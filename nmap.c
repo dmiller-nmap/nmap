@@ -1495,7 +1495,7 @@ if (!target->source_ip.s_addr) {
  * apparently requires that for some unknown reason(!).  I'd like to
  * get out of promisc. if we can figure out the problem.
  */
-if (!(pd = pcap_open_live(target->device, 92, (o.spoofsource)? 1 : 0, 1500, err0r)))
+if (!(pd = pcap_open_live(target->device, 92, (o.spoofsource)? 1 : 0, 1000, err0r)))
   fatal("pcap_open_live: %s", err0r);
 if (pcap_lookupnet(target->device, &localnet, &netmask, err0r) < 0)
   fatal("Failed to lookup device subnet/netmask: %s", err0r);
@@ -1549,11 +1549,8 @@ do {
             while  ((bytes = recvfrom(received, packet, 65535, 0, 
 				(struct sockaddr *)&from, &fromsize)) > 0 ) {
       */
-#ifndef PCAP_TIMEOUT_IGNORED
       while (( ip = (struct ip*) readip_pcap(pd, &bytes))) 
-#else
-      while(( ip = (struct ip*) readip_pcap_timed(pd, &bytes, 1)))
-#endif
+
 	{
 	  if (bytes < (4 * ip->ip_hl) + 4)
 	    continue;
@@ -1741,6 +1738,9 @@ portlist super_scan(struct hoststruct *target, unsigned short *portarray, stype 
   char myname[513];
   int scanflags;
   pcap_t *pd;
+  int bytes;
+  struct ip *ip;
+  struct tcphdr *tcp;
   struct bpf_program fcode;
   char err0r[PCAP_ERRBUF_SIZE];
   char filter[512];
@@ -1750,7 +1750,7 @@ portlist super_scan(struct hoststruct *target, unsigned short *portarray, stype 
   double numqueries_ideal = initial_packet_width; /* How many do we WANT to be on the 'net right now? */
   int tries = 0;
   unsigned int localnet, netmask;
-  int starttime;
+  int starttime, delta;
   struct hostent *myhostent;
   struct timeout_info {
     int srtt; /* Smoothed rtt estimate (microseconds) */
@@ -1765,7 +1765,7 @@ portlist super_scan(struct hoststruct *target, unsigned short *portarray, stype 
     enum { port_open, port_closed, port_testing, port_fresh } state;
     short next;
     short prev;
-  } *scan, *open, *current, *fresh, *testing;
+  } *scan, *openlist, *current, *fresh, *testinglist;
   short portlookup[65536]; /* Indexes port number -> scan[] index */
   int next_unused_port = 0;
   int decoy;
@@ -1790,8 +1790,8 @@ portlist super_scan(struct hoststruct *target, unsigned short *portarray, stype 
     else scan[i].next = -1;
     portlookup[portarray[i]] = i;
   }
-  current = testing = fresh = &scan[0]; /* fresh == unscanned ports, testing is a list of all ports that haven't been determined to be closed yet */
-  open = NULL; /* we haven't shown any ports to be open yet... */
+  current = testinglist = fresh = &scan[0]; /* fresh == unscanned ports, testinglist is a list of all ports that haven't been determined to be closed yet */
+  openlist = NULL; /* we haven't shown any ports to be open yet... */
 
     
   /* Init our raw socket */
@@ -1815,7 +1815,7 @@ portlist super_scan(struct hoststruct *target, unsigned short *portarray, stype 
  * header + 4 bytes of TCP port info.
  */
 
-if (!(pd = pcap_open_live(target->device, 92,  (o.spoofsource)? 1 : 0, 1500, err0r)))
+if (!(pd = pcap_open_live(target->device, 92,  (o.spoofsource)? 1 : 0, 50, err0r)))
   fatal("pcap_open_live: %s", err0r);
 
 if (pcap_lookupnet(target->device, &localnet, &netmask, err0r) < 0)
@@ -1849,7 +1849,7 @@ if (o.debugging || o.verbose)
     {
       /* Check the possible retransmissions first */
       gettimeofday(&now, NULL);
-      for( current = testing; current && (current != fresh); 
+      for( current = testinglist; current && (current != fresh); 
 	   current = (current->next >= 0)? &scan[current->next] : NULL) {
 	if ( TIMEVAL_SUBTRACT(now, current->sent) > to.timeout) {
 	  if (current->trynum > 0) {
@@ -1861,10 +1861,10 @@ if (o.debugging || o.verbose)
 	    current->next = -1;
 	    current->prev = -1;
 	    /* Now move into new list */
-	    if (!open) open = current;
+	    if (!openlist) openlist = current;
 	    else {
-	      current->next = open - scan;
-	      open = current;
+	      current->next = openlist - scan;
+	      openlist = current;
 	      scan[current->next].prev = current - scan;	      
 	    }
 
@@ -1903,14 +1903,55 @@ if (o.debugging || o.verbose)
 	}
       }
       /* Now that we have sent the packets we wait for responses */
-      while(/* need to do readip but need a working libpcap first <grr!> */1) {
+      while (( ip = (struct ip*) readip_pcap(pd, &bytes))) {
+	if (bytes < (4 * ip->ip_hl) + 4)
+	  continue;
+	if (ip->ip_src.s_addr == target->host.s_addr) {
+	  tcp = (struct tcphdr *) (((char *) ip) + 4 * ip->ip_hl);
+	  if (tcp->th_flags & TH_RST) {	    
+	    if (portlookup[ntohs(tcp->th_sport)] < 0 && o.debugging) {
+	      printf("Strange packet from port %d:\n", ntohs(tcp->th_sport));
+	      readtcppacket(ip, bytes);
+	    } else {
+	      current = &scan[portlookup[ntohs(tcp->th_sport)]];
+	      if (current->state == port_closed) {
+		/* We've got a latecomer */
+		to.rttvar *= 1.2;
+		if (o.debugging) { printf("Late packet, varianceincrease to %d\n", to.rttvar); }
+	      }
+	      else if (current->trynum > 0) {
+		/* Doh! our last packet was apparently lost, slow down */
+		numqueries_ideal *= fallback_percent;
+		if (o.debugging) { printf("Lost a packet, decreasing window to %d\n", (int) numqueries_ideal); }
+	      } else {
+		/* Yeah, just what we were hoping for ... */
+		gettimeofday(&now,NULL);
+		delta = TIMEVAL_SUBTRACT(now,current->sent) - to.srtt;
+		numqueries_ideal += (4/numqueries_ideal);
+		to.srtt += delta >> 3);
+		to.rttvar += (ABS(delta) - to.rttvar) >> 2;
+		to.timeout = to.srtt + (to.rttvar << 2);
+	    }
+	      
+	    }
+	    if (o.debugging > 1) printf("Nothing open on port %d\n", badport);
+	    /* delete the port from active scanning */
+	    for(i=0; i < o.max_sockets; i++)
+	      if (portno[i] == badport) {
+		if (o.debugging && trynum[i] > 0)
+		  printf("Bad port %d caught on fin scan, try number %d\n",
+			 badport, trynum[i] + 1);
+		trynum[i] = 0;
+		portno[i] = 0;
+		break;
+	      }	  	  
+	  }
 	  
-	  
-      }
-
+	}
+      } while(changed && tries < 8);
+      return NULL;
     }
-  } while(changed && tries < 8);
-return NULL;
+  }
 }
 
 portlist fin_scan(struct hoststruct *target, unsigned short *portarray) {
@@ -2015,11 +2056,7 @@ while(!done) {
   /* NOT PORTABLE, USING libpcap INSTEAD */
   /*while ((bytes = recvfrom(tcpsd, response, 65535, 0, (struct sockaddr *)
     &stranger, &sockaddr_in_size)) > 0) */
-#ifndef PCAP_TIMEOUT_IGNORED
   while(( ip = (struct ip*) readip_pcap(pd, &bytes))) 
-#else
-  while(( ip = (struct ip*) readip_pcap_timed(pd, &bytes, 1))) 
-#endif
     {    
       if (bytes < (4 * ip->ip_hl) + 4)
 	continue;
