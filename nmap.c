@@ -1733,7 +1733,7 @@ return 1;
 portlist super_scan(struct hoststruct *target, unsigned short *portarray, stype scantype) {
   int initial_packet_width = 10;  /* How many scan packets in parallel (to start with) */
   int packet_incr = 4; /* How much we increase the parallel packets by each round */
-  double fallback_percent = 0.5;
+  double fallback_percent = 0.7;
   int rawsd;
   char myname[513];
   int scanflags = 0;
@@ -1771,6 +1771,7 @@ portlist super_scan(struct hoststruct *target, unsigned short *portarray, stype 
   int decoy;
   struct timeval now;
   int i,j;
+  int windowdecrease = 0; /* Has the window been decreased this round yet? */
 
   memset(portlookup, 255, 65536); /* 0xffff better always be (short) -1 */
   scan = safe_malloc(o.numports * sizeof(struct f00));
@@ -1918,6 +1919,7 @@ if (o.debugging || o.verbose)
 
       printf("Ideal number of queries: %d\n", (int) numqueries_ideal);
       /* Now that we have sent the packets we wait for responses */
+      windowdecrease = 0;
       while (( ip = (struct ip*) readip_pcap(pd, &bytes))) {
 	if (bytes < (4 * ip->ip_hl) + 4)
 	  continue;
@@ -1954,8 +1956,12 @@ if (o.debugging || o.verbose)
 		printf("srtt %d rttvar %d timeout %d\n",  to.srtt, to.rttvar, to.timeout);
 		if (i > 0 && current->trynum > 0) {
 		  /* The first packet was apparently lost, slow down */
-		  numqueries_ideal *= fallback_percent;
-		  if (o.debugging) { printf("Lost a packet, decreasing window to %d\n", (int) numqueries_ideal);
+		  if (windowdecrease == 0) {
+		    numqueries_ideal *= fallback_percent;
+		    if (o.debugging) { printf("Lost a packet, decreasing window to %d\n", (int) numqueries_ideal);
+		    windowdecrease++;
+		    } else if (o.debugging) { printf("Lost a packet, but not decreasing\n");
+		    }
 		  }
 		}
 	      }	      
