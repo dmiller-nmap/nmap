@@ -7,6 +7,11 @@
  *
  * Long live Aol and pr: Phreak. <grins>
  */
+
+#ifndef MAX_PARSE_ARGS
+#define MAX_PARSE_ARGS 512
+#endif
+
 #if MISSING_GTK
 /* Do nothing, nmapfe.c will spit out an error */
 #else
@@ -21,6 +26,10 @@
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <fcntl.h>
+#include <strings.h>
+#include <assert.h>
+#include <ctype.h>
+
 #include "nmapfe.h"
 #include "nmapfe_sig.h"
 
@@ -405,7 +414,7 @@ on_cancel_button1_clicked              (GtkButton       *button,
 void func_start_scan()
 {
   char *command;
-
+  /*  fprintf(stderr, "start_scan called\n"); */
   if(GTK_TOGGLE_BUTTON(MW->start_scan)->active){
 
     command = build_command(NULL);
@@ -418,7 +427,7 @@ void func_start_scan()
     nmap_pid = execute(command);
 
   } else {
-    stop_scan(NULL);
+    stop_scan();
   }
 }
 
@@ -437,16 +446,23 @@ int execute(char *command) {
     perror("poopy pipe error");
 
   if (!(pid = fork())) {
+    char **argv;
+    int argc;
+    /*
     char *argv[4];
 
     argv[0] = "sh";
-    argv[1] = "-c";
+    argv[1] = "-c";     
     argv[2] = command;
     argv[3] = 0;
+    */
+    argc = arg_parse(command, &argv);
+    if (argc <= 0)
+      exit(1);
     dup2(pipes[1], 1);
     dup2(pipes[1], 2);
     fcntl(pipes[0], F_SETFL, O_NDELAY);
-    execve("/bin/sh", argv, environ);
+    execve("nmap", argv, environ);
     /*exit(127);*/
   }
   close(pipes[1]);
@@ -700,9 +716,10 @@ gint read_data(gpointer data)
   fixed = gdk_font_load ("-misc-fixed-medium-r-*-*-*-120-*-*-*-*-*-*");
   bold = gdk_font_load("-misc-fixed-bold-r-normal-*-*-120-*-*-*-*-*-*");
 
-  if((count = read(pipes[0], buf, sizeof(buf)-1))) {
+  while((count = read(pipes[0], buf, sizeof(buf)-1))) {
+    /*    fprintf(stderr, "Count was %d\n", count); */
     buf[count] = '\0';
-    if((strcmp(buf, buf2)) == 0){
+    if((strcmp(buf, buf2)) == 0) {
       return(1);
     } else {
       if(view_type == 1){
@@ -713,13 +730,13 @@ gint read_data(gpointer data)
 	do{
  	  tmpstr = newstr;
 	  newstr = strtok(NULL, " ");
-      if(tmpstr) tmpstr += strlen(tmpstr)+1; /* position on the start of next token */
+	  if(tmpstr) tmpstr += strlen(tmpstr)+1; /* position on the start of next token */
 	  while(tmpstr && (tmpstr++)[0] == 0x20) /* print the leading spaces */
-	  	gtk_text_insert(GTK_TEXT(MW->output), fixed, NULL, NULL, " ", -1);
-
+	    gtk_text_insert(GTK_TEXT(MW->output), fixed, NULL, NULL, " ", -1);
+	  
 	  if(newstr != NULL){
 	    /********* CATCH STUFF ****************************/
-		if(newstr[0] == '('){
+	    if(newstr[0] == '('){
 	      gtk_text_insert(GTK_TEXT(MW->output), fixed, NULL, NULL, newstr, -1); 
 	      gtk_text_insert(GTK_TEXT(MW->output), fixed, NULL, NULL, " ", -1);
 	    }else if(strstr(newstr, "http://")){
@@ -828,7 +845,7 @@ gint read_data(gpointer data)
 	    }else if(strstr(newstr, "linuxconf")){
 	      gtk_text_insert(GTK_TEXT(MW->output), bold, &red, NULL, newstr, -1);
 	      gtk_text_insert(GTK_TEXT(MW->output), fixed, NULL, NULL, " ", -1);	
-
+	      
 				/******* END PORT COLOR CODING, BEGIN OS COLORS *****************/		
 	    }else if(strstr(newstr, "Linux")){
 	      gtk_text_insert(GTK_TEXT(MW->output), bold, &blue, NULL, newstr, -1);
@@ -851,7 +868,7 @@ gint read_data(gpointer data)
 	    }else if(strstr(newstr, "Windows")){
 	      gtk_text_insert(GTK_TEXT(MW->output), bold, &blue, NULL, newstr, -1);
 	      gtk_text_insert(GTK_TEXT(MW->output), fixed, NULL, NULL, " ", -1);
-					
+	      
 	    }else{ 
 	      gtk_text_insert(GTK_TEXT(MW->output), fixed, NULL, NULL, newstr, -1); 
 	      gtk_text_insert(GTK_TEXT(MW->output), fixed, NULL, NULL, " ", -1);
@@ -868,22 +885,26 @@ gint read_data(gpointer data)
       if(view_type == 2) {
 	build_tree(buf);
       }
-		
       strcpy(buf2, buf);
-      waitpid(0, NULL, WNOHANG);
+		
     } /*end if*/
-  } else {
+  } 
+  /*  fprintf(stderr, "Below loop: Count was %d\n", count); */
+  if (!nmap_pid || (waitpid(0, NULL, WNOHANG) == nmap_pid)) {
+    /*    fprintf(stderr, "Program gone, dead, kablooey!\n"); */
+    nmap_pid = 0;
     gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(MW->start_scan), 0);
-    return(0);
-  }/* end if */
+    return 0;
+  }
 
   return(1);	
 }
 
 void stop_scan()
 {
+  /*  fprintf(stderr, "stop scan called -- pid == %d\n", nmap_pid); */
   if (nmap_pid)
-    kill(nmap_pid, 1);
+    kill(nmap_pid, 9);
   nmap_pid = 0;
 }
 
@@ -994,5 +1015,90 @@ void on_help_ok_clicked(GtkButton *button, GtkWidget	*help)
   gtk_widget_destroy(help);
 }
 /***************************************************************/
+
+int Strncpy(char *dest, const char *src, size_t n) {
+  strncpy(dest, src, n);
+  if (dest[n-1] == '\0')
+    return 0;
+  dest[n-1] = '\0';
+  return -1;
+}
+
+/* This function takes a command and the address of an uninitialized
+   char ** .  It parses the command (by seperating out whitespace)
+   into an argv[] style char **, which it sets the argv parameter to.
+   The function returns the number of items filled up in the array
+   (argc), or -1 in the case of an error.  This function allocates
+   memmory for argv and thus it must be freed -- use argv_parse_free()
+   for that.  If arg_parse returns <1, then argv does not need to be freed.
+   The returned arrays are always terminated with a NULL pointer */
+int arg_parse(const char *command, char ***argv) {
+  char **myargv = NULL;
+  int argc = 0;
+  char mycommand[4096];
+  unsigned char *start, *end;
+  char oldend;
+
+  *argv = NULL;
+  if (Strncpy(mycommand, command, 4096) == -1) {      
+    return -1;
+  }
+  myargv = malloc((MAX_PARSE_ARGS + 2) * sizeof(char *));
+  bzero(myargv, (MAX_PARSE_ARGS+2) * sizeof(char *));
+  myargv[0] = (char *) 0x123456; /* Integrity checker */
+  myargv++;
+  start = mycommand;
+  while(start && *start) {
+    while(*start && isspace(*start))
+      start++;
+    if (*start == '"') {
+      start++;
+      end = strchr(start, '"');
+    } else if (*start == '\'') {
+      start++;
+      end = strchr(start, '\'');      
+    } else if (!*start) {
+      continue;
+    } else {
+      end = start+1;
+      while(*end && !isspace(*end)) {      
+	end++;
+      }
+    }
+    if (!end) {
+      arg_parse_free(myargv);
+      return -1;
+    }
+    if (argc >= MAX_PARSE_ARGS) {
+      arg_parse_free(myargv);
+      return -1;
+    }
+    oldend = *end;
+    *end = '\0';
+    myargv[argc++] = strdup(start);
+    if (oldend)
+      start = end + 1;
+    else start = end;
+  }
+  myargv[argc+1] = 0;
+  *argv = myargv;
+  return argc;
+}
+
+/* Free an argv allocated inside arg_parse */
+void arg_parse_free(char **argv) {
+  char **current;
+  /* Integrity check */
+  argv--;
+  assert(argv[0] == (char *) 0x123456);
+  current = argv + 1;
+  while(*current) {
+    free(*current);
+    current++;
+  }
+  free(argv);
+}
+
+
 
 #endif /* MISSING_GTK */
