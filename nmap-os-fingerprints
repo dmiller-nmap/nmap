@@ -29,6 +29,17 @@
 # T7 is a FIN|PSH|URG to a closed port w/options
 # PU is a UDP packet to a closed port
 
+Fingerprint 2Wire Home Portal 100, v.3.1.0
+TSeq(Class=RI%gcd=<6%SI=<7A8FA&>50%IPID=I%TS=100HZ)
+T1(DF=Y%W=8000%ACK=S++%Flags=AS%Ops=MEWNNNT)
+T2(Resp=N)
+T3(Resp=N)
+T4(DF=Y%W=0%ACK=O%Flags=R%Ops=)
+T5(DF=Y%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=Y%W=0%ACK=O%Flags=R%Ops=)
+T7(Resp=N)
+PU(DF=Y%TOS=0%IPLEN=70%RIPTL=148%RID=E|F%RIPCK=E%UCK=E%ULEN=134%DAT=E)
+
 Fingerprint 3Com Access Builder 4000 7.2
 T1(DF=N%W=0|800%ACK=S++%Flags=AR|AS%Ops=|M)
 T2(Resp=Y%DF=N%W=0%ACK=O%Flags=AR%Ops=)
@@ -38,6 +49,17 @@ T5(DF=N%W=0%ACK=O%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=AR%Ops=)
 T7(DF=N%W=0%ACK=O%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=0%ULEN=134%DAT=E)
+
+Fingerprint 3Com communication server ESPL CS2100
+TSeq(Class=TD%gcd=<68%SI=<1E%IPID=I%TS=U)
+T1(DF=N%W=1000%ACK=S++%Flags=AS%Ops=M)
+T2(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T3(Resp=Y%DF=N%W=1000%ACK=S++%Flags=AS%Ops=M)
+T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint 3Com NBX Superstack 3 IP PBX running firmware 4_1_11
 TSeq(Class=64K%IPID=I%TS=2HZ)
@@ -240,6 +262,18 @@ T5(DF=N%W=400%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=400%ACK=S%Flags=AR%Ops=)
 T7(DF=N%W=400%ACK=S++%Flags=AR%Ops=)
 PU(Resp=N)
+
+# SMC Barricade7004VBR Boot Code v1.05
+Fingerprint SMC Barricade DSL Router/Modem 7404BRB or 7004VBR
+TSeq(Class=TD%gcd=<6%SI=<1E%IPID=I%TS=U)
+T1(DF=Y%W=1770%ACK=S++%Flags=AS%Ops=ME)
+T2(Resp=N)
+T3(Resp=Y%DF=Y%W=1770%ACK=S++%Flags=AS%Ops=ME)
+T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint SMC Router / Barricade, firmware 1.94a
 TSeq(Class=TD%gcd=<68%SI=<32%IPID=I%TS=U)
@@ -520,6 +554,18 @@ T6(DF=N%W=0%ACK=S%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
+# OS/400 V5R1M0 w/ C2134 + Autumn '02 Hiper, DB & Java
+Fingerprint IBM OS/400 V5R1M0
+TSeq(Class=TD%gcd=<22222%SI=<14%IPID=I%TS=1000HZ)
+T1(DF=N%W=2000|4000%ACK=S++%Flags=AS%Ops=MNWNNT)
+T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
+T3(Resp=Y%DF=N%W=2000|4000%ACK=S++%Flags=AS%Ops=MNWNNT)
+T4(DF=N%W=0%ACK=S%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=S%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
+
 # Fingerprint IBM-RS/6000 7017-S80 AIX-Version 4.3.3.0
 Fingerprint AIX 4.3.3.0 on an IBM RS/*
 TSeq(Class=TR%gcd=<6%TS=U)
@@ -573,7 +619,19 @@ T3(Resp=Y%DF=Y%W=FFFF%ACK=S++%Flags=AS%Ops=M)
 T4(DF=N%W=4000%ACK=O%Flags=R%Ops=)
 T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
-T7(Resp=N)
+T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=15C%RID=E%RIPCK=F%UCK=0%ULEN=134%DAT=E)
+
+# Fingerprint AIX 5.1.0.0 maintenance level 3
+Fingerprint IBM AIX 5.1
+TSeq(Class=TR%gcd=<6%IPID=I%TS=U)
+T1(DF=N%W=FFFF%ACK=S++%Flags=AS%Ops=M)
+T2(Resp=N)
+T3(Resp=Y%DF=N%W=FFFF%ACK=S++%Flags=AS%Ops=M)
+T4(DF=N%W=4000%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=15C%RID=E%RIPCK=F%UCK=0%ULEN=134%DAT=E)
 
 Fingerprint Alcatel 1000 ADSL (modem)
@@ -612,7 +670,7 @@ PU(Resp=N)
 # Alcaltel Speed Touch Home running GV8BAA3.235 (992640)
 # Alcatel SpeedTouch Pro ADSL Router running NZ OS 3.281
 #  Alcatel Speed Touch Home ADSL Modem (POTS), Ver 3.2
-Fingerprint Alcaltel Speed Touch ADSL modem or router
+Fingerprint Alcaltel Speed Touch *DSL modem/router
 TSeq(Class=64K%IPID=I%TS=2HZ)
 T1(DF=N%W=1000%ACK=S++%Flags=AS%Ops=MNWNNT)
 T2(Resp=N)
@@ -622,6 +680,18 @@ T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=0%UCK=E%ULEN=134%DAT=E)
+
+# Alcaltel Speed Touch 510 *DSL router (uses THOMSON Unix embeded Version 4.0.0.9.0)
+Fingerprint Alcaltel Speed Touch 510 *DSL modem/router
+TSeq(Class=64K%IPID=I%TS=2HZ)
+T1(DF=N%W=1000%ACK=S++%Flags=AS%Ops=MNWNNT)
+T2(Resp=N)
+T3(Resp=Y%DF=N%W=1000%ACK=O%Flags=A%Ops=NNT)
+T4(DF=N%W=1000%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Allied Telesyn AT-S10 version 3.0 on an AT-TS24TR hub
 TSeq(Class=C)
@@ -663,6 +733,18 @@ TSeq(Class=TD%gcd=<9C8%SI=<1E)
 T1(DF=N%W=200%ACK=S++|O%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
 T3(Resp=Y%DF=N%W=200%ACK=S++%Flags=AS%Ops=M)
+T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
+
+# Alteon ACEswitch 184 Software Version 8.0.49
+Fingerprint Alteon ACEswitch 184 V. 8.0.49   
+TSeq(Class=RI%gcd=<34%SI=<C698A&>215%IPID=I%TS=U)
+T1(DF=N%W=1000%ACK=S++%Flags=AS%Ops=M)
+T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
+T3(Resp=Y%DF=N%W=1000%ACK=S++%Flags=AS%Ops=M)
 T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
@@ -789,6 +871,39 @@ T5(DF=N%W=0%ACK=O%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=0%UCK=E%ULEN=134%DAT=E)
+
+Fingerprint APC MasterSwitch Network Power Controller
+TSeq(Class=TR)
+T1(DF=N%W=640%ACK=S++%Flags=AS%Ops=ME)
+T2(Resp=N)
+T3(Resp=Y%DF=N%W=640%ACK=S++%Flags=AS%Ops=ME)
+T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)   
+T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=F%ULEN=134%DAT=E)
+
+Fingerprint APC Web/SNMP UPS management card
+TSeq(Class=RI%gcd=<6%SI=<52FB700&>D46DF)
+T1(DF=N%W=640%ACK=S++%Flags=AS%Ops=ME)
+T2(Resp=N)
+T3(Resp=Y%DF=N%W=640%ACK=S++%Flags=AS%Ops=ME)
+T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=F%ULEN=134%DAT=E)
+
+Fingerprint ARLAN BR2000E V5.0E Radio Bridge
+TSeq(Class=TR%gcd=<6)
+T1(DF=N%W=400%ACK=S++%Flags=AS%Ops=)
+T2(Resp=Y%DF=N%W=1F4%ACK=S%Flags=AR%Ops=)
+T3(Resp=Y%DF=N%W=1F4%ACK=S++%Flags=AR%Ops=)
+T4(DF=N%W=1F4%ACK=S%Flags=AR%Ops=)
+T5(DF=N%W=1F4%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=1F4%ACK=S%Flags=AR%Ops=)
+T7(DF=N%W=1F4%ACK=S++%Flags=AR%Ops=)
+PU(Resp=N)
 
 Fingerprint Ascend P130 Router
 TSeq(Class=RI%gcd=<6%SI=>BBB&<BBBB)
@@ -1192,6 +1307,17 @@ T6(DF=N%W=0%ACK=S%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(Resp=N)
 
+Fingerprint AtheOS/Syllable 0.4.2
+TSeq(Class=RI%gcd=<A%SI=<1BDA%IPID=I%TS=U)
+T1(DF=N%W=3FF0%ACK=S++%Flags=AS%Ops=M)
+T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
+T3(Resp=Y%DF=N%W=3FF0%ACK=S++%Flags=AS%Ops=M)
+T4(DF=N%W=0%ACK=S%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=S%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+PU(Resp=N)
+
 Fingerprint ATT Unix SVR4.2 on a Lucent Definity voicemail system
 TSeq(Class=64K)
 T1(Resp=Y%DF=N%W=1000%ACK=S++%Flags=AS%Ops=M)
@@ -1225,6 +1351,49 @@ T6(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T7(Resp=N)
 PU(Resp=N)
 
+# Meridian Data Network CD-ROM Server (V4.20 Nov 26 1997)
+Fingerprint AXIS or Meridian Data Network CD-ROM server
+TSeq(Class=C)
+T1(DF=N%W=200%ACK=S++%Flags=AS%Ops=M)
+T2(Resp=N)
+T3(Resp=Y%DF=N%W=200%ACK=O%Flags=A%Ops=)
+T4(DF=N%W=200%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+PU(Resp=N)
+
+Fingerprint AXIS 540/542Print ServerV5.30 Jan 24 1997
+TSeq(Class=C)
+T1(Resp=Y%DF=N%W=1000%ACK=S++%Flags=AS%Ops=M)
+T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
+T3(Resp=Y%DF=N%W=0|100%ACK=O|S++%Flags=AR|A%Ops=)
+T4(Resp=Y%DF=N%W=0%ACK=O%Flags=R%Ops=)
+T5(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(Resp=Y%DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+PU(Resp=N)
+
+Fingerprint Axis 540 e'net print server ver 5.48
+TSeq(Class=TD%gcd=<80004%SI=<1E%IPID=I%TS=U)
+T1(DF=N%W=1000%ACK=S++%Flags=AS%Ops=M)
+T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
+T3(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+PU(Resp=N)
+
+Fingerprint Axis 540 print server
+T1(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
+T3(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+PU(Resp=N)
 
 Fingerprint AXIS NetEye Camera Server V1.20 # Thanks to Pluvius
 TSeq(Class=C)
@@ -1337,6 +1506,17 @@ T4(DF=N%W=3000%ACK=O%Flags=R%Ops=)
 T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
+PU(Resp=N)
+
+Fingerprint BeOS 5.0.4 (BeOS 5 Pro + BONE 7a)
+TSeq(Class=TD%gcd=<6%SI=<C8%IPID=I%TS=U)
+T1(DF=N%W=7F53%ACK=S++|O%Flags=AS%Ops=MNW)
+T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
+T3(Resp=Y%DF=N%W=7F53%ACK=S++|O%Flags=AS%Ops=MNW)
+T4(DF=N%W=0%ACK=O%Flags=AR%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=AR%Ops=)
+T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(Resp=N)
 
 Fingerprint BeOS 5.1d0/DANO on x86
@@ -1550,6 +1730,18 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(Resp=N)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
+# Checkpoint Firewall-1/VPN-1 SecurePlatform NG, running FeaturePack 3
+Fingerprint Checkpoint SecurePlatform NG FP3
+TSeq(Class=RI%gcd=<6%SI=<1C6F042&>48C8B%IPID=Z%TS=U)
+T1(DF=Y%W=16D0%ACK=S++%Flags=AS%Ops=MNW)
+T2(Resp=N)
+T3(Resp=N)
+T4(DF=Y%W=0%ACK=O%Flags=R%Ops=)
+T5(DF=Y%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=Y%W=0%ACK=O%Flags=R%Ops=)
+T7(Resp=N)
+PU(DF=N%TOS=C0%IPLEN=164%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
+
 Fingerprint Olicom A/S - ILAN/XL
 TSeq(Class=TD%gcd=<28004%SI=<28%IPID=I|RD%TS=U)
 T1(DF=N%W=4000%ACK=S++%Flags=AS%Ops=M)
@@ -1717,7 +1909,8 @@ T7(Resp=Y%DF=N%W=0%ACK=O|S%Flags=AR%Ops=)
 PU(Resp=N)
 
 # Cisco Catalyst 6500: WS-C6509 Software, Version NmpSW: 6.3(5)
-Fingerprint Cisco Catalyst 6500: WS-C6509 Software 6.3(5)
+# Cisco Catalyst 5500 with OS Version 6.3(5)
+Fingerprint Cisco Catalyst 5500/6500 w/software 6.3(5)
 TSeq(Class=TR%gcd=<6%IPID=I%TS=U)
 T1(DF=N%W=1000%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -1726,9 +1919,8 @@ T4(DF=N%W=1000%ACK=O%Flags=R%Ops=)
 T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
-PU(DF=Y%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=0%UCK=0%ULEN=134%DAT=E)
+PU(DF=N|Y%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
-# Contributed by Sean Naude; sean.naude@rmb.co.za
 Fingerprint Cisco Catalyst 4006 Switch running NmpSW 7.4(2)
 SInfo(V=3.00%P=i686-pc-linux-gnu%D=2/12%Time=3E4A758F%O=23%C=1)
 TSeq(Class=TR%IPID=I%TS=U)
@@ -1754,7 +1946,6 @@ T6(DF=N%W=C00|400|1000%ACK=O%Flags=R%Ops=WNMETL)
 T7(DF=N%W=C00|400|1000%ACK=S++%Flags=AR%Ops=WNMETL)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
-# Contributer wishes to remain anonymous
 Fingerprint Cisco PIX 4.2(2) Internal Interface
 TSeq(Class=C)
 T1(DF=N%W=1000%ACK=S++%Flags=AS%Ops=M)
@@ -1766,7 +1957,18 @@ T6(DF=N%W=800%ACK=S%Flags=AR%Ops=WNMETL)
 T7(DF=N%W=800%ACK=S%Flags=UPRF%Ops=WNMETL)
 PU(Resp=N)
 
-Fingerprint Cisco PIX 515 or 525 running 6.2(1)
+Fingerprint Cisco Pix 506 Firewall
+TSeq(Class=TR%gcd=<6%IPID=I%TS=U)
+T1(DF=N%W=1000%ACK=S++%Flags=AS%Ops=M)
+T2(Resp=Y%DF=N%W=C00%ACK=S%Flags=AR%Ops=WNMETL)
+T3(Resp=Y%DF=N%W=C00%ACK=S++%Flags=UAPR%Ops=WNMETL)
+T4(DF=N%W=C00%ACK=S%Flags=AR%Ops=WNMETL)
+T5(DF=N%W=C00%ACK=S++%Flags=AR%Ops=WNMETL)
+T6(DF=N%W=C00%ACK=S%Flags=AR%Ops=WNMETL)
+T7(DF=N%W=C00%ACK=S++%Flags=UAPR%Ops=WNMETL)
+PU(Resp=N)
+
+Fingerprint Cisco PIX 515 or 525 running 6.1(4) - 6.2(1)
 TSeq(Class=TR%gcd=<6%IPID=I%TS=U)
 T1(DF=N%W=1000%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=800|C00%ACK=S%Flags=AR%Ops=WNMETL)
@@ -1775,6 +1977,17 @@ T4(Resp=N)
 T5(DF=N%W=800|C00%ACK=S++%Flags=AR%Ops=WNMETL)
 T6(DF=N%W=800|C00%ACK=S%Flags=AR%Ops=WNMETL)
 T7(DF=N%W=800|C00%ACK=S++%Flags=UAPR%Ops=WNMETL)
+PU(Resp=N)
+
+Fingerprint Cisco PIX Firewall Version 6.2(2) - 6.3
+TSeq(Class=TR%gcd=<6%IPID=I%TS=U)
+T1(DF=N%W=1000%ACK=S++%Flags=AS%Ops=M)
+T2(Resp=Y%DF=N%W=400%ACK=S%Flags=AR%Ops=WNMETL)
+T3(Resp=Y%DF=N%W=1000%ACK=S++%Flags=AS%Ops=M)
+T4(Resp=N)
+T5(DF=N%W=400%ACK=S++%Flags=AR%Ops=WNMETL)
+T6(DF=N%W=400%ACK=S%Flags=AR%Ops=WNMETL)
+T7(DF=N%W=400%ACK=S++%Flags=UAPR%Ops=WNMETL)
 PU(Resp=N)
 
 Fingerprint Cisco PIX Firewall Version 6.2(1)
@@ -1786,6 +1999,18 @@ T4(Resp=N)
 T5(Resp=N)
 T6(Resp=N)
 T7(Resp=N)
+PU(Resp=N)
+
+# Cisco 535 IOS 6.2 PIX running in failover mode... ie.. idle
+Fingerprint Cisco 535 PIX 6.1.4 - 6.2.2
+TSeq(Class=TR%gcd=<6%IPID=I%TS=U)
+T1(DF=N%W=1000%ACK=S++%Flags=AS%Ops=M)
+T2(Resp=Y%DF=N%W=1000%ACK=S%Flags=AR%Ops=WNMETL)
+T3(Resp=Y%DF=N%W=1000%ACK=S++%Flags=AS%Ops=M)
+T4(Resp=N)
+T5(DF=N%W=1000%ACK=S++%Flags=AR%Ops=WNMETL)
+T6(DF=N%W=1000%ACK=S%Flags=AR%Ops=WNMETL)
+T7(DF=N%W=1000%ACK=S++%Flags=UAPR%Ops=WNMETL)
 PU(Resp=N)
 
 Fingerprint Cisco 766 non-IOS software 4.2(3.5)
@@ -1899,6 +2124,18 @@ T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
+PU(DF=N%TOS=C0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
+
+# Cisco 1700 running IOS 12.0(7)T
+Fingerprint IOS 12.0(7)T (on a 1700 router)
+TSeq(Class=RI%gcd=<6%SI=<7A6C&>D%IPID=Z%TS=U)
+T1(DF=N%W=1020%ACK=S++%Flags=AS%Ops=M)
+T2(Resp=N)
+T3(Resp=Y%DF=N%W=1020%ACK=S++%Flags=AS%Ops=M)
+T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=C0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Cisco IOS 12.0(21) (On a 2514 router)
@@ -2036,6 +2273,21 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(Resp=N)
 
+# A Cisco ATA 186 is a little box that allows a standard POTS
+# telephone to be used as a voice-over-Ip phone.  There is a
+# variation, the ATA 188 that has a pass-through port, much like the
+# Cisco 7960 phone.
+Fingerprint Cisco ATA 186 POTS<->VOIP phone gateway device
+TSeq(Class=TD%gcd=<A0000%SI=<1E%IPID=I%TS=U)
+T1(DF=N%W=3E80%ACK=S++%Flags=AS%Ops=M)
+T2(Resp=Y%DF=N%W=0%ACK=O%Flags=ARF%Ops=)
+T3(Resp=Y%DF=N%W=3E80%ACK=S++%Flags=AS%Ops=M)
+T4(DF=N%W=0%ACK=O%Flags=RF%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=ARF%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=RF%Ops=)
+T7(DF=N%W=0%ACK=S%Flags=ARF%Ops=)
+PU(Resp=N)
+
 Fingerprint Cisco 675 DSL router -- cbos 2.1
 T1(Resp=Y%DF=Y%W=EA60%ACK=S++%Flags=AS|ASF|APSF%Ops=M)
 T2(Resp=Y%DF=Y%W=100%ACK=S%Flags=AR%Ops=)
@@ -2057,6 +2309,17 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S|S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
+Fingerprint Cisco 7905 IP Phone
+TSeq(Class=TD%gcd=<2004%SI=<1E%IPID=I%TS=U)
+T1(DF=N%W=3E80%ACK=S++%Flags=AS%Ops=M)
+T2(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T3(Resp=Y%DF=N%W=3E80%ACK=S++%Flags=AS%Ops=M)
+T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
+
 Fingerprint Cisco CacheOS (1.1.0)
 TSeq(Class=64K)
 T1(DF=N%W=2000%ACK=S++%Flags=AS%Ops=ME)
@@ -2068,6 +2331,30 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=F%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
+Fingerprint Cisco Content Engine 505 Software V. 4.2.1
+TSeq(Class=RI%gcd=<6%SI=<2D75904&>5AE06%IPID=I%TS=U)
+T1(DF=N%W=16D0%ACK=S++%Flags=AS%Ops=ME)
+T2(Resp=N)
+T3(Resp=Y%DF=N%W=16D0%ACK=S++%Flags=AS%Ops=ME)
+T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+PU(DF=N%TOS=C0|CC%IPLEN=164%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
+
+# running Application and Content Networking System Software 4.2.3
+# Fingerprint Cisco Content Engine 560 Software V. 4.2.3
+Fingerprint Cisco Content Engine 560 running Content Networking System V. 4.2.3
+TSeq(Class=RI%gcd=<6%SI=<19440B6&>40ACE%IPID=I%TS=U)
+T1(DF=N%W=16D0%ACK=S++%Flags=AS%Ops=ME)
+T2(Resp=N)
+T3(Resp=Y%DF=N%W=16D0%ACK=S++%Flags=AS%Ops=ME)
+T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+PU(DF=N%TOS=C0%IPLEN=164%RIPTL=148%RID=E|F%RIPCK=E%UCK=E%ULEN=134%DAT=E)
+
 Fingerprint Cisco Secure PIX Firewall Version 5.0(2)
 T1(DF=N%W=1000%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=400%ACK=S%Flags=AR%Ops=WNMETL)
@@ -2076,6 +2363,18 @@ T4(DF=N%W=400%ACK=S%Flags=AR%Ops=WNMETL)
 T5(DF=N%W=400%ACK=S++%Flags=AR%Ops=WNMETL)
 T6(DF=N%W=400%ACK=S%Flags=AR%Ops=WNMETL)
 T7(DF=N%W=400%ACK=S++%Flags=UAPR%Ops=WNMETL)
+PU(Resp=N)
+
+# Cisco PIX running IOS 6.1(1) - Internal interface
+Fingerprint Cisco PIX w/IOS 6.1(1)
+TSeq(Class=TR%gcd=<6%IPID=I%TS=U)
+T1(DF=N%W=1000%ACK=S++%Flags=AS%Ops=M)
+T2(Resp=Y%DF=N%W=1000%ACK=S%Flags=AR%Ops=WNMETL)
+T3(Resp=Y%DF=N%W=1000%ACK=S++%Flags=UAPR%Ops=WNMETL)
+T4(DF=N%W=1000%ACK=S%Flags=AR%Ops=WNMETL)
+T5(DF=N%W=1000%ACK=S++%Flags=AR%Ops=WNMETL)
+T6(DF=N%W=1000%ACK=S%Flags=AR%Ops=WNMETL)
+T7(DF=N%W=1000%ACK=S++%Flags=UAPR%Ops=WNMETL)
 PU(Resp=N)
 
 Fingerprint Cisco uBR 7223
@@ -2379,6 +2678,17 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(Resp=N)
 
+Fingerprint Cisco IOS 12.0(5)WC5a on a 2900XL
+TSeq(Class=TR%gcd=<6%IPID=Z%TS=1000HZ)
+T1(DF=N%W=1020%ACK=S++%Flags=AS%Ops=MML)
+T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
+T3(Resp=Y%DF=N%W=1020%ACK=S++%Flags=AS%Ops=MML)
+T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
+PU(DF=N%TOS=C0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
+
 Fingerprint Cisco IOS 12.1(4) on a 2600
 TSeq(Class=RI%gcd=<A%SI=<9772&>3A%IPID=Z%TS=U)
 T1(DF=N%W=1020%ACK=S++%Flags=AS%Ops=M)
@@ -2558,6 +2868,28 @@ T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=AR%Ops=)
 T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(Resp=N)
+
+Fingerprint Draytek Vigor 2200e Router V2.1a
+TSeq(Class=TR%gcd=<6%IPID=I%TS=U)
+T1(DF=N%W=834%ACK=S++%Flags=AS%Ops=ME)
+T2(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T3(Resp=Y%DF=N%W=834%ACK=S++%Flags=AS%Ops=ME)
+T4(DF=N%W=0%ACK=O%Flags=AR%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=AR%Ops=)
+T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+PU(DF=N%TOS=C0%IPLEN=38%RIPTL=148%RID=E|F%RIPCK=E%UCK=E%ULEN=134%DAT=E)
+
+Fingerprint Compaq Integrated Lights Out Board
+TSeq(Class=TD%gcd=<6%SI=<1E%IPID=I%TS=U)
+T1(DF=N%W=800%ACK=O%Flags=R%Ops=)
+T2(Resp=Y%DF=N%W=800%ACK=O%Flags=R%Ops=)
+T3(Resp=Y%DF=N%W=800%ACK=O%Flags=R%Ops=)
+T4(DF=N%W=800%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=800%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=800%ACK=S%Flags=AR%Ops=)
+T7(DF=N%W=800%ACK=S++%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E|F%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Compaq iPAQ Connection Point CP-2W Rev1.00
 T1(DF=N%W=800%ACK=S++%Flags=AS%Ops=M)
@@ -2765,6 +3097,17 @@ T5(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=O%Flags=R%Ops=)
 PU(Resp=N)
+
+Fingerprint Eicon Diva1830 running 1.5 firmware
+TSeq(Class=TD%gcd=<20004%SI=<14%IPID=I%TS=U)
+T1(DF=N%W=2000%ACK=S++%Flags=ASF%Ops=M)
+T2(Resp=Y%DF=N%W=1%ACK=S%Flags=AR%Ops=)
+T3(Resp=Y%DF=N%W=2000%ACK=S++%Flags=ASF%Ops=M)
+T4(DF=N%W=1%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=1%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=1%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=1%ACK=S%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=164%RIPTL=148%RID=E|F%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint EMC DART running on a DataMover. Version T4.1.8.1
 TSeq(Class=64K%IPID=I%TS=2HZ)
@@ -3010,7 +3353,8 @@ PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 # Nokia IPSO 3.2-3.2.1 releng 783-849
 # IPSO 3.4-FCS4A releng 767  Running CheckPoint 4.1 SP6
 # Nokia IPSO 3.2-fcs4 releng 783 (FreeBSD Based)
-Fingerprint Nokia IPSO 3.2-3.4 Running checkpoint FW1
+# Nokia IPSO 4.3.1-FCS5
+Fingerprint Nokia IPSO 3.2-4.3.1-FCS5 Running checkpoint FW1
 TSeq(Class=RI%gcd=<6%SI=<77DC6&>1319)
 T1(DF=N%W=4000%ACK=O|S++%Flags=A|AS%Ops=NNT|MNWNNT)
 T2(Resp=N)
@@ -3064,6 +3408,16 @@ T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
 T3(Resp=Y%DF=N%W=5DC%ACK=S++%Flags=AS%Ops=M)
 T4(DF=N%W=0%ACK=S%Flags=R%Ops=)
 T5(DF=N%W=0%ACK=S%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=S%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+PU(Resp=N)
+
+Fingerprint Genius print server
+T1(DF=N%W=400%ACK=S++%Flags=APS%Ops=M)
+T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
+T3(Resp=Y%DF=N%W=0%ACK=O%Flags=AR%Ops=)
+T4(DF=N%W=0%ACK=S%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=S%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(Resp=N)
@@ -3236,6 +3590,17 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=0%ULEN=134%DAT=E)
 
+Fingerprint FreeBSD 4.4 for i386 (IA-32)
+TSeq(Class=TR%gcd=<6)
+T1(DF=Y%W=5B4|C0B7%ACK=S++%Flags=AS%Ops=MNWNNT)
+T2(Resp=N)
+T3(Resp=Y%DF=Y%W=5B4|C0B7%ACK=S++%Flags=AS%Ops=MNWNNT)
+T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=0%ULEN=134%DAT=E)
+
 Fingerprint FreeBSD 4.5-RELEASE (or -STABLE) (X86)
 TSeq(Class=TR%gcd=<6%IPID=I|RD%TS=100HZ)
 T1(DF=N%W=FFFF%ACK=S++%Flags=AS%Ops=MNWNNT)
@@ -3283,6 +3648,17 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=0%ULEN=134%DAT=E)
 
+Fingerprint FreeBSD 4.6.2-RELEASE
+TSeq(Class=TR%gcd=<6%IPID=I%TS=1000HZ)
+T1(DF=N%W=E000%ACK=S++%Flags=AS%Ops=MNWNNT)
+T2(Resp=N)
+T3(Resp=Y%DF=N%W=E000%ACK=S++%Flags=AS%Ops=MNWNNT)
+T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=0%ULEN=134%DAT=E)
+
 # 4.7-STABLE FreeBSD 4.7-STABLE #0: Tue Nov 19 16:13:55 2002
 Fingerprint FreeBSD 4.6.2-RELEASE - 4.7-STABLE
 TSeq(Class=TR%gcd=<6%IPID=I%TS=100HZ)
@@ -3295,11 +3671,35 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=0%ULEN=134%DAT=E)
 
-Fingerprint FreeBSD 4.6.2-RELEASE
-TSeq(Class=TR%gcd=<6%IPID=I%TS=1000HZ)
-T1(DF=N%W=E000%ACK=S++%Flags=AS%Ops=MNWNNT)
+# FreeBSD 4.7-RELEASE-p3 FreeBSD 4.7-RELEASE-p3 #0: Wed Jan 8 21:31:21 CET 2003 i386
+Fingerprint FreeBSD 4.7-RELEASE
+TSeq(Class=TR%gcd=<6%IPID=RD%TS=100HZ)
+T1(DF=Y%W=E000%ACK=S++%Flags=AS%Ops=MNWNNT)
 T2(Resp=N)
-T3(Resp=Y%DF=N%W=E000%ACK=S++%Flags=AS%Ops=MNWNNT)
+T3(Resp=Y%DF=Y%W=E000%ACK=S++%Flags=AS%Ops=MNWNNT)
+T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=0%ULEN=134%DAT=E)
+
+# FreeBSD-4.7-RELEASE-p3 on i386
+Fingerprint FreeBSD-4.7-RELEASE-p3
+TSeq(Class=TR%gcd=<6%IPID=I%TS=100HZ)
+T1(DF=Y%W=E000%ACK=S++%Flags=AS%Ops=MNWNNT)
+T2(Resp=N)
+T3(Resp=Y%DF=Y%W=E000%ACK=S++%Flags=AS%Ops=MNWNNT)
+T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
+PU(DF=Y%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=0%ULEN=134%DAT=E)
+
+Fingerprint FreeBSD 4.7-STABLE (Jan 2003)
+TSeq(Class=TR%gcd=<6%IPID=RD%TS=U)
+T1(DF=Y%W=E000%ACK=S++%Flags=AS%Ops=M)
+T2(Resp=N)
+T3(Resp=N)
 T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
@@ -3318,7 +3718,7 @@ T7(Resp=N)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=0%ULEN=134%DAT=E)
 
 #  FreeBSD 5.0-CURRENT Sun Apr 14 12:41:40 EDT 2002
-Fingerprint FreeBSD 5.0-CURRENT
+Fingerprint FreeBSD 5.0-CURRENT (Apr 2002)
 TSeq(Class=TR%gcd=<6%IPID=RD%TS=U)
 T1(DF=N%W=FFFF%ACK=S++%Flags=AS%Ops=MNWNNT)
 T2(Resp=N)
@@ -3328,6 +3728,40 @@ T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=0%ULEN=134%DAT=E)
+
+# FreeBSD somehost.someplace 5.0-CURRENT FreeBSD 5.0-CURRENT #0: Wed Jan 29 12:31:51 CST 2003 i386
+Fingerprint FreeBSD 5.0-CURRENT (Jan 2003)
+TSeq(Class=TR%gcd=<6%IPID=I%TS=1000HZ)
+T1(DF=Y%W=FFFF%ACK=S++%Flags=AS%Ops=MNWNNT)
+T2(Resp=N)
+T3(Resp=Y%DF=Y%W=FFFF%ACK=S++%Flags=AS%Ops=MNWNNT)
+T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=0%ULEN=134%DAT=E)
+
+Fingerprint FreeBSD 5.0-RELEASE (x86)
+TSeq(Class=TR%gcd=<6%IPID=I%TS=100HZ)
+T1(DF=Y%W=4000|FFFF%ACK=S++%Flags=AS%Ops=MNWNNT)
+T2(Resp=N)
+T3(Resp=Y%DF=Y%W=4000|FFFF%ACK=S++%Flags=AS%Ops=MNWNNT)
+T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
+PU(DF=Y|N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=0%ULEN=134%DAT=E)
+
+Fingerprint FreeBSD 5.0-RELEASE
+TSeq(Class=TR%gcd=<6%IPID=I%TS=100HZ)
+T1(DF=Y%W=FFFF%ACK=S++%Flags=AS%Ops=MNWNNT)
+T2(Resp=N)
+T3(Resp=Y%DF=Y%W=FFFF%ACK=S++%Flags=AS%Ops=MNWNNT)
+T4(DF=Y%W=0%ACK=O%Flags=R%Ops=)
+T5(DF=Y%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=Y%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=Y%W=0%ACK=S%Flags=AR%Ops=)
+PU(DF=Y%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=0%ULEN=134%DAT=E)
 
 Fingerprint FreeSCO 0.27 (Linux 2.0.38 kernel)
 TSeq(Class=RI%gcd=<6%SI=<1F22A6E&>4E0A2%IPID=Z%TS=100HZ)
@@ -3470,7 +3904,9 @@ T6(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 T7(Resp=N)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
-Fingerprint HP JetDirect 610n (Model J4169A) firmware L.24.06
+# JetDirect J6057A, firmware R.24.06, connected to an HP 2200 printer
+# JetDirect 610n (Model J4169A) firmware L.24.06
+Fingerprint HP printer w/JetDirect card
 TSeq(Class=RI%gcd=<6%SI=<AF762&>9E9%IPID=I%TS=2HZ)
 T1(DF=N%W=5B4%ACK=S++%Flags=AS%Ops=MNWNNT)
 T2(Resp=N)
@@ -3526,8 +3962,30 @@ T6(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 T7(Resp=N)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=0%UCK=E%ULEN=134%DAT=E)
 
+Fingerprint HP JetDirect J2556b Firmware A.05.32
+T1(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T2(Resp=N)
+T3(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T4(DF=N%W=0%ACK=S%Flags=AR%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=S%Flags=AR%Ops=)
+T7(Resp=N)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=0%UCK=E%ULEN=134%DAT=E)
+
+# This is a HP 5si printer with a Jetdirect Ethernet card model# J2556b Firmware A.05.32
+Fingerprint HP printer w/JetDirect J2556b card (firmware A.05.32)
+T1(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T2(Resp=N)
+T3(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T4(DF=N%W=0%ACK=S%Flags=AR%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=S%Flags=AR%Ops=)
+T7(Resp=N)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=0%UCK=E%ULEN=134%DAT=E)
+
 # Jet Direct Model J3113A, Firmware Rev G.07.20
-Fingerprint HP Color LaserJet 4500N, Jet Direct J3113A/2100
+# HP Color LaserJet 4500N, Jet Direct J3113A/2100
+Fingerprint HP Printer w/Jet Direct J3113A/2100 card 
 T1(DF=N%W=16D0|0%ACK=S++%Flags=AS|AR%Ops=M|)
 T2(Resp=N)
 T3(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
@@ -3815,6 +4273,28 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(Resp=N)
 PU(DF=N|Y%TOS=0%IPLEN=38%RIPTL=15C%RID=E%RIPCK=F%UCK=0%ULEN=134%DAT=E)
 
+Fingerprint IBM AIX 5.1
+TSeq(Class=TR%gcd=<6%IPID=I%TS=U)
+T1(DF=Y%W=402E%ACK=S++%Flags=AS%Ops=M)
+T2(Resp=N)
+T3(Resp=Y%DF=Y%W=402E%ACK=S++%Flags=AS%Ops=M)
+T4(DF=N%W=4000%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=15C%RID=E%RIPCK=F%UCK=0%ULEN=134%DAT=E)
+
+Fingerprint AIX 5.2 on RS/6000
+TSeq(Class=TR%gcd=<6%IPID=I%TS=U)
+T1(DF=N%W=402E%ACK=S++%Flags=AS%Ops=M)
+T2(Resp=N)
+T3(Resp=Y%DF=N%W=402E%ACK=S++%Flags=AS%Ops=M)
+T4(DF=N%W=4000%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=15C%RID=E%RIPCK=F%UCK=0%ULEN=134%DAT=E)
+
 Fingerprint IBM Infoprint 12 Net-Printer
 TSeq(Class=64K%IPID=I%TS=U)
 T1(DF=N%W=4000%ACK=S++%Flags=AS%Ops=M)
@@ -3857,7 +4337,7 @@ T4(DF=N%W=7000%ACK=O%Flags=R%Ops=)
 T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
-PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=F%RIPCK=0%UCK=0%ULEN=134%DAT=E)
+PU(DF=N|Y%TOS=0%IPLEN=38%RIPTL=148%RID=F%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
 Fingerprint IBM OS/2 Warp 4.0
 TSeq(Class=i800)
@@ -3949,7 +4429,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=0%ULEN=134%DAT=E)
 
 Fingerprint D-Link 704P Ethernet Broadband Gateway
-TSeq(Class=RI|TD%gcd=<68%SI=<3A2%IPID=I%TS=U)
+TSeq(Class=RI|TD%gcd=<68%SI=<3A2%IPID=I|BI%TS=U)
 T1(DF=N%W=800|C00%ACK=S++%Flags=AR%Ops=)
 T2(Resp=Y%DF=N%W=800|C00%ACK=S%Flags=AR%Ops=)
 T3(Resp=Y%DF=N%W=800|C00%ACK=S++%Flags=AR%Ops=)
@@ -4006,6 +4486,29 @@ T6(DF=N%W=400%ACK=S++%Flags=AR%Ops=WNMETL)
 T7(DF=N%W=400%ACK=S++%Flags=AR%Ops=WNMETL)
 PU(Resp=N)
 
+Fingerprint D-Link DI-713P Wireless Gateway (2.57 build 3a)
+TSeq(Class=TR%gcd=<6%IPID=I%TS=U)
+T1(DF=N%W=FAF0%ACK=S++%Flags=APS%Ops=M)
+T2(Resp=N)
+T3(Resp=Y%DF=N%W=FAF0%ACK=S++%Flags=APS%Ops=M)
+T4(DF=N%W=7FFF%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=FAF0%ACK=S++%Flags=R%Ops=)
+T6(DF=N%W=7FFF%ACK=O%Flags=R%Ops=)
+T7(Resp=N)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
+
+# DLink DI-804 Cable/DSL Residential Gateway (with firmware v2.00B7)
+Fingerprint DLink DI-804 Cable/DSL Residential Gateway (firmware v2.00B7)
+TSeq(Class=TD%gcd=<10%SI=<3C%IPID=I%TS=U)
+T1(DF=N%W=834%ACK=S++%Flags=AS%Ops=M)
+T2(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T3(Resp=Y%DF=N%W=834%ACK=S++%Flags=AS%Ops=M)
+T4(DF=N%W=0%ACK=O%Flags=AR%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=AR%Ops=)
+T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+PU(DF=N%TOS=C0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
+
 Fingerprint D-Link DCS-1000 webcam with firmware 1.06
 TSeq(Class=TD%gcd=<E0%SI=<14%IPID=I%TS=U)
 T1(DF=N%W=16D0%ACK=S++%Flags=AS%Ops=M)
@@ -4028,7 +4531,8 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(Resp=N)
 
-Fingerprint DI-701Residential Gateway ( http://www.dlink.com/products/broadband/di701/ ) or KA9Q NOS - KO4KS-TNOS v. 2.30
+# DI-701 Residential Gateway ( http://www.dlink.com/products/broadband/di701/ ) or KA9Q NOS - KO4KS-TNOS v. 2.30
+Fingerprint DI-701 Residential Gateway or KA9Q NOS - KO4KS-TNOS v. 2.30
 TSeq(Class=RI%gcd=<6%SI=<17DC20&>3D00)
 T1(DF=Y%W=2017%ACK=S++%Flags=AS%Ops=MNWNNT)
 T2(Resp=N)
@@ -4038,6 +4542,17 @@ T5(DF=N%W=800|1000%ACK=S++%Flags=AR%Ops=WNMETL)
 T6(DF=N%W=800|1000%ACK=S++%Flags=AR%Ops=WNMETL)
 T7(DF=N%W=800|1000%ACK=S++%Flags=AR%Ops=WNMETL)
 PU(Resp=N)
+
+Fingerprint D-Link DWL-5000AP AP/BSP 1.3
+TSeq(Class=64K%IPID=I%TS=U)
+T1(DF=N%W=1000%ACK=S++%Flags=AS%Ops=MNW)
+T2(Resp=N)
+T3(Resp=Y%DF=N%W=1000%ACK=O%Flags=A%Ops=)
+T4(DF=N%W=1000%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
 Fingerprint D-Link Wireless Access Point DRC-1000AP - v3.2.28
 TSeq(Class=TR%gcd=<6%IPID=I%TS=U)
@@ -4080,6 +4595,17 @@ T1(DF=N%W=424%ACK=S++%Flags=AS%Ops=ME)
 T2(Resp=N)
 T3(Resp=Y%DF=N%W=424%ACK=S++%Flags=AS%Ops=ME)
 T4(DF=N%W=16D0%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=R%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S%Flags=R%Ops=)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=0%UCK=0%ULEN=134%DAT=E)
+
+Fingerprint Intel NetportExpress 10 3-port print server
+TSeq(Class=64K%IPID=I%TS=U)
+T1(DF=N%W=848%ACK=S++%Flags=AS%Ops=ME)
+T2(Resp=N)
+T3(Resp=Y%DF=N%W=848%ACK=S++%Flags=AS%Ops=ME)
+T4(DF=N%W=2DA0%ACK=O%Flags=R%Ops=)
 T5(DF=N%W=0%ACK=S++%Flags=R%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=R%Ops=)
@@ -4303,6 +4829,19 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=F%UCK=E%ULEN=134%DAT=E)
 
+# Innovaphone 200 V4.00 sr4 IP200[02-4283], Bootcode[205], HW[202] 2048/8192
+# Innovaphone IP400 V4.00 hotfix IP400[02-4253], Bootcode[315], HW[102] 2048/4096
+Fingerprint Innovaphone IP200/IP400 VOIP phone/gateway
+TSeq(Class=TD%gcd=<714%SI=<14%IPID=I%TS=U)
+T1(DF=N%W=2800%ACK=S++%Flags=AS%Ops=M)
+T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
+T3(Resp=Y%DF=N%W=2800%ACK=S++%Flags=AS%Ops=M)
+T4(DF=N%W=0%ACK=S%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=S%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+PU(Resp=N)
+
 Fingerprint Instant Internet box
 TSeq(Class=TD%gcd=1000|2000|3000%SI=<BB)
 T1(Resp=Y%DF=N%W=1C84%ACK=S++%Flags=AS%Ops=M)
@@ -4417,7 +4956,7 @@ PU(Resp=Y%DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 # IP19/IP27/IP30/IP32
 Fingerprint IRIX 6.5-6.5.15m
-TSeq(Class=RI|64K%gcd=<144%SI=<FFFF&>8%IPID=I%TS=2HZ)
+TSeq(Class=RI|64K|i800%gcd=<144%SI=<FFFF&>8%IPID=I%TS=2HZ)
 T1(DF=N%W=C000|EF2A%ACK=S++%Flags=AS%Ops=MNWNNTNNM)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
 T3(Resp=Y%DF=N%W=C000|EF2A%ACK=O%Flags=A%Ops=NNT)
@@ -4509,6 +5048,30 @@ PU(DF=Y%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Juniper Networks JUNOS 5.3 on an Olive router
 TSeq(Class=RI%gcd=<6%SI=<ABEB4&>661%IPID=I%TS=100HZ)
+T1(DF=Y%W=403D%ACK=S++%Flags=AS%Ops=MNWNNT)
+T2(Resp=N)
+T3(Resp=Y%DF=Y%W=403D%ACK=S++%Flags=AS%Ops=MNWNNT)
+T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
+PU(DF=Y%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
+
+# Juniper Networks JUNOS 5.5R1.2 built 2002-09-28
+Fingerprint Juniper Networks JUNOS 5.5R1.2
+TSeq(Class=TR%gcd=<6%IPID=I%TS=100HZ)
+T1(DF=N%W=403D%ACK=S++%Flags=AS%Ops=MNWNNT)
+T2(Resp=N)
+T3(Resp=Y%DF=N%W=403D%ACK=S++%Flags=AS%Ops=MNWNNT)
+T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
+PU(DF=Y%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
+
+# JUNOS <hostname> 5.6R1.3 JUNOS 5.6R1.3 #0: 2003-01-02 20:38:33 UTC -- This one was no Juniper Hardware Router but a JunOS installed on a simple i386 box.
+Fingerprint Juniper Networks JUNOS 5.6R1.3 on X86 box
+TSeq(Class=TR%gcd=<6%IPID=I%TS=100HZ)
 T1(DF=Y%W=403D%ACK=S++%Flags=AS%Ops=MNWNNT)
 T2(Resp=N)
 T3(Resp=Y%DF=Y%W=403D%ACK=S++%Flags=AS%Ops=MNWNNT)
@@ -4650,6 +5213,19 @@ T6(Resp=N)
 T7(Resp=N)
 PU(Resp=N)
 
+# Lexmark MarkNet XL Internal Printer Network Adapter on a Lexmark Optra LaserPrinter
+Fingerprint Lexmark Optra printer w/MarkNet XL Network Adapter
+TSeq(Class=TD%gcd=<272A%SI=<1E%IPID=I%TS=U)
+T1(DF=N%W=400%ACK=S++%Flags=AS%Ops=M)
+T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
+T3(Resp=Y%DF=N%W=400%ACK=S++%Flags=AS%Ops=M)
+T4(DF=N%W=0%ACK=S%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=S%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+PU(Resp=N)
+
+
 Fingerprint Lexmark Optra R+ (4049-RA0) w. MarkNet XL card (firmware rev. 79.133.1
 TSeq(Class=TD%gcd=1393|3AB9|4E4C|61DF|7572|8905|C3BE%SI=<20)
 T1(Resp=Y%DF=N%W=400%ACK=S++%Flags=AS%Ops=ME)
@@ -4674,7 +5250,19 @@ T6(DF=N%W=1000|C00|400|800%ACK=S%Flags=AR%Ops=)
 T7(DF=N%W=1000|C00|400|800%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
-Fingerprint LinkSys WAP11 wireless AP firmware ver. 2.2
+# Linksys WAP11 v2.6 v1.06 firmware
+Fingerprint Linksys WAP11 Wireless AP
+TSeq(Class=TD%gcd=<1F502%SI=<14%IPID=I%TS=U)
+T1(DF=N%W=1200%ACK=S++%Flags=AS%Ops=M)
+T2(Resp=N)
+T3(Resp=Y%DF=N%W=1200%ACK=O%Flags=A%Ops=)
+T4(DF=N%W=2000%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
+
+Fingerprint LinkSys WAP11 wireless AP firmware v2.2
 TSeq(Class=TD%gcd=<1F502%SI=<1E%IPID=I%TS=U)
 T1(DF=N%W=2000%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -4695,17 +5283,6 @@ T5(DF=N%W=0%ACK=O%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=O%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=164%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
-
-Fingerprint Pigtail Express VoIP phone (runs VxWorks)
-TSeq(Class=64K%IPID=I%TS=U)
-T1(DF=N%W=2000%ACK=S++%Flags=AS%Ops=MNW)
-T2(Resp=N)
-T3(Resp=Y%DF=N%W=2000%ACK=O%Flags=A%Ops=)
-T4(DF=N%W=2000%ACK=O%Flags=R%Ops=)
-T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
-T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
-T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
-PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=F%RIPCK=F%UCK=0%ULEN=134%DAT=E)
 
 Fingerprint PS2 Linux 1.0
 TSeq(Class=RI%gcd=<6%SI=<20E2FE8&>5428C%IPID=I%TS=100HZ)
@@ -4817,6 +5394,17 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=C0|A0|0|20%IPLEN=164%RIPTL=148%RID=E%RIPCK=E%UCK=E|F%ULEN=134%DAT=E)
 
+Fingerprint Linux 2.0.39
+TSeq(Class=TR%gcd=<6%IPID=I%TS=U)
+T1(DF=N%W=3FE0%ACK=S++%Flags=AS%Ops=ME)
+T2(Resp=N)
+T3(Resp=Y%DF=N%W=3FE0|0%ACK=S++%Flags=ARSF|AR%Ops=ME|)
+T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
+PU(DF=N%TOS=C0%IPLEN=164%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
+
 Fingerprint Linux 2.0.35 (S.u.S.E. Linux 5.3 (i386)
 TSeq(Class=TR%gcd=<6)
 T1(DF=N%W=3FF0%ACK=S++%Flags=AS%Ops=ME)
@@ -4881,18 +5469,19 @@ T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
-PU(DF=N%TOS=C0|A0|0|70|14%IPLEN=164%RIPTL=148%RID=E%RIPCK=E%UCK=E|F%ULEN=134%DAT=E)
+PU(DF=N%TOS=28|C0|A0|0|70|14%IPLEN=164%RIPTL=148%RID=E%RIPCK=E|F%UCK=E|F%ULEN=134%DAT=E)
 
-Fingerprint Linux 2.2.12 - 2.2.19
-TSeq(Class=RI%gcd=<6%SI=<1FF51DA&>51CC9%IPID=I%TS=U)
-T1(DF=Y%W=7F53%ACK=S++%Flags=AS%Ops=MENW)
+# SuSE Linux 6.3 (i386) - Kernel 2.2.13
+Fingerprint Linux kernel 2.2.13 (SuSE; X86)
+TSeq(Class=RI%gcd=<6%SI=<21DE76C&>2B4E4%IPID=I%TS=100HZ)
+T1(DF=Y%W=109%ACK=S++%Flags=AS%Ops=MENNT)
 T2(Resp=N)
-T3(Resp=Y%DF=Y%W=7F53%ACK=S++%Flags=AS%Ops=MENW)
+T3(Resp=Y%DF=Y%W=109%ACK=S++%Flags=AS%Ops=MENNT)
 T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
-PU(DF=N%TOS=C0|A0|0%IPLEN=164%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
+PU(DF=N%TOS=0%IPLEN=164%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Linux 2.2.5 - 2.2.13 SMP
 TSeq(Class=RI%gcd=<6%SI=<D49FAE&>2203C)
@@ -4904,6 +5493,17 @@ T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=C0%IPLEN=164%RIPTL=148%RID=E%RIPCK=E%UCK=F|E%ULEN=134%DAT=E)
+
+Fingerprint Linux 2.2.12 - 2.2.19
+TSeq(Class=RI%gcd=<6%SI=<1FF51DA&>51CC9%IPID=I%TS=U)
+T1(DF=Y%W=7F53%ACK=S++%Flags=AS%Ops=MENW)
+T2(Resp=N)
+T3(Resp=Y%DF=Y%W=7F53%ACK=S++%Flags=AS%Ops=MENW)
+T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
+PU(DF=N%TOS=C0|A0|0%IPLEN=164%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Linux kernel 2.2.13
 TSeq(Class=RI%gcd=<6%SI=<E5F68C&>24CA0)
@@ -4949,6 +5549,29 @@ T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=C0%IPLEN=164%RIPTL=148%RID=E%RIPCK=E%UCK=F|E%ULEN=134%DAT=E)
+
+# IPCop 1.20 dedicated firewall Linux distro old Pentium 1 hardware + 3C509B cards http://ipcop.org/
+Fingerprint IPCop 1.20 Linux 2.2.2X-based firewall
+TSeq(Class=RI%gcd=<6%SI=<95DBC&>116E%IPID=I%TS=100HZ)
+T1(DF=Y%W=C0B7%ACK=S++%Flags=AS%Ops=NNTMNW)
+T2(Resp=N)
+T3(Resp=N)
+T4(DF=Y%W=0%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
+PU(DF=N%TOS=C0%IPLEN=164%RIPTL=148%RID=E%RIPCK=E%UCK=F%ULEN=134%DAT=E)
+
+Fingerprint Linux 2.2.21 SMP i586
+TSeq(Class=RI%gcd=<6%SI=<1921FE8&>404B1%IPID=I%TS=U)
+T1(DF=Y%W=7FFF%ACK=S++%Flags=AS%Ops=MENW)
+T2(Resp=N)
+T3(Resp=Y%DF=Y%W=7FFF%ACK=S++%Flags=AS%Ops=MENW)
+T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
+PU(DF=N%TOS=C0%IPLEN=164%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Linux 2.3.12
 TSeq(Class=RI%gcd=<20%SI=>DDDD)
@@ -5029,9 +5652,9 @@ PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Linux Kernel 2.4.0 - 2.5.20
 TSeq(Class=RI%gcd=<8%SI=<2D870AA&>10000%IPID=Z|C|I|RD%TS=100HZ|U)
-T1(DF=Y%W=5B4|F98|1140|11AC|12CC|16A0|1680|2D24|4000|474C|7E18|7EA0|7FFF%ACK=S++%Flags=AS%Ops=MNNTNW)
+T1(DF=Y%W=5B4|F98|1140|11AC|12CC|16A0|1680|2D24|4000|474C|7E18|7EA0|7FFF%ACK=S++%Flags=AS%Ops=MNNTNW|MNNT)
 T2(Resp=N)
-T3(Resp=Y%DF=Y%W=5B4|F98|1140|11AC|12CC|16A0|1680|2D24|4000|474C|7E18|7EA0|7FFF%ACK=S++%Flags=AS%Ops=MNNTNW)
+T3(Resp=Y%DF=Y%W=5B4|F98|1140|11AC|12CC|16A0|1680|2D24|4000|474C|7E18|7EA0|7FFF%ACK=S++%Flags=AS%Ops=MNNTNW|MNNT)
 T4(DF=Y%W=0%ACK=O%Flags=R%Ops=)
 T5(DF=Y%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=Y%W=0%ACK=O%Flags=R%Ops=)
@@ -5065,30 +5688,31 @@ PU(DF=N%TOS=C0%IPLEN=164%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Linux Kernel 2.4.0 - 2.5.20 w/o tcp_timestamps
 TSeq(Class=RI%gcd=<8%SI=<2D870AA&>10000%IPID=Z|C|I%TS=U)
-T1(DF=Y%W=5B4|1140|2D24|16A0|16D0|1680|4000|400C|7FFF%ACK=S++%Flags=AS%Ops=MNW)
+T1(DF=Y%W=5B4|1140|2D24|16A0|16B0|16D0|1680|4000|400C|7FFF%ACK=S++%Flags=AS%Ops=MNW)
 T2(Resp=N)
-T3(Resp=Y%DF=Y%W=5B4|1140|2D24|16A0|16D0|1680|4000|400C|7FFF%ACK=S++%Flags=AS%Ops=MNW)
+T3(Resp=Y%DF=Y%W=5B4|1140|2D24|16A0|16B0|16D0|1680|4000|400C|7FFF%ACK=S++%Flags=AS%Ops=MNW)
 T4(DF=Y%W=0%ACK=O%Flags=R%Ops=)
 T5(DF=Y%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=Y%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=Y%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=Y|N%TOS=14|C0|0%IPLEN=164%RIPTL=148%RID=E%RIPCK=E|F%UCK=E|F%ULEN=134%DAT=E)
 
-Fingerprint Genius print server
-T1(DF=N%W=400%ACK=S++%Flags=APS%Ops=M)
-T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
-T3(Resp=Y%DF=N%W=0%ACK=O%Flags=AR%Ops=)
-T4(DF=N%W=0%ACK=S%Flags=R%Ops=)
-T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
-T6(DF=N%W=0%ACK=S%Flags=R%Ops=)
-T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
-PU(Resp=N)
-
 Fingerprint Gentoo 1.2 linux (Kernel 2.4.19-gentoo-rc5)
 TSeq(Class=RI%gcd=<6%SI=<1BF1FC0&>4788F%IPID=RD%TS=1000HZ)
 T1(DF=Y%W=7FFF%ACK=S++%Flags=AS%Ops=MNNTNW)
 T2(Resp=N)
 T3(Resp=Y%DF=Y%W=7FFF%ACK=S++%Flags=AS%Ops=MNNTNW)
+T4(DF=Y%W=0%ACK=O%Flags=R%Ops=)
+T5(DF=Y%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=Y%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=Y%W=0%ACK=S++%Flags=AR%Ops=)
+PU(DF=N%TOS=C0%IPLEN=164%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
+
+Fingerprint Linux 2.4.20 (Gentoo 1.2; X86)
+TSeq(Class=RI%gcd=<6%SI=<2B9C772&>6FA19%IPID=Z%TS=100HZ)
+T1(DF=Y%W=3000%ACK=S++%Flags=AS%Ops=MNNTNW)
+T2(Resp=N)
+T3(Resp=Y%DF=Y%W=3000%ACK=S++%Flags=AS%Ops=MNNTNW)
 T4(DF=Y%W=0%ACK=O%Flags=R%Ops=)
 T5(DF=Y%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=Y%W=0%ACK=O%Flags=R%Ops=)
@@ -5295,7 +5919,7 @@ T4(DF=Y%W=0%ACK=O%Flags=R%Ops=)
 T5(DF=Y%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=Y%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=Y%W=0%ACK=S%Flags=AR%Ops=)
-PU(DF=Y%TOS=0%IPLEN=70%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
+PU(DF=Y%TOS=0|A0%IPLEN=70%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Mac OS X Server 1.2 (ppc)
 TSeq(Class=RI%gcd=<6%SI=<199A9C&>4177)
@@ -5318,94 +5942,6 @@ T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=0%ULEN=134%DAT=E)
-
-Fingerprint FreeBSD 4.4 for i386 (IA-32)
-TSeq(Class=TR%gcd=<6)
-T1(DF=Y%W=5B4|C0B7%ACK=S++%Flags=AS%Ops=MNWNNT)
-T2(Resp=N)
-T3(Resp=Y%DF=Y%W=5B4|C0B7%ACK=S++%Flags=AS%Ops=MNWNNT)
-T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
-T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
-T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
-T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
-PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=0%ULEN=134%DAT=E)
-
-Fingerprint APC MasterSwitch Network Power Controller
-TSeq(Class=TR)
-T1(DF=N%W=640%ACK=S++%Flags=AS%Ops=ME)
-T2(Resp=N)
-T3(Resp=Y%DF=N%W=640%ACK=S++%Flags=AS%Ops=ME)
-T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
-T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
-T6(DF=N%W=0%ACK=O%Flags=R%Ops=)   
-T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
-PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=F%ULEN=134%DAT=E)
-
-Fingerprint APC Web/SNMP UPS management card
-TSeq(Class=RI%gcd=<6%SI=<52FB700&>D46DF)
-T1(DF=N%W=640%ACK=S++%Flags=AS%Ops=ME)
-T2(Resp=N)
-T3(Resp=Y%DF=N%W=640%ACK=S++%Flags=AS%Ops=ME)
-T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
-T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
-T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
-T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
-PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=F%ULEN=134%DAT=E)
-
-Fingerprint ARLAN BR2000E V5.0E Radio Bridge
-TSeq(Class=TR%gcd=<6)
-T1(DF=N%W=400%ACK=S++%Flags=AS%Ops=)
-T2(Resp=Y%DF=N%W=1F4%ACK=S%Flags=AR%Ops=)
-T3(Resp=Y%DF=N%W=1F4%ACK=S++%Flags=AR%Ops=)
-T4(DF=N%W=1F4%ACK=S%Flags=AR%Ops=)
-T5(DF=N%W=1F4%ACK=S++%Flags=AR%Ops=)
-T6(DF=N%W=1F4%ACK=S%Flags=AR%Ops=)
-T7(DF=N%W=1F4%ACK=S++%Flags=AR%Ops=)
-PU(Resp=N)
-
-# Meridian Data Network CD-ROM Server (V4.20 Nov 26 1997)
-Fingerprint AXIS or Meridian Data Network CD-ROM server
-TSeq(Class=C)
-T1(DF=N%W=200%ACK=S++%Flags=AS%Ops=M)
-T2(Resp=N)
-T3(Resp=Y%DF=N%W=200%ACK=O%Flags=A%Ops=)
-T4(DF=N%W=200%ACK=O%Flags=R%Ops=)
-T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
-T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
-T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
-PU(Resp=N)
-
-Fingerprint AXIS 540/542Print ServerV5.30 Jan 24 1997
-TSeq(Class=C)
-T1(Resp=Y%DF=N%W=1000%ACK=S++%Flags=AS%Ops=M)
-T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
-T3(Resp=Y%DF=N%W=0|100%ACK=O|S++%Flags=AR|A%Ops=)
-T4(Resp=Y%DF=N%W=0%ACK=O%Flags=R%Ops=)
-T5(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
-T6(Resp=Y%DF=N%W=0%ACK=O%Flags=R%Ops=)
-T7(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
-PU(Resp=N)
-
-Fingerprint Axis 540 e'net print server ver 5.48
-TSeq(Class=TD%gcd=<80004%SI=<1E%IPID=I%TS=U)
-T1(DF=N%W=1000%ACK=S++%Flags=AS%Ops=M)
-T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
-T3(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
-T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
-T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
-T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
-T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
-PU(Resp=N)
-
-Fingerprint Axis 540 print server
-T1(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
-T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
-T3(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
-T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
-T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
-T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
-T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
-PU(Resp=N)
 
 Fingerprint MegaBit Gear TE4111C
 TSeq(Class=64K%IPID=I%TS=U)
@@ -5494,6 +6030,18 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=Y%TOS=0%IPLEN=38%RIPTL=148%RIPCK=F%UCK=0%ULEN=134%DAT=E)
 
+# VxWorks Version: 5.3; Software Version: SB4100E-4.1.11-SCM05-NOSHELL; Hardware Version: 3
+Fingerprint Motorola SurfBoard SB4100E Cable Modem
+TSeq(Class=64K%IPID=I%TS=U)
+T1(DF=N%W=1000%ACK=S++%Flags=AS%Ops=M)
+T2(Resp=N)
+T3(Resp=N)
+T4(DF=N%W=1000%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(Resp=N)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E|F%RIPCK=0%UCK=0%ULEN=134%DAT=E)
+
 Fingerprint Motorola SurfBoard 4401 provided by adelphia
 TSeq(Class=64K%IPID=I%TS=U)
 T1(DF=N%W=1000%ACK=S++%Flags=AS%Ops=)
@@ -5520,6 +6068,17 @@ Fingerprint MOTOROLA VANGUARD 320 running OS version 5.4
 TSeq(Class=TD%gcd=<6%SI=<1E)
 T1(DF=N%W=800%ACK=S++%Flags=AS%Ops=MEL)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
+T3(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+PU(Resp=N)
+
+Fingerprint Motorola Vanguard 320 multi-protocol network access device V5.5 - 5.6
+TSeq(Class=TD%gcd=<6%SI=<1E%IPID=I%TS=U)
+T1(DF=N%W=800%ACK=S++%Flags=AS%Ops=MEL)
+T2(Resp=N)
 T3(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
@@ -5872,6 +6431,19 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=4801%RID=E%RIPCK=F%UCK=E%ULEN=134%DAT=E)
 
+# Netgear FM144P ProSafe Wireless Firewall with Print Server
+# Repotec IP515H Cable Router / Print Server
+Fingerprint Netgear FM144P/Repotec IP515H Router & Print Server
+TSeq(Class=TD%gcd=<104%SI=<1E%IPID=I%TS=U)
+T1(DF=N%W=C00%ACK=S++%Flags=AS%Ops=M)
+T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
+T3(Resp=Y%DF=N%W=C00%ACK=S++%Flags=AS%Ops=M)
+T4(DF=N%W=0%ACK=S%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=S%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+PU(Resp=N)
+
 Fingerprint Netopia R3100-I DSL Router Firmware version v4.7.2
 TSeq(Class=TD%gcd=<EA64%SI=<10E%IPID=I%TS=U)
 T1(DF=N%W=400%ACK=S++%Flags=AS%Ops=M)
@@ -5938,6 +6510,19 @@ T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=Y%TOS=E0%IPLEN=164%RIPTL=134%RID=E%RIPCK=F%UCK=0%ULEN=134%DAT=E)
+
+# Nortel/Alteon ACE Director 3 Hardware Revision: B Software Version 6.0.42
+Fingerprint Nortel/Alteon ACE Director 3 Version 6.0.42-B
+TSeq(Class=TR%gcd=<6%IPID=RD)
+T1(DF=N%W=C00%ACK=S++%Flags=AR%Ops=WNMETL)
+T2(Resp=Y%DF=N%W=C00%ACK=S%Flags=AR%Ops=WNMETL)
+T3(Resp=Y%DF=N%W=C00%ACK=S++%Flags=AR%Ops=WNMETL)
+T4(DF=N%W=C00%ACK=S%Flags=AR%Ops=WNMETL)
+T5(DF=Y%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=C00%ACK=S%Flags=AR%Ops=WNMETL)
+T7(DF=N%W=C00%ACK=S++%Flags=AR%Ops=WNMETL)
+PU(Resp=N)
+
 
 # Nortel CallPilot 100 voicemail system
 # 3com superstack 3 4300 (3c17100) Hardware Version: V4.0 Software Version:  V1.12
@@ -6044,6 +6629,18 @@ TSeq(Class=RI%gcd=<8%SI=<5641338&>DCCE9)
 T1(DF=Y%W=8000%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
 T3(Resp=Y%DF=Y%W=7FFF%ACK=O%Flags=AS%Ops=M)
+T4(Resp=N)
+T5(DF=Y%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=Y%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=Y%W=0%ACK=S++%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
+
+# Novell Netware 5 Support Pack Revision 06 Server Version 5.00.09
+Fingerprint Novell Netware 5.00.09 SP06
+TSeq(Class=RI%gcd=<6%SI=<1EDA0D4&>2F197%IPID=I%TS=U)
+T1(DF=Y%W=1000%ACK=S++%Flags=AS%Ops=M)
+T2(Resp=N)
+T3(Resp=Y%DF=Y%W=FFF%ACK=O%Flags=AS%Ops=M)
 T4(Resp=N)
 T5(DF=Y%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=Y%W=0%ACK=O%Flags=R%Ops=)
@@ -6317,6 +6914,17 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=134%RID=E%RIPCK=F%UCK=E%ULEN=134%DAT=E)
 
+Fingerprint OpenBSD 3.2 with pf scrub and no-df
+TSeq(Class=TR%gcd=<6%IPID=RD%TS=2HZ)
+T1(DF=N%W=FFFF%ACK=S++%Flags=AS%Ops=MNWNNT)
+T2(Resp=N)
+T3(Resp=N)
+T4(DF=N%W=FFFF%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(Resp=N)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=134%RID=E|F%RIPCK=F%UCK=E%ULEN=134%DAT=E)
+
 Fingerprint OpenVMS 6.1  # Thanks to Mcneil J <J.Mcneil@rhbnc.ac.uk>
 TSeq(Class=64K)
 T1(DF=N%W=1000%ACK=S++%Flags=AS%Ops=|MWN)
@@ -6371,6 +6979,17 @@ T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=2200%ACK=O%Flags=R%Ops=)
 T7(Resp=N)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=F%UCK=0%ULEN=134%DAT=E)
+
+Fingerprint VMS 6.2
+TSeq(Class=RI%gcd=<6%SI=<4D8%IPID=BI%TS=U)
+T1(DF=Y%W=6000%ACK=S++%Flags=AS%Ops=MWL)
+T2(Resp=Y%DF=N%W=6000%ACK=S%Flags=AR%Ops=)
+T3(Resp=Y%DF=Y%W=6000%ACK=O%Flags=AS%Ops=MWL)
+T4(DF=N%W=6000%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=6000%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=6000%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=6000%ACK=S++%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=164%RIPTL=148%RID=E|F%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint OpenVMS 7.1 using Process Software's TCPWare 5.3 TCP/IP package
 TSeq(Class=RI|TD%gcd=<6%SI=<BBBB)
@@ -6448,6 +7067,18 @@ T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
+
+# OpenVMS 7.3 with TCP/IP 5.3
+Fingerprint OpenVMS 7.3 (Alpha) TCP/IP 5.3
+TSeq(Class=TR%gcd=<6%TS=U)
+T1(DF=N%W=F000%ACK=S++%Flags=AS%Ops=MNW)
+T2(Resp=N)
+T3(Resp=Y%DF=N%W=F000%ACK=O%Flags=A%Ops=)
+T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=164%RIPTL=148%RID=E%RIPCK=F%UCK=F%ULEN=134%DAT=E)
 
 Fingerprint Savin 9927 Copier
 TSeq(Class=i800%IPID=I%TS=U)
@@ -6570,6 +7201,16 @@ T6(Resp=Y%DF=N%W=1000%ACK=S++%Flags=AR%Ops=)
 T7(Resp=Y%DF=N%W=1000%ACK=S++%Flags=AR%Ops=)
 PU(Resp=N)
 
+Fingerprint SonicWall SOHO-3
+T1(DF=N%W=1000%ACK=S++%Flags=AR%Ops=)
+T2(Resp=Y%DF=N%W=1000%ACK=S++%Flags=AR%Ops=)
+T3(Resp=Y%DF=N%W=1000%ACK=S++%Flags=AR%Ops=)
+T4(DF=N%W=1000%ACK=S++%Flags=AR%Ops=)
+T5(DF=N%W=1000%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=1000%ACK=S++%Flags=AR%Ops=)
+T7(DF=N%W=1000%ACK=S++%Flags=AR%Ops=)
+PU(Resp=N)
+
 Fingerprint SONY NEWS-OS 6.1.2
 TSeq(Class=64K%gcd=<6%SI=<14)
 T1(DF=Y%W=CDFF%ACK=S++%Flags=AS%Ops=MEWL)
@@ -6623,6 +7264,18 @@ T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(Resp=N)
 PU(Resp=N)
+
+# RCS/3182 - Firmware rev. 06D (Apr 26 2001 15:15:33) - OS ver. RCS_3000_BDNL Version 06F (May 18 2001 16:15:18)
+Fingerprint Systech RCS/3182 ethernet port server (firmware 06D)
+TSeq(Class=64K%IPID=I%TS=U)
+T1(DF=N%W=8000%ACK=S++%Flags=AS%Ops=M)
+T2(Resp=N)
+T3(Resp=Y%DF=N%W=7FFC%ACK=O%Flags=A%Ops=)
+T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
 Fingerprint OpenVMS Alpha 6.2 running DIGITAL TCP/IP Services (UCX) v4.0
 TSeq(Class=64K)
@@ -6724,6 +7377,17 @@ T6(DF=N%W=400%ACK=S%Flags=AR%Ops=)
 T7(DF=N%W=400%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
+Fingerprint Pigtail Express VoIP phone (runs VxWorks)
+TSeq(Class=64K%IPID=I%TS=U)
+T1(DF=N%W=2000%ACK=S++%Flags=AS%Ops=MNW)
+T2(Resp=N)
+T3(Resp=Y%DF=N%W=2000%ACK=O%Flags=A%Ops=)
+T4(DF=N%W=2000%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=F%RIPCK=F%UCK=0%ULEN=134%DAT=E)
+
 Fingerprint Plan9 Second Edition
 TSeq(Class=TR)
 T1(DF=N%W=FFFF%ACK=S++%Flags=AS%Ops=M)
@@ -6821,6 +7485,19 @@ T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=F%ULEN=134%DAT=E)
+
+# Radionics Ram IV Alarm System
+# Lantronix CoBox DR1-IAP serial device server
+Fingerprint Lantronix CoBox serial device server or Radionics Ram IV Alarm 
+TSeq(Class=TD%gcd=<404%SI=<6E%IPID=I%TS=U)
+T1(DF=Y%W=1FF%ACK=S++%Flags=AS%Ops=M)
+T2(Resp=Y%DF=Y%W=0%ACK=S++%Flags=AR%Ops=)
+T3(Resp=Y%DF=Y%W=0%ACK=S++%Flags=AR%Ops=)
+T4(DF=Y%W=0%ACK=O%Flags=R%Ops=)
+T5(DF=Y%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=Y%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=Y%W=0%ACK=S++%Flags=AR%Ops=)
+PU(DF=Y%TOS=0%IPLEN=38%RIPTL=148%RID=E|F%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Raptor firewall 5.03 on NT 4
 TSeq(Class=TR)
@@ -6966,6 +7643,18 @@ T6(DF=Y%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=Y%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=Y%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
+# Unisys LX/NX MCP 46.1/HMP 5.0 on an Unisys LX5120
+Fingerprint Unisys LX/NX MCP 46.1/HMP 5.0 on LX5120
+TSeq(Class=RI%gcd=<6%SI=<7868FCE&>CF0B8%IPID=I%TS=U)
+T1(DF=N%W=8000%ACK=S++%Flags=AS%Ops=M)
+T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
+T3(Resp=Y%DF=N%W=8000%ACK=S++%Flags=AS%Ops=M)
+T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+PU(Resp=N)
+
 Fingerprint UnixWare 2.01
 TSeq(Class=64K)
 T1(DF=N%W=1000%ACK=S++%Flags=AS%Ops=|M)
@@ -7021,7 +7710,7 @@ T6(DF=Y%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=Y%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=Y%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
-Fingerprint Unixware 7.1.1 (x86)
+Fingerprint SCO UnixWare 7.1.0 - 7.1.1 (x86)
 TSeq(Class=RI%gcd=<6%SI=<403094&>8C71%IPID=I%TS=100HZ)
 T1(DF=N%W=60F4%ACK=S++%Flags=AS%Ops=MNWNNT)
 T2(Resp=N)
@@ -7053,6 +7742,17 @@ T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=F%RIPCK=0%UCK=0%ULEN=134%DAT=E)
+
+Fingerprint Secure Computing Sidewinder firewall 5.2.1.06
+TSeq(Class=TR%gcd=<6%IPID=I%TS=2HZ)
+T1(DF=Y%W=402E%ACK=S++%Flags=AS%Ops=MNWNNT)
+T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
+T3(Resp=Y%DF=Y%W=402E%ACK=S++%Flags=AS%Ops=MNWNNT)
+T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E|F%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Secure Computing SECUREZone Firewall Version 2.0
 TSeq(Class=TR%gcd=<6)
@@ -7167,6 +7867,18 @@ T6(DF=Y%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=Y%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=Y|N%TOS=0%IPLEN=70%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
+# SunOS dabox 5.6 Generic_105181-30 sun4u sparc SUNW,Ultra-Enterprise
+Fingerprint Solaris 2.6 (SPARC)
+TSeq(Class=TR%gcd=<6%IPID=I%TS=100HZ)
+T1(DF=Y%W=2297%ACK=S++%Flags=AS%Ops=NNTNWME)
+T2(Resp=Y%DF=N%W=1000%ACK=S%Flags=AR%Ops=)
+T3(Resp=N)
+T4(DF=N%W=1000%ACK=S%Flags=AR%Ops=)
+T5(DF=Y%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=1000%ACK=S%Flags=AR%Ops=)
+T7(DF=N%W=1000%ACK=S++%Flags=AR%Ops=)
+PU(DF=Y%TOS=0%IPLEN=70%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
+
 Fingerprint Solaris 2.6 - 7 (SPARC)
 TSeq(Class=RI%gcd=<6%SI=<57A26&>DF1)
 T1(DF=Y%W=2297|2788|4431|8371|8F4D|ABCD|FFF7|FFFF|2297|212%ACK=S++%Flags=AS%Ops=NNTNWME)
@@ -7224,7 +7936,7 @@ PU(DF=Y%TOS=0%IPLEN=70%RIPTL=148%RID=E%RIPCK=E|F%UCK=E|F%ULEN=134%DAT=E)
 
 Fingerprint Solaris 8 early access beta through actual release
 TSeq(Class=RI|TR%gcd=<8%SI=<FEC86&>E0F%IPID=I%TS=100HZ)
-T1(DF=Y%W=60DA|807A|B68%ACK=S++%Flags=AS%Ops=NNTNWM|NNTM)
+T1(DF=Y%W=5B4|60DA|807A|B68%ACK=S++%Flags=AS%Ops=NNTNWM|NNTM)
 T2(Resp=N)
 T3(Resp=N)
 T4(DF=Y%W=0%ACK=O%Flags=R%Ops=)
@@ -7398,7 +8110,8 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(Resp=N)
 
-Fingerprint Tektronix Phaser 360 Extended
+# Tektronix Phaser 360 Extended
+Fingerprint Tektronix Phaser 360 printer
 TSeq(Class=i800)
 T1(DF=N%W=F87%ACK=S++%Flags=AS%Ops=ME)
 T2(Resp=N)
@@ -7415,6 +8128,17 @@ TSeq(Class=RI%gcd=<F%SI=>888&<4444)
 T1(DF=N%W=1000%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
 T3(Resp=Y%DF=N%W=0|1000%ACK=S++|O%Flags=AR|AS%Ops=|M)
+T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
+
+Fingerprint Tektronix Phaser 560 printer
+TSeq(Class=RI%gcd=<6%SI=<8C8C0&>B05%IPID=I%TS=U)
+T1(DF=N%W=1%ACK=S++%Flags=AS%Ops=M)
+T2(Resp=N)
+T3(Resp=Y%DF=N%W=1%ACK=S++%Flags=AS%Ops=M)
 T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
@@ -7589,6 +8313,17 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=F%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
+Fingerprint WatchGuard Firebox SOHO V5.x
+TSeq(Class=TR%gcd=<6%IPID=RD%TS=U)
+T1(DF=N%W=16D0%ACK=S++%Flags=AS%Ops=M)
+T2(Resp=Y%DF=N%W=C00%ACK=S%Flags=AR%Ops=)
+T3(Resp=Y%DF=N%W=C00%ACK=S++%Flags=AR%Ops=)
+T4(DF=N%W=C00%ACK=S%Flags=AR%Ops=)
+T5(DF=N%W=C00%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=C00%ACK=S%Flags=AR%Ops=)
+T7(DF=N%W=C00%ACK=S++%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
+
 Fingerprint Windows 3.1 with Trumpet Winsock 2.0 revision B
 TSeq(Class=TD%gcd=10000%SI=<FF)
 T1(Resp=Y%DF=N%W=1000%ACK=S++%Flags=AS%Ops=M)
@@ -7621,6 +8356,31 @@ T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=S++|O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S++|S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E|F%ULEN=134%DAT=E)
+
+# Microsoft Windows 98 4.10.2222.A
+# "Windows 98 Second Edition, patched up to date" (1/25/03)
+Fingerprint Microsoft Windows 98 SE
+TSeq(Class=TD%gcd=<A%SI=<46%IPID=RPI|RD|BI%TS=U)
+T1(DF=Y%W=D780|EBC0%ACK=S++%Flags=AS%Ops=MNW)
+T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
+T3(Resp=Y%DF=Y%W=D780|EBC0%ACK=S++%Flags=AS%Ops=MNW)
+T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
+
+# Windows 98 Second Edition (build 2222)
+Fingerprint Microsoft Windows 98 SE
+TSeq(Class=TD%gcd=<6%SI=<46%IPID=RPI|RD|BI%TS=U)
+T1(DF=Y%W=D780|EBC0%ACK=S++%Flags=AS%Ops=MNW)
+T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
+T3(Resp=Y%DF=Y%W=D780|EBC0%ACK=S++%Flags=AS%Ops=MNW)
+T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Microsoft PocketPC  3.0.11171 running on Compaq iPAQ 3870 Pocket PC
 TSeq(Class=TD%gcd=<6%SI=<104%IPID=BI)
@@ -7665,6 +8425,17 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
+Fingerprint Windows 98, version 4.10.1998
+TSeq(Class=TD%gcd=<6%SI=<78%IPID=BI%TS=U)
+T1(DF=Y%W=10C0%ACK=S++%Flags=AS%Ops=M)
+T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
+T3(Resp=Y%DF=Y%W=10C0%ACK=S++%Flags=AS%Ops=M)
+T4(DF=N%W=0%ACK=S++|O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=S|O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
+
 Fingerprint Windows 98 SE, version 4.10.2222 A
 TSeq(Class=TD%gcd=<6%SI=<1E%IPID=BI%TS=U)
 T1(DF=Y%W=FFFF%ACK=S++%Flags=AS%Ops=M)
@@ -7703,6 +8474,29 @@ TSeq(Class=RI%gcd=<6%SI=<DA16&>21A)
 T1(DF=Y%W=2017%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
 T3(Resp=Y%DF=Y%W=2017%ACK=S++%Flags=AS%Ops=M)
+T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
+
+Fingerprint Windows NT4 Workstation SP6a
+TSeq(Class=RI%gcd=<A%SI=<1A66C&>112%IPID=RPI|BI%TS=U)
+T1(DF=Y%W=4470%ACK=S++%Flags=AS%Ops=M)
+T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
+T3(Resp=Y%DF=Y%W=4470%ACK=S++%Flags=AS%Ops=M)
+T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
+
+# Windows NT Version 4.0 (Build 1381 - Service Pack 6), Revised Service Pack 6a
+Fingerprint Windows NT4 Workstation SP6a
+TSeq(Class=TD%gcd=<8%SI=<46%IPID=RPI|RD%TS=U)
+T1(DF=Y%W=7210%ACK=S++%Flags=AS%Ops=M)
+T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
+T3(Resp=Y%DF=Y%W=7210%ACK=S++%Flags=AS%Ops=M)
 T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
@@ -7788,27 +8582,53 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=B0%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
+# Microsoft .NET Enterprise Server RC2 (Version 5.2 build 3718.dnsrv.021114-1947)
+Fingerprint Microsoft .NET Enterprise Server RC2 (Version 5.2, build 3718.dnsrv.021114-1947)
+TSeq(Class=TR%gcd=<6%IPID=I)
+T1(DF=Y%W=402E%ACK=S++%Flags=AS%Ops=MNWNNT)
+T2(Resp=N)
+T3(Resp=Y%DF=Y%W=402E%ACK=S++%Flags=AS%Ops=MNWNNT)
+T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=B0%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
+
 # Windows Millenium Edition v4.90.300
-# Windows 2000 Professional (x86)
 # Windows Me or Windows 2000 RC1 through final release
 # Microsoft Windows 2000 Advanced Server
+# Windows 2000 with SP2 and long fat pipe (RFC 1323)
+# Windows 2000 Professional servicepack 3
+# Windows 2000 5.00.2195 Service Pack 2 and latest hotfixes
+# Windows 2000 Professional (x86)
+# Compaq ProLiant DL-380G2 running windows 2000 with SP3 and all the current patch sets (2/3/03)
 # Winodws XP professional version 2002 on PC Intel processor
 # Windows XP Build 2600
-# Windows 2000 with SP2 and long fat pipe (RFC 1323)
-# Windows 2K 5.00.2195 Service Pack 2 and latest hotfixes
 # XP Professional 5.1 (build 2600).. all patches up to June 20, 2002
 # Fingerprint Windows XP Pro with all current updates to May 2002
 # Windows 2000 Version 5.0 Build (2195: Service Pack 3)
 Fingerprint Windows Millennium Edition (Me), Win 2000, or WinXP
-TSeq(Class=RI%gcd=<6%SI=<23726&>49C%IPID=I%TS=0)
-T1(DF=Y%W=5B4|14F0|16D0|2EE0|402E|B5C9|B580|C000|D304|FAF0|FC00|FD20|FD68|FFFF%ACK=S++%Flags=AS%Ops=NNT|MNWNNT)
+TSeq(Class=RI%gcd=<6%SI=<FFFFF&>49C%IPID=I%TS=0)
+T1(DF=Y%W=5B4|14F0|16D0|2EE0|402E|4470|8052|B5C9|B580|C000|D304|FAF0|FC00|FD20|FD68|FFFF%ACK=S++%Flags=AS%Ops=NNT|MNWNNT)
 T2(Resp=Y|N%DF=N%W=0%ACK=S%Flags=AR%Ops=)
-T3(Resp=Y%DF=Y%W=5B4|14F0|16D0|2EE0|B5C9|B580|C000|402E|D304|FAF0|FC00|FD20|FD68|FFFF%ACK=S++%Flags=AS%Ops=MNWNNT)
+T3(Resp=Y%DF=Y%W=5B4|14F0|16D0|2EE0|4470|8052|B5C9|B580|C000|402E|D304|FAF0|FC00|FD20|FD68|FFFF%ACK=S++%Flags=AS%Ops=MNWNNT)
 T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E|F%UCK=E|F%ULEN=134%DAT=E)
+
+# Windows ME + all updates as of 1/1/03
+Fingerprint Millennium Edition (Me)
+TSeq(Class=RI%gcd=<8%SI=<1DA74&>117%IPID=I)
+T1(DF=Y%W=402E%ACK=S++%Flags=AS%Ops=MNWNNT)
+T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
+T3(Resp=Y%DF=N%W=0%ACK=O%Flags=AR%Ops=)
+T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Windows 2000 server SP2
 TSeq(Class=RI%gcd=<6%SI=<25224&>22C%IPID=I)
@@ -7823,14 +8643,48 @@ PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Windows 2000 server SP3
 TSeq(Class=RI%gcd=<6%SI=<24F5E&>47E%IPID=I%TS=U)
-T1(DF=Y%W=FAF0%ACK=S++%Flags=AS%Ops=MNW)
+T1(DF=Y%W=16D0|B680|FAF0%ACK=S++%Flags=AS%Ops=MNW)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
-T3(Resp=Y%DF=Y%W=FAF0%ACK=S++%Flags=AS%Ops=MNW)
+T3(Resp=Y%DF=Y%W=16D0|B680|FAF0%ACK=S++%Flags=AS%Ops=MNW)
 T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
+
+Fingerprint Windows 2000 SP3
+TSeq(Class=RI%gcd=<6%SI=<269EE&>2EC%IPID=I)
+T1(DF=Y%W=FF70%ACK=S++%Flags=AS%Ops=MNWNNT)
+T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
+T3(Resp=Y%DF=Y%W=FF70%ACK=S++%Flags=AS%Ops=MNWNNT)
+T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
+
+Fingerprint Windows 2000 Advanced Server SP3
+TSeq(Class=RI%gcd=<6%SI=<206B6&>2E7%IPID=I)
+T1(DF=Y%W=8000|FEE2%ACK=S++%Flags=AS%Ops=MNWNNT)
+T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
+T3(Resp=Y%DF=Y%W=8000|FEE2%ACK=S++%Flags=AS%Ops=MNWNNT)
+T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
+
+# Windows 2000 Advanced Server SP3, all available updates as of 11/13/02
+Fingerprint Windows 2000 Advanced Server SP3
+TSeq(Class=RI%gcd=<6%SI=<58066&>3E9%IPID=I)
+T1(DF=Y%W=402E|FFF0%ACK=S++%Flags=AS%Ops=MNNT|MNWNNT)
+T2(Resp=Y%DF=N%W=400|C00%ACK=S%Flags=AR%Ops=WNMETL)
+T3(Resp=Y%DF=N%W=400|C00%ACK=S++%Flags=AR%Ops=WNMETL)
+T4(DF=N%W=400|C00%ACK=S%Flags=AR%Ops=WNMETL)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=400|C00%ACK=S%Flags=AR%Ops=WNMETL)
+T7(DF=N%W=400|C00%ACK=S++%Flags=AR%Ops=WNMETL)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E|F%RIPCK=E%UCK=F%ULEN=134%DAT=E)
 
 Fingerprint WinME
 TSeq(Class=RI%gcd=<6%SI=<249A0&>3B6%IPID=I)
@@ -7876,17 +8730,19 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
-Fingerprint Windows 2000 SP2 
-TSeq(Class=TD|RI%gcd=<14%SI=<302%IPID=BI%TS=U)
-T1(DF=N%W=2017%ACK=S++%Flags=AS%Ops=M)
+Fingerprint Windows 2000 SP3
+TSeq(Class=RI%gcd=<6%SI=<15374&>110%IPID=I)
+T1(DF=Y%W=FAF0%ACK=S++%Flags=AS%Ops=MNWNNT)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
-T3(Resp=Y%DF=N%W=2017%ACK=S++%Flags=AS%Ops=M)
+T3(Resp=Y%DF=Y%W=FAF0%ACK=S++%Flags=AS%Ops=MNWNNT)
 T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
-PU(Resp=N)
+PU(DF=N%TOS=80%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=F%ULEN=134%DAT=E)
 
+#  Windows 2000 with service pack 3
+# Windows XP Pro with SP1 and latest Windows Update patches as of February 1st, 2003
 Fingerprint Windows 2000/XP/ME
 TSeq(Class=RI%gcd=<20%SI=<E92A&>240)
 T1(DF=Y%W=40E8|5B8E|7FFF|FAF0|FEF4%ACK=S++%Flags=AS%Ops=MNWNNT|MNW|M)
@@ -7911,7 +8767,7 @@ PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Windows XP Professional RC1+ through final release
 TSeq(Class=RI%gcd=<8%SI=<2959A&>356%IPID=I)
-T1(DF=Y|N%W=FAF0|402E%ACK=S++%Flags=AS%Ops=MNWNNT)
+T1(DF=Y|N%W=402E|FAF0%ACK=S++%Flags=AS%Ops=MNWNNT)
 T2(Resp=N)
 T3(Resp=N)
 T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
@@ -7919,6 +8775,52 @@ T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(Resp=N)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
+
+# Windows XP Version 5.1 (Build 2600.xpsp 1.020828-1920: Service Pack 1) > lateste +windows update patch too (1/31/03)
+Fingerprint Windows XP 5.1 2600.xpsp1.020828-1920
+TSeq(Class=RI%gcd=<6%SI=<2461C&>3BA%IPID=I%TS=U)
+T1(DF=Y%W=FAF0%ACK=S++%Flags=AS%Ops=MNW)
+T2(Resp=N)
+T3(Resp=N)
+T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(Resp=N)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
+
+# windows xp pro WITHOUT ANY service packs
+Fingerprint MS Windows XP Pro
+TSeq(Class=RI%gcd=<6%SI=<2EBEE&>45E%IPID=I%TS=U)
+T1(DF=Y%W=F424%ACK=S++%Flags=AS%Ops=MNW)
+T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
+T3(Resp=Y%DF=Y%W=F424%ACK=S++%Flags=AS%Ops=MNW)
+T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
+
+Fingerprint MS Windows XP Pro SP1
+TSeq(Class=RI%gcd=<6%SI=<9A6AA&>18A0%IPID=I%TS=U)
+T1(DF=Y%W=8820%ACK=S++|O%Flags=AS|A%Ops=M|)
+T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
+T3(Resp=Y%DF=Y%W=8820%ACK=S++|O%Flags=AS||A%Ops=M||)
+T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
+
+Fingerprint MS Windows XP Pro SP1
+TSeq(Class=RI%gcd=<8%SI=<272A4&>31E%IPID=I%TS=U)
+T1(DF=N%W=2000%ACK=S++%Flags=AS%Ops=M)
+T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
+T3(Resp=Y%DF=N%W=2000%ACK=S++%Flags=AS%Ops=M)
+T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+PU(DF=N%TOS=5C%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint MS Windows XP Pro Version 5.1 Build 2600
 TSeq(Class=RI%gcd=<6%SI=<32578&>18D%IPID=I)
@@ -7932,7 +8834,9 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=F%ULEN=134%DAT=E)
 
 # Windows XP Pro Build 2600.xpsp1.020828-1920 with Windows Services for Unix 3.0 installed
-Fingerprint MS Windows XP Pro Build 2600 SP1
+# Windows 2000 Advanced Server with SP3
+# Microsoft Windows 2000 Server version 5.0 build 2195 Service Pack 3
+Fingerprint MS Windows XP Pro Build 2600 SP1 or Win2K Advanced Server SP3
 TSeq(Class=RI%gcd=<6%SI=<57472&>68D%IPID=I)
 T1(DF=N|Y%W=0|FFF0%ACK=S++%Flags=AR|AS%Ops=|MNWNNT)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -7941,18 +8845,6 @@ T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
-PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
-
-# Windows XP Professional, 5.1 (Build 2600.xpclnt_qfe.010827-1803) with all Windows Update patches as of 02-10-2003 EXCEPT service pack 1
-Fingerprint Windows XP Professional, 5.1 (Build 2600) no service packs
-TSeq(Class=RI%gcd=<6%SI=<167CE&>294%IPID=I%TS=U)
-T1(DF=N%W=4000%ACK=S++%Flags=AS%Ops=M)
-T2(Resp=N)
-T3(Resp=N)
-T4(DF=%W=%ACK=%Flags=%Ops=)
-T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
-T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
-T7(Resp=N)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint WNOS 5.0 on DOS 6.22
@@ -8131,6 +9023,17 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=O%Flags=R%Ops=)
 PU(Resp=N)
 
+Fingerprint Xerox Docuprint N2125 network printer
+TSeq(Class=64K%IPID=I%TS=U)
+T1(DF=N%W=2000%ACK=S++%Flags=AS%Ops=MNW)
+T2(Resp=N)
+T3(Resp=N)
+T4(DF=N%W=2000%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(Resp=N)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=0%UCK=0%ULEN=134%DAT=E)
+
 Fingerprint xMach 0.1-CURRENT
 TSeq(Class=64K%IPID=I%TS=2HZ)
 T1(DF=N%W=2017%ACK=S++%Flags=AS%Ops=MNWNNT)
@@ -8285,9 +9188,23 @@ T6(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T7(DF=N%W=0%ACK=S++%Flags=UAPRF%Ops=)
 PU(Resp=N)
 
+# Zero One Tech. Print Server 3000
+# Hawking Print Server PN7117
+Fingerprint Print Server: Zero One Tech 3000 or Hawking PN7117
+TSeq(Class=TD%gcd=<C004%SI=<1E%IPID=I%TS=U)
+T1(DF=N%W=B68%ACK=S++%Flags=AS%Ops=M)
+T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
+T3(Resp=Y%DF=N%W=B68%ACK=S++%Flags=AS%Ops=M)
+T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
+
 #Zyxel P128imh or P480 router (ZyNOS)
+# ZyNOS F/W Version: V2.50(AJ.7) | 2/28/2002
 Fingerprint Zyxel ZyNOS based router (ZyNOS)
-TSeq(Class=TD%gcd=1000|2000|5000|4000|6000|8000|A000%SI=<5)
+TSeq(Class=TD%gcd=1000|2000|5000|4000|6000|8000|A000|78000|%SI=<FF%IPID=I%TS=U)
 T1(DF=N%W=400%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
 T3(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
