@@ -136,14 +136,15 @@ int main(int argc, char *argv[]) {
   case OSSCAN_SUCCESS:
     if (FPR.num_perfect_matches > 0) {
       printf("Found **%d PERFECT MATCHES** for entered fingerprint in %s:\n", FPR.num_perfect_matches, fingerfile);
-    
+      printf("Accu Line# OS\n");      
       for(i=0; i < FPR.num_matches && FPR.accuracy[i] == 1; i++) {
-	printf("100%% %s\n", FPR.prints[i]->OS_name);
+	printf("100%% %5d %s\n", FPR.prints[i]->line, FPR.prints[i]->OS_name);
       }
     } else {
       printf("No perfect matches found, **GUESSES AVAILABLE** for entered fingerprint in %s:\n", fingerfile);
+      printf("Accu Line# OS\n");
       for(i=0; i < 10 && i < FPR.num_matches; i++) {
-	printf("%d%% %s\n", (int) (FPR.accuracy[i] * 100), FPR.prints[i]->OS_name);
+	printf("%3d%% %5d %s\n", (int) (FPR.accuracy[i] * 100), FPR.prints[i]->line, FPR.prints[i]->OS_name);
       }
     }
     printf("\n");

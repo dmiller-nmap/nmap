@@ -124,6 +124,7 @@ struct AVal {
 
 typedef struct FingerTest {
   char OS_name[256];
+  int line; /* For reference prints, the line # in nmap-os-fingerprints */
   const char *name;
   struct AVal *results;
   struct FingerTest *next;

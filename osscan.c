@@ -1268,7 +1268,7 @@ FingerPrint *parse_single_fingerprint(char *fprint_orig) {
   do /* 1 line at a time */ {
     nextline = strchr(thisline, '\n');
     if (nextline) *nextline++ = '\0';
-    printf("Preparing to handle next line: %s\n", thisline);
+    /* printf("Preparing to handle next line: %s\n", thisline); */
 
     while(*thisline && isspace((int) *thisline)) thisline++;
     if (!*thisline) {
@@ -1375,6 +1375,7 @@ while(fgets(line, sizeof(line), fp)) {
   *q = '\0';
 
   current = FPs[numrecords];
+  current->line = lineno;
   /* Now we read the fingerprint itself */
   while(fgets(line, sizeof(line), fp)) {
     lineno++;
