@@ -169,6 +169,10 @@ SOURCE=..\idle_scan.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\main.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\nmap.c
 # End Source File
 # Begin Source File
