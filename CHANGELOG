@@ -1,5 +1,8 @@
 # Nmap Changelog ($Id$)
 
+-- Integrate TIMEVAL_SEC_SUBTRACT() fix by Scott Renfro (scott@renfro.org)
+   which improves timing accuracy.
+
 ** 2.54BETA29
 
 -- Integrated William McVey's multi-portlist patch.  This allows you

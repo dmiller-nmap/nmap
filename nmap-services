@@ -1513,8 +1513,7 @@ vpvc              1519/tcp   # Virtual Places Video control
 vpvc              1519/udp   # Virtual Places Video control
 atm-zip-office    1520/tcp   # atm zip office
 atm-zip-office    1520/udp   # atm zip office
-ncube-lm          1521/tcp   # nCube License Manager
-ncube-lm          1521/udp   # nCube License Manager
+oracle            1521/tcp   # Oracle Database
 rna-lm            1522/tcp   # Ricardo North America License Manager
 rna-lm            1522/udp   # Ricardo North America License Manager
 cichild-lm        1523/tcp   # 
@@ -2011,6 +2010,7 @@ sd                9876/tcp   # Session Director
 sd                9876/udp   # Session Director
 issa              9991/tcp   # ISS System Scanner Agent
 issc              9992/tcp   # ISS System Scanner Console
+snet-sensor-mgmt  10000/tcp  # SecureNet Pro Sensor https management server
 stel              10005/tcp  # Secure telnet
 amanda            10080/udp  # Amanda Backup Util
 amandaidx         10082/tcp  # Amanda indexing
