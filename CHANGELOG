@@ -1,16 +1,83 @@
 # Nmap Changelog ($Id$)
 
+Nmap 3.28
+
+o Fixed (I hope) an issue that would cause Nmap to print "Serious time
+  computation problem in adjust_timeout ..." and quit.  The ultimate
+  cause was demonstrated by this --packet_trace snippet that Russel
+  Miller (rmiller(a)duskglow.com) sent me:
+  SENT (0.0500s) ICMP 0.0.0.0 > 127.0.0.1 Echo request (type=8/code=0) ...
+  RCVD (0.0450s) ICMP 127.0.0.1 > 127.0.0.1 Echo reply (type=0/code=0) ...
+  As you can see, the ping reply appears to come BEFORE the request
+  was sent(!).  This sort of thing happens on at least Linux and
+  Windows.  The send time is obtained from gettimeofday(NULL), while
+  receive time libpcap packet header.  If anyone knows why this
+  occurs, or (even better) knows a good way to fix it, let me know.
+  For now, I am allowing the response to come up to .05s "before" the
+  request.  That is gross.
+
+o For years, Nmap has added -I/usr/local/include and -L/usr/local/lib
+  to the compiler line to grab local libraries.  I have removed this
+  behavior by default, and added a '--with_localdirs' configure option
+  that adds it back.  If Nmap fails to compile now without the above
+  option, please let me know.  I can change the default back if this
+  change causes more problems than it solves.  People (such as certain
+  ports tree packagers) who know they don't want /usr/local should
+  specify --without_localdirs rather than relying on that always being
+  the default.
+
+o Fixed (I hope) a problem that led to the error message "Assertion
+  `tqi->sockets[probe_port_num][seq] == -1' failed".
+
+o Applied some changes from Solar Designer (solar(a)openwall.com)
+  which fix some typos and also suggest safer /tmp/ behavior in the
+  HACKING file and Lithuanian man page.  These changes are for the
+  Nmap package of his Openwall GNU/*/Linux (Owl) distribution. 
+  [ http://www.openwall.com/Owl/ ]
+
+o For Solaris, I now define NET_SIZE_T to size_t rather than socklen_t
+  in nmap.h.  Isn't that exciting?!!!  Hopefully this will help
+  compilation on Solaris 2.6 (and perhaps earlier).  If any Solaris
+  users notice new compilation problems, please let me know.  Thanks to
+  Al Smith (Al.Smith(a)aeschi.ch.eu.org) for reporting the issue.
+
+o Removed an errant getopt() prototype in nbase/getopt.h which should
+  hopefully improve compilation on certain Solaris boxes and BSD
+  variants.
+
+o Included new Russian man page translation by Alex Volkov
+  (alex(a)cherepovets-city.ru)
+
+o Included --packet_trace support for Explicit Congestion Notification
+  (rfc 2481/3168) flags thanks to a patch sent in by Maik Pfeil
+  (root(a)bundesspionageministerium.de)
+
+o Included --packet_trace support for a few (unusual) ICMP types in
+  case Nmap receives them.  The patch was also sent by Maik Pfeil.
+
+o Fixed a problem with redirecting XML/Grep/Machine output to stdout
+  on Windows (e.g. -oX - ).  Problem was reported by Wei Jiang
+  (Wei.Jiang(a)bindview.com)
+
+o I spam-protected the email addresses in this file.  I fervently hope
+  that within 5 years we will be able to defeat this scourge through
+  technology and laws, so that we may again list our email addresses
+  openly without fear of abuse by criminal spammers.  Oh, and it would
+  be a shame if the spiders went through this whole page and only
+  found uce@ftc.gov, rhundt@fcc.gov, jquello@fcc.gov, sness@fcc.gov,
+  president@whitehouse.gov, and rchong@fcc.gov.
+
 Nmap 3.27
 
 o Nmap now compiles under Amiga thanks to patches sent by Diego
-  Casorran (dcr8520@amiga.org).
+  Casorran (dcr8520(a)amiga.org).
 
 o Fixed a backwards WIN32 ifdef that broke UDP and small-fragment
   scans for some operating systems other than Linux and Windows.
-  Thanks to Guido van Rooij (guido@gvr.org) for reporting the problem
+  Thanks to Guido van Rooij (guido(a)gvr.org) for reporting the problem
   and sending a patch.
 
-o Applied patch from Marius Strobl (marius@alchemy.franken.de) which improves
+o Applied patch from Marius Strobl (marius(a)alchemy.franken.de) which improves
   the definition of NET_SIZE_T on FreeBSD so that it compiles on
   64-bit platforms.
 
@@ -39,15 +106,15 @@ o I added UDP-based "ping" scanning.  The -PU option can take an
 
 o Fixed (I hope) problem where Nmap would abort, complaining that
   "Assertion `pt->down_this_block > 0' failed".  Thanks to
-  ray@24hoursecurity.org and mugz@x-mafia.com for reporting and
+  ray(a)24hoursecurity.org and mugz(a)x-mafia.com for reporting and
   helping me debug this problem.
 
 o Fixed a GCC dependency reported by Ayamura Kikuchi
-  (ayamura@keio.net)
+  (ayamura(a)keio.net)
 
 o Fixed an "assertion failure" which would cause Nmap to exit when you
   specify a --max_rtt_timeout below 3000.  Thanks to Tammy Rathbun
-  (rathbun2@llnl.gov) and Jan Roger Wilkens (jrw@proseq.net) for
+  (rathbun2(a)llnl.gov) and Jan Roger Wilkens (jrw(a)proseq.net) for
   reporting this.
 
 o Packet receive times are now obtained from libpcap rather than
@@ -70,30 +137,30 @@ o Fixed a portability problem that caused BSD Make to bail out.
 o Fixed a divide by zero error caused when nonroot users (on UNIX)
   explicitly request ICMP pings (which require root privileges).  Now it
   prints a warning and uses the normal nonroot TCP connect() ping.
-  Jaroslav Sladek (jup@matfyz.cz) found the bug and provided the patch.
+  Jaroslav Sladek (jup(a)matfyz.cz) found the bug and provided the patch.
 
 o Made Nmap more tolerant of corrupt nmap-services and nmap-protocols
-  files thanks to report & patch sent by Phix (phix@hush.com)
+  files thanks to report & patch sent by Phix (phix(a)hush.com)
 
 o Added some more port numbers sent in by Seth Master
-  (smaster@stanford.edu).  He has been a frequent nmap-services
+  (smaster(a)stanford.edu).  He has been a frequent nmap-services
   contributor in the last couple months.
 
 o Added --packet_trace support to Windows
 
 o Removed superfluous "addport" line in the XML output (patch from Max
-  Schubert (nmap@webwizarddesign.com)).
+  Schubert (nmap(a)webwizarddesign.com)).
 
 o Merged wintcpip.cc into tcpip.cc to avoid the headache of
   maintaining many nearly-identical functions.
 
 o Fixed an assertion failure crash related to combining port 0 scans
-  and OS scan.  Thanks to A.Jones@mvv.de for reporting this.
+  and OS scan.  Thanks to A.Jones(a)mvv.de for reporting this.
 
 o Fixed some compilation problems on systems without IPv6 support --
-  patch sent by Jochen Erwied (Jochen.Erwied@mbs-software.info)
+  patch sent by Jochen Erwied (Jochen.Erwied(a)mbs-software.info)
 
-o Applied patch from Jochen Erwied (Jochen.Erwied@mbs-software.info)
+o Applied patch from Jochen Erwied (Jochen.Erwied(a)mbs-software.info)
   which fixes the format strings used for printing certain timestamps.
 
 o Upgraded to autoconf 2.57, including the latest config.guess/config.sub
@@ -103,7 +170,7 @@ o Renamed configure.ac files to configure.in as recommended by the
 
 o Changed the wording of NmapFE Gnome entries to better-comply with
   Gnome's Human Interface Guidelines (HIG).  Suggested by Axel Krauth
-  (krauth@fmi.uni-passau.de)
+  (krauth(a)fmi.uni-passau.de)
 
 Nmap 3.20
 
@@ -111,9 +178,9 @@ o The random IP input option (-iR) now takes an argument specifying
   how many IPs you want to scan (e.g. -iR 1000).  Specify 0 for the old
   neverending scan behavior.
 
-o Fixed a tricky memory leak discovered by Mugz (mugz@x-mafia.com).
+o Fixed a tricky memory leak discovered by Mugz (mugz(a)x-mafia.com).
 
-o Fixed output truncation problem noted by Lionel CONS (lionel.cons@cern.ch)
+o Fixed output truncation problem noted by Lionel CONS (lionel.cons(a)cern.ch)
 
 o Fixed a bug that would cause certain incoming ICMP error messages to
   be improperly ignored.
@@ -158,15 +225,15 @@ o I added support for a brand new "port" that many of you may have
   would still scan ports 1-40.  Unlike ports, protocol 0 IS now scanned
   by default.  This now works for ping probes too (e.g., -PS, -PA).
 
-o Applied patch by Martin Kluge (martin@elxsi.info) which adds --ttl
+o Applied patch by Martin Kluge (martin(a)elxsi.info) which adds --ttl
   option, which sets the outgoing IPv4 TTL field in packets sent via
   all raw scan types (including ping scans and OS detection).  The
   patch "should work" on Windows, but hasn't been tested.  A TTL of 0
   is supported, and even tends to work on a LAN:
-    14:17:19.474293 192.168.0.42.60214 > 192.168.0.40.135: S 3265375623:3265375623(0) win 1024 [ttl 0] (id 35919, len 40)
-    14:17:19.474456 192.168.0.40.135 > 192.168.0.42.60214: S 2805154856:2805154856(0) ack 3265375624 win 64240 <mss 1460> (DF) (ttl 128, id 49889, len 44)
+    14:17:19.474293 192.168.0.42.60214 > 192.168.0.40.135: S 326:326(0) [ttl 0]
+    14:17:19.474456 192.168.0.40.135 > 192.168.0.42.60214: S 280:280(0) ack 326 (ttl 128)
 
-o Applied patch by Gabriel L. Somlo ( somlo@acns.colostate.edu ) which
+o Applied patch by Gabriel L. Somlo ( somlo(a)acns.colostate.edu ) which
   extends the multi-ping-port functionality to nonroot and IPv6
   connect() users.
 
@@ -178,16 +245,16 @@ o I added a new --datadir command line option which allows you to
   (e.g. /usr/share/nmap), and finally the current directory.
 
 o Fixed Windows (VC++ 6) compilation, thanks to patches from Kevin
-  Davis (computerguy@cfl.rr.com) and Andy Lutomirski
-  (luto@stanford.edu)
+  Davis (computerguy(a)cfl.rr.com) and Andy Lutomirski
+  (luto(a)stanford.edu)
 
 o Included new Latvian man page translation by 
-  "miscelerious options" (misc@inbox.lv)
+  "miscelerious options" (misc(a)inbox.lv)
 
 o Fixed Solaris compilation when Sun make is used rather than GNU
-  make.  Thanks to Tom Duffy (tduffy@sun.com) for assistance.
+  make.  Thanks to Tom Duffy (tduffy(a)sun.com) for assistance.
 
-o Applied patch from Stephen Bishop (sbishop@idsec.co.uk) which
+o Applied patch from Stephen Bishop (sbishop(a)idsec.co.uk) which
   prevends certain false-positive responses when Nmap raw TCP ping scans
   are being run in parallel.
 
@@ -197,7 +264,7 @@ o To emphasize the highly professional nature of Nmap, I changed all
 o Fixed a problem with nmap-frontend RPMs that would cause a bogus
   /bin/xnmap link to be created (it should only create
   /usr/bin/xnmap).  Thanks to Juho Schultz
-  (juho.schultz@astro.helsinki.fi) for reporting the problem.
+  (juho.schultz(a)astro.helsinki.fi) for reporting the problem.
 
 o I made the maximum number of allowed routes and interfaces allowed
   on the scanning machine dynamic rather than hardcoded #defines of 1024
@@ -215,13 +282,13 @@ o Integrated the largest OS fingerprint DB updates ever! Thanks to
   now!
 
 o Applied NetBSD portability patch by Darren Reed
-  (darrenr@reed.wattle.id.au)
+  (darrenr(a)reed.wattle.id.au)
 
 o Updated Makefile to better-detect if it can't make nmapfe and
   provide a clearer error message.  Also fixed a couple compiler
   warnings on some *BSD platforms.
 
-o Applied patch from "Max" (nmap@webwizarddesign.com) which adds the
+o Applied patch from "Max" (nmap(a)webwizarddesign.com) which adds the
   port owner to the "addport" XML output lines which are printed (only
   in verbose mode, I think) as each open port is discovered.
 
@@ -243,11 +310,11 @@ o "Ping types" are no longer exclusive -- you can now do combinations
   since you can achieve the same result via "PE" and "PT" options.
 
 o Applied patch (with modest changes) by Gabriel L. Somlo
-  (somlo@acns.colostate.edu), which allows multiple TCP probe ports in
+  (somlo(a)acns.colostate.edu), which allows multiple TCP probe ports in
   raw (root) mode.  See the previous item for an example.
 
 o Fixed a libpcap compilation issue noted by Josef 'Jupp' Schugt
-  (deusxmachina@webmail.co.za) which relates to the definition (or
+  (deusxmachina(a)webmail.co.za) which relates to the definition (or
   lack thereof) of ARPHRD_HDLC (used for Cisco HDLC frames).
 
 o Tweaked the version number (-V) output slightly.
@@ -260,11 +327,11 @@ o Upgraded libpcap from version 0.6.2 to 0.7.1.  Updated the
   in the Nmap bundled version of Libpcap.
 
 o Applied patch to fix a libpcap alignment bug found by Tom Duffy
-  (tduffy@sun.com).
+  (tduffy(a)sun.com).
 
 o Fixed Windows compilation.
 
-o Applied patch by Chad Loder (cloder@loder.us) of Rapid7 which
+o Applied patch by Chad Loder (cloder(a)loder.us) of Rapid7 which
   fixes OpenBSD compilation.  I believe Chad is now the official
   OpenBSD Nmap "port" maintainer.  His patch also adjusted
   random-scan (-iR) to include the recently allocated 82.0.0.0/8
@@ -272,17 +339,17 @@ o Applied patch by Chad Loder (cloder@loder.us) of Rapid7 which
 
 o Fixed (I hope) a few compilation problems on
   non-IPv6-enabled machines which were noted by Josef 'Jupp'
-  Schugt (jupp@gmx.de)
+  Schugt (jupp(a)gmx.de)
 
 o Included some man page translations which were inadvertently
   missed in previous tarballs.
 
-o Applied patch from Matthieu Verbert (mve@zurich.ibm.com) which
+o Applied patch from Matthieu Verbert (mve(a)zurich.ibm.com) which
   places the Nmap man pages under ${prefix}/share/man rather than
   ${prefix}/man when installed via RPM.  Maybe the tarball
   install should do this too?  Opinions?
 
-o Applied patch from R Anderson (listbox@pole-position.org) which
+o Applied patch from R Anderson (listbox(a)pole-position.org) which
   improves the way ICMP port unreachables from intermediate hosts
   are handled during UDP scans.
 
@@ -293,33 +360,33 @@ o Added note to man page related to Nmap US export control.  I
 
 o Added a warning that some hosts may be skipped and/or repeated
   when someone tries to --resume a --randomize_hosts scan.  This
-  was suggested by Crayden Mantelium (crayden@sensewave.com)
+  was suggested by Crayden Mantelium (crayden(a)sensewave.com)
 
 o Fixed a minor memory leak noted by Michael Davis
-  (mike@datanerds.net).
+  (mike(a)datanerds.net).
 
 Nmap 3.10ALPHA4
 
-o Applied patch by Max Schubert (nmap@webwizarddesign.com) which adds
+o Applied patch by Max Schubert (nmap(a)webwizarddesign.com) which adds
   an add-port XML tag whenever a new port is found open when Nmap is
   running in verbose mode.  The new tag looks like:
-  <addport state="open" portid="22" protocol="tcp"/>
+  [addport state="open" portid="22" protocol="tcp"/]
   I also updated docs/nmap.dtd to recognize this new tag.
 
 o Added German translation of Nmap manpage by Marc Ruef
-  (marc.ruef@computec.ch).  It is also available at
+  (marc.ruef(a)computec.ch).  It is also available at
   http://www.insecure.org/nmap/data/nmap_manpage-de.html
 
 o Includes a brand new French translation of the manpage by Sebastien
   Blanchet.  You could probably guess that it is available at
   http://www.insecure.org/nmap/data/nmap_manpage-fr.html
 
-o Applied some patches from Chad Loder (cloder@loder.us) which update
+o Applied some patches from Chad Loder (cloder(a)loder.us) which update
   the random IP allocation pool and improve OpenBSD support.  Some
   were from the OBSD Nmap patchlist.
 
 o Fixed a compile problem on machines without PF_INET6.  Thanks to
-  Josef 'Jupp' Schugt (deusxmachina@webmail.co.za) for noting this.
+  Josef 'Jupp' Schugt (deusxmachina(a)webmail.co.za) for noting this.
 
 Nmap 3.10ALPHA3
 
@@ -347,16 +414,16 @@ o Nmap now reports execution times to millisecond precision (rather
   than rouding to the nearest second).
 
 o Fixed an infinite loop caused by invalid port arguments.  Problem
-  noted by fejed (fejed@uddf.net).
+  noted by fejed (fejed(a)uddf.net).
 
 Nmap 3.10ALPHA2
 
 o Fixed compilation and IPv6 support on FreeBSD (tested on
-  4.6-STABLE).  Thanks to Niels Heinen (niels.heinen@ubizen.com) for
+  4.6-STABLE).  Thanks to Niels Heinen (niels.heinen(a)ubizen.com) for
   suggestions.
 
 o Made some portability changes based on suggestions by Josef 'Jupp'
-  Schugt (jupp@gmx.de)
+  Schugt (jupp(a)gmx.de)
 
 o Fixed compilation and IPv6 support on Solaris 9 (haven't tested
   earlier versions).
@@ -378,20 +445,20 @@ o Major code restructing, which included conversion to C++ -- so
   such a compiler.  Windows (VC++) users: see the README-WIN32 for new
   compilation instructions.
 
-o Applied patch from Axel Nennker (Axel.Nennker@t-systems.com) which
+o Applied patch from Axel Nennker (Axel.Nennker(a)t-systems.com) which
   adds a --without-nmapfe option to the configure script.  This si
   useful if your system doesn't have the proper libraries (eg GTK) or
   if you think GUIs are for sissies :).
 
 o Removed arbitrary max_parallelism (-M) limitations, as suggested by
-  William McVey ( wam@cisco.com ).
+  William McVey ( wam(a)cisco.com ).
 
 o Added DEC OSF to the platforms that require the BSDFIX() macro due
   to taking ip length and offset fields in host rather than network byte
-  order.  Suggested by Dean Bennett (deanb@gbtn.net)
+  order.  Suggested by Dean Bennett (deanb(a)gbtn.net)
 
 o Fixed an debug statement C ambiguity discovered by Kronos
-  (kronos@kronoz.cjb.net)
+  (kronos(a)kronoz.cjb.net)
 
 Nmap 3.00
 
@@ -401,7 +468,7 @@ Nmap 2.99RC2
 
 o Fixed an important memory initialization bug which was causing
   crashes on Mac OS X (and possibly other platforms).  The problem was
-  located by Pieter ten Pierick (P.tenPierick@chello.nl)
+  located by Pieter ten Pierick (P.tenPierick(a)chello.nl)
 
 o Various minor bugfixes/cleanup
 
@@ -424,11 +491,11 @@ o I removed "credit" lines from the nmap-os-fingerprints file out of
   don't want you to be spammed when the fingerprint file goes online.
 
 o Minor usage screen (nmap -h) fix suggested by Martin Kluge 
-  ( martin@elxsi.info )
+  ( martin(a)elxsi.info )
 
 o Insured that the initial pound (#) in C preprocessor directives is
   always in column 1 (portability fix).  Problem noted by Shamsher
-  Sran (ssran@bechtel.com)
+  Sran (ssran(a)bechtel.com)
 
 Nmap 2.54BETA37
 
@@ -438,46 +505,46 @@ o Made SYN scan the default for privileged (root) users.  This offers
   more stealthy and less likely to crash applications listening on the
   target host.
 
-o Fixed a problem noted by Ping Huang (pshuang@alum.mit.edu) relating
+o Fixed a problem noted by Ping Huang (pshuang(a)alum.mit.edu) relating
   to -PI scans of a machine's own non-localhost interfaces (eg
   scanning your ethernet address).
 
-o Applied patch from Patrice Goetghebeur (pgoetghebeur@mac.com) which
+o Applied patch from Patrice Goetghebeur (pgoetghebeur(a)mac.com) which
   fixes PPP/SLIP support on Mac OS X.
 
 o Applied dozens of nmap-services portnumber mapping updates
-  researched and sent by palante@subterrain.net
+  researched and sent by palante(a)subterrain.net
 
 o Updated nmap-rpc to the latest version from Eilon Gishri
-  (eilon@aristo.tau.ac.il)
+  (eilon(a)aristo.tau.ac.il)
 
 o Fixed --resume option to better detect all of the previously scanned
-  hosts in an -oN file (bug report from Adam.Scott@predictive.com )
+  hosts in an -oN file (bug report from Adam.Scott(a)predictive.com )
 
 o Adjusted random IP generator (for -iR) to account for newly
   allocated ip space from
   http://www.iana.org/assignments/ipv4-address-space as noted by Chad
-  Loder (cloder@acm.org)
+  Loder (cloder(a)acm.org)
 
 o Updated config.sub and config.guess to the versions in
   automake-1.6.2 .
 
-o Applied patch from Markus A. Nonym (g17m0@lycos.com) which checks
+o Applied patch from Markus A. Nonym (g17m0(a)lycos.com) which checks
   for a recent version of GTK+ in ./configure before even trying to
   build NmapFE (avoids the previous ugly compiler errors).
 
-o Applied patch from benkj@gmx.it which fixes misbehavior when Nmap
+o Applied patch from benkj(a)gmx.it which fixes misbehavior when Nmap
   would receive EOF (including ^D) in interactive mode.
 
 o Fixed format string bugs (not the security-related kind) found by
-  Takehiro YONEKURA (yonekura@obliguard.com) and Kuk-hyeon Lee 
-  (errai@inzen.com)
+  Takehiro YONEKURA (yonekura(a)obliguard.com) and Kuk-hyeon Lee 
+  (errai(a)inzen.com)
 
-o Applied patch from Greg Steuck (greg-nmap-dev@nest.cx) which fixes
+o Applied patch from Greg Steuck (greg-nmap-dev(a)nest.cx) which fixes
   an alignment problem in charpool.c that could cause bus errors on
   64-bit platforms.
 
-o Applied portability fix patch from Matt Christian (mattc@visi.com)
+o Applied portability fix patch from Matt Christian (mattc(a)visi.com)
 
 Nmap 2.54BETA36
 
@@ -500,29 +567,29 @@ o Fixed Windows compilation (and I really mean it this time -- tested
 
 o Applied configure script patch to recognize Solaris 2.10 when it
   eventually becomes available (from James Carlson
-  (james.d.carlson@east.sun.com)
+  (james.d.carlson(a)east.sun.com)
 
 o Applied some portability fixes from Albert Chin
-  (china@thewrittenword.com)
+  (china(a)thewrittenword.com)
 
 o Applied libpcap aclocal.m4 patch to enable debugging (-g) when
   compiling libpcap with gcc.  Patch from Ping Huang
-  (pshuang@alum.mit.edu)
+  (pshuang(a)alum.mit.edu)
 
 o Restructured "TCP probe port" output message a bit as suggested by
-  Ping Huang (pshuang@alum.mit.edu)
+  Ping Huang (pshuang(a)alum.mit.edu)
 
 Nmap 2.54BETA34
 
 o Windows compilation fixed thanks to new VC++ project file (nmap.dsp) sent
-  by Evan Sparks (gmplague@sdf.lonestar.org) (I had forgotten to include 
+  by Evan Sparks (gmplague(a)sdf.lonestar.org) (I had forgotten to include 
   the new main.c).
 
 o Various nmap-services updates
 
 o Fixed a bunch of typos and capitalization issues in
   nmap-os-fingerprints by applying patch sent in by Royce Williams
-  (royce@alaska.net).
+  (royce(a)alaska.net).
 
 Nmap 2.54BETA33
 
@@ -536,10 +603,10 @@ o Tons of OS fingerprint updates.  More than 100 fingerprints added or
   contributed!
 
 o Applied fix for an important RPC scanning bug sent in by Pasi Eronen
-  (pasi.eronen@nixu.com)
+  (pasi.eronen(a)nixu.com)
 
 o Applied fix for nasty OS fingerprinting bug found by William
-  Robertson (wkr@cs.ucsb.edu)
+  Robertson (wkr(a)cs.ucsb.edu)
 
 o Do not show uptime when obviously spoofed (eg OpenBSD 3.0)
 
@@ -552,15 +619,15 @@ o Moved main() function into a new file, cleverly named main.c.
 Nmap 2.54BETA32
 
 o Applied Windows pinging fix and from Andy Lutomirski
-  (Luto@myrealbox.com)
+  (Luto(a)myrealbox.com)
 
 o Applied a few more Windows fixes from Andy.
 
 o Fixed a flaw in several error-checking statements noted by Giacomo
-  Cariello (jwk@bug.it)
+  Cariello (jwk(a)bug.it)
 
-o Applied Win32 compilation fixes sent by Kirby Kuehl (kkuehl@cisco.com)
-  and jens.vogt@bluewin.ch
+o Applied Win32 compilation fixes sent by Kirby Kuehl (kkuehl(a)cisco.com)
+  and jens.vogt(a)bluewin.ch
 
 Nmap 2.54BETA31
 
@@ -573,28 +640,28 @@ o Documented the --data_length option and made it work with all the
 
 o Added check for strings.h before including it in portlist.c .  This
   fixes a compilation problem on some versions of Windows.  Problem
-  first noted by Michael Vorin (mvorin@hotmail.com)
+  first noted by Michael Vorin (mvorin(a)hotmail.com)
 
-o Applied patch from Andy Lutomirski (Luto@myrealbox.com) which fixes
+o Applied patch from Andy Lutomirski (Luto(a)myrealbox.com) which fixes
   a crash on some Windows platforms when timeouts occur.
 
 o Fixed "grepable output" (-oG) so that it prints IPID sequence class
   rather than printing the TCP ISN sequence index twice.  Problem
-  noted by Russell Fulton (r.fulton@auckland.ac.nz)
+  noted by Russell Fulton (r.fulton(a)auckland.ac.nz)
 
 o Added mysterious, undocumented --scanflags option.
 
-o Applied patch from Andy Lutomirski (Luto@myrealbox.com) which fixes
+o Applied patch from Andy Lutomirski (Luto(a)myrealbox.com) which fixes
   some important Windows bugs.  Apparently this can cause a dramatic
   speedup in some circumstances.  The patch had other misc. changes
   too.
 
-o Fix bug noted by Chris V (iselldrugstokidsonline@yahoo.com) in which
+o Fix bug noted by Chris V (iselldrugstokidsonline(a)yahoo.com) in which
   Nmap could segmentation fault with the (bogus) command: './nmap -sO
   -p 1-65535 hostname' (protocol only can go up to 255).  That being
   said, Nmap should never segfault just because of bogus options.
 
-o Fixed problem noted by Maximiliano (emax25@arnet.com.ar) where Nmap
+o Fixed problem noted by Maximiliano (emax25(a)arnet.com.ar) where Nmap
   would get stuck in a (nearly) infinite loop when you try to "resume"
   a random host (-iR) scan.
 
@@ -603,7 +670,7 @@ o Included a number of fingerprint updates, but I still have many more
   portlist updates.
 
 o Included a bunch of fixes (mostly to prevent compiler warnings) from
-  William McVey (wam@cisco.com)
+  William McVey (wam(a)cisco.com)
 
 Nmap 2.54BETA30
 
@@ -611,24 +678,24 @@ o Added a Document Type Definition (DTD) for the Nmap XML output
   format (-oX) to the docs directory.  This allows validating parsers
   to check nmap XML output files for correctness.  It is also useful
   for application programmers to understand the XML output structure.
-  The DTD was written by William McVey (wam@cisco.com) of Cisco Secure 
+  The DTD was written by William McVey (wam(a)cisco.com) of Cisco Secure 
   Consulting Services ( http://www.cisco.com/go/securityconsulting ).
 
 o Merged in a number of Windows fixes/updates from Andy Lutomirski
-  (Luto@myrealbox.com)
+  (Luto(a)myrealbox.com)
 
 o Merged in fixes/updates (mostly to the Windows functionality) from
-  Matt Hargett (matt@use.net)
+  Matt Hargett (matt(a)use.net)
 
-o Applied patch by Colin Phipps (cph@netcraft.com) which correctly
+o Applied patch by Colin Phipps (cph(a)netcraft.com) which correctly
   encodes special characters in the XML output.
 
-o Applied patch by William McVey (wam@cisco.com) which adds the uptime
+o Applied patch by William McVey (wam(a)cisco.com) which adds the uptime
   information printed with -O to the XML output format.
 
 o Fixed byte-order bug in Windows packet matching code which caused
   -PS and -PT to fail.  Bug found and patch sent by Tim Adam
-  (tma@osa.com.au)
+  (tma(a)osa.com.au)
 
 o Fixed segfault problem with "-sU -F".  Nobody reported this until I
   noticed it :(.  Anytime you see "Segmentation Fault" in the latest
@@ -645,10 +712,10 @@ o Documented the --append_output option which tells Nmap to append
   scan results to any output files you have specified rather than
   overwriting the files.
 
-o Integrate TIMEVAL_SEC_SUBTRACT() fix by Scott Renfro (scott@renfro.org)
+o Integrate TIMEVAL_SEC_SUBTRACT() fix by Scott Renfro (scott(a)renfro.org)
   which improves timing accuracy.
 
-** 2.54BETA29
+Nmap 2.54BETA29
 
 o Integrated William McVey's multi-portlist patch.  This allows you to
   specify different port numbers when scanning both TCP & UDP.  For
@@ -665,26 +732,26 @@ o Added/updated a bunch of fingerprints, including Windows XP release
   Phone :).  Many other fingerprints were updated as well.
 
 o Found and fixed some relatively major memory leaks based on reports
-  sent in by H D Moore (hdm@secureaustin.com), mugz
-  (mugz@x-mafia.org), and Steven Van Acker (deepstar@ulyssis.org)
+  sent in by H D Moore (hdm(a)secureaustin.com), mugz
+  (mugz(a)x-mafia.org), and Steven Van Acker (deepstar(a)ulyssis.org)
 
-o Applied patch from Chad Loder (chad_loder@rapid7.com) which improves
+o Applied patch from Chad Loder (chad_loder(a)rapid7.com) which improves
   random target host selection (-iR) by excluding more undesirable
   addresses.
 
-o Fixed portscan timing bug found by H D Moore (hdm@secureaustin.com).
+o Fixed portscan timing bug found by H D Moore (hdm(a)secureaustin.com).
   This bug can occur when you specify a --max_rtt_timeout but not
   --initial_rtt_timeout and then scan certain firewalled hosts.
 
 o Fixed port number printing bug found by "Stephen Leavitt"
-  <stephen_j_leavitt@hotmail.com>
+  (stephen_j_leavitt(a)hotmail.com)
 
 o The Nmap source tarball now extracts with more lenient permissions
   (sometimes world-readable or world-executable, but never
   world-writable).  If you don't want this, set your umask to 077
-  (which is what I do).  Suggested by Line Printer (lps@rahul.net)
+  (which is what I do).  Suggested by Line Printer (lps(a)rahul.net)
 
-** 2.54BETA28
+Nmap 2.54BETA28
 
 o I hope that I have fixed the Libpcap "Unknown datalink type" problem that
   many people reported.  If you still receive this error, please send
@@ -700,40 +767,40 @@ o Hopefully fixed Libpcap lex/yacc generated file problem that
 
 o Various minor fixes/changes/updates
 
-** 2.54BETA27
+Nmap 2.54BETA27
 
 o Fixed bug that caused "adding open port" messages to be printed even
   when verbose mode was not specified. (patch sent by Doug Hoyte (
-  dugely@yahoo.com ).
+  dugely(a)yahoo.com ).
 
 o Fixed bug in zombie:port option parsing in Idlescan as well a few
-  other bugs in patch sent by Germano Caronni (gec@acm.org)
+  other bugs in patch sent by Germano Caronni (gec(a)acm.org)
 
 o Fixed Windows compilation (I broke it when I added Idlescan).
 
 o Fixed a (Win32 only) port identification bug which would cause some
   ports to be listed as "unknown" even when Nmap should know their
   name.  This was found at patched by David Griffiths
-  (davidg@intrinsica.co.uk).
+  (davidg(a)intrinsica.co.uk).
 
 o Fixed more nmap-os-fingerprints syntax/grammar violations found by
   Raymond Mercier of VIGILANTe
 
 o Fixed a memory leak in Nbase str*casecmp() functions by applying
-  patch sent by Matt (matt@use.net).  I plan to kill this whole
+  patch sent by Matt (matt(a)use.net).  I plan to kill this whole
   strcasecmp.c file as soon as possible (it is a mess).
 
-** 2.54BETA26
+Nmap 2.54BETA26
 
 o Added Idlescan (IPID blind scan).  The usage syntax is 
-  "-sI <zombie>".
+  "-sI [zombie]".
 
 o Fixed a bunch of fingerprints that were corrupt due to violations of
   the fingerprint syntax/grammar (problems were found by Raymond
   Mercier of VIGILANTe )
 
 o Fixed command-line option parsing bug found 
-  by "m r rao" (mrrao@del3.vsnl.net.in )
+  by "m r rao" (mrrao(a)del3.vsnl.net.in )
 
 o Fixed an OS fingerprinting bug that caused many extra packets to be
   sent if you request a lot of decoys.
@@ -746,9 +813,9 @@ o Added some debug code to help diagnose the "Unknown datalink type"
   etc)
 
 o Added a bunch of IDS sensor/console/agent port numbers from
-  Patrick Mueller (pmueller@neohapsis.com)
+  Patrick Mueller (pmueller(a)neohapsis.com)
 
-** 2.54BETA25
+Nmap 2.54BETA25
 
 o Added a whole bunch of new OS fingerprints (and adjustments) ranging
   from big important ones (Linux 2.4.X, OpenBSD 2.9, FreeBSD 4.3,
@@ -769,1000 +836,1008 @@ o Added "All zeros" IP.ID sequence classification to account for the
 
 o Tweaked TCP Timestamp and IP.ID sequence classification algorithms
 
-** 2.54BETA24
+Nmap 2.54BETA24
 
 o Fixed compilation problems on MacOS X publis release.  Thanks to
-  Nicolas Dawson (nizcolas@myrealbox.com) for securing an account for
+  Nicolas Dawson (nizcolas(a)myrealbox.com) for securing an account for
   me.
 
-o On the suggestion of the ever-helpful LaMont Jones (lamont@hp.com),
+o On the suggestion of the ever-helpful LaMont Jones (lamont(a)hp.com),
   I obtained the newest config.guess/config.sub from
   http://subversions.gnu.org/cgi-bin/cvsweb/config and made
   libpcap/nbase use symlinks rather than copeis of the file
 
-o Applied patch from LaMont Jones (lamont@hp.com) which makes Nmap
+o Applied patch from LaMont Jones (lamont(a)hp.com) which makes Nmap
   compatable with gcc 3.0 (apparently printf() is a macro in that
   version)
 
-o Applied patch from Colin Phipps (cph@netcraft.com) which fixes a
+o Applied patch from Colin Phipps (cph(a)netcraft.com) which fixes a
   problem that kept UDP RPC scanning from working unless you were also
   doing a TCP scan.
 
-o Applied a patch from Chris Eagle (cseagle@redshift.com) which fixes
+o Applied a patch from Chris Eagle (cseagle(a)redshift.com) which fixes
   Windows compilation (I broke it with a recent change).
 
 o Updated Lithuanian translation of man page based on a newer version sent 
-  by Aurimas Mikalauskas (inner@crazy.lt)
+  by Aurimas Mikalauskas (inner(a)crazy.lt)
 
 o Killed carriage returns in nmap.c and nmapfe.c, which caused
   problems for some (SGI) compilers.  Problem noted by Artur
-  Niederstebruch (artur@sgi.com)
+  Niederstebruch (artur(a)sgi.com)
 
 o Updated to latest version of rpc program number list, maintained by
-  Eilon Gishri (eilon@aristo.tau.ac.il)
+  Eilon Gishri (eilon(a)aristo.tau.ac.il)
 
 o Fixed a quoting bug in the Nmap man page found by 
-  Rasmus Andersson <rasmus@pole-position.org>
+  Rasmus Andersson (rasmus(a)pole-position.org)
 
 o Applied RPM spec file changes from "Benjamin Reed"
-  (ranger@befunk.com) which allows you to avoid building the frontend
+  (ranger(a)befunk.com) which allows you to avoid building the frontend
   by adding "--define frontend 0" to the build command (eg --rebuild,
   --ba, etc).
 
-** 2.54BETA22
+Nmap 2.54BETA22
 
--- Eliminated usage of u_int32_t (was causing compilation errors on
-   some Sun and HP boxes).  Problem first noted by Nick Munger
-   (nmunger@Oswego.EDU) and Ralf Hildebrandt
-   (Ralf.Hildebrandt@innominate.com) and Antonin Sprinzl
-   (Antonin.Sprinzl@tuwien.ac.at)
+o Eliminated usage of u_int32_t (was causing compilation errors on
+  some Sun and HP boxes).  Problem first noted by Nick Munger
+  (nmunger(a)Oswego.EDU) and Ralf Hildebrandt
+  (Ralf.Hildebrandt(a)innominate.com) and Antonin Sprinzl
+  (Antonin.Sprinzl(a)tuwien.ac.at)
 
--- Defined integer-width typedefs such as u32/s32/u16/etc. in Nbase.
-   Went through much of the Nmap code and substituted these in where
-   correct lengths are important (port numbers, IP addresses, etc).
+o Defined integer-width typedefs such as u32/s32/u16/etc. in Nbase.
+  Went through much of the Nmap code and substituted these in where
+  correct lengths are important (port numbers, IP addresses, etc).
 
-** 2.54BETA21
+Nmap 2.54BETA21
 
--- Cleaned up a few build/distribution issues that were reported 
-   by LaMont Jones (lamont@hp.com) 
+o Cleaned up a few build/distribution issues that were reported by
+  LaMont Jones (lamont(a)hp.com)
 
--- Fixed compiler warning noted by Gabor Z. Papp (gzp@papp.hu) )
+o Fixed compiler warning noted by Gabor Z. Papp (gzp(a)papp.hu) )
 
-** 2.54BETA20 
+Nmap 2.54BETA20 
 
--- Added TCP Timestamp sequence checking for OS detection and
-   Netcraft-style uptime tests.
+o Added TCP Timestamp sequence checking for OS detection and
+  Netcraft-style uptime tests.
 
--- Found and fixed (I hope) byte alignment problem which was causing
-   bus errors on SPARC64 ( reported by H D Moore (hdm@secureaustin.com)
-   and Matthew Franz (mfranz@cisco.com) )
+o Found and fixed (I hope) byte alignment problem which was causing
+  bus errors on SPARC64 ( reported by H D Moore
+  (hdm(a)secureaustin.com) and Matthew Franz (mfranz(a)cisco.com) )
 
--- Apple Darwin (Mac OS X) 1.2 portability patch from 
-   Rob Braun <bbraun@synack.net>
+o Apple Darwin (Mac OS X) 1.2 portability patch from Rob Braun
+  (bbraun(a)synack.net)
 
--- Added IPID sequence number predictability report (also now used in
-   OS detection).
+o Added IPID sequence number predictability report (also now used in
+  OS detection).
 
--- Show actual IPID, TCP ISN, and TCP timestamp values in XML format
-   output rather than just the cooked results.
+o Show actual IPID, TCP ISN, and TCP timestamp values in XML format
+  output rather than just the cooked results.
 
--- Suppress IPID and TCP ISN predictability report unless you use -v
-   (you need -O as well).
+o Suppress IPID and TCP ISN predictability report unless you use -v
+  (you need -O as well).
 
--- Applied Solaris 8 compilation fixes from Germano Caronni 
-   ( gec@acm.org )
+o Applied Solaris 8 compilation fixes from Germano Caronni (
+  gec(a)acm.org )
 
--- Applied configure.in variable name typo fixes from Christian
-   Weisgerber (naddy@openbsd.org)
+o Applied configure.in variable name typo fixes from Christian
+  Weisgerber (naddy(a)openbsd.org)
 
--- Applied some more changes from Andy Lutomirski (Luto@mailandnews.com)
-   which provides better detection and reporting from some heinous errors.
+o Applied some more changes from Andy Lutomirski
+  (Luto(a)mailandnews.com) which provides better detection and
+  reporting from some heinous errors.
 
--- Added -n and -R (always/never DNS resolve) options to the man page.
+o Added -n and -R (always/never DNS resolve) options to the man page.
 
-** 2.54BETA19
+Nmap 2.54BETA19
 
--- I ported NmapFE to Windows so that Win32 users can use the
-   graphical interface.  It generally works, although I haven't tested
-   much.  Patches welcome!
+o I ported NmapFE to Windows so that Win32 users can use the graphical
+  interface.  It generally works, although I haven't tested much.
+  Patches welcome!
 
--- Various little fixes and cleanups, especially to the Windows port.
+o Various little fixes and cleanups, especially to the Windows port.
 
--- Applied patch from Andy Lutomirski (Luto@mailandnews.com) which
-   enhances some of the Win* error messages and adds the --win_trace
-   debugging option.
+o Applied patch from Andy Lutomirski (Luto(a)mailandnews.com) which
+  enhances some of the Win* error messages and adds the --win_trace
+  debugging option.
 
--- Applied some patches from Jay Freeman (saurik@saurik.com)
-   -- New --data_length option adds indicated number of random data
-   bytes to send with scan packet and tcp ping packet (does not
-   currently work with ICMP ping packet).  Does not affect OS
-   detection, RPC, or connect() scan packets.
-   -- Windows portability fixes
-   -- Various other little fixes.
+o Applied some patches from Jay Freeman (saurik(a)saurik.com)
+  o New --data_length option adds indicated number of random data
+    bytes to send with scan packet and tcp ping packet (does not
+    currently work with ICMP ping packet).  Does not affect OS
+    detection, RPC, or connect() scan packets.
+    o Windows portability fixes
+    o Various other little fixes.
 
--- Renamed rpc.h and error.h because they conflict with Windows
-   include files.  By the way, this was a pain to figure out because
-   VC++ is such a crappy compiler!  It basically just says problem in
-   "foobar.h" without giving you any idea how foobar.h got included!
-   gcc gives you a nice message tracing the chain of include files!
+o Renamed rpc.h and error.h because they conflict with Windows include
+  files.  By the way, this was a pain to figure out because VC++ is
+  such a crappy compiler!  It basically just says problem in
+  "foobar.h" without giving you any idea how foobar.h got included!
+  gcc gives you a nice message tracing the chain of include files!
 
-** 2.54BETA16
+Nmap 2.54BETA16
 
--- Upgraded to latest version of Winpcap ( 2.1-beta )
+o Upgraded to latest version of Winpcap ( 2.1-beta )
 
--- Merged in Windows port code from Ryan Permeh ( ryan@eeye.com) and
-   Andy Lutomirski ( Luto@mailandnews.com ).
+o Merged in Windows port code from Ryan Permeh ( ryan(a)eeye.com) and
+  Andy Lutomirski ( Luto(a)mailandnews.com ).
 
--- Took out C++ compiler test from nbase configure script.  It was
-   inserted accidently, but I found it interesting that only 2 people
-   complained about this causing them problems.  I guess most everyone
-   already has C++ compilers.
+o Took out C++ compiler test from nbase configure script.  It was
+  inserted accidently, but I found it interesting that only 2 people
+  complained about this causing them problems.  I guess most everyone
+  already has C++ compilers.
 
--- Applied patch from Steve Bleazard (steve@bleazard.com) which fixed
-   bug in internal Smoothed Round Trim Time calculations.
+o Applied patch from Steve Bleazard (steve(a)bleazard.com) which fixed
+  bug in internal Smoothed Round Trim Time calculations.
 
--- Fixed CFLAGS computation error in configure.  Problem discovered
-   and patched by Fredrik Lundholm (exce7@ce.chalmers.se)
+o Fixed CFLAGS computation error in configure.  Problem discovered and
+  patched by Fredrik Lundholm (exce7(a)ce.chalmers.se)
 
--- Added more debugging code for "Unknown datalink type" error -- if
-   you get this, please send me the full error msg including hex values.
+o Added more debugging code for "Unknown datalink type" error -- if
+  you get this, please send me the full error msg including hex
+  values.
 
--- Added Portuguese man page translations from Antonio Pires de Castro
-   Junior (apcastro@ic.unicamp.br).
+o Added Portuguese man page translations from Antonio Pires de Castro
+  Junior (apcastro(a)ic.unicamp.br).
 
--- Capitalized all references to God in error messages.
+o Capitalized all references to God in error messages.
 
-** Version 2.54BETA7
+Nmap 2.54BETA7
 
--- Applied patch from Hubert Feyrer
-   (hubert.feyrer@informatik.fh-regensburg.de) which adds support for
-   the new NetBSD DLT_PPP_* types.
+o Applied patch from Hubert Feyrer
+  (hubert.feyrer(a)informatik.fh-regensburg.de) which adds support for
+  the new NetBSD DLT_PPP_* types.
 
--- Updated to Eilon Gishri's (eilon@aristo.tau.ac.il) newest version
-   of nmap-rpc at ftp://ftp.tau.ac.il/pub/users/eilon/rpc/rpc
+o Updated to Eilon Gishri's (eilon(a)aristo.tau.ac.il) newest version
+  of nmap-rpc at ftp://ftp.tau.ac.il/pub/users/eilon/rpc/rpc
 
--- Moved a bunch of the scanning engine related functions to new files
-   (scan_engine.c and scan_engine.h ).  Timing functions were moved to
-   the new timing.c/timing.h .  Other stuff was shifted to
-   tcpip.c/tcpip.h.  At some point, nmap.c will only contain the Nmap
-   command line UI.
+o Moved a bunch of the scanning engine related functions to new files
+  (scan_engine.c and scan_engine.h ).  Timing functions were moved to
+  the new timing.c/timing.h .  Other stuff was shifted to
+  tcpip.c/tcpip.h.  At some point, nmap.c will only contain the Nmap
+  command line UI.
 
--- Updated Russian version of man page from Alex Volkov (topcat@nm.ru)
+o Updated Russian version of man page from Alex Volkov (topcat(a)nm.ru)
 
-** Version 2.54BETA6
+Nmap 2.54BETA6
 
--- Added XML output (-oX).  Hopefully this will help those of you
-   writing Nmap front ends and other tools that utilize Nmap.  The
-   "machine-readable" output has been renamed "grepable" (-oG) to
-   emphasize that XML is now the preferred machine-readable output
-   format.  But don't worry if your tool uses -oM , that format (and
-   the deprecated -oM flag) won't go away any time soon (if ever).
+o Added XML output (-oX).  Hopefully this will help those of you
+  writing Nmap front ends and other tools that utilize Nmap.  The
+  "machine-readable" output has been renamed "grepable" (-oG) to
+  emphasize that XML is now the preferred machine-readable output
+  format.  But don't worry if your tool uses -oM , that format (and
+  the deprecated -oM flag) won't go away any time soon (if ever).
 
--- Applied patch from Stefan Rapp <s.rapp@hrz.uni-dortmund.de> which fixes
-   a variable argument integer promotion problem in the new snprintf 
-   compatability file.  This is important for Redhat 7 systems.
+o Applied patch from Stefan Rapp (s.rapp(a)hrz.uni-dortmund.de) which
+  fixes a variable argument integer promotion problem in the new
+  snprintf compatability file.  This is important for Redhat 7
+  systems.
 
--- Reorganized output-related routines so that they now reside in
-   output.c & output.h.  Let me know if I accidently screwed up the
-   behavior of any scan types in the process.
+o Reorganized output-related routines so that they now reside in
+  output.c & output.h.  Let me know if I accidently screwed up the
+  behavior of any scan types in the process.
 
-** Version 2.54BETA5
+Nmap 2.54BETA5
 
--- Revamped the 'compatability libraries' subsystem.  Moved all of
-   that to a new library called 'libnbase' and changed Nmap and NmapFE
-   to use that.  I included a better version of *snprintf and some
-   other compatability files.  Obviously I cannot test these changes
-   on every whacked OS that needs this compatability cruft, so please
-   let me know if you run into compilation problems.
+o Revamped the 'compatability libraries' subsystem.  Moved all of that
+  to a new library called 'libnbase' and changed Nmap and NmapFE to
+  use that.  I included a better version of *snprintf and some other
+  compatability files.  Obviously I cannot test these changes on every
+  whacked OS that needs this compatability cruft, so please let me
+  know if you run into compilation problems.
 
--- Fixed a problem found by Martyn Tovey <martyn@netcraft.com> when
-   using Nmap on platforms that dislike division by zero.
+o Fixed a problem found by Martyn Tovey (martyn(a)netcraft.com) when
+  using Nmap on platforms that dislike division by zero.
+
+o Removed 128.210.*.* addresses from Nmap man page due to complaints
+  from Purdue security staff.
+
+o Fixed FreeBSD (some versions) compilation problem found by Martyn
+  Tovey (martyn(a)netcraft.com)
+
+Nmap 2.54BETA4
 
--- Removed 128.210.*.* addresses from Nmap man page due to complaints
-   from Purdue security staff.
+o Upgraded to the very latest Libpcap version ( the 9/3/00 CVS
+  snapshot ).  This version is from the tcpdump.org group rather than
+  the Lawrence Livermore crew.  The most important advantage is Linux
+  Socket Filter support (so you won't have that annoying syslog
+  message about Nmap using the obsolete SOCK_PACKET interface).
+
+o I tried to install Nmap on yet another machine without lex/yacc or
+  flex/bison.  That was the last straw!  I am now shipping the
+  generated C files, which eliminates the lex/yacc requirement.
+
+o Applied patch by Jay Freeman (saurik) (saurik(a)saurik.com) to make
+  Nmap C++-clean (this was lot of tedious work!  Thanks!).  Note that
+  Nmap still uses a normal C compiler by default, but Nmap derivatives
+  may appreciate C++ compatability.  Note that this only applies to
+  "Nmap proper", not libpcap.
+
+o Added a HACKING file for people who want to help with Nmap
+  development.  It describes preferred patch formats, development
+  resources, and offers a number of useful changes that would likely
+  be accepted into the main tree.
 
--- Fixed FreeBSD (some versions) compilation problem found by Martyn
-   Tovey <martyn@netcraft.com>
+o Fixed a configure.in error found by Vacuum
+  (vacuum(a)technotronic.com) which could cause compilation errors.
 
-** Version 2.54BETA4
+o Fingerprint file adjustments for better Win* detection
 
--- Upgraded to the very latest Libpcap version ( the 9/3/00 CVS
-   snapshot ).  This version is from the tcpdump.org group rather than
-   the Lawrence Livermore crew.  The most important advantage is Linux
-   Socket Filter support (so you won't have that annoying syslog
-   message about Nmap using the obsolete SOCK_PACKET interface).
+o Ensure libpcap is not configured and/or installed if you already
+  have a "new enough" version (0.4a6+) installed.
 
--- I tried to install Nmap on yet another machine without lex/yacc or
-   flex/bison.  That was the last straw!  I am now shipping the
-   generated C files, which eliminates the lex/yacc requirement.
-
--- Applied patch by Jay Freeman (saurik) <saurik@saurik.com> to make
-   Nmap C++-clean (this was lot of tedious work!  Thanks!).  Note that
-   Nmap still uses a normal C compiler by default, but Nmap
-   derivatives may appreciate C++ compatability.  Note that this only
-   applies to "Nmap proper", not libpcap.
+o Included Italian translation of Nmap man page from Giorgio Zoppi
+  (deneb(a)supereva.it) .
 
--- Added a HACKING file for people who want to help with Nmap
-   development.  It describes preferred patch formats, development
-   resources, and offers a number of useful changes that would likely
-   be accepted into the main tree.
-
--- Fixed a configure.in error found by Vacuum
-   (vacuum@technotronic.com) which could cause compilation errors.
+o Fixed a SYN scan problem that could cause a major slowdown on some
+  busy networks.
 
--- Fingerprint file adjustments for better Win* detection
+o Fixed a crash problem in NmapFE reported by sverre ( sverre(a)gmx.net )
 
--- Ensure libpcap is not configured and/or installed if you already
-   have a "new enough" version (0.4a6+) installed.
+o Added an "SInfo" line to most printed fingerprints.  It looks
+  similar to this:
+  SInfo(V=2.54BETA4%P=i686-pc-linux-gnu%D=9/4%Time=9681031%O=7%C=1)
+  and contains information useful when fingerprints are reported (Nmap
+  version/platform, scan date, and open/closed ports used)
 
--- Included Italian translation of Nmap man page from Giorgio Zoppi
-   <deneb@supereva.it> .
+o Fixed RPCGrind (-sR) scan.  It has been almost completely broken
+  since 2.54BETA2 (which has been out for two weeks) and nobody
+  reported it!  I noticed the problem myself during testing of
+  something else.  I am disappointed that nobody bothered to even let
+  me know that this was broken.  Does anyone even use RPC Scan?
 
--- Fixed a SYN scan problem that could cause a major slowdown on some
-   busy networks.
+o Various other small fixes/improvements
 
--- Fixed a crash problem in NmapFE reported by sverre ( sverre@gmx.net )
+Nmap 2.54BETA3
 
--- Added an "SInfo" line to most printed fingerprints.  It looks
-   similar to this: 
-   SInfo(V=2.54BETA4%P=i686-pc-linux-gnu%D=9/4%Time=9681031%O=7%C=1)
-   and contains information useful when fingerprints are reported
-   (Nmap version/platform, scan date, and open/closed ports used)
+o Went through and added/adjusted a bunch of fingerprints.  A lot of
+  people submitted Windows Millenium Edition (WinME) beta
+  fingerprints, but nobody submitted IPs for them.  So please let me
+  know if this version detects your WinME boxes.
 
--- Fixed RPCGrind (-sR) scan.  It has been almost completely broken
-   since 2.54BETA2 (which has been out for two weeks) and nobody
-   reported it!  I noticed the problem myself during testing of
-   something else.  I am disappointed that nobody bothered to even let
-   me know that this was broken.  Does anyone even use RPC Scan?
+o Applied NmapFE patch from Michael Fischer v. Mollard (mfvm(a)gmx.de)
+  which made did the following:
+  o Added delete event so that NmapFE always quits when you kill it
+    with your window manager
+  o added the menubar to the vbox instead to the fixed widget
 
--- Various other small fixes/improvements
+o Various small fixes/improvements
 
-** Version 2.54BETA3
+Nmap 2.54BETA2
 
--- Went through and added/adjusted a bunch of fingerprints.  A lot of
-   people submitted Windows Millenium Edition (WinME) beta
-   fingerprints, but nobody submitted IPs for them.  So please let me
-   know if this version detects your WinME boxes.
+o Added a shortcut which can make single port SYN scans of a network
+  much faster.  For example, if a new sendmail vulnerability is found,
+  this reduces the time it takes to scan your whole network for port
+  25.  This shortcut takes effect when you do "-PS[port] -sS
+  -p[port]".  For example 'nmap -n -sS -p25 -PS25 24.0.0.0/8".  This
+  optimization doubled the scan speed in a 30,000 IP test I performed.
 
--- Applied NmapFE patch from Michael Fischer v. Mollard <mfvm@gmx.de>
-   which made did the following:
-    -- Added delete event so that NmapFE always quits when you kill it
-       with your window manager
-    -- added the menubar to the vbox instead to the fixed widget
+o Added -sL (List scan).  Just as ping scan (-sP) allows you to short
+  circuit the scan right after pinging, -sL allows you to short
+  circuit the scan right after target selection.  This allows you to
+  see what hosts WOULD be scanned without actually doing it.  The
+  hosts will be resolved unles you use -n.  Primary uses:
+  1) Get all the IPs in a network (like A.B.C.D/16) and take out
+     machines that are too fragile to be scanned safely before
+     calling Nmap with the new list (using -iL).
+  2) Test that a complex spec like 128.4,5,7-9.*.7 does what you
+     expect before actual scanning.
+  3) When all you want to do is resolve a bunch of IPs.
+  4) You just want results of a zone transfer (if it is implemented).
 
--- Various small fixes/improvements
+o Added some new fingerprints and adjusted some others based on
+  submissions to the DB (I still have a lot more to go through so
+  don't worry if your submission is still not detected).
 
-** Version 2.54BETA2
+o Added a warning when you scan 0 hosts (eg "nmap -v").  There are
+  various other output tweaks as well.
 
--- Added a shortcut which can make single port SYN scans of a network
-   much faster.  For example, if a new sendmail vulnerability is
-   found, this reduces the time it takes to scan your whole network
-   for port 25.  This shortcut takes effect when you do "-PS<port> -sS
-   -p<port>".  For example 'nmap -n -sS -p25 -PS25 24.0.0.0/8".  This
-   optimization doubled the scan speed in a 30,000 IP test I performed.
+o Ensured that 0.0.0.0 can be scanned by nmap (although on some OSs,
+  like Linux, it won't work due to what seem to be kernel bugs).  Oh
+  well.  I'll look into it later.
 
--- Added -sL (List scan).  Just as ping scan (-sP) allows you to short
-   circuit the scan right after pinging, -sL allows you to short
-   circuit the scan right after target selection.  This allows you to
-   see what hosts WOULD be scanned without actually doing it.  The
-   hosts will be resolved unles you use -n.  Primary uses:
-   1) Get all the IPs in a network (like A.B.C.D/16) and take out
-      machines that are too fragile to be scanned safely before
-      calling Nmap with the new list (using -iL).
-   2) Test that a complex spec like 128.4,5,7-9.*.7 does what you
-      expect before actual scanning.
-   3) When all you want to do is resolve a bunch of IPs.
-   4) You just want results of a zone transfer (if it is implemented).
+Nmap 2.54BETA1
 
--- Added some new fingerprints and adjusted some others based on
-   submissions to the DB (I still have a lot more to go through so
-   don't worry if your submission is still not detected).
+o Added an extremely cool scan type by Gerhard Rieger ( rieger at
+  iue.tuwien.ac.at ) -- IP Protocol scanning.  Basically it sends a
+  bunch of IP headers (no data) with different "protocol" fields to
+  the host.  The host then (usually) sends back a protocol unreachable
+  for those that it does not support.  By exclusion, nmap can make a
+  list of those that are supported.  This is similar in concept to
+  (and is implemented using most of the same scanning routines as) UDP
+  scanning.  Note that some hosts do not send back protocol
+  unreachables -- in that case all protocols will appear "open".
 
--- Added a warning when you scan 0 hosts (eg "nmap -v").  There are
-   various other output tweaks as well.
+o Fixed an uninitialized variable problem in NmapFE (found by Alvin
+  Starr (alvin at iplink.net )
 
--- Ensured that 0.0.0.0 can be scanned by nmap (although on some OSs, like
-   Linux, it won't work due to what seem to be kernel bugs).  Oh
-   well.  I'll look into it later.
+o Fixed a packaging problem that lead to the Nmap man page being
+  included twice in the .tgz .
 
-** Version 2.54BETA1
+o Fixed dangling nroff include in xnmap man page (noted by Debian Nmap
+  package maintainer LaMont Jones (lamont(a)security.hp.com)
 
--- Added an extremely cool scan type by Gerhard Rieger ( rieger at
-   iue.tuwien.ac.at ) -- IP Protocol scanning.  Basically it sends a
-   bunch of IP headers (no data) with different "protocol" fields to
-   the host.  The host then (usually) sends back a protocol
-   unreachable for those that it does not support.  By exclusion, nmap
-   can make a list of those that are supported.  This is similar in
-   concept to (and is implemented using most of the same scanning
-   routines as) UDP scanning.  Note that some hosts do not send back
-   protocol unreachables -- in that case all protocols will appear
-   "open".
+o Give a warning when no targets at all are specified
 
--- Fixed an uninitialized variable problem in NmapFE (found by Alvin
-   Starr (alvin at iplink.net )
+o Updated 'make uninstall' so that it deletes all relevant files
 
--- Fixed a packaging problem that lead to the Nmap man page being
-   included twice in the .tgz .
+o Included latest nmap-rpc from Eilon Gishri (eilon at aristo.tau.ac.il)
 
--- Fixed dangling nroff include in xnmap man page (noted by Debian
-   Nmap package maintainer LaMont Jones (lamont@security.hp.com)
+o Eliminated -I. from Nmap's and NmapFE's makefiles (suggested by "Jay
+  Freeman (saurik)" (saurik at saurik.com)
 
--- Give a warning when no targets at all are specified
+o Added Russian documentation by Alex Volkov
 
--- Updated 'make uninstall' so that it deletes all relevant files
+o Added Lithuanian documentation from Aurimas Mikalauskas (inner(a)dammit.lt) 
 
--- Included latest nmap-rpc from Eilon Gishri (eilon at aristo.tau.ac.il)
+Nmap 2.53
 
--- Eliminated -I. from Nmap's and NmapFE's makefiles (suggested by
-   "Jay Freeman (saurik)" (saurik at saurik.com)
+o Fixed a commenting issue that could cause trouble for non-GNU
+  compilers (first found by Jan-Frode Myklebust (janfrode at
+  parallab.uib.no))
 
--- Added Russian documentation by Alex Volkov
+o A few new services to nmap-services
 
--- Added Lithuanian documentation from Aurimas Mikalauskas (inner at dammit.lt) 
-** Version 2.53
+Nmap 2.52
 
--- Fixed a commenting issue that could cause trouble for non-GNU compilers
-   (first found by Jan-Frode Myklebust (janfrode at parallab.uib.no))
+o Added very simple man pages for xnmap/nmapfe (lack of man pages for
+  these was noticed by LaMont Jones (lamont(a)hp.com), the Debian Nmap
+  package maintainer, based on bug report by Adrian Bunk
+  (bunk(a)fs.tum.de ).
 
--- A few new services to nmap-services
+o Fixed a "Status: Down" machine name output problem in machine
+  parseable logs found by Alek O. Komarnitsky (alek(a)ast.lmco.com)
 
-** Version 2.52
+o Took some wierd files out of the doc directory (cd, grep , vi, and
+  .swp)
 
--- Added very simple man pages for xnmap/nmapfe (lack of man pages for
-   these was noticed by LaMont Jones (lamont (at) hp.com), the Debian
-   Nmap package maintainer, based on bug report by Adrian Bunk (bunk
-   (at) fs.tum.de ).
+o Fixed some typos found by Thomas Klausner (wiz(a)danbala.ifoer.tuwien.ac.at)
 
--- Fixed a "Status: Down" machine name output problem in machine
-   parseable logs found by Alek O. Komarnitsky ( alek (at) ast.lmco.com )
+o Updated nmap-rpc with new entries found in the latest version of
+  Eilon Gishri's rpc list.
 
--- Took some wierd files out of the doc directory (cd, grep , vi, and
-   .swp)
+Nmap 2.51
 
--- Fixed some typos found by Thomas Klausner ( wiz (at)
-   danbala.ifoer.tuwien.ac.at )
+o Fixed target parsing bug found by Steve Horsburgh (shorsburgh(a)horsburgh.com).
 
--- Updated nmap-rpc with new entries found in the latest version of Eilon
-   Gishri's rpc list.
+o Changed makefile/rpm to store fingerprint, rpc, and services file in
+  $prefix/share/nmap rather than $prefix/lib/nmap , since these files
+  are architecture independent.  You should now use ./configure
+  --datadir instead of ./configure --libdir to change the default
+  location.  Suggested by Thomas Klausner
+  (wiz(a)danbala.ifoer.tuwien.ac.at).
 
-** Version 2.51
+o I am now including Eilon Gishri's (eilon(a)aristo.tau.ac.il) rpc
+  number list (which he recently merged with the Nmap 2.50 rpc list).
 
--- Fixed target parsing bug found by Steve Horsburgh (shorsburgh (at)
-   horsburgh.com).
+o Included Spanish and French HTML versions of the Nmap man page (may
+  not always be up to date).
 
--- Changed makefile/rpm to store fingerprint, rpc, and services file
-   in $prefix/share/nmap rather than $prefix/lib/nmap , since these
-   files are architecture independent.  You should now use 
-   ./configure --datadir instead of ./configure --libdir to change 
-   the default location.  Suggested by Thomas Klausner ( wiz (at)
-   danbala.ifoer.tuwien.ac.at ).
+Nmap 2.50
 
--- I am now including Eilon Gishri's (eilon (at) aristo.tau.ac.il) rpc
-   number list (which he recently merged with the Nmap 2.50 rpc list).
+o Fixed an IP calculation error which could occur in some cases where
+  you scan machines on different devices (like lo and eth0).  This
+  problem was discoved by Jonathan Fine (jfine(a)psu.edu).
 
--- Included Spanish and French HTML versions of the Nmap man page (may
-   not always be up to date).
+o Fixed a problem that could, in rare cases, cause a SYN scan scan to
+  crash (the error message was "attempt to add port number X with
+  illegal state 0").  This problem was reported by Erik Benner
+  (erik(a)xyzzy.net)
 
-** Version 2.50
+o Changed the .spec file so that RPM versions create a xnmap link to
+  nmapfe ( the normal make install has done this for a long time ).
 
--- Fixed an IP calculation error which could occur in some cases where
-   you scan machines on different devices (like lo and eth0).  This
-   problem was discoved by Jonathan Fine (jfine@psu.edu).
+Nmap 2.3BETA21
 
--- Fixed a problem that could, in rare cases, cause a SYN scan scan to
-   crash (the error message was "attempt to add port number X with
-   illegal state 0").  This problem was reported by Erik Benner
-   (erik@xyzzy.net)
+o A number of people reported problems with nmapfe in various
+  environments (specifically gdk errors, hangs, and crashes).  I think
+  that is now fixed.  Let me know if you still have the problem (make
+  sure the title bar says BETA21).
 
--- Changed the .spec file so that RPM versions create a xnmap link to
-   nmapfe ( the normal make install has done this for a long time ).
+o Added a bunch of OS fingerprints based on all the contributions in
+  the last month or so.
 
-** Version 2.3BETA21
+o Fixed a bug that completely broke RPC scanning in BETA19.
 
--- A number of people reported problems with nmapfe in various
-   environments (specifically gdk errors, hangs, and crashes).  I
-   think that is now fixed.  Let me know if you still have the problem
-   (make sure the title bar says BETA21).
+o Added list of ports scanned near the top of each machine log WHEN
+  -v was specified.  Here is an example of the format:
+  # Ports scanned: TCP(13;1-10,22,25) UDP(0;)
+  The "13" above is the number of TCP ports being scanned.
 
--- Added a bunch of OS fingerprints based on all the contributions in
-   the last month or so.
+o Got rid of a snprintf() from nmapfe sine some systems don't have it
+  :( and I'm to lazy to integrate in the snprintf that comes with nmap
+  right now.
 
--- Fixed a bug that completely broke RPC scanning in BETA19.
+o Fixed important target IP range parsing bug found by Jean-Yves Simon
+  ( lethalwp(a)linuxbe.org ).
 
--- Added list of ports scanned near the top of each machine log WHEN
-   -v was specified.  Here is an example of the format:
-   # Ports scanned: TCP(13;1-10,22,25) UDP(0;)
-   The "13" above is the number of TCP ports being scanned.
+o Applied patch by albert chin (china at thewrittenword.com) which
+  adds --with-libpcap[=DIR] option to configure and and adds an
+  elegant approach for -lnsl and -lsocket checking to configure .
 
--- Got rid of a snprintf() from nmapfe sine some systems don't have it
-   :( and I'm to lazy to integrate in the snprintf that comes with
-   nmap right now.
+o Fixed a bug which could cause Nmap to mark a port filtered based on
+  ICMP dest. unreachable packets relating to a different host than the
+  one being scanned.
 
--- Fixed important target IP range parsing bug found by Jean-Yves
-   Simon ( lethalwp@linuxbe.org ).
+o Fixed output problem relating to ident scan noted by Peter Marschall
+  ( peter.marschall at mayn.de )
 
--- Applied patch by albert chin (china at thewrittenword.com) which
-   adds --with-libpcap[=DIR] option to configure and and adds an
-   elegant approach for -lnsl and -lsocket checking to configure .
+o Applied patch to services.c by Andrew Brown (atatat(a)atatdot.net)
+  which prevents some useless debugging (-d) output when reading some
+  kindss of /etc/services files.
 
--- Fixed a bug which could cause Nmap to mark a port filtered based on ICMP
-   dest. unreachable packets relating to a different host than the one
-   being scanned.
+o Added "Host: [machinename] (ip) Status: Down" to machine logs when
+  the verbose option is given (just like down hosts are reported to
+  stdout when verbose is given).  Suggested by Alek Komarnitsky.
 
--- Fixed output problem relating to ident scan noted by Peter
-   Marschall ( peter.marschall at mayn.de )
+o Applied NetBSD compatability patch provided by Mipam (reinoud at
+  ibbnet.org) which changes an autoconf macro to check for
+  getopt_long_only instead of getopt_long.
 
--- Applied patch to services.c by Andrew Brown (atatat@atatdot.net)
-   which prevents some useless debugging (-d) output when reading some
-   kindss of /etc/services files.
+o Nmap used to print an inaccuracy warning when no open TCP ports were
+  found on the target machine.  Due to a bug, this was not always
+  being printed.  Problem found by Matt (matt at use.net) and Ajay
+  Gupta2 (Ajay.Gupta2 at ey.com).
 
--- Added "Host: [machinename] (ip) Status: Down" to machine logs when
-   the verbose option is given (just like down hosts are reported to
-   stdout when verbose is given).  Suggested by Alek Komarnitsky.
+o Added the number of ports in the ignored state right after the state
+  name in machine parseable logs.  It used to looke like: "Ignored
+  State: closed" whereas now it looks like: "Ignored State: closed
+  (1508)" Meaning that 1508 ports were closed and thus are not
+  specifically enumerated.
 
--- Applied NetBSD compatability patch provided by Mipam (reinoud at
-   ibbnet.org) which changes an autoconf macro to check for
-   getopt_long_only instead of getopt_long.
+o Changed all nmapfe calls to gdk_font_load into gdk_fontset_load .
+  Bennett Feitell (bfeitell at panix.com) suggested that this fixed
+  some nmapfe font problems.
 
--- Nmap used to print an inaccuracy warning when no open TCP ports
-   were found on the target machine.  Due to a bug, this was not
-   always being printed.  Problem found by Matt (matt at use.net) and
-   Ajay Gupta2 (Ajay.Gupta2 at ey.com).
+Nmap 2.3BETA20
 
--- Added the number of ports in the ignored state right after the
-state name in machine parseable logs.  It used to looke like:
- "Ignored State: closed" whereas now it looks like:
- "Ignored State: closed (1508)" Meaning that 1508 ports were closed
- and thus are not specifically enumerated.
+o Applied patch sent in by s.rapp(a)hrz.uni-dortmund.de which fixes a
+  memory alignment bug in osscan.c which could cause core dumps on
+  machines which require aligned access (like SPARC).
 
--- Changed all nmapfe calls to gdk_font_load into gdk_fontset_load .
-   Bennett Feitell (bfeitell at panix.com) suggested that this fixed
-   some nmapfe font problems.
+o Fixed a compilation problem on machines that do not have MAP_FAILED
+  defined (as a return value to mmap).  Problem noted by Phil
+  Stracchino (alaric(a)babcom.com).
 
-** Version 2.3BETA20
+Nmap 2.3BETA19
 
--- Applied patch sent in by s.rapp@hrz.uni-dortmund.de which fixes a
-   memory alignment bug in osscan.c which could cause core dumps on
-   machines which require aligned access (like SPARC).
+o Tweaked the output so that it now tells how many ports are not shown
+  and what state the ignored ports are in.  This info could be
+  inferred before by people who had studied the manpage, but now the
+  info is explicitly available.  I cleaned up a bunch of stuff
+  internally to make this happen.  I hope I didn't break anything!
 
--- Fixed a compilation problem on machines that do not have MAP_FAILED
-   defined (as a return value to mmap).  Problem noted by Phil
-   Stracchino <alaric@babcom.com>.
+o Changed NmapFE so that it always kills any running Nmap process when
+  you press exit. Problem noted by Marc Renner
+  (mrenner(a)ci.marysville.wa.us)
 
-** Version 2.3BETA19
+o Apparently some Linux (glibc) systems now come with a "strcasestr"
+  function.  So I have made autoconf look for this and use the native
+  version if supported. (problem noted by Sami Farin
+  (sfarin(a)ratol.fi)).
 
--- Tweaked the output so that it now tells how many ports are not
-   shown and what state the ignored ports are in.  This info could be
-   inferred before by people who had studied the manpage, but now the
-   info is explicitly available.  I cleaned up a bunch of stuff
-   internally to make this happen.  I hope I didn't break anything!
+o Added a new attribute "Ignored State: xxx" to the machine parseable
+  logs, where xxx is the state (closed, filtered, or UNfiltered) that
+  is being ignored.  Ports in that state are not listed (they weren't
+  listed in earlier versions either).  Perhaps I should list ALL ports
+  for machine parseable output.  Opinions?
 
--- Changed NmapFE so that it always kills any running Nmap process
-   when you press exit. Problem noted by Marc Renner
-   (mrenner (at) ci.marysville.wa.us)
+o Merged in a patch sent in by Mipam (reinoud(a)ibbnet.org) which is
+  apparently part of the OpenBSD Nmap "port".  Although Nmap seems to
+  work fine for me on my OpenBSD 2.4 box, a couple OpenBSD users have
+  complained of problems.  Hopefully this will help. (it adds DLT_LOOP
+  and DLT_ENC offset cases when reading from libpcap).
 
--- Apparently some Linux (glibc) systems now come with a "strcasestr"
-   function.  So I have made autoconf look for this and use the native
-   version if supported. (problem noted by Sami Farin
-   (sfarin (at) ratol.fi)).
+o A few really minor bugfixes.
 
--- Added a new attribute "Ignored State: xxx" to the machine parseable
-   logs, where xxx is the state (closed, filtered, or UNfiltered) that
-   is being ignored.  Ports in that state are not listed (they weren't
-   listed in earlier versions either).  Perhaps I should list ALL
-   ports for machine parseable output.  Opinions?
+Nmap 2.3BETA18
 
--- Merged in a patch sent in by Mipam (reinoud (at) ibbnet.org) which is
-   apparently part of the OpenBSD Nmap "port".  Although Nmap seems to
-   work fine for me on my OpenBSD 2.4 box, a couple OpenBSD users have
-   complained of problems.  Hopefully this will help. (it adds
-   DLT_LOOP and DLT_ENC offset cases when reading from libpcap).
+o Fixed a very important bug that occurred when SYN scanning
+  localhost.  Many thanks to Dries Schellekens (
+  gwyllion(a)ace.ulyssis.student.kuleuven.ac.be ) for first reporting
+  the problem.
 
--- A few really minor bugfixes.
+o Uros Prestor from TurboLinux informed us that the latest versions of
+  Nmap work with Linux on the upcoming Intel Merced/Itanium IA-64
+  processors.  He also said that the TurboLinux distribution includes
+  Nmap.  Kudos to them!  As well as the other distros that support
+  Nmap (Debian, Red Hat, Suse, Trinux) and of course FreeBSD, NetBSD,
+  & OpenBSD.  Does anyone know if Nmap ships with the latest from
+  Mandrake or Corel?  The latest Solaris includes some Free software.
+  If anyone can get them to ship Nmap, I will buy you a case of beer
+  :).
 
-** Version 2.3BETA18
+o Added a #define to change vsnprintf to vsprintf on machines which do
+  not support the former (mostly Solaris 2.5.1 and earlier).  This
+  function is less safe.  For people who care about security, we
+  recommend an upgrade to Solaris 8 (or Linux/*BSD).
 
--- Fixed a very important bug that occurred when SYN scanning
-   localhost.  Many thanks to Dries Schellekens (
-   gwyllion (at) ace.ulyssis.student.kuleuven.ac.be ) for first reporting
-   the problem.
+o Changed the NmapFE version to 0.[nmap_version] rather than always
+  leaving it at 0.9.5 (which was confusing).  Thanks to J.D.K. Chipps
+  (jdkc(a)woptura.com) for noticing this.
 
--- Uros Prestor from TurboLinux informed us that the latest
-   versions of Nmap work with Linux on the upcoming Intel
-   Merced/Itanium IA-64 processors.  He also said that the TurboLinux
-   distribution includes Nmap.  Kudos to them!  As well as the other
-   distros that support Nmap (Debian, Red Hat, Suse, Trinux) and of
-   course FreeBSD, NetBSD, & OpenBSD.  Does anyone know if Nmap ships
-   with the latest from Mandrake or Corel?  The latest Solaris
-   includes some Free software.  If anyone can get them to ship Nmap,
-   I will buy you a case of beer :).
+o Added support for "-vv" (means the same as "-v -v").  Older versions
+  of Nmap supported it (noted by George Kurtz).
 
--- Added a #define to change vsnprintf to vsprintf on machines which
-   do not support the former (mostly Solaris 2.5.1 and earlier).  This
-   function is less safe.  For people who care about security, we
-   recommend an upgrade to Solaris 8 (or Linux/*BSD).
+Nmap 2.3BETA17
 
--- Changed the NmapFE version to 0.<nmap_version> rather than always
-   leaving it at 0.9.5 (which was confusing).  Thanks to J.D.K. Chipps
-   (jdkc (at) woptura.com) for noticing this.
+o Added ACK scanning.  This scan technique (which van Houser and
+  others have been bugging me to add for years :), is great for
+  testing firewall rulesets.  It can NOT find open ports, but it can
+  distinguish between filtered/unfilterd by sending an ACK packet to
+  each port and waiting for a RST to come back.  Filtered ports will
+  not send back a RST (or will send ICMP unreachables).  This scan
+  type is activated with -sA .
 
--- Added support for "-vv" (means the same as "-v -v").  Older
-   versions of Nmap supported it (noted by George Kurtz).
+o Documented the Window scan (-sW) which Lamont Granquist added in
+  September 99.
 
-** Version 2.3BETA17
+o Added a whole bunch of OS fingerprints that people have submitted.
 
--- Added ACK scanning.  This scan technique (which van Houser and
-   others have been bugging me to add for years :), is great for
-   testing firewall rulesets.  It can NOT find open ports, but it can
-   distinguish between filtered/unfilterd by sending an ACK packet to
-   each port and waiting for a RST to come back.  Filtered ports will
-   not send back a RST (or will send ICMP unreachables).  This scan
-   type is activated with -sA .
+o "Protocol" field in output eliminated.  It is now printed right next
+  to the number (/etc/services style).  Like "22/tcp".  I wonder what
+  I should put in the extra white space this leaves on the report :).
 
--- Documented the Window scan (-sW) which Lamont Granquist added in
-   September 99.
+o Added --resume option to continue a large network scan where you
+  left off.  This is useful for recovering from errors (modem drops
+  carrier, network outage, etc).  It also allows you to start and stop
+  for policy reasons (like if a client only wants you to scan on
+  weekends or at night) or if you want to run the scan on a different
+  host.  Usage is 'nmap --resume logfile' where logfile can be either
+  normal (-oN) or machine parseable (-oM) logfile from the scan that
+  was aborted.  No other options can be given (the options in the
+  logfile from the original scan will be used).  Nmap will start off
+  with the host after the last one successfully scanned in the log
+  file.
 
--- Added a whole bunch of OS fingerprints that people have submitted.
+o Added --append_output option which causes -oN/-oM/-oS to APPEND to
+  the output file you specify rather than overwriting it.
 
--- "Protocol" field in output eliminated.  It is now printed right
-   next to the number (/etc/services style).  Like "22/tcp".  I wonder
-   what I should put in the extra white space this leaves on the
-   report :).
+o Various internal code cleanup, makefile fixes, etc.
 
--- Added --resume option to continue a large network scan where you
-   left off.  This is useful for recovering from errors (modem drops
-   carrier, network outage, etc).  It also allows you to start and
-   stop for policy reasons (like if a client only wants you to scan on
-   weekends or at night) or if you want to run the scan on a different
-   host.  Usage is 'nmap --resume logfile' where logfile can be either
-   normal (-oN) or machine parseable (-oM) logfile from the scan that
-   was aborted.  No other options can be given (the options in the
-   logfile from the original scan will be used).  Nmap will start off
-   with the host after the last one successfully scanned in the log
-   file.
+o Changed version number from 2.3BETA* to 2.30BETA* to appease various
+  packaging systems that thought 2.3BETA was < 2.12 .
 
--- Added --append_output option which causes -oN/-oM/-oS to APPEND to
-   the output file you specify rather than overwriting it.
+o Nmap output to files now correctly flushes output after scanning for
+  each host is finished.
 
--- Various internal code cleanup, makefile fixes, etc.
+o Fixed compiler -L flags error found by Ralf Hildebrandt
+  (R.Hildebrandt(a)tu-bs.de)
 
--- Changed version number from 2.3BETA* to 2.30BETA* to appease
-   various packaging systems that thought 2.3BETA was < 2.12 .
+o Fixed configure scripts so that options you give to the Nmap
+  configure (like --prefix ) are also passed to the nmapfe configure
+  script.  This problem was noted by Ralf Hildebrandt
+  (R.Hildebrandt(a)tu-bs.de).  While I was at it, I added some other
+  cleanups to the system.
 
--- Nmap output to files now correctly flushes output after scanning
-   for each host is finished.
+o Added --noninteractive option for when nmap is called from scripts
+  (where stuff like prompting users for info is unacceptable).  It
+  does not currently do anything (Nmap never prompts) and script
+  writers should probably wait until at least May '2000 so their
+  scripts still work with earlier versions of Nmap.
 
--- Fixed compiler -L flags error found by Ralf Hildebrandt
-   <R.Hildebrandt (at) tu-bs.de>
+o Updated to the latest config.guess and config.sub from Autoconf 2.13
 
--- Fixed configure scripts so that options you give to the Nmap
-   configure (like --prefix ) are also passed to the nmapfe configure
-   script.  This problem was noted by Ralf Hildebrandt
-   <R.Hildebrandt (at) tu-bs.de>.  While I was at it, I added some other
-   cleanups to the system.
+o Applied patch by Sven (s.carstens(a)gmx.de> which fixes a
+  segmentation fault problem in Nmapfe colored mode as well as some
+  output niceties.
 
--- Added --noninteractive option for when nmap is called from scripts
-   (where stuff like prompting users for info is unacceptable).  It
-   does not currently do anything (Nmap never prompts) and script
-   writers should probably wait until at least May '2000 so their
-   scripts still work with earlier versions of Nmap.
+o Changed some C++ comments to C-style for portability (noticed by
+  "Sergei V. Rousakov" (sergei(a)cas.Vanderbilt.Edu) )
 
--- Updated to the latest config.guess and config.sub from Autoconf 2.13
+Nmap 2.3BETA14
 
--- Applied patch by Sven <s.carstens (at) gmx.de> which fixes a segmentation
-   fault problem in Nmapfe colored mode as well as some output niceties.
+o Peter Kosinar (goober(a)gjh.sk) performed some cleanup of the output
+  routines and as a bonus he added skript kiddie output mode!!!  Try
+  it out by adding "-oS - " to your nmap command line.  Note that
+  using '-' to represent stdout instead of a filename is something you
+  can do with any of the output modes.
 
--- Changed some C++ comments to C-style for portability (noticed by 
-   "Sergei V. Rousakov" <sergei (at) cas.Vanderbilt.Edu> )
+o Ensured that Nmap always gives up on ident scan after the first port
+  attempt finds it to be closed (problem noticed by Matt
+  (matt(a)use.net))
 
-** Version 2.3BETA14
+o Changed strsep's in nmapfe to more portable strtok's (should
+  especially help Nmapfe compiles on Solaris)
 
--- Peter Kosinar <goober (at) gjh.sk> performed some cleanup of the output
-   routines and as a bonus he added skript kiddie output mode!!!  Try
-   it out by adding "-oS - " to your nmap command line.  Note that
-   using '-' to represent stdout instead of a filename is something
-   you can do with any of the output modes.
+o Changed permutation algorithm to make port order and host order
+  shuffling more random.
 
--- Ensured that Nmap always gives up on ident scan after the first
-   port attempt finds it to be closed (problem noticed by Matt
-   <matt (at) use.net>)
+o Various minor changes and internal code cleanup.
 
--- Changed strsep's in nmapfe to more portable strtok's (should
-   especially help Nmapfe compiles on Solaris)
+o Fixed integer overflow that was limiting the max --host_timeout
+  value to about 2,000,000 milliseconds (~1/2 hour).  The limit is now
+  about 4,000,000,000 milliseconds (~1 month).  I really hope you
+  don't need more than that :).
 
--- Changed permutation algorithm to make port order and host order
-   shuffling more random.
+Nmap 2.3BETA13
 
--- Various minor changes and internal code cleanup.
+o I made Nmap smarter about detecting filtering during UDP, Xmas,
+  NULL, and FIN scans.
 
--- Fixed integer overflow that was limiting the max --host_timeout value 
-   to about 2,000,000 milliseconds (~1/2 hour).  The limit is now
-   about 4,000,000,000 milliseconds (~1 month).  I really hope you don't 
-   need more than that :).
+o Updated Nmapfe to 0.9.5 (+ a patch from NmapFE author Zach Smith)
 
-** Version 2.3BETA13
--- I made Nmap smarter about detecting filtering during UDP, Xmas,
-   NULL, and FIN scans.
+o Fixed a problem where NmapFE would fail to honor $PATH (Noticed by
+  K. Scott Rowe (kscott(a)nmt.edu)
 
--- Updated Nmapfe to 0.9.5 (+ a patch from NmapFE author Zach Smith)
+o Added a couple ICMP unreachable messages Nmap was missing (found by
+  Bifrost (bifrost(a)minions.com)).
 
--- Fixed a problem where NmapFE would fail to honor $PATH (Noticed 
-   by K. Scott Rowe <kscott (at) nmt.edu>)
+o Internal cleanup that improves the way some port lists are stored.
 
--- Added a couple ICMP unreachable messages Nmap was missing (found by
-   Bifrost <bifrost (at) minions.com>).
+o Added some more RPC numbers from (mmmorris(a)netscape.net)
 
--- Internal cleanup that improves the way some port lists are stored.
+o Relaxed the dependency requirements of nmapfe rpm (now will accept
+  any version of Nmap).
 
--- Added some more RPC numbers from <mmmorris (at) netscape.net>
+Nmap 2.3BETA12
 
--- Relaxed the dependency requirements of nmapfe rpm (now will accept
-   any version of Nmap).
+o Added interactive mode which adds convenience for managing nmap
+  sessions and also enhances privacy.  Get to it with --interactive
+  and then type 'h' for help.
 
-** Version 2.3BETA12
--- Added interactive mode which adds convenience for managing nmap
-   sessions and also enhances privacy.  Get to it with --interactive
-   and then type 'h' for help.
+o Added/modified many fingerprints including the latest 2.3.X Linux
+  releases, the latest Win2000 builds, the Apple Airport Wireless
+  device, and several dozen more.
 
--- Added/modified many fingerprints including the latest 2.3.X Linux
-   releases, the latest Win2000 builds, the Apple Airport Wireless
-   device, and several dozen more.
+o Migrated to RPM .spec file sent in by Tim Powers
+  (timp(a)redhat.com).  That is the file they will be using to package
+  Nmap with the power tools CD in the next Redhat release.  The most
+  important changes are that Nmap (only the RPM version) now installs
+  in /usr/* instead of /usr/local/* and the frontend is now
+  dynamically linked with GTK and comes in a separate rpm.
 
--- Migrated to RPM .spec file sent in by Tim Powers
-   <timp (at) redhat.com>.  That is the file they will be using to package
-   Nmap with the power tools CD in the next Redhat release.  The most
-   important changes are that Nmap (only the RPM version) now installs
-   in /usr/* instead of /usr/local/* and the frontend is now
-   dynamically linked with GTK and comes in a separate rpm.
+o The -i (input from list) option has been deprecated.  From now on
+  you should use -iL [filename] to read from a list or -iR to have
+  Nmap generate random IPs to scan.  This -iR option is new.
 
--- The -i (input from list) option has been deprecated.  From now on
-   you should use -iL <filename> to read from a list or -iR to have
-   Nmap generate random IPs to scan.  This -iR option is new.
+o The -o and -m options have been deprecated.  From now on, you should
+  use -oN for normal (human readable) output and -oM for machine
+  parseable output.  At some point I might add -oH (HTML output) or
+  -oSK (sKr|pt kiDdi3 0uTPut).
 
--- The -o and -m options have been deprecated.  From now on, you
-   should use -oN for normal (human readable) output and -oM for
-   machine parseable output.  At some point I might add -oH (HTML
-   output) or -oSK (sKr|pt |<iDdi3 0uTPut).
+o Added --randomize_hosts option, which causes hosts be be scanned in
+  non-sequential order.  This makes scans less conspicuous.  For
+  efficiency reasons, the hosts are chopped into groups of 2048 and
+  then each group is internally shuffled (the groups still go in
+  order).
 
--- Added --randomize_hosts option, which causes hosts be be scanned in
-   non-sequential order.  This makes scans less conspicuous.  For
-   efficiency reasons, the hosts are chopped into groups of 2048 and
-   then each group is internally shuffled (the groups still go in
-   order).
+o Rearranged the help ('nmap -h' or 'nmap' or 'nmap --help') screen to
+  be shorter (37 -> 23 lines!) and include some of the new features of
+  this release.  The man page was updated as well.
 
--- Rearranged the help ('nmap -h' or 'nmap' or 'nmap --help') screen
-   to be shorter (37 -> 23 lines!) and include some of the new
-   features of this release.  The man page was updated as well.
+o Fixed longstanding bug where nmap -sS mylocalnetwork/24 would not
+  successfully scan the host running nmap.
 
--- Fixed longstanding bug where nmap -sS mylocalnetwork/24 would not
-   successfully scan the host running nmap.
+o Internal improvements to make scanning faster with -i (input list)
+  or when you specify multiple machines on the command line.
 
--- Internal improvements to make scanning faster with -i (input list)
-   or when you specify multiple machines on the command line.
+o Uses faster GCD algorithm and fixed several typos (sent in by Peter
+  Kosinar).
 
--- Uses faster GCD algorithm and fixed several typos (sent in by Peter
-   Kosinar).
+o Provide more information in machine/human readable output files
+  (start time, end time, RPC program name, Nmap version number)
 
--- Provide more information in machine/human readable output files
-   (start time, end time, RPC program name, Nmap version number)
+o Killed the -A option (if you don't know what that is then you won't
+  miss it.  In fact, even if you do know what it is you won't miss
+  it.)
 
--- Killed the -A option (if you don't know what that is then you won't
-   miss it.  In fact, even if you do know what it is you won't miss
-   it.)
+Nmap 2.3BETA10
 
-** Version 2.3BETA10
+o Added about 70 new OS fingerprints so that Nmap can detect more
+  systems.  The most important new fingerprints are probably:
+  * The new SP5+ NT boxes -- After all these years MS FINALLY made
+    sequence prediction harder (on NT anyway).
+  * Solaris 8 Pre-Release
+  * Sega Dreamcast (Hack that!)
+  * Latest Windows 2000 builds
+  * OpenBSD 2.6
 
--- Added about 70 new OS fingerprints so that Nmap can detect more
-   systems.  The most important new fingerprints are probably:
-   * The new SP5+ NT boxes -- After all these years MS FINALLY made
-     sequence prediction harder (on NT anyway).
-   * Solaris 8 Pre-Release
-   * Sega Dreamcast (Hack that!)
-   * Latest Windows 2000 builds
-   * OpenBSD 2.6
+Nmap 2.3BETA9
 
-** Version 2.3BETA9
+o Applied patch by Mark Abene (Phiber Optik) to fix several type
+  length issues so that it works on Linux/Alpha.
 
--- Applied patch by Mark Abene (Phiber Optik) to fix several type
-   length issues so that it works on Linux/Alpha.
+o Applied patch by Matthieu Verbert (mve(a)zurich.ibm.com) to speed up OSScan
 
--- Applied patch by Matthieu Verbert <mve (at) zurich.ibm.com> to speed up OSScan
+Nmap 2.3Beta8
 
-** Version 2.3Beta8
--- Added "firewall mode" timing optimizations which can decrease the
-   ammount of time neccessary to SYN or connect scan some heavily
-   filtered hosts.
+o Added "firewall mode" timing optimizations which can decrease the
+  ammount of time neccessary to SYN or connect scan some heavily
+  filtered hosts.
 
--- Added min_rtt_timeout timing option (see man page for details)
+o Added min_rtt_timeout timing option (see man page for details)
 
--- Changed "TCP Ping" to use a random ACK value rather than 0 (an IDS
-   called Snort was using this to detect Nmap TCP Pings).
+o Changed "TCP Ping" to use a random ACK value rather than 0 (an IDS
+  called Snort was using this to detect Nmap TCP Pings).
 
--- Some changes for better Alpha/Linux support based on investigation
-   by Bill Beers <wbeers (at) carolina.rr.com>
+o Some changes for better Alpha/Linux support based on investigation
+  by Bill Beers (wbeers(a)carolina.rr.com)
 
--- Applied changes for FDDI support by Tobias J. Nijweide <tobias (at) mesa.nl
+o Applied changes for FDDI support by Tobias J. Nijweide (tobias(a)mesa.nl)
 
--- Applied a socket binding patch from LaMont Jones <lamont (at) security.hp.com>
-   which can be useful when using -S to specify one of multiple interfaces
-   on a machine.
+o Applied a socket binding patch from LaMont Jones
+  (lamont(a)security.hp.com) which can be useful when using -S to
+  specify one of multiple interfaces on a machine.
 
--- Made OS detection smart enough to first check scan results for a known
-   closed port instead of immediately resorting to a random one.  This
-   improves OS detection against some machines behind packet
-   filters. (suggested by van Hauser) 
+o Made OS detection smart enough to first check scan results for a
+  known closed port instead of immediately resorting to a random one.
+  This improves OS detection against some machines behind packet
+  filters. (suggested by van Hauser)
 
--- Applied a shortcut suggestion by Thomas Reinke which can lead to
-   a tremendous speedup against some firewalled hosts.
+o Applied a shortcut suggestion by Thomas Reinke which can lead to a
+  tremendous speedup against some firewalled hosts.
 
--- Added some ports commonly used for RPC to nmap-services
+o Added some ports commonly used for RPC to nmap-services
 
--- Fixed a problem with the timing of an RPC scan (could come before
-   the UDP scans they rely on)
+o Fixed a problem with the timing of an RPC scan (could come before
+  the UDP scans they rely on)
 
--- Added a number of new ports to nmap-services
+o Added a number of new ports to nmap-services
 
-** Version 2.3Beta6 **
+Nmap 2.3Beta6
 
--- Added sophisticated timing controls to give the user much more
-   control over Nmap's speed.  This allows you to make Nmap much more
-   aggressive to scan hosts faster, or you can make Nmap more "polite"
-   -- slower but less likely to wreak havoc on your Network.  You can
-   even enforce large delays between sending packets to sneak under
-   IDS thresholds and prevent detection.  See the new "Timing Options"
-   section of the Nmap man page for more information on using this.
+o Added sophisticated timing controls to give the user much more
+  control over Nmap's speed.  This allows you to make Nmap much more
+  aggressive to scan hosts faster, or you can make Nmap more "polite"
+  -- slower but less likely to wreak havoc on your Network.  You can
+  even enforce large delays between sending packets to sneak under IDS
+  thresholds and prevent detection.  See the new "Timing Options"
+  section of the Nmap man page for more information on using this.
 
--- Applied Lamont Granquist's <lamontg (at) u.washington.edu> Window
-   scan patch (I changed the name from ACK scan to Window scan since I
-   may add another scan that uses ACK packets and I don't want them to
-   be confused).  -sW activates this scan type.  It is mostly
-   effective against BSD, AIX, Digital UNIX, and various older HP/UX,
-   SunOS, and VAX. (See nmap-hackers mailing list archives for an
-   extensive list).
+o Applied Lamont Granquist's (lamontg(a)u.washington.edu) Window scan
+  patch (I changed the name from ACK scan to Window scan since I may
+  add another scan that uses ACK packets and I don't want them to be
+  confused).  -sW activates this scan type.  It is mostly effective
+  against BSD, AIX, Digital UNIX, and various older HP/UX, SunOS, and
+  VAX. (See nmap-hackers mailing list archives for an extensive list).
 
--- Added various long options people expect to see like --version , 
-   --help , --usage , etc.  Some of the new timing options are also
-   long.  I had to add getopt_long C files since most non-Linux boxes
-   don't support getopt_long in libc.
+o Added various long options people expect to see like --version ,
+  --help , --usage , etc.  Some of the new timing options are also long.
+  I had to add getopt_long C files since most non-Linux boxes don't
+  support getopt_long in libc.
 
--- Human readable (-o) output changed to include the time/date of the
-   scan.  Suggested by van Hauser.
+o Human readable (-o) output changed to include the time/date of the
+  scan.  Suggested by van Hauser.
 
-** Version 2.3-Beta5 ***
+Nmap 2.3-Beta5
 
--- Changed RPC output based on suggestions by David O'Brien
-   <obrien (at) NUXI.com> and Lance Spitzner <lance (at) spitzner.net>.  I got
-   rid of the "(Non-RPC)" unnecessary clutter which appeared after
-   each non RPC port and the "(untested)" that appeard after each
-   "filtered" port.
+o Changed RPC output based on suggestions by David O'Brien
+  (obrien(a)NUXI.com) and Lance Spitzner (lance(a)spitzner.net).  I
+  got rid of the "(Non-RPC)" unnecessary clutter which appeared after
+  each non RPC port and the "(untested)" that appeard after each
+  "filtered" port.
 
--- Added a ton of new OS fingerprints people submitted.  I had about
-   400 in my inbox.  Of course, almost 100 of them were submissions for
-   www.windows2000test.com :).
+o Added a ton of new OS fingerprints people submitted.  I had about
+  400 in my inbox.  Of course, almost 100 of them were submissions for
+  www.windows2000test.com :).
 
--- Changed the machine parseable output of RPC information to include
-   the version information.  If we figured out the RPC info, it is now
-   provided as "program-num*lowversion-highversion".  If we didn't get
-   the number, but we think the port is RPC, the field simply contains
-   "R".  If we believe the port is NOT RPC, then the field contains
-   "N".  If the field is empty, we did not RPC scan the port.  Thanks
-   to H D Moore <nlog (at) ings.com> for making me aware how much the
-   earlier machine parseable RPC logging sucked :).
+o Changed the machine parseable output of RPC information to include
+  the version information.  If we figured out the RPC info, it is now
+  provided as "program-num*lowversion-highversion".  If we didn't get
+  the number, but we think the port is RPC, the field simply contains
+  "R".  If we believe the port is NOT RPC, then the field contains
+  "N".  If the field is empty, we did not RPC scan the port.  Thanks
+  to H D Moore (nlog(a)ings.com) for making me aware how much the
+  earlier machine parseable RPC logging sucked :).
 
-*** Version 2.3-Beta4 ***
+Nmap 2.3-Beta4
 
--- Added direct (non-portmapper) RPC scanning to determine what RPC
-   program is listening on a particular port.  This works for UDP and
-   TCP ports and is currently implemented using sockets (which means
-   you can't use decoys, but on the other hand you don't have to be
-   root).  Thanks go to ga <ga (at) capyork.com> for writing sample code to
-   demonstrate the technique.  The RPC services list included with
-   nmap was compiled by Vik Bajaj <vbajaj (at) sas.upenn.edu> with help
-   from various members of the nmap-hackers list.
+o Added direct (non-portmapper) RPC scanning to determine what RPC
+  program is listening on a particular port.  This works for UDP and
+  TCP ports and is currently implemented using sockets (which means
+  you can't use decoys, but on the other hand you don't have to be
+  root).  Thanks go to ga (ga(a)capyork.com) for writing sample code
+  to demonstrate the technique.  The RPC services list included with
+  nmap was compiled by Vik Bajaj (vbajaj(a)sas.upenn.edu) with help
+  from various members of the nmap-hackers list.
 
--- Fixed a problem that could cause freezes when you
-   scan machines on at least two different types of interfaces as part
-   of the same command.
+o Fixed a problem that could cause freezes when you scan machines on
+  at least two different types of interfaces as part of the same
+  command.
 
--- Identified and found workaround for Linux kernel bug which allows
-   connect() to sometimes succeed inapropriately when scanning closed
-   ports on localhost.
+o Identified and found workaround for Linux kernel bug which allows
+  connect() to sometimes succeed inapropriately when scanning closed
+  ports on localhost.
 
--- Fixed problems relating to people who specify the same port more
-   than once on the command line.  While the right answer is "well,
-   don't do that!", I decided to fix nmap to handle this gracefully.
+o Fixed problems relating to people who specify the same port more
+  than once on the command line.  While the right answer is "well,
+  don't do that!", I decided to fix nmap to handle this gracefully.
 
--- Tweaked UDP scanning to be more effective against Solaris ICMP
-   error limiting.
+o Tweaked UDP scanning to be more effective against Solaris ICMP error
+  limiting.
 
--- Fixed strtol() integer overflow problem found by Renaud 
-   Deraison <deraison (at) cvs.nessus.org>
+o Fixed strtol() integer overflow problem found by Renaud Deraison
+  (deraison(a)cvs.nessus.org)
 
--- The HTML translation of the Man page at
-   http://www.insecure.org/nmap/nmap_manpage.html should now be
-   complete (man2html was dropping lines before).
+o The HTML translation of the Man page at
+  http://www.insecure.org/nmap/nmap_manpage.html should now be
+  complete (man2html was dropping lines before).
 
--- Added a note in the man page that Nmap 2.0+ is believed to be
-   COMPLETELY Y2K COMPLIANT!  I've been getting a lot of letters from
-   laywers about that recently.  You should still be able to port scan on
-   Jan 1st (well ... as long as you have electricity and gangs of looting
-   thugs haven't stolen your computers :)
+o Added a note in the man page that Nmap 2.0+ is believed to be
+  COMPLETELY Y2K COMPLIANT!  I've been getting a lot of letters from
+  laywers about that recently.  You should still be able to port scan
+  on Jan 1st (well ... as long as you have electricity and gangs of
+  looting thugs haven't stolen your computers :)
 
-*** Version 2.2-Beta4 ***
--- Integrated nmapfe code from Zach Smith to allow
-   the nmapfe output window to resize when you resize the nmapfe window.
+Nmap 2.2-Beta4
 
--- Integrated patch sent in by Stefan Erben <stefan (at) erben.com> which
-   allows nmap to recognize and ignore null interfaces.  If you were
-   getting a bogus error like "eth0 not found in /proc/net/route" then
-   this should solve your problem.
+o Integrated nmapfe code from Zach Smith to allow the nmapfe output
+  window to resize when you resize the nmapfe window.
 
--- Applied patch from Alexander Savelyev <fano (at) ham.kiev.ua> which
-   gives nmap the parameters necessary to support SLIP and PPP on BSDI
-   systems.
+o Integrated patch sent in by Stefan Erben (stefan(a)erben.com) which
+  allows nmap to recognize and ignore null interfaces.  If you were
+  getting a bogus error like "eth0 not found in /proc/net/route" then
+  this should solve your problem.
 
--- Upgraded to a new version of shtool (1.2.3)
+o Applied patch from Alexander Savelyev (fano(a)ham.kiev.ua) which
+  gives nmap the parameters necessary to support SLIP and PPP on BSDI
+  systems.
 
-*** Version 2.2-Beta3 ***
+o Upgraded to a new version of shtool (1.2.3)
 
--- Adopted Ralf S. Engelschall's excellent shtool script
-   for simplifying the nmap makefile and making it more portable
--- Various other minor changes to nmapfe.
+Nmap 2.2-Beta3
 
-*** Version 2.2-Beta2 ***
+o Adopted Ralf S. Engelschall's excellent shtool script for
+  simplifying the nmap makefile and making it more portable
 
--- Cleaned up build environment more, fixed up RPM and Makefile.in,
-   eliminated the automake stuff.
--- Added nmapfe feature to show nmap command as you change options
--- Changed nmapfe to use a global MyWidgets struct rather than
-   tons of global vars all over the place.
--- Made nmapfe much smarter about rejecting stupid option attempts.
-   It now tries to correct things when you specify illegal options.
--- GTK+ 1.0 compatibility fixes
--- Integrated nmapfe changes from Zach
+o Various other minor changes to nmapfe.
 
-*** Version 2.2-BETA1 Changes ***
+Nmap 2.2-Beta2
 
--- Integrated in nmapfe -- a cool front end wrottem by Zach Smith <matrxweb (at) hotmail.com>
+o Cleaned up build environment more, fixed up RPM and Makefile.in,
+  eliminated the automake stuff.
 
+o Added nmapfe feature to show nmap command as you change options
 
-*** Version 2.12 Changes ***
+o Changed nmapfe to use a global MyWidgets struct rather than tons of
+  global vars all over the place.
 
--- Changed the way tcp connect() scan determines the results of a
-   connect() call.  Hopefully this will make nmap a little more
-   portable.
+o Made nmapfe much smarter about rejecting stupid option attempts.  It
+  now tries to correct things when you specify illegal options.
 
--- Got rid of the security warning message for people who are missing
-   /dev/random and /dev/urandom due to complaints about the warning.
-   This only silences the warnings -- it still uses relatively weak
-   random number generation under Solaris and other systems that lack
-   this functionality.
+o GTK+ 1.0 compatibility fixes
 
--- Eliminated pow() calls on Linux boxes.  I think some sort of glibc
-   bug was causing nmap to sigsegv in some cases inside of pow().
-   Most people weren't affected, but those who were would almost
-   always SIGSEGV with -O.
+o Integrated nmapfe changes from Zach
 
--- Fixed an rpm problem noted by Mark Smith <marks (at) senet.com.au>
+Nmap 2.2-BETA1
 
-*** Version 2.11 Changes ***
+o Integrated in nmapfe -- a cool front end wrottem by Zach Smith (matrxweb(a)hotmail.com)
 
--- Many new fingerprints added.  I received more than 300 submissions
-   between this release and the last one.
+Nmap 2.12
 
--- Fixed IRIX problems which prevented OS scanning from working on
-   that platform.  The problem was researched and solution found by
-   Lamont Granquist <lamontg (at) u.washington.edu>.  You can also thank
-   him for porting nmap to almost every UNIX around.
+o Changed the way tcp connect() scan determines the results of a
+  connect() call.  Hopefully this will make nmap a little more
+  portable.
 
--- Added support for '-m -' to redirect machine readable logs to
-   stdout for shell pipelining, etc.  I also changed machine readable
-   output to show service names now that we use a nmap specific
-   services file rather than /etc/services.  These features were
-   suggested by Dan Farmer.  You can also thank him for SATAN (the
-   auditing tool).
+o Got rid of the security warning message for people who are missing
+  /dev/random and /dev/urandom due to complaints about the warning.
+  This only silences the warnings -- it still uses relatively weak
+  random number generation under Solaris and other systems that lack
+  this functionality.
 
--- Fixed a link-list bug that could cause hangs in UDP,FIN,NULL, and
-   XMAS scans.  Also fixed a ptr problem that could cause SIGSEGV.
-   These problem were discovered and tracked down by Ben Laurie
-   <ben (at) algroup.co.uk>.  You can also thank him for Apache, OpenSSL,
-   and Apache-SSL.
+o Eliminated pow() calls on Linux boxes.  I think some sort of glibc
+  bug was causing nmap to sigsegv in some cases inside of pow().  Most
+  people weren't affected, but those who were would almost always
+  SIGSEGV with -O.
 
--- Fixed installation problem for people without a /usr/local/man/man1
-   directory.  Found by Jeffrey Robertson <a-jeffro (at) microsoft.com>.
-   I guess you can thank him for Win98 ;).
+o Fixed an rpm problem noted by Mark Smith (marks(a)senet.com.au)
 
--- Several other little fixes to the installation script and minor
-   scanner tweaks.
+Nmap 2.11
 
-*** Version 2.10 Changes ***
+o Many new fingerprints added.  I received more than 300 submissions
+  between this release and the last one.
 
--- Private test release 
+o Fixed IRIX problems which prevented OS scanning from working on that
+  platform.  The problem was researched and solution found by Lamont
+  Granquist (lamontg(a)u.washington.edu).  You can also thank him for
+  porting nmap to almost every UNIX around.
 
-*** Version 2.09 Changes ***
+o Added support for '-m -' to redirect machine readable logs to stdout
+  for shell pipelining, etc.  I also changed machine readable output
+  to show service names now that we use a nmap specific services file
+  rather than /etc/services.  These features were suggested by Dan
+  Farmer.  You can also thank him for SATAN (the auditing tool).
 
--- Private test release 
+o Fixed a link-list bug that could cause hangs in UDP,FIN,NULL, and
+  XMAS scans.  Also fixed a ptr problem that could cause SIGSEGV.
+  These problem were discovered and tracked down by Ben Laurie
+  (ben(a)algroup.co.uk).  You can also thank him for Apache, OpenSSL,
+  and Apache-SSL.
 
-*** Version 2.08 Changes ***
+o Fixed installation problem for people without a /usr/local/man/man1
+  directory.  Found by Jeffrey Robertson (a-jeffro(a)microsoft.com).
+  I guess you can thank him for Win98 ;).
 
--- Bugfix for problem that can cause nmap to appear to "freeze up" for long
-   periods of time when run on some busy networks. (found by Lamont Granquist)
+o Several other little fixes to the installation script and minor
+  scanner tweaks.
 
-*** Version 2.07 Changes ***
+Nmap 2.10
 
--- Fixed a lockup on Solaris (and perhaps other proprietary UNIX
-   systems) caused by a lack of /dev/random & /dev/urandom and a
-   rand() that only returns values up to 65535.  Users of Free
-   operating systems like Linux, FreeBSD, or OpenBSD probably
-   shouldn't bother upgrading.
+o Private test release 
 
-***Version 2.06 Changes***
+Nmap 2.09
 
--- Fixed compile problems on machines which lack snprintf() (found by Ken
-   Williams <jkwilli2 (at) unity.ncsu.edu>)
--- Added the squid proxy to nmap-services (suggested by Holger Heimann)
--- Fixed a problem where the new memory allocation system was handing out
-   misaligned pointers.
--- Fixed another memory allocation bug which probably doesn't cause any
-   real-life problems.
--- Made nmap look in more places for nmap-os-fingerprints
+o Private test release 
 
-***Version 2.05 Changes***
+Nmap 2.08
 
--- Tons of new fingerprints.  The number has grown by more than 25%.
-  In particular, Charles M. Hannum <root (at) ihack.net> fixed several
+o Bugfix for problem that can cause nmap to appear to "freeze up" for
+  long periods of time when run on some busy networks. (found by
+  Lamont Granquist)
+
+Nmap 2.07
+
+o Fixed a lockup on Solaris (and perhaps other proprietary UNIX
+  systems) caused by a lack of /dev/random & /dev/urandom and a rand()
+  that only returns values up to 65535.  Users of Free operating
+  systems like Linux, FreeBSD, or OpenBSD probably shouldn't bother
+  upgrading.
+
+Nmap 2.06
+
+o Fixed compile problems on machines which lack snprintf() (found by
+  Ken Williams (jkwilli2(a)unity.ncsu.edu))
+
+o Added the squid proxy to nmap-services (suggested by Holger Heimann)
+
+o Fixed a problem where the new memory allocation system was handing
+  out misaligned pointers.
+
+o Fixed another memory allocation bug which probably doesn't cause any
+  real-life problems.
+
+o Made nmap look in more places for nmap-os-fingerprints
+
+Nmap 2.05
+
+o Tons of new fingerprints.  The number has grown by more than 25%.
+  In particular, Charles M. Hannum (root(a)ihack.net) fixed several
   problems with NetBSD that made it easy to fingerprint and he sent me
   a huge new batch of fingerprints for various NetBSD releases down to
   1.2.  Other people sent NetBSD fingerprints down to 1.0.  I finally
   got some early Linux fingerprints in (down to 1.09).
 
--- Nmap now comes with its own nmap-services which I created by
-   merging the /etc/services from a bunch of OS' and then adding
-   Netbus, Back Orifice, etc.
+o Nmap now comes with its own nmap-services which I created by merging
+  the /etc/services from a bunch of OS' and then adding Netbus, Back
+  Orifice, etc.
 
--- Random number generation now takes advantage of the /dev/urandom or
-   /dev/random that most Free operating systems offer.
+o Random number generation now takes advantage of the /dev/urandom or
+  /dev/random that most Free operating systems offer.
 
--- Increased the maximum number of OS guesses nmap will make, told
-   nmap never to give you two matches where the OS names are
-   byte-to-byte equivalent.  Fixed nmap to differentiate between "no
-   OS matches found" and "too many OS matches to list".
+o Increased the maximum number of OS guesses nmap will make, told nmap
+  never to give you two matches where the OS names are byte-to-byte
+  equivalent.  Fixed nmap to differentiate between "no OS matches
+  found" and "too many OS matches to list".
 
--- Fixed an information leak in the packet TTL values (found by 
-   HD Moore <hdmoore (at) usa.net>)
+o Fixed an information leak in the packet TTL values (found by HD
+  Moore (hdmoore(a)usa.net))
 
--- Fixed the problem noted by Savva Uspensky about offsets used for
-   various operating systems' PPP/SLIP headers.  Due to lack of
-   responses regarding other operating systems, I have made
-   assumptions about what works for BSDI, NetBSD, and SOLARIS.  If
-   this version no longer works on your modem, please let me know (and
-   tell me whether you are using SLIP/PPP and what OS you are
-   running).
+o Fixed the problem noted by Savva Uspensky about offsets used for
+  various operating systems' PPP/SLIP headers.  Due to lack of
+  responses regarding other operating systems, I have made assumptions
+  about what works for BSDI, NetBSD, and SOLARIS.  If this version no
+  longer works on your modem, please let me know (and tell me whether
+  you are using SLIP/PPP and what OS you are running).
 
--- Machine parseable logs are now more machine parseable (I now use a
-   tab to seperate test result fields rather than the more ambiguous
-   spaces.  This may break a few things which rely on the old format.
-   Sorry.  They should be easy to fix.
+o Machine parseable logs are now more machine parseable (I now use a
+  tab to seperate test result fields rather than the more ambiguous
+  spaces.  This may break a few things which rely on the old format.
+  Sorry.  They should be easy to fix.
 
--- Added my nmap-fingerprintinting-article.txt to the distribution in
-   the docs directory.
+o Added my nmap-fingerprintinting-article.txt to the distribution in
+  the docs directory.
 
--- Fixed problem where nmap -sS <my_ethernet_or_ppp_ip_address> would
-   not correctly scan localhost (due to the kernel rerouting the
-   traffic through localhost).  Nmap should now detect and work around
-   this behavior.
+o Fixed problem where nmap -sS (my_ethernet_or_ppp_ip_address) would
+  not correctly scan localhost (due to the kernel rerouting the
+  traffic through localhost).  Nmap should now detect and work around
+  this behavior.
 
--- Applied patch sent to my by Bill Fenner <fenner (at) parc.xerox.com>
-   which fixes various SunOS compatibility problems.
+o Applied patch sent to my by Bill Fenner (fenner(a)parc.xerox.com)
+  which fixes various SunOS compatibility problems.
 
--- Changed the makefile 'all' target to use install-sh rather than 
-   mkdir -p (doesn't work on some systems)
+o Changed the makefile 'all' target to use install-sh rather than
+  mkdir -p (doesn't work on some systems)
 
--- Documentation updated and clarified slightly.
+o Documentation updated and clarified slightly.
 
--- Added this CHANGELOG file to the distribution.
-
-
-
-
-
+o Added this CHANGELOG file to the distribution.

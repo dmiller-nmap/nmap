@@ -364,6 +364,8 @@ struct tcphdr {
 #define	TH_PUSH	0x08
 #define	TH_ACK	0x10
 #define	TH_URG	0x20
+#define TH_ECE  0x40
+#define TH_CWR  0x80
 	u_short	th_win;			/* window */
 	u_short	th_sum;			/* checksum */
 	u_short	th_urp;			/* urgent pointer */

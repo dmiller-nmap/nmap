@@ -679,7 +679,7 @@ useful information in the source port number.
 Normally Nmap sends minimalistic packets that only contain a header.
 So its TCP packets are generally 40 bytes and ICMP echo requests are
 just 28.  This option tells Nmap to append the given number of
-zero-filled bytes to most of the packets it sends.  OS detection (\-O)
+random bytes to most of the packets it sends.  OS detection (\-O)
 packets are not affected, but most pinging and portscan packets are.
 This slows things down, but can be slightly less conspicuous.
 .TP

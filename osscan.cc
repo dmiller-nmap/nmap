@@ -183,7 +183,7 @@ if (o.verbose && openport != (unsigned long) -1)
      if (!FPtests[1]) {     
        if (o.scan_delay) enforce_scan_delay(NULL);
        send_tcp_raw_decoys(rawsd, target->v4hostip(), o.ttl, current_port, 
-			   openport, sequence_base, 0,TH_BOGUS|TH_SYN, 0, (u8 *) "\003\003\012\001\002\004\001\011\010\012\077\077\077\077\000\000\000\000\000\000" , 20, NULL, 0);
+			   openport, sequence_base, 0,TH_ECE|TH_SYN, 0, (u8 *) "\003\003\012\001\002\004\001\011\010\012\077\077\077\077\000\000\000\000\000\000" , 20, NULL, 0);
      }
      
      /* Test 2 */
@@ -735,7 +735,7 @@ struct AVal *fingerprint_iptcppacket(struct ip *ip, int mss, u32 syn) {
   */
   AVs[4].attribute = "Flags";
   p = AVs[4].value;
-  if (tcp->th_flags & TH_BOG) *p++ = 'B';
+  if (tcp->th_flags & TH_ECE) *p++ = 'B';
   if (tcp->th_flags & TH_URG) *p++ = 'U';
   if (tcp->th_flags & TH_ACK) *p++ = 'A';
   if (tcp->th_flags & TH_PUSH) *p++ = 'P';

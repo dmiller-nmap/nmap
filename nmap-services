@@ -59,7 +59,7 @@ graphics          41/udp     #
 nameserver        42/tcp     # Host Name Server
 nameserver        42/udp     # Host Name Server
 whois             43/tcp     # nicname
-shois             43/udp     # nicname
+whois             43/udp     # nicname
 mpm-flags         44/tcp     # MPM FLAGS Protocol
 mpm-flags         44/udp     # MPM FLAGS Protocol
 mpm               45/tcp     # Message Processing Module [recv]
@@ -1846,6 +1846,7 @@ IISrpc-or-vat     3456/udp   # also VAT default data
 vat-control       3457/tcp   # VAT default control
 vat-control       3457/udp   # VAT default control
 track             3462/tcp   # software distribution
+rendezvous        3689/tcp   # Rendezvous Zeroconf (used by Apple)
 udt_os            3900/tcp   # Unidata UDT OS
 udt_os            3900/udp   # Unidata UDT OS
 mapper-nodemgr    3984/tcp   # MAPPER network node manager
@@ -1869,6 +1870,7 @@ nuts_dem          4132/udp   # NUTS Daemon
 nuts_bootp        4133/tcp   # NUTS Bootp Server
 nuts_bootp        4133/udp   # NUTS Bootp Server
 wincim            4144/tcp   # pc windows compuserve.com protocol
+xtell             4224/tcp   # Xtell messenging server
 rwhois            4321/tcp   # Remote Who Is
 rwhois            4321/udp   # Remote Who Is
 msql              4333/tcp   # mini-sql server
@@ -2056,6 +2058,7 @@ dlip              7201/tcp   #
 dlip              7201/udp   # 
 openmanage        7273/tcp   # Dell OpenManage
 icb               7326/tcp   # Internet Citizen's Band
+pythonds          7464/tcp   # Python Documentation Server
 qaz               7597/tcp   # Quaz trojan worm
 cucme-1           7648/udp   # cucme live video/audio server
 cucme-2           7649/udp   # cucme live video/audio server
@@ -2118,6 +2121,12 @@ wdbrpc            17185/udp  # vxWorks WDB remote debugging ONCRPC
 kuang2            17300/tcp  # Kuang2 backdoor
 biimenu           18000/tcp  # Beckman Instruments, Inc.
 biimenu           18000/udp  # Beckman Instruments, Inc.
+opsec_cvp         18181/tcp  # Check Point OPSEC
+opsec_ufp         18182/tcp  # Check Point OPSEC
+opsec_sam         18183/tcp  # Check Point OPSEC
+opsec_lea         18184/tcp  # Check Point OPSEC
+opsec_omi         18185/tcp  # Check Point OPSEC
+opsec_ela         18187/tcp  # Check Point OPSEC
 btx               20005/tcp  # xcept4 (Interacts with German Telekom's CEPT videotext service)
 wnn6              22273/tcp  # Wnn6 (Japanese input)
 wnn6_Cn           22289/tcp  # Wnn6 (Chinese input)
@@ -2128,6 +2137,17 @@ hpnpd             22370/udp  # Hewlett-Packard Network Printer daemon
 quake             26000/udp  # Quake game server
 wnn6_DS           26208/tcp  # Wnn6 (Dserver)
 hexen2            26900/udp  # Hexen 2 game server
+flexlm0           27000/tcp  # FlexLM license manager additional ports
+flexlm1           27001/tcp  # FlexLM license manager additional ports
+flexlm2           27002/tcp  # FlexLM license manager additional ports
+flexlm3           27003/tcp  # FlexLM license manager additional ports
+flexlm4           27004/tcp  # FlexLM license manager additional ports
+flexlm5           27005/tcp  # FlexLM license manager additional ports
+flexlm6           27006/tcp  # FlexLM license manager additional ports
+flexlm7           27007/tcp  # FlexLM license manager additional ports
+flexlm8           27008/tcp  # FlexLM license manager additional ports
+flexlm9           27009/tcp  # FlexLM license manager additional ports
+flexlm10          27010/tcp  # FlexLM license manager additional ports
 halflife          27015/udp  # Half-life game server
 subseven          27374/tcp  # Subseven Windows trojan
 Trinoo_Bcast      27444/udp  # Trinoo distributed attack tool Master

@@ -232,6 +232,8 @@ const char *ippackethdrinfo(const u8 *packet, u32 len) {
 	strncat(tcpinfo, buf, sizeof(tcpinfo));
       }
       if (tcp->th_flags & TH_URG) *p++ = 'U';
+      if (tcp->th_flags & TH_ECE) *p++ = 'E'; /* rfc 2481/3168 */
+      if (tcp->th_flags & TH_CWR) *p++ = 'C'; /* rfc 2481/3168 */
       *p++ = '\0';
 
       snprintf(protoinfo, sizeof(protoinfo), "TCP %s:%d > %s:%d %s %s %s",
@@ -329,6 +331,15 @@ const char *ippackethdrinfo(const u8 *packet, u32 len) {
       strcpy(icmptype, "Address mask request"); break;
     case 18: 
       strcpy(icmptype, "Address mask reply"); break;
+    case 30:
+      strcpy(icmptype, "Traceroute"); break;
+    case 37:
+      strcpy(icmptype, "Domain name request"); break;
+    case 38:
+      strcpy(icmptype, "Domain name reply"); break; 
+    case 40:
+      strcpy(icmptype, "Security failures"); /* rfc 2521 */ break;
+      
     default:
       strcpy(icmptype, "Unknown type"); break;
       break;

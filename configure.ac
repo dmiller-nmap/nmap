@@ -5,11 +5,27 @@ AC_PREREQ(2.13)
 dnl Process this file with autoconf to produce a configure script.
 AC_INIT(nmap.cc)
 
-if test -d /usr/local/lib; then
-  LDFLAGS="$LDFLAGS -L/usr/local/lib"
-fi
-if test -d /usr/local/include; then
-  CXXFLAGS="$CXXFLAGS -I/usr/local/include"
+AC_ARG_WITH(localdirs,
+  [  --with-localdirs        Explicitly ask compiler to use /usr/local/{include,libs} if they exist ],
+  [ case "$with_localdirs" in
+      yes)
+        user_localdirs=1
+        ;;
+      no)
+        user_localdirs=0
+        ;;
+    esac
+    ],
+  [ user_localdirs=0 ] )
+
+if test "$user_localdirs" = 1; then
+   if test -d /usr/local/lib; then
+     LDFLAGS="$LDFLAGS -L/usr/local/lib"
+     fi
+   if test -d /usr/local/include; then
+     CFLAGS="$CFLAGS -I/usr/local/include"
+     CXXFLAGS="$CFLAGS -I/usr/local/include"
+   fi
 fi
 
 libpcapdir=libpcap-possiblymodified

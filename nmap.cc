@@ -1320,7 +1320,7 @@ n -h          -- Obtain help with Nmap syntax\n\
 h             -- Prints this help screen.\n\
 Examples:\n\
 n -sS -O -v example.com/24\n\
-f --spoof \"/usr/local/bin/pico -z hello.c\" -sS -oN /tmp/e.log example.com/24\n\n");
+f --spoof \"/usr/local/bin/pico -z hello.c\" -sS -oN e.log example.com/24\n\n");
 }
 
 char *seqreport(struct seq_info *seq) {

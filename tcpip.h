@@ -208,9 +208,13 @@ extern "C" {
 #endif
 #endif
 
-/* Bogus TCP flag!!!  Krad! */
-#define TH_BOGUS 64
-#define TH_BOG 64
+/* Explicit Congestion Notification (rfc 2481/3168) */
+#ifndef TH_ECE
+#define TH_ECE        0x40
+#endif
+#ifndef TH_CWR
+#define TH_CWR        0x80
+#endif
 
 #define MORE_FRAGMENTS 8192 /*NOT a user serviceable parameter*/
 

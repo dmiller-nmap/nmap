@@ -191,7 +191,7 @@ struct scan_lists *getdefaultports(int tcpscan, int udpscan) {
 
   if (!services_initialized)
     if (nmap_services_init() == -1)
-      fatal("Getfastports: Coudn't get port numbers");
+      fatal("Getfastports: Couldn't get port numbers");
   
   bzero(usedports, sizeof(usedports));
   for(bucket = 1; bucket < 1025; bucket++) {  

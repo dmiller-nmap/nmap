@@ -315,7 +315,7 @@ int rpc_are_we_done(char *msg, int msg_len, Target *target,
     return 1;
   }
   if (ntohl(rpc_pack->type_msg) != RPC_MSG_REPLY) {
-    error("Strange -- RPC type is %li shoulb be RPC_MSG_REPLY (1)", ntohl(rpc_pack->type_msg));
+    error("Strange -- RPC type is %li shoulb be RPC_MSG_REPLY (1)", (unsigned long) ntohl(rpc_pack->type_msg));
     return 0;
   }
   if (ntohl(rpc_pack->auth_flavor) != 0 /* AUTH_NULL */ ||

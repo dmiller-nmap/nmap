@@ -1721,7 +1721,7 @@ version )
     
     #   create the version file according the the selected language  
     echo "new version: $version.$revision$bptype$bplevel ($date)"
-    tmpfile="/tmp/version.tmp.$$"
+    tmpfile="version.tmp.$$"
     rm -f $tmpfile >/dev/null 2>&1
     case $LANGUAGE in
         txt )
@@ -1815,7 +1815,7 @@ path )
     basename=no
     pathlist="$PATH"
     namelist=""
-    tmpfile="/tmp/path.tmp.$$"
+    tmpfile="path.tmp.$$"
     while [ ".$1" != . ]; do
         case $1 in
             -s ) silent=yes   ; shift; continue ;;

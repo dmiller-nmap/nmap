@@ -547,7 +547,7 @@ gettimeofday(&start, NULL);
 }
 
 int sendconnecttcpqueries(Target *hostbatch[], struct tcpqueryinfo *tqi,
-			Target *target, int seq, 
+			Target *target, u16 seq, 
 			struct timeval *time, struct pingtune *pt, 
 			struct timeout_info *to, int max_width) {
   int i;
@@ -561,7 +561,7 @@ int sendconnecttcpqueries(Target *hostbatch[], struct tcpqueryinfo *tqi,
 }
 
 int sendconnecttcpquery(Target *hostbatch[], struct tcpqueryinfo *tqi,
-			Target *target, int probe_port_num, int seq, 
+			Target *target, int probe_port_num, u16 seq, 
 			struct timeval *time, struct pingtune *pt, 
 			struct timeout_info *to, int max_width) {
 
@@ -638,7 +638,7 @@ int sendconnecttcpquery(Target *hostbatch[], struct tcpqueryinfo *tqi,
 return 0;
 }
 
-int sendrawtcpudppingqueries(int rawsd, Target *target, int pingtype, int seq, 
+int sendrawtcpudppingqueries(int rawsd, Target *target, int pingtype, u16 seq, 
 			  struct timeval *time, struct pingtune *pt) {
   int i;
 
@@ -667,7 +667,7 @@ int sendrawtcpudppingqueries(int rawsd, Target *target, int pingtype, int seq,
 }
 
 int sendrawudppingquery(int rawsd, Target *target, u16 probe_port,
-			int seq, struct timeval *time, struct pingtune *pt) {
+			u16 seq, struct timeval *time, struct pingtune *pt) {
 int trynum = 0;
 unsigned short sportbase;
 
@@ -686,7 +686,7 @@ else {
 }
 
 int sendrawtcppingquery(int rawsd, Target *target, int pingtype, u16 probe_port,
-			int seq, struct timeval *time, struct pingtune *pt) {
+			u16 seq, struct timeval *time, struct pingtune *pt) {
 int trynum = 0;
 int myseq;
 unsigned short sportbase;
@@ -1250,7 +1250,7 @@ int get_ping_results(int sd, pcap_t *pd, Target *hostbatch[], int pingtype,
 	  hostnum = sequence / pt->max_tries;
 	  trynum = sequence % pt->max_tries;
 	} else {
-	  // Didn't get it back in either field -- we'll brute forc it ...
+	  // Didn't get it back in either field -- we'll brute force it ...
 	  for(hostnum = pt->group_end; hostnum >= 0; hostnum--) {
 	    if (hostbatch[hostnum]->v4host().s_addr == ip->ip_src.s_addr)
 	      break;
@@ -1328,7 +1328,7 @@ int get_ping_results(int sd, pcap_t *pd, Target *hostbatch[], int pingtype,
 	sequence = hostnum * pt->max_tries + trynum;
 
 	if (o.debugging) 
-	  log_write(LOG_STDOUT, "In response to UDP-ping, we got UDP packet back from %s port %hi (hostnum = %d trynum = %d\n", inet_ntoa(ip->ip_src), htons(tcp->th_sport), hostnum, trynum);
+	  log_write(LOG_STDOUT, "In response to UDP-ping, we got UDP packet back from %s port %hi (hostnum = %d trynum = %d\n", inet_ntoa(ip->ip_src), htons(udp->uh_sport), hostnum, trynum);
 	pingstyle = pingstyle_rawudp;
 	foundsomething = 1;
 	dotimeout = 1;

@@ -852,6 +852,7 @@ if test -n "$ac_init_help"; then
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
+  --with-localdirs        Explicitly ask compiler to use /usr/local/{include,libs} if they exist
   --without-nmapfe    skip nmapfe X-window GUI
   --with-libpcap=DIR    Look for pcap include/libs in DIR
   --with-libnbase=DIR     Look for nbase include/libs in DIR
@@ -1274,11 +1275,31 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 
-if test -d /usr/local/lib; then
-  LDFLAGS="$LDFLAGS -L/usr/local/lib"
-fi
-if test -d /usr/local/include; then
-  CXXFLAGS="$CXXFLAGS -I/usr/local/include"
+
+# Check whether --with-localdirs or --without-localdirs was given.
+if test "${with_localdirs+set}" = set; then
+  withval="$with_localdirs"
+   case "$with_localdirs" in
+      yes)
+        user_localdirs=1
+        ;;
+      no)
+        user_localdirs=0
+        ;;
+    esac
+
+else
+   user_localdirs=0
+fi;
+
+if test "$user_localdirs" = 1; then
+   if test -d /usr/local/lib; then
+     LDFLAGS="$LDFLAGS -L/usr/local/lib"
+     fi
+   if test -d /usr/local/include; then
+     CFLAGS="$CFLAGS -I/usr/local/include"
+     CXXFLAGS="$CFLAGS -I/usr/local/include"
+   fi
 fi
 
 libpcapdir=libpcap-possiblymodified

@@ -1,4 +1,4 @@
-NMAP_VERSION = 3.27
+NMAP_VERSION = 3.28
 NMAP_NAME= nmap
 NMAP_URL= www.insecure.org/nmap/
 NMAP_PLATFORM=@host@
@@ -74,6 +74,7 @@ nmapfe/nmapfe:
 #	@echo "END OF SECTION WHERE FAILURES ARE OK"
 
 # This target is just for me ... don't you get any ideas --Fyodor
+# This is unsafe on shared systems, should use mktemp
 distro: 
 	autoconf
 	rm -f config.cache
@@ -93,6 +94,7 @@ distro:
 	nroff -man docs/nmap_italian.1 | man2html -nodepage -title 'Nmap network security scanner man page (Italian translation)' > docs/nmap_manpage-it.html
 	nroff -man docs/nmap_latvian.1 | man2html -nodepage -title 'Nmap network security scanner man page (Latvian translation)' > docs/nmap_manpage-lv.html
 	nroff -Tlatin1 -man docs/nmap_lithuanian.1 | man2html -nodepage -title 'Nmap network security scanner man page (Lithuanian translation)' > docs/nmap_manpage-lt.html
+	nroff -man docs/nmap_russian.1 | man2html -nodepage -title 'Nmap network security scanner man page (Russian translation)' > docs/nmap_manpage-ru.html
 # We need a content-type for the Lithuanian version
 	sr '<HEAD>' '<HEAD><META http-equiv="Content-Type" content="text/html; charset=windows-1257">' docs/nmap_manpage-lt.html
 	nroff -man docs/nmap_portuguese.1 | man2html -nodepage -title 'Nmap network security scanner man page (Portuguese translation)' > docs/nmap_manpage-pt.html
@@ -141,7 +143,7 @@ distro:
                     nmap_manpage-ru.html nmap_manpage.html \
                     nmap.1 nmapfe.1 nmap_french.1 nmap_german.1 \
                     nmap_italian.1 nmap_lithuanian.1 nmap_portuguese.1 \
-                    nmap_spanish.1 xnmap.1 nmap.dtd \
+                    nmap_spanish.1 nmap_russian.1 xnmap.1 nmap.dtd \
                     /usr/tmp/nmap-$(NMAP_VERSION)/docs
 	$(SHTOOL) mkdir /usr/tmp/nmap-$(NMAP_VERSION)/nmapfe
 	cd nmapfe; cp -ra Makefile.in aclocal.m4 configure configure.ac \

@@ -74,14 +74,27 @@ void adjust_timeouts2(const struct timeval *sent,
   if (o.debugging > 1) {
     log_write(LOG_STDOUT, "Timeout vals: srtt: %d rttvar: %d to: %d ", to->srtt, to->rttvar, to->timeout);
   }
+
+  delta = TIMEVAL_SUBTRACT(*received, *sent);
+
+  /* Argh ... pcap receive time is sometimes a little off my
+     getimeofday() results on various platforms :(.  So a packet may
+     appear to be received as much as a hundredth of a second before
+     it was sent.  So I will allow small negative RTT numbers */
+  if (delta < 0 && delta > -50000) {
+    if (o.debugging > 2)
+      log_write(LOG_STDOUT, "Small negative delta (probably due to libpcap time / gettimeofday() discrepancy) - adjusting from %lius to %dus\n", delta, 10000);
+    delta = 10000;
+  }
+
+
   if (to->srtt == -1 && to->rttvar == -1) {
     /* We need to initialize the sucker ... */
-    to->srtt = TIMEVAL_SUBTRACT(*received, *sent);
+    to->srtt = delta;
     to->rttvar = MAX(5000, MIN(to->srtt, 2000000));
     to->timeout = to->srtt + (to->rttvar << 2);
   }
   else {
-    delta = TIMEVAL_SUBTRACT(*received, *sent);
     if (delta >= 8000000 || delta < 0) {
       if (o.verbose)
 	error("adjust_timeout: packet supposedly had rtt of %lu microseconds.  Ignoring time.", delta);

@@ -4366,7 +4366,9 @@ T6(DF=N|Y%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N|Y%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N|Y%TOS=0%IPLEN=70%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
-Fingerprint HP9000 Model 804 K450 running HP/UX 11.00
+# HP9000 Model 804 K450 running HP/UX 11.00
+# Mac OS9
+Fingerprint Mac OS 9, or HP/UX 11.00
 TSeq(Class=RI%gcd=<6%SI=<4F254&>C95)
 T1(DF=N%W=8000%ACK=S++%Flags=AS%Ops=MEWNNNT)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)

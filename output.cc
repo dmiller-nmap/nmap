@@ -345,9 +345,9 @@ int log_open(int logt, int append, char *filename)
   if (*filename == '-' && *(filename + 1) == '\0')
     {
       o.logfd[i]=stdout;
-      o.nmap_stdout = fopen("/dev/null", "w");
+      o.nmap_stdout = fopen(DEVNULL, "w");
       if (!o.nmap_stdout)
-	fatal("Could not assign /dev/null to stdout for writing");
+	fatal("Could not assign %s to stdout for writing", DEVNULL);
   }
   else
     {
