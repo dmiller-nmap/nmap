@@ -58,6 +58,8 @@
 #endif /* WIN32 */
 #endif /* HAVE_CONFIG_H */
 
+#include <nbase.h>
+
 #ifdef STDC_HEADERS
 #include <stdlib.h>
 #endif

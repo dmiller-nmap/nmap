@@ -1,5 +1,16 @@
 # Nmap Changelog ($Id$)
 
+o Fixed a GCC dependency reported by Ayamura KIKUCHI (ayamura@keio.net)
+
+o Fixed a divide by zero error caused when nonroot users (on UNIX)
+  explicitly request ICMP pings (which require root privileges).  Now it
+  prints a warning and uses the normal nonroot TCP connect() ping.
+  Jaroslav Sladek (jup@matfyz.cz) found the bug and provided the patch.
+
+o Changed the wording of NmapFE Gnome entries to better-comply with
+  Gnome's Human Interface Guidelines (HIG).  Suggested by Axel Krauth
+  (krauth@fmi.uni-passau.de)
+
 Nmap 3.20
 
 o The random IP input option (-iR) now takes an argument specifying

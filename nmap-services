@@ -623,8 +623,8 @@ bnet              415/tcp    #
 bnet              415/udp    # 
 silverplatter     416/tcp    # 
 silverplatter     416/udp    # 
-onmux             417/tcp    # 
-onmux             417/udp    # 
+onmux             417/tcp    # Meeting maker
+onmux             417/udp    # Meeting maker
 hyper-g           418/tcp    # 
 hyper-g           418/udp    # 
 ariel1            419/tcp    # 
@@ -1805,6 +1805,7 @@ sybase            2638/tcp   # Sybase database
 listen            2766/tcp   # System V listener port
 www-dev           2784/tcp   # world wide web - development
 www-dev           2784/udp   # world wide web - development
+extensisportfolio 2903/tcp   # Portfolio Server by Extensis Product Group
 iss-realsec       2998/tcp   # ISS RealSecure IDS Remote Console Admin port
 ppp               3000/tcp   # User-level ppp daemon, or chili!soft asp
 nessusd           3001/tcp   # Nessus Security Scanner (www.nessus.org) Daemon or chili!soft asp
@@ -1823,6 +1824,7 @@ ccmail            3264/tcp   # cc:mail/lotus
 ccmail            3264/udp   # cc:mail/lotus
 globalcatLDAP     3268/tcp   # Global Catalog LDAP
 globalcatLDAPssl  3269/tcp   # Global Catalog LDAP over ssl
+meetingmaker      3292/tcp   # Meeting maker time management software
 mysql             3306/tcp   # mySQL
 dec-notes         3333/tcp   # DEC Notes
 dec-notes         3333/udp   # DEC Notes
@@ -1998,6 +2000,8 @@ montage-lm        6147/udp   # Montage License Manager
 ricardo-lm        6148/tcp   # Ricardo North America License Manager
 ricardo-lm        6148/udp   # Ricardo North America License Manager
 gnutella          6346/tcp   # Gnutella file sharing protocol
+crystalreports    6400/tcp   # Seagate Crystal Reports
+crystalenterprise 6401/tcp   # Seagate Crystal Enterprise
 PowerChutePLUS    6547/tcp   #
 PowerChutePLUS    6548/tcp   #
 PowerChutePLUS    6549/udp   #
@@ -2041,6 +2045,7 @@ fodms             7200/tcp   # FODMS FLIP
 fodms             7200/udp   # FODMS FLIP
 dlip              7201/tcp   # 
 dlip              7201/udp   # 
+openmanage        7273/tcp   # Dell OpenManage
 icb               7326/tcp   # Internet Citizen's Band
 qaz               7597/tcp   # Quaz trojan worm
 cucme-1           7648/udp   # cucme live video/audio server
@@ -2153,6 +2158,7 @@ sometimes-rpc27   32787/tcp  # Sometimes an RPC port dmispd (DMI Service Provide
 sometimes-rpc28   32787/udp  # Sometimes an RPC port
 sygatefw          39213/udp  # Sygate Firewall management port version 3.0 build 521 and above
 reachout          43188/tcp
+tinyfw            44334/tcp  # tiny personal firewall admin port
 coldfusion-auth   44442/tcp  # ColdFusion Advanced Security/Siteminder Authentication Port (by Allaire/Netegrity)
 coldfusion-auth   44443/tcp  # ColdFusion Advanced Security/Siteminder Authentication Port (by Allaire/Netegrity)
 ciscopop          45000/udp  # Cisco Postoffice Protocol for Cisco Secure IDS

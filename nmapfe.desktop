@@ -1,6 +1,6 @@
 [Desktop Entry]
-Name=Nmapfe
-Comment=Gtk+ frontend to nmap
+Name=Nmap Security Scanner GUI
+Comment=Execute Nmap security/port scans
 Exec=nmapfe
 Terminal=0
 Type=Application

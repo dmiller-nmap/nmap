@@ -240,6 +240,11 @@ void NmapOps::ValidateOptions() {
     if (pingtype & (PINGTYPE_ICMP_PING|PINGTYPE_ICMP_MASK|PINGTYPE_ICMP_TS)) {
       error("Warning:  You are not root -- using TCP pingscan rather than ICMP");
       pingtype = PINGTYPE_TCP;
+      if (num_ping_synprobes == 0)
+	{
+	  num_ping_synprobes = 1;
+	  ping_synprobes[0] = DEFAULT_TCP_PROBE_PORT;
+	}
     }
 #endif
     

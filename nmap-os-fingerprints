@@ -776,7 +776,9 @@ T6(DF=N%W=0%ACK=S%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(Resp=N)
 
-Fingerprint Alteon AceSwitch 110 (software 4.0.37)
+# Alteon AceSwitch 110 (software 4.0.37)
+# Centillion C100 ATM Switch OS Version 2.0.2.
+Fingerprint Alteon AceSwitch 110 or Cantillion C100 ATM Switch
 TSeq(Class=TD%gcd=<9C8%SI=<1E)
 T1(DF=N%W=200%ACK=S++|O%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
