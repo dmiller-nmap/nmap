@@ -59,8 +59,8 @@ RANLIB = @RANLIB@
 # used by the generated parser.  This allows programs to use lex/yacc
 # and link against libpcap.  If you don't have flex or bison, get them.
 #
-LEX = @V_LEX@
-YACC = @V_YACC@
+LEX = flex
+YACC = bison
 
 # Explicitly define compilation rule since SunOS 4's make doesn't like gcc.
 # Also, gcc does not remove the .o before forking 'as', which can be a
@@ -72,7 +72,7 @@ YACC = @V_YACC@
 PSRC =	pcap-@V_PCAP@.c
 CSRC =	pcap.c inet.c gencode.c optimize.c nametoaddr.c \
 	etherent.c savefile.c bpf_filter.c bpf_image.c bpf_dump.c
-GENSRC = scanner.c grammar.c version.c
+GENSRC = version.c
 LIBOBJS = @LIBOBJS@
 
 SRC =	$(PSRC) $(CSRC) $(GENSRC)
@@ -82,8 +82,7 @@ SRC =	$(PSRC) $(CSRC) $(GENSRC)
 OBJ =	$(PSRC:.c=.o) $(CSRC:.c=.o) $(GENSRC:.c=.o) # $(LIBOBJS)
 HDR =	pcap.h pcap-int.h pcap-namedb.h pcap-nit.h pcap-pf.h \
 	ethertype.h gencode.h gnuc.h
-GENHDR = \
-	tokdefs.h
+GENHDR = tokdefs.h
 
 TAGHDR = \
 	bpf/net/bpf.h
