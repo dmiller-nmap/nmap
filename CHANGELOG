@@ -1,5 +1,15 @@
 # Nmap Changelog ($Id$)
 
+-- Fixed byte-order bug in Windows packet matching code which caused
+   -PS and -PT to fail.  Bug found and patch sent by Tim Adam 
+   (tma@osa.com.au)
+
+-- Fixed segfault problem with "-sU -F".  Nobody reported this until
+   I noticed it :(.  Anytime you see "Segmentation Fault" in the latest
+   version of Nmap, it is probably a bug -- please mail me the command 
+   you used, the OS/platform you are running on, and whether it is
+   reproducable.
+
 -- Integrate TIMEVAL_SEC_SUBTRACT() fix by Scott Renfro (scott@renfro.org)
    which improves timing accuracy.
 

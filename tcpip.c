@@ -1192,6 +1192,7 @@ int flt_icmptcp_2port(const char *packet, int len)
 
 int flt_icmptcp_5port(const char *packet, int len)
 {
+  unsigned short dport;
   struct ip* ip = (struct ip*)packet;
   if(ip->ip_dst.s_addr != flt_dsthost) return 0;
   if(ip->ip_p == IPPROTO_ICMP) return 1;
@@ -1199,8 +1200,8 @@ int flt_icmptcp_5port(const char *packet, int len)
     {
       struct tcphdr* tcp = (struct tcphdr *) (((char *) ip) + 4 * ip->ip_hl);
       if(len < 4 * ip->ip_hl + 4) return 0;
-      if(tcp->th_dport >= flt_baseport
-	 && tcp->th_dport <= flt_baseport + 4) return 1;
+      dport = ntohs(tcp->th_dport);
+      if(dport >= flt_baseport && dport <= flt_baseport + 4) return 1;
     }
   
   return 0;

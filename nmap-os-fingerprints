@@ -3931,7 +3931,7 @@ T7(DF=Y%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=Y%TOS=C0%IPLEN=178%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=F|E)
 
 # Contributed by <DeXteR> root@dexter.dynu.com
-Fingerprint Linux Kernel 2.4.0 - 2.4.5 (X86)
+Fingerprint Linux Kernel 2.4.0 - 2.4.9 (X86)
 TSeq(Class=RI%gcd=<8%SI=<2D870AA&>3A454%IPID=Z%TS=100HZ)
 T1(DF=Y%W=2D24|16A0|1680|4000|7FFF%ACK=S++%Flags=AS%Ops=MNNTNW)
 T2(Resp=N)
