@@ -47,12 +47,13 @@ int sendpingquery(int sd, int rawsd, struct hoststruct *target,
 int sendrawtcppingquery(int rawsd, struct hoststruct *target, int seq,
 			struct timeval *time, struct pingtune *pt);
 int sendconnecttcpquery(struct hoststruct *hostbatch, struct tcpqueryinfo *tqi, struct hoststruct *target, 
-			int seq, struct timeval *time, struct pingtune *pt, struct timeout_info *to);
+			int seq, struct timeval *time, struct pingtune *pt, struct timeout_info *to, int max_width);
 int get_connecttcpscan_results(struct tcpqueryinfo *tqi, 
 			       struct hoststruct *hostbatch, 
 			       struct timeval *time, struct pingtune *pt, 
 			       struct timeout_info *to);
 char *readhoststate(int state);
+void massping(struct hoststruct *hostbatch, int numhosts);
 #endif /* TARGETS_H */
 
 

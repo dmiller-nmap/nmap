@@ -2,7 +2,7 @@
 
 extern struct ops o;
 
-struct hoststruct *nexthost(char *hostexp, int lookahead, int pingtimeout) {
+struct hoststruct *nexthost(char *hostexp, int lookahead) {
 static int lastindex = -1;
 static struct hoststruct *hostbatch  = NULL;
 char *device;
@@ -48,7 +48,7 @@ do {
 	{
 	  struct in_addr iii;
 	  iii.s_addr = htonl(targets.currentaddr.s_addr);
-	  printf("Skipping host %s because no '-A' and IGNORE_ZERO_AND_255_HOSTS is set in the source.\n", inet_ntoa(iii));
+	  fprintf(stderr, "Skipping host %s because no '-A' and IGNORE_ZERO_AND_255_HOSTS is set in the source.\n", inet_ntoa(iii));
 	  targets.currentaddr.s_addr++;
 	  i--;
 	}
@@ -63,12 +63,12 @@ do {
 	for(; targets.current[2] <= targets.last[2] && i < lookahead ;) {	
 	  for(; targets.current[3] <= targets.last[3]  && i < lookahead ; targets.current[3]++) {
 	    if (o.debugging > 1) 
-	      printf("doing %d.%d.%d.%d = %d.%d.%d.%d\n", targets.current[0], targets.current[1], targets.current[2], targets.current[3], targets.addresses[0][targets.current[0]],targets.addresses[1][targets.current[1]],targets.addresses[2][targets.current[2]],targets.addresses[3][targets.current[3]]);
+	      fprintf(o.nmap_stdout, "doing %d.%d.%d.%d = %d.%d.%d.%d\n", targets.current[0], targets.current[1], targets.current[2], targets.current[3], targets.addresses[0][targets.current[0]],targets.addresses[1][targets.current[1]],targets.addresses[2][targets.current[2]],targets.addresses[3][targets.current[3]]);
 	    hostbatch[i++].host.s_addr = htonl(targets.addresses[0][targets.current[0]] << 24 | targets.addresses[1][targets.current[1]] << 16 |
 					       targets.addresses[2][targets.current[2]] << 8 | targets.addresses[3][targets.current[3]]);
 	    if (!o.allowall && (!(ntohl(hostbatch[i - 1].host.s_addr) % 256) || ntohl(hostbatch[i - 1].host.s_addr) % 256 == 255))
 	      {
-		printf("Skipping host %s because no '-A' and IGNORE_ZERO_AND_255_HOSTS is set in the source.\n", inet_ntoa(hostbatch[i - 1].host));
+		fprintf(stderr, "Skipping host %s because no '-A' and IGNORE_ZERO_AND_255_HOSTS is set in the source.\n", inet_ntoa(hostbatch[i - 1].host));
 		i--;
 	      }
 	  }
@@ -115,16 +115,16 @@ do {
 	} else {
 	  strcpy(hostbatch[i].device, device);
 	}
-      }
-    }
+      }      
+    }    
   }
 
 if ((o.pingtype == PINGTYPE_ICMP) || (hostbatch[0].host.s_addr && (o.pingtype != PINGTYPE_NONE))) 
-  massping(hostbatch, i, pingtimeout);
+  massping(hostbatch, i);
 else for(i=0; hostbatch[i].host.s_addr; i++)  {
   hostbatch[i].to.srtt = -1;
   hostbatch[i].to.rttvar = -1;
-  hostbatch[i].to.timeout = 6000000;
+  hostbatch[i].to.timeout = o.initial_rtt_timeout * 1000;
   hostbatch[i].flags |= HOST_UP; /*hostbatch[i].up = 1;*/
 }
 
@@ -151,7 +151,7 @@ target_net = strtok(hostexp, "/");
 s = strtok(NULL, "");    /* find the end of the token from hostexp */
 targets->netmask  = ( s ) ? atoi(s) : 32;
 if ((int) targets->netmask < 0 || targets->netmask > 32) {
-  printf("Illegal netmask value (%d), must be /0 - /32 .  Assuming /32 (one host)\n", targets->netmask);
+  fprintf(stderr, "Illegal netmask value (%d), must be /0 - /32 .  Assuming /32 (one host)\n", targets->netmask);
   targets->netmask = 32;
 }
 for(i=0; *(hostexp + i); i++) 
@@ -216,7 +216,7 @@ else {
 	else if (r && !*(r+1)) end = 255;
       }
       if (o.debugging)
-	printf("The first host is %d, and the last one is %d\n", start, end);
+	fprintf(o.nmap_stdout, "The first host is %d, and the last one is %d\n", start, end);
       if (start < 0 || start > end) fatal("Your host specifications are illegal!");
       for(k=start; k <= end; k++)
 	targets->addresses[i][j++] = k;
@@ -234,7 +234,7 @@ else {
       else if (r && !*(r+1)) end = 255;
     }
     if (o.debugging)
-      printf("The first host is %d, and the last one is %d\n", start, end);
+      fprintf(o.nmap_stdout, "The first host is %d, and the last one is %d\n", start, end);
     if (start < 0 || start > end) fatal("Your host specifications are illegal!");
     if (j + (end - start) > 255) fatal("Your host specifications are illegal!");
     for(k=start; k <= end; k++) 
@@ -249,7 +249,7 @@ else {
 }
 
 
-void massping(struct hoststruct *hostbatch, int num_hosts, int pingtimeout) {
+void massping(struct hoststruct *hostbatch, int num_hosts) {
 static struct timeout_info to = { 0,0,0};
 static int gsize = LOOKAHEAD;
 int hostnum;
@@ -281,6 +281,7 @@ char err0r[PCAP_ERRBUF_SIZE];
 char filter[512];
 unsigned int localnet, netmask;
 unsigned short sportbase;
+int max_width = 0;
 
 bzero((char *)&ptech, sizeof(struct pingtech));
 
@@ -292,7 +293,7 @@ pt.discardtimesbefore = 0;
 pt.down_this_block = 0;
 pt.num_responses = 0;
 pt.max_tries = 5; /* Maximum number of tries for a block */
-pt.group_size = gsize;
+pt.group_size = (o.max_parallelism)? MIN(o.max_parallelism, gsize) : gsize;
 pt.group_start = 0;
 pt.block_tries = 0; /* How many tries this block has gone through */
 
@@ -315,8 +316,10 @@ time = safe_malloc(sizeof(struct timeval) * ((pt.max_tries) * num_hosts));
 bzero(time, sizeof(struct timeval) * pt.max_tries * num_hosts);
 id = (unsigned short) get_random_uint();
 
-if (ptech.connecttcpscan) 
-  max_block_size = MIN(50, o.max_sockets);
+if (ptech.connecttcpscan)  {
+  max_width = (o.max_parallelism)? o.max_parallelism : MAX(1, max_sd() - 4);
+  max_block_size = MIN(50, max_width);
+}
 
 
 bzero((char *)&tqi, sizeof(tqi));
@@ -345,7 +348,7 @@ if (ptech.icmpscan) {
 if (!to.srtt && !to.rttvar && !to.timeout) {
   /*  to.srtt = 800000;
       to.rttvar = 500000; */ /* we will init these when we get real data */
-  to.timeout = pingtimeout * 1e6;
+  to.timeout = o.initial_rtt_timeout * 1000;
 } 
 
 /* Init our raw socket */
@@ -372,21 +375,21 @@ if (ptech.rawicmpscan || ptech.rawtcpscan) {
    = 104 byte snaplen */
   if (!(pd = pcap_open_live(hostbatch[0].device, 104, o.spoofsource, 20,
 			    err0r)))
-    fatal("pcap_open_live: %s", err0r);
+      fatal("pcap_open_live: %s\nIf you are on Linux and getting Socket type not supported, try modprobe af_packet or recompile your kernel with SOCK_PACKET enabled.  If you are on bsd and getting device not configured, you need to recompile your kernel with Berkeley Packet Filter support.", err0r);
 
   if (pcap_lookupnet(hostbatch[0].device, &localnet, &netmask, err0r) < 0)
     fatal("Failed to lookup device subnet/netmask: %s", err0r);
-  sprintf(filter, "(icmp and dst host %s) or (tcp and dst host %s and ( dst port %d or dst port %d or dst port %d or dst port %d or dst port %d))", 
+  snprintf(filter, sizeof(filter), "(icmp and dst host %s) or (tcp and dst host %s and ( dst port %d or dst port %d or dst port %d or dst port %d or dst port %d))", 
 	  inet_ntoa(hostbatch[0].source_ip),inet_ntoa(hostbatch[0].source_ip),
 	  sportbase , sportbase + 1, sportbase + 2, sportbase + 3, 
 	  sportbase + 4);
 
   /* Due to apparent bug in libpcap */
-  if (islocalhost(&(hostbatch[0].source_ip)))
+  if (islocalhost(&(hostbatch[0].host)))
     filter[0] = '\0';
 
   if (o.debugging)
-    printf("Packet capture filter: %s\n", filter);
+    fprintf(o.nmap_stdout, "Packet capture filter: %s\n", filter);
   if (pcap_compile(pd, &fcode, filter, 0, netmask) < 0)
     fatal("Error compiling our pcap filter: %s\n", pcap_geterr(pd));
   if (pcap_setfilter(pd, &fcode) < 0 )
@@ -418,6 +421,7 @@ gettimeofday(&start, NULL);
 	 if (ptech.icmpscan && !sd_blocking) { 
 	   block_socket(sd); sd_blocking = 1; 
 	 }
+	 if (o.scan_delay) enforce_scan_delay(NULL);
 	 if (ptech.icmpscan || ptech.rawicmpscan)
 	   sendpingquery(sd, rawpingsd, &hostbatch[hostnum],  
 			 seq, id, &ss, time, ptech);
@@ -426,14 +430,14 @@ gettimeofday(&start, NULL);
 	   sendrawtcppingquery(rawsd, &hostbatch[hostnum],  seq, time, &pt);
 	 }
 	 else if (ptech.connecttcpscan) {
-	   sendconnecttcpquery(hostbatch, &tqi, &hostbatch[hostnum], seq, time, &pt, &to);
+	   sendconnecttcpquery(hostbatch, &tqi, &hostbatch[hostnum], seq, time, &pt, &to, max_width);
 	 }
 	 pt.block_unaccounted++;
 	 gettimeofday(&t2, NULL);
 	 if (TIMEVAL_SUBTRACT(t2,time[seq]) > 1000000) {
 	   pt.discardtimesbefore = hostnum;
 	   if (o.debugging) 
-	     printf("Huge send delay: %lu microseconds\n", (unsigned long) TIMEVAL_SUBTRACT(t2,t1));
+	     fprintf(o.nmap_stdout, "Huge send delay: %lu microseconds\n", (unsigned long) TIMEVAL_SUBTRACT(t2,t1));
 	 }
        }
      } /* for() loop */
@@ -461,7 +465,7 @@ gettimeofday(&start, NULL);
    } while ((pt.up_this_block > 0 || pt.group_end - pt.group_start <= 3) && pt.block_unaccounted > 0 && pt.block_tries < pt.max_tries);
 
    if (o.debugging)
-     printf("Finished block: srtt: %d rttvar: %d timeout: %d block_tries: %d up_this_block: %d down_this_block: %d group_sz: %d\n", to.srtt, to.rttvar, to.timeout, pt.block_tries, pt.up_this_block, pt.down_this_block, pt.group_end - pt.group_start + 1);
+     fprintf(o.nmap_stdout, "Finished block: srtt: %d rttvar: %d timeout: %d block_tries: %d up_this_block: %d down_this_block: %d group_sz: %d\n", to.srtt, to.rttvar, to.timeout, pt.block_tries, pt.up_this_block, pt.down_this_block, pt.group_end - pt.group_start + 1);
 
    if ((pt.block_tries == 1) || (pt.block_tries == 2 && pt.up_this_block == 0 && pt.down_this_block == 0)) 
      /* Then it did not miss any hosts (that we know of)*/
@@ -482,7 +486,7 @@ gettimeofday(&start, NULL);
  free(time);
  if (pd) pcap_close(pd);
  if (o.debugging) 
-   printf("massping done:  num_hosts: %d  num_responses: %d\n", num_hosts, pt.num_responses);
+   fprintf(o.nmap_stdout, "massping done:  num_hosts: %d  num_responses: %d\n", num_hosts, pt.num_responses);
  gsize = pt.group_size;
  return;
 }
@@ -490,7 +494,7 @@ gettimeofday(&start, NULL);
 int sendconnecttcpquery(struct hoststruct *hostbatch, struct tcpqueryinfo *tqi,
 			struct hoststruct *target, int seq, 
 			struct timeval *time, struct pingtune *pt, 
-			struct timeout_info *to) {
+			struct timeout_info *to, int max_width) {
 
   int res,i;
   int tmpsd;
@@ -501,14 +505,14 @@ int sendconnecttcpquery(struct hoststruct *hostbatch, struct tcpqueryinfo *tqi,
   trynum = seq % pt->max_tries;
   hostnum = seq / pt->max_tries;
 
-  assert(tqi->sockets_out <= o.max_sockets);
-  if (tqi->sockets_out == o.max_sockets) {
+  assert(tqi->sockets_out <= max_width);
+  if (tqi->sockets_out == max_width) {
     /* We've got to free one! */
     for(i=0; i < trynum; i++) {
       tmpsd = hostnum * pt->max_tries + i;
       if (tqi->sockets[tmpsd] >= 0) {
 	if (o.debugging) 
-	  printf("sendconnecttcpquery: Scavenging a free socket due to serious shortage\n");
+	  fprintf(o.nmap_stdout, "sendconnecttcpquery: Scavenging a free socket due to serious shortage\n");
 	close(tqi->sockets[tmpsd]);
 	tqi->sockets[tmpsd] = -1;
 	tqi->sockets_out--;
@@ -565,6 +569,7 @@ int sendrawtcppingquery(int rawsd, struct hoststruct *target, int seq,
 int decoy, trynum;
 int myseq;
 unsigned short sportbase;
+unsigned long myack = get_random_uint();
 
 if (o.magic_port_set) sportbase = o.magic_port;
 else sportbase = o.magic_port + 20;
@@ -574,9 +579,9 @@ trynum = seq % pt->max_tries;
  memcpy((char *)&(o.decoys[o.decoyturn]), (char *)&target->source_ip, sizeof(struct in_addr));
  for (decoy = 0; decoy < o.numdecoys; decoy++) {
    if (o.pingtype & PINGTYPE_TCP_USE_SYN) {   
-   send_tcp_raw( rawsd, &o.decoys[decoy], &(target->host), sportbase + trynum, o.tcp_probe_port, myseq, 0, TH_SYN, 0, NULL, 0, NULL, 0);
+   send_tcp_raw( rawsd, &o.decoys[decoy], &(target->host), sportbase + trynum, o.tcp_probe_port, myseq, myack, TH_SYN, 0, NULL, 0, NULL, 0);
    } else {
-     send_tcp_raw( rawsd, &o.decoys[decoy], &(target->host), sportbase + trynum, o.tcp_probe_port, myseq, 0, TH_ACK, 0, NULL, 0, NULL, 0);
+     send_tcp_raw( rawsd, &o.decoys[decoy], &(target->host), sportbase + trynum, o.tcp_probe_port, myseq, myack, TH_ACK, 0, NULL, 0, NULL, 0);
    }
  }
 
@@ -668,13 +673,13 @@ while(pt->block_unaccounted) {
 	if (tqi->sockets[seq] >= 0) {
 	  if (o.debugging > 1) {
 	    if (FD_ISSET(tqi->sockets[seq], &(myfds_r))) {
-	      printf("WRITE selected for machine %s\n", inet_ntoa(hostbatch[hostindex].host));  
+	      fprintf(o.nmap_stdout, "WRITE selected for machine %s\n", inet_ntoa(hostbatch[hostindex].host));  
 	    }
 	    if ( FD_ISSET(tqi->sockets[seq], &myfds_w)) {
-	      printf("READ selected for machine %s\n", inet_ntoa(hostbatch[hostindex].host)); 
+	      fprintf(o.nmap_stdout, "READ selected for machine %s\n", inet_ntoa(hostbatch[hostindex].host)); 
 	    }
 	    if  ( FD_ISSET(tqi->sockets[seq], &myfds_x)) {
-	      printf("EXC selected for machine %s\n", inet_ntoa(hostbatch[hostindex].host));
+	      fprintf(o.nmap_stdout, "EXC selected for machine %s\n", inet_ntoa(hostbatch[hostindex].host));
 	    }
 	  }
 	  if (FD_ISSET(tqi->sockets[seq], &myfds_r) || FD_ISSET(tqi->sockets[seq], &myfds_w) ||  FD_ISSET(tqi->sockets[seq], &myfds_x)) {
@@ -685,7 +690,7 @@ while(pt->block_unaccounted) {
 	      case ECONNREFUSED:
 	      case EAGAIN:
 		if (errno == EAGAIN && o.verbose) {
-		  printf("Machine %s MIGHT actually be listening on probe port %d\n", inet_ntoa(hostbatch[hostindex].host), o.tcp_probe_port);
+		  fprintf(o.nmap_stdout, "Machine %s MIGHT actually be listening on probe port %d\n", inet_ntoa(hostbatch[hostindex].host), o.tcp_probe_port);
 		}
 		foundsomething = 1;
 		newstate = HOST_UP;	
@@ -701,7 +706,7 @@ while(pt->block_unaccounted) {
 		newstate = HOST_DOWN;
 		break;
 	      default:
-		sprintf (buf, "Strange read error from %s", inet_ntoa(hostbatch[hostindex].host));
+		snprintf (buf, sizeof(buf), "Strange read error from %s", inet_ntoa(hostbatch[hostindex].host));
 		perror(buf);
 		break;
 	      }
@@ -711,11 +716,11 @@ while(pt->block_unaccounted) {
 	      if (o.verbose) {	      
 		buf[res2] = '\0';
 		if (res2 == 0)
-		  printf("Machine %s is actually LISTENING on probe port %d\n",
+		  fprintf(o.nmap_stdout, "Machine %s is actually LISTENING on probe port %d\n",
 			 inet_ntoa(hostbatch[hostindex].host), 
 			 o.tcp_probe_port);
 		else 
-		  printf("Machine %s is actually LISTENING on probe port %d, banner: %s\n",
+		  fprintf(o.nmap_stdout, "Machine %s is actually LISTENING on probe port %d, banner: %s\n",
 			 inet_ntoa(hostbatch[hostindex].host), 
 			 o.tcp_probe_port, buf);
 	      }
@@ -809,7 +814,7 @@ while(pt->block_unaccounted > 0 && !timeout) {
   tmpto = myto;
 
   if (pd) {
-    ip = (struct ip*) readip_pcap(pd, &bytes);
+    ip = (struct ip*) readip_pcap(pd, &bytes, to->timeout);
   } else {    
     FD_SET(sd, &fd_r);
     FD_SET(sd, &fd_x);
@@ -855,7 +860,7 @@ while(pt->block_unaccounted > 0 && !timeout) {
       if (!hostbatch[hostnum].source_ip.s_addr)
 	hostbatch[hostnum].source_ip.s_addr = ip->ip_dst.s_addr;
       if (o.debugging) 
-	printf("We got a ping packet back from %s: id = %d seq = %d checksum = %d\n", inet_ntoa(ip->ip_src), ping->id, ping->seq, ping->checksum);
+	fprintf(o.nmap_stdout, "We got a ping packet back from %s: id = %d seq = %d checksum = %d\n", inet_ntoa(ip->ip_src), ping->id, ping->seq, ping->checksum);
       if (hostbatch[hostnum].host.s_addr == ip->ip_src.s_addr) {
 	foundsomething = 1;
 	pingtype = PINGTYPE_ICMP;
@@ -904,7 +909,7 @@ while(pt->block_unaccounted > 0 && !timeout) {
     
 	if (ping->type == 3) {
 	if (o.debugging) 
-	  printf("Got destination unreachable for %s\n", inet_ntoa(hostbatch[hostnum].host));
+	  fprintf(o.nmap_stdout, "Got destination unreachable for %s\n", inet_ntoa(hostbatch[hostnum].host));
 	/* Since this gives an idea of how long it takes to get an answer,
 	   we add it into our times */
 	if (pt->discardtimesbefore < sequence)
@@ -914,18 +919,18 @@ while(pt->block_unaccounted > 0 && !timeout) {
 	newstate = HOST_DOWN;
       } else if (ping->type == 11) {
 	if (o.debugging) 
-	  printf("Got Time Exceeded for %s\n", inet_ntoa(hostbatch[hostnum].host));
+	  fprintf(o.nmap_stdout, "Got Time Exceeded for %s\n", inet_ntoa(hostbatch[hostnum].host));
 	dotimeout = 0; /* I don't want anything to do with timing this */
 	foundsomething = 1;
 	pingtype = PINGTYPE_ICMP;
 	newstate = HOST_DOWN;
       }
       else if (ping->type == 4) {      
-	if (o.debugging) printf("Got ICMP source quench\n");
+	if (o.debugging) fprintf(o.nmap_stdout, "Got ICMP source quench\n");
 	usleep(50000);
       }  
       else if (o.debugging > 0) {
-	printf("Got ICMP message type %d code %d\n", ping->type, ping->code);
+	fprintf(o.nmap_stdout, "Got ICMP message type %d code %d\n", ping->type, ping->code);
       }
     }
   } else if (ip->ip_p == IPPROTO_TCP) 
@@ -974,7 +979,7 @@ while(pt->block_unaccounted > 0 && !timeout) {
 	continue;
       }
       if (o.debugging) 
-	printf("We got a TCP ping packet back from %s (hostnum = %d trynum = %d\n", inet_ntoa(ip->ip_src), hostnum, trynum);
+	fprintf(o.nmap_stdout, "We got a TCP ping packet back from %s (hostnum = %d trynum = %d\n", inet_ntoa(ip->ip_src), hostnum, trynum);
       pingtype = PINGTYPE_RAWTCP;
       foundsomething = 1;
       if (pt->discardtimesbefore < sequence)
@@ -1004,7 +1009,7 @@ struct timeval tv;
 
 if (o.debugging)  {
   gettimeofday(&tv, NULL);
-  printf("Hostupdate called for machne %s state %s -> %s (trynum %d, dotimeadj: %s time: %ld)\n", inet_ntoa(target->host), readhoststate(target->flags), readhoststate(newstate), trynum, (dotimeout)? "yes" : "no", (long) TIMEVAL_SUBTRACT(tv, *sent));
+  fprintf(o.nmap_stdout, "Hostupdate called for machne %s state %s -> %s (trynum %d, dotimeadj: %s time: %ld)\n", inet_ntoa(target->host), readhoststate(target->flags), readhoststate(newstate), trynum, (dotimeout)? "yes" : "no", (long) TIMEVAL_SUBTRACT(tv, *sent));
 }
 assert(hostnum <= pt->group_end);
 
@@ -1045,10 +1050,10 @@ if (target->flags & HOST_UP) {
 if (trynum > 0 && !(pt->dropthistry)) {
   pt->dropthistry = 1;
   if (o.debugging) 
-    printf("Decreasing massping group size from %d to ", pt->group_size);
+    fprintf(o.nmap_stdout, "Decreasing massping group size from %d to ", pt->group_size);
   pt->group_size = MAX(pt->group_size * 0.75, 10);
   if (o.debugging) 
-    printf("%d\n", pt->group_size);
+    fprintf(o.nmap_stdout, "%d\n", pt->group_size);
 }
 
 if (newstate == HOST_DOWN && (target->flags & HOST_DOWN)) {

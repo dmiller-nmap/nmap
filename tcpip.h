@@ -290,8 +290,8 @@ char *routethrough(struct in_addr *dest, struct in_addr *source);
 unsigned short in_cksum(unsigned short *ptr,int nbytes);
 int send_tcp_raw( int sd, struct in_addr *source, 
 		  struct in_addr *victim, unsigned short sport, 
-		  unsigned short dport, unsigned long seq,
-		  unsigned long ack, unsigned char flags,
+		  unsigned short dport, unsigned int seq,
+		  unsigned int ack, unsigned char flags,
 		  unsigned short window, char *options, int optlen,
 		  char *data, unsigned short datalen);
 int send_udp_raw( int sd, struct in_addr *source, 
@@ -324,8 +324,8 @@ inline int Sendto(char *functionname, int sd, char *packet, int len,
 unsigned short in_cksum(unsigned short *ptr,int nbytes);
 /* Hex dump */
 int get_link_offset(char *device);
-char *readip_pcap(pcap_t *pd, unsigned int *len);
-char *readip_pcap_timed(pcap_t *pd, unsigned int *len, unsigned long timeout /*seconds
+char *readip_pcap(pcap_t *pd, unsigned int *len, int to_usec);
+char *readip_pcap_timed(pcap_t *pd, unsigned int *len, unsigned int timeout /*seconds
  */);
 #ifndef HAVE_INET_ATON
 int inet_aton(register const char *, struct in_addr *);

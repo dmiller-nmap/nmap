@@ -46,7 +46,7 @@ char dev[128];
 /* Standard swiped internet checksum routine */
 inline unsigned short in_cksum(unsigned short *ptr,int nbytes) {
 
-register long           sum;            /* assumes long == 32 bits */
+register int            sum;            /* XXX assumes long == 32 bits */
 u_short                 oddbyte;
 register u_short        answer;         /* assumes u_short == 16 bits */
 
@@ -102,16 +102,16 @@ int resolve(char *hostname, struct in_addr *ip) {
 
 int send_tcp_raw( int sd, struct in_addr *source, 
 		  struct in_addr *victim, unsigned short sport, 
-		  unsigned short dport, unsigned long seq,
-		  unsigned long ack, unsigned char flags,
+		  unsigned short dport, unsigned int seq,
+		  unsigned int ack, unsigned char flags,
 		  unsigned short window, char *options, int optlen,
 		  char *data, unsigned short datalen) 
 {
 
 struct pseudo_header { 
   /*for computing TCP checksum, see TCP/IP Illustrated p. 145 */
-  unsigned long s_addy;
-  unsigned long d_addr;
+  unsigned int s_addy;
+  unsigned int d_addr;
   char zer0;
   unsigned char protocol;
   unsigned short length;
@@ -318,10 +318,10 @@ if (ip->ip_p== IPPROTO_TCP) {
 
     printf("ttl: %hu ", ip->ip_ttl);
 
-    if (tcp->th_flags & (TH_SYN | TH_ACK)) printf("Seq: %lu\tAck: %lu\n", 
-						  (unsigned long) ntohl(tcp->th_seq), (unsigned long) ntohl(tcp->th_ack));
-    else if (tcp->th_flags & TH_SYN) printf("Seq: %lu\n", (unsigned long) ntohl(tcp->th_seq));
-    else if (tcp->th_flags & TH_ACK) printf("Ack: %lu\n", (unsigned long) ntohl(tcp->th_ack));
+    if (tcp->th_flags & (TH_SYN | TH_ACK)) printf("Seq: %u\tAck: %u\n", 
+						  (unsigned int) ntohl(tcp->th_seq), (unsigned int) ntohl(tcp->th_ack));
+    else if (tcp->th_flags & TH_SYN) printf("Seq: %u\n", (unsigned int) ntohl(tcp->th_seq));
+    else if (tcp->th_flags & TH_ACK) printf("Ack: %u\n", (unsigned int) ntohl(tcp->th_ack));
   }
 }
 if (readdata && i < tot_len) {
@@ -748,108 +748,86 @@ exit(1);
 
 /* Read an IP packet using libpcap .  We return the packet and take
    a pcap descripter and a pointer to the packet length (which we set
-   in the function.  If you want a read timeout, specify one in 
-   pcap_open_live(). If you want a maximum length returned, you also
+   in the function. If you want a maximum length returned, you
    should specify that in pcap_open_live() */
 
-char *readip_pcap(pcap_t *pd, unsigned int *len) {
-static int offset = -1;
-static pcap_t *lastpcap = NULL;
+/* to_usec is the timeout period in microseconds -- use 0 to skip the
+   test and -1 to block forever.  Note that we don't interrupt pcap, so
+   low values (and 0) degenerate to the timeout specified 
+   in pcap_open_live()
+ */
+
+char *readip_pcap(pcap_t *pd, unsigned int *len, int to_usec) {
+int offset = -1;
 struct pcap_pkthdr head;
 char *p;
 int datalink;
+int timedout = 0;
+struct timeval tv_start, tv_end;
 
 if (!pd) fatal("NULL packet device passed to readip_pcap");
-if (!lastpcap || pd != lastpcap) { 
-  /* New packet capture device, need to recompute offset */
-  if ( (datalink = pcap_datalink(pd)) < 0)
-    fatal("Cannot obtain datalink information: %s", pcap_geterr(pd));
-  switch(datalink) {
-  case DLT_EN10MB: offset = 14; break;
-  case DLT_IEEE802: offset = 22; break;
-  case DLT_NULL: offset = 4; break;
-  case DLT_SLIP:
-#if (FREEBSD || OPENBSD || NETBSD || BSDI)
-    offset = 16;
-#else
-    offset = 24; /* Anyone use this??? */
+
+/* New packet capture device, need to recompute offset */
+ if ( (datalink = pcap_datalink(pd)) < 0)
+   fatal("Cannot obtain datalink information: %s", pcap_geterr(pd));
+ switch(datalink) {
+ case DLT_EN10MB: offset = 14; break;
+ case DLT_IEEE802: offset = 22; break;
+ case DLT_NULL: offset = 4; break;
+ case DLT_SLIP:
+#ifdef DLT_SLIP_BSDOS
+ case DLT_SLIP_BSDOS:
 #endif
-    break;
-  case DLT_PPP: 
 #if (FREEBSD || OPENBSD || NETBSD || BSDI)
-    offset = 4;
+   offset = 16;
+#else
+   offset = 24; /* Anyone use this??? */
+#endif
+   break;
+ case DLT_PPP: 
+#ifdef DLT_PPP_BSDOS
+ case DLT_PPP_BSDOS:
+#endif
+#if (FREEBSD || OPENBSD || NETBSD || BSDI)
+   offset = 4;
 #else
 #ifdef SOLARIS
-    offset = 8;
+   offset = 8;
 #else
-    offset = 24; /* Anyone use this? */
+   offset = 24; /* Anyone use this? */
 #endif /* ifdef solaris */
 #endif /* if freebsd || openbsd || netbsd || bsdi */
-    break;
-  case DLT_RAW: offset = 0; break;
-  default: fatal("Unknown datalink type (%d)", datalink);
-  }
-}
-lastpcap = pd;
-do {
-  p = (char *) pcap_next(pd, &head);
-  if (p)
-    p += offset;
-  else {
-    /* timed out */ 
-    *len=0;
-    return NULL;
-  }
-} while(!p || (*p & 0x40) != 0x40); /* Go until we get IPv4 packet */
-*len = head.caplen - offset;
-return p;
-}
+   break;
+ case DLT_RAW: offset = 0; break;
+ case DLT_FDDI: offset = 21; break;
+ default: fatal("Unknown datalink type (%d)", datalink);
+ }
 
-/* Like readip_pcap except we use our own timeout value.  This is needed
-   due to a "bug" in libpcap.  The Linux pcap_open_live takes a timeout
-   but DOES NOT EVEN LOOK AT IT! */
-char *readip_pcap_timed(pcap_t *pd, unsigned int *len, unsigned long timeout /*seconds
- */) {
-static int offset = -1;
-static pcap_t *lastpcap = NULL;
-struct pcap_pkthdr head;
-char *p;
-int datalink;
-
-if (!pd) fatal("NULL packet device passed to readip_pcap");
-if (!lastpcap || pd != lastpcap) {
-  /* New packet capture device, need to recompute offset */
-  if ( (datalink = pcap_datalink(pd)) < 0)
-    fatal("Cannot obtain datalink information: %s", pcap_geterr(pd));
-  switch(datalink) {
-  case DLT_EN10MB: offset = 14; break;
-  case DLT_IEEE802: offset = 22; break;
-  case DLT_NULL: offset = 4; break;
-  case DLT_SLIP:
-  case DLT_PPP: offset = 24; break;
-  case DLT_RAW: offset = 0; break;
-  default: fatal("Unknown datalink type (%d)", datalink);
-  }
-}
-lastpcap = pd;
-signal(SIGALRM, sig_alarm);
-if (setjmp(jmp_env)) {
-  /* We've timed out */
-  *len = 0;
-  return NULL;
-}
-jumpok = 1;
-alarm(timeout);
-do {
-p = (char *) pcap_next(pd, &head);
-if (p)
-  p += offset;
-} while(!p || (*p & 0x40) != 0x40); /* Go until we get IPv4 packet */
-alarm(0);
-jumpok = 0;
-signal(SIGALRM, SIG_DFL);
-*len = head.caplen - offset;
-return p;
+ if (to_usec > 0) {
+   gettimeofday(&tv_start, NULL);
+ }
+ do {
+   p = (char *) pcap_next(pd, &head);
+   if (p)
+     p += offset;
+   if (!p || (*p & 0x40) != 0x40) {
+     /* Should we timeout? */
+     if (to_usec == 0) {
+       timedout = 1;
+     } else if (to_usec > 0) {
+       gettimeofday(&tv_end, NULL);
+       if (TIMEVAL_SUBTRACT(tv_end, tv_start) >= to_usec) {
+	 timedout = 1;     
+       }
+     }
+   }
+ } while(!timedout && (!p || (*p & 0x40) != 0x40)); /* Go until we get IPv4 packet */
+ if (timedout) {
+   *len = 0;
+   return NULL;
+ }
+ *len = head.caplen - offset;
+ return p;
 }
 
 int ipaddr2devname( char *dev, struct in_addr *addr ) {
@@ -916,12 +894,30 @@ struct interface_info *getinterfaces(int *howmany) {
       fatal("getinterfaces: SIOCGIFCONF claims you have no network interfaces!\n");
 #if HAVE_SOCKADDR_SA_LEN
     /*    len = MAX(sizeof(struct sockaddr), ifr->ifr_addr.sa_len);*/
-    len = ifr->ifr_addr.sa_len;
+    len = ifr->ifr_addr.sa_len + sizeof(ifr->ifr_name);
 #else
-    len = sizeof(SA);
+    len = sizeof(struct ifreq);
+    /* len = sizeof(SA); */
 #endif
+
+#if TCPIP_DEBUGGING
+    printf("ifnet list length = %d\n",ifc.ifc_len);
+    printf("sa_len = %d\n",len);
+    hdump(buf, ifc.ifc_len);
+    printf("ifr = %X\n",(unsigned int)(*(char **)&ifr));
+    printf("Size of struct ifreq: %d\n", sizeof(struct ifreq));
+#endif
+
     for(; ifr && *((char *)ifr) && ((char *)ifr) < buf + ifc.ifc_len; 
-	((*(char **)&ifr) +=  sizeof(ifr->ifr_name) + len )) {
+	((*(char **)&ifr) += len )) {
+#if TCPIP_DEBUGGING
+      printf("ifr_name size = %d\n", sizeof(ifr->ifr_name));
+      printf("ifr = %X\n",(unsigned int)(*(char **)&ifr));
+#endif
+
+      /* skip any device with no name */
+      if (!*((char *)ifr))
+        continue;
       sin = (struct sockaddr_in *) &ifr->ifr_addr;
       memcpy(&(mydevs[numinterfaces].addr), (char *) &(sin->sin_addr), sizeof(struct in_addr));
       /* In case it is a stinkin' alias */
@@ -929,6 +925,12 @@ struct interface_info *getinterfaces(int *howmany) {
 	*p = '\0';
       strncpy(mydevs[numinterfaces].name, ifr->ifr_name, 63);
       mydevs[numinterfaces].name[63] = '\0';
+
+
+#if TCPIP_DEBUGGING
+      printf("Interface %d is %s\n",numinterfaces,mydevs[numinterfaces].name);
+#endif
+
       numinterfaces++;
       if (numinterfaces == 47)  {      
 	error("My god!  You seem to have WAY too many interfaces!  Things may not work right\n");
@@ -936,7 +938,7 @@ struct interface_info *getinterfaces(int *howmany) {
       }
 #if HAVE_SOCKADDR_SA_LEN
       /* len = MAX(sizeof(struct sockaddr), ifr->ifr_addr.sa_len);*/
-      len = ifr->ifr_addr.sa_len;
+      len = ifr->ifr_addr.sa_len + sizeof(ifr->ifr_name);
 #endif 
       mydevs[numinterfaces].name[0] = '\0';
     }
@@ -962,8 +964,8 @@ char *routethrough(struct in_addr *dest, struct in_addr *source) {
   struct interface_info *mydevs;
   static struct myroute {
     struct interface_info *dev;
-    unsigned long mask;
-    unsigned long dest;
+    unsigned int mask;
+    unsigned int dest;
   } myroutes[128];
   int numinterfaces = 0;
   char *p, *endptr;
@@ -992,13 +994,16 @@ char *routethrough(struct in_addr *dest, struct in_addr *source) {
 	  error("Could not find interface in /proc/net/route line");
 	  continue;
 	}
+	if (*p == '*')
+	  continue; /* Deleted route -- any other valid reason for
+		       a route to start with an asterict? */
 	Strncpy(iface, p, sizeof(iface));
 	if ((p = strchr(iface, ':'))) {
 	  *p = '\0'; /* To support IP aliasing */
 	}
 	p = strtok(NULL, " \t\n");
 	endptr = NULL;
-	myroutes[numroutes].dest = strtol(p, &endptr, 16);
+	myroutes[numroutes].dest = strtoul(p, &endptr, 16);
 	if (!endptr || *endptr) {
 	  error("Failed to determine Destination from /proc/net/route");
 	  continue;
@@ -1012,7 +1017,7 @@ char *routethrough(struct in_addr *dest, struct in_addr *source) {
 	  continue;
 	}
 	endptr = NULL;
-	myroutes[numroutes].mask = strtol(p, &endptr, 16);
+	myroutes[numroutes].mask = strtoul(p, &endptr, 16);
 	if (!endptr || *endptr) {
 	  error("Failed to determine mask from /proc/net/route");
 	  continue;
@@ -1020,7 +1025,7 @@ char *routethrough(struct in_addr *dest, struct in_addr *source) {
 
 
 #if TCPIP_DEBUGGING
-	  printf("#%d: for dev %s, The dest is %lX and the mask is %lX\n", numroutes, iface, myroutes[numroutes].dest, myroutes[numroutes].mask);
+	  printf("#%d: for dev %s, The dest is %X and the mask is %X\n", numroutes, iface, myroutes[numroutes].dest, myroutes[numroutes].mask);
 #endif
 	  for(i=0; i < numinterfaces; i++)
 	    if (!strcmp(iface, mydevs[i].name)) {

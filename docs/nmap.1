@@ -24,7 +24,8 @@ section for more details.  nmap also offers a number of advanced
 features such as remote OS detection via TCP/IP fingerprinting,
 stealth scanning, dynamic delay and retransmission calculations,
 parallel scanning, detection of down hosts via parallel pings, decoy
-scanning, port filtering detection, fragmentation scanning, and
+scanning, port filtering detection, direct (non-portmapper) RPC
+scanning, fragmentation scanning, and
 flexible target and port specification.
 .PP
 Significant effort has been put into decent nmap performance for
@@ -54,7 +55,7 @@ Options that make sense together can generally be combined.  Some
 options are specific to certain scan modes.  
 .I nmap 
 tries to catch and warn the user about psychotic or unsupported
-option combinations.  
+option combinations.
 .Sp
 If you are impatient, you can skip to the
 .I examples
@@ -62,7 +63,7 @@ section at the end, which demonstrates common usage.  You can also run
 .B nmap -h
 for a quick reference page listing all the options.
 .TP
-.B Scan Types
+.B SCAN TYPES
 .TP
 .B \-sT 
 TCP connect() scan:  This is the most basic form of TCP scanning. The
@@ -99,16 +100,19 @@ unmolested.
 .Sp
 The idea is that closed ports are required to reply to your probe
 packet with an RST, while open ports must ignore the packets in
-question (see RFC 794 pp 64).  The FIN scan uses a bare (surprise) FIN
+question (see RFC 973 pp 64).  The FIN scan uses a bare (surprise) FIN
 packet as the probe, while the Xmas tree scan turns on the FIN, URG,
 and PUSH flags.  The Null scan turns off all flags.  Unfortunately
 Microsoft (like usual) decided to completely ignore the standard and
 do things their own way.  Thus this scan type will not work against
 systems running Windows95/NT.  On the positive side, this is a good
 way to distinguish between the two platforms.  If the scan finds
-closed ports, you probably have a UNIX machine, whereas all ports open
-is indicative of Windows.  A few exceptions are that Cisco, BSDI,
-HP/UX, MVS, and IRIX are also broken in that they send resets when
+open ports, you know the machine is not a Windows box.  If a -sF,-sX,or 
+-sN scan shows all ports closed, yet a SYN (-sS) scan shows ports being opened,
+you are probably looking at a Windows box.  This is less useful now that
+nmap has proper OS detection built in.  There are also a few other systems
+that are broken in the same way Windows is.  They include Cisco, BSDI, HP/UX, 
+MVS, and IRIX.  All of the above send resets from the open ports when 
 they should just drop the packet.
 .TP
 .B \-sP
@@ -166,6 +170,16 @@ can scan all 65K ports of a Windows machine
 .B very
 quickly.  Woop!
 .TP
+.B \-sR  
+RPC scan.  This method works in combination with the various
+port scan methods of Nmap.  It takes all the TCP/UDP ports found open
+and then floods them with SunRPC program NULL commands in an attempt to
+determine whether they are RPC ports, and if so, what program and
+version number they serve up.  Thus you can effectively obtain the
+same info as 'rpcinfo -p' even if the target's portmapper is behind a
+firewall (or protected by TCP wrappers).  Decoys do not currently work
+with RPC scan, at some point I may add decoy support for UDP RPC scans.
+.TP
 .B \-b <ftp relay host>
 FTP bounce attack: An interesting "feature" of the ftp protocol (RFC
 959) is support for "proxy" ftp connections. In other words, I should
@@ -197,7 +211,7 @@ you can see my article in
 .I nmap
 URL (http://www.insecure.org/nmap).
 .TP
-.B General Options
+.B GENERAL OPTIONS
 None of these are required but some can be quite useful.
 .TP
 .B \-P0
@@ -214,7 +228,7 @@ when portscanning microsoft.com.
 Use TCP "ping" to determine what hosts are up.  Instead of sending
 ICMP echo request packets and waiting for a response, we spew out TCP
 ACK packets throughout the target network (or to a single machine) and
-then watt for responses to trickle back.  Hosts that are up should
+then wait for responses to trickle back.  Hosts that are up should
 respond with a RST.  This option preserves the efficiency of only
 scanning hosts that are up while still allowing you to scan
 networks/hosts that block ping packets.  For non root users, we use
@@ -315,7 +329,11 @@ form into the file you specify as an argument.
 .B \-m <logfilename>
 This logs the results of your scans in a
 .B machine parseable
-form into the file you specify as an argument.
+form into the file you specify as an argument.  You can give -m the
+argument '-' (without quotes) to shoot output into stdout (for shell
+pipelines, etc).  In this case normal output will be suppressed.
+Watch out for error messages if you use this (they will still go to
+stderr).
 .TP
 .B \-i <inputfilename>
 Reads target specifications from the file specified RATHER than from
@@ -333,19 +351,23 @@ This option specifies what ports you want to specify. For example '-p
 23' will only try port 23 of the target host(s).  
 '-p 20-30,139,60000-' scans ports between 20 and 30, port 139, and all
 ports greater than 60000.  The default is to scan all ports between 1
-and 1024 as well as any ports listed in your /etc/services.
+and 1024 as well as any ports listed in the services file which comes
+with nmap.
 .TP
 .B \-F Fast scan mode.
-Specifies that you only wish to scan for ports listed in
-/etc/services.  This is obviously much faster than scanning all 65535
-ports on a host.
+Specifies that you only wish to scan for ports listed in the services
+file which comes with nmap.  This is obviously much faster than
+scanning all 65535 ports on a host.
 .TP
 .B \-D <decoy1 [,decoy2][,ME],...>
 Causes a decoy scan to be performed which makes it appear to the
 remote host that the host(s) you specify as decoys are scanning the
-target network too.  Thus their IDS might report 5-10 port scans
-from unique IP addresses, but they won't know which IP was scanning
-them and which were innocent decoys.
+target network too.  Thus their IDS might report 5-10 port scans from
+unique IP addresses, but they won't know which IP was scanning them
+and which were innocent decoys.  While this can be defeated through
+router path tracing, response-dropping, and other "active"
+mechanisms, it is generally an extremely effective technique for
+hiding your IP address.
 .Sp
 Separate each decoy host with commas, and you can optionally use 'ME'
 as one of the decoys to represent the position you want your IP
@@ -357,7 +379,8 @@ use 'ME', nmap will put you in a random position.
 Note that the hosts you use as decoys should be up or you might
 accidently SYN flood your targets.  Also it will be pretty easy to
 determine which host is scanning if only one is actually up on the
-network.
+network.  You might want to use IP addresses instead of names (so the
+decoy networks don't see you in their nameserver logs).
 .Sp
 Also note that some (stupid) "port scan detectors" will firewall/deny
 routing to hosts that attempt port scans.  Thus you might
@@ -370,7 +393,7 @@ should not take action against the machine that seems like it is port
 scanning them.  It could just be a decoy!
 .Sp
 Decoys are used both in the initial ping scan (using ICMP, SYN, ACK,
-or whatever) as well as the actual port scanning phase.  Decoys are
+or whatever) and during the actual port scanning phase.  Decoys are
 also used during remote OS detection (
 .B \-O
 ).
@@ -427,7 +450,84 @@ TCP connect() scan (the default).  This is useful to slow down the scan a
 little bit and avoid crashing remote machines.  Another approach is to use
 \-sS, which is generally easier for machines to handle.
 .TP
-.B Target specification
+.B TIMING OPTIONS
+Generally Nmap does a good job at adjusting for Network
+characteristics at runtime and scanning as fast as possible while
+minimizing that chances of hosts/ports going undetected.  However,
+there are same cases where Nmap's default timing policy may not meet
+your objectives.  The following options provide a fine level of
+control over the scan timing:
+.TP
+.B -T <Paranoid|Sneaky|Polite|Normal|Aggressive|Insane>
+These are canned timing policies for conveniently expressing your
+priorities to Nmap.  
+.B Paranoid 
+mode scans
+.B very
+slowly in the hopes of avoiding detection by IDS systems.  It
+serializes all scans (no parallel scanning) and generally waits at
+least 5 minutes between sending packets.  
+.B Sneaky 
+is similar, except it
+only waits 15 seconds between sending packets.  
+.B Polite
+is meant to
+ease load on the network and reduce the chances of crashing machines.
+It serializes the probes and waits 
+.B at least 
+0.4 seconds between them.  
+.B Normal
+is the default Nmap behaviour, which tries to run as quickly as possible
+without overloading the network or missing hosts/ports.  
+.B Aggressive
+mode adds a 5 minute timeout per host and it never waits more than
+1.25 seconds for probe responses.  
+.B Insane 
+is only suitable for very fast networks or where you don't mind losing
+some information.  It times out hosts in 75 seconds and only waits 0.3
+seconds for individual probes.  It does allow for very quick network
+sweeps though :).  You can also reference these by number (0-5).  For
+example, \'-T 0\' gives you Paranoid mode and \'-T 5\' is Insane mode.
+.Sp
+These canned timing modes should NOT be used in combination with
+the lower level controls given below.
+.TP
+.B --host_timeout <milliseconds>
+Specifies the amount of time Nmap is allowed to spend scanning a single host
+before giving up on that IP.  The default timing mode has no host timeout.
+.TP
+.B --max_rtt_timeout <milliseconds>
+Specifies the maximum amount of time Nmap is allowed to wait for a
+probe response before retransmitting or timing out that particular
+probe.  The default mode sets this to about 9000.
+.TP
+.B --min_rtt_timeout <milliseconds>
+When the target hosts start to establish a pattern of responding very
+quickly, Nmap will shrink the amount of time given per probe.  This
+speeds up the scan, but can lead to missed packets when a response
+takes longer than usual.  With this parameter you can guarantee that
+Nmap will wait at least the given amount of time before giving up on a
+probe.
+.TP
+.B --initial_rtt_timeout <milliseconds>
+Specifies the initial probe timeout.  This is generally only useful
+when scanning firwalled hosts with -P0.  Normally Nmap can obtain good
+RTT estimates from the ping and the first few probes.  The default mode
+uses 6000.
+.TP
+.B --max_parallelism <number>
+Specifies the maximum number of scans Nmap is allowed to perform in
+parallel.  Setting this to one means Nmap will never try to scan more
+than 1 port at a time.  It also effects other parallel scans such as
+ping sweep, RPC scan, etc.
+.TP
+.B --scan_delay <milliseconds>
+Specifies the 
+.B minimum
+amount of time Nmap must wait between probes.  This is mostly useful
+to reduce network load or to slow the scan way down to sneak under IDS thresholds.
+
+.SH TARGET SPECIFICATION
 Everything that isn't an option (or option argument) in nmap is
 treated as a target host specification.  The simplest case is listing
 single hostnames or IP addresses on the command line.  If you want to
@@ -506,7 +606,9 @@ The above commands are for my GNU/Linux box.  You may need different
 commands/options on other operating systems.
 .SH BUGS 
 Bugs?  What bugs?  Send me any that you find.  Patches are nice too :)
-Remember to also send in new OS fingerprints so we can grow the database.
+Remember to also send in new OS fingerprints so we can grow the
+database.  Nmap will give you a submission URL when an appropriate
+fingerprint is found.
 .SH AUTHOR
 .Sp
 Fyodor
@@ -515,7 +617,7 @@ Fyodor
 The newest version of 
 .I nmap
 can be obtained from 
-.I http://www.insecure.org/nmap
+.I http://www.insecure.org/nmap/
 .Sp
 .I nmap 
 is (C) 1997,1998,1999 by Fyodor (fyodor@dhp.com, fyodor@insecure.org)
@@ -529,14 +631,46 @@ are available from ftp://ftp.ee.lbl.gov/libpcap.tar.Z .
 .Sp
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; Version 2.  If you want to license nmap
-under terms other than the GPL, you can write Fyodor and plead your
-case, but none of the (2-3) attempts at this have been successful.
+the Free Software Foundation; Version 2.  This guarantees your right
+to use, modify, and redistribute Nmap under certain conditions.  If
+this license is unacceptable to you, Insecure.Org may be willing to
+sell alternative licenses (contact fyodor@dhp.com).
+.Sp
+Source is provided to this software because we believe users have a
+right to know exactly what a program is going to do before they run
+it.  This also allows you to audit the software for security holes
+(none have been found so far).  
+.Sp
+Source code also allows you to port nmap to new platforms, fix bugs, and
+add new features.  You are highly encouraged to send your changes to
+Fyodor for possible incorporation into the main Nmap distribution.
+By sending these changes to Fyodor or nmap-hackers, it is assumed that
+you are offering Fyodor the unlimited, non-exclusive right to reuse,
+modify, and relicense the code.  If you wish to specify special
+license conditions of your contributions, please state them up front.
 .Sp
 This program is distributed in the hope that it will be useful, but
-WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+.B WITHOUT ANY WARRANTY;
+without even the implied warranty of
+.B MERCHANTABILITY 
+or 
+.B FITNESS FOR A PARTICULAR PURPOSE.
+See the GNU
 General Public License for more details (it is in the COPYING file of
 the
 .I nmap 
-distribution).
+distribution).  
+.Sp
+It should also be noted that Nmap has been known to
+crash certain poorly written applications, TCP/IP stacks, and even
+operating systems.  
+.B Nmap should never be run against mission critical systems 
+unless you are prepared to suffer downtime.  We acknowledge here that
+Nmap may crash your systems or networks and we disclaim all liability
+for any damage or problems Nmap could cause.
+.Sp
+All versions of Nmap equal to or greater than 2.0 are believed
+(through informal testing) to be Year 2000 (Y2K) compliant in all
+respects.  That being said, we reiterate that Nmap comes with no
+warranty.  There is no reason to believe versions earlier than 2.0 are
+susceptible to problems, but we have not tested them.

@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 #include <ctype.h>
 #include <sys/types.h>
 #include <netinet/in.h>
@@ -33,7 +34,7 @@
 #define ABS(x) (((x) >= 0)?(x):(-x)) 
 #endif
 #ifndef MOD_DIFF
-#define MOD_DIFF(a,b) (unsigned long) (MIN((unsigned long)(a) - (unsigned long ) (b), (unsigned long )(b) - (unsigned long) (a)))
+#define MOD_DIFF(a,b) ((unsigned long) (MIN((unsigned long)(a) - (unsigned long ) (b), (unsigned long )(b) - (unsigned long) (a))))
 #endif
 #ifndef FALSE
 #define FALSE 0
@@ -48,16 +49,28 @@
         (((addr) >> 16) & 0xff), \
         (((addr) >> 24) & 0xff)
 
+/* Timeval subtraction in microseconds */
 #define TIMEVAL_SUBTRACT(a,b) (((a).tv_sec - (b).tv_sec) * 1000000 + (a).tv_usec - (b).tv_usec)
+/* Timeval subtract in milliseconds */
+#define TIMEVAL_MSEC_SUBTRACT(a,b) ((((a).tv_sec - (b).tv_sec) * 1000) + ((a).tv_usec - (b).tv_usec) / 1000)
+/* Timeval subtract in seconds */
+#define TIMEVAL_SEC_SUBTRACT(a,b) ((a).tv_sec - (b).tv_sec + ((a).tv_usec - (b).tv_usec + 500)/1000)
+
 
 void *safe_malloc(int size);
 char *strcasestr(char *haystack, char *pneedle);
 void hdump(unsigned char *packet, int len);
 void lamont_hdump(unsigned char *bp, int length);
-void Strncpy(char *dest, const char *src, size_t n);
+int Strncpy(char *dest, const char *src, size_t n);
 int get_random_bytes(void *buf, int numbytes);
 int get_random_int();
+unsigned short get_random_ushort();
 unsigned int get_random_uint();
+/* Like the perl equivialent -- It removes the terminating newline from string
+   IF one exists.  It then returns the POSSIBLY MODIFIED string */
+char *chomp(char *string);
+ssize_t Write(int fd, const void *buf, size_t count);
+
 #ifndef HAVE_USLEEP
 #ifdef HAVE_NANOSLEEP
 void usleep(unsigned long usec);

@@ -20,8 +20,8 @@ AC_PROG_CC
  if test -n "$GCC"; then
       CFLAGS="$CFLAGS -Wall "
  fi
-AC_PROG_INSTALL
-AC_PATH_PROG(MAKEDEPEND, makedepend)
+dnl AC_PROG_INSTALL
+dnl AC_PATH_PROG(MAKEDEPEND, makedepend)
 
 AC_SUBST(COMPAT_OBJS)
 AC_SUBST(COMPAT_SRCS)
@@ -114,7 +114,8 @@ dnl need posix4/nanosleep for solaris 2.4
 AC_CHECK_LIB(posix4, nanosleep)
 
 dnl Check whether libpcap is already available
-AC_CHECK_LIB(pcap, pcap_datalink, have_libpcap=yes, have_libpcap=no)
+AC_CHECK_LIB(pcap, pcap_datalink, [ have_libpcap=yes, 
+  LIBS="-lpcap $LIBS" ], have_libpcap=no)
 if test $linux = yes; then
   have_libpcap=no
 fi
@@ -167,7 +168,7 @@ AC_SUBST(PCAP_DIST_CLEAN)
 
 dnl Checks for header files.
 AC_HEADER_STDC
-AC_CHECK_HEADERS(string.h strings.h memory.h sys/param.h sys/sockio.h netinet/if_ether.h bstring.h sys/time.h)
+AC_CHECK_HEADERS(string.h getopt.h strings.h memory.h sys/param.h sys/sockio.h  netinet/if_ether.h bstring.h sys/time.h )
 AC_HEADER_TIME
 
 dnl AC_CHECK_HEADERS(fcntl.h sys/time.h unistd.h)
@@ -324,9 +325,17 @@ dnl Checks for library functions.
 dnl AC_TYPE_SIGNAL
 AC_CHECK_FUNCS(bzero snprintf memcpy usleep nanosleep strerror)
 
+AC_CHECK_FUNC(snprintf, , 
+  [ COMPAT_SRCS="$COMPAT_SRCS snprintf.c"
+    COMPAT_OBJS="$COMPAT_OBJS snprintf.o" ])
+
 AC_CHECK_FUNC(inet_aton, , 
   [ COMPAT_SRCS="$COMPAT_SRCS inet_aton.c"
     COMPAT_OBJS="$COMPAT_OBJS inet_aton.o" ])
+
+AC_CHECK_FUNC(getopt_long, , 
+  [ COMPAT_SRCS="$COMPAT_SRCS getopt.c getopt1.c"
+    COMPAT_OBJS="$COMPAT_OBJS getopt.o getopt1.o" ])
 
 dnl AC_CHECK_FUNCS(gethostname gettimeofday select socket strdup strstr )
 

@@ -4,13 +4,11 @@
 void *safe_malloc(int size)
 {
   void *mymem;
-  fflush(stdout);
   if (size < 0)
     fatal("Tried to malloc negative amount of memory!!!");
   mymem = malloc(size);
   if (mymem == NULL)
     fatal("Malloc Failed! Probably out of space.");
-  fflush(stdout);
   return mymem;
 }
 
@@ -128,9 +126,12 @@ needlelen = strlen(pneedle);
  return NULL;
 }
 
-void Strncpy(char *dest, const char *src, size_t n) {
+int Strncpy(char *dest, const char *src, size_t n) {
   strncpy(dest, src, n);
-  dest[n] = '\0';
+  if (dest[n-1] == '\0')
+    return 0;
+  dest[n-1] = '\0';
+  return -1;
 }
 
 #ifndef HAVE_USLEEP
@@ -152,6 +153,22 @@ char *strerror(int errnum) {
 }
 #endif
 
+/* Like the perl equivialent -- It removes the terminating newline from string
+   IF one exists.  It then returns the POSSIBLY MODIFIED string */
+char *chomp(char *string) {
+  int len;
+  len = strlen(string);
+  if (len < 1)
+    return string;
+  if (string[len - 1] != '\n')
+    return string;  
+  if (len > 1 && string[len-2] == '\r') {
+    string[len-2] = '\0';
+  } else string[len-1] = '\0';
+  return string;
+}
+
+
 int get_random_int() {
 int i;
 get_random_bytes(&i, sizeof(int));
@@ -164,6 +181,12 @@ get_random_bytes(&i, sizeof(unsigned int));
 return i;
 }
 
+unsigned short get_random_ushort() {
+unsigned short s;
+get_random_bytes(&s, sizeof(unsigned short));
+return s;
+}
+
 int get_random_bytes(void *buf, int numbytes) {
 static char bytebuf[2048];
 static char badrandomwarning = 0;
@@ -172,8 +195,8 @@ int res;
 int tmp;
 struct timeval tv;
 FILE *fp = NULL;
-int i;
-int *iptr;
+unsigned int i;
+short *iptr;
 
 if (numbytes < 0 || numbytes > 0xFFFF) return -1;
 
@@ -192,17 +215,17 @@ if (bytesleft == 0) {
   if (!fp) {  
     if (badrandomwarning == 0) {
       badrandomwarning++;
-      error("Could not open and read from /dev/urandom or /dev/random!  Using (probably) insecure random number source!");
+      /*      error("WARNING: your system apparently does not offer /dev/urandom or /dev/random.  Reverting to less secure version."); */
     }
     /* Seed our random generator */
     gettimeofday(&tv, NULL);
     srand((tv.tv_sec ^ tv.tv_usec) ^ getpid());
 
-    for(i=0; i < sizeof(bytebuf) / sizeof(int); i++) {
-      iptr = (int *) ((char *)bytebuf + i * sizeof(int));
+    for(i=0; i < sizeof(bytebuf) / sizeof(short); i++) {
+      iptr = (short *) ((char *)bytebuf + i * sizeof(short));
       *iptr = rand();
     }
-    bytesleft = (sizeof(bytebuf) / sizeof(int)) * sizeof(int);
+    bytesleft = (sizeof(bytebuf) / sizeof(short)) * sizeof(short);
     /*    ^^^^^^^^^^^^^^^not as meaningless as it looks  */
   } else fclose(fp);
 }
@@ -218,6 +241,20 @@ memcpy(buf, bytebuf + (sizeof(bytebuf) - bytesleft), bytesleft);
 tmp = bytesleft;
 bytesleft = 0;
 return get_random_bytes((char *)buf + tmp, numbytes - tmp);
+}
+
+ssize_t Write(int fd, const void *buf, size_t count) {
+  int res;
+  unsigned int len;
+
+  len = 0;
+  do {
+    res = write(fd,(char *) buf + len,count - len);
+    if (res > 0)
+      len += res;
+  } while(len < count && (res != -1 || errno == EINTR));
+
+  return res;
 }
 
 

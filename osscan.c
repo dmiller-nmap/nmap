@@ -2,7 +2,8 @@
 
 extern struct ops o;
 
-FingerPrint *get_fingerprint(struct hoststruct *target, struct seq_info *si) {
+FingerPrint *get_fingerprint(struct hoststruct *target, struct seq_info *si, 
+			     unsigned short *portarray) {
 FingerPrint *FP = NULL, *FPtmp = NULL;
 FingerPrint *FPtests[9];
 struct AVal *seq_AVs;
@@ -23,10 +24,10 @@ int current_port = 0;
 int testsleft;
 int testno;
 int  timeout;
-unsigned long sequence_base;
+unsigned int sequence_base;
 unsigned int openport;
 int bytes;
-unsigned int closedport;
+unsigned int closedport = 31337;
 struct port *tport;
 char *p;
 int decoy;
@@ -34,15 +35,18 @@ struct bpf_program fcode;
 char err0r[PCAP_ERRBUF_SIZE];
 char filter[512];
 double seq_inc_sum = 0;
-unsigned long  seq_avg_inc = 0;
+unsigned int  seq_avg_inc = 0;
 struct udpprobeinfo *upi = NULL;
-unsigned long seq_gcd = 1;
-unsigned long seq_diffs[NUM_SEQ_SAMPLES];
+unsigned int seq_gcd = 1;
+unsigned int seq_diffs[NUM_SEQ_SAMPLES];
 int ossofttimeout, oshardtimeout;
+
+if (target->timedout)
+  return NULL;
 
 /* Init our fingerprint tests to each be NULL */
 bzero(FPtests, sizeof(FPtests)); 
-get_random_bytes(&sequence_base, sizeof(unsigned long));
+get_random_bytes(&sequence_base, sizeof(unsigned int));
 /* Init our raw socket */
  if ((rawsd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) < 0 )
    pfatal("socket trobles in get_fingerprint");
@@ -56,7 +60,7 @@ get_random_bytes(&sequence_base, sizeof(unsigned long));
      fatal("Cannot get hostname!  Try using -S <my_IP_address> or -e <interface to scan through>\n");
    memcpy(&target->source_ip, myhostent->h_addr_list[0], sizeof(struct in_addr));
    if (o.debugging || o.verbose)
-     printf("We skillfully deduced that your address is %s\n",
+     fprintf(o.nmap_stdout, "We skillfully deduced that your address is %s\n",
 	    inet_ntoa(target->source_ip));
  }
  /* Now for the pcap opening nonsense ... */
@@ -68,22 +72,22 @@ ossofttimeout = MAX(200000, target->to.timeout);
 oshardtimeout = MAX(500000, 5 * target->to.timeout);
 
 if (!(pd = pcap_open_live(target->device, 650,  (o.spoofsource)? 1 : 0, (ossofttimeout + 500)/ 1000, err0r)))
-  fatal("pcap_open_live: %s", err0r);
+  fatal("pcap_open_live: %s\nIf you are on Linux and getting Socket type not supported, try modprobe af_packet or recompile your kernel with SOCK_PACKET enabled.  If you are on bsd and getting device not configured, you need to recompile your kernel with Berkeley Packet Filter support.", err0r);
 
 if (o.debugging)
-  printf("Wait time is %d\n", (ossofttimeout +500)/1000);
+  fprintf(o.nmap_stdout, "Wait time is %d\n", (ossofttimeout +500)/1000);
 
 if (pcap_lookupnet(target->device, &localnet, &netmask, err0r) < 0)
   fatal("Failed to lookup device subnet/netmask: %s", err0r);
  p = strdup(inet_ntoa(target->host));
 
-sprintf(filter, "(icmp and dst host %s) or (tcp and src host %s and dst host %s)", inet_ntoa(target->source_ip), p, inet_ntoa(target->source_ip));
+snprintf(filter, sizeof(filter), "(icmp and dst host %s) or (tcp and src host %s and dst host %s)", inet_ntoa(target->source_ip), p, inet_ntoa(target->source_ip));
  free(p);
  /* Due to apparent bug in libpcap */
- if (islocalhost(&(target->source_ip)))
+ if (islocalhost(&(target->host)))
    filter[0] = '\0';
  if (o.debugging)
-   printf("Packet capture filter: %s\n", filter);
+   fprintf(o.nmap_stdout, "Packet capture filter: %s\n", filter);
  if (pcap_compile(pd, &fcode, filter, 0, netmask) < 0)
    fatal("Error compiling our pcap filter: %s\n", pcap_geterr(pd));
  if (pcap_setfilter(pd, &fcode) < 0 )
@@ -101,10 +105,22 @@ sprintf(filter, "(icmp and dst host %s) or (tcp and src host %s and dst host %s)
    }
  }
  
-closedport = (get_random_uint() % 14781) + 30000;
 
+ /* Now we should find a closed port */
+ for(i=0; i < o.numports; i++) {
+   tport = lookupport(target->ports, portarray[i], IPPROTO_TCP);
+   if (!tport || tport->state == PORT_UNFIREWALLED) {
+     /* Great -- we found what we were looking for ... */
+     closedport = portarray[i];
+     break;
+   }
+ }
+ if (i == o.numports) { 
+   /* Uh-oh -- we don't know of any closed ports ... */
+   closedport = (get_random_uint() % 14781) + 30000;
+ }
 if (o.verbose && openport != -1)
-  printf("For OSScan assuming that port %d is open and port %d is closed and neither are firewalled\n", openport, closedport);
+  fprintf(o.nmap_stdout, "For OSScan assuming that port %d is open and port %d is closed and neither are firewalled\n", openport, closedport);
 
  current_port = o.magic_port + NUM_SEQ_SAMPLES +1;
  
@@ -117,59 +133,93 @@ if (o.verbose && openport != -1)
    newcatches = 0;
    if (openport != -1) {   
      /* Test 1 */
-     if (!FPtests[1])
+     if (!FPtests[1]) {     
+       if (o.scan_delay) enforce_scan_delay(NULL);
        for(decoy=0; decoy < o.numdecoys; decoy++) {
 	 send_tcp_raw(rawsd, &o.decoys[decoy], &target->host, current_port, 
 		      openport, sequence_base, 0,TH_BOGUS|TH_SYN, 0,"\003\003\012\001\002\004\001\011\010\012\077\077\077\077\000\000\000\000\000\000" , 20, NULL, 0);
        }
+     }
      
      /* Test 2 */
-     if (!FPtests[2])
+     if (!FPtests[2]) {     
+       if (o.scan_delay) enforce_scan_delay(NULL);
        for(decoy=0; decoy < o.numdecoys; decoy++) {
 	 send_tcp_raw(rawsd, &o.decoys[decoy], &target->host, current_port +1, 
 		      openport, sequence_base, 0,0, 0,"\003\003\012\001\002\004\001\011\010\012\077\077\077\077\000\000\000\000\000\000" , 20, NULL, 0);
        }
+     }
+
      /* Test 3 */
-     if (!FPtests[3])
+     if (!FPtests[3]) {     
+       if (o.scan_delay) enforce_scan_delay(NULL);
        for(decoy=0; decoy < o.numdecoys; decoy++) {
 	 send_tcp_raw(rawsd, &o.decoys[decoy], &target->host, current_port +2, 
 		      openport, sequence_base, 0,TH_SYN|TH_FIN|TH_URG|TH_PUSH, 0,"\003\003\012\001\002\004\001\011\010\012\077\077\077\077\000\000\000\000\000\000" , 20, NULL, 0);
        }
+     }
+
      /* Test 4 */
-     if (!FPtests[4])
+     if (!FPtests[4]) {     
+       if (o.scan_delay) enforce_scan_delay(NULL);
        for(decoy=0; decoy < o.numdecoys; decoy++) {
 	 send_tcp_raw(rawsd, &o.decoys[decoy], &target->host, current_port +3, 
 		      openport, sequence_base, 0,TH_ACK, 0,"\003\003\012\001\002\004\001\011\010\012\077\077\077\077\000\000\000\000\000\000" , 20, NULL, 0);
        }
+     }
    }
+   
    /* Test 5 */
-   if (!FPtests[5])
+   if (!FPtests[5]) {   
+     if (o.scan_delay) enforce_scan_delay(NULL);
      for(decoy=0; decoy < o.numdecoys; decoy++) {
        send_tcp_raw(rawsd, &o.decoys[decoy], &target->host, current_port +4,
 		    closedport, sequence_base, 0,TH_SYN, 0,"\003\003\012\001\002\004\001\011\010\012\077\077\077\077\000\000\000\000\000\000" , 20, NULL, 0);
      }
+   }
+
      /* Test 6 */
-   if (!FPtests[6])
+   if (!FPtests[6]) {   
+     if (o.scan_delay) enforce_scan_delay(NULL);
      for(decoy=0; decoy < o.numdecoys; decoy++) {
        send_tcp_raw(rawsd, &o.decoys[decoy], &target->host, current_port +5, 
 		    closedport, sequence_base, 0,TH_ACK, 0,"\003\003\012\001\002\004\001\011\010\012\077\077\077\077\000\000\000\000\000\000" , 20, NULL, 0);
      }
+   }
+
      /* Test 7 */
-   if (!FPtests[7])
+   if (!FPtests[7]) {
+     if (o.scan_delay) enforce_scan_delay(NULL);   
      for(decoy=0; decoy < o.numdecoys; decoy++) {
        send_tcp_raw(rawsd, &o.decoys[decoy], &target->host, current_port +6, 
 		    closedport, sequence_base, 0,TH_FIN|TH_PUSH|TH_URG, 0,"\003\003\012\001\002\004\001\011\010\012\077\077\077\077\000\000\000\000\000\000" , 20, NULL, 0);
      }
+   }
+
    if (!FPtests[8]) {
+     if (o.scan_delay) enforce_scan_delay(NULL);
      upi = send_closedudp_probe(rawsd, &target->host, o.magic_port, closedport);
    }
    gettimeofday(&t1, NULL);
    timeout = 0;
-   while(( ip = (struct ip*) readip_pcap(pd, &bytes)) && !timeout) {
+
+   /* Insure we haven't overrun our allotted time ... */
+   if (o.host_timeout && (TIMEVAL_SUBTRACT(t1, target->host_timeout) >= 0))
+     {
+       target->timedout = 1;
+       goto osscan_timedout;
+     }
+   while(( ip = (struct ip*) readip_pcap(pd, &bytes, oshardtimeout)) && !timeout) {
      gettimeofday(&t2, NULL);
      if (TIMEVAL_SUBTRACT(t2,t1) > oshardtimeout) {
        timeout = 1;
      }
+     if (o.host_timeout && (TIMEVAL_SUBTRACT(t2, target->host_timeout) >= 0))
+       {
+	 target->timedout = 1;
+	 goto osscan_timedout;
+       }
+
      if (bytes < (4 * ip->ip_hl) + 4)
        continue;
      if (ip->ip_p == IPPROTO_TCP) {
@@ -178,7 +228,7 @@ if (o.verbose && openport != -1)
        if (testno <= 0 || testno > 7)
 	 continue;
        if (o.debugging > 1)
-	 printf("Got packet for test number %d\n", testno);
+	 fprintf(o.nmap_stdout, "Got packet for test number %d\n", testno);
        if (FPtests[testno]) continue;
        testsleft--;
        newcatches++;
@@ -210,6 +260,8 @@ if (o.verbose && openport != -1)
 	 FPtests[8] = NULL;
        }
      }
+    if (testsleft == 0)
+      break;
    }     
  } while ( testsleft > 0 && (tries++ < 5 && (newcatches || tries == 1)));
 
@@ -217,10 +269,12 @@ if (o.verbose && openport != -1)
  /* First we send our initial NUM_SEQ_SAMPLES SYN packets  */
  if (openport != -1) {
    for(i=1; i <= NUM_SEQ_SAMPLES; i++) {
+     if (o.scan_delay) enforce_scan_delay(NULL);
      for(decoy=0; decoy < o.numdecoys; decoy++) {
        send_tcp_raw(rawsd, &o.decoys[decoy], &target->host, o.magic_port+i, 
 		    openport, sequence_base + i, 0, TH_SYN, 0 , NULL, 0, NULL, 0);
-       usleep( 5000 + target->to.srtt);
+       if (!o.scan_delay)
+	 usleep( 5000 + target->to.srtt);
     }
      /*     usleep(25000);*/
    }
@@ -229,8 +283,14 @@ if (o.verbose && openport != -1)
    timeout = 0; 
    gettimeofday(&t1,NULL);
    while(si->responses < NUM_SEQ_SAMPLES && !timeout) {
-     ip = (struct ip*) readip_pcap(pd, &bytes);
+     ip = (struct ip*) readip_pcap(pd, &bytes, oshardtimeout);
      gettimeofday(&t2, NULL);
+     /* Insure we haven't overrun our allotted time ... */
+     if (o.host_timeout && (TIMEVAL_SUBTRACT(t2, target->host_timeout) >= 0))
+       {
+	 target->timedout = 1;
+	 goto osscan_timedout;
+       }
      if (!ip) { 
        if (TIMEVAL_SUBTRACT(t2,t1) > ossofttimeout)
 	 timeout = 1;
@@ -248,7 +308,7 @@ if (o.verbose && openport != -1)
        if ((tcp->th_flags & TH_RST)) {
 	 /*readtcppacket((char *) ip, ntohs(ip->ip_len));*/	 
 	 if (si->responses == 0) {	 
-	     printf("WARNING:  RST from port %d -- is this port really open?\n", openport);
+	     fprintf(stderr, "WARNING:  RST from port %d -- is this port really open?\n", openport);
 	     /* We used to quit in this case, but left-overs from a SYN
 		scan or lame-ass TCP wrappers can cause this! */
 	 } 
@@ -263,9 +323,9 @@ if (o.verbose && openport != -1)
      }
    }
      
-   if (si->responses >= 4) {
+   if (si->responses >= 4 && o.scan_delay <= 1000) {
      seq_gcd = get_gcd_n_ulong(si->responses -1, seq_diffs);
-     /*     printf("The GCD is %lu\n", seq_gcd);*/
+     /*     printf("The GCD is %u\n", seq_gcd);*/
      if (seq_gcd) {     
        for(i=0; i < si->responses - 1; i++)
 	 seq_diffs[i] /= seq_gcd;
@@ -292,15 +352,28 @@ if (o.verbose && openport != -1)
        si->index = 10;
      } else if (si->class == SEQ_UNKNOWN) {
        seq_avg_inc = (0.5) + seq_avg_inc / (si->responses - 1);
-       /*       printf("seq_avg_inc=%lu\n", seq_avg_inc);*/
+       /*       printf("seq_avg_inc=%u\n", seq_avg_inc);*/
        for(i=0; i < si->responses -1; i++)       {     
-	 /*	 printf("The difference is %lu\n", seq_diffs[i]);
-		 printf("Adding %lu^2=%e", MOD_DIFF(seq_diffs[i], seq_avg_inc), pow(MOD_DIFF(seq_diffs[i], seq_avg_inc), 2));*/
-	 seq_inc_sum += pow(MOD_DIFF(seq_diffs[i], seq_avg_inc), 2);
+	 /*	 printf("The difference is %u\n", seq_diffs[i]);
+		 printf("Adding %u^2=%e", MOD_DIFF(seq_diffs[i], seq_avg_inc), pow(MOD_DIFF(seq_diffs[i], seq_avg_inc), 2));*/
+	 /* pow() seems F#@!#$!ed up on some Linux systems so I will
+	    not use it for now 
+  	    seq_inc_sum += pow(MOD_DIFF(seq_diffs[i], seq_avg_inc), 2);
+	 */	 
+	 
+	 seq_inc_sum += ((double)(MOD_DIFF(seq_diffs[i], seq_avg_inc)) * ((double)MOD_DIFF(seq_diffs[i], seq_avg_inc)));
+	 /*	 seq_inc_sum += pow(MOD_DIFF(seq_diffs[i], seq_avg_inc), 2);*/
+
        }
        /*       printf("The sequence sum is %e\n", seq_inc_sum);*/
        seq_inc_sum /= (si->responses - 1);
-       si->index = (unsigned long) (0.5 + pow(seq_inc_sum, 0.5));
+       /* Some versions of Linux libc seem to have broken pow ... so we
+	  avoid it */
+#ifdef LINUX       
+       si->index = (unsigned int) (0.5 + sqrt(seq_inc_sum));
+#else
+       si->index = (unsigned int) (0.5 + pow(seq_inc_sum, 0.5));
+#endif
        /*       printf("The sequence index is %d\n", si->index);*/
        if (si->index < 75) {
 	 si->class = SEQ_TD;
@@ -335,7 +408,7 @@ if (o.verbose && openport != -1)
        strcpy(seq_AVs[0].value, "TD");
        seq_AVs[0].next = &seq_AVs[1];
        seq_AVs[1].attribute= "gcd";     
-       sprintf(seq_AVs[1].value, "%lX", seq_gcd);
+       sprintf(seq_AVs[1].value, "%X", seq_gcd);
        seq_AVs[1].next = &seq_AVs[2];
        seq_AVs[2].attribute="SI";
        sprintf(seq_AVs[2].value, "%X", si->index);
@@ -344,7 +417,7 @@ if (o.verbose && openport != -1)
        strcpy(seq_AVs[0].value, "RI");
        seq_AVs[0].next = &seq_AVs[1];
        seq_AVs[1].attribute= "gcd";     
-       sprintf(seq_AVs[1].value, "%lX", seq_gcd);
+       sprintf(seq_AVs[1].value, "%X", seq_gcd);
        seq_AVs[1].next = &seq_AVs[2];
        seq_AVs[2].attribute="SI";
        sprintf(seq_AVs[2].value, "%X", si->index);
@@ -358,7 +431,7 @@ if (o.verbose && openport != -1)
      nmap_log("Insufficient responses for TCP sequencing (%d), OS detection will be MUCH less reliable\n", si->responses);
    }
  } else {
-   nmap_log("Warning:  No ports found open on this machine, OS detection will be MUCH less reliable\n");
+   nmap_log("Warning:  No tcp ports found open on this machine, OS detection will be MUCH less reliable\n");
  }
 
 for(i=0; i < 9; i++) {
@@ -388,13 +461,16 @@ for(i=0; i < 9; i++) {
  }
  if (last) FPtests[last]->next = NULL;
  
+ osscan_timedout:
+ if (target->timedout)
+   FP = NULL;
  close(rawsd);
  pcap_close(pd);
  return FP;
 }
 
 
-struct AVal *fingerprint_iptcppacket(struct ip *ip, int mss, unsigned long syn) {
+struct AVal *fingerprint_iptcppacket(struct ip *ip, int mss, unsigned int syn) {
   struct AVal *AVs;
   int length;
   int opcode;
@@ -568,8 +644,8 @@ struct AVal *getattrbyname(struct AVal *AV, char *name) {
 int AVal_match(struct AVal *reference, struct AVal *fprint) {
   struct AVal *current_ref;
   struct AVal *current_fp;
-  unsigned long number;
-  unsigned long val;
+  unsigned int number;
+  unsigned int val;
   char *p, *q;  /* OHHHH YEEEAAAAAHHHH!#!@#$!% */
   char valcpy[512];
   char *endptr;
@@ -583,7 +659,7 @@ int AVal_match(struct AVal *reference, struct AVal *fprint) {
     < (less than), > (greather than), + (non-zero), | (or), and & (and) 
     No parenthesis are allowed and an expression cannot have | AND & */
     numtrue = andexp = orexp = 0;
-    strcpy(valcpy, current_ref->value);
+    Strncpy(valcpy, current_ref->value, sizeof(valcpy));
     p = valcpy;
     if (strchr(current_ref->value, '|')) {
       orexp = 1; expchar = '|';
@@ -642,22 +718,36 @@ return;
 }
 
 
-int os_scan(struct hoststruct *target) {
+int os_scan(struct hoststruct *target, unsigned short *portarray) {
 FingerPrint **FP_matches[3];
 int FP_nummatches[3];
 struct seq_info si[3];
 int try;
 int i;
+struct timeval now;
+
+if (target->timedout)
+    return 1;
 
 bzero(si, sizeof(si));
 
  for(try=0; try < 3; try++) {
-  target->FPs[try] = get_fingerprint(target, &si[try]); 
-  FP_matches[try] = match_fingerprint(target->FPs[try], &(FP_nummatches[try]));
-  if (FP_matches[try][0]) 
-    break;
-  if (try < 2)
-    sleep(2);
+   if (o.host_timeout) {   
+     gettimeofday(&now, NULL);
+     if (target->timedout || TIMEVAL_SUBTRACT(now, target->host_timeout) >= 0)
+       {
+	 target->timedout = 1;
+	 return 1;
+       }
+   }
+   target->FPs[try] = get_fingerprint(target, &si[try], portarray); 
+   if (target->timedout)
+     return 1;
+   FP_matches[try] = match_fingerprint(target->FPs[try], &(FP_nummatches[try]));
+   if (FP_matches[try][0]) 
+     break;
+   if (try < 2)
+     sleep(2);
  }
  target->numFPs = (try == 3)? 3 : try + 1;
  memcpy(&(target->seq), &si[target->numFPs - 1], sizeof(struct seq_info));
@@ -758,19 +848,15 @@ static char str[2048];
 FingerPrint *current;
 struct AVal *AV;
 char *p = str;
-
+int len;
 bzero(str, sizeof(str));
 
 if (!FP) return "(None)";
 
 if(*(FP->OS_name)) {
-  int len = 0;
-  len = sprintf(str, "FingerPrint  %s\n", FP->OS_name);
-#ifdef SPRINTF_RETURNS_STRING
-  p += strlen(p);
-#else
+  len = snprintf(str, 128, "FingerPrint  %s\n", FP->OS_name);
+  if (len < 0) fatal("OS name too long");
   p += len;
-#endif
 }
 
 for(current = FP; current ; current = current->next) {
@@ -795,7 +881,7 @@ return str;
 }
 
 
-unsigned long get_gcd_n_ulong(int numvalues, unsigned long *values) {
+unsigned int get_gcd_n_ulong(int numvalues, unsigned int *values) {
   int gcd;
   int i;
 
@@ -807,7 +893,7 @@ unsigned long get_gcd_n_ulong(int numvalues, unsigned long *values) {
   return gcd;
 }
 
-unsigned long euclid_gcd(unsigned long a, unsigned long b) {
+unsigned int euclid_gcd(unsigned int a, unsigned int b) {
   if (a < b) return euclid_gcd(b,a);
   if (!b) return a;
   return euclid_gcd(b, a % b);
@@ -829,15 +915,12 @@ char *p, *q; /* OH YEAH!!!! */
  FPs = safe_malloc(sizeof(FingerPrint *) * 2048); 
  bzero(FPs, sizeof(FingerPrint *) * 2048);
 
-
-sprintf(filename, "%s/nmap-os-fingerprints", LIBDIR);
-fp = fopen(filename, "r");
-if (!fp) {
-  fp = fopen("nmap-os-fingerprints", "r");
-  if (!fp) {
-    fatal("OS scan requested but I cannot find nmap_os_fingerprints file.  It must be in %s or your current directory", LIBDIR);
-  }
+if (nmap_fetchfile(filename, sizeof(filename), "nmap-os-fingerprints") == -1){
+  fatal("OS scan requested but I cannot find nmap-os-fingerprints file.  It should be in %s, ~/.nmap/ or .", LIBDIR);
 }
+
+fp = fopen(filename, "r");
+
  top:
 while(fgets(line, sizeof(line), fp)) {  
   lineno++;
@@ -848,13 +931,13 @@ while(fgets(line, sizeof(line), fp)) {
  fparse:
 
   if (strncasecmp(line, "FingerPrint", 11)) {
-    printf("Parse error on line %d of nmap_os_fingerprints file: %s\n", lineno, line);
+    fprintf(stderr, "Parse error on line %d of nmap-os-fingerprints file: %s\n", lineno, line);
     continue;
   }
   p = line + 12;
   while(*p && isspace((int) *p)) p++;
   if (!*p) {
-    printf("Parse error on line %d of nmap_os_fingerprints file: %s\n", lineno, line);    
+    fprintf(stderr, "Parse error on line %d of nmap-os-fingerprints file: %s\n", lineno, line);    
     continue;
   }
   FPs[numrecords] = safe_malloc(sizeof(FingerPrint));
@@ -888,7 +971,7 @@ while(fgets(line, sizeof(line), fp)) {
     p = line;
     q = strchr(line, '(');
     if (!q) {
-      printf("Parse error on line %d of nmap_os_fingerprints file: %s\n", lineno, line);
+      fprintf(stderr, "Parse error on line %d of nmap-os-fingerprints file: %s\n", lineno, line);
       goto top;
     }
     *q = '\0';
@@ -902,7 +985,7 @@ while(fgets(line, sizeof(line), fp)) {
     *q = '(';
     q = strchr(p, ')');
     if (!q) {
-      printf("Parse error on line %d of nmap_os_fingerprints file: %s\n", lineno, line);
+      fprintf(stderr, "Parse error on line %d of nmap-os-fingerprints file: %s\n", lineno, line);
       goto top;
     }
     *q = '\0';
@@ -911,6 +994,7 @@ while(fgets(line, sizeof(line), fp)) {
   /* printf("Read in fingerprint:\n%s\n", fp2ascii(FPs[numrecords])); */
   numrecords++;
 }
+fclose(fp);
 FPs[numrecords] = NULL; 
 return FPs;
 }
@@ -1057,11 +1141,11 @@ udp->uh_sum = realcheck;
      upi.target.s_addr = ip->ip_dst.s_addr;
    }
    if (TCPIP_DEBUGGING > 1) {
-     printf("Raw UDP packet creation completed!  Here it is:\n");
+     fprintf(o.nmap_stdout, "Raw UDP packet creation completed!  Here it is:\n");
      readudppacket(packet,1);
    }
    if (TCPIP_DEBUGGING > 1)     
-     printf("\nTrying sendto(%d , packet, %d, 0 , %s , %d)\n",
+     fprintf(o.nmap_stdout, "\nTrying sendto(%d , packet, %d, 0 , %s , %d)\n",
 	    sd, BSDUFIX(ip->ip_len), inet_ntoa(*victim),
 	    (int) sizeof(struct sockaddr_in));
 
@@ -1072,7 +1156,7 @@ udp->uh_sum = realcheck;
        return NULL;
      }
 
-   if (TCPIP_DEBUGGING > 1) printf("successfully sent %d bytes of raw_tcp!\n", res);
+   if (TCPIP_DEBUGGING > 1) fprintf(o.nmap_stdout, "successfully sent %d bytes of raw_tcp!\n", res);
  }
 
 return &upi;
@@ -1158,14 +1242,14 @@ current_testno++;
 
 /* This next test doesn't work on Solaris because the lamers
    overwrite our ip_id */
-#if !defined(SOLARIS) && !defined(SUNOS)
+#if !defined(SOLARIS) && !defined(SUNOS) && !defined(IRIX)
 /* Now lets see how they treated the ID we sent ... */
 AVs[current_testno].attribute = "RID";
 if (ntohs(ip2->ip_id) == 0)
-  sprintf(AVs[current_testno].value, "0");
+  strcpy(AVs[current_testno].value, "0");
 else if (ip2->ip_id == upi->ipid)
-  sprintf(AVs[current_testno].value, "E"); /* The "expected" value */
-else sprintf(AVs[current_testno].value, "F"); /* They fucked it up */
+  strcpy(AVs[current_testno].value, "E"); /* The "expected" value */
+else strcpy(AVs[current_testno].value, "F"); /* They fucked it up */
 
 current_testno++;
 #endif
@@ -1179,13 +1263,13 @@ checksumptr = (unsigned short *)   ((char *) ip2 + 10);
 checksum =   *checksumptr;
 
 if (checksum == 0)
-  sprintf(AVs[current_testno].value, "0");
+  strcpy(AVs[current_testno].value, "0");
 else {
   *checksumptr = 0;
   if (in_cksum((unsigned short *)ip2, 20) == checksum) {
-    sprintf(AVs[current_testno].value, "E"); /* The "expected" value */
+    strcpy(AVs[current_testno].value, "E"); /* The "expected" value */
   } else {
-    sprintf(AVs[current_testno].value, "F"); /* They fucked it up */
+    strcpy(AVs[current_testno].value, "F"); /* They fucked it up */
   }
   *checksumptr = checksum;
 }
@@ -1195,10 +1279,10 @@ current_testno++;
 /* UDP checksum */
 AVs[current_testno].attribute = "UCK";
 if (udp->uh_sum == 0)
-  sprintf(AVs[current_testno].value, "0");
+  strcpy(AVs[current_testno].value, "0");
 else if (udp->uh_sum == upi->udpck)
-  sprintf(AVs[current_testno].value, "E"); /* The "expected" value */
-else sprintf(AVs[current_testno].value, "F"); /* They fucked it up */
+  strcpy(AVs[current_testno].value, "E"); /* The "expected" value */
+else strcpy(AVs[current_testno].value, "F"); /* They fucked it up */
 
 current_testno++;
 
@@ -1218,9 +1302,9 @@ while(datastart < dataend) {
 }
 AVs[current_testno].attribute = "DAT";
 if (datastart < dataend)
-  sprintf(AVs[current_testno].value, "F"); /* They fucked it up */
+  strcpy(AVs[current_testno].value, "F"); /* They fucked it up */
 else  
-  sprintf(AVs[current_testno].value, "E");
+  strcpy(AVs[current_testno].value, "E");
 
 AVs[current_testno].next = NULL;
 

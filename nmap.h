@@ -3,10 +3,22 @@
 
 /************************INCLUDES**********************************/
 
-#include <unistd.h>
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
+#endif
+
+#include <unistd.h>
+#ifdef HAVE_GETOPT_H
+#include <getopt.h>
+#else
+/* The next half-dozen lines are from gcc-2.95 ... -Fyodor */
+/* Include getopt.h for the sake of getopt_long.
+   We don't need the declaration of getopt, and it could conflict
+   with something from a system header file, so effectively nullify that.  */
+#define getopt getopt_loser
+#include "getopt.h"
+#undef getopt
 #endif
 
 #ifdef STDC_HEADERS
@@ -151,7 +163,7 @@ void *realloc();
 /* How many udp sends without a ICMP port unreachable error does it take before we consider the port open? */
 #define UDP_MAX_PORT_RETRIES 4
  /*How many seconds before we give up on a host being alive? */
-#define PING_TIMEOUT 6 /* Also timeout for a connect() tcp scan port */
+
 #define FAKE_ARGV "pine" /* What ps and w should show if you use -q */
 /* How do we want to log into ftp sites for */ 
 #define FTPUSER "anonymous"
@@ -163,6 +175,17 @@ void *realloc();
 				      dead? */
 #define MAX_DECOYS 128 /* How many decoys are allowed? */
 
+#ifndef MAX_RTT_TIMEOUT
+#define MAX_RTT_TIMEOUT 10000 /* Never allow more than 10 secs for packet round
+				 trip */
+#endif
+
+#ifndef MIN_RTT_TIMEOUT
+#define MIN_RTT_TIMEOUT 300 /* We will always wait at least 300 ms for a response */
+#endif
+
+#define INITIAL_RTT_TIMEOUT 6000 /* Allow 6 seconds at first for packet responses */
+#define HOST_TIMEOUT    0 /* By default allow unlimited time to scan each host */
 
 
 /* DO NOT change stuff after this point */
@@ -226,6 +249,7 @@ void *realloc();
 #include "error.h"
 #include "utils.h"
 #include "services.h"
+#include "rpc.h"
 
 /***********************STRUCTURES**********************************/
 
@@ -257,7 +281,7 @@ void posportupdate(struct hoststruct *target, struct portinfo *current,
 		   struct portinfolist *pil, struct connectsockinfo *csi);
 void get_syn_results(struct hoststruct *target, struct portinfo *scan,
 		     struct scanstats *ss, struct portinfolist *pil, 
-		     int *portlookup, pcap_t *pd, unsigned long *sequences);
+		     int *portlookup, pcap_t *pd, unsigned long *sequences, stype scantype);
 int get_connect_results(struct hoststruct *target, struct portinfo *scan, 
 			 struct scanstats *ss, struct portinfolist *pil, 
 			 int *portlookup, unsigned long *sequences, 
@@ -288,14 +312,13 @@ int send_small_fragz(int sd, struct in_addr *source, struct in_addr *victim,
 int listen_icmp(int icmpsock, unsigned short outports[],
 		unsigned short numtries[], int *num_out,
 		struct in_addr target, portlist *ports);
-void massping(struct hoststruct *hostbatch, int numhosts, int pingtimeout);
 
 /* general helper functions */
 void hdump(unsigned char *packet, int len);
 void *safe_malloc(int size);
 char *grab_next_host_spec(FILE *inputfd, int argc, char **fakeargv);
 int parse_targets(struct targets *targets, char *h);
-struct hoststruct *nexthost(char *hostexp, int lookahead, int pingtimeout);
+struct hoststruct *nexthost(char *hostexp, int lookahead);
 void options_init();
 void nmap_log(char *fmt, ...);
 void nmap_machine_log(char *fmt, ...);
@@ -306,9 +329,14 @@ char *seqclass2ascii(int clas);
 void invertfirewalled(portlist *pl, unsigned short *ports);
 int nmap_fetchfile(char *filename_returned, int bufferlen, char *file);
 int fileexistsandisreadable(char *pathname);
+void enforce_scan_delay(struct timeval *tv);
+int check_firewallmode(struct hoststruct *target, struct scanstats *ss);
 /* From glibc 2.0.6 because Solaris doesn't seem to have this function */
 #ifndef HAVE_INET_ATON
 int inet_aton(register const char *, struct in_addr *);
+#endif
+#ifndef HAVE_SNPRINTF
+int snprintf ( char *str, size_t n, const char *format, ... );
 #endif
 #endif /* NMAP_H */
 

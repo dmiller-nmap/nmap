@@ -5,13 +5,24 @@ typedef struct port {
   unsigned short portno;
   unsigned char proto;
   char *owner;
+  char *rpc_name;
+  int rpc_status; /* RPC_STATUS_UNTESTED means we haven't checked
+		    RPC_STATUS_UNKNOWN means the port appears to be RPC
+		    but we couldn't find a match
+		    RPC_STATUS_GOOD_PROG means rpc_program gives the prog #
+		    RPC_STATUS_NOT_RPC means the port doesn't appear to 
+		    be RPC */
+  unsigned long rpc_program; /* Only valid if rpc_state == RPC_STATUS_GOOD_PROG */
+  unsigned long rpc_lowver;
+  unsigned long rpc_highver;
   int state; 
   int confidence; /* How sure are we about the state? */
   struct port *next;
 } port;
 
+/* Stores "port info" which is TCP/UDP ports or RPC program ids */
  struct portinfo {
-   unsigned short portno;
+   unsigned long portno; /* TCP/UDP port or RPC program id */
    short trynum;
    int sd[3]; /* Socket descriptors for connect_scan */
    struct timeval sent[3]; 
@@ -46,6 +57,12 @@ struct connectsockinfo {
 					index.  No OS better give us
 					an SD > 2047!@#$ */
   int maxsd;
+};
+
+struct firewallmodeinfo {
+  int active; /* is firewall mode currently active for the host? */
+  int nonresponsive_ports; /* # Of ports we haven't received any response from */
+  int responsive_ports; /* # of ports that told us whether they were open/closed/filtered/unfiltered */
 };
 
 /* The runtime statistics used to decide how fast to proced and how
@@ -126,6 +143,10 @@ struct hoststruct {
   int wierd_responses; /* echo responses from other addresses, Ie a network broadcast address */
   unsigned int flags; /* HOST_UP, HOST_DOWN, HOST_FIREWALLED, HOST_BROADCAST (instead of HOST_BROADCAST use wierd_responses */
   struct timeout_info to;
+  struct timeval host_timeout;
+  struct firewallmodeinfo firewallmode; /* For supporting "firewall mode" speed optimisations */
+  int timedout; /* Nonzero if continued scanning should be aborted due to
+		   timeout  */
   char device[64]; /* The device we transmit on */
 };
 
@@ -139,7 +160,15 @@ struct ops /* someone took struct options, <grrr> */ {
   unsigned short magic_port;
   unsigned short magic_port_set; /* Was this set by user? */
   unsigned short tcp_probe_port;
-  int max_sockets;
+
+  /* Scan timing/politeness issues */
+  int max_parallelism;
+  int max_rtt_timeout;
+  int min_rtt_timeout;
+  int host_timeout;
+  int scan_delay;
+  int initial_rtt_timeout;
+
   int isr00t;
   struct in_addr decoys[MAX_DECOYS];
   int numdecoys;
@@ -149,14 +178,15 @@ struct ops /* someone took struct options, <grrr> */ {
   int pingtype;
   int pingscan;
   int allowall;
-  int ptime;
   int numports;
   int connectscan;
   int bouncescan;
+  int rpcscan;
   int nullscan;
   int xmasscan;
   int fragscan;
   int synscan;
+  int windowscan;
   int maimonscan;
   int finscan;
   int udpscan;
@@ -164,10 +194,11 @@ struct ops /* someone took struct options, <grrr> */ {
   int force; /* force nmap to continue on even when the outcome seems somewhat certain */
   FILE *logfd; /* Output log file descriptor */
   FILE *machinelogfd; /* Machine parseable log file descriptor */
+  FILE *nmap_stdout; /* Nmap standard output */
 };
   
 typedef port *portlist;
-typedef enum { SYN_SCAN, FIN_SCAN, XMAS_SCAN, UDP_SCAN, CONNECT_SCAN, NULL_SCAN, MAIMON_SCAN } stype;
+typedef enum { SYN_SCAN, FIN_SCAN, XMAS_SCAN, UDP_SCAN, CONNECT_SCAN, NULL_SCAN, WINDOW_SCAN, RPC_SCAN, MAIMON_SCAN } stype;
 
 #endif /*GLOBAL_STRUCTURES_H */
 

@@ -17,7 +17,7 @@ Copyright: GPL
 Group: Networking/Utilities
 Source: http://www.insecure.org/nmap/nmap-@VERSION@.tgz
 URL: http://www.insecure.org/nmap/
-BuildRoot: /tmp/%{name}-@VERSION@
+BuildRoot: /tmp/build-%{name}-@VERSION@
 # The BuildRoot specifies where RPM will look for the files in the %files
 # secion (i.e. relative to the BuildRoot), and also sets the value of the
 # $RPM_BUILD_ROOT variable. The default, '/', causes the nmap utility
@@ -57,21 +57,23 @@ predictability characteristics, reverse-identd scanning, and more.
 %build
 # CFLAGS="$RPM_OPT_FLAGS" ./configure --prefix=$RPM_BUILD_ROOT/usr/local
 CFLAGS="$RPM_OPT_FLAGS" ./configure --prefix=/usr/local
+rm -f nmap nmapfe/nmapfe
 make STATIC=-static
 strip nmap
+strip nmapfe/nmapfe
 
 %install
-install -d -m 755 $RPM_BUILD_ROOT/usr/local/bin
-install -d -m 755 $RPM_BUILD_ROOT/usr/local/man/man1
-install -d -m 755 $RPM_BUILD_ROOT/usr/local/lib/nmap
+./shtool mkdir -f -p -m 755 $RPM_BUILD_ROOT/usr/local/bin $RPM_BUILD_ROOT/usr/local/man/man1 $RPM_BUILD_ROOT/usr/local/lib/nmap
 #install -m 755 $RPM_BUILD_ROOT/
 make install bindir=$RPM_BUILD_ROOT/usr/local/bin mandir=$RPM_BUILD_ROOT/usr/local/man libdir=$RPM_BUILD_ROOT/usr/local/lib/nmap
-
 # build directory and file lists
 find $RPM_BUILD_ROOT -type d |
   sed -e "s#^$RPM_BUILD_ROOT#%attr(-, root, root) %dir #g" > rpm-files
 
 find $RPM_BUILD_ROOT -type f |
+  sed -e "s#^$RPM_BUILD_ROOT#%attr(-, root, root) #g" >> rpm-files
+
+find $RPM_BUILD_ROOT -type l |
   sed -e "s#^$RPM_BUILD_ROOT#%attr(-, root, root) #g" >> rpm-files
 
 # cat <<DOCS >> rpm-files
@@ -84,3 +86,6 @@ rm -rf $RPM_BUILD_ROOT
 %files -f rpm-files
 
 #eof
+
+
+
