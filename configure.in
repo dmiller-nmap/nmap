@@ -29,6 +29,8 @@ AC_SUBST(COMPAT_SRCS)
 dnl Host specific hacks
 AC_CANONICAL_HOST
 
+linux=no
+
 case "$host" in
   *-sgi-irix5*)
     no_libsocket=yes

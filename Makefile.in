@@ -46,6 +46,7 @@ distro:
 	autoconf
 	rm -f config.cache
 	./configure
+	cd $(LIBPCAPDIR); ./configure
 	$(MAKE) clean
 	$(MAKE) static
 	$(MAKE)
@@ -57,7 +58,7 @@ distro:
 	rm -rf /usr/tmp/nmap-$(VERSION)
 	mkdir /usr/tmp/nmap-$(VERSION)
 	$(MAKE) clean
-	rm -f $(LIBPCAPDIR)/config.cache
+	rm -f $(LIBPCAPDIR)/config.cache $(LIBPCAPDIR)/Makefile
 	cp -r nmap.c targets.c nmap.h \
 	tcpip.c tcpip.h error.c error.h utils.c utils.h inet_aton.c \
 	configure.in config.h.in Makefile.in configure install-sh config.guess \
