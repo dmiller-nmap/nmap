@@ -467,27 +467,24 @@ int nmap_main(int argc, char *argv[]) {
 	o.pingtype = PINGTYPE_NONE;
       else if (*optarg == 'S') {
 	o.pingtype |= (PINGTYPE_TCP|PINGTYPE_TCP_USE_SYN);
-	if (isdigit((int) *(optarg+1))) {      
+	if (isdigit((int) *(optarg+1)))
 	  o.tcp_probe_port = atoi(optarg+1);
-	  log_write(LOG_STDOUT, "TCP probe port is %hu\n", o.tcp_probe_port);
-	} else if (o.verbose)
-	  log_write(LOG_STDOUT, "TCP probe port is %hu\n", o.tcp_probe_port);
       }
       else if (*optarg == 'T' || *optarg == 'A') {
 	o.pingtype |= (PINGTYPE_TCP|PINGTYPE_TCP_USE_ACK);
-	if (isdigit((int) *(optarg+1))) {      
+	if (isdigit((int) *(optarg+1)))
 	  o.tcp_probe_port = atoi(optarg+1);
-	  log_write(LOG_STDOUT, "TCP probe port is %hu\n", o.tcp_probe_port);
-	} else if (o.verbose)
-	  log_write(LOG_STDOUT, "TCP probe port is %hu\n", o.tcp_probe_port);
       }
       else if (*optarg == 'B') {
 	o.pingtype = (PINGTYPE_TCP|PINGTYPE_TCP_USE_ACK|PINGTYPE_ICMP_PING);
 	if (isdigit((int) *(optarg+1)))
 	  o.tcp_probe_port = atoi(optarg+1);
-	log_write(LOG_STDOUT, "TCP probe port is %hu\n", o.tcp_probe_port);
       }
-      else {fatal("Illegal Argument to -P, use -P0, -PI, -PT, or -PT80 (or whatever number you want for the TCP probe destination port)"); }
+      else { 
+	fatal("Illegal Argument to -P, use -P0, -PI, -PB, -PM, -PP, -PT, or -PT80 (or whatever number you want for the TCP probe destination port)"); 
+      }
+      if ((o.pingtype & PINGTYPE_TCP) && o.tcp_probe_port != DEFAULT_TCP_PROBE_PORT)
+	log_write(LOG_STDOUT, "TCP probe port is %hu\n", o.tcp_probe_port);	
       break;
     case 'p': 
       if (ports)
@@ -680,10 +677,6 @@ int nmap_main(int argc, char *argv[]) {
     error("WARNING: UDP scan was requested, but no udp ports were specified.  Skipping this scan type.");
   if (o.ipprotscan && ! ports->prot_count)
     error("WARNING: protocol scan was requested, but no protocols were specified to be scanned.  Skipping this scan type.");
-
-  /* Default dest port for tcp probe */
-  if (!o.tcp_probe_port) o.tcp_probe_port = DEFAULT_TCP_PROBE_PORT;
-
 
   if (o.pingscan && (o.connectscan || o.udpscan || o.windowscan || o.synscan || o.idlescan || o.finscan || o.maimonscan ||  o.nullscan || o.xmasscan || o.ackscan || o.bouncescan || o.ipprotscan || o.listscan)) {
     fatal("Ping scan is not valid with any other scan types (the other ones all include a ping scan");
@@ -1174,6 +1167,7 @@ void options_init() {
   o.scanflags = -1;
   o.extra_payload_length = 0;
   o.extra_payload = NULL;
+  o.tcp_probe_port = DEFAULT_TCP_PROBE_PORT;
 }
 
 /* We set the socket lingering so we will RST connection instead of wasting
