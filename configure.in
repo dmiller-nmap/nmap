@@ -1,13 +1,16 @@
 
+# Require autoconf 2.13
+AC_PREREQ(2.13)
+
+dnl Process this file with autoconf to produce a configure script.
+AC_INIT(nmap.c)
+
 if test -d /usr/local/lib; then
   LDFLAGS="$LDFLAGS -L/usr/local/lib"
 fi
 if test -d /usr/local/include; then
   CFLAGS="$CLFAGS -I/usr/local/include"
 fi
-
-dnl Process this file with autoconf to produce a configure script.
-AC_INIT(nmap.c)
 
 libpcapdir=libpcap-possiblymodified
 AC_SUBST(libpcapdir)
