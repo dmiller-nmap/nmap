@@ -68,6 +68,19 @@ extern NmapOps o;
 extern unsigned long flt_dsthost, flt_srchost;
 extern unsigned short flt_baseport;
 
+#ifdef WIN32
+#include "mswin32/winip/winip.h"
+
+#include "pcap-int.h"
+
+void nmapwin_init();
+void nmapwin_cleanup();
+void nmapwin_list_interfaces();
+
+int if2nameindex(int ifi);
+#endif
+
+
 #ifndef WIN32 /* Already defined in wintcpip.c for now */
 void sethdrinclude(int sd) {
 #ifdef IP_HDRINCL
@@ -151,6 +164,7 @@ int resolve(char *hostname, struct sockaddr_storage *ss, size_t *sslen,
   freeaddrinfo(result);
   return 1;
 }
+
 
 /* Returns a buffer of ASCII information about a packet that may look
    like "TCP 127.0.0.1:50923 > 127.0.0.1:3 S ttl=61 id=39516 iplen=40
@@ -325,10 +339,6 @@ const char *ippackethdrinfo(const u8 *packet, u32 len) {
 }
 
 
-/* Tests whether a packet sent to  IP is LIKELY to route 
- through the kernel localhost interface */
-#ifndef WIN32 /* This next group of functions are already defined in 
-                 wintcpip.c for now */
 int islocalhost(const struct in_addr * const addr) {
 char dev[128];
   /* If it is 0.0.0.0 or starts with 127.0.0.1 then it is 
@@ -350,9 +360,46 @@ char dev[128];
   return 0;
 }
 
+/* Calls pcap_open_live and spits out an error (and quits) if the call
+   faile.  So a valid pcap_t will always be returned.  Note that the
+   Windows/UNIX versions are separate since they differ so much.
+   Also, the actual my_pcap_open_live() for Windows is in
+   mswin32/winip/winip.c.  It calls the function below if pcap is
+   being used, otherwise it uses Windows raw sockets. */
+#ifdef WIN32
+pcap_t *my_real_pcap_open_live(char *device, int snaplen, int promisc, int to_ms) 
+{
+  char err0r[PCAP_ERRBUF_SIZE];
+  pcap_t *pt;
+  const WINIP_IF *ifentry;
+  int ifi = name2ifi(device);
+  
+  if(ifi == -1)
+    fatal("my_real_pcap_open_live: invalid device %s\n", device);
+  
+  if(o.debugging > 1)
+    printf("Trying to open %s for recieve with winpcap.\n", device);
+  
+  ifentry = ifi2ifentry(ifi);
+  
+  //	check for bogus interface
+  if(!ifentry->pcapname)
+    {
+      fatal("my_real_pcap_open_live: called with non-pcap interface %s!\n",
+	    device);
+    }
+  
+  if (!((pt = pcap_open_live(ifentry->pcapname, snaplen, promisc, to_ms, err0r)))) 	
+    fatal("pcap_open_live: %s");
+	  
+	  
+  //	This should help
+  pcap_setmintocopy(pt, 1);
+  
+  return pt;
+}
 
-/* Calls pcap_open_live and spits out an error (and quits) if the call faile.
-   So a valid pcap_t will always be returned. */
+#else // !WIN32
 pcap_t *my_pcap_open_live(char *device, int snaplen, int promisc, int to_ms) 
 {
   char err0r[PCAP_ERRBUF_SIZE];
@@ -365,6 +412,7 @@ pcap_t *my_pcap_open_live(char *device, int snaplen, int promisc, int to_ms)
   }
   return pt;
 }
+#endif // WIN32
 
 /* Standard BSD internet checksum routine */
 unsigned short in_cksum(u16 *ptr,int nbytes) {
@@ -437,6 +485,7 @@ int send_tcp_raw_decoys( int sd, const struct in_addr *victim, int ttl,
 }
 
 
+
 int send_tcp_raw( int sd, const struct in_addr *source, 
 		  const struct in_addr *victim, int ttl, 
 		  u16 sport, u16 dport, u32 seq, u32 ack, u8 flags,
@@ -461,10 +510,6 @@ struct pseudo_header *pseudo =  (struct pseudo_header *) (packet + sizeof(struct
    wasting too much in computing the checksum */
 int res = -1;
 struct sockaddr_in sock;
-char myname[MAXHOSTNAMELEN + 1];
-struct hostent *myhostent = NULL;
-int source_malloced = 0;
-
 static int myttl = 0;
 
 /* check that required fields are there and not too silly */
@@ -486,25 +531,14 @@ if (ttl == -1) {
 	myttl = ttl;
 }
 
+assert(source);
+
+#ifndef WIN32
 /* It was a tough decision whether to do this here for every packet
    or let the calling function deal with it.  In the end I grudgingly decided
    to do it here and potentially waste a couple microseconds... */
 sethdrinclude(sd); 
-
-/* if they didn't give a source address, fill in our first address */
-if (!source) {
-  source_malloced = 1;
-  source = (struct in_addr *) safe_malloc(sizeof(struct in_addr));
-  if (gethostname(myname, MAXHOSTNAMELEN) || 
-      !(myhostent = gethostbyname(myname)))
-       fatal("Cannot get hostname!  Try using -S <my_IP_address> or -e <interface to scan through>\n");
-  memcpy( (void *) source, myhostent->h_addr_list[0], sizeof(struct in_addr));
-#if ( TCPIP_DEBUGGING )
-    printf("We skillfully deduced that your address is %s\n", 
-	   inet_ntoa(*source));
 #endif
-}
-
 
 /*do we even have to fill out this damn thing?  This is a raw packet, 
   after all */
@@ -565,6 +599,11 @@ get_random_bytes(&(ip->ip_id), 2);
 ip->ip_ttl = myttl;
 ip->ip_p = IPPROTO_TCP;
 ip->ip_src.s_addr = source->s_addr;
+#ifdef WIN32
+// I'm not sure why this is --Fyodor
+if (source->s_addr == victim->s_addr) ip->ip_src.s_addr++;
+#endif
+
 ip->ip_dst.s_addr= victim->s_addr;
 #if HAVE_IP_IP_SUM
 ip->ip_sum = in_cksum((unsigned short *)ip, sizeof(struct ip));
@@ -578,47 +617,9 @@ if (TCPIP_DEBUGGING > 1) {
 res = Sendto("send_tcp_raw", sd, packet, BSDUFIX(ip->ip_len), 0,
 	     (struct sockaddr *)&sock,  (int)sizeof(struct sockaddr_in));
 
-if (source_malloced) free((void *) source);
 free(packet);
 return res;
 }
-
-int Sendto(char *functionname, int sd, const unsigned char *packet, int len, 
-	   unsigned int flags, struct sockaddr *to, int tolen) {
-
-struct sockaddr_in *sin = (struct sockaddr_in *) to;
-int res;
-int retries = 0;
-int sleeptime = 0;
-
-do {
-  if (TCPIP_DEBUGGING > 1) {  
-    log_write(LOG_STDOUT, "trying sendto(%d, packet, %d, 0, %s, %d)",
-	   sd, len, inet_ntoa(sin->sin_addr), tolen);
-  }
-  if ((res = sendto(sd, (const char *) packet, len, flags, to, tolen)) == -1) {
-    error("sendto in %s: sendto(%d, packet, %d, 0, %s, %d) => %s",
-	  functionname, sd, len, inet_ntoa(sin->sin_addr), tolen,
-	  strerror(errno));
-    if (retries > 2 || errno == EPERM) 
-      return -1;
-    sleeptime = 15 * (1 << (2 * retries));
-    error("Sleeping %d seconds then retrying", sleeptime);
-    fflush(stderr);
-    sleep(sleeptime);
-  }
-  retries++;
-} while( res == -1);
-
- PacketTrace::trace(PacketTrace::SENT, packet, len); 
-
-if (TCPIP_DEBUGGING > 1)
-  log_write(LOG_STDOUT, "successfully sent %d bytes of raw_tcp!\n", res);
-
-return res;
-}
-
-
 
 void readippacket(const u8 *packet, int readdata) {
   struct ip *ip = (struct ip *) packet;
@@ -755,6 +756,7 @@ int send_udp_raw_decoys( int sd, const struct in_addr *victim, int ttl,
 
 
 
+
 int send_udp_raw( int sd, struct in_addr *source, const struct in_addr *victim,
  		  int ttl, u16 sport, u16 dport, u16 ipid, char *data, 
 		  u16 datalen) 
@@ -767,9 +769,6 @@ static int myttl = 0;
 
 int res;
 struct sockaddr_in sock;
-char myname[MAXHOSTNAMELEN + 1];
-struct hostent *myhostent = NULL;
-int source_malloced = 0;
 struct pseudo_udp_hdr {
   struct in_addr source;
   struct in_addr dest;        
@@ -792,25 +791,12 @@ if (ttl == -1) {
   myttl = ttl;
 }
 
+#ifdef WIN32
 /* It was a tough decision whether to do this here for every packet
    or let the calling function deal with it.  In the end I grudgingly decided
    to do it here and potentially waste a couple microseconds... */
 sethdrinclude(sd); 
-
-/* if they didn't give a source address, fill in our first address */
-if (!source) {
-  source_malloced = 1;
-  source = (struct in_addr *) safe_malloc(sizeof(struct in_addr));
-  if (gethostname(myname, MAXHOSTNAMELEN) || 
-      !(myhostent = gethostbyname(myname)))
-    fatal("Cannot get hostname!  Try using -S <my_IP_address> or -e <interface to scan through>\n");
-  memcpy(source, myhostent->h_addr_list[0], sizeof(struct in_addr));
-#if ( TCPIP_DEBUGGING )
-    printf("We skillfully deduced that your address is %s\n", 
-	   inet_ntoa(*source));
 #endif
-}
-
 
 /*do we even have to fill out this damn thing?  This is a raw packet, 
   after all */
@@ -853,6 +839,10 @@ ip->ip_id = htons(ipid);
 ip->ip_ttl = myttl;
 ip->ip_p = IPPROTO_UDP;
 ip->ip_src.s_addr = source->s_addr;
+#ifdef WIN32
+// I'm not exactly sure why this is needed --Fyodor
+if(source->s_addr == victim->s_addr) ip->ip_src.s_addr;
+#endif
 ip->ip_dst.s_addr= victim->s_addr;
 #if HAVE_IP_IP_SUM
 ip->ip_sum = in_cksum((unsigned short *)ip, sizeof(struct ip));
@@ -866,7 +856,6 @@ if (TCPIP_DEBUGGING > 1) {
 res = Sendto("send_udp_raw", sd, packet, BSDUFIX(ip->ip_len), 0,
 	     (struct sockaddr *)&sock,  (int)sizeof(struct sockaddr_in));
 
-if (source_malloced) free(source);
 free(packet);
 return res;
 }
@@ -883,7 +872,6 @@ int send_small_fragz_decoys(int sd, const struct in_addr *victim, u32 seq,
 
   return 0;
 }
-
 /* Much of this is swiped from my send_tcp_raw function above, which 
    doesn't support fragmentation */
 int send_small_fragz(int sd, struct in_addr *source, 
@@ -913,18 +901,21 @@ int res;
 struct sockaddr_in sock;
 int id;
 
+assert(source);
+
 /* Time to live */
 if (ttl == -1) {
-	        myttl = (time(NULL) % 14) + 51;
+  myttl = (time(NULL) % 14) + 51;
 } else {
-	        myttl = ttl;
+  myttl = ttl;
 }
 
+#ifdef WIN32
 /* It was a tough decision whether to do this here for every packet
    or let the calling function deal with it.  In the end I grudgingly decided
    to do it here and potentially waste a couple microseconds... */
 sethdrinclude(sd);
-
+#endif
 
 /*Why do we have to fill out this damn thing? This is a raw packet, after all */
 sock.sin_family = AF_INET;
@@ -977,11 +968,8 @@ if (o.debugging > 1)
   log_write(LOG_STDOUT, "\nTrying sendto(%d , packet, %d, 0 , %s , %d)\n",
 	 sd, ntohs(ip->ip_len), inet_ntoa(*victim),
 	 (int) sizeof(struct sockaddr_in));
-/* Lets save this and send it AFTER we send the second one, just to be
-   cute ;) */
 
-if ((res = sendto(sd, (const char *) packet,sizeof(struct ip) + 16 , 0, 
-		  (struct sockaddr *)&sock, sizeof(struct sockaddr_in))) == -1)
+if ((res = Sendto("send_small_fragz", sd, packet,sizeof(struct ip) + 16 , 0, (struct sockaddr *)&sock, sizeof(struct sockaddr_in))) == -1)
   {
     perror("sendto in send_syn_fragz");
     return -1;
@@ -999,6 +987,10 @@ ip2->ip_off = BSDFIX(2);
 ip2->ip_ttl = myttl;
 ip2->ip_p = IPPROTO_TCP;
 ip2->ip_src.s_addr = source->s_addr;
+#ifdef WIN32
+// I'm not sure exactly why this is neccessary --Fyodor
+ if(source->s_addr == victim->s_addr) ip2->ip_src.s_addr++;
+#endif
 ip2->ip_dst.s_addr = victim->s_addr;
 
 #if HAVE_IP_IP_SUM
@@ -1012,8 +1004,9 @@ if (o.debugging > 1)
 
   log_write(LOG_STDOUT, "\nTrying sendto(%d , ip2, %d, 0 , %s , %d)\n", sd, 
 	 ntohs(ip2->ip_len), inet_ntoa(*victim), (int) sizeof(struct sockaddr_in));
-if ((res = sendto(sd, (const char *)ip2,sizeof(struct ip) + 4 , 0, 
-		  (struct sockaddr *)&sock, (int) sizeof(struct sockaddr_in))) == -1)
+if ((res = Sendto("send_small_fragz", sd, (const unsigned char *) ip2,
+		  sizeof(struct ip) + 4 , 0,  (struct sockaddr *)&sock, 
+		  (int) sizeof(struct sockaddr_in))) == -1)
   {
     perror("sendto in send_tcp_raw frag #2");
     return -1;
@@ -1047,9 +1040,6 @@ static int myttl = 0;
 
 int res = -1;
 struct sockaddr_in sock;
-char myname[MAXHOSTNAMELEN + 1];
-struct hostent *myhostent = NULL;
-int source_malloced = 0;
 
 /* check that required fields are there and not too silly */
 if ( !victim || sd < 0) {
@@ -1065,25 +1055,12 @@ if (ttl == -1) {
 	        myttl = ttl;
 }
 
+#ifndef WIN32
 /* It was a tough decision whether to do this here for every packet
    or let the calling function deal with it.  In the end I grudgingly decided
    to do it here and potentially waste a couple microseconds... */
 sethdrinclude(sd); 
-
-/* if they didn't give a source address, fill in our first address */
-if (!source) {
-  source_malloced = 1;
-  source = (struct in_addr *) safe_malloc(sizeof(struct in_addr));
-  if (gethostname(myname, MAXHOSTNAMELEN) || 
-      !(myhostent = gethostbyname(myname)))
-    fatal("Cannot get hostname!  Try using -S <my_IP_address> or -e <interface to scan through>\n");
-  memcpy(source, myhostent->h_addr_list[0], sizeof(struct in_addr));
-#if ( TCPIP_DEBUGGING )
-    printf("We skillfully deduced that your address is %s\n", 
-	   inet_ntoa(*source));
 #endif
-}
-
 
 /*do we even have to fill out this damn thing?  This is a raw packet, 
   after all */
@@ -1103,6 +1080,10 @@ get_random_bytes(&(ip->ip_id), 2);
 ip->ip_ttl = myttl;
 ip->ip_p = proto;
 ip->ip_src.s_addr = source->s_addr;
+#ifdef WIN32
+// I'm not sure why this is here -- Fyodor
+if(source->s_addr == victim->s_addr) ip->ip_src.s_addr++;
+#endif
 ip->ip_dst.s_addr= victim->s_addr;
 #if HAVE_IP_IP_SUM
 ip->ip_sum = in_cksum((unsigned short *)ip, sizeof(struct ip));
@@ -1121,20 +1102,24 @@ if (TCPIP_DEBUGGING > 1) {
 res = Sendto("send_ip_raw", sd, packet, BSDUFIX(ip->ip_len), 0,
 	     (struct sockaddr *)&sock,  (int)sizeof(struct sockaddr_in));
 
-if (source_malloced) free(source);
 free(packet); 
 return res;
 }
 
 int unblock_socket(int sd) {
+#ifdef WIN32
+u_long one = 1;
+if(sd != 501) // Hack related to WinIP Raw Socket support
+  ioctlsocket (sd, FIONBIO, &one);
+#else
 int options;
 /*Unblock our socket to prevent recvfrom from blocking forever
   on certain target ports. */
 options = O_NONBLOCK | fcntl(sd, F_GETFL);
 fcntl(sd, F_SETFL, options);
+#endif //WIN32
 return 1;
 }
-
 
 /* Get the source address and interface name */
 #if 0
@@ -1225,7 +1210,6 @@ int done = 0;
 return NULL;
 }
 #endif /* 0 */
-#endif /* WIN32 */
 
 int getsourceip(struct in_addr *src, const struct in_addr * const dst) {
   int sd;
@@ -1313,9 +1297,6 @@ exit(1);
 
 /* If rcvdtime is non-null and a packet is returned, rcvd will be filled
    with the time that packet was captured from the wire by pcap */
-
-#ifndef WIN32 /* Windows version of next few functions is currently 
-                 in wintcpip.c.  Should be merged at some point. */
 char *readip_pcap(pcap_t *pd, unsigned int *len, long to_usec, struct timeval *rcvdtime) {
 int offset = -1;
 struct pcap_pkthdr head;
@@ -1326,6 +1307,13 @@ struct timeval tv_start, tv_end;
 static char *alignedbuf = NULL;
 static unsigned int alignedbufsz=0;
 static int warning = 0;
+
+#ifdef WIN32
+long to_left;
+
+// We use WinXP raw packet support when available
+ if (-2 == (long) pd) return rawrecv_readip(pd, len, to_usec, rcvdtime);
+#endif
 
 if (!pd) fatal("NULL packet device passed to readip_pcap");
 
@@ -1406,6 +1394,13 @@ if (!pd) fatal("NULL packet device passed to readip_pcap");
    gettimeofday(&tv_start, NULL);
  }
  do {
+#ifdef WIN32
+   gettimeofday(&tv_end, NULL);
+   to_left = MAX(1, (to_usec - TIMEVAL_SUBTRACT(tv_end, tv_start)) / 1000);
+   // Set the timeout (BUGBUG: this is cheating)
+   PacketSetReadTimeout(pd->adapter, to_left);
+#endif
+
    p = (char *) pcap_next(pd, &head);
 
    if (p)
@@ -1436,15 +1431,27 @@ if (!pd) fatal("NULL packet device passed to readip_pcap");
  }
  memcpy(alignedbuf, p, *len);
  PacketTrace::trace(PacketTrace::RCVD, (u8 *) alignedbuf, *len);
-
+ // printf("Just got a packet at %li,%li\n", head.ts.tv_sec, head.ts.tv_usec);
  if (rcvdtime) {
-   *rcvdtime = head.ts;
+ // FIXME: I eventually need to figure out why Windows head.ts time is sometimes BEFORE the time I
+ // sent the packet (which is according to gettimeofday() in nbase).  For now, I will sadly have to
+ // use gettimeofday() for Windows in this case
+ #ifdef WIN32
+ gettimeofday(&tv_end, NULL);
+ *rcvdtime = tv_end;
+ #else
+ *rcvdtime = head.ts;
+ #endif
    assert(head.ts.tv_sec);
  }
 
  return alignedbuf;
 }
+  
+ 
 
+#ifndef WIN32 /* Windows version of next few functions is currently 
+                 in wintcpip.c.  Should be merged at some point. */
 /* Set a pcap filter */
 void set_pcap_filter(Target *target,
 		     pcap_t *pd, PFILTERFN filter, char *bpf, ...)
@@ -2003,3 +2010,40 @@ if (echots) *echots = 0;
 return 0;
 }
 
+#ifndef WIN32 // An alternative version of this function is defined in 
+              // mswin32/winip/winip.c
+int Sendto(char *functionname, int sd, const unsigned char *packet, int len, 
+	   unsigned int flags, struct sockaddr *to, int tolen) {
+
+struct sockaddr_in *sin = (struct sockaddr_in *) to;
+int res;
+int retries = 0;
+int sleeptime = 0;
+
+do {
+  if (TCPIP_DEBUGGING > 1) {  
+    log_write(LOG_STDOUT, "trying sendto(%d, packet, %d, 0, %s, %d)",
+	   sd, len, inet_ntoa(sin->sin_addr), tolen);
+  }
+  if ((res = sendto(sd, (const char *) packet, len, flags, to, tolen)) == -1) {
+    error("sendto in %s: sendto(%d, packet, %d, 0, %s, %d) => %s",
+	  functionname, sd, len, inet_ntoa(sin->sin_addr), tolen,
+	  strerror(errno));
+    if (retries > 2 || errno == EPERM) 
+      return -1;
+    sleeptime = 15 * (1 << (2 * retries));
+    error("Sleeping %d seconds then retrying", sleeptime);
+    fflush(stderr);
+    sleep(sleeptime);
+  }
+  retries++;
+} while( res == -1);
+
+ PacketTrace::trace(PacketTrace::SENT, packet, len); 
+
+if (TCPIP_DEBUGGING > 1)
+  log_write(LOG_STDOUT, "successfully sent %d bytes of raw_tcp!\n", res);
+
+return res;
+}
+#endif

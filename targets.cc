@@ -481,6 +481,7 @@ gettimeofday(&start, NULL);
 	 }
 	 pt.block_unaccounted++;
 	 gettimeofday(&time[seq - pt.seq_offset], NULL);
+
 	 if (ptech.icmpscan || ptech.rawicmpscan)
 	   sendpingqueries(sd, rawpingsd, hostbatch[hostnum],  
 			   seq, pt.seq_offset, id, &ss, time, pingtype, ptech);

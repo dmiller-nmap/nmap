@@ -778,6 +778,7 @@ int win32_sendto(int sd, const char *packet, int len,
 int Sendto(char *functionname, int sd, const unsigned char *packet, int len, 
 	   unsigned int flags, struct sockaddr *to, int tolen)
 {
+	PacketTrace::trace(PacketTrace::SENT, packet, len);
 	return win32_sendto(sd, (char *) packet, len, flags, to, tolen);
 }
 
@@ -848,14 +849,6 @@ void sethdrinclude(int sd)
 //		error("sethdrinclude called -- this probably shouldn't happen\n");
 		setsockopt(sd, IPPROTO_IP, IP_HDRINCL, (char *) &one, sizeof(one));
 	}
-}
-
-char *readip_pcap(pcap_t *pd, unsigned int *len, long to_usec)
-{
-	if(-2 == (long)pd)
-		return rawrecv_readip(pd, len, to_usec);
-
-	else return readip_pcap_real(pd, len, to_usec);
 }
 
 void set_pcap_filter(Target *target,

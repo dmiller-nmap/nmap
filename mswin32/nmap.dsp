@@ -122,10 +122,6 @@ SOURCE=.\winfix.cc
 
 SOURCE=.\winip\winip.c
 # End Source File
-# Begin Source File
-
-SOURCE=.\wintcpip.cc
-# End Source File
 # End Group
 # Begin Group "Nbase"
 

@@ -180,7 +180,7 @@ EXTERNC int pcapsendraw(const char *packet, int len,
 //	rawrecv interface
 EXTERNC pcap_t *rawrecv_open(const char *dev);
 EXTERNC void rawrecv_close(pcap_t *pd);
-EXTERNC char *rawrecv_readip(pcap_t *pd, unsigned int *len, long to_usec);
+EXTERNC char *rawrecv_readip(pcap_t *pd, unsigned int *len, long to_usec, struct timeval *rcvdtime);
 EXTERNC void rawrecv_setfilter(pcap_t *pd, PFILTERFN filterfn);
 EXTERNC char *readip_pcap_real(pcap_t *pd, unsigned int *len, long to_usec);
 

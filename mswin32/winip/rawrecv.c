@@ -99,7 +99,7 @@ void rawrecv_setfilter(pcap_t *pd, PFILTERFN filterfn)
 	else filter = nullfilter;
 }
 
-char *rawrecv_readip(pcap_t *pd, unsigned int *len, long to_usec)
+char *rawrecv_readip(pcap_t *pd, unsigned int *len, long to_usec, struct timeval *rcvdtime)
 {
 	int rcvlen;
 	DWORD time1, time2;
@@ -130,7 +130,11 @@ begin:
 	{
 		if(rcvlen >= sizeof(struct ip) && filter(buf, rcvlen))
 		{
+			if (rcvdtime) {
+				gettimeofday(rcvdtime, NULL);
+			}
 			if(len) *len = rcvlen;
+			PacketTrace::trace(PacketTrace::RCVD, (u8 *) buf, rcvlen);
 			return buf;
 		}
 		else
