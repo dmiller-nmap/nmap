@@ -52,6 +52,8 @@ distro:
 	./nmap -h >& /dev/null    #Make sure nmap exists
 	rm -f docs/nmap.usage.txt	
 	./nmap -h > docs/nmap.usage.txt 
+	rm -f docs/nmap_manpage.html
+	nroff -man docs/nmap.1 | man2html -title 'Nmap network security scanner man page' > docs/nmap_manpage.html
 	rm -rf /usr/tmp/nmap-$(VERSION)
 	mkdir /usr/tmp/nmap-$(VERSION)
 	$(MAKE) clean
@@ -59,8 +61,9 @@ distro:
 	cp -r nmap.c targets.c nmap.h \
 	tcpip.c tcpip.h error.c error.h utils.c utils.h inet_aton.c \
 	configure.in config.h.in Makefile.in configure install-sh config.guess \
-	config.sub INSTALL bg/purple.gif docs/README docs/copying.html \
-	docs/nmap_doc.html docs/nmap.usage.txt $(LIBPCAPDIR) \
+	config.sub INSTALL bg/purple.gif docs/README docs/copying.html COPYING \
+	docs/nmap_doc.html docs/nmap.usage.txt docs/nmap.1 \
+	docs/nmap_manpage.html $(LIBPCAPDIR) \
 	/usr/tmp/nmap-$(VERSION)
 	cd /usr/tmp; \
 	tar czf nmap-$(VERSION).tar.gz nmap-$(VERSION)
@@ -84,14 +87,14 @@ distclean: my_clean my_distclean @PCAP_DIST_CLEAN@
 my_distclean:
 	rm -f Makefile Makefile.bak config.h stamp-h stamp-h.in \
 	         config.cache config.log config.status
-	
+
 
 depend:
 	$(MAKEDEPEND) $(INCLS) -s "# DO NOT DELETE" -- $(DEFS) -- $(SRCS)
 
 install: all
 	$(INSTALL) $(TARGET) $(bindir)/$(TARGET)
-	$(INSTALL) $(TARGET).1 $(mandir)/man1/$(TARGET).1
+	$(INSTALL) docs/$(TARGET).1 $(mandir)/man1/$(TARGET).1
 
 uninstall:
 	rm -f $(bindir)/$(TARGET)
