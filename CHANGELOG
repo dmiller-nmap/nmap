@@ -1,5 +1,19 @@
 # Nmap Changelog
 
+** Version 2.50
+
+-- Fixed an IP calculation error which could occur in some cases where
+   you scan machines on different devices (like lo and eth0).  This
+   problem was discoved by Jonathan Fine (jfine@psu.edu).
+
+-- Fixed a problem that could, in rare cases, cause a SYN scan scan to
+   crash (the error message was "attempt to add port number X with
+   illegal state 0").  This problem was reported by Erik Benner
+   (erik@xyzzy.net)
+
+-- Changed the .spec file so that RPM versions create a xnmap link to
+   nmapfe ( the normal make install has done this for a long time ).
+
 ** Version 2.3BETA21
 
 -- A number of people reported problems with nmapfe in various

@@ -69,8 +69,14 @@ int target_struct_get(struct targets *t, struct in_addr *sin) {
 	t->current[octet] = 0;
       }
     }
-    /* Octet can only be -1 if I just used the last IP */
-    assert(octet != -1 || t->nleft == 1);
+    if (octet == -1) {
+      /* It didn't find anything to bump up, I muast have taken the last IP */
+      assert(t->nleft == 1);
+      /* So I manually bump the last element up one (which may make it > 255)*/
+      t->current[3]++;
+    } else {
+      assert(t->nleft > 1); // There must be at least one more IP left */
+    }
   }
   t->nleft--;
   assert(t->nleft >= 0);

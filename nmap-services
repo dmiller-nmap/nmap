@@ -1746,6 +1746,7 @@ ivs-video         2232/tcp   # IVS Video default
 ivs-video         2232/udp   # IVS Video default
 ivsd              2241/tcp   # IVS Daemon
 ivsd              2241/udp   # IVS Daemon
+compaqdiag        2301/tcp   # Compaq remote diagnostic/management
 pehelp            2307/tcp   # 
 pehelp            2307/udp   # 
 cvspserver        2401/tcp   # CVS network server
@@ -2028,7 +2029,7 @@ sometimes-rpc21   32779/tcp  # Sometimes an RPC port on my Solaris box
 sometimes-rpc22   32779/udp  # Sometimes an RPC port on my Solaris box
 sometimes-rpc23   32780/tcp  # Sometimes an RPC port on my Solaris box
 sometimes-rpc24   32780/udp  # Sometimes an RPC port on my Solaris box
-reachout          43118/tcp
+reachout          43188/tcp
 dbbrowse          47557/tcp  # Databeam Corporation
 dbbrowse          47557/udp  # Databeam Corporation
 pcanywhere        65301/tcp

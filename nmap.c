@@ -2353,7 +2353,7 @@ void pos_scan(struct hoststruct *target, unsigned short *portarray, stype scanty
     initial_packet_width = ss.max_width;
   ss.numqueries_ideal = initial_packet_width;
 
-  memset(portlookup, 255, 65536 * sizeof(int)); /* 0xffffffff better always be (int) -1 */
+  memset(portlookup, 255, sizeof(portlookup)); /* 0xffffffff better always be (int) -1 */
   bzero(csi.socklookup, sizeof(csi.socklookup));
 
   if (scantype != RPC_SCAN) {
@@ -2787,7 +2787,7 @@ void pos_scan(struct hoststruct *target, unsigned short *portarray, stype scanty
       fatal("Bean counting error no. 4321897: ports_left: %d numqueries_outstanding: %d\n", ss.ports_left, ss.numqueries_outstanding);
     }
 
-    /* We only want to try if the 'firewalled' list contains elements,
+    /* We only want to try again if the 'firewalled' list contains elements,
        meaning that some ports timed out.  We retry until nothing
        changes for a round (not counting the very first round).
     */
@@ -3290,20 +3290,36 @@ void get_syn_results(struct hoststruct *target, struct portinfo *scan,
 	  newstate = PORT_CLOSED;
 	} else if ((tcp->th_flags & (TH_SYN|TH_ACK)) == (TH_SYN|TH_ACK)) {
 	  newstate = PORT_OPEN;
+	} else {
+	  if (o.debugging)
+	    error("Received response to SYN scan with unexpected tcp flags: %d\n", tcp->th_flags);
+	  continue;
 	}
       }
       else if (scantype == WINDOW_SCAN) {
-	if (tcp->th_win) {
-	  newstate = PORT_OPEN;
+	if (tcp->th_flags & TH_RST) {
+	  if (tcp->th_win) {
+	    newstate = PORT_OPEN;
+	  } else {
+	    newstate = PORT_CLOSED;
+	  }
 	} else {
-	  newstate = PORT_CLOSED;
+	  if (o.debugging)
+	    error("Received response to WINDOW scan with unexpected tcp flags: %d\n", tcp->th_flags);
+	  continue;
 	}
       }
       else if (scantype == ACK_SCAN) {
 	if (tcp->th_flags & TH_RST) {	  
 	  newstate = PORT_UNFIREWALLED;
+	} else {
+	  if (o.debugging)
+	    error("Received response to ACK scan with unexpected tcp flags: %d\n", tcp->th_flags);
+	  continue;
 	}
-      } 
+      } else {
+	fatal("Unknown scan type!#$!@#$ passed to get_syn_results!  Please notify fyodor@insecure.org");
+      }
     } else if (ip->ip_p == IPPROTO_ICMP) {
       icmp = (struct icmp *) ((char *)ip + 4 * ip->ip_hl);
       ip2 = (struct ip *) (((char *) ip) + 4 * ip->ip_hl + 8);
@@ -3336,10 +3352,7 @@ void get_syn_results(struct hoststruct *target, struct portinfo *scan,
 	  hdump((unsigned char *)icmp, ntohs(ip->ip_len) - sizeof(struct ip));
 	  continue;
 	}
-
-
-	
-
+       
 	newport = ntohs(data[1]);
 	if (portlookup[newport] >= 0) {
 	  current = &scan[portlookup[newport]];

@@ -51,6 +51,13 @@ mkdir -p $RPM_BUILD_ROOT%{prefix}/share/gnome/apps/Utilities
 strip $RPM_BUILD_ROOT%{prefix}/bin/* || :
 gzip $RPM_BUILD_ROOT%{prefix}/man/man1/* || :
 
+%post frontend
+rm -f ${prefix}/bin/xnmap
+ln -s nmapfe ${prefix}/bin/xnmap
+
+%postun frontend
+rm -f ${prefix}/bin/xnmap
+
 %clean
 rm -rf $RPM_BUILD_ROOT
 
