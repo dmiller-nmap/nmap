@@ -127,6 +127,7 @@ while((arg = getopt(argc,fakeargv,"Ab:D:de:FfhiL:lM:Nno:P::p:qrRS:s:T:tUuw:Vv"))
       while(*p) {
 	switch(*p) {
 	case 'F':  o.finscan++;break;
+	case 'M':  o.maimonscan++;break;
 	case 'N':  o.nullscan++;break;
 	case 'P':  o.pingscan++;break;
 	case 'S':  o.synscan++;break;
@@ -166,18 +167,18 @@ if (!o.isr00t && o.pingtype == icmp) {
   o.pingtype = tcp;
 }
 if (bouncescan && o.pingtype != none) printf("Hint: if your bounce scan target hosts aren't reachable from here, remember to use -P0 so we don't try and ping them prior to the scan\n");
-if (o.connectscan && (o.synscan || o.finscan || o.xmasscan || o.nullscan)) 
+if (o.connectscan && (o.synscan || o.finscan || o.maimonscan || o.xmasscan || o.nullscan)) 
   fatal("Pick just one of -t, -s, and -U.  They all do a TCP portscan.\
  If you are trying to do TCP SYN scanning, just use -s, for FIN use -U, and \
  for normal connect() style scanning, use -t");
-if ((o.fragscan && !o.synscan && !o.finscan && !o.nullscan && !o.xmasscan)) {
+if ((o.fragscan && !o.synscan && !o.finscan &&!o.maimonscan && !o.nullscan && !o.xmasscan)) {
   printf("Specified -f but don't know whether to fragment SYN,FIN,NULL, or XMAS scan.  Ie you need to still specify -S[something].  Doing fragmented SYN scan\n");
 }
 if (o.udpscan || o.lamerscan) 
   printf("Warning: udp scan is not always 100%c accurate, I will be rewriting it\n", '%'); /* Due to gcc -Wall stupidity */
-if ((o.synscan || o.finscan || o.udpscan || o.fragscan || o.xmasscan || o.nullscan) && !o.isr00t)
+if ((o.synscan || o.finscan || o.maimonscan || o.udpscan || o.fragscan || o.xmasscan || o.nullscan) && !o.isr00t)
   fatal("Options specified require r00t privileges.  You don't have them!");
-if (!o.connectscan && !o.udpscan && !o.synscan && !o.finscan && !o.nullscan && !o.xmasscan && !bouncescan && !o.pingscan) {
+if (!o.connectscan && !o.udpscan && !o.synscan && !o.finscan && !o.maimonscan &&  !o.nullscan && !o.xmasscan && !bouncescan && !o.pingscan) {
   o.connectscan++;
   if (o.verbose) error("No scantype specified, assuming vanilla tcp connect()\
  scan. Use -sP if you really don't want to portscan (and just want to see what hosts are up).");
@@ -225,7 +226,7 @@ if (!o.verbose)
   error("Hint: The -v option notifies you of open ports as they are found.\n");
   */
 if (fastscan)
-  ports = getfastports(o.synscan|o.connectscan|o.fragscan|o.finscan|bouncescan|o.nullscan|o.xmasscan,
+  ports = getfastports(o.synscan|o.connectscan|o.fragscan|o.finscan|o.maimonscan|bouncescan|o.nullscan|o.xmasscan,
                        o.udpscan|o.lamerscan);
 if (!ports && !o.pingscan) ports = getpts("1-1024");
 
@@ -289,7 +290,7 @@ else {
   if (currenths->wierd_responses)
     nmap_log("Host  %s (%s) seems to be a subnet broadcast address (returned %d extra pings)\n",  currenths->name, inet_ntoa(currenths->host), currenths->wierd_responses);
 }
-if (currenths->flags & HOST_UP && !currenths->source_ip.s_addr && ( o.synscan || o.finscan || o.udpscan || o.nullscan || o.xmasscan)) {
+if (currenths->flags & HOST_UP && !currenths->source_ip.s_addr && ( o.synscan || o.finscan || o.maimonscan || o.udpscan || o.nullscan || o.xmasscan)) {
   if (gethostname(myname, MAXHOSTNAMELEN) || 
       !(target = gethostbyname(myname)))
     fatal("Your system is messed up.  Cannot get hostname!  You might have to use -S <my_IP_address>\n"); 
@@ -303,7 +304,7 @@ if (currenths->flags & HOST_UP && !currenths->source_ip.s_addr && ( o.synscan ||
  if (o.device[0]) { strcpy(currenths->device, o.device); }
 
 /* Figure out what link-layer device (interface) to use (ie eth0, ppp0, etc) */
-if (!o.device[0] && currenths->flags & HOST_UP && (o.nullscan || o.xmasscan || o.udpscan || o.finscan || o.synscan) && !ipaddr2devname( currenths->device, &currenths->source_ip))
+if (!o.device[0] && currenths->flags & HOST_UP && (o.nullscan || o.xmasscan || o.udpscan || o.finscan || o.maimonscan ||  o.synscan) && !ipaddr2devname( currenths->device, &currenths->source_ip))
   fatal("Could not figure out what device to send the packet out on!  You might possibly want to try -S (but this is probably a bigger problem).  If you are trying to sp00f the source of a SYN/FIN scan with -S <fakeip>, then you must use -e eth0 (or other devicename) to tell us what interface to use.\n");
 /* Set up the decoy */
 o.decoys[o.decoyturn] = currenths->source_ip;
@@ -314,9 +315,10 @@ o.decoys[o.decoyturn] = currenths->source_ip;
       
       if (o.synscan) syn_scan(currenths, ports);
       
-      if (o.finscan||o.xmasscan||o.nullscan) super_scan(currenths, ports, FIN_SCAN);
+      if (o.finscan) super_scan(currenths, ports, FIN_SCAN);
       if (o.xmasscan) super_scan(currenths, ports, XMAS_SCAN);
       if (o.nullscan) super_scan(currenths, ports, NULL_SCAN);
+      if (o.maimonscan) super_scan(currenths, ports, MAIMON_SCAN);
       if (o.udpscan) super_scan(currenths, ports, UDP_SCAN);
       
       if (bouncescan) {
@@ -1849,6 +1851,7 @@ sprintf(filter, "(icmp and src host %s and dst host %s) or (tcp and src host %s 
 if (scantype == XMAS_SCAN) scanflags = TH_FIN|TH_URG|TH_PUSH;
 else if (scantype == NULL_SCAN) scanflags = 0;
 else if (scantype == FIN_SCAN) scanflags = TH_FIN;
+else if (scantype == MAIMON_SCAN) scanflags = TH_FIN|TH_ACK;
 else if (scantype != UDP_SCAN) { fatal("Unknown scna type for super_scan"); }
 
 starttime = time(NULL);
@@ -2115,6 +2118,7 @@ starttime = time(NULL);
 if (o.xmasscan) scanflags = TH_FIN|TH_URG|TH_PUSH;
 else if (o.nullscan) scanflags = 0;
 else if (o.finscan) scanflags = TH_FIN;
+else if (o.maimonscan) scanflags = TH_FIN|TH_ACK;
 
 if (o.debugging || o.verbose)
   printf("Initiating FIN,NULL,or Xmas stealth scan against %s (%s), sleep delay: %ld useconds\n", target->name, inet_ntoa(target->host), timeout);

@@ -255,6 +255,7 @@ struct ops /* someone took struct options, <grrr> */ {
   int xmasscan;
   int fragscan;
   int synscan;
+  int maimonscan;
   int finscan;
   int udpscan;
   int lamerscan;
@@ -264,7 +265,7 @@ struct ops /* someone took struct options, <grrr> */ {
 };
   
 typedef port *portlist;
-typedef enum { SYN_SCAN, FIN_SCAN, XMAS_SCAN, UDP_SCAN, CONNECT_SCAN, NULL_SCAN } stype;
+typedef enum { SYN_SCAN, FIN_SCAN, XMAS_SCAN, UDP_SCAN, CONNECT_SCAN, NULL_SCAN, MAIMON_SCAN } stype;
 
 /***********************PROTOTYPES**********************************/
 
