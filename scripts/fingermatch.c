@@ -102,6 +102,13 @@ int main(int argc, char *argv[]) {
       }
       Strncpy(lasttestname, line, sizeof(lasttestname));
       *p = '(';
+    } else {
+      /* The only legitimate non-comment line that doesn't have a ( is the 
+	 initial Fingerprint line */
+      if (strncmp(line, "Fingerprint ", 12) != 0) {
+	printf("Warning: Bogus line skipped\n");
+	continue;
+      }
     }
     if (printlen + linelen >= sizeof(fprint) - 5)
       fatal("Overflow!");
@@ -119,7 +126,11 @@ int main(int argc, char *argv[]) {
       !strstr(fprint, "T4(") || !strstr(fprint, "T5(") || 
       !strstr(fprint, "T6(") || !strstr(fprint, "T7(") ||
       !strstr(fprint, "PU(")) {
-    printf("\n\n***WARNING: Fingerprint is missing at least 1 element***\n\n");
+    /* This ought to get my attention :) */
+    printf("\n"
+           "********************************************************\n"
+           "***WARNING: Fingerprint is missing at least 1 element***\n"
+           "********************************************************\n");
   }
 
   testFP = parse_single_fingerprint(fprint);
