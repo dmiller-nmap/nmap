@@ -1,5 +1,21 @@
 # Nmap Changelog ($Id$)
 
+o Enabled MAC address reporting when using the Windows version
+  of Nmap.  Thanks to Andy Lutomirski (luto(a)stanford.edu) for
+  writing and sending the patch.
+
+o Upgraded libpcap from version 0.7.2 to 0.8.3.
+
+o Updated nmapfe.desktop file to provide better NmapFE desktop support
+  under Fedora Core and other systems.  Thanks to Mephisto
+  (mephisto(a)mephisto.ma.cx) for sending the patch.
+
+o Further nmapfe.desktop changes to better fit the freedesktop
+  standard.  The patch came from Murphy (m3rf(a)swimmingnoodle.com).
+
+o Fixed capitalization (with a perl script) of many over-capitalized
+  vendor names in nmap-mac-prefixes.
+
 o Ensured that MAC address vendor names are always escaped in XML
   output if they contain illegal characters (particularly '&').  Thanks
   to Matthieu Verbert (mve(a)zurich.ibm.com) for the report and a patch.

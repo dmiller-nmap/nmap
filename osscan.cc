@@ -203,7 +203,7 @@ snprintf(filter, sizeof(filter), "dst host %s and (icmp or (tcp and src host %s)
  if ((tport = target->ports.nextPort(NULL, IPPROTO_TCP, PORT_CLOSED, false))) {
    closedport = tport->portno;
    target->FPR->osscan_closedtcpport = tport->portno;
- } else if ((tport = target->ports.nextPort(NULL, IPPROTO_TCP, PORT_UNFIREWALLED, false))) {
+ } else if ((tport = target->ports.nextPort(NULL, IPPROTO_TCP, PORT_UNFILTERED, false))) {
    /* Well, we will settle for unfiltered */
    closedport = tport->portno;
  } else {
@@ -1139,7 +1139,7 @@ int bestaccidx;
  memset(si, 0, sizeof(si));
  if (target->ports.state_counts_tcp[PORT_OPEN] == 0 ||
      (target->ports.state_counts_tcp[PORT_CLOSED] == 0 &&
-      target->ports.state_counts_tcp[PORT_UNFIREWALLED] == 0)) {
+      target->ports.state_counts_tcp[PORT_UNFILTERED] == 0)) {
    if (o.osscan_limit) {
      if (o.verbose)
        log_write(LOG_STDOUT|LOG_NORMAL|LOG_SKID, "Skipping OS Scan due to absence of open (or perhaps closed) ports\n");

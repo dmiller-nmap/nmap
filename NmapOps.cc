@@ -173,7 +173,7 @@ void NmapOps::Initialize() {
   spoofsource = 0;
   device[0] = '\0';
   interactivemode = 0;
-  host_group_sz = HOST_GROUP_SZ;
+  ping_group_sz = PING_GROUP_SZ;
   generate_random_ips = 0;
   reference_FPs = NULL;
   magic_port = 33000 + (get_random_uint() % 31000);
@@ -219,6 +219,19 @@ bool NmapOps::TCPScan() {
 
 bool NmapOps::UDPScan() {
   return udpscan;
+}
+
+  /* this function does not currently cover cases such as TCP SYN ping
+     scan which can go either way based on whether the user is root or
+     IPv6 is being used.  It will return false in those cases where a
+     RawScan is not neccessarily used. */
+bool NmapOps::RawScan() {
+  if (ackscan|finscan|idlescan|ipprotscan|maimonscan|nullscan|osscan|synscan|udpscan|windowscan|xmasscan)
+    return true;
+  if (o.pingtype & (PINGTYPE_ICMP_PING|PINGTYPE_ICMP_MASK|PINGTYPE_ICMP_TS|PINGTYPE_TCP_USE_ACK|PINGTYPE_RAWTCP|PINGTYPE_UDP))
+    return true;
+
+   return false; 
 }
 
 

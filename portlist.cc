@@ -335,6 +335,7 @@ PortList::PortList() {
   memset(state_counts_tcp, 0, sizeof(state_counts_tcp));
   memset(state_counts_ip, 0, sizeof(state_counts_ip));
   numports = 0;
+  idstr = NULL;
 }
 
 PortList::~PortList() {
@@ -366,6 +367,12 @@ PortList::~PortList() {
     free(ip_prots);
     ip_prots = NULL;
   }
+
+  if (idstr) { 
+    free(idstr);
+    idstr = NULL;
+  }
+
 }
 
 
@@ -379,9 +386,9 @@ int PortList::addPort(u16 portno, u8 protocol, char *owner, int state) {
       snprintf(msg, sizeof(msg), " (owner: %s)", owner);
     } else msg[0] = '\0';
     
-    log_write(LOG_STDOUT, "Adding %s port %hu/%s%s\n",
+    log_write(LOG_STDOUT, "Discovered %s port %hu/%s%s%s\n",
 	      statenum2str(state), portno, 
-	      proto2ascii(protocol), msg);
+	      proto2ascii(protocol), msg, idstr? idstr : "");
     log_flush(LOG_STDOUT);
     
     /* Write out add port messages for XML format so wrapper libraries can
@@ -393,8 +400,8 @@ int PortList::addPort(u16 portno, u8 protocol, char *owner, int state) {
 
 
 /* Make sure state is OK */
-  if (state != PORT_OPEN && state != PORT_CLOSED && state != PORT_FIREWALLED &&
-      state != PORT_UNFIREWALLED)
+  if (state != PORT_OPEN && state != PORT_CLOSED && state != PORT_FILTERED &&
+      state != PORT_UNFILTERED && state != PORT_OPENFILTERED)
     fatal("addPort: attempt to add port number %d with illegal state %d\n", portno, state);
 
   if (protocol == IPPROTO_TCP) {
@@ -484,6 +491,19 @@ int PortList::removePort(u16 portno, u8 protocol) {
   return 0;
 }
 
+  /* Saves an identification string for the target containing these
+     ports (an IP addrss might be a good example, but set what you
+     want).  Only used when printing new port updates.  Optional.  A
+     copy is made. */
+void PortList::setIdStr(const char *id) {
+  int len = 0;
+  if (idstr) free(idstr);
+  if (!id) { idstr = NULL; return; }
+  len = strlen(id);
+  len += 5; // " on " + \0
+  idstr = (char *) safe_malloc(len);
+  snprintf(idstr, len, " on %s", id);
+}
 
 Port *PortList::lookupPort(u16 portno, u8 protocol) {
 
@@ -501,17 +521,18 @@ Port *PortList::lookupPort(u16 portno, u8 protocol) {
 
 int PortList::getIgnoredPortState() {
   int ignored = PORT_UNKNOWN;
+  int ignoredNum = 0;
+  int i;
+  for(i=0; i < PORT_HIGHEST_STATE; i++) {
+    if (i == PORT_OPEN || i == PORT_UNKNOWN || i == PORT_TESTING || 
+	i == PORT_FRESH) continue; /* Cannot be ignored */
+    if (state_counts[i] > ignoredNum) {
+      ignored = i;
+      ignoredNum = state_counts[i];
+    }
+  }
 
-  if (state_counts[PORT_FIREWALLED] > 10 + 
-      MAX(state_counts[PORT_UNFIREWALLED], 
-	  state_counts[PORT_CLOSED])) {
-    ignored = PORT_FIREWALLED;
-  } else if (state_counts[PORT_UNFIREWALLED] > 
-	     state_counts[PORT_CLOSED]) {
-    ignored = PORT_UNFIREWALLED;
-  } else ignored = PORT_CLOSED;
-
-  if (state_counts[ignored] < 10)
+  if (state_counts[ignored] < 15)
     ignored = PORT_UNKNOWN;
 
   return ignored;
@@ -570,5 +591,32 @@ if ((allowed_protocol == 0 || allowed_protocol == IPPROTO_UDP) &&
 
 /*  No more ports */
 return NULL;
+}
+
+// Move some popular TCP ports to the beginning of the portlist, because
+// that can speed up certain scans.  You should have already done any port
+// randomization, this should prevent the ports from always coming out in the
+// same order.
+void random_port_cheat(u16 *ports, int portcount) {
+  int allportidx = 0;
+  int popportidx = 0;
+  int earlyreplidx = 0;
+  u16 pop_ports[] = { 21, 22, 23, 25, 53, 80, 113, 256, 389, 443, 554, 636, 1723, 3389 };
+  int num_pop_ports = sizeof(pop_ports) / sizeof(u16);
+
+  for(allportidx = 0; allportidx < portcount; allportidx++) {
+    // see if the currentport is a popular port
+    for(popportidx = 0; popportidx < num_pop_ports; popportidx++) {
+      if (ports[allportidx] == pop_ports[popportidx]) {
+	// This one is popular!  Swap it near to the beginning.
+	if (allportidx != earlyreplidx) {
+	  ports[allportidx] = ports[earlyreplidx];
+	  ports[earlyreplidx] = pop_ports[popportidx];
+	}
+	earlyreplidx++;
+	break;
+      }
+    }
+  }
 }
 

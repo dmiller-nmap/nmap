@@ -231,7 +231,14 @@ void hoststructfry(Target *hostbatch[], int nelem) {
   return;
 }
 
-Target *nexthost(HostGroupState *hs, 
+/* Returns the last host obtained by nexthost.  It will be given again the next
+   time you call nexthost(). */
+void returnhost(HostGroupState *hs) {
+  assert(hs->next_batch_no > 0);
+  hs->next_batch_no--;
+}
+
+Target *nexthost(HostGroupState *hs,
 			    struct scan_lists *ports, int *pingtype) {
 int hidx;
 char *device;
@@ -268,10 +275,7 @@ do {
 	   3) We are doing a raw-mode portscan or osscan OR
 	   4) We are on windows and doing ICMP ping */
 	if (o.isr00t && o.af() == AF_INET && 
-	    ((*pingtype & (PINGTYPE_TCP|PINGTYPE_UDP)) || 
-	     o.synscan || o.finscan || o.xmasscan || o.nullscan || 
-	     o.ipprotscan || o.maimonscan || o.idlescan || o.ackscan || 
-	     o.udpscan || o.osscan || o.windowscan
+	    ((*pingtype & (PINGTYPE_TCP|PINGTYPE_UDP)) || o.RawScan()
 #ifdef WIN32
          || (*pingtype & (PINGTYPE_ICMP_PING|PINGTYPE_ICMP_MASK|PINGTYPE_ICMP_TS))
 #endif // WIN32
@@ -342,9 +346,7 @@ if (hs->randomize) {
       (*pingtype != PINGTYPE_NONE))) 
    massping(hs->hostbatch, hs->current_batch_sz, ports, *pingtype);
  else for(i=0; i < hs->current_batch_sz; i++)  {
-   hs->hostbatch[i]->to.srtt = -1;
-   hs->hostbatch[i]->to.rttvar = -1;
-   hs->hostbatch[i]->to.timeout = o.initialRttTimeout() * 1000;
+   initialize_timeout_info(&hs->hostbatch[i]->to);
    hs->hostbatch[i]->flags |= HOST_UP; /*hostbatch[i].up = 1;*/
  }
  return hs->hostbatch[hs->next_batch_no++];
@@ -477,10 +479,8 @@ if (ptech.icmpscan) {
 if (!to.srtt && !to.rttvar && !to.timeout) {
   /*  to.srtt = 800000;
       to.rttvar = 500000; */ /* we will init these when we get real data */
-  to.timeout = o.initialRttTimeout() * 1000;
-  to.srtt = -1;
-  to.rttvar = -1;
-} 
+  initialize_timeout_info(&to);
+}
 
 /* Init our raw socket */
 if (o.numdecoys > 1 || ptech.rawtcpscan || ptech.rawicmpscan || ptech.rawudpscan) {
@@ -1275,7 +1275,7 @@ int get_ping_results(int sd, pcap_t *pd, Target *hostbatch[], int pingtype,
 	    /* Since this gives an idea of how long it takes to get an answer,
 	       we add it into our times */
 	    newstate = HOST_DOWN;
-	    newportstate = PORT_FIREWALLED;
+	    newportstate = PORT_FILTERED;
 	  }
 	} else if (ping->type == 11) {
 	  if (o.debugging) 

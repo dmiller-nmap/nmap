@@ -2268,7 +2268,7 @@ T7(DF=N%W=0%ACK=O|S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=F%ULEN=134%DAT=E)
 
 Fingerprint Cisco 7200 router running IOS 12.1(14)E6
-Class Cisco | IOS | 12.X | router   
+Class Cisco | IOS | 12.X | router
 TSeq(Class=TR%gcd=<6%IPID=Z%TS=U)
 T1(DF=N%W=1020%ACK=S++%Flags=AS%Ops=ME)
 T2(Resp=N)

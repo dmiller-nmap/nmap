@@ -1789,7 +1789,7 @@ ports 1352
 # Lotus Notes domino 5.0.11
 # Lotus Server 6.0.1
 # Lotus Domino (r) Server (Release 6.0.1CF1 for Windows/32
-match lotusnotes m|^.\0\0\0.\0\0\0\x03\0\0@\x02\x0f\0.\x009......\x03\0\0\0\0\x02\0/\0.\0\0\0\0\0\0\0@\x1f.*CN=([-.\w]+)/O=([-.\w]+)[^-.\w]|s v/Lotus Domino server//CN=$1;Org=$2/
+match lotusnotes m|^.\0\0\0.\0\0\0\x03\0\0@\x02\x0f\0.\x009......\x03\0\0\0\0\x02\0/\0.\0\0\0\0\0\0\0@\x1f.*CN=([-.\w ]+)/O=([-.\w ]+)[^-.\w ]|s v/Lotus Domino server//CN=$1;Org=$2/
 ##############################NEXT PROBE##############################
 Probe UDP Sqlping q|\x02|
 ports 1434

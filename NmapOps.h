@@ -111,6 +111,12 @@ class NmapOps {
   const struct in_addr *v4sourceip();
   bool TCPScan(); /* Returns true if at least one chosen scan type is TCP */
   bool UDPScan(); /* Returns true if at least one chosen scan type is UDP */
+
+  /* Returns true if at least one chosen scan type uses raw packets.
+     Itdoes not currently cover cases such as TCP SYN ping scan which
+     can go either way based on whether the user is root or IPv6 is
+     being used.  It will return false in those cases where a RawScan
+     is not neccessarily used. */
   bool RawScan();
   void ValidateOptions(); /* Checks that the options given are
                              reasonable and consistant.  If they aren't, the
@@ -130,7 +136,7 @@ class NmapOps {
   int spoofsource; /* -S used */
   char device[64];
   int interactivemode;
-  int host_group_sz;
+  int ping_group_sz;
   int generate_random_ips; /* -iR option */
   FingerPrint **reference_FPs;
   u16 magic_port;

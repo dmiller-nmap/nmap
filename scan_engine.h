@@ -94,6 +94,10 @@
 #include "tcpip.h"
 #include "global_structures.h"
 
+/* 3rd generation Nmap scanning function.  Handles most Nmap port scan types */
+void ultra_scan(vector<Target *> &Targets, struct scan_lists *ports, 
+		stype scantype);
+
 /* Handles the "positive-response" scans (where we get a response
    telling us that the port is open based on the probe.  This includes
    SYN Scan, Connect Scan, RPC scan, Window Scan, and ACK scan */
@@ -110,5 +114,16 @@ void bounce_scan(Target *target, u16 *portarray, int numports,
    includes scans such as FIN/XMAS/NULL/Maimon/UDP and IP Proto scans */
 void super_scan(Target *target, u16 *portarray, int numports,
 		stype scantype);
+
+/* Determines an ideal number of hosts to be scanned (port scan, os
+   scan, version detection, etc.) in parallel after the ping scan is
+   completed.  This is a balance between efficiency (more hosts in
+   parallel often reduces scan time per host) and results latency (you
+   need to wait for all hosts to finish before Nmap can spit out the
+   results).  Memory consumption usually also increases with the
+   number of hosts scanned in parallel, though rarely to significant
+   levels. */
+int determineScanGroupSize(int hosts_scanned_so_far, 
+			   struct scan_lists *ports);
 
 #endif /* SCAN_ENGINE_H */

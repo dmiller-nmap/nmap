@@ -179,6 +179,7 @@ static int parse_bounce_argument(struct ftpinfo *ftp, char *url) {
 int nmap_main(int argc, char *argv[]) {
   char *p, *q;
   int i, arg;
+  unsigned int targetno;
   size_t j, argvlen;
   FILE *inputfd = NULL;
   char *host_spec;
@@ -189,8 +190,8 @@ int nmap_main(int argc, char *argv[]) {
   char *idleProxy = NULL; /* The idle host used to "Proxy" an Idlescan */
   int num_host_exp_groups = 0;
   char *machinefilename = NULL, *kiddiefilename = NULL, 
-       *normalfilename = NULL, *xmlfilename = NULL;
-  HostGroupState *hstate;
+    *normalfilename = NULL, *xmlfilename = NULL;
+  HostGroupState *hstate = NULL;
   int numhosts_up = 0;
   int starttime;
   struct scan_lists *ports = NULL;
@@ -205,10 +206,12 @@ int nmap_main(int argc, char *argv[]) {
   struct hostent *target = NULL;
   char **fakeargv;
   Target *currenths;
+  vector<Target *> Targets;
   char *proberr;
   char emptystring[1];
   int sourceaddrwarning = 0; /* Have we warned them yet about unguessable
 				source addresses? */
+  unsigned int ideal_scan_group_sz = 0;
   char hostname[MAXHOSTNAMELEN + 1] = "";
   time_t timep;
   char mytime[128];
@@ -216,56 +219,56 @@ int nmap_main(int argc, char *argv[]) {
   size_t sslen;
   int option_index;
   struct option long_options[] =
-  {
-    {"version", no_argument, 0, 'V'},
-    {"verbose", no_argument, 0, 'v'},
-    {"datadir", required_argument, 0, 0},
-    {"debug", optional_argument, 0, 'd'},
-    {"help", no_argument, 0, 'h'},
-    {"max_parallelism", required_argument, 0, 'M'},
-    {"min_parallelism", required_argument, 0, 0},
-    {"timing", required_argument, 0, 'T'},
-    {"max_rtt_timeout", required_argument, 0, 0},
-    {"min_rtt_timeout", required_argument, 0, 0},
-    {"initial_rtt_timeout", required_argument, 0, 0},
-    {"scanflags", required_argument, 0, 0},
-    {"host_timeout", required_argument, 0, 0},
-    {"scan_delay", required_argument, 0, 0},
-    {"oA", required_argument, 0, 0},  
-    {"oN", required_argument, 0, 0},
-    {"oM", required_argument, 0, 0},  
-    {"oG", required_argument, 0, 0},  
-    {"oS", required_argument, 0, 0},
-    {"oH", required_argument, 0, 0},  
-    {"oX", required_argument, 0, 0},  
-    {"iL", required_argument, 0, 0},  
-    {"iR", required_argument, 0, 0},
-    {"sI", required_argument, 0, 0},  
-    {"source_port", required_argument, 0, 'g'},
-    {"randomize_hosts", no_argument, 0, 0},
-    {"osscan_limit", no_argument, 0, 0}, /* skip OSScan if no open ports */
-    {"osscan_guess", no_argument, 0, 0}, /* More guessing flexability */
-    {"packet_trace", no_argument, 0, 0}, /* Display all packets sent/rcv */
-    {"version_trace", no_argument, 0, 0}, /* Display -sV related activity */
-    {"fuzzy", no_argument, 0, 0}, /* Alias for osscan_guess */
-    {"data_length", required_argument, 0, 0},
-    {"rH", no_argument, 0, 0},
-    {"vv", no_argument, 0, 0},
-    {"append_output", no_argument, 0, 0},
-    {"noninteractive", no_argument, 0, 0},
-    {"ttl", required_argument, 0, 0}, /* Time to live */
+    {
+      {"version", no_argument, 0, 'V'},
+      {"verbose", no_argument, 0, 'v'},
+      {"datadir", required_argument, 0, 0},
+      {"debug", optional_argument, 0, 'd'},
+      {"help", no_argument, 0, 'h'},
+      {"max_parallelism", required_argument, 0, 'M'},
+      {"min_parallelism", required_argument, 0, 0},
+      {"timing", required_argument, 0, 'T'},
+      {"max_rtt_timeout", required_argument, 0, 0},
+      {"min_rtt_timeout", required_argument, 0, 0},
+      {"initial_rtt_timeout", required_argument, 0, 0},
+      {"scanflags", required_argument, 0, 0},
+      {"host_timeout", required_argument, 0, 0},
+      {"scan_delay", required_argument, 0, 0},
+      {"oA", required_argument, 0, 0},  
+      {"oN", required_argument, 0, 0},
+      {"oM", required_argument, 0, 0},  
+      {"oG", required_argument, 0, 0},  
+      {"oS", required_argument, 0, 0},
+      {"oH", required_argument, 0, 0},  
+      {"oX", required_argument, 0, 0},  
+      {"iL", required_argument, 0, 0},  
+      {"iR", required_argument, 0, 0},
+      {"sI", required_argument, 0, 0},  
+      {"source_port", required_argument, 0, 'g'},
+      {"randomize_hosts", no_argument, 0, 0},
+      {"osscan_limit", no_argument, 0, 0}, /* skip OSScan if no open ports */
+      {"osscan_guess", no_argument, 0, 0}, /* More guessing flexability */
+      {"packet_trace", no_argument, 0, 0}, /* Display all packets sent/rcv */
+      {"version_trace", no_argument, 0, 0}, /* Display -sV related activity */
+      {"fuzzy", no_argument, 0, 0}, /* Alias for osscan_guess */
+      {"data_length", required_argument, 0, 0},
+      {"rH", no_argument, 0, 0},
+      {"vv", no_argument, 0, 0},
+      {"append_output", no_argument, 0, 0},
+      {"noninteractive", no_argument, 0, 0},
+      {"ttl", required_argument, 0, 0}, /* Time to live */
 #ifdef WIN32
-    {"win_list_interfaces", no_argument, 0, 0},
-    {"win_norawsock", no_argument, 0, 0}, 
-    {"win_forcerawsock", no_argument, 0, 0}, 
-    {"win_nopcap", no_argument, 0, 0}, 
-    {"win_nt4route", no_argument, 0, 0}, 
-    {"win_noiphlpapi", no_argument, 0, 0}, 
-    {"win_help", no_argument, 0, 0},
-    {"win_trace", no_argument, 0, 0},
+      {"win_list_interfaces", no_argument, 0, 0},
+      {"win_norawsock", no_argument, 0, 0}, 
+      {"win_forcerawsock", no_argument, 0, 0}, 
+      {"win_nopcap", no_argument, 0, 0}, 
+      {"win_nt4route", no_argument, 0, 0}, 
+      {"win_noiphlpapi", no_argument, 0, 0}, 
+      {"win_help", no_argument, 0, 0},
+      {"win_trace", no_argument, 0, 0},
 #endif
-    {0, 0, 0, 0}
-  };
+      {0, 0, 0, 0}
+    };
 
   /* argv faking silliness */
   fakeargv = (char **) safe_malloc(sizeof(char *) * (argc + 1));
@@ -277,6 +280,7 @@ int nmap_main(int argc, char *argv[]) {
   emptystring[0] = '\0'; /* It wouldn't be an emptystring w/o this ;) */
 
   if (argc < 2 ) printusage(argv[0], -1);
+  Targets.reserve(100);
 
   /* OK, lets parse these args! */
   optind = 1; /* so it can be called multiple times */
@@ -322,8 +326,8 @@ int nmap_main(int argc, char *argv[]) {
 	if (o.ttl < 0 || o.ttl > 255) {
 	  fatal("ttl option must be a number between 0 and 255 (inclusive)");
 	}
-     } else if (strcmp(long_options[option_index].name, "datadir") == 0) {
-       o.datadir = strdup(optarg);
+      } else if (strcmp(long_options[option_index].name, "datadir") == 0) {
+	o.datadir = strdup(optarg);
 #ifdef WIN32
       } else if (strcmp(long_options[option_index].name, "win_list_interfaces") == 0 ) { 
 	wo.listinterfaces = 1; 
@@ -363,7 +367,7 @@ int nmap_main(int argc, char *argv[]) {
       } else if (strcmp(long_options[option_index].name, "randomize_hosts") == 0
 		 || strcmp(long_options[option_index].name, "rH") == 0) {
 	o.randomize_hosts = 1;
-	o.host_group_sz = HOST_GROUP_SZ * 4;
+	o.ping_group_sz = PING_GROUP_SZ * 4;
       } else if (strcmp(long_options[option_index].name, "osscan_limit")  == 0) {
 	o.osscan_limit = 1;
       } else if (strcmp(long_options[option_index].name, "osscan_guess")  == 0
@@ -658,10 +662,12 @@ int nmap_main(int argc, char *argv[]) {
       } else if (*optarg == '3' || (strcasecmp(optarg, "Normal") == 0)) {
       } else if (*optarg == '4' || (strcasecmp(optarg, "Aggressive") == 0)) {
 	o.timing_level = 4;
+	o.setMinRttTimeout(100);
 	o.setMaxRttTimeout(1250);
 	o.setInitialRttTimeout(800);
       } else if (*optarg == '5' || (strcasecmp(optarg, "Insane") == 0)) {
 	o.timing_level = 5;
+	o.setMinRttTimeout(50);
 	o.setMaxRttTimeout(300);
 	o.setInitialRttTimeout(300);
 	o.host_timeout = 900000;
@@ -831,7 +837,7 @@ int nmap_main(int argc, char *argv[]) {
   /* Before we randomize the ports scanned, lets output them to machine 
      parseable output */
   if (o.verbose)
-     output_ports_to_machine_parseable_output(ports, o.windowscan|o.synscan|o.connectscan|o.fragscan|o.finscan|o.maimonscan|o.bouncescan|o.nullscan|o.xmasscan|o.ackscan|o.idlescan,o.udpscan,o.ipprotscan);
+    output_ports_to_machine_parseable_output(ports, o.TCPScan(), o.udpscan, o.ipprotscan);
 
   /* more fakeargv junk, BTW malloc'ing extra space in argv[0] doesn't work */
   if (quashargv) {
@@ -861,51 +867,82 @@ int nmap_main(int argc, char *argv[]) {
 
 
   if  (randomize) {
-    if (ports->tcp_count) 
-	    shortfry(ports->tcp_ports, ports->tcp_count); 
+    if (ports->tcp_count) {
+      shortfry(ports->tcp_ports, ports->tcp_count); 
+      // move a few more common ports closer to the beginning to speed scan
+      random_port_cheat(ports->tcp_ports, ports->tcp_count);
+    }
     if (ports->udp_count) 
-	    shortfry(ports->udp_ports, ports->udp_count); 
+      shortfry(ports->udp_ports, ports->udp_count); 
     if (ports->prot_count) 
-	    shortfry(ports->prots, ports->prot_count); 
+      shortfry(ports->prots, ports->prot_count); 
   }
-
+  
   starttime = time(NULL);
-
+  
   /* Time to create a hostgroup state object filled with all the requested
      machines */
-  host_exp_group = (char **) safe_malloc(o.host_group_sz * sizeof(char *));
+  host_exp_group = (char **) safe_malloc(o.ping_group_sz * sizeof(char *));
 
-  while(!o.max_ips_to_scan || o.max_ips_to_scan > numhosts_scanned) {
-    while(num_host_exp_groups < o.host_group_sz &&
-	  (host_spec = grab_next_host_spec(inputfd, argc, fakeargv))) {
-      host_exp_group[num_host_exp_groups++] = strdup(host_spec);
-      // For purposes of random scan
-      if (o.max_ips_to_scan && o.max_ips_to_scan <= numhosts_scanned + num_host_exp_groups)
-	break;
-    }
-    if (num_host_exp_groups == 0)
+  while(num_host_exp_groups < o.ping_group_sz &&
+	(host_spec = grab_next_host_spec(inputfd, argc, fakeargv))) {
+    host_exp_group[num_host_exp_groups++] = strdup(host_spec);
+    // For purposes of random scan
+    if (o.max_ips_to_scan && o.max_ips_to_scan <= numhosts_scanned + num_host_exp_groups)
       break;
-  
-    hstate = new HostGroupState(o.host_group_sz, o.randomize_hosts,
-				host_exp_group, num_host_exp_groups);
+  }
 
-    while((currenths = nexthost(hstate, ports, &(o.pingtype)))) {
+  if (num_host_exp_groups == 0)
+    fatal("No target machines/networks specified!");
+  hstate = new HostGroupState(o.ping_group_sz, o.randomize_hosts,
+			      host_exp_group, num_host_exp_groups);
+
+  do {
+    ideal_scan_group_sz = determineScanGroupSize(numhosts_scanned, ports);
+    while(Targets.size() < ideal_scan_group_sz) {
+      currenths = nexthost(hstate, ports, &(o.pingtype));
+      if (!currenths) {
+	/* Try to refill with any remaining expressions */
+	/* First free the old ones */
+	for(i=0; i < num_host_exp_groups; i++)
+	  free(host_exp_group[i]);
+	num_host_exp_groups = 0;
+	/* Now grab any new expressions */
+	while(num_host_exp_groups < o.ping_group_sz &&
+	      (host_spec = grab_next_host_spec(inputfd, argc, fakeargv))) {
+	  host_exp_group[num_host_exp_groups++] = strdup(host_spec);
+	  // For purposes of random scan
+	  if (o.max_ips_to_scan && o.max_ips_to_scan <= numhosts_scanned + num_host_exp_groups)
+	    break;
+	}
+	if (num_host_exp_groups == 0)
+	  break;
+	delete hstate;
+	hstate = new HostGroupState(o.ping_group_sz, o.randomize_hosts,
+				    host_exp_group, num_host_exp_groups);
+      
+	/* Try one last time -- with new expressions */
+	currenths = nexthost(hstate, ports, &(o.pingtype));
+	if (!currenths)
+	  break;
+      }
       numhosts_scanned++;
+    
       if (currenths->flags & HOST_UP && !o.listscan) 
 	numhosts_up++;
-      
+    
       /* Set timeout info */
       currenths->timedout = 0;
       if (o.host_timeout) {
 	gettimeofday(&currenths->host_timeout, NULL);
-	
+      
 	/* Must go through all this to avoid int overflow */
 	currenths->host_timeout.tv_sec += o.host_timeout / 1000;
 	currenths->host_timeout.tv_usec += (o.host_timeout % 1000) * 1000;
 	currenths->host_timeout.tv_sec += currenths->host_timeout.tv_usec / 1000000;
 	currenths->host_timeout.tv_usec %= 1000000;
       }
-      
+    
       /* Lookup the IP */
       if (((currenths->flags & HOST_UP) || resolve_all) && !o.noresolve) {
 	if (currenths->TargetSockAddr(&ss, &sslen) != 0)
@@ -915,130 +952,171 @@ int nmap_main(int argc, char *argv[]) {
 	  currenths->setHostName(hostname);
 	}
       }
-
+    
+      if (o.pingscan || o.listscan) {
+	/* We're done with the hosts */
+	log_write(LOG_XML, "<host>");
+	write_host_status(currenths, resolve_all);
+	printmacinfo(currenths);
+	if (currenths->flags & HOST_UP)
+	  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT|LOG_MACHINE,"\n");
+	log_write(LOG_XML, "</host>\n");
+	continue;
+      }
+    
       if (o.spoofsource) {
 	o.SourceSockAddr(&ss, &sslen);
 	currenths->setSourceSockAddr(&ss, sslen);
       }
-
-      log_write(LOG_XML, "<host>");
-      write_host_status(currenths, resolve_all);
-      
-      /* The !currenths->wierd_responses was commented out after I found
-	 a smurf address which DID allow port scanninng and you could even
-	 telnetthere.  wierd :0 
-	 IGNORE THAT COMMENT!  The check is back again ... for now 
-	 NOPE -- gone again */
-      
-      if (currenths->flags & HOST_UP /*&& !currenths->wierd_responses*/ &&
-	  !o.pingscan && !o.listscan) {
-	
-	if ((currenths->flags & HOST_UP) && o.af() == AF_INET && currenths->SourceSockAddr(NULL, NULL) != 0 && ( o.windowscan || o.synscan || o.idlescan || o.finscan || o.maimonscan || o.udpscan || o.nullscan || o.xmasscan || o.ackscan || o.ipprotscan || o.osscan)) {
-	  if (o.SourceSockAddr(&ss, &sslen) == 0) {
-	    currenths->setSourceSockAddr(&ss, sslen);
-	  } else {	  
-	    if (gethostname(myname, MAXHOSTNAMELEN) || 
-		resolve(myname, &ss, &sslen, o.af()) == 0)
-	      fatal("Cannot get hostname!  Try using -S <my_IP_address> or -e <interface to scan through>\n"); 
+    
+      /* I used to check that !currenths->wierd_responses, but in some
+	 rare cases, such IPs CAN be port successfully scanned and even connected to */
+      if (currenths->flags & HOST_UP) {
+	if (o.af() == AF_INET && o.RawScan()) { 
+	  if (currenths->SourceSockAddr(NULL, NULL) != 0) {
+	    if (o.SourceSockAddr(&ss, &sslen) == 0) {
+	      currenths->setSourceSockAddr(&ss, sslen);
+	    } else {
+	      if (gethostname(myname, MAXHOSTNAMELEN) || 
+		  resolve(myname, &ss, &sslen, o.af()) == 0)
+		fatal("Cannot get hostname!  Try using -S <my_IP_address> or -e <interface to scan through>\n"); 
 	    
-	    o.setSourceSockAddr(&ss, sslen);
-	    currenths->setSourceSockAddr(&ss, sslen);
-	    if (! sourceaddrwarning) {
-	      fprintf(stderr, "WARNING:  We could not determine for sure which interface to use, so we are guessing %s .  If this is wrong, use -S <my_IP_address>.\n", inet_socktop(&ss));
-	      sourceaddrwarning = 1;
+	      o.setSourceSockAddr(&ss, sslen);
+	      currenths->setSourceSockAddr(&ss, sslen);
+	      if (! sourceaddrwarning) {
+		fprintf(stderr, "WARNING:  We could not determine for sure which interface to use, so we are guessing %s .  If this is wrong, use -S <my_IP_address>.\n", inet_socktop(&ss));
+		sourceaddrwarning = 1;
+	      }
 	    }
 	  }
+	  if (!*currenths->device)
+	    if (ipaddr2devname( currenths->device, currenths->v4sourceip()) != 0)
+	      fatal("Could not figure out what device to send the packet out on!  You might possibly want to try -S (but this is probably a bigger problem).  If you are trying to sp00f the source of a SYN/FIN scan with -S <fakeip>, then you must use -e eth0 (or other devicename) to tell us what interface to use.\n");
+	
+	  /* Groups should generally use the same device as properties
+	     change quite a bit between devices.  Plus dealing with a
+	     multi-device group can be a pain programmatically. So if
+	     this Target has a different device the rest, we give it
+	     back. */
+	  if (Targets.size() > 0 && strcmp(Targets[Targets.size() - 1]->device, currenths->device)) {
+	    returnhost(hstate);
+	    numhosts_scanned--; numhosts_up--;
+	    break;
+	  }
+	  o.decoys[o.decoyturn] = currenths->v4source();
 	}
-	
-	/* Figure out what link-layer device (interface) to use (ie eth0, ppp0, etc) */
-	if (!*currenths->device && currenths->flags & HOST_UP && (o.nullscan || o.xmasscan || o.ackscan || o.udpscan || o.idlescan || o.finscan || o.maimonscan ||  o.synscan || o.osscan || o.windowscan || o.ipprotscan) && (ipaddr2devname( currenths->device, currenths->v4sourceip()) != 0))
-	  fatal("Could not figure out what device to send the packet out on!  You might possibly want to try -S (but this is probably a bigger problem).  If you are trying to sp00f the source of a SYN/FIN scan with -S <fakeip>, then you must use -e eth0 (or other devicename) to tell us what interface to use.\n");
-	/* Set up the decoy */
-	o.decoys[o.decoyturn] = currenths->v4source();
-	
-	/* Time for some actual scanning! */    
-	if (o.synscan) pos_scan(currenths, ports->tcp_ports, ports->tcp_count, SYN_SCAN);
-	if (o.windowscan) pos_scan(currenths, ports->tcp_ports, ports->tcp_count, WINDOW_SCAN);
-	if (o.connectscan) pos_scan(currenths, ports->tcp_ports, ports->tcp_count, CONNECT_SCAN);
-	if (o.ackscan) pos_scan(currenths, ports->tcp_ports, ports->tcp_count, ACK_SCAN); 
-	if (o.finscan) super_scan(currenths, ports->tcp_ports, ports->tcp_count, FIN_SCAN);
-	if (o.xmasscan) super_scan(currenths, ports->tcp_ports, ports->tcp_count, XMAS_SCAN);
-	if (o.nullscan) super_scan(currenths, ports->tcp_ports, ports->tcp_count, NULL_SCAN);
-	if (o.maimonscan) super_scan(currenths, ports->tcp_ports, 
-				     ports->tcp_count, MAIMON_SCAN);
-	if (o.udpscan) super_scan(currenths, ports->udp_ports, 
-				  ports->udp_count, UDP_SCAN);
-	if (o.ipprotscan) super_scan(currenths, ports->prots, 
-				     ports->prot_count, IPPROT_SCAN);
-
-	if (o.idlescan) idle_scan(currenths, ports->tcp_ports, 
-				  ports->tcp_count, idleProxy);
-
-	if (o.bouncescan) {
-	  if (ftp.sd <= 0) ftp_anon_connect(&ftp);
-	  if (ftp.sd > 0) bounce_scan(currenths, ports->tcp_ports, 
-				      ports->tcp_count, &ftp);
-	}
-	
-
-	if (o.servicescan) {
-	  // Application fingerprinting is desired.
-	  // service_scan takes an "array" of Targets.  Someday I'll actually pass more than
-	  // one.
-	  service_scan(&currenths, 1); 
-	}
-
-	/* This scantype must be after any TCP or UDP scans since it
-	 * get's it's port scan list from the open port list of the current
-	 * host rather than port list the user specified.
-	 */
-	if (o.servicescan || o.rpcscan)  pos_scan(currenths, NULL, 0, RPC_SCAN);
-
-	
-	if (o.osscan) {
-	  os_scan(currenths);
-	}
-	
-	if (currenths->timedout) {
-	  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Skipping host %s due to host timeout\n", currenths->NameIP(hostname, sizeof(hostname)));
-	  log_write(LOG_MACHINE,"Host: %s (%s)\tStatus: Timeout", 
-		    currenths->targetipstr(), currenths->HostName());
-	} else {
-	  printportoutput(currenths, &currenths->ports);
-	  printmacinfo(currenths);
-	  printosscanoutput(currenths);
- 	}      
-
-	if (o.debugging) log_write(LOG_STDOUT, "Final times for host: srtt: %d rttvar: %d  to: %d\n", currenths->to.srtt, currenths->to.rttvar, currenths->to.timeout);
-	log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT|LOG_MACHINE,"\n");
+	Targets.push_back(currenths);
       }
+    }
   
-      
-      log_write(LOG_XML, "</host>\n");
-  
-      log_flush_all();
-      delete currenths;
+    if (Targets.size() == 0)
+      break; /* Couldn't find any more targets */
 
-      if (o.max_ips_to_scan && numhosts_scanned >= o.max_ips_to_scan) break;
+    // Our source must be set in decoy list because nexthost() call can
+    // change it (that issue really should be fixed when possible)
+    if (o.af() == AF_INET && o.RawScan())
+      o.decoys[o.decoyturn] = Targets[0]->v4source();
 
+    /* I now have the group for scanning in the Targets vector */
+    /* TODO: Add parallel-capable scans here */
+    if (o.synscan)
+      ultra_scan(Targets, ports, SYN_SCAN);
+
+    if (o.ackscan)
+      ultra_scan(Targets, ports, ACK_SCAN);
+
+    if (o.windowscan)
+      ultra_scan(Targets, ports, WINDOW_SCAN);
+
+    if (o.finscan)
+      ultra_scan(Targets, ports, FIN_SCAN);
+
+    if (o.xmasscan)
+      ultra_scan(Targets, ports, XMAS_SCAN);
+
+    if (o.nullscan)
+      ultra_scan(Targets, ports, NULL_SCAN);
+
+    if (o.maimonscan)
+      ultra_scan(Targets, ports, MAIMON_SCAN);
+
+    if (o.udpscan)
+      ultra_scan(Targets, ports, UDP_SCAN);
+
+    if (o.connectscan)
+      ultra_scan(Targets, ports, CONNECT_SCAN);
+
+    if (o.ipprotscan)
+      ultra_scan(Targets, ports, IPPROT_SCAN);
+
+   /* These lame functions can only handle one target at a time */
+    for(targetno = 0; targetno < Targets.size(); targetno++) {
+      currenths = Targets[targetno];
+      if (o.idlescan) idle_scan(currenths, ports->tcp_ports, 
+				ports->tcp_count, idleProxy);
+      if (o.bouncescan) {
+	if (ftp.sd <= 0) ftp_anon_connect(&ftp);
+	if (ftp.sd > 0) bounce_scan(currenths, ports->tcp_ports, 
+				    ports->tcp_count, &ftp);
+      }
     }
 
-    delete hstate;
+    if (o.servicescan)
+      service_scan(Targets);
 
-    /* Free my host expressions */
-    for(i=0; i < num_host_exp_groups; i++)
-      free(host_exp_group[i]);
-    num_host_exp_groups = 0;
-  }
+    for(targetno = 0; targetno < Targets.size(); targetno++) {
+      currenths = Targets[targetno];
+    
+      /* This scantype must be after any TCP or UDP scans since it
+       * get's it's port scan list from the open port list of the current
+       * host rather than port list the user specified.
+       */
+      if (o.servicescan || o.rpcscan)  pos_scan(currenths, NULL, 0, RPC_SCAN);
 
+      // Should be host parallelized.  Though rarely takes a huge amt. of time.
+      if (o.osscan) 
+	os_scan(currenths);
+      
+    /* Now I can do the output and such for each host */
+      log_write(LOG_XML, "<host>");
+      write_host_status(currenths, resolve_all);
+      if (currenths->timedout) {
+	log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Skipping host %s due to host timeout\n", 
+		  currenths->NameIP(hostname, sizeof(hostname)));
+	log_write(LOG_MACHINE,"Host: %s (%s)\tStatus: Timeout", 
+		  currenths->targetipstr(), currenths->HostName());
+      } else {
+	printportoutput(currenths, &currenths->ports);
+	printmacinfo(currenths);
+	printosscanoutput(currenths);
+      }
+    
+      if (o.debugging) 
+	log_write(LOG_STDOUT, "Final times for host: srtt: %d rttvar: %d  to: %d\n", 
+		  currenths->to.srtt, currenths->to.rttvar, currenths->to.timeout);
+      log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT|LOG_MACHINE,"\n");
+      log_write(LOG_XML, "</host>\n");
+    }
+    log_flush_all();
+  
+    /* Free all of the Targets */
+    while(!Targets.empty()) {
+      currenths = Targets.back();
+      delete currenths;
+      Targets.pop_back();
+    }
+  } while(!o.max_ips_to_scan || o.max_ips_to_scan > numhosts_scanned);
+  
+  delete hstate;
+  hstate = NULL;
+
+  /* Free host expressions */
+  for(i=0; i < num_host_exp_groups; i++)
+    free(host_exp_group[i]);
+  num_host_exp_groups = 0;
   free(host_exp_group);
 
   printfinaloutput(numhosts_scanned, numhosts_up, starttime);
-
-  /* Free fake argv */
-  for(i=0; i < argc; i++)
-    free(fakeargv[i]);
-  free(fakeargv);
 
   if (ports) {
     free(ports->tcp_ports);
@@ -1047,9 +1125,14 @@ int nmap_main(int argc, char *argv[]) {
     free(ports);
   }
 
-  return 0;
-}
+  /* Free fake argv */
+  for(i=0; i < argc; i++)
+    free(fakeargv[i]);
+  free(fakeargv);
 
+  return 0;
+}      
+      
 
 /* Reads in a (normal or machine format) Nmap log file and gathers enough
    state to allow Nmap to continue where it left off.  The important things
@@ -1632,9 +1715,10 @@ char *scantype2str(stype scantype) {
 char *statenum2str(int state) {
   switch(state) {
   case PORT_OPEN: return "open"; break;
-  case PORT_FIREWALLED: return "filtered"; break;
-  case PORT_UNFIREWALLED: return "UNfiltered"; break;
+  case PORT_FILTERED: return "filtered"; break;
+  case PORT_UNFILTERED: return "UNfiltered"; break;
   case PORT_CLOSED: return "closed"; break;
+  case PORT_OPENFILTERED: return "open|filtered"; break;
   default: return "unknown"; break;
   }
   return "unknown";

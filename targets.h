@@ -181,6 +181,9 @@ void hoststructfry(Target *hostbatch[], int nelem);
 /* Ports is the list of ports the user asked to be scanned (0 terminated),
    you can just pass NULL (it is only a stupid optimization that needs it) */
 Target *nexthost(HostGroupState *hs, struct scan_lists *ports, int *pingtype);
+/* Returns the last host obtained by nexthost.  It will be given again the next
+   time you call nexthost(). */
+void returnhost(HostGroupState *hs);
 #endif /* TARGETS_H */
 
 

@@ -221,7 +221,6 @@ struct scan_lists {
 	int prot_count;
 };
 
-
 typedef enum { ACK_SCAN, SYN_SCAN, FIN_SCAN, XMAS_SCAN, UDP_SCAN, CONNECT_SCAN, NULL_SCAN, WINDOW_SCAN, RPC_SCAN, MAIMON_SCAN, IPPROT_SCAN } stype;
 
 #endif /*GLOBAL_STRUCTURES_H */

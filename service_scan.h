@@ -294,8 +294,8 @@ public:
 /**********************  PROTOTYPES  ***********************************/
 
 /* Execute a service fingerprinting scan against all open ports of the
-   targets[] specified. */
-int service_scan(Target *targets[], int num_targets);
+   Targets specified. */
+int service_scan(vector<Target *> &Targets);
 
 // Parses the given nmap-service-probes file into the AP class
 void parse_nmap_service_probe_file(AllProbes *AP, char *filename);

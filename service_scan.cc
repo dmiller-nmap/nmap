@@ -203,12 +203,13 @@ private:
 // This holds the service information for a group of Targets being service scanned.
 class ServiceGroup {
 public:
-  ServiceGroup(Target *targets[], int num_targets, AllProbes *AP);
+  ServiceGroup(vector<Target *> &Targets, AllProbes *AP);
   ~ServiceGroup();
   list<ServiceNFO *> services_finished; // Services finished (discovered or not)
   list<ServiceNFO *> services_in_progress; // Services currently being probed
   list<ServiceNFO *> services_remaining; // Probes not started yet
   unsigned int ideal_parallelism; // Max (and desired) number of probes out at once.
+  ScanProgressMeter *SPM;
   private:
 };
 
@@ -1391,19 +1392,28 @@ u8 *ServiceNFO::getcurrentproberesponse(int *respstrlen) {
 }
 
 
-ServiceGroup::ServiceGroup(Target *targets[], int num_targets, 
-			   AllProbes *AP) {
-  int targetno;
+ServiceGroup::ServiceGroup(vector<Target *> &Targets, AllProbes *AP) {
+  unsigned int targetno;
   ServiceNFO *svc;
   Port *nxtport;
   int desired_par;
 
-  for(targetno = 0 ; targetno < num_targets; targetno++) {
+  for(targetno = 0 ; targetno < Targets.size(); targetno++) {
     nxtport = NULL;
-    while((nxtport = targets[targetno]->ports.nextPort(nxtport, 0, PORT_OPEN,
+    while((nxtport = Targets[targetno]->ports.nextPort(nxtport, 0, PORT_OPEN,
 			      true))) {
       svc = new ServiceNFO(AP);
-      svc->target = targets[targetno];
+      svc->target = Targets[targetno];
+      svc->portno = nxtport->portno;
+      svc->proto = nxtport->proto;
+      svc->port = nxtport;
+      services_remaining.push_back(svc);
+    }
+    /* Handle any open|filtered ports (from UDP scan) */
+    while((nxtport = Targets[targetno]->ports.nextPort(nxtport, 0, 
+						       PORT_OPENFILTERED, true))) {
+      svc = new ServiceNFO(AP);
+      svc->target = Targets[targetno];
       svc->portno = nxtport->portno;
       svc->proto = nxtport->proto;
       svc->port = nxtport;
@@ -1411,6 +1421,7 @@ ServiceGroup::ServiceGroup(Target *targets[], int num_targets,
     }
   }
 
+  SPM = new ScanProgressMeter("Service scan");
   desired_par = 1;
   if (o.timing_level == 3) desired_par = 10;
   if (o.timing_level == 4) desired_par = 15;
@@ -1430,6 +1441,8 @@ ServiceGroup::~ServiceGroup() {
 
   for(i = services_remaining.begin(); i != services_remaining.end(); i++)
     delete *i;
+
+  delete SPM;
 }
 
   // Sends probe text to an open connection.  In the case of a NULL probe, there
@@ -1569,6 +1582,15 @@ static int scanThroughTunnel(nsock_pool nsp, nsock_iod nsi, ServiceGroup *SG,
   return 1;
 }
 
+/* Prints completion estimates and the like when appropriate */
+static void considerPrintingStats(ServiceGroup *SG) {
+  /* Perhaps this should be made more complex, but I suppose it should be
+     good enough for now. */
+  if (SG->SPM->mayBePrinted(nsock_gettimeofday())) {
+    SG->SPM->printStatsIfNeccessary(SG->services_finished.size() / ((double)SG->services_remaining.size() + SG->services_in_progress.size() + SG->services_finished.size()), nsock_gettimeofday());
+  }
+}
+
 // A simple helper function to cancel further work on a service and
 // set it to the given probe_state pass NULL for nsi if you don't want
 // it to be deleted (for example, if you already have done so).
@@ -1581,6 +1603,8 @@ void end_svcprobe(nsock_pool nsp, enum serviceprobestate probe_state, ServiceGro
   assert(*member);
   SG->services_in_progress.erase(member);
   SG->services_finished.push_back(svc);
+
+  considerPrintingStats(SG);
 
   if (nsi) {
     nsi_delete(nsi, NSOCK_PENDING_SILENT);
@@ -1680,6 +1704,20 @@ void servicescan_write_handler(nsock_pool nsp, nsock_event nse, void *mydata) {
   return;
 }
 
+/* Called if data is read for a service.  Checks if the service is UDP and
+   the port is in state PORT_OPENFILTERED.  If that is the case, the state
+   is changed to PORT_OPEN, as only an open port would return a response */
+static void adjustPortStateIfNeccessary(ServiceNFO *svc) {
+  if (svc->proto != IPPROTO_UDP)
+    return;
+
+  if (svc->port->state == PORT_OPENFILTERED) {
+    svc->target->ports.addPort(svc->portno, IPPROTO_UDP, NULL, PORT_OPEN);
+  }
+
+  return;
+}
+
 void servicescan_read_handler(nsock_pool nsp, nsock_event nse, void *mydata) {
   nsock_iod nsi = nse_iod(nse);
   enum nse_status status = nse_status(nse);
@@ -1697,6 +1735,7 @@ void servicescan_read_handler(nsock_pool nsp, nsock_event nse, void *mydata) {
   if (status == NSE_STATUS_SUCCESS) {
     // w00p, w00p, we read something back from the port.
     readstr = (u8 *) nse_readbuf(nse, &readstrlen);
+    adjustPortStateIfNeccessary(svc); /* A UDP response means PORT_OPENFILTERED is really PORT_OPEN */
     svc->appendtocurrentproberesponse(readstr, readstrlen);
     // now get the full version
     readstr = svc->getcurrentproberesponse(&readstrlen);
@@ -1919,8 +1958,9 @@ int launchSomeServiceProbes(nsock_pool nsp, ServiceGroup *SG) {
 
 
 /* Execute a service fingerprinting scan against all open ports of the
-   targets[] specified. */
-int service_scan(Target *targets[], int num_targets) {
+   Targets specified. */
+int service_scan(vector<Target *> &Targets) {
+  // int service_scan(Target *targets[], int num_targets)
   static AllProbes *AP;
   ServiceGroup *SG;
   nsock_pool nsp;
@@ -1929,12 +1969,12 @@ int service_scan(Target *targets[], int num_targets) {
   enum nsock_loopstatus looprc;
   time_t starttime;
 
-  if (num_targets <= 0)
+  if (Targets.size() == 0)
     return 1;
 
-  // TODO:  This might have to change once I actually start passing in
-  // more than one target.
-  if (targets[0]->timedout)
+  // TODO:  This might have to change once I figure out what to do about
+  // host timeouts.
+  if (Targets[0]->timedout)
     return 1;
 
   if (!AP) {
@@ -1943,7 +1983,7 @@ int service_scan(Target *targets[], int num_targets) {
   }
 
   // Now I convert the targets into a new ServiceGroup
-  SG = new ServiceGroup(targets, num_targets, AP);
+  SG = new ServiceGroup(Targets, AP);
 
   if (SG->services_remaining.size() == 0) {
     delete SG;
@@ -1952,8 +1992,17 @@ int service_scan(Target *targets[], int num_targets) {
 
   starttime = time(NULL);
   if (o.verbose) {
+    char targetstr[128];
     struct tm *tm = localtime(&starttime);
-    log_write(LOG_STDOUT, "Initiating service scan against %d %s on %d %s at %02d:%02d\n", SG->services_remaining.size(), (SG->services_remaining.size() == 1)? "service" : "services", num_targets, (num_targets == 1)? "host" : "hosts", tm->tm_hour, tm->tm_min);
+    bool plural = (Targets.size() != 1);
+    if (!plural) {
+      (*(Targets.begin()))->NameIP(targetstr, sizeof(targetstr));
+    } else snprintf(targetstr, sizeof(targetstr), "%d hosts", Targets.size());
+
+    log_write(LOG_STDOUT, "Initiating service scan against %d %s on %s at %02d:%02d\n", 
+	      SG->services_remaining.size(), 
+	      (SG->services_remaining.size() == 1)? "service" : "services", 
+	      targetstr, tm->tm_hour, tm->tm_min);
   }
 
   // Lets create a nsock pool for managing all the concurrent probes
@@ -1970,14 +2019,14 @@ int service_scan(Target *targets[], int num_targets) {
 
   // How long do we have befor timing out?
   gettimeofday(&now, NULL);
-  // TODO:  May need to change when multiple hosts are actually used
+  // TODO:  Need to change for multiple hosts are actually used
   if (!o.host_timeout)
     timeout= -1;
   else 
-    timeout = TIMEVAL_MSEC_SUBTRACT(targets[0]->host_timeout, now);
+    timeout = TIMEVAL_MSEC_SUBTRACT(Targets[0]->host_timeout, now);
     
   if (timeout != -1 && timeout < 500) { // half a second or less just won't cut it
-    targets[0]->timedout = 1;
+    Targets[0]->timedout = 1;
   } else {
     // OK!  Lets start our main loop!
     looprc = nsock_loop(nsp, timeout);
@@ -1985,7 +2034,7 @@ int service_scan(Target *targets[], int num_targets) {
       int err = nsp_geterrorcode(nsp);
       fatal("Unexpected nsock_loop error.  Error code %d (%s)", err, strerror(err));
     } else if (looprc == NSOCK_LOOP_TIMEOUT) {
-      targets[0]->timedout = 1;
+      Targets[0]->timedout = 1;
     } // else we succeeded!  Should we do something in that case?
   }
 
@@ -1993,8 +2042,8 @@ int service_scan(Target *targets[], int num_targets) {
 
   if (o.verbose) {
     long nsec = time(NULL) - starttime;
-    if (!targets[0]->timedout) {
-      log_write(LOG_STDOUT, "The service scan took %ld %s to scan %d %s on %d %s.\n", nsec, (nsec == 1)? "second" : "seconds", SG->services_finished.size(),  (SG->services_finished.size() == 1)? "service" : "services", num_targets, (num_targets == 1)? "host" : "hosts");
+    if (!Targets[0]->timedout) {
+      log_write(LOG_STDOUT, "The service scan took %ld %s to scan %d %s on %d %s.\n", nsec, (nsec == 1)? "second" : "seconds", SG->services_finished.size(),  (SG->services_finished.size() == 1)? "service" : "services", Targets.size(), (Targets.size() == 1)? "host" : "hosts");
     } else log_write(LOG_STDOUT, "The service scan timed out.\n");
   }
 

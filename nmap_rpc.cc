@@ -376,8 +376,8 @@ int rpc_are_we_done(char *msg, int msg_len, Target *target,
     
    
   if (current->state != PORT_TESTING && current->state != PORT_CLOSED &&
-      current->state != PORT_FIREWALLED) {
-    error("Supposed scan_offset refers to port in state %s (should be testing,closed, or firewalld)", statenum2str(current->state));
+      current->state != PORT_FILTERED) {
+    error("Supposed scan_offset refers to port in state %s (should be testing,closed, or filtered)", statenum2str(current->state));
     rsi->rpc_status = RPC_STATUS_NOT_RPC;
     ss->numqueries_outstanding = 0;
     return 1;

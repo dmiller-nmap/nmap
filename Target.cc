@@ -185,6 +185,8 @@ void Target::setTargetSockAddr(struct sockaddr_storage *ss, size_t ss_len) {
   memcpy(&targetsock, ss, ss_len);
   targetsocklen = ss_len;
   GenerateIPString();
+  /* The ports array needs to know a name too */
+  ports.setIdStr(targetipstr());
 }
 
 // Returns IPv4 host address or {0} if unavailable.

@@ -414,6 +414,31 @@ struct icmp
 };
 #endif /* HAVE_STRUCT_ICMP */
 
+/* Represents a single probe packet, such as a SYN to port 80 or an
+   ICMP netmask request packet. Values are still in network byte order. */
+class IPProbe {
+ public:
+  IPProbe();
+  ~IPProbe();
+/* Takes an IP packet and stores _a copy_ of it, in this Probe,
+   adjusting proper header pointers and such */
+  int storePacket(u8 *ippacket, u32 len);
+  u32 packetbuflen; /* Length of the whole packet */
+  u8 *packetbuf; /* The packet itself */
+  struct ip *ipv4; /* IP header of packet */
+  struct icmp *icmp; /* icmp, tcp, and udp are NULL if the packet has no such header */
+  struct tcphdr *tcp;
+  struct udphdr_bsd *udp;
+
+  u8 af; /* AF_INET or AF_INET6 */
+  /* Resets everything to NULL.  Frees packetbuf if it is filled.  You
+     can reuse a Probe by calling Reset() and then a new
+     storePacket(). */
+  void Reset(); 
+ private:
+
+};
+
  /* This ideally should be a port that isn't in use for any protocol on our machine or on the target */
 #define MAGIC_PORT 49724
 #define TVAL2LONG(X)  X.tv_sec * 1e6 + X.tv_usec
@@ -458,6 +483,41 @@ int send_udp_raw( int sd, struct in_addr *source, const struct in_addr *victim,
 int send_ip_raw( int sd, struct in_addr *source, const struct in_addr *victim, 
 		 int ttl, u8 proto, char *data, u16 datalen);
 
+/* Builds a TCP packet (including an IP header) by packing the fields
+   with the given information.  It allocates a new buffer to store the
+   packet contents, and then returns that buffer.  The packet is not
+   actually sent by this function.  Caller must delete the buffer when
+   finished with the packet.  The packet length is returned in
+   packetlen, which must be a valid int pointer. */
+u8 *build_tcp_raw(const struct in_addr *source, 
+		  const struct in_addr *victim, int ttl, 
+		  u16 ipid, u16 sport, u16 dport, u32 seq, u32 ack, u8 flags,
+		  u16 window, u8 *options, int optlen, char *data, 
+		  u16 datalen, u32 *packetlen);
+
+/* Builds a UDP packet (including an IP header) by packing the fields
+   with the given information.  It allocates a new buffer to store the
+   packet contents, and then returns that buffer.  The packet is not
+   actually sent by this function.  Caller must delete the buffer when
+   finished with the packet.  The packet length is returned in
+   packetlen, which must be a valid int pointer. */
+u8 *build_udp_raw(struct in_addr *source, const struct in_addr *victim,
+ 		  int ttl, u16 sport, u16 dport, u16 ipid, char *data, 
+		  u16 datalen, u32 *packetlen);
+
+/* Builds an IP packet (including an IP header) by packing the fields
+   with the given information.  It allocates a new buffer to store the
+   packet contents, and then returns that buffer.  The packet is not
+   actually sent by this function.  Caller must delete the buffer when
+   finished with the packet.  The packet length is returned in
+   packetlen, which must be a valid int pointer. */
+u8 *build_ip_raw(struct in_addr *source, const struct in_addr *victim, 
+		 int ttl, u8 proto, u16 ipid, char *data, u16 datalen, 
+		 u32 *packetlen);
+
+/* Send a pre-built IPv4 packet */
+int send_ip_packet(int sd, u8 *packet, unsigned int packetlen);
+
 /* Much of this is swiped from my send_tcp_raw function above, which 
    doesn't support fragmentation */
 int send_small_fragz(int sd, struct in_addr *source, 
@@ -482,7 +542,10 @@ int send_ip_raw_decoys( int sd, const struct in_addr *victim, int ttl, u8 proto,
 /* Calls pcap_open_live and spits out an error (and quits) if the call fails.
    So a valid pcap_t will always be returned. */
 pcap_t *my_pcap_open_live(char *device, int snaplen, int promisc, int to_ms);
-
+// Returns whether the packet receive time value obtaned from libpcap
+// (and thus by readip_pcap()) should be considered valid.  When
+// invalid (Windows and Amiga), readip_pcap returns the time you called it.
+bool pcap_recv_timeval_valid();
 
 /* Returns a buffer of ASCII information about a packet that may look
    like "TCP 127.0.0.1:50923 > 127.0.0.1:3 S ttl=61 id=39516 iplen=40

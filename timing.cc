@@ -93,6 +93,14 @@
 
 extern NmapOps o;
 
+/* Call this function on a newly allocated struct timeout_info to
+   initialize the values appropriately */
+void initialize_timeout_info(struct timeout_info *to) {
+  to->srtt = -1;
+  to->rttvar = -1;
+  to->timeout = o.initialRttTimeout() * 1000;
+}
+
 /* Adjust our timeout values based on the time the latest probe took for a 
    response.  We update our RTT averages, etc. */
 void adjust_timeouts(struct timeval sent, struct timeout_info *to) {
@@ -112,7 +120,7 @@ void adjust_timeouts2(const struct timeval *sent,
 		      struct timeout_info *to) {
   long delta = 0;
 
-  if (o.debugging > 1) {
+  if (o.debugging > 3) {
     log_write(LOG_STDOUT, "Timeout vals: srtt: %d rttvar: %d to: %d ", to->srtt, to->rttvar, to->timeout);
   }
 
@@ -167,7 +175,7 @@ void adjust_timeouts2(const struct timeval *sent,
   if (o.scan_delay)
     to->timeout = MAX(to->timeout, o.scan_delay * 1000);
 
-  if (o.debugging > 1) {
+  if (o.debugging > 3) {
     log_write(LOG_STDOUT, "delta %ld ==> srtt: %d rttvar: %d to: %d\n", delta, to->srtt, to->rttvar, to->timeout);
   }
 
@@ -214,5 +222,131 @@ void enforce_scan_delay(struct timeval *tv) {
   }
 
   return;    
+}
+
+ScanProgressMeter::ScanProgressMeter(char *stypestr) {
+  scantypestr = strdup(stypestr);
+  gettimeofday(&begin, NULL);
+  last_print_test = begin;
+  memset(&last_print, 0, sizeof(last_print));
+  memset(&last_est, 0, sizeof(last_print));
+}
+
+ScanProgressMeter::~ScanProgressMeter() {
+  if (scantypestr) {
+    free(scantypestr);
+    scantypestr = NULL;
+  }
+}
+
+/* Decides whether a timing report is likely to even be
+   printed.  There are stringint limitations on how often they are
+   printed, as well as the verbosity level that must exist.  So you
+   might as well check this before spending much time computing
+   progress info.  now can be NULL if caller doesn't have the current
+   time handy.  Just because this function returns true does not mean
+   that the next printStatsIfNeccessary will always print something.
+   It depends on whether time estimates have changed, which this func
+   doesn't even know about. */
+bool ScanProgressMeter::mayBePrinted(const struct timeval *now) {
+  struct timeval tv;
+
+  if (!o.verbose)
+    return false;
+
+  if (!now) {
+    *(struct timeval *)now = tv;
+    gettimeofday((struct timeval *)now, NULL);
+  }
+
+  if (last_print.tv_sec == 0) {
+    /* We've never printed before -- the rules are less stringent */
+    if (TIMEVAL_MSEC_SUBTRACT(*now, begin) > 30000)
+      return true;
+    else return false;
+  } 
+
+  if (TIMEVAL_MSEC_SUBTRACT(*now, last_print_test) < 3000) 
+    return false;  /* No point even checking too often */
+
+  /* We'd never want to print more than once per 30 seconds */
+  if (TIMEVAL_MSEC_SUBTRACT(*now, last_print) < 30000)
+    return false;
+
+  return true;
+}
+
+/* Prints an estimate of when this scan will complete.  It only does
+   so if mayBePrinted() is true, and it seems reasonable to do so
+   because the estimate has changed significantly.  Returns whether
+   or not a line was printed.*/
+bool ScanProgressMeter::printStatsIfNeccessary(double perc_done, 
+					       const struct timeval *now) {
+  struct timeval tvtmp;
+  long time_used_ms;
+  long time_needed_ms;
+  long time_left_ms;
+  long sec_left;
+  long prev_est_time_left_ms; /* Time left as per prev. estimate */
+  long change_abs_ms; /* absolute value of change */
+  bool printit = false;
+  time_t timet;
+  struct tm *ltime;
+
+  if (!now) {
+    *(struct timeval *)now = tvtmp;
+    gettimeofday((struct timeval *)now, NULL);
+  }
+  
+  if (!mayBePrinted(now))
+    return false;
+
+  last_print_test = *now;
+
+  if (perc_done <= 0.003)
+    return false; /* Need more info first */
+
+  assert(perc_done <= 1.0);
+
+  /* OK, now lets estimate the time to finish */
+  time_used_ms = TIMEVAL_MSEC_SUBTRACT(*now, begin);
+  time_needed_ms = (int) ((double) time_used_ms / perc_done);
+  time_left_ms = time_needed_ms - time_used_ms;
+
+  if (time_left_ms < 30000)
+    return false; /* No point in updating when it is virtually finished. */
+
+  /* If we have not printed before, or if our previous ETC has elapsed, print
+     a new one */
+  if (last_print.tv_sec < 0)
+    printit = true;
+  else {
+    /* If the estimate changed by more than X minutes, and if that
+       change represents at least X% of the time remaining, print
+       it.  */
+    prev_est_time_left_ms = TIMEVAL_MSEC_SUBTRACT(last_est, *now);
+    change_abs_ms = ABS(prev_est_time_left_ms - time_left_ms);
+    if (prev_est_time_left_ms <= 0)
+      printit = true;
+    else if (o.debugging || (change_abs_ms > 180000 && change_abs_ms > .05 * MAX(time_left_ms, prev_est_time_left_ms)))
+      printit = true;
+  }
+
+  if (printit) {
+    /* Here we go! */
+    last_print = *now;
+    TIMEVAL_MSEC_ADD(last_est, *now, time_left_ms);
+    timet = last_est.tv_sec;
+    ltime = localtime(&timet);
+    assert(ltime);
+
+    sec_left = time_left_ms / 1000;
+    log_write(LOG_STDOUT, "%s Timing: About %.2f%% done; ETC: %02d:%02d (%li:%02li:%02li remaining)\n", 
+	      scantypestr, perc_done * 100, ltime->tm_hour, ltime->tm_min, sec_left / 3600, 
+	      (sec_left % 3600) / 60, sec_left % 60);
+    log_flush(LOG_STDOUT);
+    return true;
+  } 
+  return false;
 }
 

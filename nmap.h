@@ -294,8 +294,12 @@ void *realloc();
 				 trip */
 #endif
 
+/* We wait at least 100 ms for a response by default - while that
+   seems aggressive, waiting too long can cause us to fail to detect
+   drops until many probes later on extremely low-latency
+   networks (such as localhost scans).  */
 #ifndef MIN_RTT_TIMEOUT
-#define MIN_RTT_TIMEOUT 300 /* We will always wait at least 300 ms for a response */
+#define MIN_RTT_TIMEOUT 100 
 #endif
 
 #define INITIAL_RTT_TIMEOUT 6000 /* Allow 6 seconds at first for packet responses */
@@ -307,7 +311,7 @@ void *realloc();
 /* Number of hosts we pre-ping and then scan.  We do a lot more if
    randomize_hosts is set.  Every one you add to this leads to ~1K of
    extra always-resident memory in nmap */
-#define HOST_GROUP_SZ 1024
+#define PING_GROUP_SZ 1024
 
 /* DO NOT change stuff after this point */
 #define UC(b)   (((int)b)&0xff)
