@@ -100,6 +100,11 @@ void initialize_idleproxy(struct idle_proxy_info *proxy, char *proxyName) {
 
   for(i=0; i < NUM_IPID_PROBES; i++) probe_returned[i] = 0;
 
+  bzero(proxy, sizeof(*proxy));
+  proxy->host.to.srtt = -1;
+  proxy->host.to.rttvar = -1;
+  proxy->host.to.timeout = o.initial_rtt_timeout * 1000;
+
   Strncpy(name, proxyName, sizeof(name));
   q = strchr(name, ':');
   if (q) {
@@ -118,7 +123,7 @@ void initialize_idleproxy(struct idle_proxy_info *proxy, char *proxyName) {
 
   /* Lets figure out the appropriate source address to use when sending
      the pr0bez */
-  if (o.source->s_addr) {
+  if (o.source && o.source->s_addr) {
     proxy->host.source_ip.s_addr = o.source->s_addr;
     Strncpy(proxy->host.device, o.device, sizeof(proxy->host.device));
   } else {
@@ -212,6 +217,7 @@ void initialize_idleproxy(struct idle_proxy_info *proxy, char *proxyName) {
 	probes_returned++;
 	ipids[seq_response_num] = (u16) ntohs(ip->ip_id);
 	probe_returned[seq_response_num] = 1;
+	adjust_timeouts(probe_send_times[seq_response_num], &(proxy->host.to));
       }
     }
   }
@@ -250,12 +256,28 @@ void idle_scan(struct hoststruct *target, u16 *portarray, char *proxyName) {
   static struct idle_proxy_info proxy;
   if (!proxyName) fatal("Idlescan requires a proxy host");
 
-  /* If this is the first call, or the proxy arg changed, we need to
-     test the requested proxy.  */
-  if (!*lastproxy || strcmp(proxyName, lastproxy)) {
+  if (*lastproxy && strcmp(proxyName, lastproxy))
+    fatal("idle_scan(): You are not allowed to change proxies midstream.  Sorry");
+
+  /* If this is the first call,  */
+  if (!*lastproxy) {
     initialize_idleproxy(&proxy, proxyName);
   }
 
+  /* If we don't have timing infoz for the new target, we'll use values 
+     derived from the proxy */
+  if (target->to.srtt == -1 && target->to.rttvar == -1) {
+    to->srtt = 2 * proxy->host.to.srtt;
+    to->rttvar = MAX(10000, MIN(to->srtt, 2000000));
+    to->timeout = to->srtt + (to->rttvar << 2);
+  }
+
+  /* Now I guess it is time to let the scanning begin!  Since Idle
+     scan is sort of tree structured (we scan a group and then divide
+     it up and drill down in subscans of the group), we use a
+     recursive scanning function */
+
+  
 
   return;
 }
