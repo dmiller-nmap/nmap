@@ -1,5 +1,9 @@
 # Nmap Changelog ($Id$)
 
+o Ensured that MAC address vendor names are always escaped in XML
+  output if they contain illegal characters (particularly '&').  Thanks
+  to Matthieu Verbert (mve(a)zurich.ibm.com) for the report and a patch.
+
 o Changed xmloutputversion in XML output from 1.0 to 1.01 to note that
   there was a slight change (which was actually the MAC stuff in 3.55).
   Thanks to Lionel CONS (lionel.cons(a)cern.ch) for the suggestion.

@@ -929,8 +929,11 @@ void printmacinfo(Target *currenths) {
 
   if (mac) {
     const char *macvendor = MACPrefix2Corp(mac);
-    if (macvendor) snprintf(vendorstr, sizeof(vendorstr), " vendor=\"%s\"", macvendor);
-    else vendorstr[0] = '\0';
+    if (macvendor) {
+      char *xml_mac = xml_convert(macvendor);
+      snprintf(vendorstr, sizeof(vendorstr), " vendor=\"%s\"", xml_mac);
+      free(xml_mac);
+    } else vendorstr[0] = '\0';
     snprintf(macascii, sizeof(macascii), "%02X:%02X:%02X:%02X:%02X:%02X",  mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
     log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT, "MAC Address: %s (%s)\n", macascii, macvendor? macvendor : "Unknown");
     log_write(LOG_XML, "<address addr=\"%s\"%s addrtype=\"%s\" />\n", macascii, vendorstr, "mac");
