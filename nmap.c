@@ -2065,6 +2065,7 @@ void super_scan(struct hoststruct *target, unsigned short *portarray, stype scan
 		
 		  switch(icmp->icmp_code) {
 		  
+		  case 1: /* Host unreachable */
 		  case 2: /* pr0t0c0l unreachable */
 		    newstate = PORT_FIREWALLED;
 		    break;
