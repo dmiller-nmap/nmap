@@ -57,6 +57,7 @@
 <!ENTITY % attr_numeric "CDATA" >
 <!ENTITY % attr_ipaddr "CDATA" >
 <!ENTITY % attr_numeric "CDATA" >
+<!ENTITY % attr_type "(ipv4 | ipv6 | mac)" >
 
 <!ENTITY % host_states "(up|down|unknown|skipped)" >
 
@@ -68,7 +69,7 @@
 <!-- see output.c:output_xml_scaninfo_records for scan types -->
 <!ENTITY % scan_types "(syn|ack|bounce|connect|null|xmas|window|maimon|fin|udp|ipproto)" >
 
-<!ENTITY % ip_versions "(ipv4)" >
+<!-- <!ENTITY % ip_versions "(ipv4)" > -->
 
 <!ENTITY % port_protocols "(ip|tcp|udp)" >
 
@@ -76,7 +77,6 @@
      grep "conf=" *
 --> 
 <!ENTITY % service_confs  "( 3 | 5 | 10)" >
-
 
 
 
@@ -115,7 +115,7 @@
      output.c:write_host_status(), output.c:printportoutput(), and
      output.c:printosscanoutput()
 -->
-<!ELEMENT host		( ( status | address )+ , ( hostnames | smurf | ports | addport | os | uptime | tcpsequence | ipidsequence | tcptssequence )* ) >
+<!ELEMENT host		( status, address , (address | hostnames | smurf | ports | addport | os | uptime | tcpsequence | ipidsequence | tcptssequence )* ) >
 
 
 <!-- these elements are written by output.c:write_xml_initial_hostinfo() -->
@@ -125,7 +125,8 @@
 <!ELEMENT address	EMPTY >
 <!ATTLIST address	
 			addr		%attr_ipaddr;	#REQUIRED
-			addrtype	%ip_versions;	"ipv4"
+			addrtype	%attr_type;	"ipv4"
+			vendor		CDATA		#IMPLIED
 >
 
 <!ELEMENT hostnames	(hostname)* >
