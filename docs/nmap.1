@@ -780,6 +780,11 @@ Specifies the
 amount of time Nmap must wait between probes.  This is
 mostly useful to reduce network load or to slow the scan way
 down to sneak under IDS thresholds.
+.TP
+.B --packet_trace
+Tells Nmap to show all the packets it sends and receives in a
+tcpdump-like format.  This can be tremendously useful for debugging,
+and is also a good learning tool.
 
 .SH TARGET SPECIFICATION
 Everything that isn't an option (or option argument) in nmap

@@ -2,6 +2,11 @@
 
 Nmap 3.10ALPHA3
 
+o Added --min_parallelism option, which makes scans more aggressive
+  and MUCH faster in certain situations -- especially against
+  firewalled hosts.  It is basically the opposite of --max_parallelism
+  (-M).  Note that reliability can be lost if you push it too far.
+
 o Added --packet_trace option, which tells Nmap to display all of the
   packets it sends and receives in a format similar to tcpdump.  I
   mostly added this for debugging purposes, but ppl wishing to learn
@@ -10,11 +15,6 @@ o Added --packet_trace option, which tells Nmap to display all of the
   Windows, please send me a patch :).
 
 o Fixed a segmentation fault in Idlescan (-sI).
-
-o Added --min_parallelism option, which makes scans more aggressive
-  and MUCH faster in certain situations -- especially against
-  firewalled hosts.  It is basically the opposite of --max_parallelism
-  (-M).  Note that reliability can be lost if you push it too far.
 
 o Made Idlescan timing more conservative when -P0 is specified to
   improve accuracy.

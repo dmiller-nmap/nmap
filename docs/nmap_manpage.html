@@ -232,122 +232,122 @@
               about the open ports on the  target.   IDS  systems
               will  display  the  scan  as coming from the zombie
               machine you specify (which must be up and meet cer­
-              tain  criteria).   I  am  planning  to  put  a more
-              detailed   explanation   up   at   http://www.inse­
-              cure.org/nmap/nmap_documentation.html  in  the near
-              future.
+              tain  criteria).   I  wrote an informal paper about
+              this      technique       at       http://www.inse­
+              cure.org/nmap/idlescan.html .
 
-              Besides being extraordinarily stealthy (due to  its
-              blind  nature),  this scan type permits mapping out
+              Besides  being extraordinarily stealthy (due to its
+              blind nature), this scan type permits  mapping  out
               IP-based trust relationships between machines.  The
-              port  listing shows open ports <I>from</I> <I>the</I> <I>perspective</I>
+              port listing shows open ports <I>from</I> <I>the</I>  <I>perspective</I>
               <I>of</I> <I>the</I> <I>zombie</I> <I>host.</I>  So you can try scanning a tar­
-              get  using  various zombies that you think might be
-              trusted (via router/packet  filter  rules).   Obvi­
+              get using various zombies that you think  might  be
+              trusted  (via  router/packet  filter rules).  Obvi­
               ously this is crucial information when prioritizing
               attack targets.  Otherwise, you penetration testers
-              might  have  to expend considerable resources "own­
-              ing" an intermediate system, only to find out  that
-              its  IP  isn't even trusted by the target host/net­
+              might have to expend considerable  resources  "own­
+              ing"  an intermediate system, only to find out that
+              its IP isn't even trusted by the  target  host/net­
               work you are ultimately after.
 
-              You can add a colon followed by a  port  number  if
-              you  wish  to probe a particular port on the zombie
+              You  can  add  a colon followed by a port number if
+              you wish to probe a particular port on  the  zombie
               host for IPID changes.  Otherwise Nmap will use the
               port it uses by default for "tcp pings".
 
-       <B>-sA</B>    ACK  scan:  This advanced method is usually used to
-              map out firewall rulesets.  In particular,  it  can
-              help  determine  whether  a firewall is stateful or
-              just a simple packet filter  that  blocks  incoming
+       <B>-sA</B>    ACK scan: This advanced method is usually  used  to
+              map  out  firewall rulesets.  In particular, it can
+              help determine whether a firewall  is  stateful  or
+              just  a  simple  packet filter that blocks incoming
               SYN packets.
 
-              This  scan  type  sends  an ACK packet (with random
-              looking acknowledgement/sequence  numbers)  to  the
+              This scan type sends an  ACK  packet  (with  random
+              looking  acknowledgement/sequence  numbers)  to the
               ports specified.  If a RST comes back, the ports is
-              classified as "unfiltered".  If nothing comes  back
-              (or  if  an ICMP unreachable is returned), the port
-              is classified as "filtered".  Note that  <I>nmap</I>  usu­
-              ally  doesn't  print "unfiltered" ports, so getting
+              classified  as "unfiltered".  If nothing comes back
+              (or if an ICMP unreachable is returned),  the  port
+              is  classified  as "filtered".  Note that <I>nmap</I> usu­
+              ally doesn't print "unfiltered" ports,  so  getting
               <B>no</B> ports shown in the output is usually a sign that
-              all  the  probes  got  through (and returned RSTs).
-              This scan will obviously never show  ports  in  the
+              all the probes got  through  (and  returned  RSTs).
+              This  scan  will  obviously never show ports in the
               "open" state.
 
-       <B>-sW</B>    Window  scan: This advanced scan is very similar to
-              the ACK scan, except that it can  sometimes  detect
-              open  ports  as well as filtered/nonfiltered due to
+       <B>-sW</B>    Window scan: This advanced scan is very similar  to
+              the  ACK  scan, except that it can sometimes detect
+              open ports as well as filtered/nonfiltered  due  to
               an anomaly in the TCP window size reporting by some
               operating  systems.   Systems  vulnerable  to  this
               include at least some versions of AIX, Amiga, BeOS,
-              BSDI,  Cray,  Tru64  UNIX,  DG/UX, OpenVMS, Digital
-              UNIX, FreeBSD, HP-UX, OS/2,  IRIX,  MacOS,  NetBSD,
-              OpenBSD,   OpenStep,   QNX,  Rhapsody,  SunOS  4.X,
-              Ultrix, VAX, and  VxWorks.   See  the  nmap-hackers
+              BSDI, Cray, Tru64  UNIX,  DG/UX,  OpenVMS,  Digital
+              UNIX,  FreeBSD,  HP-UX,  OS/2, IRIX, MacOS, NetBSD,
+              OpenBSD,  OpenStep,  QNX,  Rhapsody,   SunOS   4.X,
+              Ultrix,  VAX,  and  VxWorks.   See the nmap-hackers
               mailing list archive for a full list.
 
-       <B>-sR</B>    RPC  scan.   This  method works in combination with
-              the various port scan methods of  Nmap.   It  takes
-              all  the  TCP/UDP  ports found open and then floods
+       <B>-sR</B>    RPC scan.  This method works  in  combination  with
+              the  various  port  scan methods of Nmap.  It takes
+              all the TCP/UDP ports found open  and  then  floods
               them  with  SunRPC  program  NULL  commands  in  an
-              attempt  to  determine  whether they are RPC ports,
-              and if so, what program  and  version  number  they
+              attempt to determine whether they  are  RPC  ports,
+              and  if  so,  what  program and version number they
               serve up.  Thus you can effectively obtain the same
-              info as ´rpcinfo -p´ even if the target's  portmap­
+              info  as ´rpcinfo -p´ even if the target's portmap­
               per is behind a firewall (or protected by TCP wrap­
               pers).  Decoys do not currently work with RPC scan,
-              at  some  point I may add decoy support for UDP RPC
+              at some point I may add decoy support for  UDP  RPC
               scans.
 
        <B>-sL</B>    List scan.  This method simply generates and prints
-              a  list  of  IPs/Names  without actually pinging or
-              port scanning them.  DNS name  resolution  will  be
+              a list of IPs/Names  without  actually  pinging  or
+              port  scanning  them.   DNS name resolution will be
               performed unless you use -n.
 
        <B>-b</B> <B>&lt;ftp</B> <B>relay</B> <B>host&gt;</B>
-              FTP  bounce attack: An interesting "feature" of the
-              ftp protocol (RFC 959) is support for  "proxy"  ftp
-              connections.  In  other  words, I should be able to
-              connect from evil.com to the  FTP  server  of  tar­
-              get.com  and  request  that  the server send a file
+              FTP bounce attack: An interesting "feature" of  the
+              ftp  protocol  (RFC 959) is support for "proxy" ftp
+              connections. In other words, I should  be  able  to
+              connect  from  evil.com  to  the FTP server of tar­
+              get.com and request that the  server  send  a  file
               ANYWHERE on the internet!  Now this may have worked
-              well  in  1985  when  the  RFC  was written. But in
-              today's Internet, we can't  have  people  hijacking
+              well in 1985 when  the  RFC  was  written.  But  in
+              today's  Internet,  we  can't have people hijacking
               ftp servers and requesting that data be spit out to
               arbitrary points on the internet. As *Hobbit* wrote
-              back  in  1995,  this protocol flaw "can be used to
+              back in 1995, this protocol flaw "can  be  used  to
               post virtually untraceable mail and news, hammer on
               servers at various sites, fill up disks, try to hop
-              firewalls, and generally be annoying  and  hard  to
-              track  down at the same time." What we will exploit
-              this for is to (surprise, surprise) scan TCP  ports
-              from  a  "proxy" ftp server. Thus you could connect
-              to an ftp server behind a firewall, and  then  scan
-              ports  that are more likely to be blocked (139 is a
-              good one). If the ftp server  allows  reading  from
-              and  writing to some directory (such as /incoming),
-              you can send arbitrary data to ports  that  you  do
+              firewalls,  and  generally  be annoying and hard to
+              track down at the same time." What we will  exploit
+              this  for is to (surprise, surprise) scan TCP ports
+              from a "proxy" ftp server. Thus you  could  connect
+              to  an  ftp server behind a firewall, and then scan
+              ports that are more likely to be blocked (139 is  a
+              good  one).  If  the ftp server allows reading from
+              and writing to some directory (such as  /incoming),
+              you  can  send  arbitrary data to ports that you do
               find open (nmap doesn't do this for you though).
 
-              The  argument  passed to the ´b´ option is the host
-              you want to use as a proxy, in standard  URL  nota­
-              tion.      The     format     is:    <I>username:pass­</I>
+              The argument passed to the ´b´ option is  the  host
+              you  want  to use as a proxy, in standard URL nota­
+              tion.     The     format     is:     <I>username:pass­</I>
               <I>word@server:port.</I>    Everything   but   <I>server</I>   is
               optional.  To determine what servers are vulnerable
-              to this attack, you can see my  article  in  <I>Phrack</I>
-              51.   And  updated version is available at the <I>nmap</I>
+              to  this  attack,  you can see my article in <I>Phrack</I>
+              51.  And updated version is available at  the  <I>nmap</I>
               URL (http://www.insecure.org/nmap).
 
        <B>GENERAL</B> <B>OPTIONS</B>
-              None of these are required but some  can  be  quite
+              None  of  these  are required but some can be quite
               useful.
 
-       <B>-P0</B>    Do  not  try  and ping hosts at all before scanning
-              them.  This allows the scanning  of  networks  that
+       <B>-P0</B>    Do not try and ping hosts at  all  before  scanning
+              them.   This  allows  the scanning of networks that
               don't  allow  ICMP  echo  requests  (or  responses)
-              through their firewall.  microsoft.com is an  exam­
-              ple  of  such a network, and thus you should always
-              use <B>-P0</B> or <B>-PT80</B> when portscanning microsoft.com.
+              through   their   firewall.   microsoft.com  is  an
+              example of such a  network,  and  thus  you  should
+              always   use   <B>-P0</B>   or   <B>-PT80</B>  when  portscanning
+              microsoft.com.
 
        <B>-PT</B>    Use TCP "ping" to  determine  what  hosts  are  up.
               Instead  of  sending  ICMP echo request packets and
@@ -812,6 +812,13 @@
               port at a time.  It  also  effects  other  parallel
               scans such as ping sweep, RPC scan, etc.
 
+       <B>--min_parallelism</B> <B>&lt;number&gt;</B>
+              Tells  Nmap  to  scan  at least the given number of
+              ports in parallel.  This can speed up scans against
+              certain  firewalled hosts by an order of magnitude.
+              But be careful -- results will become unreliable if
+              you push it too far.
+
        <B>--scan_delay</B> <B>&lt;milliseconds&gt;</B>
               Specifies the <B>minimum</B> amount of time Nmap must wait
               between probes.  This is mostly  useful  to  reduce
@@ -869,11 +876,11 @@
        <B>nmap</B> <B>-sS</B> <B>-O</B> <B>target.example.com/24</B>
 
        Launches  a  stealth SYN scan against each machine that is
-       up out of the 255 machines on class ´C´ where target.exam­
-       ple.com  resides.  It also tries to determine what operat­
-       ing system is running on each host that is up and running.
-       This  requires root privileges because of the SYN scan and
-       the OS detection.
+       up  out  of  the  255  machines   on   class   ´C´   where
+       target.example.com  resides.   It  also tries to determine
+       what operating system is running on each host that  is  up
+       and running.  This requires root privileges because of the
+       SYN scan and the OS detection.
 
        <B>nmap</B> <B>-sX</B> <B>-p</B> <B>22,53,110,143,4564</B> <B>198.116.*.1-127</B>
 
