@@ -1116,6 +1116,7 @@ ock               1000/udp   #
 ufsd              1008/tcp   # ufsd		# UFS-aware server
 ufsd              1008/udp   # 
 sometimes-rpc1    1012/udp   # This is rstatd on my openBSD box
+kdm               1024/tcp   # K Display Manager (KDE version of xdm)
 listen            1025/tcp   # listener RFS remote_file_sharing
 blackjack         1025/udp   # network blackjack
 nterm             1026/tcp   # remote_login network_terminal
@@ -2031,6 +2032,10 @@ sometimes-rpc21   32779/tcp  # Sometimes an RPC port on my Solaris box
 sometimes-rpc22   32779/udp  # Sometimes an RPC port on my Solaris box
 sometimes-rpc23   32780/tcp  # Sometimes an RPC port on my Solaris box
 sometimes-rpc24   32780/udp  # Sometimes an RPC port on my Solaris box
+sometimes-rpc25   32786/tcp  # Sometimes an RPC port (mountd)
+sometimes-rpc26   32786/udp  # Sometimes an RPC port
+sometimes-rpc27   32787/tcp  # Sometimes an RPC port dmispd (DMI Service Provider)
+sometimes-rpc28   32787/udp  # Sometimes an RPC port
 reachout          43188/tcp
 dbbrowse          47557/tcp  # Databeam Corporation
 dbbrowse          47557/udp  # Databeam Corporation
