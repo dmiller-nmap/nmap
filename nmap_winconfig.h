@@ -49,7 +49,7 @@
 #ifndef NMAP_WINCONFIG_H
 #define NMAP_WINCONFIG_H
 
-#define NMAP_VERSION "3.21CSW"
+#define NMAP_VERSION "3.23"
 #define NMAP_NAME "nmap"
 #define NMAP_URL "www.insecure.org/nmap"
 #define NMAP_PLATFORM "i686-pc-windows-windows"

@@ -1,5 +1,7 @@
 # Nmap Changelog ($Id$)
 
+Nmap 3.23
+
 o I added UDP-based "ping" scanning.  The -PU option can take an
   optional portlist like the TCP "ping" options (-PS, -PA), but it sends
   a UDP packet to the targets and expects hosts that are up to reply
@@ -55,6 +57,11 @@ o Fixed some compilation problems on systems without IPv6 support --
 
 o Applied patch from Jochen Erwied (Jochen.Erwied@mbs-software.info)
   which fixes the format strings used for printing certain timestamps.
+
+o Upgraded to autoconf 2.57, including the latest config.guess/config.sub
+
+o Renamed configure.ac files to configure.in as recommended by the
+  latest autoconf documentation.
 
 Nmap 3.20
 

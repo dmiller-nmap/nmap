@@ -6,6 +6,9 @@ of libpcap version 0.7.1 (released November 16, 2002).  My
 -- Included this file, renamed directory from libpcap-0.7.1 to
    libpcap-possiblymodified.
 
+-- Renamed configure.in to configure.ac, which is the name now
+   recommended by the autoconf project.
+
 -- Removed the .cvsignore file, all 'CVS' directories, the 'packaging' directory, and the install-sh script.
   
 -- Added the gcc debugging flag (-g) to aclocal.m4 if gcc is being used:

@@ -1,4 +1,4 @@
-NMAP_VERSION = 3.22
+NMAP_VERSION = 3.23
 NMAP_NAME= nmap
 NMAP_URL= www.insecure.org/nmap/
 NMAP_PLATFORM=@host@
@@ -106,7 +106,7 @@ distro:
 	unix2dos README-WIN32
 	cp -ra $(SRCS) $(DEPS) nmap-os-fingerprints \
 	nmapfe.desktop nmap-services nmap-rpc nmap-protocols \
-	configure.in config.h.in nmap_winconfig.h Makefile.in configure \
+	configure.ac config.h.in nmap_winconfig.h Makefile.in configure \
         $(SHTOOL) install-sh config.guess nmap-$(NMAP_VERSION)-1.spec \
             config.sub INSTALL README-WIN32 COPYING CHANGELOG HACKING \
             /usr/tmp/nmap-$(NMAP_VERSION)
@@ -120,7 +120,7 @@ distro:
 	cd $(LIBPCAPDIR); cp -ra acconfig.h aclocal.m4 arcnet.h bpf \
                           bpf_dump.c bpf_filter.c bpf_image.c CHANGES \
                           config.guess config.h.in config.sub configure \
-                          configure.in CREDITS etherent.c ethertype.h FILES \
+                          configure.ac CREDITS etherent.c ethertype.h FILES \
                           gencode.c gencode.h grammar.c grammar.y inet.c \
                           install-sh INSTALL.txt lbl LICENSE llc.h \
                           Makefile.in mkdep nametoaddr.c net nlpid.h \
@@ -144,13 +144,13 @@ distro:
                     nmap_spanish.1 xnmap.1 nmap.dtd \
                     /usr/tmp/nmap-$(NMAP_VERSION)/docs
 	$(SHTOOL) mkdir /usr/tmp/nmap-$(NMAP_VERSION)/nmapfe
-	cd nmapfe; cp -ra Makefile.in aclocal.m4 configure configure.in \
+	cd nmapfe; cp -ra Makefile.in aclocal.m4 configure configure.ac \
 	              nmapfe.c nmapfe.h nmapfe_sig.c nmapfe_sig.h \
 	              nmapfe_error.c nmapfe_error.h NmapFE.dsp nmapfe.dsw \
 	              /usr/tmp/nmap-$(NMAP_VERSION)/nmapfe
 	$(SHTOOL) mkdir /usr/tmp/nmap-$(NMAP_VERSION)/nbase
 	cd $(NBASEDIR); cp -ra Makefile.in aclocal.m4 configlocal.m4 \
-                        configure configure.in nbase_config.h.in \
+                        configure configure.ac nbase_config.h.in \
                         *.c *.h CHANGELOG /usr/tmp/nmap-$(NMAP_VERSION)/nbase
 
 	rm -f /usr/tmp/nmap-$(NMAP_VERSION)/nbase/nbase_config.h 
@@ -223,12 +223,12 @@ uninstall:
 	rm -rf $(nmapdatadir) 
 	rm -f $(bindir)/$(TARGET)
 
-${srcdir}/configure: configure.in 
+${srcdir}/configure: configure.ac 
 	cd ${srcdir} && autoconf
 
 # autoheader might not change config.h.in, so touch a stamp file.
 ${srcdir}/config.h.in: stamp-h.in
-${srcdir}/stamp-h.in: configure.in acconfig.h \
+${srcdir}/stamp-h.in: configure.ac acconfig.h \
 	config.h.top config.h.bot
 	cd ${srcdir} && autoheader
 	echo timestamp > ${srcdir}/stamp-h.in
