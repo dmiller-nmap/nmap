@@ -76,7 +76,7 @@ AC_DEFUN(AC_LBL_C_INIT,
     if test "$GCC" = yes ; then
 	    if test "$SHLICC2" = yes ; then
 		    ac_cv_lbl_gcc_vers=2
-		    $1="-O2"
+		    $1="-g -O2"
 	    else
 		    AC_MSG_CHECKING(gcc version)
 		    AC_CACHE_VAL(ac_cv_lbl_gcc_vers,
@@ -87,7 +87,7 @@ AC_DEFUN(AC_LBL_C_INIT,
 				-e 's/\..*//'`)
 		    AC_MSG_RESULT($ac_cv_lbl_gcc_vers)
 		    if test $ac_cv_lbl_gcc_vers -gt 1 ; then
-			    $1="-O2"
+			    $1="-g -O2"
 		    fi
 	    fi
     else
