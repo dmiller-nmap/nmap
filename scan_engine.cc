@@ -2687,11 +2687,11 @@ void ultra_scan(vector<Target *> &Targets, struct scan_lists *ports,
     doAnyRetransmits(USI);
     doAnyNewProbes(USI);
     gettimeofday(&USI->now, NULL);
-    //    printf("TRACE: Finished doAnyNewProbes() at %.4fs\n", o.TimeSinceStartMS(&USI->now) / 1000.0);
+    // printf("TRACE: Finished doAnyNewProbes() at %.4fs\n", o.TimeSinceStartMS(&USI->now) / 1000.0);
     printAnyStats(USI);
     waitForResponses(USI);
     gettimeofday(&USI->now, NULL);
-    //    printf("TRACE: Finished waitForResponses() at %.4fs\n", o.TimeSinceStartMS(&USI->now) / 1000.0);
+    // printf("TRACE: Finished waitForResponses() at %.4fs\n", o.TimeSinceStartMS(&USI->now) / 1000.0);
     processData(USI);
   }
 
