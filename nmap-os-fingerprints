@@ -4203,7 +4203,8 @@ PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 #PU(DF=N%TOS=0%IPLEN=38%RIPTL=134%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 # Contributed by marco@tecnogi.com
-# OpenBSD 2.6 on X86 and an Amiga
+# With more info provided by Theo De Raadt
+# OpenBSD 2.6
 Fingerprint OpenBSD 2.6
 TSeq(Class=RI%gcd=<6%SI=<1869F6&>3E6B)
 T1(DF=N%W=403D%ACK=S++%Flags=AS%Ops=MNWNNT)
@@ -4228,7 +4229,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=134%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 # Contributed by Anonymous
-Fingerprint OpenBSD 2.6 on i386 with all available patches as of roughly Feb01
+Fingerprint OpenBSD 2.6 with all available patches as of roughly Feb01
 TSeq(Class=RI%gcd=<6%SI=<4C22A&>C1A)
 T1(DF=N%W=402E%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
