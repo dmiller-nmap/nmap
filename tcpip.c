@@ -129,7 +129,7 @@ if (!source) {
   source = safe_malloc(sizeof(struct in_addr));
   if (gethostname(myname, MAXHOSTNAMELEN) || 
       !(myhostent = gethostbyname(myname)))
-    fatal("Your system is fucked up.\n"); 
+    fatal("Your system is messed up.\n"); 
   memcpy(source, myhostent->h_addr_list[0], sizeof(struct in_addr));
 #if ( TCPIP_DEBUGGING )
     printf("We skillfully deduced that your address is %s\n", 
@@ -150,7 +150,7 @@ bzero((char *) packet, sizeof(struct ip) + sizeof(struct tcphdr));
 pseudo->s_addy = source->s_addr;
 pseudo->d_addr = victim->s_addr;
 pseudo->protocol = IPPROTO_TCP;
-pseudo->length = htons(sizeof(struct tcphdr) + datalen);
+pseudo->length = htons(sizeof(struct tcphdr) + optlen + datalen);
 
 tcp->th_sport = htons(sport);
 tcp->th_dport = htons(dport);
