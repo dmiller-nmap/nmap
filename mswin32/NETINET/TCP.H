@@ -33,6 +33,9 @@
  *	@(#)tcp.h	8.1 (Berkeley) 6/10/93
  */
 
+#ifndef NETINET_TCP_H
+#define NETINET_TCP_H
+
 typedef	u_int	tcp_seq;
 /*
  * TCP header.
@@ -95,3 +98,5 @@ struct tcphdr {
 #ifndef TCP_MAXSEG
 #define	TCP_MAXSEG	0x02	/* set maximum segment size */
 #endif
+
+#endif /* NETINET_TCP_H */

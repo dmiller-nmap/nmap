@@ -1,5 +1,6 @@
-#include <windows.h>
-#include "packet32.h"
+/* #include <windows.h> */
+/* #include "packet32.h" */
+#include "winclude.h"
 char *NMAP_VERSION ="2.54 BETA3";
 char *NMAP_NAME ="nmap";
 char *NMAP_URL="www.insecure.org/nmap/";

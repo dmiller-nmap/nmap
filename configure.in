@@ -9,7 +9,7 @@ if test -d /usr/local/lib; then
   LDFLAGS="$LDFLAGS -L/usr/local/lib"
 fi
 if test -d /usr/local/include; then
-  CFLAGS="$CLFAGS -I/usr/local/include"
+  CFLAGS="$CFLAGS -I/usr/local/include"
 fi
 
 libpcapdir=libpcap-possiblymodified

@@ -6,6 +6,7 @@
 
 #include <windows.h>
 #include <string.h>
+#include <gnuc.h>
 #include <winsock2.h>
 #include <time.h>
 #include <assert.h>
@@ -133,8 +134,6 @@ int nmapwin_isroot();
 #define close my_close
 #define read(x,y,z) recv(x,(char*)(y),z,0)
 inline int my_close(int sd);
-
-#define HAVE_MEMCPY
 
 typedef unsigned short u_short_t;
 

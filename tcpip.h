@@ -54,8 +54,6 @@
 #include "config.h"
 #endif
 
-
-
 #ifdef WIN32
 #include "mswin32\winclude.h"
 #else
@@ -103,10 +101,23 @@ void *realloc();
 #undef _IP_VHL
 
 #include <stdio.h>
+
+#if HAVE_NETINET_IN_H
 #include <netinet/in.h>
+#endif
+
+#ifdef HAVE_RPC_TYPES_H
 #include <rpc/types.h>
+#endif
+
+#ifdef HAVE_NETDB_H
 #include <netdb.h>
+#endif
+
+#if HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
+#endif
+
 #include <arpa/inet.h>
 #ifndef NETINET_IN_SYSTEM_H  /* why the HELL does OpenBSD not do this? */
 #include <netinet/in_systm.h> /* defines n_long needed for netinet/ip.h */

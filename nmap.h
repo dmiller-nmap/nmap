@@ -88,8 +88,8 @@ void *realloc();
 #include <sys/types.h>
 
 #ifndef WIN32	//	from nmapNT -- seems to work
-
 #include <sys/wait.h>
+#endif /* !WIN32 */
 
 #ifdef HAVE_SYS_PARAM_H   
 #include <sys/param.h> /* Defines MAXHOSTNAMELEN on BSD*/
@@ -115,13 +115,26 @@ void *realloc();
 #endif
 
 #include <stdio.h>
+
+#if HAVE_RPC_TYPES_H
 #include <rpc/types.h>
+#endif
+
+#if HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
-#include <sys/socket.h> 
+#endif
+ 
 #include <sys/stat.h>
+
+#if HAVE_NETINET_IN_H
 #include <netinet/in.h>
+#endif
+
 #include <errno.h>
+
+#if HAVE_NETDB_H
 #include <netdb.h>
+#endif
 
 #if TIME_WITH_SYS_TIME
 # include <sys/time.h>
@@ -135,10 +148,12 @@ void *realloc();
 #endif
 
 #include <fcntl.h>
-#include <signal.h> 
-#include <signal.h>
 #include <stdarg.h>
+
+#ifdef HAVE_PWD_H
 #include <pwd.h>
+#endif
+
 #ifndef NETINET_IN_SYSTEM_H  /* why the HELL does OpenBSD not do this? */
 #include <netinet/in_systm.h> /* defines n_long needed for netinet/ip.h */
 #define NETINET_IN_SYSTEM_H
@@ -148,7 +163,11 @@ void *realloc();
 #define NETINET_IP_H
 #endif
 #include <netinet/ip_icmp.h> 
+
+#if HAVE_ARPA_INET_H
 #include <arpa/inet.h>
+#endif
+
 #include <math.h>
 #include <assert.h>
 #ifndef __FAVOR_BSD
@@ -158,7 +177,11 @@ void *realloc();
 #include <netinet/tcp.h>          /*#include <netinet/ip_tcp.h>*/
 #define NETINET_TCP_H
 #endif
+
+#if HAVE_SYS_RESOURCE_H
 #include <sys/resource.h>
+#endif
+
 /*#include <net/if_arp.h> *//* defines struct arphdr needed for if_ether.h */
 #ifndef NET_IF_H  /* why the HELL does OpenBSD not do this? */
 #include <net/if.h>
@@ -312,6 +335,7 @@ void *realloc();
 
 /********************** LOCAL INCLUDES *****************************/
 
+
 #include "output.h"
 #include "portlist.h"
 #include "tcpip.h"
@@ -322,6 +346,7 @@ void *realloc();
 #include "protocols.h"
 #include "rpc.h"
 #include "targets.h"
+
 
 /***********************STRUCTURES**********************************/
 
@@ -376,8 +401,6 @@ int fileexistsandisreadable(char *pathname);
 int check_firewallmode(struct hoststruct *target, struct scanstats *ss);
 int gather_logfile_resumption_state(char *fname, int *myargc, char ***myargv);
 
-#endif // WIN32
-
 /* From glibc 2.0.6 because Solaris doesn't seem to have this function */
 #ifndef HAVE_INET_ATON
 int inet_aton(register const char *, struct in_addr *);
@@ -392,11 +415,3 @@ int flt_icmptcp_2port(const char *packet, int len);
 int flt_icmptcp_5port(const char *packet, int len);
 
 #endif /* NMAP_H */
-
-
-
-
-
-
-
-

@@ -57,7 +57,11 @@
 #include <errno.h>
 #include <ctype.h>
 #include <sys/types.h>
+
+#if HAVE_NETINET_IN_H
 #include <netinet/in.h>
+#endif
+
 #include <sys/time.h>
 #include <unistd.h>
 #include <assert.h>

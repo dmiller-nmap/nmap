@@ -54,15 +54,19 @@ extern struct ops o;
 /*  predefined filters -- I need to kill these globals at some pont. */
 extern unsigned long flt_dsthost, flt_srchost, flt_baseport;
 
+#ifndef WIN32 /* Already defined in wintcpip.c for now */
 void sethdrinclude(int sd) {
 #ifdef IP_HDRINCL
 int one = 1;
 setsockopt(sd, IPPROTO_IP, IP_HDRINCL, (const char *) &one, sizeof(one));
 #endif
 }
+#endif /* WIN32 */
 
 /* Tests whether a packet sent to  IP is LIKELY to route 
  through the kernel localhost interface */
+#ifndef WIN32 /* This next group of functions are already defined in 
+                 wintcpip.c for now */
 int islocalhost(struct in_addr *addr) {
 char dev[128];
   /* If it is 0.0.0.0 or starts with 127.0.0.1 then it is 
@@ -83,6 +87,7 @@ char dev[128];
      localhost */
   return 0;
 }
+
 
 /* Calls pcap_open_live and spits out an error (and quits) if the call faile.
    So a valid pcap_t will always be returned. */
@@ -828,6 +833,7 @@ fcntl(sd, F_SETFL, options);
 return 1;
 }
 
+
 /* Get the source address and interface name */
 #if 0
 char *getsourceif(struct in_addr *src, struct in_addr *dst) {
@@ -917,6 +923,7 @@ int done = 0;
 return NULL;
 }
 #endif /* 0 */
+#endif WIN32
 
 int getsourceip(struct in_addr *src, struct in_addr *dst) {
   int sd;
@@ -1002,6 +1009,8 @@ exit(1);
    in pcap_open_live()
  */
 
+#ifndef WIN32 /* Windows version of next few funcstions is currently 
+                 in wintcpip.c.  Should be merged at some point. */
 char *readip_pcap(pcap_t *pd, unsigned int *len, long to_usec) {
 int offset = -1;
 struct pcap_pkthdr head;
@@ -1091,7 +1100,6 @@ if (!pd) fatal("NULL packet device passed to readip_pcap");
  return p;
 }
 
-#ifndef WIN32
  
 /* Set a pcap filter */
 void set_pcap_filter(struct hoststruct *target,
@@ -1123,7 +1131,7 @@ void set_pcap_filter(struct hoststruct *target,
     fatal("Failed to set the pcap filter: %s\n", pcap_geterr(pd));
 }
 
-#endif
+#endif /* WIN32 */
 
 /* This is ugly :(.  We need to get rid of these at some poitn */
 unsigned long flt_dsthost, flt_srchost, flt_baseport;
@@ -1172,7 +1180,9 @@ int flt_icmptcp_5port(const char *packet, int len)
 }
 
 
-
+#ifndef WIN32 /* Currently the Windows code for next few functions is 
+                 in wintcpip.c -- should probably be merged at some
+				 point */
 int ipaddr2devname( char *dev, struct in_addr *addr ) {
 struct interface_info *mydevs;
 int numdevs;
@@ -1206,8 +1216,10 @@ for(i=0; i < numdevs; i++) {
 }
 return -1;
 }
+#endif /* WIN32 */
 
-
+#ifndef WIN32 /* ifdef'd out for now because 'doze apparently doesn't
+		         support ioctl() */
 struct interface_info *getinterfaces(int *howmany) {
   static int initialized = 0;
   static struct interface_info mydevs[128];
@@ -1290,7 +1302,7 @@ struct interface_info *getinterfaces(int *howmany) {
   if (howmany) *howmany = numinterfaces;
   return mydevs;
 }
-
+#endif
 
 
 /* An awesome function to determine what interface a packet to a given
@@ -1299,6 +1311,9 @@ struct interface_info *getinterfaces(int *howmany) {
    source parameter.   Some of the stuff is
    from Stevens' Unix Network Programming V2.  He had an easier suggestion
    for doing this (in the book), but it isn't portable :( */
+#ifndef WIN32 /* Windows functionality is currently in wintcpip.c --
+                 should probably be merged at some point */
+
 #define ROUTETHROUGH_MAXROUTES 1024
 char *routethrough(struct in_addr *dest, struct in_addr *source) {
   static int initialized = 0;
@@ -1443,6 +1458,7 @@ char *routethrough(struct in_addr *dest, struct in_addr *source) {
       fatal("I know sendmail technique ... I know rdist technique ... but I don't know what the hell kindof technique you are attempting!!!");
     return NULL;
 }
+#endif /* WIN32 */
 
 /* Maximize the receive buffer of a socket descriptor (up to 500K) */
 void max_rcvbuf(int sd) {

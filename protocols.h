@@ -48,9 +48,10 @@
 #ifndef PROTOCOLS_H
 #define PROTOCOLS_H
 
-#ifndef WIN32
+#if HAVE_NETDB_H
 #include <netdb.h>
 #endif
+
 #include "nmap.h"
 #include "global_structures.h"
 #include "charpool.h"

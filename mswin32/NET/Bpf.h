@@ -47,7 +47,7 @@
 
 #ifdef WIN32 
 #include <gnuc.h>
-#include <winsock.h>
+#include <winsock2.h>
 #endif
 
 typedef	int bpf_int32;
