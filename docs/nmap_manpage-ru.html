@@ -2,7 +2,7 @@
 <html>
 <head>
    <meta http-equiv="Content-Type" content="text/html; charset=windows-1251">
-   <meta name="GENERATOR" content="Mozilla/4.7 [en] (X11; I; Linux 2.2.14-15mdk i686) [Netscape]">
+   <meta name="GENERATOR" content="Microsoft FrontPage 4.0">
    <title>Сетевой сканер Nmap</title>
 </head>
 <body>
@@ -15,7 +15,9 @@
 <p><b><font face="Times New Roman"><font size=+1>НАЗВАНИЕ</font></font></b>
 <dir>
 <dir><font face="Times New Roman">Nmap - the Network Mapper. Утилита для
-сканирования и исследования безопасности сети.</font></dir>
+сканирования и исследования безопасности сети.</font>
+<p><font face="Times New Roman">Версия 2.54 beta 1.</font></p>
+</dir>
 </dir>
 <b><font face="Times New Roman"><font size=+1>ИСПОЛЬЗОВАНИЕ</font></font></b>
 <dir>
@@ -165,6 +167,29 @@ UDP-порты (RFC 768) на сканируемом хосте являются открытыми. На каждый
 машиной. Как обычно, Microsoft снова все проигнорировала, и не использует
 в своих ОС никаких ограничений. Поэтому вы очень быстро можете просканировать
 все 65535 UDP-портов хоста, работающего под управлением ОС Windows.</font>
+<p><b><font face="Courier">-sO</font><font face="Times New Roman"> </font></b><font face="Times New Roman">(<b>s</b>can
+<b>O</b>pen protocol) - сканирование протоколов IP.
+Данный метод используется для определения
+IP-протоколов, поддерживаемых сканируемым
+хостом. Метод заключается в передаче хосту
+IP-пакетов без какого-либо заголовка для
+каждого протокола сканируемого хоста. Если
+получено сообщение &quot;Протокол недоступен&quot;,
+то данный протокол хостом не используется.
+В противном случае Nmap предполагает, что
+протокол поддерживается хостом.</font><p><font face="Times New Roman">Некоторые
+ОС (AIX, HP-UX, Digital UNIX) и файрволлы могут
+блокировать передачу сообщений &quot;Протокол
+недоступен&quot;. По этой причине все
+сканируемые протоколы будут &quot;открыты&quot;
+(т.е. поддерживаются).</font><p><font face="Times New Roman">Поскольку
+описанная техника схожа с методом
+сканирования UDP-портов, ограничение
+скорости генерации ICMP-сообщений также
+будет иметь место.&nbsp; Однако поле &quot;тип
+протокола&quot; IP-заголовка состоит всего
+лишь из 8 бит, поэтому 256 протоколов будут
+отсканированы за приемлемое время.</font>
 <p><b><font face="Courier New">-sA</font></b> (<b>s</b>can <b>A</b><font face="Times New Roman">CK)
 - использовать ACK-сканирование. Этот дополнительный метод используется
 для определения набора правил (ruleset) файрволла. В частности, он помогает
@@ -608,7 +633,7 @@ Nmap и соответствующие способы запуска программы с указанием параметров
 <dir>&nbsp;
 <dir>
 <dir>
-<dir><font face="Times New Roman">Алексей Волков</font>
+<dir><font face="Times New Roman">RuNmap 2.53, Алексей Волков</font>
 <p><a href="mailto:topcat@cherepovets.ru">topcat@cherepovets.ru</a>
 <p><a href="http://insecure.cherepovets.ru">http://insecure.cherepovets.ru</a></dir>
 </dir>
@@ -622,13 +647,13 @@ Nmap и соответствующие способы запуска программы с указанием параметров
 <dir>
 <dir>
 <dir>
-<dir><font face="Times New Roman">Новейшую версию Nmap вы можете получить
+<dir><font face="Times New Roman">Новейшую версию Nmap и RuNmap вы можете получить
 по адресам</font>
 <p><font face="Times New Roman"><a href="http://insecure.cherepovets.ru">http://insecure.cherepovets.ru</a></font>
 <p><font face="Times New Roman"><a href="http://www.insecure.org">http://www.insecure.org</a></font>
 <p><b>nmap</b><font face="Times New Roman"> (базовая версия) © 1997,1998,1999
 Fyodor</font>
-<p><b>nmap</b><font face="Times New Roman"> (русская версия) © 1999,2000
+<p><b>runmap</b><font face="Times New Roman"> (русская версия) © 1999,2000
 Алексей Волков</font>
 <p><font face="Times New Roman">Библиотека </font><b>libcap</b><font face="Times New Roman">
 распространяется совместно с Nmap. Владельцы авторского права: Van Jacobson,
