@@ -114,7 +114,7 @@ while((arg = getopt(argc,fakeargv,"Ab:Dde:FfhiL:lM:Nno:P::p:qrRS:s:T:tUuw:Vv")) 
 	case 'P':  o.pingscan++;break;
 	case 'S':  o.synscan++;break;
 	case 'U':  o.udpscan++;break;
-	default:  error("Scantype %c not supported\n",p); printusage(argv[0]); break;
+	default:  error("Scantype %c not supported\n",*p); printusage(argv[0]); break;
 	}
 	p++;
       }
