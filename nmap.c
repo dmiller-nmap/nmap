@@ -666,7 +666,7 @@ printf("nmap V. %s usage: nmap [Scan Type(s)] [Options] <host or net #1 ... [#N]
 Scan types\n\
    -sT tcp connect() port scan\n\
    -sS tcp SYN stealth port scan (must be root)\n\
-   -sF,-SX, -sN Stealth FIN, Xmas, or Null scan (only works against UNIX).\n\
+   -sF,-sX, -sN Stealth FIN, Xmas, or Null scan (only works against UNIX).\n\
    -sP ping \"scan\". Find which hosts on specified network(s) are up but don't \n\
        port scan them\n\
    -sU UDP port scan, must be r00t\n\
@@ -1311,6 +1311,7 @@ portlist super_scan(struct hoststruct *target, unsigned short *portarray, stype 
   int portlookup[65536]; /* Indexes port number -> scan[] index */
   int decoy;
   struct timeval now;
+  int UDPPacketWarning = 0;
   int i;
   unsigned short *data;
   int packet_trynum = 0;
@@ -1562,7 +1563,10 @@ if (o.debugging || o.verbose)
 	      }    
 	    }
 	  } else if (ip->ip_p == IPPROTO_UDP) {
-	    printf("Received udp packet back ... interesting\n");
+	    if (UDPPacketWarning == 0) {
+	      UDPPacketWarning = 1;
+	      error("UDP packet received -- WEIRD!\n");
+	    }
 	    continue;
 	  }
 
@@ -2044,7 +2048,6 @@ if (current->state != PORT_OPEN && current->state != PORT_CLOSED &&
  if (trynum > -1) 
    adjust_timeouts(current->sent[trynum], &(target->to));
 
-
 /* If a non-zero trynum finds a port that hasn't been discovered, the
    earlier packets(s) were probably dropped.  So we decrease our 
    numqueries_ideal, otherwise we increase it slightly */
@@ -2141,8 +2144,14 @@ __inline__ void adjust_timeouts(struct timeval sent, struct timeout_info *to) {
     to->timeout = to->srtt + (to->rttvar << 2);
   }
   else {
-    delta = TIMEVAL_SUBTRACT(end, sent) - to->srtt;
-    /* sanity check */
+    delta = TIMEVAL_SUBTRACT(end, sent);
+    if (delta >= 25000000) {
+      if (o.verbose)
+	error("adjust_timeout: packet supposedly had rtt of %lu microseconds.  Ignoring time.", delta);
+      return;
+    }
+    delta -= to->srtt;
+    /* sanity check 2*/
     if (delta > 1500000 && delta > 10 * to->srtt) {
       if (o.debugging) {
 	printf("Bogus delta: %d (srtt %d)\n", delta, to->srtt);
@@ -2159,6 +2168,7 @@ __inline__ void adjust_timeouts(struct timeval sent, struct timeout_info *to) {
   if (to->srtt < 0 || to->rttvar < 0 || to->timeout < 0 || delta < -50000000) {
     fatal("Serious time computation problem in adjust_timeout ... end = (%d, %d) sent=(%d,%d) delta = %d srtt = %d rttvar = %d to = %d", end.tv_sec, end.tv_usec, sent.tv_sec, sent.tv_usec, delta, to->srtt, to->rttvar, to->timeout);
   }
+  
 }
 
 
@@ -2321,7 +2331,7 @@ unsigned short *data;
 	  if (i < 3) trynum = i;
 	  else {
 	    if (o.debugging) 
-	      printf("Strange ACK number from target\n");
+	      printf("Strange ACK number from target: %X\n", ntohl(tcp->th_ack));
 	    trynum = (current->trynum == 0)? 0 : -1;	    
 	  }
 	  if ((tcp->th_flags & (TH_SYN|TH_ACK)) == (TH_SYN|TH_ACK)) {	  
