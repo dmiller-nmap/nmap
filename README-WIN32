@@ -79,29 +79,17 @@ mine).
 1) Decompress the archive ( nmap-VERSION.tgz ).  This is the same
    tarball that is used for UNIX installations.
 
-2) Make sure your Visual C++ compiler recognizes the .cc extension as
-   C++ files.  You might have to make the following registry
-modifications (using regedt32 or whatever):
-
-[HKEY_CURRENT_USER\Software\Microsoft\DevStudio\6.0\Text Editor\Tabs/Language Settings\C/C++] FileExtensions=cpp;cxx;c;h;hxx;hpp;inl;tlh;tli;rc;rc2;cc;cp 
-[HKEY_CURRENT_USER\Software\Microsoft\DevStudio\6.0\Build System\Components\Platforms\Win32 (x86)\Tools\32-bit C/C++ Compiler for 80x86] Input_Spec=*.c;*.cpp;*.cxx,*.cc,*.cp 
-[HKEY_CURRENT_USER\Software\Microsoft\DevStudio\6.0\Build System\Components\Tools\<Component 0x3>] Input_Spec=*.c;*.cpp;*.cxx;*.cc;*.cp 
-
-Note:  The numbers in the "S-1-5-21-*" keys above may vary.
-
-3) Open Visual Studio and the Nmap Solution
+2) Open Visual Studio and the Nmap Solution
    (nmap-VERSION/mswin32/nmap.sln )
 
-4) Build Menu -> Configuration Manager -> set all to Release
+3) Build Menu -> Configuration Manager -> set all to Release
 
-5) Press [F7] to build nmap.exe .
+4) Build Menu -> Build Solution
 
 5) The executable can be found in
    nmap-VERSION/mswin32/Release/nmap.exe .  Remember that you must
    have Winpcap Version2.1-beta or later installed to run it (see
-   the Binary Distribution instructions above).  Note that you might
-   have to manually copy nmap-service-probes from nmap-VERSION to
-   nmap-VERSION/mswin32/Release , although I hope to fix that soon.
+   the Binary Distribution instructions above).
 
 *** Compiling NmapFE Front-end for Windows **
 

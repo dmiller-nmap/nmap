@@ -3,6 +3,7 @@
 	ProjectType="Visual C++"
 	Version="7.10"
 	Name="nmap"
+	RootNamespace="nmap"
 	SccProjectName=""
 	SccLocalPath="">
 	<Platforms>
@@ -524,6 +525,25 @@
 						Description="Copying $(InputName) to output directory..."
 						CommandLine="copy /y &quot;$(InputPath)&quot; &quot;$(TargetDir)$(InputName)&quot; &gt; nul
 "
+						Outputs="$(TargetDir)$(InputName)"/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\nmap-service-probes">
+				<FileConfiguration
+					Name="Debug|Win32">
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="Copying $(InputName) to output directory..."
+						CommandLine="copy /y &quot;$(InputPath)&quot; &quot;$(TargetDir)$(InputName)&quot; &gt; nul"
+						Outputs="$(TargetDir)$(InputName)"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32">
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="Copying $(InputName) to output directory..."
+						CommandLine="copy /y &quot;$(InputPath)&quot; &quot;$(TargetDir)$(InputName)&quot; &gt; nul"
 						Outputs="$(TargetDir)$(InputName)"/>
 				</FileConfiguration>
 			</File>

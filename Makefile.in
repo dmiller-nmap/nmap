@@ -1,4 +1,4 @@
-NMAP_VERSION = 3.48
+NMAP_VERSION = 3.49
 NMAP_NAME= nmap
 NMAP_URL= http://www.insecure.org/nmap/
 NMAP_PLATFORM=@host@
@@ -26,7 +26,7 @@ DEFS = @DEFS@ -DNMAP_VERSION=\"$(NMAP_VERSION)\" -DNMAP_NAME=\"$(NMAP_NAME)\" -D
 CXXFLAGS = @CXXFLAGS@ $(CCOPT) $(DEFS) $(INCLS)
 # CFLAGS = $(CXXFLAGS)
 # CFLAGS = $(DEFS) $(INCLS)
-STATIC = 
+STATIC =
 LDFLAGS = @LDFLAGS@ $(STATIC)
 LIBS =  @LIBS@ @LIBPCRE_LIBS@ @LIBPCAP_LIBS@
 # LIBS =  -lefence @LIBS@
@@ -220,12 +220,6 @@ web:
 	scripts/produceosclasschoosebox.pl nmap-os-fingerprints > $(wroot)/nmap/data/os-classes.txt
 	find $(wroot)/nmap/data/ -type f -exec chmod 644 '{}' \;
 
-# For distributing the binary
-static: 	
-	cd $(LIBPCAPDIR); $(MAKE)
-	$(CC) $(CXXFLAGS) $(LDFLAGS) -o nmap.linux.bin  $(SRCS) $(LIBS)
-	strip nmap.linux.bin
-
 clean: @PCAP_CLEAN@ @PCRE_CLEAN@ nmapfe_clean nsock_clean nbase_clean my_clean
 
 my_clean:
@@ -275,7 +269,6 @@ uninstall:
 	rm -f $(deskdir)/nmapfe.desktop $(mandir)/man1/nmapfe.1
 	rm -f $(mandir)/man1/xnmap.1 $(mandir)/man1/nmap.1
 	rm -rf $(nmapdatadir) 
-	rm -f $(bindir)/$(TARGET)
 
 ${srcdir}/configure: configure.ac 
 	cd ${srcdir} && autoconf

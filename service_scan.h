@@ -265,7 +265,7 @@ class ServiceProbe {
   const struct MatchDetails *testMatch(const u8 *buf, int buflen);
 
  private:
-  void ServiceProbe::setPortVector(vector<u16> *portv, const char *portstr, 
+  void setPortVector(vector<u16> *portv, const char *portstr, 
 				 int lineno);
   char *probename;
 

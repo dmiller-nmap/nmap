@@ -1822,6 +1822,7 @@ ospfd             2604/tcp   # OSPFd vty
 bgpd              2605/tcp   # BGPd vty
 webster           2627/tcp   # Network dictionary
 webster           2627/udp   # 
+dict              2628/tcp   # Dictionary service (RFC2229)
 sybase            2638/tcp   # Sybase database
 listen            2766/tcp   # System V listener port
 www-dev           2784/tcp   # world wide web - development

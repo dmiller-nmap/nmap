@@ -1,8 +1,23 @@
 # Nmap Changelog ($Id$)
 
+o Added version scan information to grepable output between the last
+  two '/' delimiters (that space was previously unused).  So the format
+  is now "portnum/state/protocol/owner/servicename/rpcinfo/versioninfo"
+  as in "53/open/tcp//domain//ISC Bind 9.2.1/" and
+  "22/open/tcp//ssh//OpenSSH 3.5p1 (protocol 1.99)/".  Thanks to
+  MadHat (madhat(a)unspecific.com) for sending a patch (although I did
+  it differently).  Note that any '/' characters in the
+  version (or owner) field are replaced with '|' to keep awk/cut
+  parsing simple.  The service name field has been updated so that it
+  is the same as in normal output (except for the same sort of
+  escaping discussed above).
 
 o Applied patch from Rob Foehl (rwf(a)loonybin.net) which fixes the
   --with_openssl=DIR configure argument.
+
+o Updated the Windows build system so that you don't have to manually
+  copy nmap-service-probes to the output directory.  I also updated
+  the README-WIN32 to elaborate further on the build process.
 
 o Added configure option --with-libpcre=included which causes Nmap to
   build with its included version of libpcre even if an acceptable

@@ -203,6 +203,9 @@ void printportoutput(Target *currenths, PortList *plist) {
   char rpcmachineinfo[64];
   char portinfo[64];
   char xmlbuf[512];
+  char grepvers[256];
+  char grepown[64];
+  char *p;
   char *state;
   char serviceinfo[64];
   char *name=NULL;
@@ -379,9 +382,39 @@ void printportoutput(Target *currenths, PortList *plist) {
 	if (*sd.fullversion)
 	  Tbl->addItem(rowno, versioncol, true, sd.fullversion);
 
-	log_write(LOG_MACHINE,"%d/%s/%s/%s/%s/%s//", current->portno, state, 
-		  protocol, (current->owner)? current->owner : "",
-		  (sd.name)? sd.name: "", rpcmachineinfo);    
+	// How should we escape illegal chars in grepable output?
+	// Well, a reasonably clean way would be backslash escapes
+	// such as \/ and \\ .  // But that makes it harder to pick
+	// out fields with awk, cut, and such.  So I'm gonna use the
+	// ugly hat (fitting to grepable output) or replacing the '/'
+	// character with '|' in the version and owner fields.
+	Strncpy(grepvers, sd.fullversion, 
+		sizeof(grepvers) / sizeof(*grepvers));
+	p = grepvers;
+	while((p = strchr(p, '/'))) {
+	  *p = '|';
+	  p++;
+	}
+	if (!current->owner) *grepown = '\0';
+	else {
+	  Strncpy(grepown, current->owner, 
+		  sizeof(grepown) / sizeof(*grepown));
+	  p = grepown;
+	  while((p = strchr(p, '/'))) {
+	    *p = '|';
+	    p++;
+	  }
+	}
+	if (!sd.name) serviceinfo[0] = '\0';
+	else {
+	  p = serviceinfo;
+	  while((p = strchr(p, '/'))) {
+	    *p = '|';
+	    p++;
+	  }
+	}
+	log_write(LOG_MACHINE,"%d/%s/%s/%s/%s/%s/%s/", current->portno, state, 
+		  protocol, grepown, serviceinfo, rpcmachineinfo, grepvers);    
 	
 	log_write(LOG_XML, "<port protocol=\"%s\" portid=\"%d\">", protocol, current->portno);
 	log_write(LOG_XML, "<state state=\"%s\" />", state);
