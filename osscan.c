@@ -245,7 +245,6 @@ if (o.verbose && openport != -1)
        strcpy(seq_AVs[0].value, "TR");
        break;
      }
-     printf("Here is the sig!\n%s", fp2ascii(FP));
    }
    else {
      printf("Only got %d responses\n", target->seq.responses);
