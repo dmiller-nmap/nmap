@@ -98,6 +98,7 @@ depend:
 install: all
 	$(INSTALL) $(TARGET) $(bindir)/$(TARGET)
 	$(INSTALL) docs/$(TARGET).1 $(mandir)/man1/$(TARGET).1
+	$(INSTALL) nmap-os-fingerprints  $(libdir)/nmap-os-fingerprints
 
 uninstall:
 	rm -f $(bindir)/$(TARGET)

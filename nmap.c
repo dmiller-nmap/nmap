@@ -298,7 +298,7 @@ if (randomize)
 starttime = time(NULL);
 
 while((host_spec = grab_next_host_spec(inputfd, argc, fakeargv))) {
-  while((currenths = nexthost(host_spec, lookahead, o.ptime)) && currenths->host.s_addr) {
+  while((currenths = nexthost(host_spec, 500, o.ptime)) && currenths->host.s_addr) {
     numhosts_scanned++;
     /* Ugly temporary hack to init timeout info */
     currenths->to.srtt = (currenths->rtt > 0)? 4 * currenths->rtt : 1000000;

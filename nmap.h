@@ -128,7 +128,7 @@ void *realloc();
    high value (avoids dynamic memmory allocation */
 #define MAX_SOCKETS_ALLOWED 1025
 /* How many hosts do we ping in parallel to see if they are up? */
-#define LOOKAHEAD 52
+#define LOOKAHEAD 25
 /* If reads of a UDP port keep returning EAGAIN (errno 13), do we want to 
    count the port as valid? */
 #define RISKY_UDP_SCAN 0
