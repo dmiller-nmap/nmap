@@ -2700,6 +2700,9 @@ __inline__ void adjust_timeouts(struct timeval sent, struct timeout_info *to) {
   }
   else {
     delta = TIMEVAL_SUBTRACT(end, sent) - to->srtt;
+    /* sanity check */
+    if (delta > 2000000 && delta > 10 * to->srtt)
+      delta = 10 * to->srtt;
     to->srtt += delta >> 3;
     to->rttvar += (ABS(delta) - to->rttvar) >> 2;
     to->timeout = to->srtt + (to->rttvar << 2);  
