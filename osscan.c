@@ -40,6 +40,7 @@ struct udpprobeinfo *upi = NULL;
 unsigned int seq_gcd = 1;
 unsigned int seq_diffs[NUM_SEQ_SAMPLES];
 int ossofttimeout, oshardtimeout;
+int seq_packets_sent = 0;
 
 if (target->timedout)
   return NULL;
@@ -249,65 +250,73 @@ if (o.verbose && openport != -1)
    }     
  } while ( testsleft > 0 && (tries++ < 5 && (newcatches || tries == 1)));
 
- 
+ si->responses = 0;
+ timeout = 0; 
+ gettimeofday(&t1,NULL);
  /* First we send our initial NUM_SEQ_SAMPLES SYN packets  */
  if (openport != -1) {
-   for(i=1; i <= NUM_SEQ_SAMPLES; i++) {
+   seq_packets_sent = 0;
+   while (seq_packets_sent < NUM_SEQ_SAMPLES) {
      if (o.scan_delay) enforce_scan_delay(NULL);
      for(decoy=0; decoy < o.numdecoys; decoy++) {
-       send_tcp_raw_decoys(rawsd, &target->host, o.magic_port+i, 
-		    openport, sequence_base + i, 0, TH_SYN, 0 , NULL, 0, NULL, 0);
+       send_tcp_raw_decoys(rawsd, &target->host, 
+			   o.magic_port + seq_packets_sent + 1, 
+			   openport, sequence_base + seq_packets_sent + 1, 0, 
+			   TH_SYN, 0 , NULL, 0, NULL, 0);
        if (!o.scan_delay)
 	 usleep( 5000 + target->to.srtt);
-    }
-     /*     usleep(25000);*/
-   }
-   /* Now we collect  the replies */
-   si->responses = 0;
-   timeout = 0; 
-   gettimeofday(&t1,NULL);
-   while(si->responses < NUM_SEQ_SAMPLES && !timeout) {
-     ip = (struct ip*) readip_pcap(pd, &bytes, oshardtimeout);
-     gettimeofday(&t2, NULL);
-     /*     error("DEBUG: got a response (len=%d):\n", bytes);  */
-     /*     lamont_hdump((unsigned char *) ip, bytes); */
-     /* Insure we haven't overrun our allotted time ... */
-     if (o.host_timeout && (TIMEVAL_MSEC_SUBTRACT(t2, target->host_timeout) >= 0))
-       {
-	 target->timedout = 1;
-	 goto osscan_timedout;
-       }
-     if (!ip) { 
-       if (TIMEVAL_SUBTRACT(t2,t1) > ossofttimeout)
+     }
+     seq_packets_sent++;
+     
+     /* Now we collect  the replies */
+     while(si->responses < seq_packets_sent && !timeout) {
+       
+       if (seq_packets_sent == NUM_SEQ_SAMPLES)
+	 ip = (struct ip*) readip_pcap(pd, &bytes, oshardtimeout);
+       else ip = (struct ip*) readip_pcap(pd, &bytes, 10);
+       gettimeofday(&t2, NULL);
+       /*     error("DEBUG: got a response (len=%d):\n", bytes);  */
+       /*     lamont_hdump((unsigned char *) ip, bytes); */
+       /* Insure we haven't overrun our allotted time ... */
+       if (o.host_timeout && (TIMEVAL_MSEC_SUBTRACT(t2, target->host_timeout) >= 0))
+	 {
+	   target->timedout = 1;
+	   goto osscan_timedout;
+	 }
+       if (!ip) { 
+	 if (seq_packets_sent < NUM_SEQ_SAMPLES)
+	   break;
+	 if (TIMEVAL_SUBTRACT(t2,t1) > ossofttimeout)
+	   timeout = 1;
+	 continue; 
+       } else if (TIMEVAL_SUBTRACT(t2,t1) > oshardtimeout) {
 	 timeout = 1;
-       continue; 
-     } else if (TIMEVAL_SUBTRACT(t2,t1) > oshardtimeout) {
-       timeout = 1;
-     }		  
-     if (bytes < (4 * ip->ip_hl) + 4)
-       continue;
-     if (ip->ip_p == IPPROTO_TCP) {
-       /*       readtcppacket((char *) ip, ntohs(ip->ip_len));  */
-       tcp = ((struct tcphdr *) (((char *) ip) + 4 * ip->ip_hl));
-       if (ntohs(tcp->th_dport) < o.magic_port || ntohs(tcp->th_dport) - o.magic_port > NUM_SEQ_SAMPLES || ntohs(tcp->th_sport) != openport) {
+       }		  
+       if (bytes < (4 * ip->ip_hl) + 4)
 	 continue;
-       }
-       if ((tcp->th_flags & TH_RST)) {
-	 /*	 readtcppacket((char *) ip, ntohs(ip->ip_len));*/	 
-	 if (si->responses == 0) {	 
+       if (ip->ip_p == IPPROTO_TCP) {
+	 /*       readtcppacket((char *) ip, ntohs(ip->ip_len));  */
+	 tcp = ((struct tcphdr *) (((char *) ip) + 4 * ip->ip_hl));
+	 if (ntohs(tcp->th_dport) < o.magic_port || ntohs(tcp->th_dport) - o.magic_port > NUM_SEQ_SAMPLES || ntohs(tcp->th_sport) != openport) {
+	   continue;
+	 }
+	 if ((tcp->th_flags & TH_RST)) {
+	   /*	 readtcppacket((char *) ip, ntohs(ip->ip_len));*/	 
+	   if (si->responses == 0) {	 
 	     fprintf(stderr, "WARNING:  RST from port %d -- is this port really open?\n", openport);
 	     /* We used to quit in this case, but left-overs from a SYN
 		scan or lame-ass TCP wrappers can cause this! */
-	 } 
-	 continue;
-      } else if ((tcp->th_flags & (TH_SYN|TH_ACK)) == (TH_SYN|TH_ACK)) {
-	/*	error("DEBUG: response is SYN|ACK to port %hi\n", ntohs(tcp->th_dport)); */
-	/*readtcppacket((char *)ip, ntohs(ip->ip_len));*/
-	  si->seqs[si->responses++] = ntohl(tcp->th_seq);
-	  if (si->responses > 1) {
-	    seq_diffs[si->responses-2] = MOD_DIFF(ntohl(tcp->th_seq), si->seqs[si->responses-2]);
-	  }      
-      }
+	   } 
+	   continue;
+	 } else if ((tcp->th_flags & (TH_SYN|TH_ACK)) == (TH_SYN|TH_ACK)) {
+	   /*	error("DEBUG: response is SYN|ACK to port %hi\n", ntohs(tcp->th_dport)); */
+	   /*readtcppacket((char *)ip, ntohs(ip->ip_len));*/
+	   si->seqs[si->responses++] = ntohl(tcp->th_seq);
+	   if (si->responses > 1) {
+	     seq_diffs[si->responses-2] = MOD_DIFF(ntohl(tcp->th_seq), si->seqs[si->responses-2]);
+	   }      
+	 }
+       }
      }
    }
      
