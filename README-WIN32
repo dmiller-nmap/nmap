@@ -48,7 +48,7 @@ nmap-VERSION-win32.zip :
 3) Open a command prompt (DOS) window and cd into the new nmap-VERSION
    directory.  Type "nmap -h" for usage information.  
 
-*** Compiling the Source Distribution for Windows ***
+*** Compiling the Nmap Source Distribution for Windows ***
 
 1) Decompress the archive ( nmap-VERSION.tgz ).  This is the same
    tarball that is used for UNIX installations.
@@ -66,7 +66,22 @@ nmap-VERSION-win32.zip :
    have Winpcap Version2.1-beta or later installed to run it (see the
    Binary Distribution instructions).
 
+*** Compiling NmapFE Front-end for Windows **
+
+1) Install the Windows versions of Glib, GDK, and GTK from
+   http://www.gimp.org/win32/ .  Copy the DLLs somewhere that they can
+   be found ( if you don't have a better place, try c:\winnt\system32
+   ).  Also copy the include and .lib files to places where your
+   compiler can find them ( add the dir to VC++ via Tools -> Options
+   -> Directories ).
+
+2) Use steps similar to the "compiling Nmap" list above to compile
+   NmapFE.  The Workspace is in nmap-VERSION/nmapfe/nmapfe.dsw .
+
+*** Final Worlds ***
+
 As mentioned earlier, patches, suggestions, and improvements are more
 than welcome!  Send them to nmap-dev@insecure.org or to me personally
 ( fyodor@insecure.org ).
 
+$Id$
