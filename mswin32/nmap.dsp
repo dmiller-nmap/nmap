@@ -152,6 +152,10 @@ SOURCE=..\charpool.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\idle_scan.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\nmap.c
 # End Source File
 # Begin Source File
@@ -261,6 +265,10 @@ SOURCE=..\charpool.h
 # Begin Source File
 
 SOURCE=..\global_structures.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\idle_scan.h
 # End Source File
 # Begin Source File
 

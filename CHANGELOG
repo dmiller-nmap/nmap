@@ -1,15 +1,27 @@
 # Nmap Changelog
 
+** 2.54BETA27
+
+-- Fixed bug that caused "adding open port" messages to be printed
+   even when verbose mode was not specified. (patch sent by Doug Hoyte
+   ( dugely@yahoo.com ).
 
 -- Fixed bug in zombie:port option parsing in Idlescan as well a few
    other bugs in patch sent by Germano Caronni 
    (caronni@batfax.olymp.org)
 
+-- Fixed Windows compilation (I broke it when I added Idlescan).
+
+-- Fixed a (Win32 only) port identification bug which would cause some
+   ports to be listed as "unknown" even when Nmap should know their
+   name.  This was found at patched by David Griffiths
+   (davidg@intrinsica.co.uk).
+
 -- Fixed more nmap-os-fingerprints syntax/grammar violations found by
    Raymond Mercier of VIGILANTe
 
 -- Fixed a memory leak in Nbase str*casecmp() functions by applying
-   patch sent my Matt (matt@use.net).  I plan to kill this whole
+   patch sent by Matt (matt@use.net).  I plan to kill this whole
    strcasecmp.c file as soon as possible (it is a mess).
 
 ** 2.54BETA26

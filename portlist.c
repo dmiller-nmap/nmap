@@ -61,7 +61,7 @@ int addport(portlist *plist, u16 portno, u8 protocol, char *owner, int state) {
   struct port **portarray = NULL;
   char msg[128];
 
-  if (state == PORT_OPEN || (o.debugging > 1)) {
+  if ((state == PORT_OPEN && o.verbose) || (o.debugging > 1)) {
     if (owner && *owner) {
       snprintf(msg, sizeof(msg), " (owner: %s)", owner);
     } else msg[0] = '\0';

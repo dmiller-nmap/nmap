@@ -258,7 +258,7 @@
               at most 256 protocols can be probed which should be
               possible in reasonable time anyway.
 
-       <B>-sI</B> <B>&lt;zombie</B> <B>host&gt;</B>
+       <B>-sI</B> <B>&lt;zombie</B> <B>host[:probeport]&gt;</B>
               Idlescan: This advanced scan method  allows  for  a
               truly blind TCP port scan of the target (meaning no
               packets are sent to the target from  your  real  IP
@@ -287,17 +287,21 @@
 
               Besides being extraordinarily stealthy (due to  its
               blind  nature),  this scan type permits mapping out
-              trust relationships  between  machines.   The  port
-              listing  shows  open  ports <I>from</I> <I>the</I> <I>perspective</I> <I>of</I>
-              <I>the</I> <I>zombie</I> <I>host.</I>  So you can try scanning a  target
-              using  various  zombies  that  you  think  might be
+              IP-based trust relationships between machines.  The
+              port  listing shows open ports <I>from</I> <I>the</I> <I>perspective</I>
+              <I>of</I> <I>the</I> <I>zombie</I> <I>host.</I>  So you can try scanning a tar-
+              get  using  various zombies that you think might be
               trusted (via router/packet  filter  rules).   Obvi-
               ously this is crucial information when prioritizing
-              attack  targets.   Otherwise,  you  might  have  to
-              expend  considerable resources "owning" an interme-
-              diate system, only to find out that  its  IP  isn't
-              even  trusted by the target host or network you are
-              ultimately after.
+              attack targets.  Otherwise, you penetration testers
+              might  have  to expend considerable resources "own-
+              ing" an intermediate system, only to find out  that
+              its  IP  isn't even trusted by the target host/net-
+              work you are ultimately after.
+
+              a particular port  on  the  zombie  host  for  IPID
+              changes.   Otherwise Nmap will use the port it uses
+              by default for "tcp pings".
 
        <B>-sA</B>    ACK scan: This advanced method is usually  used  to
               map  out  firewall rulesets.  In particular, it can
@@ -335,10 +339,6 @@
               them  with  SunRPC  program  NULL  commands  in  an
               attempt to determine whether they  are  RPC  ports,
               and  if  so,  what  program and version number they
-              serve up.  Thus you can effectively obtain the same
-              info  as  firewall  (or protected by TCP wrappers).
-              Decoys do not currently work with RPC scan, at some
-              point I may add decoy support for UDP RPC scans.
 
 
 
@@ -350,6 +350,11 @@
 
 <B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
 
+
+              serve up.  Thus you can effectively obtain the same
+              info  as  firewall  (or protected by TCP wrappers).
+              Decoys do not currently work with RPC scan, at some
+              point I may add decoy support for UDP RPC scans.
 
        <B>-b</B> <B>&lt;ftp</B> <B>relay</B> <B>host&gt;</B>
               FTP  bounce attack: An interesting "feature" of the
@@ -400,11 +405,6 @@
               Instead  of  sending  ICMP echo request packets and
               waiting for a response, we spew out TCP ACK packets
               throughout  the  target  network  (or  to  a single
-              machine) and then wait  for  responses  to  trickle
-              back.  Hosts that are up should respond with a RST.
-              This option preserves the efficiency of only  scan-
-              ning  hosts that are up while still allowing you to
-              scan networks/hosts that block ping  packets.   For
 
 
 
@@ -417,6 +417,11 @@
 <B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
 
 
+              machine) and then wait  for  responses  to  trickle
+              back.  Hosts that are up should respond with a RST.
+              This option preserves the efficiency of only  scan-
+              ning  hosts that are up while still allowing you to
+              scan networks/hosts that block ping  packets.   For
               non  root users, we use connect().  To set the des-
               tination port of the  probe  packets  use  -PT&lt;port
               number&gt;.   The  default port is 80, since this port
@@ -466,11 +471,6 @@
               The  -O  option  also  enables several other tests.
               One is the "Uptime" measurement, which uses the TCP
               timestamp option (RFC 1323) to guess when a machine
-              was last  rebooted.   This  is  only  reported  for
-              machines which provide this information.
-
-              Another  test  enabled  by  -O is TCP Sequence Pre-
-              dictability Classification.  This is a measure that
 
 
 
@@ -483,6 +483,11 @@
 <B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
 
 
+              was last  rebooted.   This  is  only  reported  for
+              machines which provide this information.
+
+              Another  test  enabled  by  -O is TCP Sequence Pre-
+              dictability Classification.  This is a measure that
               describes approximately how hard it is to establish
               a forged TCP connection against  the  remote  host.
               This is useful for exploiting source-IP based trust
@@ -532,11 +537,6 @@
               some networks can't afford the performance hit this
               causes and thus leave it disabled.
 
-              Note that I do not yet have this option working  on
-              all  systems.  It works fine for my Linux, FreeBSD,
-              and OpenBSD boxes and  some  people  have  reported
-              success with other *NIX variants.
-
 
 
 
@@ -548,6 +548,11 @@
 
 <B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
 
+
+              Note that I do not yet have this option working  on
+              all  systems.  It works fine for my Linux, FreeBSD,
+              and OpenBSD boxes and  some  people  have  reported
+              success with other *NIX variants.
 
        <B>-v</B>     Verbose  mode.  This is a highly recommended option
               and it gives out more  information  about  what  is
@@ -599,11 +604,6 @@
               U  kAn  gIv3  the  4rgument '-' (wItHOUt qUOteZ) to
               sh00t output iNT0 stDouT!@!!
 
-       <B>--resume</B> <B>&lt;logfilename&gt;</B>
-              A network scan that is cancelled due to  control-C,
-              network  outage,  etc.  can  be  resumed using this
-              option.  The logfilename must be  either  a  normal
-
 
 
                                                                 9
@@ -615,6 +615,10 @@
 <B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
 
 
+       <B>--resume</B> <B>&lt;logfilename&gt;</B>
+              A network scan that is cancelled due to  control-C,
+              network  outage,  etc.  can  be  resumed using this
+              option.  The logfilename must be  either  a  normal
               (-oN)  or  machine  parsable  (-oM)  log  from  the
               aborted scan.  No other options can be given  (they
               will  be  the same as the aborted scan).  Nmap will
@@ -665,10 +669,6 @@
               from unique IP addresses, but they won't know which
               IP  was  scanning  them  and  which  were  innocent
               decoys.  While this can be defeated through  router
-              path tracing, response-dropping, and other "active"
-              mechanisms, it is generally an extremely  effective
-              technique for hiding your IP address.
-
 
 
 
@@ -680,6 +680,10 @@
 
 <B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
 
+
+              path tracing, response-dropping, and other "active"
+              mechanisms, it is generally an extremely  effective
+              technique for hiding your IP address.
 
               Separate  each  decoy host with commas, and you can
               optionally use 'ME' as one of the decoys to  repre-
@@ -731,10 +735,6 @@
 
               Another possible use of this flag is to  spoof  the
               scan to make the targets think that <B>someone</B> <B>else</B> is
-              scanning them.  Imagine a company being  repeatedly
-              port  scanned  by a competitor!  This is not a sup-
-              ported usage (or the main purpose) of this flag.  I
-              just  think  it  raises  an interesting possibility
 
 
 
@@ -747,6 +747,10 @@
 <B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
 
 
+              scanning them.  Imagine a company being  repeatedly
+              port  scanned  by a competitor!  This is not a sup-
+              ported usage (or the main purpose) of this flag.  I
+              just  think  it  raises  an interesting possibility
               that people should  be  aware  of  before  they  go
               accusing  others  of  port scanning them.  <B>-e</B> would
               generally be required for this sort of usage.
@@ -797,10 +801,6 @@
 
        <B>-M</B> <B>&lt;max</B> <B>sockets&gt;</B>
               Sets  the  maximum  number  of sockets that will be
-              used in parallel for  a  TCP  connect()  scan  (the
-              default).   This  is useful to slow down the scan a
-              little bit  and  avoid  crashing  remote  machines.
-              Another  approach is to use -sS, which is generally
 
 
 
@@ -813,6 +813,10 @@
 <B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
 
 
+              used in parallel for  a  TCP  connect()  scan  (the
+              default).   This  is useful to slow down the scan a
+              little bit  and  avoid  crashing  remote  machines.
+              Another  approach is to use -sS, which is generally
               easier for machines to handle.
 
        <B>TIMING</B> <B>OPTIONS</B>
@@ -863,10 +867,6 @@
        <B>--max_rtt_timeout</B> <B>&lt;milliseconds&gt;</B>
               Specifies  the  maximum  amount  of  time  Nmap  is
               allowed   to  wait  for  a  probe  response  before
-              retransmitting or timing out that particular probe.
-              The default mode sets this to about 9000.
-
-
 
 
 
@@ -878,6 +878,9 @@
 
 <B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
 
+
+              retransmitting or timing out that particular probe.
+              The default mode sets this to about 9000.
 
        <B>--min_rtt_timeout</B> <B>&lt;milliseconds&gt;</B>
               When  the target hosts start to establish a pattern
@@ -932,9 +935,6 @@
        that  most  shells  require  you  to escape them with back
        slashes or protect them with quotes.
 
-       Another interesting thing to do is slice the Internet  the
-       other  way.   Instead of scanning all the hosts in a class
-       specifying hosts to scan, see the <I>examples</I> section.
 
 
 
@@ -946,6 +946,10 @@
 
 <B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
 
+
+       Another interesting thing to do is slice the Internet  the
+       other  way.   Instead of scanning all the hosts in a class
+       specifying hosts to scan, see the <I>examples</I> section.
 
 
 </PRE>
@@ -999,10 +1003,6 @@
 
        <B>host</B> <B>-l</B> <B>company.com</B> <B>|</B> <B>cut</B> <B>'-d</B> <B>'</B> <B>-f</B> <B>4</B> <B>|</B> <B>./nmap</B> <B>-v</B> <B>-iL</B> <B>-</B>
 
-       Do  a  DNS  zone transfer to find the hosts in company.com
-       and then feed the IP addresses to <I>nmap.</I>   The  above  com-
-       mands  are  for  my GNU/Linux box.  You may need different
-       commands/options on other operating systems.
 
 
 
@@ -1014,6 +1014,11 @@
 
 <B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
 
+
+       Do  a  DNS  zone transfer to find the hosts in company.com
+       and then feed the IP addresses to <I>nmap.</I>   The  above  com-
+       mands  are  for  my GNU/Linux box.  You may need different
+       commands/options on other operating systems.
 
 
 </PRE>
@@ -1069,12 +1074,7 @@
        the inability to relicense  code  has  caused  devastating
        problems for other Free Software projects (such as KDE and
        NASM).  Nmap will always be available Open Source.  If you
-       wish to specify special license conditions of your contri-
-       butions, just say so when you send them.
-
-       This program is distributed in the hope that  it  will  be
-       useful, but <B>WITHOUT</B> <B>ANY</B> <B>WARRANTY;</B> without even the implied
-       warranty of <B>MERCHANTABILITY</B> or <B>FITNESS</B>  <B>FOR</B>  <B>A</B>  <B>PARTICULAR</B>
+       wish   to  specify  special  license  conditions  of  your
 
 
 
@@ -1087,6 +1087,11 @@
 <B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
 
 
+       contributions, just say so when you send them.
+
+       This program is distributed in the hope that  it  will  be
+       useful, but <B>WITHOUT</B> <B>ANY</B> <B>WARRANTY;</B> without even the implied
+       warranty of <B>MERCHANTABILITY</B> or <B>FITNESS</B>  <B>FOR</B>  <B>A</B>  <B>PARTICULAR</B>
        <B>PURPOSE.</B>   See  the  GNU  General  Public License for more
        details (it is in the COPYING file of the  <I>nmap</I>  distribu-
        tion).
@@ -1113,11 +1118,6 @@
        believed to be Year 2000 (Y2K) compliant in all  respects.
        There  is  no  reason to believe versions earlier than 2.0
        are susceptible to problems, but we have not tested  them.
-
-
-
-
-
 
 
 

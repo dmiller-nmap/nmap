@@ -57,7 +57,7 @@ static int nmap_services_init() {
   char filename[512];
   FILE *fp;
   char servicename[128], proto[16];
-  unsigned short portno;
+  u16 portno;
   char *p;
   char line[1024];
   int lineno = 0;
@@ -110,7 +110,7 @@ static int nmap_services_init() {
     /* Now we make sure our services doesn't have duplicates */
     for(current = service_table[portno % SERVICE_TABLE_SIZE], previous = NULL;
 	current; current = current->next) {
-      if (portno == current->servent->s_port &&
+      if (portno == (u16) current->servent->s_port &&
 	  strcasecmp(proto, current->servent->s_proto) == 0) {
 	if (o.debugging) {
 	  error("Port %d proto %s is duplicated in services file %s", ntohs(portno), proto, filename);
@@ -166,7 +166,7 @@ struct servent *nmap_getservbyport(int port, const char *proto) {
 
   for(current = service_table[port % SERVICE_TABLE_SIZE];
       current; current = current->next) {
-    if (port == current->servent->s_port &&
+    if (((u16) port == (u16) current->servent->s_port) &&
 	strcmp(proto, current->servent->s_proto) == 0)
       return current->servent;
   }
