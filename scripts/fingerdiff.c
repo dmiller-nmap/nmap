@@ -174,13 +174,11 @@ int main(int argc, char *argv[]) {
       i++;
     }
 
-
-
     if (readFP(fp, referenceFPString, sizeof(referenceFPString)) == -1)
       usage("Failed to read in supposed fingerprint in %s line %d\n", sourcefile, sourceline);
     fclose(fp);
-    printf("STEP ONE: Reading REFERENCE FINGERPRINT from %s line %d ... DONE\n"
-	   ,sourcefile, sourceline);    
+    printf("STEP ONE: Reading REFERENCE FINGERPRINT from %s line %d:\n%s\n"
+	   ,sourcefile, sourceline, referenceFPString);    
   } else {
   
     printf("STEP ONE: Enter the **REFERENCE FINGERPRINT**, followed by a blank or single-dot line:\n");
