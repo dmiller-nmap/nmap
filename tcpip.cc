@@ -194,7 +194,7 @@ const char *ippackethdrinfo(const u8 *packet, u32 len) {
     char tcpinfo[64] = "";
     char buf[32];
     tcp = (struct tcphdr *)  (packet + ip->ip_hl * 4);
-    if ((len < ip->ip_hl * 4 + 20) || len < (ip->ip_hl + tcp->th_off) * 4)
+    if ((len < (u32) ip->ip_hl * 4 + 20) || len < (u32) ( ip->ip_hl + tcp->th_off) * 4)
       Strncpy(protoinfo, "TCP header incomplete", sizeof(protoinfo));
     else {
 

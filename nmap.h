@@ -208,7 +208,7 @@ void *realloc();
 #ifndef DEBUGGING
 #define DEBUGGING 0
 #endif
-#define MAX_PROBE_PORTS 8     /* How many TCP probe ports are allowed ? */
+#define MAX_PROBE_PORTS 10     /* How many TCP probe ports are allowed ? */
 /* Default number of ports in parallel.  Doesn't always involve actual 
    sockets.  Can also adjust with the -M command line option.  */
 #define MAX_SOCKETS 36 
@@ -348,6 +348,8 @@ void *realloc();
           so watch it be wrong :)... */
 #  define NET_SIZE_T size_t
 #elif defined(OPENBSD)
+#  define NET_SIZE_T socklen_t
+#elif defined(NETBSD)
 #  define NET_SIZE_T socklen_t
 #elif defined(OS390)
 #  define NET_SIZE_T size_t

@@ -126,8 +126,7 @@ void NmapOps::Initialize() {
   reference_FPs = NULL;
   magic_port = 33000 + (get_random_uint() % 31000);
   magic_port_set = 0;
-  num_probe_ports = 1;
-  tcp_probe_ports[0] = DEFAULT_TCP_PROBE_PORT;
+  num_ping_synprobes = num_ping_ackprobes = 0;
   max_parallelism = 0;
   min_parallelism = 0;
   max_rtt_timeout = MAX_RTT_TIMEOUT;
@@ -170,6 +169,8 @@ void NmapOps::ValidateOptions() {
   if (pingtype == PINGTYPE_UNKNOWN) {
     if (isr00t && af() == AF_INET) pingtype = PINGTYPE_TCP|PINGTYPE_TCP_USE_ACK|PINGTYPE_ICMP_PING;
     else pingtype = PINGTYPE_TCP; // if nonr00t or IPv6
+    num_ping_ackprobes = 1;
+    ping_ackprobes[0] = DEFAULT_TCP_PROBE_PORT;
   }
 
   /* Insure that at least one scantype is selected */
@@ -197,8 +198,21 @@ void NmapOps::ValidateOptions() {
     error("WARNING:  -S will only affect the source address used in a connect() scan if you specify one of your own addresses.  Use -sS or another raw scan if you want to completely spoof your source address, but then you need to know what you're doing to obtain meaningful results.");
   }
 
- if ((pingtype & PINGTYPE_TCP) && (!o.isr00t || o.af() != AF_INET) && num_probe_ports > 1)
-   error("WARNING:  Multiple probe ports were given, but only the first one will be used for your connect()-style TCP ping.");
+ if ((pingtype & PINGTYPE_TCP) && (!o.isr00t || o.af() != AF_INET)) {
+   /* We will have to do a connect() style ping */
+   if (num_ping_synprobes && num_ping_ackprobes) {
+     fatal("WARNING:  Cannot use both SYN and ACK ping probes if you are nonroot or using IPv6");
+   }
+   if (num_ping_synprobes > 1 || num_ping_ackprobes > 1) {
+     error("WARNING:  Multiple probe ports were given, but only the first one will be used for your connect()-style TCP ping.");
+   }
+
+   if (num_ping_synprobes > 0) { 
+     num_ping_ackprobes = 1;
+     num_ping_synprobes = 0;
+     ping_ackprobes[0] = ping_synprobes[0];
+   }
+ }
 
  if (ipprotscan + (TCPScan() || UDPScan()) + listscan + pingscan > 1) {
    fatal("Sorry, the IPProtoscan, Listscan, and Pingscan (-sO, -sL, -sP) must currently be used alone rathre than combined with other scan types.");

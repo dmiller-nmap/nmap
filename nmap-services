@@ -1826,6 +1826,7 @@ dec-notes         3333/tcp   # DEC Notes
 dec-notes         3333/udp   # DEC Notes
 msdtc             3372/tcp   # MS distributed transaction coordinator
 ms-term-serv      3389/tcp   # Microsoft Remote Display Protocol
+squid-snmp        3401/udp   # Squid proxy SNMP port
 bmap              3421/tcp   # Bull Apprise portmapper
 bmap              3421/udp   # Bull Apprise portmapper
 prsvp             3455/tcp   # RSVP Port
@@ -1872,6 +1873,7 @@ fax               4557/tcp   # FlexFax FAX transmission service
 hylafax           4559/tcp   # HylaFAX client-server protocol
 rfa               4672/tcp   # remote file access server
 rfa               4672/udp   # remote file access server
+squid-htcp        4827/udp   # Squid proxy HTCP port
 radmin            4899/tcp   # Radmin (www.radmin.com) remote PC control software
 maybeveritas      4987/tcp   #
 maybeveritas      4998/tcp   #

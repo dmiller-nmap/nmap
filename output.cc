@@ -193,7 +193,14 @@ void printportoutput(Target *currenths, portlist *plist) {
 	  Strncpy(serviceinfo, (service)? service->s_name : "unknown" , sizeof(serviceinfo));
 	  strcpy(rpcmachineinfo, "");
 	}
-	log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"%-11s%-12s%-24s", portinfo, state, serviceinfo);
+	// HACK: I hate the trailing whitespace so I'll just skip it unless
+	// an owner is available.  Eventually I need to work in/write a simple
+        // table-creating library which can deal with the spacing of the 
+	// columns and so forth.
+	if (current->owner)
+	  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"%-11s%-12s%-24s", portinfo, state, serviceinfo);
+	else
+	  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"%-11s%-12s%s", portinfo, state, serviceinfo);
 	log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"%s\n", (current->owner)? current->owner : "");
 	
 	log_write(LOG_MACHINE,"%d/%s/%s/%s/%s/%s//", current->portno, state, 

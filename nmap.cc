@@ -159,6 +159,7 @@ int nmap_main(int argc, char *argv[]) {
   struct hostent *target = NULL;
   char **fakeargv;
   Target *currenths;
+  char *proberr;
   char emptystring[1];
   int sourceaddrwarning = 0; /* Have we warned them yet about unguessable
 				source addresses? */
@@ -472,26 +473,45 @@ int nmap_main(int argc, char *argv[]) {
       else if (*optarg == 'S') {
 	o.pingtype |= (PINGTYPE_TCP|PINGTYPE_TCP_USE_SYN);
 	if (isdigit((int) *(optarg+1)))
-	  getprobepts(optarg+1);
+	  {
+	    o.num_ping_synprobes = numberlist2array(optarg+1, o.ping_synprobes, sizeof(o.ping_synprobes), &proberr, 1);
+	    if (o.num_ping_synprobes < 0) {
+	      fatal("Bogus argument to -PS: %s", proberr);
+	    }
+	  }
+	if (o.num_ping_synprobes == 0) {
+	  o.num_ping_synprobes = 1;
+	  o.ping_synprobes[0] = DEFAULT_TCP_PROBE_PORT;
+	}
       }
       else if (*optarg == 'T' || *optarg == 'A') {
 	o.pingtype |= (PINGTYPE_TCP|PINGTYPE_TCP_USE_ACK);
-	if (isdigit((int) *(optarg+1)))
-	  getprobepts(optarg+1);
+	if (isdigit((int) *(optarg+1))) {
+	  o.num_ping_ackprobes = numberlist2array(optarg+1, o.ping_ackprobes, sizeof(o.ping_ackprobes), &proberr, 1);
+	  if (o.num_ping_ackprobes < 0) {
+	    fatal("Bogus argument to -PB: %s", proberr);
+	  }
+	}
+	if (o.num_ping_ackprobes == 0) {
+	  o.num_ping_ackprobes = 1;
+	  o.ping_ackprobes[0] = DEFAULT_TCP_PROBE_PORT;
+	}
       }
       else if (*optarg == 'B') {
 	o.pingtype = (PINGTYPE_TCP|PINGTYPE_TCP_USE_ACK|PINGTYPE_ICMP_PING);
-	if (isdigit((int) *(optarg+1)))
-	  getprobepts(optarg+1);
+	if (isdigit((int) *(optarg+1))) {
+	  o.num_ping_ackprobes = numberlist2array(optarg+1, o.ping_ackprobes, sizeof(o.ping_ackprobes), &proberr, 1);
+	  if (o.num_ping_ackprobes < 0) {
+	    fatal("Bogus argument to -PB: %s", proberr);
+	  }
+	}
+	if (o.num_ping_ackprobes == 0) {
+	  o.num_ping_ackprobes = 1;
+	  o.ping_ackprobes[0] = DEFAULT_TCP_PROBE_PORT;
+	}
       }
       else { 
 	fatal("Illegal Argument to -P, use -P0, -PI, -PB, -PM, -PP, -PT, or -PT80 (or whatever number you want for the TCP probe destination port)"); 
-      }
-      if ((o.pingtype & PINGTYPE_TCP) && (o.num_probe_ports != 1 || o.tcp_probe_ports[0] != DEFAULT_TCP_PROBE_PORT)) {
-	log_write(LOG_STDOUT, "TCP probe port(s):");
-	for( int i=0; i<o.num_probe_ports; ++i )
-	  log_write(LOG_STDOUT, " %hu", o.tcp_probe_ports[i]);
-	log_write(LOG_STDOUT, "\n");
       }
       break;
     case 'p': 
@@ -1064,33 +1084,6 @@ void init_socket(int sd) {
 	  bind_failed=1;
 	}
     }
-}
-
-/* Convert a comma-separated list of ports into an array, and store it
-   in o.tcp_probe_ports[]; This is a simplified version of getpts() below */
-void getprobepts(char *expr) {
-  char *current_range;
-  char *endptr;
-  long port;
-
-  o.num_probe_ports = 0;
-  current_range = expr;
-  do {
-    if( !isdigit((int) *current_range) ) {
-      fatal("Error #486: Your port specifications are illegal.  Example of proper form: \"20,80,65532\"");
-    }
-    port = strtol(current_range, &endptr, 10);
-    if( port <= 0 || port > 65535 ) {
-      fatal("Probe ports must be between 1 and 65535 inclusive");
-    }
-    if( o.num_probe_ports >= MAX_PROBE_PORTS ) {
-      fatal("Limit on number of probe ports (%d) exceeded", MAX_PROBE_PORTS);
-    }
-    o.tcp_probe_ports[o.num_probe_ports++] = port;
-    current_range = endptr;
-    if( *current_range ==',' )
-      current_range++;
-  } while( current_range && *current_range);
 }
 
 /* Convert a string like "-100,200-1024,3000-4000,60000-" into an array 

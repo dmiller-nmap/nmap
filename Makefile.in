@@ -1,4 +1,4 @@
-NMAP_VERSION = 3.10ALPHA8
+NMAP_VERSION = 3.15BETA1
 NMAP_NAME= nmap
 NMAP_URL= www.insecure.org/nmap/
 NMAP_PLATFORM=@host@
@@ -61,7 +61,8 @@ nmapfe/nmapfe:
 #	@echo "FAILURES HERE ARE OK -- THEY JUST MEAN YOU CANNOT USE nmapfe"
 #	-rm -f nmapfe/Makefile
 #	-cd nmapfe; ./configure;
-	-cd nmapfe; test -f Makefile && $(MAKE) VERSION=$(NMAP_VERSION) STATIC=$(STATIC);
+	@if test -f nmapfe/Makefile; then echo "Building NmapFE graphical frontend"; cd nmapfe && $(MAKE) VERSION=$(NMAP_VERSION) STATIC=$(STATIC); else echo "NmapFE will not being made -- your system lacks the capabilities (perhaps GTK) for this graphical frontend -- you can still run command-line nmap!"; fi
+#	-cd nmapfe; test -f Makefile && $(MAKE) VERSION=$(NMAP_VERSION) STATIC=$(STATIC);
 #	@echo "END OF SECTION WHERE FAILURES ARE OK"
 
 # This target is just for me ... don't you get any ideas --Fyodor
@@ -174,13 +175,13 @@ clean: @PCAP_CLEAN@ nmapfe_clean nbase_clean my_clean
 my_clean:
 	rm -f $(OBJS) $(TARGET) config.cache
 pcap_clean:
-	cd $(LIBPCAPDIR); $(MAKE) clean
+	-cd $(LIBPCAPDIR); $(MAKE) clean
 nmapfe_clean:
-	cd nmapfe; $(MAKE) clean
+	-cd nmapfe; $(MAKE) clean
 nbase_clean:
-	cd $(NBASEDIR); $(MAKE) clean
+	-cd $(NBASEDIR); $(MAKE) clean
 pcap_dist_clean:
-	cd $(LIBPCAPDIR); $(MAKE) distclean
+	-cd $(LIBPCAPDIR); $(MAKE) distclean
 
 distclean: my_clean my_distclean @PCAP_DIST_CLEAN@
 my_distclean:

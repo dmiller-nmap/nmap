@@ -89,8 +89,11 @@ class NmapOps {
   FingerPrint **reference_FPs;
   u16 magic_port;
   unsigned short magic_port_set; /* Was this set by user? */
-  int num_probe_ports;
-  u16 tcp_probe_ports[MAX_PROBE_PORTS];
+  int num_ping_synprobes;
+  u16 ping_synprobes[MAX_PROBE_PORTS];
+  /* The first of the "ackprobes" is used when doing a connect() ping */
+  int num_ping_ackprobes;
+  u16 ping_ackprobes[MAX_PROBE_PORTS];
 
   /* Scan timing/politeness issues */
   int max_parallelism; // 0 means it has not been set

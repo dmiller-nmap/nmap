@@ -344,7 +344,13 @@ if (pingtype & PINGTYPE_TCP) {
 
  if (ptech.connecttcpscan)
    probes_per_host = 1; /* Only the first probe port is used in this case */
- else probes_per_host = ptech.icmpscan + ptech.rawicmpscan + (ptech.rawtcpscan? o.num_probe_ports : 0);
+ else {
+   probes_per_host = 0;
+   if (pingtype & PINGTYPE_ICMP_PING) probes_per_host++;
+   if (pingtype & PINGTYPE_ICMP_MASK) probes_per_host++;
+   if (pingtype & PINGTYPE_ICMP_TS) probes_per_host++;
+   probes_per_host += o.num_ping_synprobes + o.num_ping_ackprobes;
+ } 
 
 pt.min_group_size = MAX(3, MAX(o.min_parallelism, 16) / probes_per_host);
 
@@ -461,21 +467,16 @@ gettimeofday(&start, NULL);
 	 if (ptech.icmpscan && !sd_blocking) { 
 	   block_socket(sd); sd_blocking = 1; 
 	 }
-	 if (o.scan_delay) enforce_scan_delay(NULL);
 	 if (ptech.icmpscan || ptech.rawicmpscan)
-	   sendpingquery(sd, rawpingsd, hostbatch[hostnum],  
-			 seq, id, &ss, time, pingtype, ptech);
+	   sendpingqueries(sd, rawpingsd, hostbatch[hostnum],  
+			   seq, id, &ss, time, pingtype, ptech);
        
-	 if (ptech.rawtcpscan) {
-	   /* multiple ports probed when doing raw tcp ping */
-	   for( int i=0; i<o.num_probe_ports; i++ ) {
-	     if (i > 0 && o.scan_delay) enforce_scan_delay(NULL);
-	     sendrawtcppingquery(rawsd, hostbatch[hostnum],  pingtype, o.tcp_probe_ports[i], seq, time, &pt);
-	   }
-	 }
+	 if (ptech.rawtcpscan) 
+	   sendrawtcppingqueries(rawsd, hostbatch[hostnum], pingtype, seq, time, &pt);
+
 	 else if (ptech.connecttcpscan) {
 	   /* still only one port probed for connect tcp */
-	   sendconnecttcpquery(hostbatch, &tqi, hostbatch[hostnum], o.tcp_probe_ports[0], seq, time, &pt, &to, max_width);
+	   sendconnecttcpquery(hostbatch, &tqi, hostbatch[hostnum], o.ping_ackprobes[0], seq, time, &pt, &to, max_width);
 	 }
 	 pt.block_unaccounted++;
 	 gettimeofday(&t2, NULL);
@@ -614,6 +615,27 @@ int sendconnecttcpquery(Target *hostbatch[], struct tcpqueryinfo *tqi,
 return 0;
 }
 
+int sendrawtcppingqueries(int rawsd, Target *target, int pingtype, int seq, 
+			  struct timeval *time, struct pingtune *pt) {
+  int i;
+
+  if (pingtype & PINGTYPE_TCP_USE_ACK) {
+    for( i=0; i<o.num_ping_ackprobes; i++ ) {
+      if (i > 0 && o.scan_delay) enforce_scan_delay(NULL);
+      sendrawtcppingquery(rawsd, target, PINGTYPE_TCP_USE_ACK, o.ping_ackprobes[i], seq, time, pt);
+    }
+  }
+
+  if (pingtype & PINGTYPE_TCP_USE_SYN) {
+    for( i=0; i<o.num_ping_synprobes; i++ ) {
+      if (i > 0 && o.scan_delay) enforce_scan_delay(NULL);
+      sendrawtcppingquery(rawsd, target, PINGTYPE_TCP_USE_SYN, o.ping_synprobes[i], seq, time, pt);
+    }
+  }
+
+  return 0;
+}
+
 int sendrawtcppingquery(int rawsd, Target *target, int pingtype, u16 probe_port,
 			int seq, struct timeval *time, struct pingtune *pt) {
 int trynum;
@@ -639,6 +661,25 @@ trynum = seq % pt->max_tries;
  return 0;
 }
 
+int sendpingqueries(int sd, int rawsd, Target *target,  
+		  int seq, unsigned short id, struct scanstats *ss, 
+		    struct timeval *time, int pingtype, struct pingtech ptech) {
+  if (pingtype & PINGTYPE_ICMP_PING) {
+    if (o.scan_delay) enforce_scan_delay(NULL);
+    sendpingquery(sd, rawsd, target, seq, id, ss, time, PINGTYPE_ICMP_PING, ptech);
+  }
+  if (pingtype & PINGTYPE_ICMP_MASK) {
+    if (o.scan_delay) enforce_scan_delay(NULL);
+    sendpingquery(sd, rawsd, target, seq, id, ss, time, PINGTYPE_ICMP_MASK, ptech);
+
+  }
+  if (pingtype & PINGTYPE_ICMP_TS) {
+    if (o.scan_delay) enforce_scan_delay(NULL);
+    sendpingquery(sd, rawsd, target, seq, id, ss, time, PINGTYPE_ICMP_TS, ptech);
+  }
+
+  return 0;
+}
 
 int sendpingquery(int sd, int rawsd, Target *target,  
 		  int seq, unsigned short id, struct scanstats *ss, 
@@ -768,7 +809,7 @@ while(pt->block_unaccounted) {
 	  }
 	  if (FD_ISSET(tqi->sockets[seq], &myfds_r) || FD_ISSET(tqi->sockets[seq], &myfds_w) ||  FD_ISSET(tqi->sockets[seq], &myfds_x)) {
 	    foundsomething = 0;
-	    res2 = read(tqi->sockets[seq], buf, sizeof(buf));
+	    res2 = read(tqi->sockets[seq], buf, sizeof(buf) - 1);
 	    if (res2 == -1) {
 	      switch(errno) {
 	      case ECONNREFUSED:
@@ -777,7 +818,7 @@ while(pt->block_unaccounted) {
 //		  case WSAENOTCONN:	//	needed?  this fails around here on my system
 #endif
 		if (errno == EAGAIN && o.verbose) {
-		  log_write(LOG_STDOUT, "Machine %s MIGHT actually be listening on probe port %d\n", hostbatch[hostindex]->targetipstr(), o.tcp_probe_ports[0]);
+		  log_write(LOG_STDOUT, "Machine %s MIGHT actually be listening on probe port %d\n", hostbatch[hostindex]->targetipstr(), o.ping_ackprobes[0]);
 		}
 		foundsomething = 1;
 		newstate = HOST_UP;	
@@ -805,11 +846,11 @@ while(pt->block_unaccounted) {
 		if (res2 == 0)
 		  log_write(LOG_STDOUT, "Machine %s is actually LISTENING on probe port %d\n",
 			 hostbatch[hostindex]->targetipstr(), 
-			 o.tcp_probe_ports[0]);
+			 o.ping_ackprobes[0]);
 		else 
 		  log_write(LOG_STDOUT, "Machine %s is actually LISTENING on probe port %d, banner: %s\n",
 			 hostbatch[hostindex]->targetipstr(), 
-			 o.tcp_probe_ports[0], buf);
+			 o.ping_ackprobes[0], buf);
 	      }
 	    }
 	    if (foundsomething) {

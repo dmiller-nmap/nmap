@@ -79,6 +79,7 @@ int addport(portlist *plist, u16 portno, u8 protocol, char *owner, int state) {
     
     log_write(LOG_XML, "<addport state=\"%s\" portid=\"%hu\" protocol=\"%s\"/>\n", statenum2str(state), portno,
 	      (protocol == IPPROTO_TCP)? "tcp" : "udp");
+    log_write(LOG_XML, "<addport state=\"%s\" portid=\"%hu\" protocol=\"%s\" owner=\"%s\"/>\n", statenum2str(state), portno, (protocol == IPPROTO_TCP)? "tcp" : "udp", ((owner && *owner) ? owner : ""));
     log_flush(LOG_XML); 
   }
 

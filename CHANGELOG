@@ -1,13 +1,36 @@
 # Nmap Changelog ($Id$)
 
+o Applied NetBSD portability patch by Darren Reed
+  (darrenr@reed.wattle.id.au)
+
+o Updated Makefile to better-detect if it can't make nmapfe and
+  provide a clearer error message.  Also fixed a couple compiler
+  warnings on some *BSD platforms.
+
+o Applied patch from "Max" (nmap@webwizarddesign.com) which adds the
+  port owner to the "addport" XML output lines which are printed (only
+  in verbose mode, I think) as each open port is discovered.
+
+o I killed the annoying whitespace that is normally appended after the
+  service name.  Now it is only there when an owner was found via -sI
+  (in which case there is a fourth column and so "service" must be
+  exactly 24 characters).
+
+Nmap 3.10ALPHA9
+
 o Reworked the "ping scan" algorithm (used for any scan except -P0 or
   -sL) to be more robust in the face of low-bandwidth and congested
-  connections.  This also improves reliability in the multi-port ping
-  case described below.
+  connections.  This also improves reliability in the multi-port and
+  multi-type ping cases described below.
+
+o "Ping types" are no longer exclusive -- you can now do combinations
+  such as "-PS22,53,80 -PT113 -PN -PE" in order to increase your odds of
+  passing through strict filters.  The "PB" flag is now deprecated
+  since you can achieve the same result via "PE" and "PT" options.
 
 o Applied patch (with modest changes) by Gabriel L. Somlo
   (somlo@acns.colostate.edu), which allows multiple TCP probe ports in
-  raw (root) mode.  
+  raw (root) mode.  See the previous item for an example.
 
 o Fixed a libpcap compilation issue noted by Josef 'Jupp' Schugt
   (deusxmachina@webmail.co.za) which relates to the definition (or

@@ -313,7 +313,10 @@ this attack, you can see my article in
 URL (http://www.insecure.org/nmap).
 .TP
 .B GENERAL OPTIONS
-None of these are required but some can be quite useful.
+None of these are required but some can be quite useful.  Note that
+the -P options can now be combined -- you can increase your odds of
+penetrating strict firewalls by sending many probe types using
+different TCP ports/flags and ICMP codes.
 .TP
 .B \-P0
 Do not try and ping hosts at all before scanning them.  This
@@ -335,15 +338,16 @@ to trickle back.  Hosts that are up should respond with a
 RST.  This option preserves the efficiency of only scanning
 hosts that are up while still allowing you to scan
 networks/hosts that block ping packets.  For non root users,
-we use connect().  To set the destination port of the probe
-packets use -PT<port number>.  The default port is 80, since
-this port is often not filtered out.
+we use connect().  To set the destination ports of the probe
+packets use -PT<port1>[,port2][...].  The default port is 80, since
+this port is often not filtered out.  Note that this option now
+accepts multiple, comma-separated port numbers.
 .TP
 .B \-PS
 This option uses SYN (connection request) packets instead of
 ACK packets for root users.  Hosts that are up should
 respond with a RST (or, rarely, a SYN|ACK).  You can set the
-destination port in the same manner as \-PT above.
+destination ports in the same manner as \-PT above.
 .TP
 .B \-PI
 This option uses a true ping (ICMP echo request) packet.  It
@@ -371,7 +375,9 @@ This is the default ping type.  It uses both the ACK (
 .B \-PI
 ) sweeps in parallel.  This way you can get firewalls that filter
 either one (but not both).  The TCP probe destination port can be set
-in the same manner as with \-PT above.
+in the same manner as with \-PT above.  Note that this flag is now deprecated
+as pingtype flags can now be used in combination.  So you should use both "PE"
+and "PT" to achieve this same effect.
 .TP
 .B \-O
 This option activates remote host identification via TCP/IP
