@@ -49,7 +49,7 @@ distro:
 	$(MAKE) clean
 	$(MAKE) static
 	$(MAKE)
-	./nmap -h >& /dev/null    #Make sure nmap exists
+	./nmap -h > /dev/null    #Make sure nmap exists
 	rm -f docs/nmap.usage.txt	
 	./nmap -h > docs/nmap.usage.txt 
 	rm -f docs/nmap_manpage.html
@@ -61,7 +61,7 @@ distro:
 	cp -r nmap.c targets.c nmap.h \
 	tcpip.c tcpip.h error.c error.h utils.c utils.h inet_aton.c \
 	configure.in config.h.in Makefile.in configure install-sh config.guess \
-	config.sub INSTALL bg/purple.gif docs/README docs/copying.html COPYING \
+	config.sub INSTALL docs/README docs/copying.html COPYING \
 	docs/nmap_doc.html docs/nmap.usage.txt docs/nmap.1 \
 	docs/nmap_manpage.html $(LIBPCAPDIR) \
 	/usr/tmp/nmap-$(VERSION)
