@@ -1,5 +1,9 @@
 # Nmap Changelog ($Id$)
 
+o Fixed a bunch of typos and capitalization issues in
+  nmap-os-fingerprints by applying patch sent in by Royce Williams
+  (royce@alaska.net).
+
 Nmap 2.54BETA33
 
 o Tons of OS fingerprint updates.  More than 100 fingerprints added or
