@@ -666,7 +666,8 @@ void pos_scan(struct hoststruct *target, u16 *portarray, int numports, stype sca
 
     set_pcap_filter(target, pd, flt_icmptcp, filter);
 
-    if (scantype == SYN_SCAN)
+    if (o.scanflags != -1) scanflags = o.scanflags;
+    else if (scantype == SYN_SCAN)
       scanflags = TH_SYN;
     else
       scanflags = TH_ACK;
@@ -1325,7 +1326,8 @@ void super_scan(struct hoststruct *target, u16 *portarray, int numports,
 
   set_pcap_filter(target, pd, flt_icmptcp_2port, filter);
 
-  if (scantype == XMAS_SCAN) scanflags = TH_FIN|TH_URG|TH_PUSH;
+  if (o.scanflags != -1) scanflags = o.scanflags;
+  else if (scantype == XMAS_SCAN) scanflags = TH_FIN|TH_URG|TH_PUSH;
   else if (scantype == NULL_SCAN) scanflags = 0;
   else if (scantype == FIN_SCAN) scanflags = TH_FIN;
   else if (scantype == MAIMON_SCAN) scanflags = TH_FIN|TH_ACK;

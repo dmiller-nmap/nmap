@@ -1,5 +1,7 @@
 # Nmap Changelog ($Id$)
 
+Nmap 2.54BETA31
+
 o Added check for strings.h before including it in portlist.c .  This
   fixes a compilation problem on some versions of Windows.  Problem
   first noted by "Michael Vorin" <mvorin@hotmail.com>
@@ -10,6 +12,8 @@ o Applied patch from Andy Lutomirski (Luto@myrealbox.com) which fixes
 o Fixed "grepable output" (-oG) so that it prints IPID sequence class
   rather than printing the TCP ISN sequence index twice.  Problem
   noted by Russell Fulton (r.fulton@auckland.ac.nz)
+
+o Added mysterious, undocumented --scanflags option.
 
 o Applied patch from Andy Lutomirski (Luto@myrealbox.com) which fixes
   some important Windows bugs.  Apparently this can cause a dramatic

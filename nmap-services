@@ -1820,6 +1820,7 @@ mapper-mapethd    3985/tcp   # MAPPER TCP/IP server
 mapper-mapethd    3985/udp   # MAPPER TCP/IP server
 mapper-ws_ethd    3986/tcp   # MAPPER workstation server
 mapper-ws_ethd    3986/udp   # MAPPER workstation server
+icq               4000/udp   # AOL ICQ instant messaging clent-server communication
 netcheque         4008/tcp   # NetCheque accounting
 netcheque         4008/udp   # NetCheque accounting
 lockd             4045/tcp   # 
@@ -1856,8 +1857,8 @@ mmcc              5050/tcp   # multimedia conference control tool
 mmcc              5050/udp   # multimedia conference control tool
 rmonitor_secure   5145/tcp   # 
 rmonitor_secure   5145/udp   # 
-aol               5190/tcp   # America-Online
-aol               5190/udp   # America-Online
+aol               5190/tcp   # America-Online.  Also can be used by ICQ
+aol               5190/udp   # America-Online.
 aol-1             5191/tcp   # AmericaOnline1
 aol-1             5191/udp   # AmericaOnline1
 aol-2             5192/tcp   # AmericaOnline2

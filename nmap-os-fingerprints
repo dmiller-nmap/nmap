@@ -869,7 +869,7 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=15C%RID=E%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
-Contributed by David E. Weekly (dweekly@legato.com)
+# Contributed by David E. Weekly (dweekly@legato.com)
 Fingerprint Mac OS X 10.1
 TSeq(Class=TR%gcd=<6%IPID=I%TS=2HZ)
 T1(DF=Y%W=807A%ACK=S++%Flags=AS%Ops=MNWNNT)
@@ -2131,17 +2131,6 @@ T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=0%ULEN=134%DAT=E)
-
-# Contributed by David E. Weekly (dweekly@legato.com)
-TSeq(Class=RI%gcd=<6%SI=<81650&>E57%IPID=I%TS=U)
-T1(DF=N%W=F000%ACK=S++%Flags=AS%Ops=MNW)
-T2(Resp=N)
-T3(Resp=Y%DF=N%W=F000%ACK=O%Flags=A%Ops=)
-T4(Resp=N)
-T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
-T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
-T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
-PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 # Contributed by RaW
 Fingerprint OS-9/68K V2.4 (Quanterra Q4124 - 68030)
@@ -3978,7 +3967,7 @@ T7(DF=Y%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=Y%TOS=C0%IPLEN=178%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=F|E)
 
 # Contributed by <DeXteR> root@dexter.dynu.com
-Fingerprint Linux Kernel 2.4.0 - 2.4.9 (X86)
+Fingerprint Linux Kernel 2.4.0 - 2.4.17 (X86)
 TSeq(Class=RI%gcd=<8%SI=<2D870AA&>3A454%IPID=Z%TS=100HZ)
 T1(DF=Y%W=2D24|16A0|1680|4000|7FFF%ACK=S++%Flags=AS%Ops=MNNTNW)
 T2(Resp=N)

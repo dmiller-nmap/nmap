@@ -301,6 +301,39 @@ int main(int argc, char *argv[], char *envp[]) {
 
 }
 
+/* parse the --scanflags argument.  It can be a number >=0 or a string consisting of TCP flag names like "URGPSHFIN".  Returns -1 if the argument is invalid. */
+static int parse_scanflags(char *arg) {
+  int flagval = 0;
+  char *end = NULL;
+
+  if (isdigit(arg[0])) {
+    flagval = strtol(arg, &end, 0);
+    if (*end || flagval < 0 || flagval > 255) return -1;
+  } else {
+    if (strcasestr(arg, "FIN")) {
+      flagval |= TH_FIN;
+    } 
+    if (strcasestr(arg, "SYN")) {
+      flagval |= TH_SYN;
+    } 
+    if (strcasestr(arg, "RST") || strcasestr(arg, "RESET")) {
+      flagval |= TH_RST;
+    } 
+    if (strcasestr(arg, "PSH") || strcasestr(arg, "PUSH")) {
+      flagval |= TH_PUSH;
+    } 
+    if (strcasestr(arg, "ACK")) {
+      flagval |= TH_ACK;
+    } 
+    if (strcasestr(arg, "URG")) {
+      flagval |= TH_URG;
+    } 
+    if (strcasestr(arg, "SYN")) {
+      flagval |= TH_SYN;
+    }
+  }
+  return flagval;
+}
 
 /* parse a URL stype ftp string of the form user:pass@server:portno */
 static int parse_bounce_argument(struct ftpinfo *ftp, char *url) {
@@ -386,6 +419,7 @@ int nmap_main(int argc, char *argv[]) {
     {"timing", required_argument, 0, 'T'},
     {"max_rtt_timeout", required_argument, 0, 0},
     {"min_rtt_timeout", required_argument, 0, 0},
+    {"scanflags", required_argument, 0, 0},
     {"host_timeout", required_argument, 0, 0},
     {"scan_delay", required_argument, 0, 0},
     {"initial_rtt_timeout", required_argument, 0, 0},
@@ -468,6 +502,11 @@ int nmap_main(int argc, char *argv[]) {
 	o.min_rtt_timeout = atoi(optarg);
 	if (o.min_rtt_timeout > 50000) {
 	  fatal("Warning:  o.min_rtt_timeout is given in milliseconds, your value seems pretty large.");
+	}
+      } else if (strcmp(long_options[option_index].name, "scanflags") == 0) {
+	o.scanflags = parse_scanflags(optarg);
+	if (o.scanflags < 0) {
+	  fatal("--scanflags option must be a number between 0 and 255 (inclusive) or a string like \"URGPSHFIN\".");
 	}
       } else if (strcmp(long_options[option_index].name, "host_timeout") == 0) {
 	o.host_timeout = strtoul(optarg, NULL, 10);
@@ -1370,6 +1409,7 @@ void options_init() {
   o.initial_rtt_timeout = INITIAL_RTT_TIMEOUT;
   o.host_timeout = HOST_TIMEOUT;
   o.scan_delay = 0;
+  o.scanflags = -1;
   o.extra_payload_length = 0;
   o.extra_payload = NULL;
 }

@@ -248,6 +248,10 @@ struct ops /* someone took struct options, <grrr> */ {
   char *extra_payload;
   unsigned long host_timeout;
   int scan_delay;
+  int scanflags; /* if not -1, this value should dictate the TCP flags
+		    for the core portscaning routine (eg to change a
+		    FIN scan into a PSH scan.  Sort of a hack, but can
+		    be very useful sometimes. */
   int initial_rtt_timeout;
   struct in_addr resume_ip; /* The last IP in the log file if user 
 			       requested --restore .  Otherwise 
