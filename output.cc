@@ -588,17 +588,22 @@ static int addtochararrayifnew(char *arr[], int *numentries, int arrsize, char *
   return *numentries;
 }
 
+/* guess is true if we should print guesses */
 #define MAX_OS_CLASSMEMBERS 8
-static void printosclassificationoutput(const struct OS_Classification_Results *OSR) {
+static void printosclassificationoutput(const struct OS_Classification_Results *OSR, bool guess) {
   int classno, i, familyno;
    int overflow = 0; /* Whether we have too many devices to list */
   char *types[MAX_OS_CLASSMEMBERS];
   char fullfamily[MAX_OS_CLASSMEMBERS][128]; // "[vendor] [os family]"
+  double familyaccuracy[MAX_OS_CLASSMEMBERS]; // highest accuracy for this fullfamily
   char familygenerations[MAX_OS_CLASSMEMBERS][48]; // example: "4.X|5.X|6.X"
   int numtypes = 0, numfamilies=0;
   char tmpbuf[1024];
 
-  for(i=0; i < MAX_OS_CLASSMEMBERS; i++) familygenerations[i][0] = '\0';
+  for(i=0; i < MAX_OS_CLASSMEMBERS; i++) {
+    familygenerations[i][0] = '\0';
+    familyaccuracy[i] = 0.0;
+  }
 
   if (OSR->overall_results == OSSCAN_SUCCESS) {
 
@@ -612,7 +617,12 @@ static void printosclassificationoutput(const struct OS_Classification_Results *
     }
 
     // Now to create the fodder for normal output
-    for (classno=0; classno < OSR->OSC_num_perfect_matches; classno++) {
+    for (classno=0; classno < OSR->OSC_num_matches; classno++) {
+      /* We have processed enough if any of the following are true */
+      if (!guess && OSR->OSC_Accuracy[classno] < 1.0 ||
+	  OSR->OSC_Accuracy[classno] <= OSR->OSC_Accuracy[0] - 0.1 ||
+	  OSR->OSC_Accuracy[classno] < 1.0 && classno > 9)
+	break;
       if (addtochararrayifnew(types, &numtypes, MAX_OS_CLASSMEMBERS, OSR->OSC[classno]->Device_Type) == -1)
 	overflow = 1;
       
@@ -647,6 +657,7 @@ static void printosclassificationoutput(const struct OS_Classification_Results *
 	Strncpy(fullfamily[numfamilies], tmpbuf, 128);
 	if (OSR->OSC[classno]->OS_Generation)
 	  Strncpy(familygenerations[numfamilies], OSR->OSC[classno]->OS_Generation, 48);
+	familyaccuracy[numfamilies] = OSR->OSC_Accuracy[classno];
 	numfamilies++;
       }
     }
@@ -655,11 +666,12 @@ static void printosclassificationoutput(const struct OS_Classification_Results *
       log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT, "Device type: ");
       for(classno=0; classno < numtypes; classno++)
 	log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT, "%s%s", types[classno], (classno < numtypes - 1)? "|" : "");
-      log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT, "\n    Running: ");
+      log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT, "\nRunning%s: ", (familyaccuracy[0] < 1.0)? " (JUST GUESSING) " : "");
       for(familyno = 0; familyno < numfamilies; familyno++) {
 	if (familyno > 0) log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT, ", ");
 	log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT, "%s", fullfamily[familyno]);
 	if (*familygenerations[familyno]) log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT, " %s", familygenerations[familyno]);
+	if (familyaccuracy[familyno] < 1.0) log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT, " (%d%%)", (int) (familyaccuracy[familyno] * 100));
       }
       log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT, "\n");
     }
@@ -678,16 +690,20 @@ void printosscanoutput(Target *currenths) {
 
   if (currenths->osscan_performed && currenths->FPR != NULL) {
     log_write(LOG_XML, "<os>");
-    if (currenths->osscan_openport > 0) {
+    if (currenths->FPR->osscan_opentcpport > 0) {
       log_write(LOG_XML, 
 		"<portused state=\"open\" proto=\"tcp\" portid=\"%hu\" />\n",
-		currenths->osscan_openport);
+		currenths->FPR->osscan_opentcpport);
     }
-    if (currenths->osscan_closedport > 0) {
+    if (currenths->FPR->osscan_closedtcpport > 0) {
       log_write(LOG_XML, 
 		"<portused state=\"closed\" proto=\"tcp\" portid=\"%hu\" />\n",
-		currenths->osscan_closedport);
+		currenths->FPR->osscan_closedtcpport);
     }
+
+    // If the FP can't be submitted anyway, might as well make a guess.
+    printosclassificationoutput(currenths->FPR->getOSClassification(), 
+				o.osscan_guess || !currenths->FPR->fingerprintSuitableForSubmission());
     
     if (currenths->FPR->overall_results == OSSCAN_SUCCESS && currenths->FPR->num_perfect_matches <= 8) {
       if (currenths->FPR->num_perfect_matches > 0) {
@@ -707,12 +723,12 @@ void printosscanoutput(Target *currenths) {
 	
 	if (currenths->FPR->num_perfect_matches == 1)
 	  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,
-		    "Remote OS guess: %s", 
+		    "OS details: %s", 
 		    currenths->FPR->prints[0]->OS_name);
 	
 	else {
 	  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,
-		    "Remote OS guesses: %s", 
+		    "OS details: %s", 
 		    currenths->FPR->prints[0]->OS_name);
 	  i = 1;
 	  while(currenths->FPR->accuracy[i] == 1) {
@@ -722,7 +738,8 @@ void printosscanoutput(Target *currenths) {
 	  }
 	}
       } else {
-	if (o.osscan_guess && currenths->FPR->num_matches > 0) {
+	if ((o.osscan_guess || !currenths->FPR->fingerprintSuitableForSubmission()) && 
+	    currenths->FPR->num_matches > 0) {
 	  /* Print the best guesses available */
 	  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Aggressive OS guesses: %s (%d%%)", currenths->FPR->prints[0]->OS_name, (int) (currenths->FPR->accuracy[0] * 100));
 	  for(i=1; i < 10 && currenths->FPR->num_matches > i &&
@@ -737,37 +754,33 @@ void printosscanoutput(Target *currenths) {
 	  }
 	  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT, "\n");
 	}
-	if (o.scan_delay < 500 && currenths->osscan_openport > 0 &&
-	    currenths->osscan_closedport > 0 ) {
-	  log_write(LOG_NORMAL|LOG_SKID_NOXLT|LOG_STDOUT,"No exact OS matches for host (If you know what OS is running on it, see http://www.insecure.org/cgi-bin/nmap-submit.cgi).\nTCP/IP fingerprint:\n%s\n", mergeFPs(currenths->FPs, currenths->numFPs, currenths->osscan_openport, currenths->osscan_closedport));
+	if (currenths->FPR->fingerprintSuitableForSubmission()) {
+	  log_write(LOG_NORMAL|LOG_SKID_NOXLT|LOG_STDOUT,"No exact OS matches for host (If you know what OS is running on it, see http://www.insecure.org/cgi-bin/nmap-submit.cgi).\nTCP/IP fingerprint:\n%s\n", mergeFPs(currenths->FPR->FPs, currenths->FPR->numFPs, currenths->FPR->osscan_opentcpport, currenths->FPR->osscan_closedtcpport));
 	} else {
 	  log_write(LOG_NORMAL|LOG_SKID_NOXLT|LOG_STDOUT,"No exact OS matches for host (test conditions non-ideal).");
 	  if (o.verbose > 1)
-	    log_write(LOG_NORMAL|LOG_SKID_NOXLT|LOG_STDOUT, "\nTCP/IP fingerprint:\n%s", mergeFPs(currenths->FPs, currenths->numFPs, currenths->osscan_openport, currenths->osscan_closedport));
+	    log_write(LOG_NORMAL|LOG_SKID_NOXLT|LOG_STDOUT, "\nTCP/IP fingerprint:\n%s", mergeFPs(currenths->FPR->FPs, currenths->FPR->numFPs, currenths->FPR->osscan_opentcpport, currenths->FPR->osscan_closedtcpport));
 	}
       }
       
       log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"\n");	  
-      if (currenths->goodFP >= 0 && (o.debugging || o.verbose > 1) && currenths->FPR->num_perfect_matches > 0 ) {
-	log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"OS Fingerprint:\n%s\n", fp2ascii(currenths->FPs[currenths->goodFP]));
+      if (currenths->FPR->goodFP >= 0 && (o.debugging || o.verbose > 1) && currenths->FPR->num_perfect_matches > 0 ) {
+	log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"OS Fingerprint:\n%s\n", fp2ascii(currenths->FPR->FPs[currenths->FPR->goodFP]));
       }
     } else if (currenths->FPR->overall_results == OSSCAN_NOMATCHES) {
-      if (o.scan_delay < 500  && currenths->osscan_openport > 0 &&
-	  currenths->osscan_closedport > 0 ) {
-	log_write(LOG_NORMAL|LOG_SKID_NOXLT|LOG_STDOUT,"No OS matches for host (If you know what OS is running on it, see http://www.insecure.org/cgi-bin/nmap-submit.cgi).\nTCP/IP fingerprint:\n%s\n", mergeFPs(currenths->FPs, currenths->numFPs, currenths->osscan_openport, currenths->osscan_closedport));
+      if (o.scan_delay < 500  && currenths->FPR->osscan_opentcpport > 0 &&
+	  currenths->FPR->osscan_closedtcpport > 0 ) {
+	log_write(LOG_NORMAL|LOG_SKID_NOXLT|LOG_STDOUT,"No OS matches for host (If you know what OS is running on it, see http://www.insecure.org/cgi-bin/nmap-submit.cgi).\nTCP/IP fingerprint:\n%s\n", mergeFPs(currenths->FPR->FPs, currenths->FPR->numFPs, currenths->FPR->osscan_opentcpport, currenths->FPR->osscan_closedtcpport));
       } else {
-	log_write(LOG_NORMAL|LOG_SKID_NOXLT|LOG_STDOUT,"No OS matches for host (test conditions non-ideal).\nTCP/IP fingerprint:\n%s\n", mergeFPs(currenths->FPs, currenths->numFPs, currenths->osscan_openport, currenths->osscan_closedport));
+	log_write(LOG_NORMAL|LOG_SKID_NOXLT|LOG_STDOUT,"No OS matches for host (test conditions non-ideal).\nTCP/IP fingerprint:\n%s\n", mergeFPs(currenths->FPR->FPs, currenths->FPR->numFPs, currenths->FPR->osscan_opentcpport, currenths->FPR->osscan_closedtcpport));
       }
     } else if (currenths->FPR->overall_results == OSSCAN_TOOMANYMATCHES || currenths->FPR->num_perfect_matches > 8)
       {
-	log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Too many fingerprints match this host for me to give an accurate OS guess\n");
+	log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Too many fingerprints match this host to give specific OS details\n");
 	if (o.debugging || o.verbose) {
-	  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"TCP/IP fingerprint:\n%s\n\n",  mergeFPs(currenths->FPs, currenths->numFPs, currenths->osscan_openport, currenths->osscan_closedport));
+	  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"TCP/IP fingerprint:\n%s\n\n",  mergeFPs(currenths->FPR->FPs, currenths->FPR->numFPs, currenths->FPR->osscan_opentcpport, currenths->FPR->osscan_closedtcpport));
 	}
       } else { assert(0); }
-    printosclassificationoutput(currenths->FPR->getOSClassification());
-  
-    
     
     log_write(LOG_XML, "</os>\n");
 

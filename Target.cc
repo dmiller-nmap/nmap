@@ -57,10 +57,7 @@ void Target::Initialize() {
   hostname = NULL;
   bzero(&seq, sizeof(seq));
   FPR = NULL;
-  bzero(FPs, sizeof(FPs));
   osscan_performed = 0;
-  osscan_openport = osscan_closedport = -1;
-  numFPs = goodFP = 0;
   bzero(&ports, sizeof(struct portlist));
   wierd_responses = flags = 0;
   bzero(&to, sizeof(to));
@@ -85,18 +82,10 @@ Target::~Target() {
 }
 
 void Target::FreeInternal() {
-  int i;
 
   /* Free the DNS name if we resolved one */
   if (hostname)
     free(hostname);
-
-  /* Free OS fingerprints of OS scanning was done */
-  for(i=0; i < numFPs; i++) {
-    freeFingerPrint(FPs[i]);
-    FPs[i] = NULL;
-  }
-  numFPs = 0;
 
   if (nameIPBuf) {
     free(nameIPBuf);

@@ -148,18 +148,18 @@ snprintf(filter, sizeof(filter), "dst host %s and (icmp or (tcp and src host %s)
 
  /* Lets find an open port to use */
  openport = (unsigned long) -1;
- target->osscan_openport = -1;
- target->osscan_closedport = -1;
+ target->FPR->osscan_opentcpport = -1;
+ target->FPR->osscan_closedtcpport = -1;
  tport = NULL;
  if ((tport = nextport(&target->ports, NULL, IPPROTO_TCP, PORT_OPEN, false))) {
    openport = tport->portno;
-   target->osscan_openport = tport->portno;
+   target->FPR->osscan_opentcpport = tport->portno;
  }
  
  /* Now we should find a closed port */
  if ((tport = nextport(&target->ports, NULL, IPPROTO_TCP, PORT_CLOSED, false))) {
    closedport = tport->portno;
-   target->osscan_closedport = tport->portno;
+   target->FPR->osscan_closedtcpport = tport->portno;
  } else if ((tport = nextport(&target->ports, NULL, IPPROTO_TCP, PORT_UNFIREWALLED, false))) {
    /* Well, we will settle for unfiltered */
    closedport = tport->portno;
@@ -1081,10 +1081,10 @@ int bestaccidx;
 	 return 1;
        }
    }
-   target->FPs[itry] = get_fingerprint(target, &si[itry]); 
+   target->FPR->FPs[itry] = get_fingerprint(target, &si[itry]); 
    if (target->timedout)
      return 1;
-   match_fingerprint(target->FPs[itry], &FP_matches[itry], 
+   match_fingerprint(target->FPR->FPs[itry], &FP_matches[itry], 
 		     o.reference_FPs, OSSCAN_GUESS_THRESHOLD);
    if (FP_matches[itry].overall_results == OSSCAN_SUCCESS && 
        FP_matches[itry].num_perfect_matches > 0)
@@ -1093,13 +1093,13 @@ int bestaccidx;
      sleep(2);
  }
 
- target->numFPs = (itry == 3)? 3 : itry + 1;
- memcpy(&(target->seq), &si[target->numFPs - 1], sizeof(struct seq_info));
+ target->FPR->numFPs = (itry == 3)? 3 : itry + 1;
+ memcpy(&(target->seq), &si[target->FPR->numFPs - 1], sizeof(struct seq_info));
 
  /* Now lets find the best match */
  bestacc = 0;
  bestaccidx = 0;
- for(itry=0; itry < target->numFPs; itry++) {
+ for(itry=0; itry < target->FPR->numFPs; itry++) {
    if (FP_matches[itry].overall_results == OSSCAN_SUCCESS &&
        FP_matches[itry].num_matches > 0 &&
        FP_matches[itry].accuracy[0] > bestacc) {
@@ -1112,20 +1112,20 @@ int bestaccidx;
 
  *(target->FPR) = FP_matches[bestaccidx];
 
- for(i=0; i < target->numFPs; i++) {
+ for(i=0; i < target->FPR->numFPs; i++) {
    if (i == bestaccidx)
      continue;
    if (o.debugging) {
-     error("Failed exact match #%d (0-based):\n%s", i, fp2ascii(target->FPs[i]));
+     error("Failed exact match #%d (0-based):\n%s", i, fp2ascii(target->FPR->FPs[i]));
    }
  }
 
- if (target->numFPs > 1 && target->FPR->overall_results == OSSCAN_SUCCESS &&
+ if (target->FPR->numFPs > 1 && target->FPR->overall_results == OSSCAN_SUCCESS &&
      target->FPR->accuracy[0] == 1.0) {
-if (o.verbose) error("WARNING:  OS didn't match until the try #%d", target->numFPs);
+if (o.verbose) error("WARNING:  OS didn't match until the try #%d", target->FPR->numFPs);
  } 
 
- target->goodFP = bestaccidx;
+ target->FPR->goodFP = bestaccidx;
  
  return 1;
 }

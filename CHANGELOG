@@ -14,6 +14,17 @@ o Added a new classification system to nmap-os-fingerprints.  In
   locate and eliminate the SCO systems on a network, or find the
   wireless access points (WAPs) by scanning from the wired side.
 
+o Classification system described above is now used to print out a
+  "device type" line and OS categories for matches.  The free-form
+  English details are still printed as well.  Nmap can sometimes
+  provide classifications even where it used to provide nothing
+  because of "too many matches".  These have been added to XML output
+  as well.  They are not printed for the "grepable output", as I
+  consider that format deprecated.
+
+o Nmap will now sometimes guess in the "no exact matches" case, even
+  if you don't use the secret --osscan_guess or -fuzzy options.
+
 o Windows and Amiga ports now use packet receive times from libpcap.
   Let me know if you get any "time computation problem" errors.
 

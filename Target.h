@@ -97,16 +97,10 @@ class Target {
   const char *NameIP(char *buf, size_t buflen);
   /* This next version returns a STATIC buffer -- so no concurrency */
   const char *NameIP();
+
   struct seq_info seq;
   FingerPrintResults *FPR;
-  FingerPrint *FPs[10]; /* Fingerprint data obtained from host */
   int osscan_performed; /* nonzero if an osscan was performed */
-  int osscan_openport; /* Open port used for scannig (if one found -- 
-			  otherwise -1) */
-  int osscan_closedport; /* Closed port used for scannig (if one found -- 
-			    otherwise -1) */
-  int numFPs;
-  int goodFP;
   struct portlist ports;
   /*
   unsigned int up;
