@@ -421,7 +421,7 @@ int arg_parse(const char *command, char ***argv) {
     return -1;
   }
   myargv = (char **) malloc((MAX_PARSE_ARGS + 2) * sizeof(char *));
-  bzero(myargv, (MAX_PARSE_ARGS+2) * sizeof(char *));
+  memset(myargv, 0, (MAX_PARSE_ARGS+2) * sizeof(char *));
   myargv[0] = (char *) 0x123456; /* Integrity checker */
   myargv++;
   start = mycommand;

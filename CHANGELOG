@@ -1,5 +1,8 @@
 # Nmap Changelog ($Id$)
 
+o Applied some portability fixes from  albert chin
+  (china@thewrittenword.com)
+
 Nmap 2.54BETA34
 
 o Windows compilation fixed thanks to new VC++ project file (nmap.dsp) sent

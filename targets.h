@@ -97,7 +97,7 @@ struct tcpqueryinfo {
 };
 
 struct pingtech {
-  int icmpscan: 1,
+  unsigned int icmpscan: 1,
     rawicmpscan: 1,
     connecttcpscan: 1,
     rawtcpscan: 1;

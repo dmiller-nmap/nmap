@@ -92,7 +92,7 @@ void *realloc();
 #include <ctype.h>
 #include <sys/types.h>
 
-#ifndef WIN32	//	from nmapNT -- seems to work
+#ifndef WIN32	/* from nmapNT -- seems to work */
 #include <sys/wait.h>
 #endif /* !WIN32 */
 
