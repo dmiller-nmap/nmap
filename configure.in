@@ -63,8 +63,6 @@ dnl Check whether libpcap is already available
 AC_CHECK_LIB(pcap, pcap_datalink, have_libpcap=yes, have_libpcap=no)
 if test $have_libpcap = yes; then
   AC_MSG_CHECKING(if libpcap version is recent enough)
-  SAVELIBS="$LIBS"
-  LIBS="$LIBS -lpcap"
   AC_TRY_RUN([
 #include <stdio.h>
 extern char pcap_version[];
@@ -93,7 +91,6 @@ int main() {
 [AC_MSG_RESULT(no); have_libpcap=no],
 [AC_MSG_RESULT(no); have_libpcap=no])
 fi
-LIBS="$SAVELIBS"
 if test $have_libpcap = yes; then
   PCAP_DEPENDS=""
   PCAP_CLEAN=""
