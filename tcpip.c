@@ -757,7 +757,7 @@ exit(1);
    in pcap_open_live()
  */
 
-char *readip_pcap(pcap_t *pd, unsigned int *len, int to_usec) {
+char *readip_pcap(pcap_t *pd, unsigned int *len, long to_usec) {
 int offset = -1;
 struct pcap_pkthdr head;
 char *p;
@@ -918,6 +918,7 @@ struct interface_info *getinterfaces(int *howmany) {
       /* skip any device with no name */
       if (!*((char *)ifr))
         continue;
+
       sin = (struct sockaddr_in *) &ifr->ifr_addr;
       memcpy(&(mydevs[numinterfaces].addr), (char *) &(sin->sin_addr), sizeof(struct in_addr));
       /* In case it is a stinkin' alias */

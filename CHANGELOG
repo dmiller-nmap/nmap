@@ -1,5 +1,9 @@
 # Nmap Changelog
 
+-- Provide more information in machine/human readable output files (start time, end time, RPC program name, Nmap version number)
+
+-- The -o and -m options have been deprecated.  From now on, you should use -oN for normal (human readable) output and -oM for machine parseable output.  At some point I might add -oH (HTML output) or -oSK (sKr|pt |<iDdi3 0uTPut).
+
 ** Version 2.3BETA10
 
 -- Added about 70 new OS fingerprints so that Nmap can detect more
@@ -311,4 +315,10 @@
    mkdir -p (doesn't work on some systems)
 
 -- Documentation updated and clarified slightly.
+
+
+
+
+
+
 

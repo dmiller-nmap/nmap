@@ -187,6 +187,8 @@ void *realloc();
 #define INITIAL_RTT_TIMEOUT 6000 /* Allow 6 seconds at first for packet responses */
 #define HOST_TIMEOUT    0 /* By default allow unlimited time to scan each host */
 
+/* If nmap is called with one of the names below, it will start up in interactive mode -- alternatively, you can rename Nmap any of the following names to have it start up interactivey by default.  */
+#define INTERACTIVE_NAMES { "BitchX", "Calendar", "X", "awk", "bash", "bash2", "calendar", "cat", "csh", "elm", "emacs", "ftp", "fvwm", "g++", "gcc", "gimp", "httpd", "irc", "man", "mutt", "nc", "ncftp", "netscape", "perl", "pine", "ping", "sleep", "slirp", "ssh", "sshd", "startx", "tcsh", "telnet", "telnetd", "tia", "top", "vi", "vim", "xdvi", "xemacs", "xterm", "xv" }
 
 /* DO NOT change stuff after this point */
 #define UC(b)   (((int)b)&0xff)
@@ -312,6 +314,9 @@ int send_small_fragz(int sd, struct in_addr *source, struct in_addr *victim,
 int listen_icmp(int icmpsock, unsigned short outports[],
 		unsigned short numtries[], int *num_out,
 		struct in_addr target, portlist *ports);
+
+/* Renamed main so that interactive mode could preprocess when neccessary */
+int nmap_main(int argc, char *argv[]);
 
 /* general helper functions */
 void hdump(unsigned char *packet, int len);

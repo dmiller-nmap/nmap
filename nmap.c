@@ -7,6 +7,40 @@ extern int optind;
 struct ops o;  /* option structure */
 
 int main(int argc, char *argv[]) {
+  /* The "real" main is nmap_main().  This function hijacks control at the
+     beginning to do the following:
+     1) Check if Nmap called under name listed in INTERACTIVE_NAMES or with
+        interactive.
+     2) Start interactive mode or just call nmap_main
+  */
+  char *interactive_names[] = INTERACTIVE_NAMES;
+  int numinames = sizeof(interactive_names) / sizeof(char *);
+  int nameidx;
+  char *nmapcalledas;
+  int interactivemode = 0;
+
+  /* First we figure out whether the name nmap is called as qualifies it 
+     for interactive mode treatment */
+  nmapcalledas = strrchr(argv[0], '/');
+  if (!nmapcalledas) {
+    nmapcalledas = argv[0];
+  } else nmapcalledas++;
+
+  for(nameidx = 0; nameidx < numinames; nameidx++) {
+    if (strcasecmp(nmapcalledas, interactive_names[nameidx]) == 0) {
+      printf("Entering interactive mode due to argv[0]\n");
+      interactivemode = 1;
+      break;
+    }
+  }
+
+  if (argc == 2 && strcmp("--interactive", argv[1]) == 0) {
+    interactivemode = 1;
+  }
+
+}
+
+int nmap_main(int argc, char *argv[]) {
 char *p, *q;
 int i, j, arg, argvlen;
 FILE *inputfd = NULL;
@@ -47,9 +81,12 @@ struct option long_options[] =
   {"host_timeout", required_argument, 0, 0},
   {"scan_delay", required_argument, 0, 0},
   {"initial_rtt_timeout", required_argument, 0, 0},
+  {"oN", required_argument, 0, 0},
+  {"oM", required_argument, 0, 0},  
+  {"oH", required_argument, 0, 0},  
+  {"initial_rtt_timeout", required_argument, 0, 0},
   {0, 0, 0, 0}
 };
-
 
 #ifdef ROUTETHROUGHTEST
 /* Routethrough stuff -- kill later */
@@ -87,7 +124,8 @@ emptystring[0] = '\0'; /* It wouldn't be an emptystring w/o this ;) */
 if (argc < 2 ) printusage(argv[0]);
 
 /* OK, lets parse these args! */
-while((arg = getopt_long(argc,fakeargv,"Ab:D:d::e:Ffg:hIi:M:m:NnOo:P:p:qRrS:s:T:Vv", long_options, &option_index)) != EOF) {
+
+while((arg = getopt_long_only(argc,fakeargv,"Ab:D:d::e:Ffg:hIi:M:m:NnOo:P:p:qRrS:s:T:Vv", long_options, &option_index)) != EOF) {
   switch(arg) {
   case 0:
     if (strcmp(long_options[option_index].name, "max_rtt_timeout") == 0) {
@@ -116,6 +154,36 @@ while((arg = getopt_long(argc,fakeargv,"Ab:D:d::e:Ffg:hIi:M:m:NnOo:P:p:qRrS:s:T:
       if (o.initial_rtt_timeout <= 0) {
 	fatal("scan_delay must be greater than 0");
       }   
+    } else if (strcmp(long_options[option_index].name, "oN") == 0) {
+      if (o.logfd != NULL) fatal("Only one normal log filename allowed");
+      if (*optarg == '-' && *(optarg + 1) == '\0') {    
+	o.logfd = stdout;
+	o.nmap_stdout = fopen("/dev/null", "w");
+	if (!o.nmap_stdout) {
+	  fatal("Could not open /dev/null for writing for use with -sN - ");
+	}
+      } else {    
+	o.logfd = fopen(optarg, "w");
+	if (!o.logfd) 
+	  fatal("Failed to open output file %s for writing", optarg);
+      }
+
+    } else if (strcmp(long_options[option_index].name, "oM") == 0) {
+      if (o.machinelogfd != NULL) fatal("Only one machine log filename allowed");
+      if (*optarg == '-' && *(optarg + 1) == '\0') {    
+	o.machinelogfd = stdout;
+	o.nmap_stdout = fopen("/dev/null", "w");
+	if (!o.nmap_stdout) {
+	  fatal("Could not open /dev/null for writing for use with -sN - ");
+	}
+      } else {    
+	o.machinelogfd = fopen(optarg, "w");
+	if (!o.machinelogfd) 
+	  fatal("Failed to open machine output file %s for writing", optarg);
+      }
+
+    } else if (strcmp(long_options[option_index].name, "oH") == 0) {
+      fatal("HTML output is not yet supported");
     } else {
       fatal("Unknown long option (%s) given@#!$#$", long_options[option_index].name);
     }
@@ -216,18 +284,20 @@ while((arg = getopt_long(argc,fakeargv,"Ab:D:d::e:Ffg:hIi:M:m:NnOo:P:p:qRrS:s:T:
     o.reference_FPs = parse_fingerprint_reference_file();
     break;
   case 'o': 
-    if (o.logfd != NULL) fatal("Only one log filename allowed");
+
+    if (o.logfd != NULL) fatal("Only one normal log filename allowed");
     if (*optarg == '-' && *(optarg + 1) == '\0') {    
       o.logfd = stdout;
       o.nmap_stdout = fopen("/dev/null", "w");
       if (!o.nmap_stdout) {
-	fatal("Could not open /dev/null for writing for use with -m - ");
+	fatal("Could not open /dev/null for writing for use with -o - ");
       }
     } else {    
       o.logfd = fopen(optarg, "w");
       if (!o.logfd) 
 	fatal("Failed to open output file %s for writing", optarg);
     }
+
     break;
   case 'P': 
     if (*optarg == '\0' || *optarg == 'I')
@@ -512,18 +582,33 @@ if (o.bouncescan) {
 }
 fflush(stdout);
 
-if (o.logfd) {
+if (o.logfd || o.machinelogfd) {
   timep = time(NULL);
+
   /* Brief info incase they forget what was scanned */
   Strncpy(mytime, ctime(&timep), sizeof(mytime));
   chomp(mytime);
-  fprintf(o.logfd, "# Nmap scan initiated %s as: ", mytime);
-  for(i=0; i < argc; i++)
-    fprintf(o.logfd, "%s ", fakeargv[i]);
-  fprintf(o.logfd, "\n");
+  if (o.logfd) {
+    fprintf(o.logfd, "# Nmap (V. %s) scan initiated %s as: ", VERSION, mytime);
+  }
+
+  if (o.machinelogfd) {
+    fprintf(o.machinelogfd, "# Nmap (V. %s) scan initiated %s as: ", VERSION, mytime);
+  }
+
+  if (o.logfd) {
+    for(i=0; i < argc; i++)
+      fprintf(o.logfd, "%s ", fakeargv[i]);
+    fprintf(o.logfd, "\n");
+  }
+
+  if (o.machinelogfd) {
+    for(i=0; i < argc; i++)
+      fprintf(o.machinelogfd, "%s ", fakeargv[i]);
+    fprintf(o.machinelogfd, "\n");
+  }
+
 }
-
-
 
 /* more fakeargv junk, BTW malloc'ing extra space in argv[0] doesn't work */
 if (quashargv) {
@@ -736,8 +821,23 @@ else {
   }
 }
 
-i = time(NULL) - starttime;
+timep = time(NULL);
+i = timep - starttime;
  fprintf(o.nmap_stdout, "Nmap run completed -- %d %s (%d %s up) scanned in %d %s\n", numhosts_scanned, (numhosts_scanned == 1)? "IP address" : "IP addresses", numhosts_up, (numhosts_up == 1)? "host" : "hosts",  i, (i == 1)? "second": "seconds");
+if (o.logfd || o.machinelogfd) {
+
+  Strncpy(mytime, ctime(&timep), sizeof(mytime));
+  chomp(mytime);
+  if (o.logfd) {
+    fprintf(o.logfd, "# Nmap run completed at %s -- %d %s (%d %s up) scanned in %d %s\n", mytime, numhosts_scanned, (numhosts_scanned == 1)? "IP address" : "IP addresses", numhosts_up, (numhosts_up == 1)? "host" : "hosts",  i, (i == 1)? "second": "seconds");
+  }
+
+  if (o.machinelogfd) {
+    fprintf(o.machinelogfd, "# Nmap run completed at %s -- %d %s (%d %s up) scanned in %d %s\n", mytime, numhosts_scanned, (numhosts_scanned == 1)? "IP address" : "IP addresses", numhosts_up, (numhosts_up == 1)? "host" : "hosts",  i, (i == 1)? "second": "seconds");
+  }
+
+}
+
 return 0;
 }
 
@@ -977,8 +1077,8 @@ Options (none are required, most can be combined):\n\
    -I Get identd (rfc 1413) info on listening TCP processes.\n\
    -n Don't DNS resolve anything unless we have to (makes ping scans faster)\n\
    -R Try to resolve all hosts, even down ones (can take a lot of time)\n\
-   -o <logfile> Output scan logs to <logfile> in human readable.\n\
-   -m <logfile> Output scan logs to <logfile> in machine parseable format.\n\
+   -oN <logfile> Output scan logs to <logfile> in normal human readable format.\n\
+   -oM <logfile> Output scan logs to <logfile> in machine parseable format.\n\
    -i <inputfile> Grab IP numbers or hostnames from file.  Use '-' for stdin\n\
    -g <portnumber> Sets the source port used for scans.  20 and 53 are good choices.\n\
    -S <your_IP> If you want to specify the source address of SYN or FYN scan.\n", VERSION);
@@ -1241,6 +1341,7 @@ void printandfreeports(portlist ports) {
     strcpy(protocol,(current->proto == IPPROTO_TCP)? "tcp": "udp");
     state = statenum2str(current->state);
     service = nmap_getservbyport(htons(current->portno), protocol);
+
     if (o.rpcscan) {
       switch(current->rpc_status) {
       case RPC_STATUS_UNTESTED:
@@ -1257,7 +1358,7 @@ void printandfreeports(portlist ports) {
 	break;
       case RPC_STATUS_GOOD_PROG:
 	name = nmap_getrpcnamebynum(current->rpc_program);
-	snprintf(rpcmachineinfo, sizeof(rpcmachineinfo), "(%li*%li-%li)", current->rpc_program, current->rpc_lowver, current->rpc_highver);
+	snprintf(rpcmachineinfo, sizeof(rpcmachineinfo), "(%s:%li*%li-%li)", (name)? name : "", current->rpc_program, current->rpc_lowver, current->rpc_highver);
 	if (!name) {
 	  snprintf(rpcinfo, sizeof(rpcinfo), "(#%li (unknown) V%li-%li)", current->rpc_program, current->rpc_lowver, current->rpc_highver);
 	} else {
@@ -1283,6 +1384,7 @@ void printandfreeports(portlist ports) {
     nmap_machine_log("%d/%s/%s/%s/%s/%s//", current->portno, state, 
 		     protocol, (current->owner)? current->owner : "",
 		     (service)? service->s_name: "", rpcmachineinfo);    
+
     tmp = current;
     current = current->next;
     if (tmp->owner) free(tmp->owner);

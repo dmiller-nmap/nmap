@@ -354,6 +354,7 @@ if (o.verbose && openport != -1)
        seq_avg_inc = (0.5) + seq_avg_inc / (si->responses - 1);
        /*       printf("seq_avg_inc=%u\n", seq_avg_inc);*/
        for(i=0; i < si->responses -1; i++)       {     
+
 	 /*	 printf("The difference is %u\n", seq_diffs[i]);
 		 printf("Adding %u^2=%e", MOD_DIFF(seq_diffs[i], seq_avg_inc), pow(MOD_DIFF(seq_diffs[i], seq_avg_inc), 2));*/
 	 /* pow() seems F#@!#$!ed up on some Linux systems so I will
@@ -367,6 +368,7 @@ if (o.verbose && openport != -1)
        }
        /*       printf("The sequence sum is %e\n", seq_inc_sum);*/
        seq_inc_sum /= (si->responses - 1);
+
        /* Some versions of Linux libc seem to have broken pow ... so we
 	  avoid it */
 #ifdef LINUX       
@@ -374,6 +376,7 @@ if (o.verbose && openport != -1)
 #else
        si->index = (unsigned int) (0.5 + pow(seq_inc_sum, 0.5));
 #endif
+
        /*       printf("The sequence index is %d\n", si->index);*/
        if (si->index < 75) {
 	 si->class = SEQ_TD;

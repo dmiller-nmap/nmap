@@ -324,9 +324,7 @@ inline int Sendto(char *functionname, int sd, char *packet, int len,
 unsigned short in_cksum(unsigned short *ptr,int nbytes);
 /* Hex dump */
 int get_link_offset(char *device);
-char *readip_pcap(pcap_t *pd, unsigned int *len, int to_usec);
-char *readip_pcap_timed(pcap_t *pd, unsigned int *len, unsigned int timeout /*seconds
- */);
+char *readip_pcap(pcap_t *pd, unsigned int *len, long to_usec);
 #ifndef HAVE_INET_ATON
 int inet_aton(register const char *, struct in_addr *);
 #endif
