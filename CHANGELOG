@@ -10,8 +10,8 @@ o Added MAC address printing.  If Nmap receives packet from a target
   ethernet interface.  The Windows version of Nmap does not yet have
   this capability.  Here are examples from normal and XML
   output:
-  MAC Address: 08:00:20:8F:6B:2F (SUN Microsystems Inc.)
-  <address addr="00:A0:CC:63:85:4B" vendor="Lite-on Communications, Inc." addrtype="mac" />
+  MAC Address: 08:00:20:8F:6B:2F (SUN Microsystems)
+  <address addr="00:A0:CC:63:85:4B" vendor="Lite-on Communications" addrtype="mac" />
 
 o Normalized many of the OS names in nmap-os-fingerprints (fixed
   capitalization, typos, etc.).  Thanks to Royce Williams
