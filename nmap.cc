@@ -2,7 +2,7 @@
 /***********************************************************************
  * nmap.cc -- Currently handles some of Nmap's port scanning           *
  * features as well as the command line user interface.  Note that the *
- * actual main() function is in main.c                                 *
+ * actual main() function is in main.cc                                *
  *                                                                     *
  ***********************************************************************
  *  The Nmap Security Scanner is (C) 1995-2001 Insecure.Com LLC. This  *

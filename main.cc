@@ -2,7 +2,7 @@
 /***********************************************************************
  * main.cc -- Contains the main() function of Nmap.  Note that main()  *
  * does very little except for calling nmap_main() (which is in        *
- * nmap.c)                                                             *
+ * nmap.cc)                                                            *
  *                                                                     *
  ***********************************************************************
  *  The Nmap Security Scanner is (C) 1995-2001 Insecure.Com LLC. This  *
