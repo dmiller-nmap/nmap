@@ -80,8 +80,11 @@ class ServiceProbeMatch {
 // abort the program if there is a syntax problem.
   void InitMatch(const char *matchtext, int lineno); 
   // Returns this service name if the givven buffer and length match it.  Otherwise
-  // returns NULL.
-  const char *testMatch(const u8 *buf, int buflen);
+  // returns NULL.  If there is a service match, and the version is able to be determined
+  // (meaning there is a version_template), and 'version' is not NULL, and versionlen
+  // is long enough, than the software version is stuck into 'version' (and NUL terminated).
+  // If the version info is unavailable, version[0] will be set to '\0', space permitting.
+  const char *testMatch(const u8 *buf, int buflen, char *version, int versionlen);
 // Returns the service name this matches
   const char *getName() { return servicename; }
  private:
@@ -93,9 +96,17 @@ class ServiceProbeMatch {
   pcre *regex_compiled;
   pcre_extra *regex_extra;
   bool matchops_ignorecase;
+  bool matchops_dotall;
+  // If this is non-NULL, a version template string was given to
+  // deduce the application/version info via substring matches.
+  char *version_template; 
   // The anchor is for SERVICESCAN_STATIC matches.  If the anchor is not -1, the match must
   // start at that zero-indexed position in the response str.
   int matchops_anchor;
+  // Use version_template, and the match data included here to put the version info
+  // into 'version' (as long as versionlen is sufficient).  Returns zero for success.
+  int getVersionStr(const u8 *subject, int subjectlen, int *ovector, int nummatches,
+		char *version, int versionlen);
 };
 
 
@@ -151,9 +162,14 @@ class ServiceProbe {
   // (giving the line number) if it fails to parse the string.
   void addMatch(const char *match, int lineno);
 
-  // Returns a service name if the givven buffer and length match one.  Otherwise
-  // returns NULL.
-  const char *testMatch(const u8 *buf, int buflen);
+
+  // Returns a service name if the givven buffer and length match one.
+  // Otherwise returns NULL.  If there is a match and the version is
+  // also able to be determined, and 'version' is not NULL, and
+  // versionlen is long enough, the app/version info is stck into
+  // 'version' (and NUL terminated.  If the version info is unavailable,
+  // version[0] will be set to '\0', space permitting.
+  const char *testMatch(const u8 *buf, int buflen, char *version, int versionlen);
 
  private:
   char *probename;

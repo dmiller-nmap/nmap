@@ -1,5 +1,36 @@
 # Nmap Changelog ($Id$)
 
+o Nmap now prints a "service fingerprint" for services that it is
+  unable to match despite returning data.  The web submission page it
+  references is not yet available.
+
+o Service detection now does RPC grinding on ports it detects to be
+  running RPC.
+
+o Fixed a bug that would cause Nmap to fail to print the OS
+  fingerprint in certain cases.  Thanks to Ste Jones
+  (root@networkpenetration.com) for the problem report.
+
+Nmap 3.40BETA2
+
+o Nmap now has a simple VERSION detecton scheme.  The 'match' lines in
+  nmap-service-probes can specify a template version string
+  (referencing subexpression matches from the regex in a perl-like
+  manner) so that the version is determined at the same time as the
+  service.  This handles many common services in a highly efficient
+  manner.  A more complex form of version detection (that initiates
+  further communication w/the target service) may be neccessary
+  eventually to handle services that aren't as forthcoming with
+  version details.
+
+o The Nmap port state table now wastes less whitespace due to using a new
+  and stingy NmapOutputTable class.  This makes it easier to read, and
+  also leaves more room for version info and possibly other enhancements.
+
+o Added 's' option to match lines in nmap-service-probes.  Just as
+  with the perl 's' option, this one causes '.' in the regular
+  expression to match any character INCLUDING newline.
+
 o The WinPcap header timestamp is no longer used on Windows as it
   sometimes can be a couple seconds different than gettimeofday() (which
   is really _ftime() on Windows) for some reason.  Thanks to Scott
@@ -8,6 +39,11 @@ o The WinPcap header timestamp is no longer used on Windows as it
 o Applied a patch by Matt Selsky (selsky(a)columbia.edu) which fixes
   configure.in in such a way that the annoying header file "present but
   cannot be compiled" warning for Solaris.
+
+o Applied another patch from Matt that (we hope) fixes the "present
+  but cannot be compiled" warning -- this time for Mac OS X.
+
+o Port table header names are now capitalized ("SERVICE", "PORT", etc)
 
 Nmap 3.40BETA1
 

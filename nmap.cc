@@ -932,11 +932,6 @@ int nmap_main(int argc, char *argv[]) {
 				      ports->tcp_count, &ftp);
 	}
 	
-	/* This scantype must be after any TCP or UDP scans since it
-	 * get's it's port scan list from the open port list of the current
-	 * host rather than port list the user specified.
-	 */
-	if (o.rpcscan)  pos_scan(currenths, NULL, 0, RPC_SCAN);
 
 	if (o.servicescan) {
 	  // Application fingerprinting is desired.
@@ -944,6 +939,13 @@ int nmap_main(int argc, char *argv[]) {
 	  // one.
 	  service_scan(&currenths, 1); 
 	}
+
+	/* This scantype must be after any TCP or UDP scans since it
+	 * get's it's port scan list from the open port list of the current
+	 * host rather than port list the user specified.
+	 */
+	if (o.servicescan || o.rpcscan)  pos_scan(currenths, NULL, 0, RPC_SCAN);
+
 	
 	if (o.osscan) {
 	  os_scan(currenths);

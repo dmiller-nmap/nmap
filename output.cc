@@ -51,6 +51,7 @@
 #include "output.h"
 #include "osscan.h"
 #include "NmapOps.h"
+#include "NmapOutputTable.h"
 
 extern NmapOps o;
 static char *logtypes[LOG_TYPES]=LOG_NAMES;
@@ -68,6 +69,7 @@ void printportoutput(Target *currenths, PortList *plist) {
   char *state;
   char serviceinfo[64];
   char *name=NULL;
+  int i;
   int first = 1;
   struct protoent *proto;
   Port *current;
@@ -77,9 +79,18 @@ void printportoutput(Target *currenths, PortList *plist) {
   char hostname[1200];
   int istate = plist->getIgnoredPortState();
   numignoredports = plist->state_counts[istate];
-  const char *servicename;
-  enum service_detection_type detection_type = SERVICE_DETECTION_TABLE;
-  int detection_conf = 0;
+  struct serviceDeductions sd;
+  NmapOutputTable *Tbl = NULL;
+  int portcol = -1; // port or IP protocol #
+  int statecol = -1; // port/protocol state
+  int servicecol = -1; // service or protocol name
+  int versioncol = -1;
+  int ownercol = -1; // Used for ident scan
+  int colno = 0;
+  unsigned int rowno;
+  int numrows;
+  vector<const char *> saved_servicefps;
+
   assert(numignoredports <= plist->numports);
 
 
@@ -110,19 +121,44 @@ void printportoutput(Target *currenths, PortList *plist) {
     log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"(The %d %s%s scanned but not shown below %s in state: %s)\n", numignoredports, o.ipprotscan?"protocol":"port", (numignoredports == 1)? "" : "s", (numignoredports == 1)? "is" : "are", statenum2str(istate));
   }
 
-  if (o.ipprotscan) {
-    log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Protocol   State       Name");
-  } else if (!o.rpcscan) {  
-    log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Port       State       Service");
-  } else {
-    log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Port       State       Service (RPC)");
-  }
-  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"%s", (o.identscan)? ((o.rpcscan)? "           Owner\n" : "                 Owner\n") :"\n");
+  /* OK, now it is time to deal with the service table ... */
+  colno = 0;
+  portcol = colno++;
+  statecol = colno++;
+  servicecol = colno++;
+  if (o.servicescan || o.rpcscan)
+    versioncol = colno++;
+  if (o.identscan)
+    ownercol = colno++;
+
+  numrows = plist->state_counts[PORT_CLOSED] + 
+    plist->state_counts[PORT_OPEN] + plist->state_counts[PORT_FIREWALLED] + 
+    plist->state_counts[PORT_UNFIREWALLED];
+  if (istate != PORT_UNKNOWN)
+    numrows -=  plist->state_counts[istate];
+  assert(numrows > 0);
+  numrows++; // The header counts as a row
+
+  Tbl = new NmapOutputTable(numrows, colno);
+
+  // Lets start with the headers
+  if (o.ipprotscan)
+    Tbl->addItem(0, portcol, false, "PROTOCOL", 8);
+  else Tbl->addItem(0, portcol, false, "PORT", 4);
+
+  Tbl->addItem(0, statecol, false, "STATE", 5);
+  Tbl->addItem(0, servicecol, false, "SERVICE", 7);
+  if (versioncol > 0)
+    Tbl->addItem(0, versioncol, false, "VERSION", 7);
+  if (ownercol > 0)
+    Tbl->addItem(0, ownercol, false, "OWNER", 5);
+
   log_write(LOG_MACHINE,"\t%s: ", (o.ipprotscan)? "Protocols" : "Ports" );
   
   protoarrays[0] = plist->tcp_ports;
   protoarrays[1] = plist->udp_ports;
   current = NULL;
+  rowno = 1;
   if (o.ipprotscan) {
     for (portno = 0; portno < 256; portno++) {
       if (!plist->ip_prots[portno]) continue;
@@ -134,13 +170,17 @@ void printportoutput(Target *currenths, PortList *plist) {
 	proto = nmap_getprotbynum(htons(current->portno));
 	snprintf(portinfo, sizeof(portinfo), "%-24s",
 		 proto?proto->p_name: "unknown");
-	log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"%-11d%-12s%-24s\n", portno, state, portinfo);
+	rowno++;
+	Tbl->addItemFormatted(rowno, portcol, "%d", portno);
+	Tbl->addItem(rowno, statecol, true, state);
+	Tbl->addItem(rowno, servicecol, true, portinfo);
 	log_write(LOG_MACHINE,"%d/%s/%s/", current->portno, state, 
 		  (proto)? proto->p_name : "");
 	log_write(LOG_XML, "<port protocol=\"ip\" portid=\"%d\"><state state=\"%s\" />", current->portno, state);
 	if (proto && proto->p_name && *proto->p_name)
 	  log_write(LOG_XML, "\n<service name=\"%s\" conf=\"8\" method=\"table\" />", proto->p_name);
 	log_write(LOG_XML, "</port>\n");
+	rowno++;
       }
     }
   } else {
@@ -156,10 +196,13 @@ void printportoutput(Target *currenths, PortList *plist) {
 	strcpy(protocol,(current->proto == IPPROTO_TCP)? "tcp": "udp");
 	snprintf(portinfo, sizeof(portinfo), "%d/%s", current->portno, protocol);
 	state = statenum2str(current->state);
-	servicename = current->serviceName(&detection_type, &detection_conf);
-	
+	current->getServiceDeductions(&sd);
+
+	if (sd.service_fp)
+	  saved_servicefps.push_back(sd.service_fp);
+
 	if (o.rpcscan) {
-	  switch(current->rpc_status) {
+	  switch(sd.rpc_status) {
 	  case RPC_STATUS_UNTESTED:
 	    rpcinfo[0] = '\0';
 	    strcpy(rpcmachineinfo, "");
@@ -173,54 +216,57 @@ void printportoutput(Target *currenths, PortList *plist) {
 	    strcpy(rpcmachineinfo, "N");
 	    break;
 	  case RPC_STATUS_GOOD_PROG:
-	    name = nmap_getrpcnamebynum(current->rpc_program);
-	    snprintf(rpcmachineinfo, sizeof(rpcmachineinfo), "(%s:%li*%i-%i)", (name)? name : "", current->rpc_program, current->rpc_lowver, current->rpc_highver);
+	    name = nmap_getrpcnamebynum(sd.rpc_program);
+	    snprintf(rpcmachineinfo, sizeof(rpcmachineinfo), "(%s:%li*%i-%i)", (name)? name : "", sd.rpc_program, sd.rpc_lowver, sd.rpc_highver);
 	    if (!name) {
-	      snprintf(rpcinfo, sizeof(rpcinfo), "(#%li (unknown) V%i-%i)", current->rpc_program, current->rpc_lowver, current->rpc_highver);
+	      snprintf(rpcinfo, sizeof(rpcinfo), "(#%li (unknown) V%i-%i)", sd.rpc_program, sd.rpc_lowver, sd.rpc_highver);
 	    } else {
-	      if (current->rpc_lowver == current->rpc_highver) {
-		snprintf(rpcinfo, sizeof(rpcinfo), "(%s V%i)", name, current->rpc_lowver);
+	      if (sd.rpc_lowver == sd.rpc_highver) {
+		snprintf(rpcinfo, sizeof(rpcinfo), "(%s V%i)", name, sd.rpc_lowver);
 	      } else 
-		snprintf(rpcinfo, sizeof(rpcinfo), "(%s V%i-%i)", name, current->rpc_lowver, current->rpc_highver);
+		snprintf(rpcinfo, sizeof(rpcinfo), "(%s V%i-%i)", name, sd.rpc_lowver, sd.rpc_highver);
 	    }
 	    break;
 	  default:
-	    fatal("Unknown rpc_status %d", current->rpc_status);
+	    fatal("Unknown rpc_status %d", sd.rpc_status);
 	    break;
 	  }
-	  snprintf(serviceinfo, sizeof(serviceinfo), "%s%s%s", (servicename)? servicename : ((*rpcinfo)? "" : "unknown"), (servicename)? " " : "",  rpcinfo);
+	  snprintf(serviceinfo, sizeof(serviceinfo), "%s%s%s", (sd.name)? sd.name : ((*rpcinfo)? "" : "unknown"), (sd.name)? " " : "",  rpcinfo);
 	} else {
-	  snprintf(serviceinfo, sizeof(serviceinfo), "%s%s", (servicename)? servicename : "unknown",
-		   (servicename && detection_conf <= 5)? "?" : "");
+	  snprintf(serviceinfo, sizeof(serviceinfo), "%s%s", (sd.name)? sd.name : "unknown",
+		   (sd.name && sd.name_confidence <= 5)? "?" : "");
 	  strcpy(rpcmachineinfo, "");
 	}
 	// HACK: I hate the trailing whitespace so I'll just skip it unless
 	// an owner is available.  Eventually I need to work in/write a simple
         // table-creating library which can deal with the spacing of the 
 	// columns and so forth.
+	Tbl->addItem(rowno, portcol, true, portinfo);
+	Tbl->addItem(rowno, statecol, false, state);
+	Tbl->addItem(rowno, servicecol, true, serviceinfo);
 	if (current->owner)
-	  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"%-11s%-12s%-24s", portinfo, state, serviceinfo);
-	else
-	  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"%-11s%-12s%s", portinfo, state, serviceinfo);
-	log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"%s\n", (current->owner)? current->owner : "");
-	
+	  Tbl->addItem(rowno, ownercol, true, current->owner);
+	if (sd.version)
+	  Tbl->addItem(rowno, versioncol, false, (char *) sd.version);
+
 	log_write(LOG_MACHINE,"%d/%s/%s/%s/%s/%s//", current->portno, state, 
 		  protocol, (current->owner)? current->owner : "",
-		  (servicename)? servicename: "", rpcmachineinfo);    
+		  (sd.name)? sd.name: "", rpcmachineinfo);    
 	
 	log_write(LOG_XML, "<port protocol=\"%s\" portid=\"%d\">", protocol, current->portno);
 	log_write(LOG_XML, "<state state=\"%s\" />", state);
 	if (current->owner && *current->owner) {
 	  log_write(LOG_XML, "<owner name=\"%s\" />", current->owner);
 	}
-	if (o.rpcscan && current->rpc_status == RPC_STATUS_GOOD_PROG) {
+	if (o.rpcscan && sd.rpc_status == RPC_STATUS_GOOD_PROG) {
 	  if (name) Strncpy(tmpbuf, name, sizeof(tmpbuf));
-	  else snprintf(tmpbuf, sizeof(tmpbuf), "#%li", current->rpc_program);
-	  log_write(LOG_XML, "<service name=\"%s\" proto=\"rpc\" rpcnum=\"%li\" lowver=\"%i\" highver=\"%i\" method=\"detection\" conf=\"5\" />\n", tmpbuf, current->rpc_program, current->rpc_lowver, current->rpc_highver);
-	} else if (servicename) {
-	  log_write(LOG_XML, "<service name=\"%s\" method=\"table\" conf=\"3\" %s />\n", servicename, (o.rpcscan && current->rpc_status == RPC_STATUS_UNKNOWN)? "proto=\"rpc\"" : ""); 
+	  else snprintf(tmpbuf, sizeof(tmpbuf), "#%li", sd.rpc_program);
+	  log_write(LOG_XML, "<service name=\"%s\" proto=\"rpc\" rpcnum=\"%li\" lowver=\"%i\" highver=\"%i\" method=\"detection\" conf=\"5\" />\n", tmpbuf, sd.rpc_program, sd.rpc_lowver, sd.rpc_highver);
+	} else if (sd.name) {
+	  log_write(LOG_XML, "<service name=\"%s\" method=\"table\" conf=\"3\" %s />\n", sd.name, (o.rpcscan && sd.rpc_status == RPC_STATUS_UNKNOWN)? "proto=\"rpc\"" : ""); 
 	}
 	log_write(LOG_XML, "</port>\n");
+	rowno++;
       }
     }
    }
@@ -229,6 +275,19 @@ void printportoutput(Target *currenths, PortList *plist) {
   if (plist->state_counts[istate] > 0)
     log_write(LOG_MACHINE, "\tIgnored State: %s (%d)", statenum2str(istate), plist->state_counts[istate]);
   log_write(LOG_XML, "</ports>\n");
+
+  // Now we write the table for the user
+  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT, "%s", Tbl->printableTable(NULL));
+
+  // There may be service fingerprints I would like the user to submit
+  if (saved_servicefps.size() > 0) {
+    int numfps = saved_servicefps.size();
+log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT, "%d service%s unrecognized despite returning data. If you know the service/version, please submit the following fingerprint%s at http://www.insecure.org/cgi-bin/servicefp-submit.cgi :\n", numfps, (numfps > 1)? "s" : "", (numfps > 1)? "s" : "");
+    for(i=0; i < numfps; i++) {
+      log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT, "%s\n", saved_servicefps[i]);
+    }
+  }
+
 }
 
 char* xml_convert (const char* str) {

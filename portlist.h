@@ -77,22 +77,16 @@ enum serviceprobestate {
 
 enum service_detection_type { SERVICE_DETECTION_TABLE, SERVICE_DETECTION_PROBED };
 
-class Port {
- public:
-  Port();
-  ~Port();
-  // Obtain the service name listening on the port (NULL if port is
-  // not open or service) is unknown.  Detection type will be
-  // SERVICE_DETECTION_TABLE or SERVICE_DETECTION_PROBED.  Confidence
-  // is a number from 0 (least confident) to 10 (most confident)
-  // expressing how accurate the service detection is likely to be.  Either argument
-  // can be NULL if you aren't interested.
-  const char *serviceName(enum service_detection_type *detection_type, int *confidence);
-  // sname should be NULL if sres is not PROBESTATE_FINISHED_MATCHED
-  void setServiceProbeResults(enum serviceprobestate sres, const char *sname);
-  u16 portno;
-  u8 proto;
-  char *owner;
+struct serviceDeductions {
+  const char *name; // will be NULL if can't determine
+  // Confidence is a number from 0 (least confident) to 10 (most
+  // confident) expressing how accurate the service detection is
+  // likely to be.
+  int name_confidence;
+  const char *version; // will be NULL if can't determine
+  // if we should give the user a service fingerprint to submit, here it is.  Otherwise NULL.
+  const char *service_fp; 
+  enum service_detection_type dtype; // definition above
   int rpc_status; /* RPC_STATUS_UNTESTED means we haven't checked
 		    RPC_STATUS_UNKNOWN means the port appears to be RPC
 		    but we couldn't find a match
@@ -102,14 +96,64 @@ class Port {
   unsigned long rpc_program; /* Only valid if rpc_state == RPC_STATUS_GOOD_PROG */
   unsigned int rpc_lowver;
   unsigned int rpc_highver;
+};
+
+
+
+class Port {
+ public:
+  Port();
+  ~Port();
+
+  // pass in an allocated struct serviceDetection (don't wory about initializing, and
+  // you don't have to free any inernal ptrs.  See the serviceDeductions definition for
+  // the fields that are populated.  Returns 0 if at least a name is available.
+  int getServiceDeductions(struct serviceDeductions *sd);
+
+  // sname should be NULL if sres is not
+  // PROBESTATE_FINISHED_MATCHED. version will be NULL unless it is
+  // available.  Sometimes only the service name, but not version are
+  // found.  Note that this function makes its own copy of sname and
+  // version.  This function also takes care of truncating version to
+  // a 'reasonable' length if neccessary, and cleaning up any
+  // unprinable chars. (these tests are to avoid annoying DOS (or
+  // other) attacks by malicious services).  The fingerprint should be
+  // NULL unless one is available and the user should submit it.
+  void setServiceProbeResults(enum serviceprobestate sres, const char *sname,
+			      const char *version, const char *fingerprint);
+
+  /* Sets the results of an RPC scan.  if rpc_status is not
+   RPC_STATUS_GOOD_PROGRAM, pass 0 for the other args. This function
+   takes care of setting the port's service and version
+   appropriately. */
+  void setRPCProbeResults(int rpc_status, unsigned long rpc_program, 
+			  unsigned int rpc_lowver, unsigned int rpc_highver);
+
+  u16 portno;
+  u8 proto;
+  char *owner;
   int state; 
   int confidence; /* How sure are we about the state? */
 
+
  private:
+  int rpc_status; /* RPC_STATUS_UNTESTED means we haven't checked
+		    RPC_STATUS_UNKNOWN means the port appears to be RPC
+		    but we couldn't find a match
+		    RPC_STATUS_GOOD_PROG means rpc_program gives the prog #
+		    RPC_STATUS_NOT_RPC means the port doesn't appear to 
+		    be RPC */
+  unsigned long rpc_program; /* Only valid if rpc_state == RPC_STATUS_GOOD_PROG */
+  unsigned int rpc_lowver;
+  unsigned int rpc_highver;
   Port *next; /* Internal use only -- we sometimes like to link them
 			together */
   enum serviceprobestate serviceprobe_results; // overall results of service scan
-  const char *serviceprobe_service; // If a service was discovered, points to the name
+  char *serviceprobe_service; // If a service was discovered, points to the name
+  char *serviceprobe_version; // If a version was discovered, points to the name
+  // A fingerprint that the user can submit if the service wasn't recognized
+  char *serviceprobe_fp; 
+
 };
 
 class PortList {

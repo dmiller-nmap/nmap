@@ -71,6 +71,18 @@ void *safe_malloc(int size)
   return mymem;
 }
 
+void *safe_realloc(void *ptr, size_t size)
+{
+  void *mymem;
+  if (size < 0)
+    fatal("Tried to realloc negative amount of memory!!!");
+  mymem = realloc(ptr, size);
+  if (mymem == NULL)
+    fatal("Realloc Failed! Probably out of space.");
+  //  printf("Called safe_malloc(%d) -- returning %lX\n", size, (unsigned long) mymem);
+  return mymem;
+}
+
 /* Zero-initializing version of safe_malloc */
 void *safe_zalloc(int size)
 {

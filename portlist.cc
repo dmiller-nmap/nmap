@@ -65,56 +65,136 @@ Port::Port() {
   next = NULL;
   serviceprobe_results = PROBESTATE_INITIAL;
   serviceprobe_service = NULL;
+  serviceprobe_version = NULL;
+  serviceprobe_fp = NULL;
 }
 
 Port::~Port() {
  if (owner)
    free(owner);
+ if (serviceprobe_version)
+   free(serviceprobe_version);
+ if (serviceprobe_service)
+   free(serviceprobe_service);
+ if (serviceprobe_fp)
+   free(serviceprobe_fp);
 }
 
-// Obtain the service name listening on the port (NULL if port is
-  // not open or service) is unknown.  Detection type will be
-  // SERVICE_DETECTION_TABLE or SERVICE_DETECTION_PROBED.  Confidence
-  // is a number from 0 (least confident) to 10 (most confident)
-  // expressing how accurate the service detection is likely to be.  Either argument
-  // can be NULL if you aren't interested.
-const char *Port::serviceName(enum service_detection_type *detection_type, int *confidence) {
-  int conf = 0;
+// pass in an allocated struct serviceDetection (don't wory about
+// initializing, and you don't have to free any inernal ptrs.  See the
+// serviceDeductions definition for the fields that are populated.
+// Returns 0 if at least a name is available.
+int Port::getServiceDeductions(struct serviceDeductions *sd) {
   struct servent *service;
 
-  if (!confidence) confidence = &conf; // to make code cleaner
+  assert(sd);
+  bzero(sd, sizeof(struct serviceDeductions));
+  sd->service_fp = serviceprobe_fp;
 
-  if (serviceprobe_results == PROBESTATE_FINISHED_MATCHED) {
+  sd->rpc_status = rpc_status;
+  sd->rpc_program = rpc_program;
+  sd->rpc_lowver = rpc_lowver;
+  sd->rpc_highver = rpc_highver;
+
+  // First priority is RPC
+  if (rpc_status == RPC_STATUS_UNKNOWN || rpc_status == RPC_STATUS_GOOD_PROG ) {
     assert(serviceprobe_service);
-    if (detection_type)
-      *detection_type = SERVICE_DETECTION_PROBED;
-    *confidence = 10;
-    return serviceprobe_service;
+    sd->name = serviceprobe_service;
+    sd->name_confidence = (rpc_status == RPC_STATUS_UNKNOWN)? 8 : 10;
+    sd->dtype = SERVICE_DETECTION_PROBED; // RPC counts as probed
+    sd->version = serviceprobe_version;
+    return 0;
+  } else if (serviceprobe_results == PROBESTATE_FINISHED_MATCHED) {
+    assert(serviceprobe_service);
+    sd->dtype = SERVICE_DETECTION_PROBED;
+    sd->name = serviceprobe_service;
+    sd->name_confidence = 10;
+    sd->version = serviceprobe_version;
+    return 0;
   } else if (serviceprobe_results == PROBESTATE_FINISHED_TCPWRAPPED) {
-    if (detection_type)
-      *detection_type = SERVICE_DETECTION_PROBED;
-    *confidence = 8;
-    return "tcpwrapped";
+    sd->dtype = SERVICE_DETECTION_PROBED;
+    sd->name = "tcpwrapped";
+    sd->name_confidence = 8;
+    return 0;
   }
-
-  // TODO:  Should do RPC-related stuff here.
 
   // So much for service detection or RPC.  Maybe we can find it in the file
   service = nmap_getservbyport(htons(portno), (proto == IPPROTO_TCP)? "tcp" : "udp");
   if (service) {
-    if (detection_type) *detection_type = SERVICE_DETECTION_TABLE;
-    *confidence = 3;
-    return service->s_name;
+    sd->dtype = SERVICE_DETECTION_TABLE;
+    sd->name = service->s_name;
+    sd->name_confidence = 3;
+    return 0;
   }
   
   // Couldn't find it.  [shrug]
-  return NULL;
+  return -1;
 
 }
 
-void Port::setServiceProbeResults(enum serviceprobestate sres, const char *sname) {
+
+// sname should be NULL if sres is not
+// PROBESTATE_FINISHED_MATCHED. version will be NULL unless it is
+// available.  Sometimes only the service name, but not version are
+// found.  Note that this function makes its own copy of sname and
+// version.  This function also takes care of truncating version to a
+// 'reasonable' length if neccessary, and cleaning up any unprinable
+// chars. (these tests are to avoid annoying DOS (or other) attacks by
+// malicious services).
+void Port::setServiceProbeResults(enum serviceprobestate sres, const char *sname, const char *version, const char *fingerprint) {
+  int vlen;
   serviceprobe_results = sres;
-  serviceprobe_service = sname;
+  unsigned char *p;
+  if (sname) serviceprobe_service = strdup(sname);
+  if (fingerprint) serviceprobe_fp = strdup(fingerprint);
+  if (version) {
+    vlen = strlen(version);
+    if (vlen > 128) vlen = 128;
+    serviceprobe_version = (char *) safe_malloc(vlen + 1);
+    memcpy(serviceprobe_version, version, vlen);
+    serviceprobe_version[vlen] = '\0';
+    serviceprobe_version = strdup(version);
+    p = (unsigned char *) serviceprobe_version;
+    while(*p) {
+      if (!isprint((int)*p)) *p = '.';
+      p++;
+    }
+  }
+}
+
+/* Sets the results of an RPC scan.  if rpc_status is not
+   RPC_STATUS_GOOD_PROGRAM, pass 0 for the other args.  This function
+   takes care of setting the port's service and version appropriately. */
+void Port::setRPCProbeResults(int rpcs, unsigned long rpcp, 
+			unsigned int rpcl, unsigned int rpch) {
+  rpc_status = rpcs;
+  const char *newsvc;
+  char verbuf[128];
+
+  rpc_status = rpcs;
+  if (rpc_status == RPC_STATUS_GOOD_PROG) {
+    rpc_program = rpcp;
+    rpc_lowver = rpcl;
+    rpc_highver = rpch;
+
+    // Now set the service/version info
+    newsvc = nmap_getrpcnamebynum(rpcp);
+    if (!newsvc) newsvc = "rpc.unknownprog"; // should never happen
+    if (serviceprobe_service)
+      free(serviceprobe_service);
+    serviceprobe_service = strdup(newsvc);
+    if (rpc_lowver == rpc_highver)
+      snprintf(verbuf, sizeof(verbuf), "%i (rpc #%li)", rpc_lowver, rpc_program);
+    else
+      snprintf(verbuf, sizeof(verbuf), "%i-%i (rpc #%li)", rpc_lowver, rpc_highver,
+	       rpc_program);
+    serviceprobe_version = strdup(verbuf);
+  } else if (rpc_status == RPC_STATUS_UNKNOWN) {
+    if (serviceprobe_service)
+      free(serviceprobe_service);
+    
+    serviceprobe_service = strdup("rpc.unknown");
+  }
 }
 
 PortList::PortList() {
@@ -224,8 +304,6 @@ int PortList::addPort(u16 portno, u8 protocol, char *owner, int state) {
     portarray[portno] = new Port();
     current = portarray[portno];
     numports++;
-    current->rpc_status = RPC_STATUS_UNTESTED;
-    current->confidence = CONF_HIGH;
     current->portno = portno;
   }
   

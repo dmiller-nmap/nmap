@@ -134,6 +134,7 @@ template<class T> T box(T bmin, T bmax, T bnum) {
   /*int box(int bmin, int bmax, int bnum);
     int box(double bmin, double bmax, double bnum); */
 void *safe_malloc(int size);
+void *safe_realloc(void *ptr, size_t size);
 /* Zero-initializing version of safe_malloc */
 void *safe_zalloc(int size);
 void hdump(unsigned char *packet, unsigned int len);

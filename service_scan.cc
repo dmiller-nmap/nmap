@@ -65,6 +65,10 @@
 #include <algorithm>
 #include <list>
 
+// Because this file uses assert()s for some security checking, we can't
+// have anyone turning off debugging.
+#undef NDEBUG
+
 extern NmapOps o;
 
 class AllProbes {
@@ -80,11 +84,27 @@ class ServiceNFO {
 public:
   ServiceNFO(AllProbes *AP);
   ~ServiceNFO();
+  // If a service response to a given probeName, this function adds the resonse the the
+  // fingerprint for that service.  The fingerprint can be printed when nothing matches the
+  // service.  You can obtain the fingerprint (if any) via getServiceFingerprint();
+  void addToServiceFingerprint(const char *probeName, const u8 *resp, int resplen);
+
+  // Get the service fingerprint.  It is NULL if there is none, such
+  // as if there was a match before any other probes were finished (or
+  // if no probes gave back data).  Note that this is plain
+  // NUL-terminated ASCII data, although the length is optionally
+  // available anyway.
+  const char *getServiceFingerprint(int *flen) {
+    if (flen) *flen = servicefplen;
+    return servicefp;
+  }
   // Note that the next 2 members are for convenience and are not destroyed w/the ServiceNFO
   Target *target; // the port belongs to this target host
   Port *port; // The Port that this service represents (this copy is taken from inside Target)
   // if a match is found, it is placed here.  Otherwise NULL
-  const char *probe_matched; 
+  const char *probe_matched;
+  // If a match is found, it is placed here.  Otherwise 0 length.
+  char version_matched[128];
   // most recent probe executed (or in progress).  If there has been a match 
   // (probe_matched != NULL), this will be the corresponding ServiceProbe.
   ServiceProbe *currentProbe();
@@ -108,10 +128,19 @@ public:
   // INVALIDATED if you call appendtocurrentproberesponse() or nextProbe()
   u8 *getcurrentproberesponse(int *respstrlen);
 private:
+  // Adds a character to servicefp.  Takes care of word wrapping if
+  // neccessary at the given (wrapat) column.  Chars will only be
+  // written if there is enough space.  Oherwise it exits.
+  void addServiceChar(char c, int wrapat);
+  // Like addServiceChar, but for a whole zero-terminated string
+  void addServiceString(char *s, int wrapat);
   vector<ServiceProbe *>::iterator current_probe;
   u8 *currentresp;
   int currentresplen;
   AllProbes *AP;
+  char *servicefp;
+  int servicefplen;
+  int servicefpalloc;
 };
 
 // This holds the service information for a group of Targets being service scanned.
@@ -138,16 +167,19 @@ int launchSomeServiceProbes(nsock_pool nsp, ServiceGroup *SG);
 ServiceProbeMatch::ServiceProbeMatch() {
   servicename = NULL;
   matchstr = NULL;
+  version_template = NULL;
   regex_compiled = NULL;
   regex_extra = NULL;
   isInitialized = false;
   matchops_ignorecase = false;
+  matchops_dotall = false;
 }
 
 ServiceProbeMatch::~ServiceProbeMatch() {
   if (!isInitialized) return;
   if (servicename) free(servicename);
   if (matchstr) free(matchstr);
+  if (version_template) free(version_template);
   matchstrlen = 0;
   if (regex_compiled) pcre_free(regex_compiled);
   if (regex_extra) pcre_free(regex_extra);
@@ -186,12 +218,12 @@ void ServiceProbeMatch::InitMatch(const char *matchtext, int lineno) {
   servicename[p - matchtext]  = '\0';
 
   // The next part is a perl style regular expression specifier, like:
-  // m/^220 .*smtp/i
-  // Where 'm' means a normal regular expressions is used, the char after
-  // m can be anything (within reason, slash in this case) and tells us 
-  // what delieates the end of the regex.  After the delineating character
-  // are any single-character options ('i' in this case, meaning case 
-  // insensitive)
+  // m/^220 .*smtp/i Where 'm' means a normal regular expressions is
+  // used, the char after m can be anything (within reason, slash in
+  // this case) and tells us what delieates the end of the regex.
+  // After the delineating character are any single-character
+  // options. ('i' means "case insensitive", 's' means that . matches
+  // newlines (both are just as in perl)
   matchtext = p;
   while(isspace(*matchtext)) matchtext++;
   if (*matchtext == 'm') {
@@ -213,6 +245,8 @@ void ServiceProbeMatch::InitMatch(const char *matchtext, int lineno) {
     while(*matchtext && !isspace(*matchtext)) {
       if (*matchtext == 'i')
 	matchops_ignorecase = true;
+      else if (*matchtext == 's')
+	matchops_dotall = true;
       else fatal("ServiceProbeMatch::InitMatch: illegal regexp option on line %d of nmap-service-probes", lineno);
       matchtext++;
     }
@@ -220,6 +254,9 @@ void ServiceProbeMatch::InitMatch(const char *matchtext, int lineno) {
     // Next we compile and study the regular expression to match
     if (matchops_ignorecase)
       pcre_compile_ops |= PCRE_CASELESS;
+
+    if (matchops_dotall)
+      pcre_compile_ops |= PCRE_DOTALL;
     
     regex_compiled = pcre_compile(matchstr, pcre_compile_ops, &pcre_errptr, 
 				     &pcre_erroffset, NULL);
@@ -273,16 +310,46 @@ void ServiceProbeMatch::InitMatch(const char *matchtext, int lineno) {
     fatal("ServiceProbeMatch::InitMatch: parse error on line %d of nmap-service-probes", lineno);
   }
 
+  /* OK!  Now we look for the optional version-detection regexp */
+
+  while(isspace(*matchtext)) matchtext++;
+  if (isalnum(*matchtext)) {
+    if (*matchtext != 'v') 
+      fatal("ServiceProbeMatch::InitMatch: illegal trailing garbage (should be a version pattern match?) on line %d of nmap-service-probes", lineno);
+    delimchar = *(++matchtext);
+    ++matchtext;
+    // find the end of the regex
+    p = strchr(matchtext, delimchar);
+    if (!p) fatal("ServiceProbeMatch::InitMatch: parse error on line %d of nmap-service-probes (in the version pattern section)", lineno);
+    tmpbuflen = p - matchtext;
+    version_template = (char *) safe_malloc(tmpbuflen + 1);
+    memcpy(version_template, matchtext, tmpbuflen);
+    version_template[tmpbuflen] = '\0';
+    assert(tmpbuflen < sizeof(tmpbuf) - 1);
+    memcpy(tmpbuf, matchtext, tmpbuflen);
+    tmpbuf[tmpbuflen] = '\0';
+  }
+
   isInitialized = 1;
 }
 
-const char *ServiceProbeMatch::testMatch(const u8 *buf, int buflen) {
+// Returns this service name if the givven buffer and length match it.
+// Otherwise returns NULL.  If there is a service match, and the
+// version is able to be determined (meaning there is a
+// version_template), and 'version' is not NULL, and versionlen is
+// long enough, than the software version is stuck into 'version' (and
+// NUL terminated). If the version info is unavailable, version[0]
+// will be set to '\0', space permitting.
+const char *ServiceProbeMatch::testMatch(const u8 *buf, int buflen, 
+					 char *version, int versionlen) {
   int rc;
+  int i;
   char *bufc = (char *) buf;
+  int ovector[150]; // allows 50 substring matches (including the overall match)
   assert(isInitialized);
 
   if (matchtype == SERVICEMATCH_REGEX) {
-    rc = pcre_exec(regex_compiled, regex_extra, bufc, buflen, 0, 0, NULL, 0);
+    rc = pcre_exec(regex_compiled, regex_extra, bufc, buflen, 0, 0, ovector, sizeof(ovector) / sizeof(*ovector));
     if (rc < 0) {
 #ifdef PCRE_ERROR_MATCHLIMIT  // earlier PCRE versions lack this
       if (rc == PCRE_ERROR_MATCHLIMIT) {
@@ -296,6 +363,13 @@ const char *ServiceProbeMatch::testMatch(const u8 *buf, int buflen) {
       return NULL;
     }
     // Yeah!  Match apparently succeeded.
+    // Now lets get the version number if available
+    if (version_template && version && versionlen > 5) {
+      i = getVersionStr(buf, buflen, ovector, rc, version, versionlen);
+      if (i < 0 && versionlen > 0)
+	version[0] = '\0';
+    } else if (version && versionlen > 0)
+      version[0] = '\0';
     return servicename;
   } else {
     assert(matchtype == SERVICEMATCH_STATIC);
@@ -319,6 +393,67 @@ const char *ServiceProbeMatch::testMatch(const u8 *buf, int buflen) {
   }
   assert(0);
   return NULL; // unreached
+}
+
+// Use version_template, and the match data included here to put the version info
+// into 'version' (as long as versionlen is sufficient).  Returns zero for success.
+int ServiceProbeMatch::getVersionStr(const u8 *subject, int subjectlen, 
+				     int *ovector, int nummatches,
+				     char *version, int versionlen) {
+  int newlen;
+  char *srcstart=version_template, *srcend;
+  char *dst = version;
+  char *versionend = version + versionlen; // Right after the final char
+  int subnum = 0;
+  int offstart, offend;
+
+  if (!version || !version_template) return -1;
+  if (versionlen < 3) return -1; // fuck this!
+  
+  while(*srcstart) {
+    // First do any literal text before '$'
+    srcend = strchr(srcstart, '$');
+    if (!srcend) {
+      // Only literal text remain!
+      while(*srcstart) {
+	if (dst >= versionend - 1)
+	  return -1;
+	*dst++ = *srcstart++;
+      }
+      *dst = '\0';
+      return 0;
+    } else {
+      // Copy the literal text up to the '$', then do the substitution
+      newlen = srcend - srcstart;
+      if (newlen > 0) {
+	if (versionend - dst <= newlen - 1)
+	  return -1;
+	memcpy(dst, srcstart, newlen);
+	dst += newlen;
+      }
+      // skip the '$'
+      srcstart = srcend + 1;
+      if (!isdigit(*srcstart)) return -1;
+      subnum = *srcstart - '0';
+      if (subnum > 9 || subnum <= 0) return -1;
+      if (subnum >= nummatches) return -1;
+      srcstart++; // skip passed the ref #
+      offstart = ovector[subnum * 2];
+      offend = ovector[subnum * 2 + 1];
+      assert(offstart >= 0 && offstart < subjectlen);
+      assert(offend >= 0 && offend <= subjectlen);
+      newlen = offend - offstart;
+      if (versionend - dst <= newlen - 1)
+	return -1;
+      memcpy(dst, subject + offstart, newlen);
+      dst += newlen;
+    }
+  }
+
+  if (dst >= versionend - 1)
+    return -1;
+  *dst = '\0';
+  return 0;
 }
 
 
@@ -547,13 +682,18 @@ void parse_nmap_service_probes(AllProbes *AP) {
   fclose(fp);
 }
 
-  // Returns a service name if the givven buffer and length match one.  
-  // Otherwise  returns NULL.
-const char *ServiceProbe::testMatch(const u8 *buf, int buflen) {
+// Returns a service name if the givven buffer and length match one.
+// Otherwise returns NULL.  If there is a match and the version is
+// also able to be determined, and 'version' is not NULL, and
+// versionlen is long enough, the app/version info is stck into
+// 'version' (and NUL terminated.  If the version info is unavailable,
+// version[0] will be set to '\0', space permitting.
+const char *ServiceProbe::testMatch(const u8 *buf, int buflen, char *version, 
+				    int versionlen) {
   vector<ServiceProbeMatch *>::iterator vi;
 
   for(vi = matches.begin(); vi != matches.end(); vi++) {
-    if ((*vi)->testMatch(buf, buflen))
+    if ((*vi)->testMatch(buf, buflen, version, versionlen))
       return (*vi)->getName();
   }
 
@@ -582,12 +722,109 @@ ServiceNFO::ServiceNFO(AllProbes *newAP) {
   currentresp = NULL; 
   currentresplen = 0;
   port = NULL;
+  version_matched[0] = '\0';
+  servicefplen = servicefpalloc = 0;
+  servicefp = NULL;
 }
 
 ServiceNFO::~ServiceNFO() {
   if (currentresp) free(currentresp);
+  if (servicefp) free(servicefp);
 }
 
+  // Adds a character to servicefp.  Takes care of word wrapping if
+  // neccessary at the given (wrapat) column.  Chars will only be
+  // written if there is enough space.  Oherwise it exits.
+void ServiceNFO::addServiceChar(char c, int wrapat) {
+
+  if (servicefpalloc - servicefplen < 6)
+    fatal("ServiceNFO::addServiceChar - out of space for servicefp");
+
+  if (servicefplen % wrapat == 0) {
+    // we need to start a new line
+    memcpy(servicefp + servicefplen, "\n   ", 4);
+    servicefplen += 4;
+  }
+
+  servicefp[servicefplen++] = c;
+}
+
+// Like addServiceChar, but for a whole zero-terminated string
+void ServiceNFO::addServiceString(char *s, int wrapat) {
+  while(*s) 
+    addServiceChar(*s++, wrapat);
+}
+
+// If a service response to a given probeName, this function adds the
+// resonse the the fingerprint for that service.  The fingerprint can
+// be printed when nothing matches the service.  You can obtain the
+// fingerprint (if any) via getServiceFingerprint();
+void ServiceNFO::addToServiceFingerprint(const char *probeName, const u8 *resp, 
+					 int resplen) {
+  int spaceleft = servicefpalloc - servicefplen;
+  int servicewrap=67; // Wrap after 67 chars / line
+  int respused = MIN(resplen, 400); // truncate to reasonable size
+  int spaceneeded = respused * 6 + 20;  // every char could require \xHH escape,
+                                      // plus there is the matter of \n and spaces.
+                                      // Oh, and the SF-PortXXXXX-TCP stuff, etc
+  int srcidx;
+  struct tm *ltime;
+  time_t timep;
+  char buf[128];
+  int len;
+
+  assert(resplen);
+  assert(probeName);
+
+  if (spaceneeded >= spaceleft) {
+    spaceneeded = MAX(spaceneeded, 256); // No point in tiny allocations
+    spaceneeded += servicefpalloc;
+
+    servicefp = (char *) safe_realloc(servicefp, spaceneeded);
+    servicefpalloc = spaceneeded;
+  }
+  spaceleft = servicefpalloc - servicefplen;
+
+  if (servicefplen == 0) {
+    timep = time(NULL);
+    ltime = localtime(&timep);
+    servicefplen = snprintf(servicefp, spaceleft, "SF-Port%hi-%s:V=%s%%D=%d/%d%%Time=%X", portno, (proto == IPPROTO_TCP)? "TCP" : "UDP", NMAP_VERSION, ltime->tm_mon + 1, ltime->tm_mday, (int) timep);
+  }
+
+  // Note that we give the total length of the response, even though we 
+  // may truncate
+  len = snprintf(buf, sizeof(buf), "%%r(%s,%X,\"", probeName, resplen);
+  addServiceString(buf, servicewrap);
+
+  // Now for the probe response itself ...
+  for(srcidx=0; srcidx < respused; srcidx++) {
+    // A run of this can take up to 8 chars: "\n  \x20"
+    assert( servicefpalloc - servicefplen > 8);
+ 
+   if (isalnum((int)resp[srcidx]))
+      addServiceChar((char) resp[srcidx], servicewrap);
+    else if (resp[srcidx] == '\0') {
+      addServiceChar('\\', servicewrap);
+      addServiceChar('0', servicewrap);
+    } else if (resp[srcidx] == '\\' || resp[srcidx] == '"') {
+      addServiceChar('\\', servicewrap);
+      addServiceChar(resp[srcidx], servicewrap);
+    } else if (ispunct((int)resp[srcidx])) {
+      addServiceChar((char) resp[srcidx], servicewrap);
+    } else {
+      addServiceChar('\\', servicewrap);
+      addServiceChar('x', servicewrap);
+      snprintf(buf, sizeof(buf), "%02x", resp[srcidx]);
+      addServiceChar(*buf, servicewrap);
+      addServiceChar(*(buf+1), servicewrap);
+    }
+  }
+
+  addServiceChar('"', servicewrap);
+  addServiceChar(')', servicewrap);
+  assert(servicefpalloc - servicefplen > 1);
+  servicefp[servicefplen] = '\0';
+}
 
 ServiceProbe *ServiceNFO::currentProbe() {
   if (probe_state == PROBESTATE_INITIAL) {
@@ -903,12 +1140,15 @@ void servicescan_read_handler(nsock_pool nsp, nsock_event nse, void *mydata) {
     // now get the full version
     readstr = svc->getcurrentproberesponse(&readstrlen);
     // Now let us try to match it.
-    matchname = probe->testMatch(readstr, readstrlen);
+    matchname = probe->testMatch(readstr, readstrlen, svc->version_matched, sizeof(svc->version_matched));
 
     if (matchname) {
       // WOO HOO!!!!!!  MATCHED!
       if (o.debugging > 1)
-	printf("Service scan match: %s:%hi is %s\n", svc->target->NameIP(), svc->portno, matchname);
+	if (*(svc->version_matched))
+	printf("Service scan match: %s:%hi is %s.  Version: %s\n", svc->target->NameIP(), svc->portno, matchname, svc->version_matched);
+	else
+	  printf("Service scan match: %s:%hi is %s\n", svc->target->NameIP(), svc->portno, matchname);
       svc->probe_matched = matchname;
       end_svcprobe(PROBESTATE_FINISHED_MATCHED, SG, svc, nsi);
 
@@ -923,13 +1163,22 @@ void servicescan_read_handler(nsock_pool nsp, nsock_event nse, void *mydata) {
     // Failed to read enough to make a match in the given amount of time.  So we
     // move on to the next probe.  If this was a NULL probe, we can simply
     // send the new probe text immediately.  Oterwise we make a new connection.
+
+    readstr = svc->getcurrentproberesponse(&readstrlen);
+    if (readstrlen > 0)
+      svc->addToServiceFingerprint(svc->currentProbe()->getName(), readstr, 
+				   readstrlen);
     startNextProbe(nsp, nsi, SG, svc);
     
   } else if (status == NSE_STATUS_EOF) {
     // The jerk closed on us during read request!
     // If this was during the NULL probe, let's (for now) assume
     // the port is TCP wrapped.  Otherwise, we'll treat it as a nomatch
-    if (probe->isNullProbe()) {
+    readstr = svc->getcurrentproberesponse(&readstrlen);
+    if (readstrlen > 0)
+      svc->addToServiceFingerprint(svc->currentProbe()->getName(), readstr, 
+				   readstrlen);
+    if (probe->isNullProbe() && readstrlen == 0) {
       // TODO:  Perhaps should do further verification before making this assumption
       end_svcprobe(PROBESTATE_FINISHED_TCPWRAPPED, SG, svc, nsi);
     } else {
@@ -974,7 +1223,16 @@ list<ServiceNFO *>::iterator svc;
 
  for(svc = SG->services_finished.begin(); svc != SG->services_finished.end(); svc++) {
    if ((*svc)->probe_state == PROBESTATE_FINISHED_MATCHED) {
-     (*svc)->port->setServiceProbeResults(PROBESTATE_FINISHED_MATCHED, (*svc)->probe_matched);
+
+     (*svc)->port->setServiceProbeResults(PROBESTATE_FINISHED_MATCHED, 
+					  (*svc)->probe_matched, 
+					  *(*svc)->version_matched? (*svc)->version_matched : NULL, 
+					  NULL);
+
+   } else if ((*svc)->probe_state == PROBESTATE_FINISHED_NOMATCH) {
+     if ((*svc)->getServiceFingerprint(NULL))
+       (*svc)->port->setServiceProbeResults(PROBESTATE_FINISHED_NOMATCH, NULL,
+					    NULL, (*svc)->getServiceFingerprint(NULL));
    }
  }
 }

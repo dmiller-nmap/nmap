@@ -1142,7 +1142,11 @@ int bestaccidx;
    }
  }
 
- *(target->FPR) = FP_matches[bestaccidx];
+ // Now we redo the match, since target->FPR has various data (such as
+ // target->FPR->numFPs) which is not in FP_matches[bestaccidx].  This is
+ // kinda ugly.
+ match_fingerprint(target->FPR->FPs[itry], target->FPR, 
+		     o.reference_FPs, OSSCAN_GUESS_THRESHOLD);
 
  for(i=0; i < target->FPR->numFPs; i++) {
    if (i == bestaccidx)
@@ -1154,7 +1158,7 @@ int bestaccidx;
 
  if (target->FPR->numFPs > 1 && target->FPR->overall_results == OSSCAN_SUCCESS &&
      target->FPR->accuracy[0] == 1.0) {
-if (o.verbose) error("WARNING:  OS didn't match until the try #%d", target->FPR->numFPs);
+   if (o.verbose) error("WARNING:  OS didn't match until the try #%d", target->FPR->numFPs);
  } 
 
  target->FPR->goodFP = bestaccidx;

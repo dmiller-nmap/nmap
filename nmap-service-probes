@@ -75,28 +75,48 @@ totalwaitms 5000
 match ftp m/^220 .*ftp/i
 # 220 core.foo.com ESMTP
 match smtp m/^220 .*smtp/i
+match ssh m/^SSH-([^-]+)-OpenSSH_(\S+)/ v/OpenSSH $2 (protocol $1)/
+match ssh m/^SSH-([^-]+)-Sun_SSH_(\S+)/ v/SunSSH $2 (protocol $1)/
+match ssh m/^SSH-([^-]+)-(\d+\.\d+\.\d+) SSH Secure Shell/ v/SSH $2 (protocol $1)/
 match ssh m/^SSH-/
 match chargen q| !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ|a0
 
 Probe TCP GetRequest q|GET / HTTP/1.0\r\n\r\n|
-ports 80,81,8000-8010,8080-8085
+ports 80,81,515,8000-8010,8080-8085
 # Server: CUPS/1.1
-match ipp q|Server: CUPS/1.|
+match ipp m|^HTTP/1.0.*Server: CUPS/(\S+)|s v/CUPS $1/
 # My junbuster proxy gives me this.
-match http-proxy m|^HTTP/1.0 400 Invalid header received from browser\n\n|
+match http-proxy m|^HTTP/1.0 400 Invalid header received from browser\n\n| v/Junkbuster/
 # HTTP/1.1 200 OK
+# The 's' option below causes . to match newlines (just as in perl)
+match http m|^HTTP/1.[01].*Server: Apache/(\d+\.\d+\.\d+) ([^\r\n]+)|s v/Apache $1 ($2)/
 match http m|^HTTP/1.[01] |i
 match ftp m/^200 OK/
 
+Probe UDP DNSVersionBindReq q|\0\x06\x01\0\0\x01\0\0\0\0\0\0\x07version\x04bind\0\0\x10\0\x03|
+ports 53
+match domain m|\x07version\x04bind.*\x05(.....)$| v/Bind $1/
+
+Probe TCP DNSVersionBindReq q|\0\x1E\0\x06\x01\0\0\x01\0\0\0\0\0\0\x07version\x04bind\0\0\x10\0\x03|
+ports 53
+match domain m|\x07version\x04bind.*\x05(.....)$| v/Bind $1/
+
 # DNS Server status request: http://www.crynwr.com/crynwr/rfc1035/rfc1035.html
-Probe UDP DNSStatusRequest-UDP q|\0\0\x10\0\0\0\0\0\0\0\0\0|
+Probe TCP DNSStatusRequest q|\0\x0C\0\0\x10\0\0\0\0\0\0\0\0\0|
+ports 53
+# The 'a' option, followed by a number, means that the matchstring
+# must begin at exactly the specified offset within the response text.
+match domain q|\0\x0C\0\0\x90\x04\0\0\0\0\0\0\0\0|a0
+
+# DNS Server status request: http://www.crynwr.com/crynwr/rfc1035/rfc1035.html
+Probe UDP DNSStatusRequest q|\0\0\x10\0\0\0\0\0\0\0\0\0|
 ports 53
 # The 'a' option, followed by a number, means that the matchstring
 # must begin at exactly the specified offset within the response text.
 match domain q|\0\0\x90\x04\0\0\0\0\0\0\0\0|a0
 
 # DNS Server status request: http://www.crynwr.com/crynwr/rfc1035/rfc1035.html
-Probe TCP DNSStatusRequest-TCP q|\0\x0C\0\0\x10\0\0\0\0\0\0\0\0\0|
+Probe TCP DNSStatusRequest q|\0\x0C\0\0\x10\0\0\0\0\0\0\0\0\0|
 ports 53
 # The 'a' option, followed by a number, means that the matchstring
 # must begin at exactly the specified offset within the response text.
@@ -131,9 +151,12 @@ match printer m|^\0$|
 # From xlsclients
 Probe TCP X11Probe q|\x6C\0\x0B\0\0\0\0\0\0\0\0\0|
 ports 6000-6020
-match X11 q|\0\x2D\x0B\0\0\0\x0C\0|a0
-match X11 q|\x01\0\x0b\0\0\0\x4C\0\xA0\xE0\x63\x02\0\0|a0
+match X11 m|^\0\x2D\x0B\0\0\0\x0C\0| v/(access denied)/
+match X11 m|^\x01\0\x0b\0\0\0\x4C\0\xA0\xE0\x63\x02\0\0.*The XFree86 Project, Inc|s v/XFree86 (open)/
+match X11 m|^\x01\0\x0b\0\0\0\x4C\0\xA0\xE0\x63\x02\0\0| v/(open)/
 
 # These are empty now, but may prove useful later
 Probe TCP GenericLines q|\r\n\r\n|
+
+
 Probe TCP GenericHelp q|HELP\r\n|

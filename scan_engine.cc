@@ -627,6 +627,7 @@ void pos_scan(Target *target, u16 *portarray, int numports, stype scantype) {
   char hostname[1200];
   int i;
   unsigned long j;
+  struct serviceDeductions sd;
 
   if (target->timedout)
     return;
@@ -793,10 +794,23 @@ void pos_scan(Target *target, u16 *portarray, int numports, stype scantype) {
       goto posscan_timedout;
 
     /* Find a good port to scan if we are rpc scanning */
-    if (scantype == RPC_SCAN) {    
+    if (scantype == RPC_SCAN) {
       /* Make sure we have ports left to scan */
-      rsi.rpc_current_port = target->ports.nextPort(rsi.rpc_current_port,
-						    0, PORT_OPEN, true);
+      while(1) {
+	rsi.rpc_current_port = target->ports.nextPort(rsi.rpc_current_port,
+						      0, PORT_OPEN, true);
+	// When service scan is in use, we only want to scan ports that have already
+	// been determined to be RPC
+
+	if (!o.servicescan)
+	  break; // We do all open ports if no service scan
+	if (!rsi.rpc_current_port) 
+	  break; // done!
+	rsi.rpc_current_port->getServiceDeductions(&sd);
+	if (sd.name && strcmp(sd.name, "rpc") == 0)
+	  break; // Good - an RPC port for us to scan.
+      }
+
       if (!rsi.rpc_current_port) /* Woop!  Done! */ break;
 
       /* Reinit our testinglist so we try each RPC prog */
@@ -1079,13 +1093,10 @@ void pos_scan(Target *target, u16 *portarray, int numports, stype scantype) {
 
     if (scantype == RPC_SCAN) {
       /* Now we figure out the results of the port we just RPC scanned */
-      rsi.rpc_current_port->rpc_status = rsi.rpc_status;
-      if (rsi.rpc_status == RPC_STATUS_GOOD_PROG) {      
-	rsi.rpc_current_port->rpc_program = rsi.rpc_program;
-	rsi.rpc_current_port->rpc_lowver = rsi.rpc_lowver;
-	rsi.rpc_current_port->rpc_highver = rsi.rpc_highver;
-      }
-      
+
+      rsi.rpc_current_port->setRPCProbeResults(rsi.rpc_status, rsi.rpc_program, 
+					       rsi.rpc_lowver, rsi.rpc_highver);
+
       /* Time to put our RPC program scan list back together for the
 	 next port ... */
       for(j = 0; j < rsi.rpc_number; j++) {

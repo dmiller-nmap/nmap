@@ -190,8 +190,8 @@ pop-2             109/tcp    # PostOffice V.2
 pop-2             109/udp    # PostOffice V.2
 pop-3             110/tcp    # PostOffice V.3
 pop-3             110/udp    # PostOffice V.3
-sunrpc            111/tcp    # portmapper, rpcbind
-sunrpc            111/udp    # portmapper, rpcbind
+rpcbind           111/tcp    # portmapper, rpcbind
+rpcbind           111/udp    # portmapper, rpcbind
 mcidas            112/tcp    # McIDAS Data Transmission Protocol
 mcidas            112/udp    # McIDAS Data Transmission Protocol
 auth              113/tcp    # ident, tap, Authentication Service
@@ -2017,6 +2017,8 @@ ricardo-lm        6148/udp   # Ricardo North America License Manager
 gnutella          6346/tcp   # Gnutella file sharing protocol
 crystalreports    6400/tcp   # Seagate Crystal Reports
 crystalenterprise 6401/tcp   # Seagate Crystal Enterprise
+mythtv            6543/tcp
+mythtv            6544/tcp
 PowerChutePLUS    6547/tcp   #
 PowerChutePLUS    6548/tcp   #
 PowerChutePLUS    6549/udp   #
