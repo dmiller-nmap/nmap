@@ -101,10 +101,8 @@ distro:
                     nmap_manpage.html nmap_spanish.1 nmapfe.1 xnmap.1 \
                     /usr/tmp/nmap-$(NMAP_VERSION)/docs
 	$(SHTOOL) mkdir /usr/tmp/nmap-$(NMAP_VERSION)/nmapfe
-	cd nmapfe; cp Make.files Make.header Makefile  \
-	              Makefile.in aclocal.m4 configure configure.in \
+	cd nmapfe; cp Makefile.in aclocal.m4 configure configure.in \
 	              nmapfe.c nmapfe.h nmapfe_sig.c nmapfe_sig.h \
-	              mkinstalldirs missing  \
 	              /usr/tmp/nmap-$(NMAP_VERSION)/nmapfe
 # Kill the CVS crap
 	find /usr/tmp/nmap-$(NMAP_VERSION) -type d -name CVS | xargs rm -rf
