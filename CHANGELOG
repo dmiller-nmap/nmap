@@ -1,5 +1,39 @@
 # Nmap Changelog ($Id$)
 
+Nmap 3.15BETA3
+
+o Made numerous improvements to the timing behavior of "-T Aggressive"
+  (same as -T4) scans.  It is now recommended for regular use by
+  impatient people with a fast connection.  "-T Insane" mode has also
+  been updated, but we only recommend that for, well, insane people.
+
+o Made substantial changes to the SYN/connect()/Window scanning
+  algorithms for improved speeds, especially against heavily filtered
+  hosts.  If you notice any timing problems (misidentified ports,
+  etc.), please send me the details (including full Nmap output and a
+  description of what is wrong).  Reports of any timing problems with
+  -T4 would be helpful as well.
+
+o Changed Nmap such that ALL syn scan packets are sent from the port
+  you specify with -g.  Retransmissions used to utilize successively
+  higher ports.  This change has a downside in that some operating
+  systems (such as Linux) often won't reply to the retransmissions
+  because they reuse the same connection specifier quad
+  (srcip:srcport:dstip:dstport).  Overall I think this is a win.
+
+o Added timestamps to "Starting nmap" line and each host port scan in
+  verbose (-v) mode.  These are in ISO 8601 standard format because
+  unlike President Bush, we actually care about International 
+  consensus :).
+
+o Nmap now comes by default in .tar.bz2 format, which compresses about
+  20% further.  You can still find .tgz in the dist directory at
+  http://download.insecure.org/nmap/dist/?M=D .
+
+o Various other minor bugfixes, new services, fingerprints, etc.
+
+Nmap 3.15BETA2
+
 o I added support for a brand new "port" that many of you may have
   never scanned before!  UDP & TCP "port 0" (and IP protocol 0) are now
   permitted if you specify 0 explicitly.  An argument like "-p -40"
@@ -14,8 +48,26 @@ o Applied patch by Martin Kluge (martin@elxsi.info) which adds --ttl
     14:17:19.474293 192.168.0.42.60214 > 192.168.0.40.135: S 3265375623:3265375623(0) win 1024 [ttl 0] (id 35919, len 40)
     14:17:19.474456 192.168.0.40.135 > 192.168.0.42.60214: S 2805154856:2805154856(0) ack 3265375624 win 64240 <mss 1460> (DF) (ttl 128, id 49889, len 44)
 
+o Applied patch by Gabriel L. Somlo ( somlo@acns.colostate.edu ) which
+  extends the multi-ping-port functionality to nonroot and IPv6
+  connect() users.
+
+o I added a new --datadir command line option which allows you to
+  specify the highest priority directory for Nmap data files
+  nmap-services, nmap-os-fingerprints, and nmap-rpc.  Any files which
+  aren't in the given dir, will be searched for in the $NMAPDIR
+  environmental variable, ~/nmap/, a compiled in data directory
+  (e.g. /usr/share/nmap), and finally the current directory.
+
+o Fixed Windows (VC++ 6) compilation, thanks to patches from Kevin
+  Davis (computerguy@cfl.rr.com) and Andy Lutomirski
+  (luto@stanford.edu)
+
 o Included new Latvian man page translation by 
   "miscelerious options" (misc@inbox.lv)
+
+o Fixed Solaris compilation when Sun make is used rather than GNU
+  make.  Thanks to Tom Duffy (tduffy@sun.com) for assistance.
 
 o Applied patch from Stephen Bishop (sbishop@idsec.co.uk) which
   prevends certain false-positive responses when Nmap raw TCP ping scans

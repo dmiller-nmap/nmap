@@ -679,7 +679,7 @@ int idlescan_countopen2(struct idle_proxy_info *proxy,
 
   if ((openports > 0) && (openports <= numports)) {
     /* Yeah, we found open ports... lets adjust the timing ... */
-    if (o.debugging > 2) error("idlescan_countopen2:  found %d open ports (out of %d) in %d usecs", openports, numports, TIMEVAL_SUBTRACT(latestchange, start));
+    if (o.debugging > 2) error("idlescan_countopen2:  found %d open ports (out of %d) in %lu usecs", openports, numports, TIMEVAL_SUBTRACT(latestchange, start));
     if (sent_time) *sent_time = start;
     if (rcv_time) *rcv_time = latestchange;
   }
@@ -895,8 +895,8 @@ void idle_scan(Target *target, u16 *portarray, int numports,
     initialize_idleproxy(&proxy, proxyName, target->v4hostip());
   }
 
-  if (o.debugging || o.verbose) {  
-    log_write(LOG_STDOUT, "Initiating Idlescan against %s (%s)\n", target->HostName(), target->targetipstr());
+  if (o.debugging || o.verbose) {
+    log_write(LOG_STDOUT, "Initiating Idlescan against %s\n", target->NameIP());
   }
   starttime = time(NULL);
 

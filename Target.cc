@@ -72,6 +72,7 @@ void Target::Initialize() {
   bzero(&sourcesock, sizeof(sourcesock));
   targetsocklen = sourcesocklen = 0;
   targetipstring[0] = '\0';
+  nameIPBuf = NULL;
 }
 
 void Target::Recycle() {
@@ -96,6 +97,11 @@ void Target::FreeInternal() {
     FPs[i] = NULL;
   }
   numFPs = 0;
+
+  if (nameIPBuf) {
+    free(nameIPBuf);
+    nameIPBuf = NULL;
+  }
 
   /* Free the port lists */
   resetportlist(&ports);
@@ -229,4 +235,10 @@ const char *Target::NameIP(char *buf, size_t buflen) {
     snprintf(buf, buflen, "%s (%s)", hostname, targetipstring);
   } else Strncpy(buf, targetipstring, buflen);
   return buf;
+}
+
+/* This next version returns a static buffer -- so no concurrency */
+const char *Target::NameIP() {
+  if (!nameIPBuf) nameIPBuf = (char *) safe_malloc(MAXHOSTNAMELEN + INET6_ADDRSTRLEN);
+  return NameIP(nameIPBuf, MAXHOSTNAMELEN + INET6_ADDRSTRLEN);
 }

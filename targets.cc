@@ -86,6 +86,7 @@ static int hostupdate(Target *hostbatch[], Target *target,
 
   int hostnum = gethostnum(hostbatch, target);
   int i;
+  int p;
   int seq;
   int tmpsd;
   struct timeval tv;
@@ -104,19 +105,20 @@ static int hostupdate(Target *hostbatch[], Target *target,
   
   if (style == pingstyle_connecttcp) {
     seq = hostnum * pt->max_tries + trynum;
-    assert(tqi->sockets[seq] >= 0);
-    for(i=0; i <= pt->block_tries; i++) {  
-      seq = hostnum * pt->max_tries + i;
-      tmpsd = tqi->sockets[seq];
-      if (tmpsd >= 0) {
-	assert(tqi->sockets_out > 0);
-	tqi->sockets_out--;
-	close(tmpsd);
-	if (tmpsd == tqi->maxsd) tqi->maxsd--;
-	FD_CLR(tmpsd, &(tqi->fds_r));
-	FD_CLR(tmpsd, &(tqi->fds_w));
-	FD_CLR(tmpsd, &(tqi->fds_x));
-	tqi->sockets[seq] = -1;
+    for(p=0; p < o.num_ping_synprobes; p++) {
+      for(i=0; i <= pt->block_tries; i++) {  
+        seq = hostnum * pt->max_tries + i;
+        tmpsd = tqi->sockets[p][seq];
+        if (tmpsd >= 0) {
+	  assert(tqi->sockets_out > 0);
+	  tqi->sockets_out--;
+	  close(tmpsd);
+	  if (tmpsd == tqi->maxsd) tqi->maxsd--;
+	  FD_CLR(tmpsd, &(tqi->fds_r));
+	  FD_CLR(tmpsd, &(tqi->fds_w));
+	  FD_CLR(tmpsd, &(tqi->fds_x));
+	  tqi->sockets[p][seq] = -1;
+        }
       }
     }
   }
@@ -311,6 +313,7 @@ pcap_t *pd = NULL;
 char filter[512];
 unsigned short sportbase;
 int max_width = 0;
+int p;
 int group_start, group_end, direction; /* For going forward or backward through
 					       grouplen */
 bzero((char *)&ptech, sizeof(ptech));
@@ -342,15 +345,11 @@ if (pingtype & PINGTYPE_TCP) {
   else ptech.connecttcpscan = 1;
 }
 
- if (ptech.connecttcpscan)
-   probes_per_host = 1; /* Only the first probe port is used in this case */
- else {
-   probes_per_host = 0;
-   if (pingtype & PINGTYPE_ICMP_PING) probes_per_host++;
-   if (pingtype & PINGTYPE_ICMP_MASK) probes_per_host++;
-   if (pingtype & PINGTYPE_ICMP_TS) probes_per_host++;
-   probes_per_host += o.num_ping_synprobes + o.num_ping_ackprobes;
- } 
+ probes_per_host = 0;
+ if (pingtype & PINGTYPE_ICMP_PING) probes_per_host++;
+ if (pingtype & PINGTYPE_ICMP_MASK) probes_per_host++;
+ if (pingtype & PINGTYPE_ICMP_TS) probes_per_host++;
+ probes_per_host += o.num_ping_synprobes + o.num_ping_ackprobes;
 
 pt.min_group_size = MAX(3, MAX(o.min_parallelism, 16) / probes_per_host);
 
@@ -367,13 +366,13 @@ id = (unsigned short) get_random_uint();
 if (ptech.connecttcpscan)  {
   max_width = (o.max_parallelism)? o.max_parallelism : MAX(1, max_sd() - 4);
   max_block_size = MIN(50, max_width);
-}
 
+  bzero((char *)&tqi, sizeof(tqi));
 
-bzero((char *)&tqi, sizeof(tqi));
-if (ptech.connecttcpscan) {
-  tqi.sockets = (int *) safe_malloc(sizeof(int) * (pt.max_tries) * num_hosts);
-  memset(tqi.sockets, 255, sizeof(int) * (pt.max_tries) * num_hosts);
+  for(p=0; p < o.num_ping_synprobes; p++) {
+    tqi.sockets[p] = (int *) safe_malloc(sizeof(int) * (pt.max_tries) * num_hosts);
+    memset(tqi.sockets[p], 255, sizeof(int) * (pt.max_tries) * num_hosts);
+  }
   FD_ZERO(&(tqi.fds_r));
   FD_ZERO(&(tqi.fds_w));
   FD_ZERO(&(tqi.fds_x));
@@ -475,8 +474,7 @@ gettimeofday(&start, NULL);
 	   sendrawtcppingqueries(rawsd, hostbatch[hostnum], pingtype, seq, time, &pt);
 
 	 else if (ptech.connecttcpscan) {
-	   /* still only one port probed for connect tcp */
-	   sendconnecttcpquery(hostbatch, &tqi, hostbatch[hostnum], o.ping_ackprobes[0], seq, time, &pt, &to, max_width);
+	   sendconnecttcpqueries(hostbatch, &tqi, hostbatch[hostnum], seq, time, &pt, &to, max_width);
 	 }
 	 pt.block_unaccounted++;
 	 gettimeofday(&t2, NULL);
@@ -525,7 +523,9 @@ gettimeofday(&start, NULL);
  }
 
  close(sd);
- if (ptech.connecttcpscan) free(tqi.sockets);
+ if (ptech.connecttcpscan)
+   for(p=0; p < o.num_ping_synprobes; p++)
+     free(tqi.sockets[p]);
  if (sd >= 0) close(sd);
  if (rawsd >= 0) close(rawsd);
  if (rawpingsd >= 0) close(rawpingsd);
@@ -537,8 +537,22 @@ gettimeofday(&start, NULL);
  return;
 }
 
+int sendconnecttcpqueries(Target *hostbatch[], struct tcpqueryinfo *tqi,
+			Target *target, int seq, 
+			struct timeval *time, struct pingtune *pt, 
+			struct timeout_info *to, int max_width) {
+  int i;
+
+  for( i=0; i<o.num_ping_synprobes; i++ ) {
+    if (i > 0 && o.scan_delay) enforce_scan_delay(NULL);
+    sendconnecttcpquery(hostbatch, tqi, target, i, seq, time, pt, to, max_width);
+  }
+
+  return 0;
+}
+
 int sendconnecttcpquery(Target *hostbatch[], struct tcpqueryinfo *tqi,
-			Target *target, u16 probe_port, int seq, 
+			Target *target, int probe_port_num, int seq, 
 			struct timeval *time, struct pingtune *pt, 
 			struct timeout_info *to, int max_width) {
 
@@ -558,11 +572,11 @@ int sendconnecttcpquery(Target *hostbatch[], struct tcpqueryinfo *tqi,
     /* We've got to free one! */
     for(i=0; i < trynum; i++) {
       tmpsd = hostnum * pt->max_tries + i;
-      if (tqi->sockets[tmpsd] >= 0) {
+      if (tqi->sockets[probe_port_num][tmpsd] >= 0) {
 	if (o.debugging) 
 	  log_write(LOG_STDOUT, "sendconnecttcpquery: Scavenging a free socket due to serious shortage\n");
-	close(tqi->sockets[tmpsd]);
-	tqi->sockets[tmpsd] = -1;
+	close(tqi->sockets[probe_port_num][tmpsd]);
+	tqi->sockets[probe_port_num][tmpsd] = -1;
 	tqi->sockets_out--;
 	break;
       }
@@ -572,25 +586,25 @@ int sendconnecttcpquery(Target *hostbatch[], struct tcpqueryinfo *tqi,
   }
     
   /* Since we know we now have a free s0cket, lets take it */
-  assert(tqi->sockets[seq] == -1);
-  tqi->sockets[seq] =  socket(o.af(), SOCK_STREAM, IPPROTO_TCP);
-  if (tqi->sockets[seq] == -1) 
+  assert(tqi->sockets[probe_port_num][seq] == -1);
+  tqi->sockets[probe_port_num][seq] =  socket(o.af(), SOCK_STREAM, IPPROTO_TCP);
+  if (tqi->sockets[probe_port_num][seq] == -1) 
     fatal("Socket creation in sendconnecttcpquery");
-  tqi->maxsd = MAX(tqi->maxsd, tqi->sockets[seq]);
+  tqi->maxsd = MAX(tqi->maxsd, tqi->sockets[probe_port_num][seq]);
   tqi->sockets_out++;
-  unblock_socket(tqi->sockets[seq]);
-  init_socket(tqi->sockets[seq]);
+  unblock_socket(tqi->sockets[probe_port_num][seq]);
+  init_socket(tqi->sockets[probe_port_num][seq]);
 
   if (target->TargetSockAddr(&sock, &socklen) != 0)
     fatal("Unable to get target sock in sendconnecttcpquery");
 
   if (sin->sin_family == AF_INET)
-    sin->sin_port = htons(probe_port);
+    sin->sin_port = htons(o.ping_synprobes[probe_port_num]);
 #if HAVE_IPV6
-  else sin6->sin6_port = htons(probe_port);
+  else sin6->sin6_port = htons(o.ping_synprobes[probe_port_num]);
 #endif //HAVE_IPV6
   
-  res = connect(tqi->sockets[seq],(struct sockaddr *)&sock, socklen);
+  res = connect(tqi->sockets[probe_port_num][seq],(struct sockaddr *)&sock, socklen);
   gettimeofday(&time[seq], NULL);
 
   if ((res != -1 || errno == ECONNREFUSED)) {
@@ -598,7 +612,7 @@ int sendconnecttcpquery(Target *hostbatch[], struct tcpqueryinfo *tqi,
        in non-blocking mode */
       hostupdate(hostbatch, target, HOST_UP, 1, trynum, to, 
 		 &time[seq], pt, tqi, pingstyle_connecttcp);
-    if (tqi->maxsd == tqi->sockets[seq]) tqi->maxsd--;
+    if (tqi->maxsd == tqi->sockets[probe_port_num][seq]) tqi->maxsd--;
   }
   else if (errno == ENETUNREACH) {
     if (o.debugging) 
@@ -608,9 +622,9 @@ int sendconnecttcpquery(Target *hostbatch[], struct tcpqueryinfo *tqi,
   }
   else {
     /* We'll need to select() and wait it out */
-    FD_SET(tqi->sockets[seq], &(tqi->fds_r));
-    FD_SET(tqi->sockets[seq], &(tqi->fds_w));
-    FD_SET(tqi->sockets[seq], &(tqi->fds_x));
+    FD_SET(tqi->sockets[probe_port_num][seq], &(tqi->fds_r));
+    FD_SET(tqi->sockets[probe_port_num][seq], &(tqi->fds_w));
+    FD_SET(tqi->sockets[probe_port_num][seq], &(tqi->fds_x));
   }
 return 0;
 }
@@ -777,6 +791,7 @@ struct timeval myto, start, end;
 int hostindex;
 int trynum, newstate = HOST_DOWN;
 int seq;
+int p;
 char buf[256];
 int foundsomething = 0;
 fd_set myfds_r,myfds_w,myfds_x;
@@ -795,71 +810,73 @@ while(pt->block_unaccounted) {
     for(hostindex = pt->group_start; hostindex <= pt->group_end; hostindex++) {
       for(trynum=0; trynum <= pt->block_tries; trynum++) {
 	seq = hostindex * pt->max_tries + trynum;
-	if (tqi->sockets[seq] >= 0) {
-	  if (o.debugging > 1) {
-	    if (FD_ISSET(tqi->sockets[seq], &(myfds_r))) {
-	      log_write(LOG_STDOUT, "WRITE selected for machine %s\n", hostbatch[hostindex]->targetipstr());  
+	for(p=0; p < o.num_ping_synprobes; p++) {
+	  if (tqi->sockets[p][seq] >= 0) {
+	    if (o.debugging > 1) {
+	      if (FD_ISSET(tqi->sockets[p][seq], &(myfds_r))) {
+	        log_write(LOG_STDOUT, "WRITE selected for machine %s\n", hostbatch[hostindex]->targetipstr());  
+	      }
+	      if ( FD_ISSET(tqi->sockets[p][seq], &myfds_w)) {
+	        log_write(LOG_STDOUT, "READ selected for machine %s\n", hostbatch[hostindex]->targetipstr()); 
+	      }
+	      if  ( FD_ISSET(tqi->sockets[p][seq], &myfds_x)) {
+	        log_write(LOG_STDOUT, "EXC selected for machine %s\n", hostbatch[hostindex]->targetipstr());
+	      }
 	    }
-	    if ( FD_ISSET(tqi->sockets[seq], &myfds_w)) {
-	      log_write(LOG_STDOUT, "READ selected for machine %s\n", hostbatch[hostindex]->targetipstr()); 
-	    }
-	    if  ( FD_ISSET(tqi->sockets[seq], &myfds_x)) {
-	      log_write(LOG_STDOUT, "EXC selected for machine %s\n", hostbatch[hostindex]->targetipstr());
-	    }
-	  }
-	  if (FD_ISSET(tqi->sockets[seq], &myfds_r) || FD_ISSET(tqi->sockets[seq], &myfds_w) ||  FD_ISSET(tqi->sockets[seq], &myfds_x)) {
-	    foundsomething = 0;
-	    res2 = read(tqi->sockets[seq], buf, sizeof(buf) - 1);
-	    if (res2 == -1) {
-	      switch(errno) {
-	      case ECONNREFUSED:
-	      case EAGAIN:
+	    if (FD_ISSET(tqi->sockets[p][seq], &myfds_r) || FD_ISSET(tqi->sockets[p][seq], &myfds_w) ||  FD_ISSET(tqi->sockets[p][seq], &myfds_x)) {
+	      foundsomething = 0;
+	      res2 = read(tqi->sockets[p][seq], buf, sizeof(buf) - 1);
+	      if (res2 == -1) {
+	        switch(errno) {
+	        case ECONNREFUSED:
+	        case EAGAIN:
 #ifdef WIN32
 //		  case WSAENOTCONN:	//	needed?  this fails around here on my system
 #endif
-		if (errno == EAGAIN && o.verbose) {
-		  log_write(LOG_STDOUT, "Machine %s MIGHT actually be listening on probe port %d\n", hostbatch[hostindex]->targetipstr(), o.ping_ackprobes[0]);
-		}
-		foundsomething = 1;
-		newstate = HOST_UP;	
-		break;
-	      case ENETDOWN:
-	      case ENETUNREACH:
-	      case ENETRESET:
-	      case ECONNABORTED:
-	      case ETIMEDOUT:
-	      case EHOSTDOWN:
-	      case EHOSTUNREACH:
-		foundsomething = 1;
-		newstate = HOST_DOWN;
-		break;
-	      default:
-		snprintf (buf, sizeof(buf), "Strange read error from %s", hostbatch[hostindex]->targetipstr());
-		perror(buf);
-		break;
+		  if (errno == EAGAIN && o.verbose) {
+		    log_write(LOG_STDOUT, "Machine %s MIGHT actually be listening on probe port %d\n", hostbatch[hostindex]->targetipstr(), o.ping_synprobes[p]);
+		  }
+		  foundsomething = 1;
+		  newstate = HOST_UP;	
+		  break;
+	        case ENETDOWN:
+	        case ENETUNREACH:
+	        case ENETRESET:
+	        case ECONNABORTED:
+	        case ETIMEDOUT:
+	        case EHOSTDOWN:
+	        case EHOSTUNREACH:
+		  foundsomething = 1;
+		  newstate = HOST_DOWN;
+		  break;
+	        default:
+		  snprintf (buf, sizeof(buf), "Strange read error from %s", hostbatch[hostindex]->targetipstr());
+		  perror(buf);
+		  break;
+	        }
+	      } else { 
+	        foundsomething = 1;
+	        newstate = HOST_UP;
+	        if (o.verbose) {	      
+		  buf[res2] = '\0';
+		  if (res2 == 0)
+		    log_write(LOG_STDOUT, "Machine %s is actually LISTENING on probe port %d\n",
+			   hostbatch[hostindex]->targetipstr(), 
+			   o.ping_synprobes[p]);
+		  else 
+		    log_write(LOG_STDOUT, "Machine %s is actually LISTENING on probe port %d, banner: %s\n",
+			   hostbatch[hostindex]->targetipstr(), 
+			   o.ping_synprobes[p], buf);
+	        }
 	      }
-	    } else { 
-	      foundsomething = 1;
-	      newstate = HOST_UP;
-	      if (o.verbose) {	      
-		buf[res2] = '\0';
-		if (res2 == 0)
-		  log_write(LOG_STDOUT, "Machine %s is actually LISTENING on probe port %d\n",
-			 hostbatch[hostindex]->targetipstr(), 
-			 o.ping_ackprobes[0]);
-		else 
-		  log_write(LOG_STDOUT, "Machine %s is actually LISTENING on probe port %d, banner: %s\n",
-			 hostbatch[hostindex]->targetipstr(), 
-			 o.ping_ackprobes[0], buf);
-	      }
-	    }
-	    if (foundsomething) {
-	      hostupdate(hostbatch, hostbatch[hostindex], newstate, 1, trynum,
+	      if (foundsomething) {
+	        hostupdate(hostbatch, hostbatch[hostindex], newstate, 1, trynum,
 			 to,  &time[seq], pt, tqi, pingstyle_connecttcp);
 	      /*	      break;*/
+	      }
 	    }
 	  }
-	}
+        }
       }
     }
   }
@@ -877,10 +894,12 @@ while(pt->block_unaccounted) {
  for(hostindex = pt->group_start; hostindex <= pt->group_end; hostindex++) { 
       for(trynum=0; trynum <= pt->block_tries; trynum++) {
 	seq = hostindex * pt->max_tries + trynum;
-	if ( tqi->sockets[seq] >= 0) {
-	  tqi->sockets_out--;
-	  close(tqi->sockets[seq]);
-	  tqi->sockets[seq] = -1;
+	for(p=0; p < o.num_ping_synprobes; p++) {
+	  if ( tqi->sockets[p][seq] >= 0) {
+	    tqi->sockets_out--;
+	    close(tqi->sockets[p][seq]);
+	    tqi->sockets[p][seq] = -1;
+	  }
 	}
       }
  }
@@ -970,7 +989,7 @@ while(pt->block_unaccounted > 0 && !timeout) {
     continue;
 
   if (bytes > 0 && bytes <= 20) {  
-    error("%d byte micro packet received in get_ping_results");
+    error("%d byte micro packet received in get_ping_results", bytes);
     continue;
   }  
 

@@ -100,6 +100,8 @@ struct firewallmodeinfo {
    many ports we can try at once */
 struct scanstats {
   int packet_incr;
+  int initial_packet_width; /* Number of queries in parallel we should 
+			       start with */
   double fallback_percent;
   int numqueries_outstanding; /* How many unexpired queries are on the 'net
 				 right now? */

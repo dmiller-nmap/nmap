@@ -320,7 +320,7 @@ int rpc_are_we_done(char *msg, int msg_len, Target *target,
   }
   if (ntohl(rpc_pack->auth_flavor) != 0 /* AUTH_NULL */ ||
       ntohl(rpc_pack->opaque_length != 0)) {
-    error("Strange -- auth flavor/opaque_length are %d/%d should generally be 0/0", rpc_pack->auth_flavor, rpc_pack->opaque_length);
+    error("Strange -- auth flavor/opaque_length are %lu/%lu should generally be 0/0", rpc_pack->auth_flavor, rpc_pack->opaque_length);
     rsi->rpc_status = RPC_STATUS_NOT_RPC;
     ss->numqueries_outstanding = 0;
     return 1;
@@ -496,7 +496,7 @@ unsigned long current_msg_len;
 	 if (res == -1)
 	   gh_perror("Failed to read() from tcp rpc socket in get_rpc_results");
 	 else {
-	   error("Lamer on port %li closed RPC socket on me in get_rpc_results", rsi->rpc_current_port->portno);
+	   error("Lamer on port %u closed RPC socket on me in get_rpc_results", rsi->rpc_current_port->portno);
 	 }
        }
        ss->numqueries_outstanding = 0;

@@ -50,7 +50,12 @@
 NmapOps o;
 
 NmapOps::NmapOps() {
+  datadir = NULL;
   Initialize();
+}
+
+NmapOps::~NmapOps() {
+  if (datadir) free(datadir);
 }
 
 void NmapOps::ReInit() {
@@ -127,6 +132,7 @@ void NmapOps::Initialize() {
   magic_port = 33000 + (get_random_uint() % 31000);
   magic_port_set = 0;
   num_ping_synprobes = num_ping_ackprobes = 0;
+  timing_level = 3;
   max_parallelism = 0;
   min_parallelism = 0;
   max_rtt_timeout = MAX_RTT_TIMEOUT;
@@ -154,6 +160,8 @@ void NmapOps::Initialize() {
   nmap_stdout = stdout;
   gettimeofday(&start_time, NULL);
   pTrace = false;
+  if (datadir) free(datadir);
+  datadir = NULL;
 }
 
 bool NmapOps::TCPScan() {
@@ -202,16 +210,13 @@ void NmapOps::ValidateOptions() {
  if ((pingtype & PINGTYPE_TCP) && (!o.isr00t || o.af() != AF_INET)) {
    /* We will have to do a connect() style ping */
    if (num_ping_synprobes && num_ping_ackprobes) {
-     fatal("ERROR:  Cannot use both SYN and ACK ping probes if you are nonroot or using IPv6");
-   }
-   if (num_ping_synprobes > 1 || num_ping_ackprobes > 1) {
-     error("WARNING:  Multiple probe ports were given, but only the first one will be used for your connect()-style TCP ping.");
+     fatal("Cannot use both SYN and ACK ping probes if you are nonroot or using IPv6");
    }
 
-   if (num_ping_synprobes > 0) { 
-     num_ping_ackprobes = 1;
-     num_ping_synprobes = 0;
-     ping_ackprobes[0] = ping_synprobes[0];
+   if (num_ping_ackprobes > 0) { 
+     memcpy(ping_synprobes, ping_ackprobes, num_ping_ackprobes * sizeof(*ping_synprobes));
+     num_ping_synprobes = num_ping_ackprobes;
+     num_ping_ackprobes = 0;
    }
  }
 

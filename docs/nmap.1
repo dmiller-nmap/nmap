@@ -150,12 +150,17 @@ to ping sweep
 doing any actual port scans.
 .TP
 .B \-sU
-UDP scans: This method is used to determine which UDP (User
-Datagram Protocol, RFC 768) ports are open on a host.  The
-technique is to send 0 byte udp packets to each port on the
-target machine.  If we receive an ICMP port unreachable
-message, then the port is closed.  Otherwise we assume it is
-open.
+UDP scans: This method is used to determine which UDP (User Datagram
+Protocol, RFC 768) ports are open on a host.  The technique is to send
+0 byte udp packets to each port on the target machine.  If we receive
+an ICMP port unreachable message, then the port is closed.  Otherwise
+we assume it is open.  Unfortunately, firewalls often block the port
+unreachable messages, causing the port to appear open.  Sometimes an
+ISP will block only a few specific dangerous ports such as 31337 (back
+orifice) and 139 (Windows NetBIOS), making it look like these
+vulnerable ports are open.  So don't panic immediately.
+Unfortunately, it isn't always trivial to differentiate between real
+open UDP ports and these filtered false-positives.
 .Sp
 Some people think UDP scanning is pointless. I usually
 remind them of the recent Solaris rcpbind hole. Rpcbind can
@@ -187,6 +192,7 @@ and NT machines.  Thus we can scan all 65K ports of a
 Windows machine
 .B very
 quickly.  Woop!
+.Sp
 .TP
 .B \-sO
 IP protocol scans: This method is used to determine which IP protocols
@@ -701,6 +707,20 @@ useful to slow down the scan a little bit and avoid crashing
 remote machines.  Another approach is to use \-sS, which is
 generally easier for machines to handle.
 .TP
+.B --packet_trace
+Tells Nmap to show all the packets it sends and receives in a
+tcpdump-like format.  This can be tremendously useful for debugging,
+and is also a good learning tool.
+.TP
+.B --datadir [directoryname]
+Nmap obtains some special data at runtime in files named
+nmap-services, nmap-protocols, nmap-rpc, and nmap-os-fingerprints.
+Nmap first searches these files in the directory option to --nmapdir.
+Any files not found there, are searched for in the directory specified
+by the NMAPDIR environmental variable.  Next comes ~/nmap, and then
+a compiled-in location such as /usr/share/nmap .  As a last resort,
+Nmap will look in the current directory.
+.TP
 .B TIMING OPTIONS
 Generally Nmap does a good job at adjusting for Network
 characteristics at runtime and scanning as fast as possible
@@ -726,24 +746,25 @@ only waits 15 seconds between sending packets.
 is meant to ease load on the network and reduce the chances
 of crashing machines.  It serializes the probes and waits
 .B at least 
-0.4 seconds between them.  
+0.4 seconds between them.  Note that this is generally at least an
+order of magnitude slower than default scans, so only use it when you
+need to.
 .B Normal
 is the default Nmap behaviour, which tries to run as quickly
 as possible without overloading the network or missing
 hosts/ports.
 .B Aggressive
-mode adds a 5 minute timeout per host and it never waits
-more than 1.25 seconds for probe responses.
+This option can make certain scans (especially SYN scans against
+heavily filtered hosts) much faster.  It is recommended for impatient
+folks with a fast net connection.
 .B Insane 
 is only suitable for very fast networks or where you don't
-mind losing some information.  It times out hosts in 75
-seconds and only waits 0.3 seconds for individual probes.
-It does allow for very quick network sweeps though :).  You
-can also reference these by number (0-5).  For example, \'-T
-0\' gives you Paranoid mode and \'-T 5\' is Insane mode.
-.Sp
-These canned timing modes should NOT be used in combination
-with the lower level controls given below.
+mind losing some information.  It times out hosts in 15
+minutes and won\'t wait more than 0.3 seconds for individual probes.
+It does allow for very quick network sweeps though :).  
+.Sp 
+You can also reference these by number (0-5).  For example, \'-T0\'
+gives you Paranoid mode and \'-T5\' is Insane mode.
 .TP
 .B --host_timeout <milliseconds>
 Specifies the amount of time Nmap is allowed to spend
@@ -790,10 +811,6 @@ amount of time Nmap must wait between probes.  This is
 mostly useful to reduce network load or to slow the scan way
 down to sneak under IDS thresholds.
 .TP
-.B --packet_trace
-Tells Nmap to show all the packets it sends and receives in a
-tcpdump-like format.  This can be tremendously useful for debugging,
-and is also a good learning tool.
 
 .SH TARGET SPECIFICATION
 Everything that isn't an option (or option argument) in nmap

@@ -69,7 +69,7 @@ void adjust_timeouts(struct timeval sent, struct timeout_info *to) {
 void adjust_timeouts2(const struct timeval *sent, 
 		      const struct timeval *received, 
 		      struct timeout_info *to) {
-  int delta = 0;
+  long delta = 0;
 
   if (o.debugging > 1) {
     log_write(LOG_STDOUT, "Timeout vals: srtt: %d rttvar: %d to: %d ", to->srtt, to->rttvar, to->timeout);
@@ -92,7 +92,7 @@ void adjust_timeouts2(const struct timeval *sent,
     if (delta > 1500000 && delta > 3 * to->srtt + 2 * to->rttvar) {
       /* WANKER ALERT! */
       if (o.debugging) {
-	log_write(LOG_STDOUT, "Bogus delta: %d (srtt %d) ... ignoring\n", delta, to->srtt);
+	log_write(LOG_STDOUT, "Bogus delta: %ld (srtt %d) ... ignoring\n", delta, to->srtt);
       }
       return;
     }
@@ -107,19 +107,19 @@ void adjust_timeouts2(const struct timeval *sent,
   
   /* It hurts to do this ... it really does ... but otherwise we are being
      too risky */
-  to->timeout = MAX(to->timeout, o.min_rtt_timeout * 1000);
-  to->timeout = MIN(to->timeout, o.max_rtt_timeout * 1000);
+  to->timeout = box(o.min_rtt_timeout * 1000, o.max_rtt_timeout * 1000,  
+		    to->timeout);
 
   if (o.scan_delay)
     to->timeout = MAX(to->timeout, o.scan_delay * 1000);
 
   if (o.debugging > 1) {
-    log_write(LOG_STDOUT, "delta %d ==> srtt: %d rttvar: %d to: %d\n", delta, to->srtt, to->rttvar, to->timeout);
+    log_write(LOG_STDOUT, "delta %ld ==> srtt: %d rttvar: %d to: %d\n", delta, to->srtt, to->rttvar, to->timeout);
   }
 
   if (to->srtt < 0 || to->rttvar < 0 || to->timeout < 0 || delta < -50000000 || 
       sent->tv_sec == 0 || received->tv_sec == 0 ) {
-    fatal("Serious time computation problem in adjust_timeout ... received = (%d, %d) sent=(%d,%d) delta = %d srtt = %d rttvar = %d to = %d", received->tv_sec, received->tv_usec, sent->tv_sec, sent->tv_usec, delta, to->srtt, to->rttvar, to->timeout);
+    fatal("Serious time computation problem in adjust_timeout ... received = (%ld, %ld) sent=(%ld,%ld) delta = %ld srtt = %d rttvar = %d to = %d", received->tv_sec, received->tv_usec, sent->tv_sec, sent->tv_usec, delta, to->srtt, to->rttvar, to->timeout);
   }
 }
 

@@ -69,9 +69,13 @@
 #include <unistd.h>
 #endif
 
-void fatal(char *fmt, ...);
-void error(char *fmt, ...);
-void pfatal(char *err, ...);
-void gh_perror(char *err, ...);
+void fatal(char *fmt, ...)
+     __attribute__ ((format (printf, 1, 2)));
+void error(char *fmt, ...)
+     __attribute__ ((format (printf, 1, 2)));
+void pfatal(char *err, ...)
+     __attribute__ ((format (printf, 1, 2)));
+void gh_perror(char *err, ...)
+     __attribute__ ((format (printf, 1, 2)));
 #endif /* NMAP_ERROR_H */
 

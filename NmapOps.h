@@ -47,6 +47,7 @@
 class NmapOps {
  public:
   NmapOps();
+  ~NmapOps();
   void ReInit(); // Reinitialize the class to default state
   void setaf(int af) { addressfamily = af; }
   int af() { return addressfamily; }
@@ -90,12 +91,13 @@ class NmapOps {
   u16 magic_port;
   unsigned short magic_port_set; /* Was this set by user? */
   int num_ping_synprobes;
+  /* The "synprobes" are also used when doing a connect() ping */
   u16 ping_synprobes[MAX_PROBE_PORTS];
-  /* The first of the "ackprobes" is used when doing a connect() ping */
   int num_ping_ackprobes;
   u16 ping_ackprobes[MAX_PROBE_PORTS];
 
   /* Scan timing/politeness issues */
+  int timing_level; // 0-5, corresponding to Paranoid, Sneaky, Polite, Normal, Aggressive, Insane
   int max_parallelism; // 0 means it has not been set
   int min_parallelism; // 0 means it has not been set
   int max_rtt_timeout;
@@ -147,6 +149,7 @@ class NmapOps {
   FILE *logfd[LOG_TYPES];
   FILE *nmap_stdout; /* Nmap standard output */
   int ttl; // Time to live
+  char *datadir;
  private:
   void Initialize();
   int addressfamily; /*  Address family:  AF_INET or AF_INET6 */  

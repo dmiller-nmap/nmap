@@ -93,7 +93,18 @@ static void posportupdate(Target *target, struct portinfo *current,
   if (trynum == 0) {
     ss->numqueries_ideal = MIN(ss->numqueries_ideal + (ss->packet_incr/ss->numqueries_ideal), ss->max_width);
   } else if (trynum != -1) {
-    if (!ss->alreadydecreasedqueries) {
+    /* I don't want to decrease numqueries in the case port was
+       already determined to be open since sometimes the target box
+       ignores our RSTs and continues to resend SYN|ACK.  If this is
+       for a try #2 (eg there was one real drop), we would keep
+       getting whacked at every resend :(.  Even in a "legitimate"
+       case here where the port is OPEN, the problem is probably not
+       waiting long enough rather than a dropped packet -- and the
+       adjust_timeouts() above will deal w/that.  Note that
+       adjust_timeouts also was able to handle the bogus resends OK
+       because the timing was so bogus */
+    if (!ss->alreadydecreasedqueries && current->state != PORT_OPEN) {
+      double oldideal = ss->numqueries_ideal;
       ss->alreadydecreasedqueries = 1;
       ss->numqueries_ideal *= ss->fallback_percent;
       if (target->firewallmode.active)
@@ -101,6 +112,8 @@ static void posportupdate(Target *target, struct portinfo *current,
 							 forcefully on what 
 							 little info we have */
       ss->numqueries_ideal = MAX(ss->min_width, ss->numqueries_ideal);
+      if (o.debugging && (ss->numqueries_ideal != oldideal)) 
+	log_write(LOG_STDOUT, "Apparent packet loss -- reducing numqueries_ideal from %.3f to %.3f\n", oldideal, ss->numqueries_ideal);      
     }
   }
 
@@ -280,18 +293,18 @@ static int get_connect_results(Target *target,
 	      posportupdate(target, current, trynum, scan, ss, CONNECT_SCAN, PORT_CLOSED, pil, csi);
 	    } else {
 	      if (getpeername(sd, (struct sockaddr *) &sin, &sinlen) < 0) {
-		pfatal("error in getpeername of connect_results for port %hu", current->portno);
+		pfatal("error in getpeername of connect_results for port %hu", (u16) current->portno);
 	      } else {
 		s_in = (struct sockaddr_in *) &sin;
 		s_in6 = (struct sockaddr_in6 *) &sin;
 		if ((o.af() == AF_INET && 
 		    current->portno != ntohs(s_in->sin_port)) || (o.af() == AF_INET6 && current->portno != ntohs(s_in6->sin6_port))) {
-		  error("Mismatch!!!! we think we have port %hu but we really have a different one", current->portno);
+		  error("Mismatch!!!! we think we have port %hu but we really have a different one", (u16) current->portno);
 		}
 	      }
 
 	      if (getsockname(sd, (struct sockaddr *) &sout, &soutlen) < 0) {
-		pfatal("error in getsockname for port %hu", current->portno);
+		pfatal("error in getsockname for port %hu", (u16) current->portno);
 	      }
 	      s_in = (struct sockaddr_in *) &sout;
 	      s_in6 = (struct sockaddr_in6 *) &sout;
@@ -528,11 +541,48 @@ static void get_syn_results(Target *target, struct portinfo *scan,
   return;
 }
 
+
+/* I want to reverse the order of all PORT_TESTING entries in
+   the scan list -- this way if an intermediate router along the
+   way got overloaded and dropped the last X packets, they are
+   likely to get through (and flag us a problem if responsive)
+   if we let them go first in the next round */
+void reverse_testing_order(struct portinfolist *pil, struct portinfo *scanarray) {
+  int currentidx, nextidx;
+  struct portinfo *current;
+
+  current = pil->testinglist;
+
+  if (current == NULL || current->state != PORT_TESTING)
+    return;
+
+  while(1) {
+    nextidx = current->next;
+    currentidx = current - scanarray;
+    /* current->state is always PORT_TESTING here */
+    current->next = current->prev; // special case 1st node dealt w/later
+    current->prev = nextidx; // special last TESTING node case dealt w/later
+    if (nextidx == -1) {
+      // Every node was in TESTING state
+      current->prev = -1; // New head of list
+      pil->testinglist->next = -1;
+      pil->testinglist = current;
+      break;
+    } else if (scanarray[nextidx].state != PORT_TESTING) {
+      current->prev = -1; // New head of list
+      pil->testinglist->next = nextidx;
+      scanarray[nextidx].prev = pil->testinglist - scanarray;
+      pil->testinglist = current;
+      break;
+    }
+    current = scanarray + nextidx;
+  }
+}
+
 /* Handles the "positive-response" scans (where we get a response
    telling us that the port is open based on the probe.  This includes
    SYN Scan, Connect Scan, RPC scan, Window Scan, and ACK scan */
 void pos_scan(Target *target, u16 *portarray, int numports, stype scantype) {
-  int initial_packet_width;  /* How many scan packets in parallel (to start with) */
   struct scanstats ss;
   int rawsd = -1;
   int scanflags = 0;
@@ -544,7 +594,7 @@ void pos_scan(Target *target, u16 *portarray, int numports, stype scantype) {
   int tries = 0;
   int  res;
   int connecterror = 0;
-  int starttime;
+  time_t starttime;
   struct sockaddr_storage sock;
   struct sockaddr_in *sin = (struct sockaddr_in *) &sock;
 #if HAVE_IPV6
@@ -581,10 +631,9 @@ void pos_scan(Target *target, u16 *portarray, int numports, stype scantype) {
   if (o.debugging)
     log_write(LOG_STDOUT, "Starting pos_scan (%s)\n", scantype2str(scantype));
 
-  if (scantype == RPC_SCAN) initial_packet_width = 2;
-  else initial_packet_width = 10;
 
   ss.packet_incr = 4;
+  ss.initial_packet_width = (scantype == RPC_SCAN)? 2 : 30;
   ss.fallback_percent = 0.7;
   ss.numqueries_outstanding = 0;
   ss.ports_left = numports;
@@ -616,8 +665,8 @@ void pos_scan(Target *target, u16 *portarray, int numports, stype scantype) {
     ss.min_width = o.min_parallelism;
   } else ss.min_width = 1;
 
-  initial_packet_width = box(ss.min_width, ss.max_width, initial_packet_width);
-  ss.numqueries_ideal = initial_packet_width;
+  ss.initial_packet_width = box(ss.min_width, ss.max_width, ss.initial_packet_width);
+  ss.numqueries_ideal = ss.initial_packet_width;
 
   memset(portlookup, 255, sizeof(portlookup)); /* 0xffffffff better always be (int) -1 */
   bzero(csi.socklookup, sizeof(csi.socklookup));
@@ -705,8 +754,10 @@ void pos_scan(Target *target, u16 *portarray, int numports, stype scantype) {
     ack_number = get_random_uint();
   else ack_number = 0;
 
-  if (o.debugging || o.verbose) {  
-    log_write(LOG_STDOUT, "Initiating %s against %s\n", scantype2str(scantype), target->NameIP(hostname, sizeof(hostname)));
+  if (o.debugging || o.verbose) {
+    struct tm *tm = localtime(&starttime);
+    assert(tm);
+    log_write(LOG_STDOUT, "Initiating %s against %s at %0d:%0d\n", scantype2str(scantype), target->NameIP(hostname, sizeof(hostname)), tm->tm_hour, tm->tm_min);
   }
 
   do {
@@ -721,6 +772,7 @@ void pos_scan(Target *target, u16 *portarray, int numports, stype scantype) {
     
     if (senddelay > 200000) {
       ss.max_width = MIN(ss.max_width, 5);
+      ss.numqueries_ideal = MIN(ss.max_width, ss.numqueries_ideal);
     }
 
     if (target->timedout)
@@ -776,7 +828,7 @@ void pos_scan(Target *target, u16 *portarray, int numports, stype scantype) {
 		    target->to.rttvar = MIN(2000000, (int) (target->to.rttvar * 1.2));
 		  }	      
 		}
-		if (o.debugging) { log_write(LOG_STDOUT, "Moving port or prog %lu to the potentially firewalled list\n", current->portno); }
+		if (o.debugging > 2) { log_write(LOG_STDOUT, "Moving port or prog %lu to the potentially firewalled list\n", current->portno); }
 		target->firewallmode.nonresponsive_ports++;
 		current->state = PORT_FIREWALLED; /* For various reasons */
 		/* First delete from old list */
@@ -811,17 +863,17 @@ void pos_scan(Target *target, u16 *portarray, int numports, stype scantype) {
 		} else { ss.numqueries_outstanding--; }
 	      } else {  /* timeout ... we've got to resend */
 		if (o.scan_delay) enforce_scan_delay(NULL);
-		if (o.debugging > 1) { log_write(LOG_STDOUT, "Timeout, resending to portno/progno %lu\n", current->portno); }
+		if (o.debugging > 2) { log_write(LOG_STDOUT, "Timeout, resending to portno/progno %lu\n", current->portno); }
 		current->trynum++;
 		gettimeofday(&current->sent[current->trynum], NULL);
 		now = current->sent[current->trynum];
 		if ((scantype == SYN_SCAN) || (scantype == WINDOW_SCAN) || (scantype == ACK_SCAN)) {	      
 		  if (o.fragscan)
-		    send_small_fragz_decoys(rawsd, target->v4hostip(), o.ttl, sequences[current->trynum], o.magic_port + tries * 3 + current->trynum, current->portno, scanflags);
+		    send_small_fragz_decoys(rawsd, target->v4hostip(), o.ttl, sequences[current->trynum], o.magic_port_set? o.magic_port : o.magic_port + tries * 3 + current->trynum, current->portno, scanflags);
 		  else 
 		    send_tcp_raw_decoys(rawsd, target->v4hostip(), o.ttl,
-		    			o.magic_port + 
-					tries * 3 + current->trynum, 
+		    			o.magic_port_set? o.magic_port : 
+					o.magic_port + tries * 3 + current->trynum, 
 					current->portno, 
 					sequences[current->trynum], 
 					ack_number, scanflags, 0, NULL, 0, 
@@ -908,7 +960,7 @@ void pos_scan(Target *target, u16 *portarray, int numports, stype scantype) {
 	       we try to send off new queries if we can ... */
 	    if (ss.numqueries_outstanding >= (int) ss.numqueries_ideal) break;
 	    if (o.scan_delay) enforce_scan_delay(NULL);
-	    if (o.debugging > 1) log_write(LOG_STDOUT, "Sending initial query to port/prog %lu\n", current->portno);
+	    if (o.debugging > 2) log_write(LOG_STDOUT, "Sending initial query to port/prog %lu\n", current->portno);
 	    /* Otherwise lets send a packet! */
 	    current->state = PORT_TESTING;
 	    current->trynum = 0;
@@ -918,10 +970,10 @@ void pos_scan(Target *target, u16 *portarray, int numports, stype scantype) {
 	    if ((scantype == SYN_SCAN) || (scantype == WINDOW_SCAN) || 
 		(scantype == ACK_SCAN)) {	  
 	      if (o.fragscan)
-		send_small_fragz_decoys(rawsd, target->v4hostip(), o.ttl, sequences[current->trynum], o.magic_port + tries * 3, current->portno, scanflags);
+		send_small_fragz_decoys(rawsd, target->v4hostip(), o.ttl, sequences[current->trynum], o.magic_port_set? o.magic_port : o.magic_port + tries * 3, current->portno, scanflags);
 	      else
 		send_tcp_raw_decoys(rawsd, target->v4hostip(), o.ttl, 
-				    o.magic_port + tries * 3, current->portno,
+				    o.magic_port_set? o.magic_port : o.magic_port + tries * 3, current->portno,
 				    sequences[current->trynum], ack_number, 
 				    scanflags, 0, NULL, 0, o.extra_payload, 
 				    o.extra_payload_length);
@@ -979,7 +1031,7 @@ void pos_scan(Target *target, u16 *portarray, int numports, stype scantype) {
 	    if (senddelay) usleep(senddelay);
 	  }
 	}
-	/*      if (o.debugging > 1) log_write(LOG_STDOUT, "Ideal number of queries: %d outstanding: %d max %d ports_left %d timeout %d\n", (int) ss.numqueries_ideal, ss.numqueries_outstanding, ss.max_width, ss.ports_left, target->to.timeout);*/
+	if (o.debugging > 1) log_write(LOG_STDOUT, "Ideal number of queries: %d outstanding: %d max %d ports_left %d timeout %d senddelay: %dus\n", (int) ss.numqueries_ideal, ss.numqueries_outstanding, ss.max_width, ss.ports_left, target->to.timeout, senddelay);
 
 	/* Now that we have sent the packets we wait for responses */
 	ss.alreadydecreasedqueries = 0;
@@ -998,6 +1050,14 @@ void pos_scan(Target *target, u16 *portarray, int numports, stype scantype) {
 	  get_connect_results(target, scan, &ss, &pil, portlookup, sequences, &csi);	
 	}
 
+
+	/* I want to reverse the order of all PORT_TESTING entries in
+           the list -- this way if an intermediate router along the
+           way got overloaded and dropped the last X packets, they are
+           likely to get through (and flag us a problem if responsive)
+           if we let them go first in the next round */
+	reverse_testing_order(&pil, scan);
+
 	/* If we timed out while trying to get results -- we're outta here! */
 	if (target->timedout)
 	  goto posscan_timedout;
@@ -1012,12 +1072,6 @@ void pos_scan(Target *target, u16 *portarray, int numports, stype scantype) {
 	rsi.rpc_current_port->rpc_highver = rsi.rpc_highver;
       }
       
-      /* Next let us increment the port we are working on, since
-	 this one is done ... */
-      /*      rsi.rpc_current_port = nextport(&target->ports, rsi.rpc_current_port,
-       				      0, PORT_OPEN);
-       if (!rsi.rpc_current_port)
-      break; */
       /* Time to put our RPC program scan list back together for the
 	 next port ... */
       for(j = 0; j < rsi.rpc_number; j++) {
@@ -1038,21 +1092,21 @@ void pos_scan(Target *target, u16 *portarray, int numports, stype scantype) {
       fatal("Bean counting error no. 4321897: ports_left: %d numqueries_outstanding: %d\n", ss.ports_left, ss.numqueries_outstanding);
     }
 
-    /* We only want to try again if the 'firewalled' list contains elements,
-       meaning that some ports timed out.  We retry until nothing
-       changes for a round (not counting the very first round).
-    */
+    /* We only want to try again if the 'firewalled' list contains
+       elements, meaning that some ports timed out.  We retry until
+       nothing changes for a round (not counting the very first
+       round).  We don't retry if aggressive timing is being used and
+       the vast majority of ports are filtered, since this is more
+       likely a deny-by-default firewall than a packet loss indicator.  */
     if (pil.firewalled) {
-      if (tries == 0 || ss.changed) {	
+      bool limitedfiltering = (double) target->firewallmode.nonresponsive_ports / (target->firewallmode.responsive_ports + target->firewallmode.nonresponsive_ports) < 0.1;
+      if ((limitedfiltering || o.timing_level < 4) && (tries == 0 || ss.changed)) {	
 	pil.testinglist = pil.firewalled;
 	for( current = pil.testinglist; current ; 
 	     current = (current->next > -1)? &scan[current->next] : NULL) {
 	  current->state = PORT_FRESH;
 	  current->trynum = 0;
 	  current->sd[0] = current->sd[1] = current->sd[2] = -1;
-	  if (o.debugging) { 
-	    log_write(LOG_STDOUT, "Preparing for retry, nonresponsive port %lu noted\n", current->portno); 
-	  }
 	}
 	pil.firewalled = NULL;
       } else {
@@ -1063,20 +1117,27 @@ void pos_scan(Target *target, u16 *portarray, int numports, stype scantype) {
 	}
 	pil.testinglist = NULL;
       }
-      tries++;
     }
-    ss.numqueries_ideal = initial_packet_width;
-    if (o.debugging)
-      log_write(LOG_STDOUT, "Done with round %d\n", tries);
-  } while(pil.testinglist && tries < 20);
 
+    tries++;
+
+    if (o.debugging) {
+      log_write(LOG_STDOUT, "Finished round #%d. Current stats: numqueries_ideal: %d; min_width: %d; max_width: %d; packet_incr: %d; senddelay: %dus; fallback: %d%%\n", tries, (int) ss.numqueries_ideal, ss.min_width, ss.max_width, ss.packet_incr, senddelay, (int) (100 * ss.fallback_percent));
+    }
+    ss.numqueries_ideal = ss.initial_packet_width;
+    
+  } while(pil.testinglist && tries < 20);
+  
   if (tries == 20) {
     error("WARNING: GAVE UP ON SCAN AFTER 20 RETRIES");
   }
+
   
   if (o.verbose)
     log_write(LOG_STDOUT, "The %s took %ld %s to scan %d ports.\n", scantype2str(scantype),  (long) time(NULL) - starttime, (((long) time(NULL) - starttime) == 1)? "second" : "seconds", numports);
   
+
+
  posscan_timedout:
   
   free(scan);
@@ -1094,7 +1155,8 @@ void pos_scan(Target *target, u16 *portarray, int numports, stype scantype) {
    allow FTP bounce scan, I should really allow SOCKS proxy scan.  */
 void bounce_scan(Target *target, u16 *portarray, int numports,
 		 struct ftpinfo *ftp) {
-  int starttime,  res , sd = ftp->sd,  i=0;
+  time_t starttime;
+  int res , sd = ftp->sd,  i=0;
   const char *t = (const char *)target->v4hostip(); 
   int retriesleft = FTP_RETRIES;
   char recvbuf[2048]; 
@@ -1109,9 +1171,11 @@ void bounce_scan(Target *target, u16 *portarray, int numports,
   snprintf(targetstr, 20, "%d,%d,%d,%d,", UC(t[0]), UC(t[1]), UC(t[2]), UC(t[3]));
 
   starttime = time(NULL);
-  if (o.verbose || o.debugging)
-    log_write(LOG_STDOUT, "Initiating TCP ftp bounce scan against %s\n",
-	    target->NameIP(hostname, sizeof(hostname)));
+  if (o.verbose || o.debugging) {
+    struct tm *tm = localtime(&starttime);
+    assert(tm);
+    log_write(LOG_STDOUT, "Initiating TCP ftp bounce scan against %s at %0d:%0d\n", target->NameIP(hostname, sizeof(hostname)), tm->tm_hour, tm->tm_min );
+  }
   for(i=0; i < numports; i++) {
 
     /* Check for timeout */
@@ -1245,7 +1309,7 @@ void super_scan(Target *target, u16 *portarray, int numports,
   int min_width; /* At least this many at once */
   int tries = 0;
   int tmp = 0;
-  int starttime;
+  time_t starttime;
   u16 newport;
   int newstate = 999; /* This ought to break something if used illegally */
   struct portinfo *scan, *openlist, *current, *testinglist, *next;
@@ -1271,7 +1335,10 @@ void super_scan(Target *target, u16 *portarray, int numports,
     log_write(LOG_STDOUT, "Starting super_scan\n");
 
   max_width = (o.max_parallelism)? o.max_parallelism : 125;
-  min_width = (o.min_parallelism)? o.min_parallelism : 1;
+  min_width = 1;
+  min_width = (o.min_parallelism)? o.min_parallelism :
+    (o.timing_level == 4)? 10 :
+    (o.timing_level == 5)? 20 : 1;
   numqueries_ideal = initial_packet_width = MAX(min_width, MIN(max_width, 10));
 
   memset(portlookup, 255, 65536 * sizeof(int)); /* 0xffffffff better always be (int) -1 */
@@ -1336,9 +1403,11 @@ void super_scan(Target *target, u16 *portarray, int numports,
 
   starttime = time(NULL);
 
-  if (o.debugging || o.verbose)
-    log_write(LOG_STDOUT, "Initiating %s against %s\n", scantype2str(scantype), target->NameIP(hostname, sizeof(hostname)));
-  
+  if (o.debugging || o.verbose) {
+    struct tm *tm = localtime(&starttime);
+    assert(tm);
+    log_write(LOG_STDOUT, "Initiating %s against %s at %0d:%0d\n", scantype2str(scantype), target->NameIP(hostname, sizeof(hostname)), tm->tm_hour, tm->tm_min);
+  }
 
   do {
     changed = 0;

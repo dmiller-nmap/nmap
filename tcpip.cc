@@ -1327,7 +1327,7 @@ if (!pd) fatal("NULL packet device passed to readip_pcap");
  if (to_usec < 0) {
    if (!warning) {
      warning = 1;
-     error("WARNING: Negative timeout value (%l) passed to readip_pcap() -- using 0", to_usec);
+     error("WARNING: Negative timeout value (%lu) passed to readip_pcap() -- using 0", to_usec);
    }
    to_usec = 0;
  }

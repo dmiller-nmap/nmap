@@ -48,17 +48,17 @@
 
 /* Return num if it is between min and max.  Otherwise return min or
    max (whichever is closest to num), */
-int box(int bmin, int bmax, int bnum) {
+/*
+export template<class T> T box(T bmin, T bmax, T bnum) {
   if (bmin > bmax)
-    fatal("box(bmin=%d,bmax=%d,bnum=%d) called = bmin must be <= bmax", bmin, 
-	  bmax, bnum);
+    fatal("box(bmin=%d,bmax=%d,bnum=%d) called = bmin must be <= bmax", (int) bmin, (int) bmax, (int) bnum);
   if (bnum >= bmax)
     return bmax;
   if (bnum <= bmin)
     return bmin;
   return bnum;
 }
-
+*/
 void *safe_malloc(int size)
 {
   void *mymem;

@@ -173,6 +173,7 @@ int nmap_main(int argc, char *argv[]) {
   {
     {"version", no_argument, 0, 'V'},
     {"verbose", no_argument, 0, 'v'},
+    {"datadir", required_argument, 0, 0},
     {"debug", optional_argument, 0, 'd'},
     {"help", no_argument, 0, 'h'},
     {"max_parallelism", required_argument, 0, 'M'},
@@ -271,6 +272,8 @@ int nmap_main(int argc, char *argv[]) {
 	if (o.ttl < 0 || o.ttl > 255) {
 	  fatal("ttl option must be a number between 0 and 255 (inclusive)");
 	}
+     } else if (strcmp(long_options[option_index].name, "datadir") == 0) {
+       o.datadir = strdup(optarg);
 #ifdef WIN32
       } else if (strcmp(long_options[option_index].name, "win_list_interfaces") == 0 ) { 
 	wo.listinterfaces = 1; 
@@ -536,7 +539,7 @@ int nmap_main(int argc, char *argv[]) {
       if (o.spoofsource)
 	fatal("You can only use the source option once!  Use -D <decoy1> -D <decoy2> etc. for decoys\n");
       if (resolve(optarg, &ss, &sslen, o.af()) == 0) {
-	fatal("Failed to resolve/decode supposed %s source address %s. Note that if you are using IPv6, the -6 argument must come before -S", (o.af() == AF_INET)? "IPv4" : "IPv6");
+	fatal("Failed to resolve/decode supposed %s source address %s. Note that if you are using IPv6, the -6 argument must come before -S", (o.af() == AF_INET)? "IPv4" : "IPv6", optarg);
       }
       o.setSourceSockAddr(&ss, sslen);
       o.spoofsource = 1;
@@ -573,25 +576,29 @@ int nmap_main(int argc, char *argv[]) {
       break;
     case 'T':
       if (*optarg == '0' || (strcasecmp(optarg, "Paranoid") == 0)) {
+	o.timing_level = 0;
 	o.max_parallelism = 1;
 	o.scan_delay = 300000;
 	o.initial_rtt_timeout = 300000;
       } else if (*optarg == '1' || (strcasecmp(optarg, "Sneaky") == 0)) {
+	o.timing_level = 1;
 	o.max_parallelism = 1;
 	o.scan_delay = 15000;
 	o.initial_rtt_timeout = 15000;
       } else if (*optarg == '2' || (strcasecmp(optarg, "Polite") == 0)) {
+	o.timing_level = 2;
 	o.max_parallelism = 1;
 	o.scan_delay = 400;
       } else if (*optarg == '3' || (strcasecmp(optarg, "Normal") == 0)) {
       } else if (*optarg == '4' || (strcasecmp(optarg, "Aggressive") == 0)) {
+	o.timing_level = 4;
 	o.max_rtt_timeout = 1250;
-	o.host_timeout = 300000;
-	o.initial_rtt_timeout = 1000;
+	o.initial_rtt_timeout = 800;
       } else if (*optarg == '5' || (strcasecmp(optarg, "Insane") == 0)) {
+	o.timing_level = 5;
 	o.max_rtt_timeout = 300;
 	o.initial_rtt_timeout = 300;
-	o.host_timeout = 75000;
+	o.host_timeout = 900000;
       } else {
 	fatal("Unknown timing mode (-T argment).  Use either \"Paranoid\", \"Sneaky\", \"Polite\", \"Normal\", \"Aggressive\", \"Insane\" or a number from 0 (Paranoid) to 5 (Insane)");
       }
@@ -626,8 +633,17 @@ int nmap_main(int argc, char *argv[]) {
   if (xmlfilename)
     log_open(LOG_XML, o.append_output, xmlfilename);
 
-  if (!o.interactivemode)
-    log_write(LOG_STDOUT|LOG_SKID, "\nStarting %s V. %s ( %s )\n", NMAP_NAME, NMAP_VERSION, NMAP_URL);
+  if (!o.interactivemode) {
+    char tbuf[128];
+    struct tm *tm;
+    time_t now = time(NULL);
+    if (!(tm = localtime(&now))) 
+      fatal("Unable to get current localtime()#!#");
+    // ISO 8601 date/time -- http://www.cl.cam.ac.uk/~mgk25/iso-time.html 
+    if (strftime(tbuf, sizeof(tbuf), "%Y-%m-%d %H:%M %Z", tm) <= 0)
+      fatal("Unable to properly format time");
+    log_write(LOG_STDOUT|LOG_SKID, "\nStarting %s %s ( %s ) at %s\n", NMAP_NAME, NMAP_VERSION, NMAP_URL, tbuf);
+  }
 
   if ((o.pingscan || o.listscan) && fastscan) {
     fatal("The fast scan (-F) is incompatible with ping scan");
@@ -720,7 +736,7 @@ int nmap_main(int argc, char *argv[]) {
   chomp(mytime);
   log_write(LOG_XML, "<?xml version=\"1.0\" ?>\n<!-- ");
   log_write(LOG_NORMAL|LOG_MACHINE, "# ");
-  log_write(LOG_NORMAL|LOG_MACHINE|LOG_XML, "%s (V. %s) scan initiated %s as: ", NMAP_NAME, NMAP_VERSION, mytime);
+  log_write(LOG_NORMAL|LOG_MACHINE|LOG_XML, "%s %s scan initiated %s as: ", NMAP_NAME, NMAP_VERSION, mytime);
   
   for(i=0; i < argc; i++) {
     char *p = xml_convert(fakeargv[i]);
@@ -735,8 +751,8 @@ int nmap_main(int argc, char *argv[]) {
   for(i=0; i < argc; i++) 
     log_write(LOG_XML, (i == argc-1)? "%s\" " : "%s ", fakeargv[i]);
 
-  log_write(LOG_XML, "start=\"%d\" version=\"%s\" xmloutputversion=\"1.0\">\n",
-	    timep, NMAP_VERSION);
+  log_write(LOG_XML, "start=\"%lu\" version=\"%s\" xmloutputversion=\"1.0\">\n",
+	    (unsigned long) timep, NMAP_VERSION);
 
   output_xml_scaninfo_records(ports);
 
@@ -1233,7 +1249,7 @@ void printusage(char *name, int rc) {
 #define WIN32_PRINTF
 #endif
   printf(
-	 "Nmap V. %s Usage: nmap [Scan Type(s)] [Options] <host or net list>\n"
+	 "Nmap %s Usage: nmap [Scan Type(s)] [Options] <host or net list>\n"
 	 "Some Common Scan Types ('*' options require root privileges)\n"
 	 "* -sS TCP SYN stealth port scan (default if privileged (root))\n"
 	 "  -sT TCP connect() port scan (default for unprivileged users)\n"
@@ -1677,32 +1693,30 @@ int getidentinfoz(struct in_addr target, u16 localport, u16 remoteport,
    30 seconds */
 int check_firewallmode(Target *target, struct scanstats *ss) {
   struct firewallmodeinfo *fm = &(target->firewallmode);
-  struct timeval current_time;
-  static struct timeval last_adjust;
-  static int init = 0;
-  char hostname[1200];
 
-  if (!init) {
-    gettimeofday(&last_adjust, NULL);
-    init = 1;
-  }
-
-  if (fm->nonresponsive_ports > 50 && ((double)fm->responsive_ports / (fm->responsive_ports + fm->nonresponsive_ports)) < 0.05) {  
-    if (fm->active == 0 && o.debugging)
-      error("Activating firewall speed-optimization mode for host %s", target->NameIP(hostname, sizeof(hostname)));
+  if (!fm->active && fm->nonresponsive_ports > 50 && ((double)fm->responsive_ports / (fm->responsive_ports + fm->nonresponsive_ports)) < 0.05) {  
+    /* We allow a one-time boost of the parallelism since these slow scans often require us to wait a long time for each group.  This boost can be lost if packet loss is demonstrated.  First we start with a base value based on timing */
+    int base_value = 0;
+    int bonus = 0;
+    double new_ideal;
+    if (o.timing_level >= 3) {
+      base_value = (o.timing_level == 3)? 25 :
+	(o.timing_level == 4)? 35 : 50;
+      /* Now we give a bonus for high-srtt hosts (because the extra on-wire time allows for more parallelization */
+      if (target->to.srtt > 3000)
+	bonus = MIN(target->to.srtt / 7000, 15);
+    }
+    new_ideal = MAX(ss->numqueries_ideal, base_value + bonus);
+    new_ideal = box((double) ss->min_width, (double) ss->max_width, new_ideal);
+    if (o.debugging)
+      error("Activating firewall speed-optimization mode for host %s -- adjusting ideal_queries from %.3g to %.3g", target->NameIP(), ss->numqueries_ideal, new_ideal);
+    ss->numqueries_ideal = new_ideal;
     fm->active = 1;
   }
 
-  if (fm->active) {
-    gettimeofday(&current_time, NULL);
-    if (TIMEVAL_SEC_SUBTRACT(current_time, last_adjust) > 5) {
-      ss->numqueries_ideal = MIN(ss->numqueries_ideal + (ss->packet_incr/ss->numqueries_ideal), ss->max_width); 
-      if (o.debugging) {
-	error("Raising ideal number of queries to %10.7g to account for firewalling", ss->numqueries_ideal);
-      }
-      last_adjust = current_time;
-    }
-  }
+  /* The code here used to up the numqueries_ideal a little bit every
+     5 seconds in firewall mode ... I have removed that because I
+     think the new approach (immediate boost) is better */
   return fm->active;
 }
 
@@ -1840,15 +1854,24 @@ int nmap_fetchfile(char *filename_returned, int bufferlen, char *file) {
   char dot_buffer[512];
   static int warningcount = 0;
 
-  /* First we try $NMAPDIR/file
+  /* First we try [--datadir]/file, then $NMAPDIR/file
      next we try ~user/nmap/file
      then we try NMAPDATADIR/file <--NMAPDATADIR 
      finally we try ./file
 
 	 -- or on Windows --
 
-	 $NMAPDIR -> nmap.exe directory -> NMAPDATADIR -> .
+	 --datadir -> $NMAPDIR -> nmap.exe directory -> NMAPDATADIR -> .
   */
+
+  if (o.datadir) {
+    res = snprintf(filename_returned, bufferlen, "%s/%s", o.datadir, file);
+    if (res > 0 && res < bufferlen) {
+      if (fileexistsandisreadable(filename_returned))
+	foundsomething = 1;
+    }
+  }
+
   if ((dirptr = getenv("NMAPDIR"))) {
     res = snprintf(filename_returned, bufferlen, "%s/%s", dirptr, file);
     if (res > 0 && res < bufferlen) {

@@ -171,7 +171,15 @@
               udp packets to each port on the target machine.  If
               we receive an ICMP port unreachable  message,  then
               the  port  is  closed.   Otherwise  we assume it is
-              open.
+              open.  Unfortunately,  firewalls  often  block  the
+              port  unreachable  messages,  causing  the  port to
+              appear open.  Sometimes an ISP will  block  only  a
+              few  specific  dangerous  ports such as 31337 (back
+              orifice) and 139 (Windows NetBIOS), making it  look
+              like  these  vulnerable  ports  are open.  So don't
+              panic immediately.  Unfortunately, it isn't  always
+              trivial  to  differentiate  between  real  open UDP
+              ports and these filtered false-positives.
 
               Some people think UDP scanning is pointless. I usu­
               ally  remind  them  of  the  recent Solaris rcpbind
@@ -204,6 +212,7 @@
               at  all on Win95 and NT machines.  Thus we can scan
               all 65K ports of a Windows  machine  <B>very</B>  quickly.
               Woop!
+
 
        <B>-sO</B>    IP protocol scans: This method is used to determine
               which IP protocols are supported on  a  host.   The
@@ -748,127 +757,143 @@
               Another approach is to use -sS, which is  generally
               easier for machines to handle.
 
+       <B>--packet_trace</B>
+              Tells  Nmap  to  show  all the packets it sends and
+              receives in a tcpdump-like  format.   This  can  be
+              tremendously  useful  for  debugging, and is also a
+              good learning tool.
+
+       <B>--datadir</B> <B>[directoryname]</B>
+              Nmap obtains some special data at runtime in  files
+              named  nmap-services, nmap-protocols, nmap-rpc, and
+              nmap-os-fingerprints.  Nmap  first  searches  these
+              files  in  the  directory option to --nmapdir.  Any
+              files not found there,  are  searched  for  in  the
+              directory  specified  by  the NMAPDIR environmental
+              variable.  Next comes ~/nmap, and then a  compiled-
+              in  location  such  as /usr/share/nmap .  As a last
+              resort, Nmap will look in the current directory.
+
        <B>TIMING</B> <B>OPTIONS</B>
-              Generally  Nmap  does  a  good job at adjusting for
-              Network characteristics at runtime and scanning  as
-              fast  as  possible while minimizing that chances of
-              hosts/ports going undetected.  However,  there  are
-              same  cases  where Nmap's default timing policy may
-              not meet your objectives.   The  following  options
-              provide  a fine level of control over the scan tim­
+              Generally Nmap does a good  job  at  adjusting  for
+              Network  characteristics at runtime and scanning as
+              fast as possible while minimizing that  chances  of
+              hosts/ports  going  undetected.  However, there are
+              same cases where Nmap's default timing  policy  may
+              not  meet  your  objectives.  The following options
+              provide a fine level of control over the scan  tim­
               ing:
 
        <B>-T</B> <B>&lt;Paranoid|Sneaky|Polite|Normal|Aggressive|Insane&gt;</B>
-              These are canned timing policies  for  conveniently
-              expressing  your priorities to Nmap.  <B>Paranoid</B> mode
-              scans <B>very</B> slowly in the hopes of  avoiding  detec­
-              tion  by  IDS systems.  It serializes all scans (no
-              parallel scanning) and generally waits at  least  5
-              minutes  between  sending packets.  <B>Sneaky</B> is simi­
-              lar, except it only waits 15 seconds between  send­
-              ing  packets.   <B>Polite</B> is meant to ease load on the
-              network  and  reduce  the   chances   of   crashing
-              machines.   It  serializes  the probes and waits <B>at</B>
-              <B>least</B> 0.4 seconds  between  them.   <B>Normal</B>  is  the
-              default  Nmap  behaviour,  which  tries  to  run as
-              quickly as possible without overloading the network
-              or  missing  hosts/ports.  <B>Aggressive</B> mode adds a 5
-              minute timeout per host and  it  never  waits  more
-              than  1.25  seconds for probe responses.  <B>Insane</B> is
-              only suitable for very fast networks or  where  you
-              don't  mind  losing some information.  It times out
-              hosts in 75 seconds and only waits 0.3 seconds  for
-              individual  probes.   It  does allow for very quick
-              network sweeps though :).  You can  also  reference
-              these  by  number (0-5).  For example, ´-T 0´ gives
-              you Paranoid mode and ´-T 5´ is Insane mode.
+              These  are  canned timing policies for conveniently
+              expressing your priorities to Nmap.  <B>Paranoid</B>  mode
+              scans  <B>very</B>  slowly in the hopes of avoiding detec­
+              tion by IDS systems.  It serializes all  scans  (no
+              parallel  scanning)  and generally waits at least 5
+              minutes between sending packets.  <B>Sneaky</B>  is  simi­
+              lar,  except it only waits 15 seconds between send­
+              ing packets.  <B>Polite</B> is meant to ease load  on  the
+              network   and   reduce   the  chances  of  crashing
+              machines.  It serializes the probes  and  waits  <B>at</B>
+              <B>least</B>  0.4 seconds between them.  Note that this is
+              generally at least an  order  of  magnitude  slower
+              than  default  scans,  so only use it when you need
+              to.  <B>Normal</B> is the default  Nmap  behaviour,  which
+              tries  to  run as quickly as possible without over­
+              loading  the  network   or   missing   hosts/ports.
+              <B>Aggressive</B>  This  option  can  make  certain  scans
+              (especially  SYN  scans  against  heavily  filtered
+              hosts)  much  faster.   It is recommended for impa­
+              tient folks with a fast net connection.  <B>Insane</B>  is
+              only  suitable  for very fast networks or where you
+              don't mind losing some information.  It  times  out
+              hosts  in  15  minutes and won´t wait more than 0.3
+              seconds for individual probes.  It does  allow  for
+              very quick network sweeps though :).
 
-              These canned timing modes should  NOT  be  used  in
-              combination  with  the  lower  level controls given
-              below.
+              You  can also reference these by number (0-5).  For
+              example, ´-T0´ gives you Paranoid mode and ´-T5´ is
+              Insane mode.
 
        <B>--host_timeout</B> <B>&lt;milliseconds&gt;</B>
-              Specifies the amount of time  Nmap  is  allowed  to
-              spend  scanning  a  single host before giving up on
+              Specifies  the  amount  of  time Nmap is allowed to
+              spend scanning a single host before  giving  up  on
               that IP.  The default timing mode has no host time­
               out.
 
        <B>--max_rtt_timeout</B> <B>&lt;milliseconds&gt;</B>
               Specifies  the  maximum  amount  of  time  Nmap  is
-              allowed  to  wait  for  a  probe  response   before
+              allowed   to  wait  for  a  probe  response  before
               retransmitting or timing out that particular probe.
               The default mode sets this to about 9000.
 
        <B>--min_rtt_timeout</B> <B>&lt;milliseconds&gt;</B>
-              When the target hosts start to establish a  pattern
-              of  responding  very  quickly, Nmap will shrink the
+              When  the target hosts start to establish a pattern
+              of responding very quickly, Nmap  will  shrink  the
               amount of time given per probe.  This speeds up the
               scan,  but  can  lead  to  missed  packets  when  a
               response takes longer than usual.  With this param­
               eter you can guarantee that Nmap will wait at least
-              the given amount of time  before  giving  up  on  a
+              the  given  amount  of  time  before giving up on a
               probe.
 
        <B>--initial_rtt_timeout</B> <B>&lt;milliseconds&gt;</B>
-              Specifies  the initial probe timeout.  This is gen­
-              erally only useful when  scanning  firwalled  hosts
-              with  -P0.  Normally Nmap can obtain good RTT esti­
-              mates from the ping and the first few probes.   The
+              Specifies the initial probe timeout.  This is  gen­
+              erally  only  useful  when scanning firwalled hosts
+              with -P0.  Normally Nmap can obtain good RTT  esti­
+              mates  from the ping and the first few probes.  The
               default mode uses 6000.
 
        <B>--max_parallelism</B> <B>&lt;number&gt;</B>
-              Specifies  the  maximum  number  of  scans  Nmap is
-              allowed to perform in parallel.   Setting  this  to
-              one  means  Nmap will never try to scan more than 1
-              port at a time.  It  also  effects  other  parallel
+              Specifies the  maximum  number  of  scans  Nmap  is
+              allowed  to  perform  in parallel.  Setting this to
+              one means Nmap will never try to scan more  than  1
+              port  at  a  time.   It also effects other parallel
               scans such as ping sweep, RPC scan, etc.
 
        <B>--min_parallelism</B> <B>&lt;number&gt;</B>
-              Tells  Nmap  to  scan  at least the given number of
+              Tells Nmap to scan at least  the  given  number  of
               ports in parallel.  This can speed up scans against
-              certain  firewalled hosts by an order of magnitude.
+              certain firewalled hosts by an order of  magnitude.
               But be careful -- results will become unreliable if
               you push it too far.
 
        <B>--scan_delay</B> <B>&lt;milliseconds&gt;</B>
               Specifies the <B>minimum</B> amount of time Nmap must wait
-              between probes.  This is mostly  useful  to  reduce
-              network  load or to slow the scan way down to sneak
+              between  probes.   This  is mostly useful to reduce
+              network load or to slow the scan way down to  sneak
               under IDS thresholds.
 
-       <B>--packet_trace</B>
-              Tells Nmap to show all the  packets  it  sends  and
-              receives  in  a  tcpdump-like  format.  This can be
-              tremendously useful for debugging, and  is  also  a
-              good learning tool.
 
 
+       <B>TARGET</B> <B>SPECIFICATION</B>
+              Everything  that  isn't  an option (or option argu­
+              ment) in nmap is treated as a target host  specifi­
+              cation.   The simplest case is listing single host­
+              names or IP addresses on the command line.  If  you
+              want  to  scan  a  subnet  of IP addresses, you can
+              append <B>´/mask´</B> to the hostname or IP address.  <B>mask</B>
+              must  be between 0 (scan the whole internet) and 32
+              (scan the single host specified).  Use /24 to  scan
+              a class ´C´ address and /16 for a class ´B´.
 
-</PRE>
-<H2>TARGET SPECIFICATION</H2><PRE>
-       Everything  that  isn't  an option (or option argument) in
-       nmap is treated as a target host specification.  The  sim­
-       plest  case is listing single hostnames or IP addresses on
-       the command line.  If you want to  scan  a  subnet  of  IP
-       addresses,  you  can  append <B>´/mask´</B> to the hostname or IP
-       address.  <B>mask</B> must be between 0 (scan the whole internet)
-       and  32 (scan the single host specified).  Use /24 to scan
-       a class ´C´ address and /16 for a class ´B´.
+              Nmap  also  has a more powerful notation which lets
+              you specify an IP address  using  lists/ranges  for
+              each  element.   Thus  you can scan the whole class
+              ´B´ network 192.168.*.* by specifying ´192.168.*.*´
+              or        ´192.168.0-255.0-255´       or       even
+              ´192.168.1-50,51-255.1,2,3,4,5-255´.  And of course
+              you  can  use  the mask notation: ´192.168.0.0/16´.
+              These are all equivalent.   If  you  use  asterisks
+              (´*´),  remember  that  most  shells require you to
+              escape them with back slashes or protect them  with
+              quotes.
 
-       Nmap also has a more  powerful  notation  which  lets  you
-       specify an IP address using lists/ranges for each element.
-       Thus you can scan the whole class ´B´ network  192.168.*.*
-       by  specifying  ´192.168.*.*´  or ´192.168.0-255.0-255´ or
-       even ´192.168.1-50,51-255.1,2,3,4,5-255´.  And  of  course
-       you  can  use  the mask notation: ´192.168.0.0/16´.  These
-       are all equivalent.  If you use asterisks (´*´),  remember
-       that  most  shells  require  you  to escape them with back
-       slashes or protect them with quotes.
-
-       Another interesting thing to do is slice the Internet  the
-       other  way.   Instead of scanning all the hosts in a class
-       ´B´, scan ´*.*.5.6-7´ to scan every IP address  that  ends
-       in specifying hosts to scan, see the <I>examples</I> section.
+              Another interesting thing to do is slice the Inter­
+              net the other way.  Instead  of  scanning  all  the
+              hosts  in  a  class  ´B´,  scan ´*.*.5.6-7´ to scan
+              every IP address that ends in specifying  hosts  to
+              scan, see the <I>examples</I> section.
 
 
 </PRE>
@@ -876,11 +901,11 @@
        Here are some examples of using nmap, from simple and nor­
        mal to a little more complex/esoteric.  Note  that  actual
        numbers  and  some  actual  domain  names are used to make
-       things  more  concrete.   In  their   place   you   should
-       substitute  addresses/names  from  <B>your</B> <B>own</B> <B>network.</B>  I do
-       not think portscanning  other  networks  is  illegal;  nor
-       should  portscans  be construed by others as an attack.  I
-       have scanned hundreds of thousands of  machines  and  have
+       things more concrete.  In their place you  should  substi­
+       tute  addresses/names  from  <B>your</B>  <B>own</B>  <B>network.</B>  I do not
+       think portscanning other networks is illegal;  nor  should
+       portscans  be  construed  by  others as an attack.  I have
+       scanned  hundreds  of  thousands  of  machines  and   have
        received  only  one  complaint.  But I am not a lawyer and
        some (anal) people may be annoyed  by  <I>nmap</I>  probes.   Get
        permission first or use at your own risk.

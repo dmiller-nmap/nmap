@@ -91,7 +91,7 @@ struct pingtune {
 };
 
 struct tcpqueryinfo {
-  int *sockets;
+  int *sockets[MAX_PROBE_PORTS];
   int maxsd;
   fd_set fds_r;
   fd_set fds_w;
@@ -121,7 +121,9 @@ int sendrawtcppingqueries(int rawsd, Target *target, int pingtype,
 			  int seq, struct timeval *time, struct pingtune *pt);
 int sendrawtcppingquery(int rawsd, Target *target, int pingtype, u16 probe_port,
 			int seq, struct timeval *time, struct pingtune *pt);
-int sendconnecttcpquery(Target *hostbatch[], struct tcpqueryinfo *tqi, Target *target, u16 probe_port,
+int sendconnecttcpqueries(Target *hostbatch[], struct tcpqueryinfo *tqi, Target *target,
+			  int seq, struct timeval *time, struct pingtune *pt, struct timeout_info *to, int max_width);
+int sendconnecttcpquery(Target *hostbatch[], struct tcpqueryinfo *tqi, Target *target, int probe_port_num,
 			int seq, struct timeval *time, struct pingtune *pt, struct timeout_info *to, int max_width);
 int get_connecttcpscan_results(struct tcpqueryinfo *tqi, 
 			       Target *hostbatch[], 

@@ -379,7 +379,7 @@ if (o.verbose && openport != (unsigned long) -1)
 	   if (seq_response_num < 0 || seq_response_num >= seq_packets_sent) {
 	     /* BzzT! Value out of range */
 	     if (o.debugging) {
-	       error("Unable to associate os scan response with sent packet (received ack: %lX; sequence base: %lX. Packet:", ntohl(tcp->th_ack), sequence_base);
+	       error("Unable to associate os scan response with sent packet (received ack: %lX; sequence base: %lX. Packet:", (unsigned long) ntohl(tcp->th_ack), (unsigned long) sequence_base);
 	       readtcppacket((unsigned char *)ip,BSDUFIX(ip->ip_len));
 	     }
 	     seq_response_num = si->responses;
@@ -466,7 +466,7 @@ if (o.verbose && openport != (unsigned long) -1)
        {
 	 /* Up 2 years?  Perhaps, but they're probably lying. */
 	 if (o.debugging) {
-	   error("Ignoring claimed uptime of %d days", 
+	   error("Ignoring claimed uptime of %lu days", 
 		 (seq_send_times[0].tv_sec - si->lastboot) / 86400);
 	 }
 	 si->lastboot = 0;
@@ -1281,7 +1281,7 @@ FingerPrint *parse_single_fingerprint(char *fprint_orig) {
 
     while(*thisline && isspace((int) *thisline)) thisline++;
     if (!*thisline) {
-      fatal("Parse error on line %d of fingerprint: %s", lineno);    
+      fatal("Parse error on line %d of fingerprint: %s", lineno, nextline);    
     }
 
     if (strncasecmp(thisline, "FingerPrint", 11) == 0) {

@@ -74,7 +74,8 @@
 void printportoutput(Target *currenths, portlist *plist);
 
 /* Write some information (printf style args) to the given log stream(s) */
-void log_write(int logt, const char *fmt, ...);
+void log_write(int logt, const char *fmt, ...)
+     __attribute__ ((format (printf, 2, 3)));
 
 /* Close the given log stream(s) */
 void log_close(int logt);

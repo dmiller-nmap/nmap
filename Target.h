@@ -92,8 +92,10 @@ class Target {
      address and hostname (if available).  Eg "www.insecure.org
      (64.71.184.53)" or "fe80::202:e3ff:fe14:1102".  The name is
      written into the buffer provided, which is also returned.  Results
-     that do not fit in bufflen will be truncated. */
+     that do not fit in buflen will be truncated. */
   const char *NameIP(char *buf, size_t buflen);
+  /* This next version returns a STATIC buffer -- so no concurrency */
+  const char *NameIP();
   struct seq_info seq;
   struct FingerPrintResults FPR;
   FingerPrint *FPs[10]; /* Fingerprint data obtained from host */
@@ -129,6 +131,7 @@ class Target {
 #define INET6_ADDRSTRLEN 46
 #endif
   char targetipstring[INET6_ADDRSTRLEN];
+  char *nameIPBuf; /* for the NameIP(void) function to return */
 };
 
 #endif /* TARGET_H */

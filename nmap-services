@@ -1172,6 +1172,7 @@ phone             1167/udp   # conference calling
 skkserv           1178/tcp   # SKK (kanji input)
 lupa              1212/tcp   # 
 lupa              1212/udp   # 
+quicktime         1220/tcp   # Apple Darwin and QuickTime Streaming Administration Servers
 nerv              1222/tcp   # SNI R&D network
 nerv              1222/udp   # SNI R&D network
 hotline           1234/tcp   # 
@@ -1628,6 +1629,7 @@ CarbonCopy        1680/tcp   #
 L2TP              1701/udp   #
 H.323/Q.931       1720/tcp   # Interactive media
 pptp              1723/tcp   # Point-to-point tunnelling protocol
+wms               1755/tcp   # Windows media service
 radius            1812/udp   # RADIUS authentication protocol (RFC 2138)
 radacct           1813/udp   # RADIUS accounting protocol (RFC 2139)
 pcm               1827/tcp   # PCM Agent (AutoSecure Policy Compliance Manager
@@ -2045,11 +2047,13 @@ cucme-1           7648/udp   # cucme live video/audio server
 cucme-2           7649/udp   # cucme live video/audio server
 cucme-3           7650/udp   # cucme live video/audio server
 cucme-4           7651/udp   # cucme live video/audio server
+http-alt          8000/tcp   # A common alternative http port
 ajp12             8007/tcp   # Apache JServ Protocol 1.x
 ajp13             8009/tcp   # Apache JServ Protocol 1.3
 http-proxy        8080/tcp   # Common HTTP proxy/second web server port
 blackice-icecap   8081/tcp   # ICECap user console
 blackice-alerts   8082/tcp   # BlackIce Alerts sent to this port
+https-alt         8443/tcp   # Common alternative https port
 sun-answerbook    8888/tcp   # Sun Answerbook HTTP server
 seosload          8892/tcp   # From the new Computer Associates eTrust ACX
 zeus-admin        9090/tcp   # Zeus admin server
@@ -2062,6 +2066,7 @@ sd                9876/tcp   # Session Director
 sd                9876/udp   # Session Director
 issa              9991/tcp   # ISS System Scanner Agent
 issc              9992/tcp   # ISS System Scanner Console
+abyss             9999/tcp   # Abyss web server remote web management interface
 snet-sensor-mgmt  10000/tcp  # SecureNet Pro Sensor https management server
 stel              10005/tcp  # Secure telnet
 amanda            10080/udp  # Amanda Backup Util

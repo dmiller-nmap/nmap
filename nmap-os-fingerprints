@@ -4040,6 +4040,7 @@ PU(DF=N|Y%TOS=0%IPLEN=38%RIPTL=15C%RID=F%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 # Compaq Remote Insight Lights-Out remote console card
 # 3Com Home Wireless Gateway 3CRWE50194-E1, firmware 1.14
 # TrueTime NTS-200 GPS Network Time Server
+# Compaq Lights Out Edition firmware v2.41
 Fingerprint Embedded device: HP Switch, Copper Mountain DSL Concentrator, Compaq Remote Insight Lights-Out remote console card, 3Com Home Wireless Gateway, or TrueTime NTP clock
 TSeq(Class=64K%IPID=I%TS=U)
 T1(DF=N%W=2000%ACK=S++%Flags=AS%Ops=MNW)
@@ -7664,7 +7665,7 @@ T6(Resp=Y%DF=N%W=0%ACK=S%Flags=R%Ops=)
 T7(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(Resp=Y%DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
-Fingerprint IBM OS/400 v4r5
+Fingerprint IBM OS/400 v4 r4-5
 TSeq(Class=RI%gcd=<C%SI=<C1C&>3%IPID=I%TS=1000HZ)
 T1(DF=N%W=2000%ACK=S++%Flags=AS%Ops=MNWNNT)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)

@@ -129,7 +129,17 @@
 
 /* Return num if it is between min and max.  Otherwise return min or
    max (whichever is closest to num), */
-int box(int bmin, int bmax, int bnum);
+template<class T> T box(T bmin, T bmax, T bnum) {
+  assert(bmin <= bmax);
+  if (bnum >= bmax)
+    return bmax;
+  if (bnum <= bmin)
+    return bmin;
+  return bnum;
+}
+
+  /*int box(int bmin, int bmax, int bnum);
+    int box(double bmin, double bmax, double bnum); */
 void *safe_malloc(int size);
 /* Zero-initializing version of safe_malloc */
 void *safe_zalloc(int size);

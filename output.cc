@@ -680,7 +680,7 @@ void printosscanoutput(Target *currenths) {
 	 while(*p) p++;
        }
 
-       log_write(LOG_XML, "<tcpsequence index=\"%li\" class=\"%s\" difficulty=\"%s\" values=\"%s\" />\n", currenths->seq.index, seqclass2ascii(currenths->seq.seqclass), seqidx2difficultystr(currenths->seq.index), numlst); 
+       log_write(LOG_XML, "<tcpsequence index=\"%li\" class=\"%s\" difficulty=\"%s\" values=\"%s\" />\n", (long) currenths->seq.index, seqclass2ascii(currenths->seq.seqclass), seqidx2difficultystr(currenths->seq.index), numlst); 
        if (o.verbose)
 	 log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"%s", seqreport(&(currenths->seq)));
        log_write(LOG_MACHINE,"\tSeq Index: %d", currenths->seq.index);
@@ -742,7 +742,7 @@ void printfinaloutput(int numhosts_scanned, int numhosts_up,
   Strncpy(mytime, ctime(&timep), sizeof(mytime));
   chomp(mytime);
   
-  log_write(LOG_XML, "<runstats><finished time=\"%d\" /><hosts up=\"%d\" down=\"%d\" total=\"%d\" />\n", timep, numhosts_up, numhosts_scanned - numhosts_up, numhosts_scanned);
+  log_write(LOG_XML, "<runstats><finished time=\"%lu\" /><hosts up=\"%d\" down=\"%d\" total=\"%d\" />\n", (unsigned long) timep, numhosts_up, numhosts_scanned - numhosts_up, numhosts_scanned);
 
   log_write(LOG_XML, "<!-- Nmap run completed at %s; %d %s (%d %s up) scanned in %.3f seconds -->\n", mytime, numhosts_scanned, (numhosts_scanned == 1)? "IP address" : "IP addresses", numhosts_up, (numhosts_up == 1)? "host" : "hosts",  o.TimeSinceStartMS(&tv) / 1000.0 );
   log_write(LOG_NORMAL|LOG_MACHINE, "# Nmap run completed at %s -- %d %s (%d %s up) scanned in %.3f seconds\n", mytime, numhosts_scanned, (numhosts_scanned == 1)? "IP address" : "IP addresses", numhosts_up, (numhosts_up == 1)? "host" : "hosts", o.TimeSinceStartMS(&tv) / 1000.0 );
