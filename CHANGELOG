@@ -2,6 +2,13 @@
 
 Nmap 2.54BETA31
 
+o Added ICMP Timestamp and Netmask ping types (-PP and -PM).  These
+  (especially timestamp) can be useful against some hosts that do not
+  respond to normal ping (-PI) packets.
+
+o Documented the --data_length option and made it work with all the
+  ICMP ping types (echo request, netmask, and timestamp).
+
 o Added check for strings.h before including it in portlist.c .  This
   fixes a compilation problem on some versions of Windows.  Problem
   first noted by "Michael Vorin" <mvorin@hotmail.com>

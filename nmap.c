@@ -701,8 +701,12 @@ int nmap_main(int argc, char *argv[]) {
       normalfilename = optarg;
       break;
     case 'P': 
-      if (*optarg == '\0' || *optarg == 'I')
-	o.pingtype |= PINGTYPE_ICMP;
+      if (*optarg == '\0' || *optarg == 'I' || *optarg == 'E')
+	o.pingtype |= PINGTYPE_ICMP_PING;
+      else if (*optarg == 'M') 
+	o.pingtype |= PINGTYPE_ICMP_MASK;
+      else if (*optarg == 'P') 
+	o.pingtype |= PINGTYPE_ICMP_TS;
       else if (*optarg == '0' || *optarg == 'N' || *optarg == 'D')      
 	o.pingtype = PINGTYPE_NONE;
       else if (*optarg == 'S') {
@@ -722,7 +726,7 @@ int nmap_main(int argc, char *argv[]) {
 	  log_write(LOG_STDOUT, "TCP probe port is %hu\n", o.tcp_probe_port);
       }
       else if (*optarg == 'B') {
-	o.pingtype = (PINGTYPE_TCP|PINGTYPE_TCP_USE_ACK|PINGTYPE_ICMP);
+	o.pingtype = (PINGTYPE_TCP|PINGTYPE_TCP_USE_ACK|PINGTYPE_ICMP_PING);
 	if (isdigit((int) *(optarg+1)))
 	  o.tcp_probe_port = atoi(optarg+1);
 	log_write(LOG_STDOUT, "TCP probe port is %hu\n", o.tcp_probe_port);
@@ -822,7 +826,7 @@ int nmap_main(int argc, char *argv[]) {
 #endif
 
   if (o.pingtype == PINGTYPE_UNKNOWN) {
-    if (o.isr00t) o.pingtype = PINGTYPE_TCP|PINGTYPE_TCP_USE_ACK|PINGTYPE_ICMP;
+    if (o.isr00t) o.pingtype = PINGTYPE_TCP|PINGTYPE_TCP_USE_ACK|PINGTYPE_ICMP_PING|PINGTYPE_ICMP_MASK|PINGTYPE_ICMP_TS;
     else o.pingtype = PINGTYPE_TCP;
   }
 
@@ -938,7 +942,7 @@ int nmap_main(int argc, char *argv[]) {
   if (!o.isr00t) {
 
 #ifndef WIN32	/*	Win32 has perfectly fine ICMP socket support */
-    if (o.pingtype & PINGTYPE_ICMP) {
+    if (o.pingtype & PINGTYPE_ICMP_PING|PINGTYPE_ICMP_MASK|PINGTYPE_ICMP_TS) {
       error("Warning:  You are not root -- using TCP pingscan rather than ICMP");
       o.pingtype = PINGTYPE_TCP;
     }
@@ -1160,7 +1164,7 @@ int nmap_main(int argc, char *argv[]) {
     hostgroup_state_init(&hstate, o.host_group_sz, o.randomize_hosts, 
 			 host_exp_group, num_host_exp_groups);
   
-    while((currenths = nexthost(&hstate, ports))) {
+    while((currenths = nexthost(&hstate, ports, &(o.pingtype)))) {
       numhosts_scanned++;
       if (currenths->flags & HOST_UP && !o.listscan) 
 	numhosts_up++;

@@ -103,16 +103,15 @@ struct pingtech {
 };
 
 
-int get_ping_results(int sd, pcap_t *pd, struct hoststruct *hostbatch, struct timeval *time,  struct pingtune *pt, struct timeout_info *to, int id, struct pingtech *ptech, struct scan_lists *ports);
-int hostupdate(struct hoststruct *hostbatch, struct hoststruct *target, 
-	       int newstate, int dotimeout, int trynum, 
-	       struct timeout_info *to, struct timeval *sent, 
-	       struct pingtune *pt, struct tcpqueryinfo *tqi, int pingtype);
+int get_ping_results(int sd, pcap_t *pd, struct hoststruct *hostbatch, 
+		     int pingtype, struct timeval *time,  struct pingtune *pt,
+		     struct timeout_info *to, int id, struct pingtech *ptech, 
+		     struct scan_lists *ports);
 int sendpingquery(int sd, int rawsd, struct hoststruct *target,  
 		  int seq, unsigned short id, struct scanstats *ss, 
-		  struct timeval *time, struct pingtech ptech);
-int sendrawtcppingquery(int rawsd, struct hoststruct *target, int seq,
-			struct timeval *time, struct pingtune *pt);
+		  struct timeval *time, int pingtype, struct pingtech ptech);
+int sendrawtcppingquery(int rawsd, struct hoststruct *target, int pingtype,
+			int seq, struct timeval *time, struct pingtune *pt);
 int sendconnecttcpquery(struct hoststruct *hostbatch, struct tcpqueryinfo *tqi, struct hoststruct *target, 
 			int seq, struct timeval *time, struct pingtune *pt, struct timeout_info *to, int max_width);
 int get_connecttcpscan_results(struct tcpqueryinfo *tqi, 
@@ -121,7 +120,7 @@ int get_connecttcpscan_results(struct tcpqueryinfo *tqi,
 			       struct timeout_info *to);
 char *readhoststate(int state);
 void massping(struct hoststruct *hostbatch, int numhosts, 
-		struct scan_lists *ports);
+		struct scan_lists *ports, int pingtype);
 /* Fills up the hostgroup_state structure passed in (which must point
    to valid memory).  Lookahead is the number of hosts that can be
    checked (such as ping scanned) in advance.  Randomize causes each
@@ -146,7 +145,8 @@ void target_struct_return(struct targets *t);
 void hoststructfry(struct hoststruct *hostbatch, int nelem);
 /* Ports is the list of ports the user asked to be scanned (0 terminated),
    you can just pass NULL (it is only a stupid optimization that needs it) */
-struct hoststruct *nexthost(struct hostgroup_state *hs, struct scan_lists *ports);
+struct hoststruct *nexthost(struct hostgroup_state *hs, 
+			    struct scan_lists *ports, int *pingtype);
 /* Frees the *INTERNAL STRUCTURES* inside a hoststruct -- does not
    free the actual memory allocated to the hoststruct itself (for all
    this function knows, you could have declared it on the stack */

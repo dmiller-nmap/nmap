@@ -52,9 +52,103 @@
 
 extern struct ops o;
 
+enum pingstyle { pingstyle_unknown, pingstyle_rawtcp, pingstyle_connecttcp, 
+		 pingstyle_icmp };
+
 /*  predefined filters -- I need to kill these globals at some pont. */
 extern unsigned long flt_dsthost, flt_srchost;
 extern unsigned short flt_baseport;
+
+/* Internal function to update the state of machine (up/down/etc) based on
+   ping results */
+static int hostupdate(struct hoststruct *hostbatch, struct hoststruct *target, 
+	       int newstate, int dotimeout, int trynum, 
+	       struct timeout_info *to, struct timeval *sent, 
+	       struct pingtune *pt, struct tcpqueryinfo *tqi, 
+	       enum pingstyle style)
+{
+
+  int hostnum = target - hostbatch;
+  int i;
+  int seq;
+  int tmpsd;
+  struct timeval tv;
+  
+  if (o.debugging)  {
+    gettimeofday(&tv, NULL);
+    log_write(LOG_STDOUT, "Hostupdate called for machine %s state %s -> %s (trynum %d, dotimeadj: %s time: %ld)\n", inet_ntoa(target->host), readhoststate(target->flags), readhoststate(newstate), trynum, (dotimeout)? "yes" : "no", (long) TIMEVAL_SUBTRACT(tv, *sent));
+  }
+  assert(hostnum <= pt->group_end);
+  
+  if (dotimeout) {
+    adjust_timeouts(*sent, to);
+  }
+  
+  /* If this is a tcp connect() pingscan, close all sockets */
+  
+  if (style == pingstyle_connecttcp) {
+    seq = (target - hostbatch) * pt->max_tries + trynum;
+    assert(tqi->sockets[seq] >= 0);
+    for(i=0; i <= pt->block_tries; i++) {  
+      seq = (target - hostbatch) * pt->max_tries + i;
+      tmpsd = tqi->sockets[seq];
+      if (tmpsd >= 0) {
+	assert(tqi->sockets_out > 0);
+	tqi->sockets_out--;
+	close(tmpsd);
+	if (tmpsd == tqi->maxsd) tqi->maxsd--;
+	FD_CLR(tmpsd, &(tqi->fds_r));
+	FD_CLR(tmpsd, &(tqi->fds_w));
+	FD_CLR(tmpsd, &(tqi->fds_x));
+	tqi->sockets[seq] = -1;
+      }
+    }
+  }
+  
+  
+  target->to = *to;
+  
+  if (target->flags & HOST_UP) {
+    /* The target is already up and that takes precedence over HOST_DOWN
+       or HOST_FIREWALLED, so we just return. */
+    return 0;
+  }
+  
+  if (trynum > 0 && !(pt->dropthistry)) {
+    pt->dropthistry = 1;
+    if (o.debugging) 
+      log_write(LOG_STDOUT, "Decreasing massping group size from %d to ", pt->group_size);
+    pt->group_size = MAX((int) (pt->group_size * 0.75), 10);
+    if (o.debugging) 
+      log_write(LOG_STDOUT, "%d\n", pt->group_size);
+  }
+  
+  if (newstate == HOST_DOWN && (target->flags & HOST_DOWN)) {
+    /* I see nothing to do here */
+  } else if (newstate == HOST_UP && (target->flags & HOST_DOWN)) {
+  /* We give host_up precedence */
+    target->flags &= ~HOST_DOWN; /* Kill the host_down flag */
+    target->flags |= HOST_UP;
+    if (hostnum >= pt->group_start) {  
+      assert(pt->down_this_block > 0);
+      pt->down_this_block--;
+      pt->up_this_block++;
+    }
+  } else if (newstate == HOST_DOWN) {
+    target->flags |= HOST_DOWN;
+    pt->down_this_block++;
+    pt->block_unaccounted--;
+    pt->num_responses++;
+  } else {
+    assert(newstate == HOST_UP);
+    target->flags |= HOST_UP;
+    pt->up_this_block++;
+    pt->block_unaccounted--;
+    pt->num_responses++;
+  }
+  return 0;
+}
+
 
 /* Fills up the hostgroup_state structure passed in (which must point
    to valid memory).  Lookahead is the number of hosts that can be
@@ -194,7 +288,7 @@ void hoststructfry(struct hoststruct *hostbatch, int nelem) {
 /* REMEMBER TO CALL hoststruct_free() on the hoststruct when you are done
    with it!!! */
 struct hoststruct *nexthost(struct hostgroup_state *hs, 
-			    struct scan_lists *ports) {
+			    struct scan_lists *ports, int *pingtype) {
 int hidx;
 char *device;
 int i;
@@ -226,17 +320,17 @@ do {
 	   3) We are doing NO scan AND we are doing a raw-mode portscan or 
 	   osscan */
 	if (o.isr00t && 
-	    ((o.pingtype & PINGTYPE_TCP) || 
-	     (o.pingtype == PINGTYPE_NONE && 
+	    ((*pingtype & PINGTYPE_TCP) || 
+	     (*pingtype == PINGTYPE_NONE && 
 	      (o.synscan || o.finscan || o.xmasscan || o.nullscan || o.ipprotscan ||
 	       o.maimonscan || o.idlescan || o.ackscan || o.udpscan || o.osscan || o.windowscan)))) {
 	 device = routethrough(&(hs->hostbatch[hidx].host), &(hs->hostbatch[hidx].source_ip));
 	 if (!device) {
-	   if (o.pingtype == PINGTYPE_NONE) {
+	   if (*pingtype == PINGTYPE_NONE) {
 	     fatal("Could not determine what interface to route packets through, run again with -e <device>");
 	   } else {
-	     error("WARNING:  Could not determine what interface to route packets through to %s, changing ping scantype to ICMP only", inet_ntoa(hs->hostbatch[hidx].host));
-	     o.pingtype = PINGTYPE_ICMP;
+	     error("WARNING:  Could not determine what interface to route packets through to %s, changing ping scantype to ICMP ping only", inet_ntoa(hs->hostbatch[hidx].host));
+	     *pingtype = PINGTYPE_ICMP_PING;
 	   }
 	 } else {
 	   strcpy(hs->hostbatch[hidx].device, device);
@@ -277,8 +371,11 @@ if (hs->randomize) {
 }
 
 /* Finally we do the mass ping (if required) */
- if ((o.pingtype == PINGTYPE_ICMP) || ((hs->hostbatch[0].host.s_addr || !o.isr00t) && (o.pingtype != PINGTYPE_NONE))) 
-   massping(hs->hostbatch, hs->current_batch_sz, ports);
+ if ((*pingtype & 
+      (PINGTYPE_ICMP_PING|PINGTYPE_ICMP_MASK|PINGTYPE_ICMP_TS) ) || 
+     ((hs->hostbatch[0].host.s_addr || !o.isr00t) && 
+      (*pingtype != PINGTYPE_NONE))) 
+   massping(hs->hostbatch, hs->current_batch_sz, ports, *pingtype);
  else for(i=0; i < hs->current_batch_sz; i++)  {
    hs->hostbatch[i].to.srtt = -1;
    hs->hostbatch[i].to.rttvar = -1;
@@ -438,7 +535,7 @@ else {
 
 
 void massping(struct hoststruct *hostbatch, int num_hosts, 
-              struct scan_lists *ports) {
+              struct scan_lists *ports, int pingtype) {
 static struct timeout_info to = { 0,0,0};
 static int gsize = LOOKAHEAD;
 int hostnum;
@@ -488,11 +585,12 @@ if (o.magic_port_set) sportbase = o.magic_port;
 else sportbase = o.magic_port + 20;
 
 /* What kind of scans are we doing? */
-if ((o.pingtype & PINGTYPE_ICMP) &&  hostbatch[0].source_ip.s_addr) 
+ if ((pingtype & (PINGTYPE_ICMP_PING|PINGTYPE_ICMP_MASK|PINGTYPE_ICMP_TS)) && 
+     hostbatch[0].source_ip.s_addr) 
   ptech.rawicmpscan = 1;
-else if (o.pingtype & PINGTYPE_ICMP) 
+else if (pingtype & (PINGTYPE_ICMP_PING|PINGTYPE_ICMP_MASK|PINGTYPE_ICMP_TS)) 
   ptech.icmpscan = 1;
-if (o.pingtype & PINGTYPE_TCP) {
+if (pingtype & PINGTYPE_TCP) {
   if (o.isr00t)
     ptech.rawtcpscan = 1;
   else ptech.connecttcpscan = 1;
@@ -600,10 +698,11 @@ gettimeofday(&start, NULL);
 	 if (o.scan_delay) enforce_scan_delay(NULL);
 	 if (ptech.icmpscan || ptech.rawicmpscan)
 	   sendpingquery(sd, rawpingsd, &hostbatch[hostnum],  
-			 seq, id, &ss, time, ptech);
+			 seq, id, &ss, time, pingtype, ptech);
        
 	 if (ptech.rawtcpscan) {
-	   sendrawtcppingquery(rawsd, &hostbatch[hostnum],  seq, time, &pt);
+	   sendrawtcppingquery(rawsd, &hostbatch[hostnum],  pingtype, seq, 
+			       time, &pt);
 	 }
 	 else if (ptech.connecttcpscan) {
 	   sendconnecttcpquery(hostbatch, &tqi, &hostbatch[hostnum], seq, time, &pt, &to, max_width);
@@ -624,8 +723,8 @@ gettimeofday(&start, NULL);
 	 unblock_socket(sd); sd_blocking = 0; 
        }
        if(ptech.icmpscan || ptech.rawicmpscan || ptech.rawtcpscan) {       
-	 get_ping_results(sd, pd, hostbatch, time, &pt, &to, id, &ptech, 
-			  ports);
+	 get_ping_results(sd, pd, hostbatch, pingtype, time, &pt, &to, id, 
+			  &ptech, ports);
        }
        if (ptech.connecttcpscan) {
 	 get_connecttcpscan_results(&tqi, hostbatch, time, &pt, &to);
@@ -723,14 +822,14 @@ int sendconnecttcpquery(struct hoststruct *hostbatch, struct tcpqueryinfo *tqi,
     /* This can happen on localhost, successful/failing connection immediately
        in non-blocking mode */
       hostupdate(hostbatch, target, HOST_UP, 1, trynum, to, 
-		 &time[seq], pt, tqi, PINGTYPE_CONNECTTCP);
+		 &time[seq], pt, tqi, pingstyle_connecttcp);
     if (tqi->maxsd == tqi->sockets[seq]) tqi->maxsd--;
   }
   else if (errno == ENETUNREACH) {
     if (o.debugging) 
       error("Got ENETUNREACH from sendconnecttcpquery connect()");
     hostupdate(hostbatch, target, HOST_DOWN, 1, trynum, to, 
-	       &time[seq], pt, tqi, PINGTYPE_CONNECTTCP);
+	       &time[seq], pt, tqi, pingstyle_connecttcp);
   }
   else {
     /* We'll need to select() and wait it out */
@@ -741,8 +840,8 @@ int sendconnecttcpquery(struct hoststruct *hostbatch, struct tcpqueryinfo *tqi,
 return 0;
 }
 
-int sendrawtcppingquery(int rawsd, struct hoststruct *target, int seq,
-			struct timeval *time, struct pingtune *pt) {
+int sendrawtcppingquery(int rawsd, struct hoststruct *target, int pingtype, 
+			int seq, struct timeval *time, struct pingtune *pt) {
 int trynum;
 int myseq;
 unsigned short sportbase;
@@ -754,7 +853,7 @@ trynum = seq % pt->max_tries;
 
  myseq = (get_random_uint() << 19) + (seq << 3) + 3; /* Response better end in 011 or 100 */
  memcpy((char *)&(o.decoys[o.decoyturn]), (char *)&target->source_ip, sizeof(struct in_addr));
- if (o.pingtype & PINGTYPE_TCP_USE_SYN) {   
+ if (pingtype & PINGTYPE_TCP_USE_SYN) {   
    send_tcp_raw_decoys( rawsd, &(target->host), sportbase + trynum, o.tcp_probe_port, myseq, myack, TH_SYN, 0, NULL, 0, o.extra_payload, 
 			o.extra_payload_length);
  } else {
@@ -769,27 +868,53 @@ trynum = seq % pt->max_tries;
 
 int sendpingquery(int sd, int rawsd, struct hoststruct *target,  
 		  int seq, unsigned short id, struct scanstats *ss, 
-		  struct timeval *time, struct pingtech ptech) {
-  
+		  struct timeval *time, int pingtype, struct pingtech ptech) {
 struct ppkt {
-  unsigned char type;
-  unsigned char code;
-  unsigned short checksum;
-  unsigned short id;
-  unsigned short seq;
+  u8 type;
+  u8 code;
+  u16 checksum;
+  u16 id;
+  u16 seq;
+  u8 data[1500]; /* Note -- first 4-12 bytes can be used for ICMP header */
 } pingpkt;
+u32 *datastart = (u32 *) pingpkt.data;
+int datalen = sizeof(pingpkt.data); 
+int icmplen;
 int decoy;
 int res;
 struct sockaddr_in sock;
 char *ping = (char *) &pingpkt;
 
+ if (pingtype == PINGTYPE_ICMP_PING) {
+   icmplen = 8; 
+   pingpkt.type = 8;
+ }
+ else if (pingtype == PINGTYPE_ICMP_MASK) {
+   icmplen = 12;
+   *datastart++ = 0;
+   datalen -= 4;
+   pingpkt.type = 17;
+ }
+ else if (pingtype == PINGTYPE_ICMP_TS) {   
+   icmplen = 20;
+   bzero(datastart, 12);
+   datastart += 12;
+   datalen -= 12;
+   pingpkt.type = 13;
+ }
+ else fatal("sendpingquery: unknown pingtype: %d", pingtype);
+
+ if (o.extra_payload_length > 0) {
+   icmplen += MIN(datalen, o.extra_payload_length);
+   bzero(datastart, MIN(datalen, o.extra_payload_length));
+ }
 /* Fill out the ping packet */
-pingpkt.type = 8;
+
 pingpkt.code = 0;
 pingpkt.id = id;
 pingpkt.seq = seq;
 pingpkt.checksum = 0;
-pingpkt.checksum = in_cksum((unsigned short *)ping, 8);
+pingpkt.checksum = in_cksum((unsigned short *)ping, icmplen);
 
 /* Now for our sock */
 if (ptech.icmpscan) {
@@ -797,10 +922,7 @@ if (ptech.icmpscan) {
   sock.sin_family= AF_INET;
   sock.sin_addr = target->host;
   
-  if (sizeof(struct ppkt) != 8) 
-    fatal("Your native data type sizes are too screwed up for this to work.");
-} else {
-    memcpy((char *) &(o.decoys[o.decoyturn]), (char *)&target->source_ip, sizeof(struct in_addr));
+  memcpy((char *) &(o.decoys[o.decoyturn]), (char *)&target->source_ip, sizeof(struct in_addr));
 }
 
  for (decoy = 0; decoy < o.numdecoys; decoy++) {
@@ -809,13 +931,13 @@ if (ptech.icmpscan) {
 	probably unable to obtain an arp response from the machine.
 	We should just considering the host down rather than ignoring
 	the error */
-     if ((res = sendto(sd,(char *) ping,8,0,(struct sockaddr *)&sock,
-		       sizeof(struct sockaddr))) != 8 && errno != EHOSTUNREACH ) {
+     if ((res = sendto(sd,(char *) ping,icmplen,0,(struct sockaddr *)&sock,
+		       sizeof(struct sockaddr))) != icmplen && errno != EHOSTUNREACH ) {
        fprintf(stderr, "sendto in sendpingquery returned %d (should be 8)!\n", res);
        perror("sendto");
      }
    } else {
-     send_ip_raw( rawsd, &o.decoys[decoy], &(target->host), IPPROTO_ICMP, ping, 8);
+     send_ip_raw( rawsd, &o.decoys[decoy], &(target->host), IPPROTO_ICMP, ping, icmplen);
    }
  }
  gettimeofday(&time[seq], NULL);
@@ -912,7 +1034,7 @@ while(pt->block_unaccounted) {
 	    }
 	    if (foundsomething) {
 	      hostupdate(hostbatch, &hostbatch[hostindex], newstate, 1, trynum,
-			 to,  &time[seq], pt, tqi, PINGTYPE_CONNECTTCP);
+			 to,  &time[seq], pt, tqi, pingstyle_connecttcp);
 	      /*	      break;*/
 	    }
 	  }
@@ -951,7 +1073,7 @@ return 0;
 }
 
 
-int get_ping_results(int sd, pcap_t *pd, struct hoststruct *hostbatch, struct timeval *time,  struct pingtune *pt, struct timeout_info *to, int id, struct pingtech *ptech, struct scan_lists *ports) {
+int get_ping_results(int sd, pcap_t *pd, struct hoststruct *hostbatch, int pingtype, struct timeval *time,  struct pingtune *pt, struct timeout_info *to, int id, struct pingtech *ptech, struct scan_lists *ports) {
 fd_set fd_r, fd_x;
 struct timeval myto, tmpto, start, end;
 unsigned int bytes;
@@ -975,7 +1097,7 @@ unsigned short newport;
 int newportstate; /* Hack so that in some specific cases we can determine the 
 		     state of a port and even skip the real scan */
 int trynum = -999999;
-int pingtype = -999999;
+enum pingstyle pingstyle = pingstyle_unknown;
 int timeout = 0;
 unsigned short sequence = 65534;
 unsigned long tmpl;
@@ -1042,7 +1164,8 @@ while(pt->block_unaccounted > 0 && !timeout) {
       error("Supposed ping packet is only %d bytes long!", bytes);
       continue;
     }
-    if  ( !ping->type && !ping->code && ping->id == id) {
+    if  ( (ping->type == 0 || ping->type == 14 || ping->type == 18)
+	  && !ping->code && ping->id == id) {
       hostnum = ping->seq / pt->max_tries;
       if (hostnum > pt->group_end) {
 	if (o.debugging) 
@@ -1055,7 +1178,7 @@ while(pt->block_unaccounted > 0 && !timeout) {
 	log_write(LOG_STDOUT, "We got a ping packet back from %s: id = %d seq = %d checksum = %d\n", inet_ntoa(ip->ip_src), ping->id, ping->seq, ping->checksum);
       if (hostbatch[hostnum].host.s_addr == ip->ip_src.s_addr) {
 	foundsomething = 1;
-	pingtype = PINGTYPE_ICMP;
+	pingstyle = pingstyle_icmp;
 	sequence = ping->seq;
 	newstate = HOST_UP;
 	trynum = sequence % pt->max_tries;
@@ -1152,7 +1275,7 @@ while(pt->block_unaccounted > 0 && !timeout) {
 	if (pt->discardtimesbefore < sequence)
 	  dotimeout = 1;	
 	foundsomething = 1;
-	pingtype = PINGTYPE_ICMP;
+	pingstyle = pingstyle_icmp;
 	newstate = HOST_DOWN;
 	newportstate = PORT_FIREWALLED;
       } else if (ping->type == 11) {
@@ -1160,7 +1283,7 @@ while(pt->block_unaccounted > 0 && !timeout) {
 	  log_write(LOG_STDOUT, "Got Time Exceeded for %s\n", inet_ntoa(hostbatch[hostnum].host));
 	dotimeout = 0; /* I don't want anything to do with timing this */
 	foundsomething = 1;
-	pingtype = PINGTYPE_ICMP;
+	pingstyle = pingstyle_icmp;
 	newstate = HOST_DOWN;
       }
       else if (ping->type == 4) {      
@@ -1182,7 +1305,7 @@ while(pt->block_unaccounted > 0 && !timeout) {
       newport = ntohs(tcp->th_sport);
       tmpl = ntohl(tcp->th_ack);
       /* Grab the sequence nr */
-      if (o.pingtype & PINGTYPE_TCP_USE_SYN) {      
+      if (pingtype & PINGTYPE_TCP_USE_SYN) {      
 	if ((tmpl & 7) == 4 || (tmpl & 7) == 3) {
 	  sequence = (tmpl >> 3) & 0xffff;
 	  hostnum = sequence / pt->max_tries;
@@ -1221,13 +1344,13 @@ while(pt->block_unaccounted > 0 && !timeout) {
       }
       if (o.debugging) 
 	log_write(LOG_STDOUT, "We got a TCP ping packet back from %s (hostnum = %d trynum = %d\n", inet_ntoa(ip->ip_src), hostnum, trynum);
-      pingtype = PINGTYPE_RAWTCP;
+      pingstyle = pingstyle_rawtcp;
       foundsomething = 1;
       if (pt->discardtimesbefore < sequence)
 	dotimeout = 1;
       newstate = HOST_UP;
 
-      if (o.pingtype & PINGTYPE_TCP_USE_SYN) {
+      if (pingtype & PINGTYPE_TCP_USE_SYN) {
 	if (tcp->th_flags & TH_RST) {
 	  newportstate = PORT_CLOSED;
 	} else if ((tcp->th_flags & (TH_SYN|TH_ACK)) == (TH_SYN|TH_ACK)) {
@@ -1239,7 +1362,7 @@ while(pt->block_unaccounted > 0 && !timeout) {
     }
     if (foundsomething) {  
       hostupdate(hostbatch, &hostbatch[hostnum], newstate, dotimeout, 
-		 trynum, to, &time[sequence], pt, NULL,pingtype);
+		 trynum, to, &time[sequence], pt, NULL,pingstyle);
     }
     if (newport && newportstate != PORT_UNKNOWN) {
       /* OK, we can add it, but that is only appropriate if this is one
@@ -1252,91 +1375,6 @@ while(pt->block_unaccounted > 0 && !timeout) {
 return 0;
 }
 
-int hostupdate(struct hoststruct *hostbatch, struct hoststruct *target, 
-	       int newstate, int dotimeout, int trynum, 
-	       struct timeout_info *to, struct timeval *sent, 
-	       struct pingtune *pt, struct tcpqueryinfo *tqi, int pingtype) {
-
-int hostnum = target - hostbatch;
-int i;
-int seq;
-int tmpsd;
-struct timeval tv;
-
-if (o.debugging)  {
-  gettimeofday(&tv, NULL);
-  log_write(LOG_STDOUT, "Hostupdate called for machine %s state %s -> %s (trynum %d, dotimeadj: %s time: %ld)\n", inet_ntoa(target->host), readhoststate(target->flags), readhoststate(newstate), trynum, (dotimeout)? "yes" : "no", (long) TIMEVAL_SUBTRACT(tv, *sent));
-}
-assert(hostnum <= pt->group_end);
-
-if (dotimeout) {
-  adjust_timeouts(*sent, to);
-}
-
-/* If this is a tcp connect() pingscan, close all sockets */
-
-if (pingtype == PINGTYPE_CONNECTTCP) {
-  seq = (target - hostbatch) * pt->max_tries + trynum;
-  assert(tqi->sockets[seq] >= 0);
-  for(i=0; i <= pt->block_tries; i++) {  
-    seq = (target - hostbatch) * pt->max_tries + i;
-    tmpsd = tqi->sockets[seq];
-    if (tmpsd >= 0) {
-      assert(tqi->sockets_out > 0);
-      tqi->sockets_out--;
-      close(tmpsd);
-      if (tmpsd == tqi->maxsd) tqi->maxsd--;
-      FD_CLR(tmpsd, &(tqi->fds_r));
-      FD_CLR(tmpsd, &(tqi->fds_w));
-      FD_CLR(tmpsd, &(tqi->fds_x));
-      tqi->sockets[seq] = -1;
-    }
-  }
-}
-
-
-target->to = *to;
-
-if (target->flags & HOST_UP) {
-  /* The target is already up and that takes precedence over HOST_DOWN
-     or HOST_FIREWALLED, so we just return. */
-  return 0;
-}
-
-if (trynum > 0 && !(pt->dropthistry)) {
-  pt->dropthistry = 1;
-  if (o.debugging) 
-    log_write(LOG_STDOUT, "Decreasing massping group size from %d to ", pt->group_size);
-  pt->group_size = MAX((int) (pt->group_size * 0.75), 10);
-  if (o.debugging) 
-    log_write(LOG_STDOUT, "%d\n", pt->group_size);
-}
-
-if (newstate == HOST_DOWN && (target->flags & HOST_DOWN)) {
-  /* I see nothing to do here */
-} else if (newstate == HOST_UP && (target->flags & HOST_DOWN)) {
-  /* We give host_up precedence */
-  target->flags &= ~HOST_DOWN; /* Kill the host_down flag */
-  target->flags |= HOST_UP;
-  if (hostnum >= pt->group_start) {  
-    assert(pt->down_this_block > 0);
-    pt->down_this_block--;
-    pt->up_this_block++;
-  }
-} else if (newstate == HOST_DOWN) {
-  target->flags |= HOST_DOWN;
-  pt->down_this_block++;
-  pt->block_unaccounted--;
-  pt->num_responses++;
-} else {
-  assert(newstate == HOST_UP);
-  target->flags |= HOST_UP;
-  pt->up_this_block++;
-  pt->block_unaccounted--;
-  pt->num_responses++;
-}
-return 0;
-}
 
 char *readhoststate(int state) {
   switch(state) {

@@ -357,10 +357,20 @@ of incomming IP packets to a subnet of computers.  These
 should be eliminated if found as they allow for numerous
 denial of service attacks (Smurf is the most common).
 .TP
+.B \-PP
+Uses an ICMP timestamp request (code 13) packet to find listening hosts.
+.TP
+.B \-PM
+Same as 
+.B \-PI
+and 
+.B \-PP
+except uses a netmask request (ICMP code 17).
+.TP
 .B \-PB
 This is the default ping type.  It uses both the ACK (
 .B \-PT
-) and ICMP (
+) and ICMP echo request (
 .B \-PI
 ) sweeps in parallel.  This way you can get firewalls that filter
 either one (but not both).  The TCP probe destination port can be set
@@ -639,6 +649,14 @@ nmap changes the source port even if you used -g.
 Be aware that there is a small performance penalty on some
 scans for using this option, because I sometimes store
 useful information in the source port number.
+.TP
+.B \--data_length <number>
+Normally Nmap sends minimalistic packets that only contain a header.
+So its TCP packets are generally 40 bytes and ICMP echo requests are
+just 28.  This option tells Nmap to append the given number of
+zero-filled bytes to most of the packets it sends.  OS detection (\-O)
+packets are not affected, but most pinging and portscan packets are.
+This slows things down, but can be slightly less conspicuous.
 .TP
 .B \-n
 Tells Nmap to

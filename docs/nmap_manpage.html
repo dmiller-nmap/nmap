@@ -388,356 +388,374 @@
               for   numerous  denial  of  service  attacks
               (Smurf is the most common).
 
-       <B>-PB</B>    This is the default ping type.  It uses both
-              the  ACK  ( <B>-PT</B> ) and ICMP ( <B>-PI</B> ) sweeps in
-              parallel.  This way you  can  get  firewalls
-              that  filter either one (but not both).  The
-              TCP probe destination port can be set in the
-              same manner as with -PT above.
+       <B>-PP</B>    Uses an ICMP  timestamp  request  (code  13)
+              packet to find listening hosts.
 
-       <B>-O</B>     This  option activates remote host identifi­
-              cation via TCP/IP fingerprinting.  In  other
-              words,  it  uses  a  bunch  of techniques to
-              detect subtleties in the underlying  operat­
-              ing  system  network  stack of the computers
-              you are scanning.  It uses this  information
-              to  create a 'fingerprint' which it compares
-              with its database of known  OS  fingerprints
-              (the  nmap-os-fingerprints  file)  to decide
+       <B>-PM</B>    Same  as  <B>-PI</B>  and <B>-PP</B> except uses a netmask
+              request (ICMP code 17).
+
+       <B>-PB</B>    This is the default ping type.  It uses both
+              the  ACK ( <B>-PT</B> ) and ICMP echo request ( <B>-PI</B>
+              ) sweeps in parallel.  This way you can  get
+              firewalls  that  filter  either one (but not
+              both).  The TCP probe destination  port  can
+              be set in the same manner as with -PT above.
+
+       <B>-O</B>     This option activates remote host  identifi­
+              cation  via TCP/IP fingerprinting.  In other
+              words, it uses  a  bunch  of  techniques  to
+              detect  subtleties in the underlying operat­
+              ing system network stack  of  the  computers
+              you  are scanning.  It uses this information
+              to create a 'fingerprint' which it  compares
+              with  its  database of known OS fingerprints
+              (the nmap-os-fingerprints  file)  to  decide
               what type of system you are scanning.
 
-              If Nmap is unable  to  guess  the  OS  of  a
-              machine,  and  conditions  are  good  (eg at
-              least one open port), Nmap  will  provide  a
+              If  Nmap  is  unable  to  guess  the OS of a
+              machine, and  conditions  are  good  (eg  at
+              least  one  open  port), Nmap will provide a
               URL you can use to submit the fingerprint if
-              you know (for sure) the OS  running  on  the
-              machine.   By  doing  this you contribute to
-              the pool of operating systems known to  nmap
+              you  know  (for  sure) the OS running on the
+              machine.  By doing this  you  contribute  to
+              the  pool of operating systems known to nmap
               and thus it will be more accurate for every­
-              one.  Note that if you leave an  IP  address
+              one.   Note  that if you leave an IP address
               on the form, the machine may be scanned when
-              we add the fingerprint (to validate that  it
+              we  add the fingerprint (to validate that it
               works).
 
-              The  -O  option  also  enables several other
-              tests.  One  is  the  "Uptime"  measurement,
-              which  uses  the  TCP  timestamp option (RFC
-              1323) to  guess  when  a  machine  was  last
-              rebooted.    This   is   only  reported  for
+              The -O option  also  enables  several  other
+              tests.   One  is  the  "Uptime" measurement,
+              which uses the  TCP  timestamp  option  (RFC
+              1323)  to  guess  when  a  machine  was last
+              rebooted.   This  is   only   reported   for
               machines which provide this information.
 
-              Another test enabled by -O is  TCP  Sequence
-              Predictability  Classification.   This  is a
+              Another  test  enabled by -O is TCP Sequence
+              Predictability Classification.   This  is  a
               measure  that  describes  approximately  how
               hard it is to establish a forged TCP connec­
-              tion against the remote host.  This is  use­
-              ful  for  exploiting  source-IP  based trust
-              relationships  (rlogin,  firewall   filters,
-              etc)  or for hiding the source of an attack.
-              The actual difficulty  number  is  based  on
-              statistical  sampling and may fluctuate.  It
+              tion  against the remote host.  This is use­
+              ful for  exploiting  source-IP  based  trust
+              relationships   (rlogin,  firewall  filters,
+              etc) or for hiding the source of an  attack.
+              The  actual  difficulty  number  is based on
+              statistical sampling and may fluctuate.   It
               is generally better to use the English clas­
-              sification  such  as  "worthy  challenge" or
-              "trivial joke".  This is  only  reported  in
+              sification such  as  "worthy  challenge"  or
+              "trivial  joke".   This  is only reported in
               normal output with -v.
 
-              When  verbose  mode (-v) is on with -O, IPID
-              Sequence Generation is also reported.   Most
-              machines  are  in  the  "incremental" class,
-              which means that  they  increment  the  "ID"
-              field  in the IP header for each packet they
+              When verbose mode (-v) is on with  -O,  IPID
+              Sequence  Generation is also reported.  Most
+              machines are  in  the  "incremental"  class,
+              which  means  that  they  increment the "ID"
+              field in the IP header for each packet  they
               send.  This makes them vulnerable to several
-              advanced  information gathering and spoofing
+              advanced information gathering and  spoofing
               attacks.
 
        <B>-I</B>     This turns on TCP reverse ident scanning. As
-              noted  by  Dave  Goldsmith in a 1996 Bugtraq
-              post, the ident protocol (rfc  1413)  allows
+              noted by Dave Goldsmith in  a  1996  Bugtraq
+              post,  the  ident protocol (rfc 1413) allows
               for the disclosure of the username that owns
-              any process connected via TCP, even if  that
-              process  didn't  initiate the connection. So
-              you can, for example, connect  to  the  http
+              any  process connected via TCP, even if that
+              process didn't initiate the  connection.  So
+              you  can,  for  example, connect to the http
               port and then use identd to find out whether
               the server is running as root. This can only
-              be  done  with  a full TCP connection to the
-              target port (i.e. the -sT scanning  option).
+              be done with a full TCP  connection  to  the
+              target  port (i.e. the -sT scanning option).
               When <B>-I</B> is used, the remote host's identd is
               queried for each open port found.  Obviously
-              this  won't  work if the host is not running
+              this won't work if the host is  not  running
               identd.
 
-       <B>-f</B>     This option causes the requested  SYN,  FIN,
+       <B>-f</B>     This  option  causes the requested SYN, FIN,
               XMAS, or NULL scan to use tiny fragmented IP
-              packets.  The idea is to split  up  the  TCP
+              packets.   The  idea  is to split up the TCP
               header  over  several  packets  to  make  it
-              harder for packet filters, intrusion  detec­
-              tion systems, and other annoyances to detect
-              what you are doing. Be  careful  with  this!
-              Some  programs  have  trouble handling these
-              tiny packets. My favorite sniffer  segmenta­
-              tion  faulted immediately upon receiving the
-              first 36-byte fragment. After that  comes  a
-              24  byte one! While this method won't get by
-              packet filters and firewalls that queue  all
-              IP      fragments     (like     the     CON­
+              harder   for   packet   filters,   intrusion
+              detection systems, and other  annoyances  to
+              detect  what  you are doing. Be careful with
+              this! Some programs  have  trouble  handling
+              these tiny packets. My favorite sniffer seg­
+              mentation faulted immediately upon receiving
+              the first 36-byte fragment. After that comes
+              a 24 byte one! While this method  won't  get
+              by  packet  filters and firewalls that queue
+              all   IP   fragments    (like    the    CON­
               FIG_IP_ALWAYS_DEFRAG  option  in  the  Linux
               kernel), some networks can't afford the per­
-              formance hit this causes and thus  leave  it
+              formance  hit  this causes and thus leave it
               disabled.
 
-              Note  that  I  do  not  yet have this option
-              working on all systems.  It works  fine  for
-              my  Linux,  FreeBSD,  and  OpenBSD boxes and
+              Note that I do  not  yet  have  this  option
+              working  on  all systems.  It works fine for
+              my Linux, FreeBSD,  and  OpenBSD  boxes  and
               some people have reported success with other
               *NIX variants.
 
-       <B>-v</B>     Verbose  mode.  This is a highly recommended
-              option and it  gives  out  more  information
-              about  what  is  going  on.   You can use it
-              twice for greater effect.  Use <B>-d</B>  a  couple
-              of  times  if  you  really want to get crazy
+       <B>-v</B>     Verbose mode.  This is a highly  recommended
+              option  and  it  gives  out more information
+              about what is going  on.   You  can  use  it
+              twice  for  greater effect.  Use <B>-d</B> a couple
+              of times if you really  want  to  get  crazy
               with scrolling the screen!
 
-       <B>-h</B>     This handy option display a quick  reference
-              screen  of  nmap  usage options.  As you may
+       <B>-h</B>     This  handy option display a quick reference
+              screen of nmap usage options.   As  you  may
               have noticed, this man page is not exactly a
               'quick reference' :)
 
        <B>-oN</B> <B>&lt;logfilename&gt;</B>
-              This  logs  the  results  of your scans in a
+              This logs the results of  your  scans  in  a
               normal <B>human</B> <B>readable</B> form into the file you
               specify as an argument.
 
        <B>-oX</B> <B>&lt;logfilename&gt;</B>
-              This  logs  the results of your scans in <B>XML</B>
-              form into the file you specify as  an  argu­
-              ment.   This  allows programs to easily cap­
-              ture and interpret Nmap  results.   You  can
-              give  the  argument  ´-´ (without quotes) to
-              shoot  output   into   stdout   (for   shell
+              This logs the results of your scans  in  <B>XML</B>
+              form  into  the file you specify as an argu­
+              ment.  This allows programs to  easily  cap­
+              ture  and  interpret  Nmap results.  You can
+              give the argument ´-´  (without  quotes)  to
+              shoot   output   into   stdout   (for  shell
               pipelines, etc).  In this case normal output
-              will be suppressed.   Watch  out  for  error
+              will  be  suppressed.   Watch  out for error
               messages if you use this (they will still go
-              to stderr).  Also note that ´-v´  may  cause
-              some  extra  information to be printed.  The
-              Document Type Definition (DTD) defining  the
-              XML   output   structure   is  available  at
+              to  stderr).   Also note that ´-v´ may cause
+              some extra information to be  printed.   The
+              Document  Type Definition (DTD) defining the
+              XML  output  structure   is   available   at
               http://www.insecure.org/nmap/nmap.dtd .
 
        <B>-oG</B> <B>&lt;logfilename&gt;</B>
-              This logs the results of  your  scans  in  a
-              <B>grepable</B>  form  into the file you specify as
-              an argument.  This  simple  format  provides
-              all  the information on one line (so you can
-              easily grep for port or OS  information  and
-              see  all  the IPs.  This used to be the pre­
-              ferred mechanism for  programs  to  interact
-              with  Nmap,  but now we recommend XML output
-              (-oX instead).  This simple format  may  not
-              contain  as  much  information  as the other
-              formats.  You  can  give  the  argument  ´-´
+              This  logs  the  results  of your scans in a
+              <B>grepable</B> form into the file you  specify  as
+              an  argument.   This  simple format provides
+              all the information on one line (so you  can
+              easily  grep  for port or OS information and
+              see all the IPs.  This used to be  the  pre­
+              ferred  mechanism  for  programs to interact
+              with Nmap, but now we recommend  XML  output
+              (-oX  instead).   This simple format may not
+              contain as much  information  as  the  other
+              formats.   You  can  give  the  argument ´-´
               (without quotes) to shoot output into stdout
-              (for shell pipelines, etc).   In  this  case
+              (for  shell  pipelines,  etc).  In this case
               normal output will be suppressed.  Watch out
-              for error messages if  you  use  this  (they
-              will  still  go  to stderr).  Also note that
+              for  error  messages  if  you use this (they
+              will still go to stderr).   Also  note  that
               ´-v´ will cause some extra information to be
               printed.
 
        <B>-oA</B> <B>&lt;basefilename&gt;</B>
-              This  tells  Nmap  to  log in ALL the majore
-              formats (normal, grepable,  and  XML).   You
+              This tells Nmap to log  in  ALL  the  majore
+              formats  (normal,  grepable,  and XML).  You
               give a base for the filename, and the output
-              files will  be  base.nmap,  base.gnmap,  and
+              files  will  be  base.nmap,  base.gnmap, and
               base.xml.
 
        <B>-oS</B> <B>&lt;logfilename&gt;</B>
-              thIs  l0gz  th3  r3suLtS  of YouR ScanZ iN a
+              thIs l0gz th3 r3suLtS of  YouR  ScanZ  iN  a
               <B>s|&lt;ipT</B> <B>kiDd|3</B> f0rM iNto THe fiL3 U sPecfy 4s
-              an  arGuMEnT!   U  kAn gIv3 the 4rgument ´-´
-              (wItHOUt qUOteZ) to sh00t output  iNT0  stD­
+              an arGuMEnT!  U kAn gIv3  the  4rgument  ´-´
+              (wItHOUt  qUOteZ)  to sh00t output iNT0 stD­
               ouT!@!!
 
        <B>--resume</B> <B>&lt;logfilename&gt;</B>
               A network scan that is cancelled due to con­
-              trol-C, network outage, etc. can be  resumed
-              using  this option.  The logfilename must be
-              either a normal (-oN)  or  machine  parsable
-              (-oM)  log  from the aborted scan.  No other
-              options can be given (they will be the  same
-              as  the  aborted  scan).  Nmap will start on
-              the machine after the last one  successfully
+              trol-C,  network outage, etc. can be resumed
+              using this option.  The logfilename must  be
+              either  a  normal  (-oN) or machine parsable
+              (-oM) log from the aborted scan.   No  other
+              options  can be given (they will be the same
+              as the aborted scan).  Nmap  will  start  on
+              the  machine after the last one successfully
               scanned in the log file.
 
        <B>--append_output</B>
-              Tells  Nmap  to  append  scan results to any
-              output files you have specified rather  than
+              Tells Nmap to append  scan  results  to  any
+              output  files you have specified rather than
               overwriting those files.
 
        <B>-iL</B> <B>&lt;inputfilename&gt;</B>
-              Reads  target  specifications  from the file
+              Reads target specifications  from  the  file
               specified RATHER than from the command line.
-              The  file  should  contain a list of host or
+              The file should contain a list  of  host  or
               network  expressions  seperated  by  spaces,
-              tabs,  or  newlines.   Use  a  hyphen (-) as
-              <I>inputfilename</I> if you want nmap to read  host
+              tabs, or newlines.   Use  a  hyphen  (-)  as
+              <I>inputfilename</I>  if you want nmap to read host
               expressions from stdin (like at the end of a
               pipe).  See the section <I>target</I> <I>specification</I>
-              for  more information on the expressions you
+              for more information on the expressions  you
               fill the file with.
 
-       <B>-iR</B>    This option tells Nmap to generate  its  own
-              hosts  to scan by simply picking random num­
-              bers :).  It will never end.   This  can  be
-              useful   for  statistical  sampling  of  the
+       <B>-iR</B>    This  option  tells Nmap to generate its own
+              hosts to scan by simply picking random  num­
+              bers  :).   It  will never end.  This can be
+              useful  for  statistical  sampling  of   the
               Internet to estimate various things.  If you
-              are  ever  really bored, try <I>nmap</I> <I>-sS</I> <I>-iR</I> <I>-p</I>
+              are ever really bored, try <I>nmap</I> <I>-sS</I>  <I>-iR</I>  <I>-p</I>
               <I>80</I> to find some web servers to look at.
 
        <B>-p</B> <B>&lt;port</B> <B>ranges&gt;</B>
               This option specifies what ports you want to
-              specify.  For  example '-p 23' will only try
-              port  23  of  the   target   host(s).    ´-p
+              specify. For example '-p 23' will  only  try
+              port   23   of   the  target  host(s).   ´-p
               20-30,139,60000-´ scans ports between 20 and
-              30, port 139, and  all  ports  greater  than
-              60000.   The  default  is  to scan all ports
-              between 1 and 1024  as  well  as  any  ports
+              30,  port  139,  and  all ports greater than
+              60000.  The default is  to  scan  all  ports
+              between  1  and  1024  as  well as any ports
               listed in the services file which comes with
-              nmap.  For IP protocol scanning (-sO),  this
-              specifies  the  protocol  number you wish to
+              nmap.   For IP protocol scanning (-sO), this
+              specifies the protocol number  you  wish  to
               scan for (0-255).
 
-              When scanning both TCP and  UDP  ports,  you
-              can   specify   a   particular  protocol  by
-              preceding the port numbers by "T:" or  "U:".
-              The   qualifier   lasts  until  you  specify
-              another qualifier.  For example,  the  argu­
-              ment  "-p  U:53,111,137,T:21-25,80,139,8080"
-              would scan UDP ports 53,111,and 137, as well
-              as  the listed TCP ports.  Note that to scan
-              both UDP &amp; TCP, you have to specify -sU  and
-              at  least  one  TCP  scan type (such as -sS,
-              -sF, or -sT).  If no protocol  qualifier  is
-              given,  the  port  numbers  are added to all
-              protocol lists.
+              When  scanning  both  TCP and UDP ports, you
+              can specify a particular protocol by preced­
+              ing  the  port numbers by "T:" or "U:".  The
+              qualifier lasts until  you  specify  another
+              qualifier.   For  example,  the argument "-p
+              U:53,111,137,T:21-25,80,139,8080" would scan
+              UDP  ports  53,111,and  137,  as well as the
+              listed TCP ports.  Note that  to  scan  both
+              UDP  &amp;  TCP,  you have to specify -sU and at
+              least one TCP scan type (such as  -sS,  -sF,
+              or -sT).  If no protocol qualifier is given,
+              the port numbers are added to  all  protocol
+              lists.
 
        <B>-F</B> <B>Fast</B> <B>scan</B> <B>mode.</B>
-              Specifies that you only  wish  to  scan  for
-              ports  listed  in  the  services  file which
-              comes with nmap (or the protocols  file  for
-              -sO).   This  is  obviously much faster than
+              Specifies  that  you  only  wish to scan for
+              ports listed  in  the  services  file  which
+              comes  with  nmap (or the protocols file for
+              -sO).  This is obviously  much  faster  than
               scanning all 65535 ports on a host.
 
        <B>-D</B> <B>&lt;decoy1</B> <B>[,decoy2][,ME],...&gt;</B>
-              Causes a decoy scan to  be  performed  which
-              makes  it appear to the remote host that the
-              host(s) you specify as decoys  are  scanning
-              the  target  network  too.   Thus  their IDS
-              might report 5-10 port scans from unique  IP
-              addresses,  but they won't know which IP was
-              scanning  them  and  which   were   innocent
-              decoys.   While this can be defeated through
-              router path tracing, response-dropping,  and
-              other  "active"  mechanisms, it is generally
-              an extremely effective technique for  hiding
+              Causes  a  decoy  scan to be performed which
+              makes it appear to the remote host that  the
+              host(s)  you  specify as decoys are scanning
+              the target  network  too.   Thus  their  IDS
+              might  report 5-10 port scans from unique IP
+              addresses, but they won't know which IP  was
+              scanning   them   and  which  were  innocent
+              decoys.  While this can be defeated  through
+              router  path tracing, response-dropping, and
+              other "active" mechanisms, it  is  generally
+              an  extremely effective technique for hiding
               your IP address.
 
-              Separate  each  decoy  host with commas, and
-              you can optionally use 'ME' as  one  of  the
-              decoys  to  represent  the position you want
-              your IP address to be  used.   If  your  put
+              Separate each decoy host  with  commas,  and
+              you  can  optionally  use 'ME' as one of the
+              decoys to represent the  position  you  want
+              your  IP  address  to  be used.  If your put
               'ME' in the 6th position or later, some com­
               mon  port  scan  detectors  (such  as  Solar
               Designer's excellent scanlogd) are unlikeley
-              to show your IP  address  at  all.   If  you
-              don't  use 'ME', nmap will put you in a ran­
+              to  show  your  IP  address  at all.  If you
+              don't use 'ME', nmap will put you in a  ran­
               dom position.
 
               Note that the hosts you use as decoys should
               be up or you might accidently SYN flood your
-              targets.  Also it will  be  pretty  easy  to
+              targets.   Also  it  will  be pretty easy to
               determine which host is scanning if only one
-              is actually up on the  network.   You  might
-              want  to  use  IP addresses instead of names
-              (so the decoy  networks  don't  see  you  in
+              is  actually  up  on the network.  You might
+              want to use IP addresses  instead  of  names
+              (so  the  decoy  networks  don't  see you in
               their nameserver logs).
 
-              Also  note  that  some  (stupid)  "port scan
+              Also note  that  some  (stupid)  "port  scan
               detectors"  will  firewall/deny  routing  to
-              hosts  that  attempt  port  scans.  Thus you
-              might inadvertantly cause  the  machine  you
-              scan  to  lose  connectivity  with the decoy
-              machines you are using.   This  could  cause
-              the  target  machines  major problems if the
-              decoy is, say, its internet gateway or  even
-              "localhost".   Thus  you  might  want  to be
-              careful of this option.  The real  moral  of
-              the  story  is  that  detectors of spoofable
-              port scans should not  take  action  against
-              the  machine  that  seems  like  it  is port
-              scanning them.  It could just be a decoy!
+              hosts that attempt  port  scans.   Thus  you
+              might  inadvertantly  cause  the machine you
+              scan to lose  connectivity  with  the  decoy
+              machines  you  are  using.  This could cause
+              the target machines major  problems  if  the
+              decoy  is, say, its internet gateway or even
+              "localhost".  Thus  you  might  want  to  be
+              careful  of  this option.  The real moral of
+              the story is  that  detectors  of  spoofable
+              port  scans  should  not take action against
+              the machine that seems like it is port scan­
+              ning them.  It could just be a decoy!
 
-              Decoys are used both  in  the  initial  ping
+              Decoys  are  used  both  in the initial ping
               scan (using ICMP, SYN, ACK, or whatever) and
-              during  the  actual  port  scanning   phase.
+              during   the  actual  port  scanning  phase.
               Decoys are also used during remote OS detec­
               tion ( <B>-O</B> ).
 
-              It is  worth  noting  that  using  too  many
-              decoys  may  slow  your scan and potentially
+              It  is  worth  noting  that  using  too many
+              decoys may slow your  scan  and  potentially
               even make it less accurate.  Also, some ISPs
-              will   filter   out  your  spoofed  packets,
-              although  many  (currently  most)   do   not
+              will  filter  out  your   spoofed   packets,
+              although   many   (currently  most)  do  not
               restrict spoofed IP packets at all.
 
        <B>-S</B> <B>&lt;IP_Address&gt;</B>
-              In  some circumstances, <I>nmap</I> may not be able
+              In some circumstances, <I>nmap</I> may not be  able
               to determine your source address ( <I>nmap</I> will
               tell you if this is the case).  In this sit­
-              uation, use -S with your IP address (of  the
+              uation,  use -S with your IP address (of the
               interface you wish to send packets through).
 
-              Another possible use  of  this  flag  is  to
-              spoof  the  scan  to  make the targets think
+              Another  possible  use  of  this  flag is to
+              spoof the scan to  make  the  targets  think
               that <B>someone</B> <B>else</B> is scanning them.  Imagine
               a company being repeatedly port scanned by a
-              competitor!  This is not a  supported  usage
-              (or  the main purpose) of this flag.  I just
-              think it raises an  interesting  possibility
-              that  people  should be aware of before they
-              go accusing others of  port  scanning  them.
+              competitor!   This  is not a supported usage
+              (or the main purpose) of this flag.  I  just
+              think  it  raises an interesting possibility
+              that people should be aware of  before  they
+              go  accusing  others  of port scanning them.
               <B>-e</B> would generally be required for this sort
               of usage.
 
        <B>-e</B> <B>&lt;interface&gt;</B>
-              Tells  nmap  what  interface  to  send   and
-              receive  packets on.  Nmap should be able to
-              detect this but it will tell you if it  can­
+              Tells   nmap  what  interface  to  send  and
+              receive packets on.  Nmap should be able  to
+              detect  this but it will tell you if it can­
               not.
 
        <B>-g</B> <B>&lt;portnumber&gt;</B>
-              Sets  the  source port number used in scans.
-              Many  naive  firewall  and   packet   filter
-              installations  make  an  exception  in their
-              ruleset to allow DNS (53) or  FTP-DATA  (20)
+              Sets the source port number used  in  scans.
+              Many   naive   firewall  and  packet  filter
+              installations make  an  exception  in  their
+              ruleset  to  allow DNS (53) or FTP-DATA (20)
               packets to come through and establish a con­
               nection.  Obviously this completely subverts
               the  security  advantages  of  the  firewall
-              since intruders can just masquerade  as  FTP
+              since  intruders  can just masquerade as FTP
               or  DNS  by  modifying  their  source  port.
-              Obviously for a UDP scan you should  try  53
+              Obviously  for  a UDP scan you should try 53
               first and TCP scans should try 20 before 53.
-              Note that this is only  a  request  --  nmap
-              will  honor  it  only if and when it is able
-              to.  For example, you can't do TCP ISN  sam­
-              pling   all   from   one  host:port  to  one
-              host:port, so nmap changes the  source  port
+              Note  that  this  is  only a request -- nmap
+              will honor it only if and when  it  is  able
+              to.   For example, you can't do TCP ISN sam­
+              pling  all  from  one   host:port   to   one
+              host:port,  so  nmap changes the source port
               even if you used -g.
 
-              Be  aware  that there is a small performance
+              Be aware that there is a  small  performance
               penalty on some scans for using this option,
               because I sometimes store useful information
               in the source port number.
+
+       <B>--data_length</B> <B>&lt;number&gt;</B>
+              Normally  Nmap  sends  minimalistic  packets
+              that only contain  a  header.   So  its  TCP
+              packets are generally 40 bytes and ICMP echo
+              requests are just  28.   This  option  tells
+              Nmap  to  append  the  given number of zero-
+              filled bytes  to  most  of  the  packets  it
+              sends.   OS  detection  (-O) packets are not
+              affected,  but  most  pinging  and  portscan
+              packets  are.   This  slows things down, but
+              can be slightly less conspicuous.
 
        <B>-n</B>     Tells Nmap to <B>NEVER</B> do reverse  DNS  resolu­
               tion  on  the  active IP addresses it finds.
