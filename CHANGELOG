@@ -1,8 +1,12 @@
 # Nmap Changelog
 
 -- Applied some patches from Jay Freeman (saurik@saurik.com)
-   -- New --data_length option adds indicated number of random data to scans
+   -- New --data_length option adds indicated number of random data
+   bytes to send with scan packet and tcp ping packet (does not
+   currently work with ICMP ping packet).  Does not affect OS
+   detection, RPC, or connect() scan packets.
    -- Windows portability fixes
+   -- Various other little fixes.
 
 ** 2.54BETA16
 

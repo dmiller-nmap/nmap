@@ -60,6 +60,9 @@
 #error "Your system does not appear to have GTK (www.gtk.org) installed.  Thus the Nmap X Front End will not compile.  You should still be able to use Nmap the normal way (via text console).  GUIs are for wimps anyway :)"
 #else
 
+#include "nmapfe.h"
+#include "nmapfe_sig.h"
+
 #include <gtk/gtk.h>
 #include <gdk/gdkkeysyms.h>
 #include <nbase.h>
@@ -67,9 +70,6 @@
 #include <unistd.h>
 #endif
 #include <stdio.h>
-
-#include "nmapfe.h"
-#include "nmapfe_sig.h"
 
 
 /* Keep this global */

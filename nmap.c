@@ -270,12 +270,8 @@ int main(int argc, char *argv[], char *envp[]) {
 
 	if (o.debugging) error("About to exec %s", nmappath);
 	/* Kill stdout & stderr */
-	if (!o.debugging) {	
-#ifndef WIN32
-	  fd = open("/dev/null", O_WRONLY);
-#else
-	  fd = _open("NUL", O_WRONLY);
-#endif
+	if (!o.debugging) {
+	  fd = open(DEVNULL, O_WRONLY);
 	  if (fd != -1) {
 	    dup2(fd, STDOUT_FILENO);
 	    dup2(fd, STDERR_FILENO);
@@ -403,6 +399,7 @@ int nmap_main(int argc, char *argv[]) {
     {"randomize_hosts", no_argument, 0, 0},
     {"osscan_limit", no_argument, 0, 0}, /* skip OSScan if no open ports */
     {"osscan_guess", no_argument, 0, 0}, /* More guessing flexability */
+    {"data_length", required_argument, 0, 0},
     {"rH", no_argument, 0, 0},
     {"vv", no_argument, 0, 0},
     {"append_output", no_argument, 0, 0},
@@ -511,8 +508,16 @@ int nmap_main(int argc, char *argv[]) {
       } else if (strcmp(long_options[option_index].name, "initial_rtt_timeout") == 0) {
 	o.initial_rtt_timeout = atoi(optarg);
 	if (o.initial_rtt_timeout <= 0) {
-	  fatal("scan_delay must be greater than 0");
-	}   
+	  fatal("initial_rtt_timeout must be greater than 0");
+	}
+      } else if (strcmp(long_options[option_index].name, "data_length") == 0) {
+	o.extra_payload_length = atoi(optarg);
+	if (o.extra_payload_length < 0) {
+	  fatal("data_length must be greater than 0");
+	} else if (o.extra_payload_length > 0) {
+	  o.extra_payload = (char *) safe_malloc(o.extra_payload_length);
+	  get_random_bytes(o.extra_payload, o.extra_payload_length);
+	}
       } else if (strcmp(long_options[option_index].name, "oN") == 0) {
 	normalfilename = optarg;
       } else if (strcmp(long_options[option_index].name, "oG") == 0 ||
@@ -752,9 +757,6 @@ int nmap_main(int argc, char *argv[]) {
     signal(SIGSEGV, sigdie); 
 #endif
 
-  if (!o.interactivemode)
-    log_write(LOG_STDOUT|LOG_SKID, "\nStarting %s V. %s ( %s )\n", NMAP_NAME, NMAP_VERSION, NMAP_URL);
-
   if (o.pingtype == PINGTYPE_UNKNOWN) {
     if (o.isr00t) o.pingtype = PINGTYPE_TCP|PINGTYPE_TCP_USE_ACK|PINGTYPE_ICMP;
     else o.pingtype = PINGTYPE_TCP;
@@ -770,6 +772,9 @@ int nmap_main(int argc, char *argv[]) {
     log_open(LOG_SKID, o.append_output, kiddiefilename);
   if (xmlfilename)
     log_open(LOG_XML, o.append_output, xmlfilename);
+
+  if (!o.interactivemode)
+    log_write(LOG_STDOUT|LOG_SKID, "\nStarting %s V. %s ( %s )\n", NMAP_NAME, NMAP_VERSION, NMAP_URL);
 
   /* Now we check the option sanity */
   /* Insure that at least one scantype is selected */
@@ -1288,7 +1293,8 @@ void options_init() {
   o.initial_rtt_timeout = INITIAL_RTT_TIMEOUT;
   o.host_timeout = HOST_TIMEOUT;
   o.scan_delay = 0;
-
+  o.extra_payload_length = 0;
+  o.extra_payload = NULL;
 }
 
 /* We set the socket lingering so we will RST connection instead of wasting

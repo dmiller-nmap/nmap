@@ -821,8 +821,9 @@ void pos_scan(struct hoststruct *target, unsigned short *portarray, stype scanty
 					tries * 3 + current->trynum, 
 					current->portno, 
 					sequences[current->trynum], 
-					ack_number, scanflags, 0, NULL, 0, 0, 
-					0);
+					ack_number, scanflags, 0, NULL, 0, 
+					o.extra_payload, 
+					o.extra_payload_length);
 
 		} else if (scantype == RPC_SCAN) {
 		  if (send_rpc_query(&target->host, rsi.rpc_current_port->portno,
@@ -915,7 +916,8 @@ void pos_scan(struct hoststruct *target, unsigned short *portarray, stype scanty
 		send_tcp_raw_decoys(rawsd, &target->host, 
 				    o.magic_port + tries * 3, current->portno,
 				    sequences[current->trynum], ack_number, 
-				    scanflags, 0, NULL, 0, 0, 0);
+				    scanflags, 0, NULL, 0, o.extra_payload, 
+				    o.extra_payload_length);
 	    } else if (scantype == RPC_SCAN) {
 	      if (send_rpc_query(&target->host, rsi.rpc_current_port->portno,
 				 rsi.rpc_current_port->proto, current->portno, 
@@ -1391,13 +1393,13 @@ void super_scan(struct hoststruct *target, unsigned short *portarray,
 		  send_small_fragz_decoys(rawsd, &target->host, 0,i, current->portno, scanflags);
 		else if (scantype == UDP_SCAN)
 		  send_udp_raw_decoys(rawsd, &target->host, i,
-				      current->portno, NULL ,0);
+				      current->portno, o.extra_payload, o.extra_payload_length);
 		else if (scantype == IPPROT_SCAN)
-		  send_ip_raw_decoys(rawsd, &target->host, current->portno, NULL, 0);
+		  send_ip_raw_decoys(rawsd, &target->host, current->portno, o.extra_payload, o.extra_payload_length);
 		else
 		  send_tcp_raw_decoys(rawsd, &target->host, i, 
 				      current->portno, 0, 0, scanflags, 0, NULL, 0,
-				      0, 0);
+				      o.extra_payload, o.extra_payload_length);
 		if (senddelay &&
 		    (scantype == UDP_SCAN || scantype == IPPROT_SCAN))
 		  usleep(senddelay);
@@ -1420,13 +1422,14 @@ void super_scan(struct hoststruct *target, unsigned short *portarray,
 	      send_small_fragz_decoys(rawsd, &target->host, 0, o.magic_port, current->portno, scanflags);
 	    else if (scantype == UDP_SCAN)
 	      send_udp_raw_decoys(rawsd, &target->host, o.magic_port,
-				  current->portno, NULL, 0);
+				  current->portno, o.extra_payload, o.extra_payload_length);
 	    else if (scantype == IPPROT_SCAN)
 	      send_ip_raw_decoys(rawsd, &target->host,
-				 current->portno, NULL, 0);
+				 current->portno, o.extra_payload, o.extra_payload_length);
 	    else
 	      send_tcp_raw_decoys(rawsd, &target->host, o.magic_port, 
-				  current->portno, 0, 0, scanflags, 0, NULL, 0, 0, 0);
+				  current->portno, 0, 0, scanflags, 0, NULL, 0,
+				  o.extra_payload, o.extra_payload_length);
 	    if ((scantype == UDP_SCAN || scantype == IPPROT_SCAN) &&
 		senddelay)
 	      usleep(senddelay);

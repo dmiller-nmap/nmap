@@ -713,9 +713,11 @@ trynum = seq % pt->max_tries;
  myseq = (get_random_uint() << 19) + (seq << 3) + 3; /* Response better end in 011 or 100 */
  memcpy((char *)&(o.decoys[o.decoyturn]), (char *)&target->source_ip, sizeof(struct in_addr));
  if (o.pingtype & PINGTYPE_TCP_USE_SYN) {   
-   send_tcp_raw_decoys( rawsd, &(target->host), sportbase + trynum, o.tcp_probe_port, myseq, myack, TH_SYN, 0, NULL, 0, NULL, 0);
+   send_tcp_raw_decoys( rawsd, &(target->host), sportbase + trynum, o.tcp_probe_port, myseq, myack, TH_SYN, 0, NULL, 0, o.extra_payload, 
+			o.extra_payload_length);
  } else {
-   send_tcp_raw_decoys( rawsd, &(target->host), sportbase + trynum, o.tcp_probe_port, myseq, myack, TH_ACK, 0, NULL, 0, NULL, 0);
+   send_tcp_raw_decoys( rawsd, &(target->host), sportbase + trynum, o.tcp_probe_port, myseq, myack, TH_ACK, 0, NULL, 0, o.extra_payload, 
+			o.extra_payload_length);
  }
 
  gettimeofday(&time[seq], NULL);

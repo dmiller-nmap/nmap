@@ -70,8 +70,8 @@ pcap_t *rawrecv_open(const char *dev)
 	if(setsockopt(s, SOL_SOCKET, SO_RCVBUF, (char*)&bufsz, sizeof(bufsz)))
 		fatal("rawrecv_open: failed to set buffer size\n");
 
-	if(WSAIoctl(s, SIO_RCVALL, &one, sizeof(one), 0, 0,
-		&bytesret, 0, 0))
+	if(WSAIoctl(s, SIO_RCVALL, &one, sizeof(one), NULL, 0,
+		&bytesret, NULL, NULL))
 		fatal("rawrecv_open: SIO_RCVALL failed (%lu) on device %s\n", WSAGetLastError(), dev);
 
 	filter = nullfilter;

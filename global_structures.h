@@ -239,6 +239,8 @@ struct ops /* someone took struct options, <grrr> */ {
   int max_parallelism;
   int max_rtt_timeout;
   int min_rtt_timeout;
+  int extra_payload_length; /* These two are for --data_length op */
+  char *extra_payload;
   unsigned long host_timeout;
   int scan_delay;
   int initial_rtt_timeout;
