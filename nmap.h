@@ -242,6 +242,9 @@ struct ops /* someone took struct options, <grrr> */ {
   int wait;
   int ptime;
   int numports;
+  int connectscan;
+  int nullscan;
+  int xmasscan;
   int fragscan;
   int synscan;
   int finscan;
