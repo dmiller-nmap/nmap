@@ -1587,7 +1587,9 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 # Thanks to eddie <drb0b@klinikal.nwnet.co.uk>
-Fingerprint Cisco 3640 IOS 11.1(7)AX [KUONG(7)AX]
+# Cisco 3640 IOS 11.1(7)AX [KUONG(7)AX]
+# Cisco Catalyst 2900 Series switch with IOS Version 11.2(8.10)SA6
+Fingerprint Cisco IOS 11.1(7)-11.2(8.10)
 TSeq(Class=RI%gcd=<6%SI=>BBB&<FFFF)
 T1(Resp=Y%DF=N%W=10C0%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -2142,7 +2144,9 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 # Contributed by andre@corp.home.nl
-Fingerprint Cisco 12008 running IOS 12.0(18.6)S1
+# Cisco 12008 running IOS 12.0(18.6)S1
+# Cisco 7206VXR running IOS 12.0(18)S
+Fingerprint Cisco IOS 12.0(18)S or 12.0(18)S1
 TSeq(Class=TR%gcd=<6%IPID=Z%TS=U)
 T1(DF=N%W=10C0%ACK=S++%Flags=AS%Ops=ME)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -2156,7 +2160,7 @@ PU(Resp=N)
 # Contributed by Steve Shapery <czero@cze.ro>
 # Cisco 3620 running IOS 12.2.1
 # IOS (tm) C2600 Software (C2600-I-M), Version 12.2(1)
-Fingerprint Cisco IOS 12.1(5)-12.2(1)
+Fingerprint Cisco IOS 12.1(5)-12.2(7a)
 TSeq(Class=TR%gcd=<6%IPID=Z%TS=U)
 T1(DF=N%W=1020%ACK=S++%Flags=AS%Ops=ME)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -3913,7 +3917,8 @@ T7(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(Resp=Y%DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 # Contributed by foo@porto.bmb.uga.edu
-Fingerprint Irix 6.5-6.5.12f IP19/IP30
+# IP19/IP27/IP30
+Fingerprint Irix 6.5-6.5.15m
 TSeq(Class=RI%gcd=<144%SI=<FFFF&>8%IPID=I%TS=2HZ)
 T1(DF=N%W=C000%ACK=S++%Flags=AS%Ops=MNWNNTNNM)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)

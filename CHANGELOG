@@ -1,15 +1,29 @@
 # Nmap Changelog ($Id$)
 
+Nmap 2.54BETA33
 
-o Applied fix for nasty OS fingerprinting bug found by William
-  Robertson (wkr@cs.ucsb.edu)
+o Tons of OS fingerprint updates.  More than 100 fingerprints added or
+  changed, including OpenBSD 3, FreeBSD 4.5, Solaris 9 pre-release,
+  Commodor 64 (with the TFE Ethernet Card and uIP stack), Compaq iPAQ,
+  Cisco IOS 12.2(8), AIX 5.1, IRIX 6.5.15, various
+  Redback/Racal/Juniper/BigIP/HP/Siemens/Brocade/Quantum devices,
+  numerous printers/switches, KRONOS network clock, WTI Network Power
+  Switch, Windows XP, and many more.  Thanks to everyone who
+  contributed!
 
 o Applied fix for an important RPC scanning bug sent in by Pasi Eronen
   (pasi.eronen@nixu.com)
 
+o Applied fix for nasty OS fingerprinting bug found by William
+  Robertson (wkr@cs.ucsb.edu)
+
 o Do not show uptime when obviously spoofed (eg OpenBSD 3.0)
 
-o Move main() into a new file, cleverly named main.c.
+o Slightly changed (I hope improved) the whitespace in Nmap output so
+  that messages relating to the same host are kept together (and
+  different hosts different separated by newlines).
+
+o Moved main() function into a new file, cleverly named main.c.
 
 Nmap 2.54BETA32
 

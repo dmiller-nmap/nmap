@@ -698,7 +698,7 @@ int nmap_main(int argc, char *argv[]) {
   if (!o.isr00t) {
 
 #ifndef WIN32	/*	Win32 has perfectly fine ICMP socket support */
-    if (o.pingtype & PINGTYPE_ICMP_PING|PINGTYPE_ICMP_MASK|PINGTYPE_ICMP_TS) {
+    if (o.pingtype & (PINGTYPE_ICMP_PING|PINGTYPE_ICMP_MASK|PINGTYPE_ICMP_TS)) {
       error("Warning:  You are not root -- using TCP pingscan rather than ICMP");
       o.pingtype = PINGTYPE_TCP;
     }
@@ -1026,8 +1026,10 @@ int nmap_main(int argc, char *argv[]) {
  	}      
 
 	if (o.debugging) log_write(LOG_STDOUT, "Final times for host: srtt: %d rttvar: %d  to: %d\n", currenths->to.srtt, currenths->to.rttvar, currenths->to.timeout);
-	log_write(LOG_MACHINE,"\n");
+	log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT|LOG_MACHINE,"\n");
       }
+  
+      
       log_write(LOG_XML, "</host>\n");
   
       log_flush_all();

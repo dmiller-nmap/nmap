@@ -1002,7 +1002,7 @@ npmp-local        610/udp    #
 npmp-gui          611/tcp    # 
 npmp-gui          611/udp    # 
 qmqp              628/tcp    # Qmail Quick Mail Queueing
-cups              631/tcp    # http://www.cups.org (Common UNIX Printing System)
+ipp               631/tcp    # Internet Printing Protocol -- for one implementation see http://www.cups.org (Common UNIX Printing System)
 ginad             634/tcp    # 
 ginad             634/udp    # 
 mount             635/udp    # NFS Mount Service
@@ -1914,8 +1914,6 @@ vnc-2             5802/tcp   # Virtual Network Computer display 2
 vnc-http          5900/tcp   # Virtual Network Computer HTTP Access, display 0
 vnc-http-1        5901/tcp   # Virtual Network Computer HTTP Access, display 1
 vnc-http-2        5902/tcp   # Virtual Network Computer HTTP Access, display 2
-vnc-1             5901/tcp   # Virtual Network Computer Display :1
-vnc-2             5902/tcp   # Virtual Network Computer Display :2
 ncd-pref-tcp      5977/tcp   # NCD preferences tcp port
 ncd-diag-tcp      5978/tcp   # NCD diagnostic tcp port
 ncd-conf-tcp      5979/tcp   # NCD configuration tcp port

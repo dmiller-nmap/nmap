@@ -215,7 +215,7 @@ void printportoutput(struct hoststruct *currenths, portlist *plist) {
     }
    }
   }
-  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"\n");
+  /*  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"\n"); */
   log_write(LOG_MACHINE, "\tIgnored State: %s (%d)", statenum2str(plist->ignored_port_state), plist->state_counts[plist->ignored_port_state]);
   log_write(LOG_XML, "</ports>\n");
 }
@@ -722,7 +722,7 @@ void printfinaloutput(int numhosts_scanned, int numhosts_up,
     fprintf(stderr, "WARNING: No targets were specified, so 0 hosts scanned.\n");
   if (numhosts_scanned == 1 && numhosts_up == 0 && !o.listscan)
     log_write(LOG_STDOUT, "Note: Host seems down. If it is really up, but blocking our ping probes, try -P0\n");
-  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"\n");
+  /*  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"\n"); */
   log_write(LOG_STDOUT|LOG_SKID, "Nmap run completed -- %d %s (%d %s up) scanned in %d %s\n", numhosts_scanned, (numhosts_scanned == 1)? "IP address" : "IP addresses", numhosts_up, (numhosts_up == 1)? "host" : "hosts",  i, (i == 1)? "second": "seconds");
 
 
