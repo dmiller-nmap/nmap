@@ -503,13 +503,13 @@ void adjust_idle_timing(struct idle_proxy_info *proxy,
       proxy->senddelay += 10000;
       proxy->senddelay = MIN(proxy->max_senddelay, proxy->senddelay);
        /* No group size should be greater than .5s of send delays */
-      proxy->current_groupsz = MAX(2, MIN(proxy->current_groupsz, 500000 / (proxy->senddelay + 1)));
+      proxy->current_groupsz = MAX(4, MIN(proxy->current_groupsz, 500000 / (proxy->senddelay + 1)));
 
     } else if (testcount > realcount) {
       /* Perhaps the proxy host is not really idle ... */
       /* I guess all I can do is decrease the group size, so that if the proxy is not really idle, at least we may be able to scan cnunks more quickly in between outside packets */
       proxy->current_groupsz *= 0.8;
-      proxy->current_groupsz = MAX(proxy->current_groupsz, 2);
+      proxy->current_groupsz = MAX(proxy->current_groupsz, 4);
 
       if (!notidlewarning && o.verbose) {
 	notidlewarning = 1;
@@ -520,6 +520,7 @@ void adjust_idle_timing(struct idle_proxy_info *proxy,
 	 in allowed group size and we can lightly decrease the senddelay */
 
       proxy->senddelay = (int) (proxy->senddelay * 0.9);
+      if (proxy->senddelay < 500) proxy->senddelay = 0;
       proxy->current_groupsz = MIN(proxy->current_groupsz * 1.1, 500000 / (proxy->senddelay + 1));
       proxy->current_groupsz = MIN(proxy->max_groupsz, proxy->current_groupsz);
 
@@ -660,6 +661,7 @@ int idlescan_countopen2(struct idle_proxy_info *proxy,
     /* Yeah, we got as many responses as we sent probes.  This calls for a 
        very light timing acceleration ... */
     proxy->senddelay = (int) (proxy->senddelay * 0.95);
+    if (proxy->senddelay < 500) proxy->senddelay = 0;
     proxy->current_groupsz = MAX(2, MIN(proxy->current_groupsz, 500000 / (proxy->senddelay+1)));
   }
 
