@@ -394,6 +394,8 @@ int PortList::addPort(u16 portno, u8 protocol, char *owner, int state) {
   Port **portarray = NULL;
   char msg[128];
 
+  assert(state < PORT_HIGHEST_STATE);
+
   if ((state == PORT_OPEN && o.verbose) || (o.debugging > 1)) {
     if (owner && *owner) {
       snprintf(msg, sizeof(msg), " (owner: %s)", owner);
