@@ -123,6 +123,7 @@ void NmapOps::Initialize() {
   magic_port_set = 0;
   tcp_probe_port = DEFAULT_TCP_PROBE_PORT;
   max_parallelism = 0;
+  min_parallelism = 0;
   max_rtt_timeout = MAX_RTT_TIMEOUT;
   min_rtt_timeout = MIN_RTT_TIMEOUT;
   initial_rtt_timeout = INITIAL_RTT_TIMEOUT;
@@ -287,6 +288,10 @@ void NmapOps::ValidateOptions() {
   
   if (magic_port_set && connectscan) {
     error("WARNING:  -g is incompatible with the default connect() scan (-sT).  Use a raw scan such as -sS if you want to set the source port.");
+  }
+
+  if (min_parallelism > max_parallelism) {
+    fatal("--min_parallelism must be less than or equal to --max_parallelism");
   }
   
   if (af() == AF_INET6 && (numdecoys|osscan|bouncescan|fragscan|ackscan|finscan|idlescan|ipprotscan|maimonscan|nullscan|rpcscan|synscan|udpscan|windowscan|xmasscan)) {

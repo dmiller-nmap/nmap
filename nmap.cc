@@ -175,6 +175,7 @@ int nmap_main(int argc, char *argv[]) {
     {"debug", optional_argument, 0, 'd'},
     {"help", no_argument, 0, 'h'},
     {"max_parallelism", required_argument, 0, 'M'},
+    {"min_parallelism", required_argument, 0, 0},
     {"timing", required_argument, 0, 'T'},
     {"max_rtt_timeout", required_argument, 0, 0},
     {"min_rtt_timeout", required_argument, 0, 0},
@@ -262,6 +263,12 @@ int nmap_main(int argc, char *argv[]) {
 	wo.listinterfaces = 1; 
       } else if (strcmp(long_options[option_index].name, "win_norawsock") == 0 ) { 
 	wo.norawsock = 1; 
+      } else if (strcmp(long_options[option_index].name, "min_parallelism") == 0 ) {
+	o.min_parallelism = atoi(optarg); 
+	if (o.min_parallelism < 1) fatal("Argument to --min_parallelism must be at least 1!");
+	if (o.min_parallelism > 100) {
+	  error("Warning: Your --min_parallelism option is absurdly high! Don't complain to Fyodor if all hell breaks loose!");
+	}
       } else if (strcmp(long_options[option_index].name, "win_forcerawsock") == 0 ) { 
 	wo.forcerawsock = 1; 
       } else if (strcmp(long_options[option_index].name, "win_nopcap") == 0 ) { 

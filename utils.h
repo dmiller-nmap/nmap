@@ -127,7 +127,9 @@
 /* assign one timeval to another timeval plus some msecs: a = b + msecs */
 #define TIMEVAL_MSEC_ADD(a, b, msecs) (a).tv_sec = (b).tv_sec + ((msecs) / 1000); (a).tv_usec = (b).tv_usec + ((msecs) % 1000) * 1000; (a).tv_sec += (a).tv_usec / 1000000; (a).tv_usec %= 1000000
 
-
+/* Return num if it is between min and max.  Otherwise return min or
+   max (whichever is closest to num), */
+int box(int bmin, int bmax, int bnum);
 void *safe_malloc(int size);
 /* Zero-initializing version of safe_malloc */
 void *safe_zalloc(int size);

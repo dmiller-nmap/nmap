@@ -92,7 +92,8 @@ class NmapOps {
   u16 tcp_probe_port;
 
   /* Scan timing/politeness issues */
-  int max_parallelism;
+  int max_parallelism; // 0 means it has not been set
+  int min_parallelism; // 0 means it has not been set
   int max_rtt_timeout;
   int min_rtt_timeout;
   int initial_rtt_timeout;

@@ -46,6 +46,19 @@
 
 #include "utils.h"
 
+/* Return num if it is between min and max.  Otherwise return min or
+   max (whichever is closest to num), */
+int box(int bmin, int bmax, int bnum) {
+  if (bmin > bmax)
+    fatal("box(bmin=%d,bmax=%d,bnum=%d) called = bmin must be <= bmax", bmin, 
+	  bmax, bnum);
+  if (bnum >= bmax)
+    return bmax;
+  if (bnum <= bmin)
+    return bmin;
+  return bnum;
+}
+
 void *safe_malloc(int size)
 {
   void *mymem;

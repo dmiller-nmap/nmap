@@ -79,6 +79,8 @@ struct idle_proxy_info {
   u16 latestid; /* The most recent IPID we have received from the proxy */
   u16 probe_port; /* The port we use for probing IPID infoz */
   u16 max_groupsz; /* We won't test groups larger than this ... */
+  u16 min_groupsz; /* We won't allow the group size to fall below this
+		      level.  Affected by --min_parallelism */
   double current_groupsz; /* Current group size being used ... depends on
                           conditions ... won't be higher than
                           max_groupsz */
@@ -252,6 +254,7 @@ void initialize_idleproxy(struct idle_proxy_info *proxy, char *proxyName,
   proxy->host.to.timeout = o.initial_rtt_timeout * 1000;
 
   proxy->max_groupsz = (o.max_parallelism)? o.max_parallelism : 100;
+  proxy->min_groupsz = (o.min_parallelism)? o.min_parallelism : 4;
   proxy->max_senddelay = 100000;
 
   Strncpy(name, proxyName, sizeof(name));
@@ -427,6 +430,7 @@ void initialize_idleproxy(struct idle_proxy_info *proxy, char *proxyName,
     if (o.debugging)
       error("idlescan initial zombie qualification test: %d probes sent, only %d returned", NUM_IPID_PROBES, probes_returned);
     proxy->current_groupsz = MIN(12, proxy->max_groupsz);
+    proxy->current_groupsz = MAX(proxy->current_groupsz, proxy->min_groupsz);
     proxy->senddelay += 5000;
   }
 
@@ -502,19 +506,17 @@ void adjust_idle_timing(struct idle_proxy_info *proxy,
 	 about the first two.  The solution is to decrease our group
 	 size and add a sending delay */
 
-      proxy->current_groupsz *= 0.80; /* packets could be dropped because
-					too many sent at once */
-      proxy->current_groupsz = MAX(proxy->current_groupsz, 1);
+/* packets could be dropped because too many sent at once */
+      proxy->current_groupsz = MAX(proxy->min_groupsz, proxy->current_groupsz * 0.8);
       proxy->senddelay += 10000;
       proxy->senddelay = MIN(proxy->max_senddelay, proxy->senddelay);
        /* No group size should be greater than .5s of send delays */
-      proxy->current_groupsz = MAX(4, MIN(proxy->current_groupsz, 500000 / (proxy->senddelay + 1)));
+      proxy->current_groupsz = MAX(proxy->min_groupsz, MIN(proxy->current_groupsz, 500000 / (proxy->senddelay + 1)));
 
     } else if (testcount > realcount) {
       /* Perhaps the proxy host is not really idle ... */
       /* I guess all I can do is decrease the group size, so that if the proxy is not really idle, at least we may be able to scan cnunks more quickly in between outside packets */
-      proxy->current_groupsz *= 0.8;
-      proxy->current_groupsz = MAX(proxy->current_groupsz, 4);
+      proxy->current_groupsz = MAX(proxy->min_groupsz, proxy->current_groupsz * 0.8);
 
       if (!notidlewarning && o.verbose) {
 	notidlewarning = 1;
@@ -661,13 +663,13 @@ int idlescan_countopen2(struct idle_proxy_info *proxy,
     proxy->senddelay += 5000;
     proxy->senddelay = MIN(proxy->max_senddelay, proxy->senddelay);
     /* No group size should be greater than .5s of send delays */
-    proxy->current_groupsz = MAX(2, MIN(proxy->current_groupsz, 500000 / (proxy->senddelay+1)));
+    proxy->current_groupsz = MAX(proxy->min_groupsz, MIN(proxy->current_groupsz, 500000 / (proxy->senddelay+1)));
   } else {
     /* Yeah, we got as many responses as we sent probes.  This calls for a 
        very light timing acceleration ... */
     proxy->senddelay = (int) (proxy->senddelay * 0.95);
     if (proxy->senddelay < 500) proxy->senddelay = 0;
-    proxy->current_groupsz = MAX(2, MIN(proxy->current_groupsz, 500000 / (proxy->senddelay+1)));
+    proxy->current_groupsz = MAX(proxy->min_groupsz, MIN(proxy->current_groupsz, 500000 / (proxy->senddelay+1)));
   }
 
   if ((openports > 0) && (openports <= numports)) {
