@@ -148,6 +148,8 @@ sadmind		100232			# Solstice
 ufsd		100233	ufsd
 gssd		100234	gss		# GSS Daemon
 cachefsd	100235	cachefs		# CacheFS Daemon
+SyMON           100244              # SUNWsymon
+pmfd            100248    rpc.pmfd  # SUNWcluster
 snmpXdmid	100249
 nisd		100300	rpc.nisd
 nis_cache	100301
@@ -258,6 +260,7 @@ nsrmmdbd	390107	nsrmmdb
 nsrstat		390109
 nsrjb		390110	nsrjbd
 nsrexec		390113	nsrexecd
+lgtolmd         390115         # Legato license broker
 nsrnotd		390400
 #
 # Remedy AR System daemons
@@ -410,6 +413,7 @@ netinfobind	200100001	nibindd # NeXT NetInfo
 SLSd_daemon	536870913	# HP Distributed Single Logical Screen
 uidd		536870915
 userd		536870916
+# vtsk        536870916 # SUNWvts -- collision!
 bondd		536870917
 staticd		536870918
 curved		536870919

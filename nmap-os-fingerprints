@@ -159,7 +159,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 # Contributed by Hackerz-Raz
-Fingerprint Accelerated Networks - High Speed Integrated Access VoDSL
+Fingerprint SonicWall SOHO firewall or Accelerated Networks VoDSL
 TSeq(Class=64K)
 T1(DF=N%W=2000%ACK=S++%Flags=AS%Ops=MNW)
 T2(Resp=N)
@@ -1643,6 +1643,18 @@ T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=F%UCK=E%ULEN=134%DAT=E)
+
+# Contributed by Chad Loder <chad_loder@rapid7.com>
+Fingerprint CNIG904B Internet Broadband Gateway firmware version 1.11
+TSeq(Class=TD%gcd=<F4%SI=<1D6%IPID=Z%TS=U)
+T1(DF=N%W=C00|800|1000|400%ACK=S++%Flags=AR%Ops=)
+T2(Resp=Y%DF=N%W=C00|800|1000|400%ACK=S%Flags=AR%Ops=)
+T3(Resp=Y%DF=N%W=C00|800|1000|400%ACK=S++%Flags=AR%Ops=)
+T4(DF=N%W=C00|800|1000|400%ACK=S%Flags=AR%Ops=)
+T5(DF=N%W=C00|800|1000|400%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=C00|800|1000|400%ACK=S%Flags=AR%Ops=)
+T7(DF=N%W=C00|800|1000|400%ACK=S++%Flags=AR%Ops=)
+PU(Resp=N)
 
 # Contributed by Joerg Sahlmann, joerg@sahlmann.com
 Fingerprint Cobalt Linux 4.0 (Fargo) Kernel 2.0.34C52_SK on MIPS or TEAMInternet Series 100 WebSense

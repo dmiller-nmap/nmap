@@ -1,5 +1,16 @@
 # Nmap Changelog
 
+-- I hope that I have fixed the "Unknown datalink type" problem that
+   many people reported.  If you still receive this error, please send
+   me the following info:
+   1) Full output of Nmap including the command you typed
+   2) What OS/OS version you are using
+   3) What type of interface is the scan going through (PPP, ISDN, ethernet,
+      PPPoE, etc)
+   4) Whether you compiled from source or used the RPM version
+
+-- Various minor fixes/changes/updates
+
 ** 2.54BETA27
 
 -- Fixed bug that caused "adding open port" messages to be printed

@@ -1,4 +1,4 @@
-NMAP_VERSION = 2.54BETA27
+NMAP_VERSION = 2.54BETA28
 NMAP_NAME= nmap
 NMAP_URL= www.insecure.org/nmap/
 NMAP_PLATFORM=@host@
@@ -106,14 +106,13 @@ distro:
             SUNOS4 TODO VERSION aclocal.m4 bpf bpf_dump.c bpf_image.c \
             config.h.in configure configure.in etherent.c ethertype.h \
             gencode.c gencode.h grammar.c grammar.y \
-            inet.c install-sh lbl llc.h mkdep nametoaddr.c nlpid.h \
+            inet.c lbl llc.h mkdep nametoaddr.c nlpid.h \
             optimize.c pcap-bpf.c pcap-dlpi.c pcap-enet.c pcap-int.h \
             pcap-linux.c pcap-namedb.h pcap-nit.c pcap-nit.h pcap-null.c \
             pcap-pf.c pcap-pf.h pcap-snit.c pcap-snoop.c pcap.3 pcap.c \
             pcap.h ppp.h savefile.c scanner.c scanner.l sll.h tokdefs.h \
             /usr/tmp/nmap-$(NMAP_VERSION)/$(LIBPCAPDIR)
-	ln -s ../config.sub /usr/tmp/nmap-$(NMAP_VERSION)/$(LIBPCAPDIR)/config.sub
-	ln -s ../config.guess /usr/tmp/nmap-$(NMAP_VERSION)/$(LIBPCAPDIR)/config.guess
+
 	$(SHTOOL) mkdir /usr/tmp/nmap-$(NMAP_VERSION)/docs
 	cd docs; cp -ra README copying.html nmap-fingerprinting-article.txt \
                     nmap.1 nmap.deprecated.txt nmap.usage.txt nmap_doc.html \
@@ -131,10 +130,9 @@ distro:
 	              /usr/tmp/nmap-$(NMAP_VERSION)/nmapfe
 	$(SHTOOL) mkdir /usr/tmp/nmap-$(NMAP_VERSION)/nbase
 	cd $(NBASEDIR); cp -ra Makefile.in aclocal.m4 configure configure.in \
-	             install-sh nbase_config.h.in \
+	             nbase_config.h.in \
                      *.c *.h CHANGELOG /usr/tmp/nmap-$(NMAP_VERSION)/nbase
-	ln -s ../config.sub /usr/tmp/nmap-$(NMAP_VERSION)/nbase/config.sub
-	ln -s ../config.guess /usr/tmp/nmap-$(NMAP_VERSION)/nbase/config.guess
+
 	rm -f /usr/tmp/nmap-$(NMAP_VERSION)/nbase/nbase_config.h 
 # Kill the CVS crap
 	find /usr/tmp/nmap-$(NMAP_VERSION) -type d -name CVS | xargs rm -rf

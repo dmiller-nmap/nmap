@@ -1599,7 +1599,13 @@ char *grab_next_host_spec(FILE *inputfd, int argc, char **fakeargv) {
     do {    
       ipc = (unsigned char *) &ip.s_addr;
       get_random_bytes(ipc, 4);
-    } while(ipc[0] == 10 || ipc[0] > 224 || ipc[0] == 127 || !ipc[0] || ipc[0] == 6 || ( ipc[0] == 192 && ipc[1] == 168) ); /* Skip these private, multicast, reserved, and localhost addresses -- I also skip 6.*.*.* because that is the U.S. Army Yuma Proving Ground and it is kindof wacky */
+
+    } while(ipc[0] == 10 || ipc[0] > 224 || ipc[0] == 127 || !ipc[0] || 
+	    ipc[0] == 6 || ( ipc[0] == 192 && ipc[1] == 168) || 
+	    (ipc[0] == 172 && ipc[1] >= 16 && ipc[1] <= 31));  
+            /* Skip the above private, multicast, reserved, and localhost
+               addresses -- I also skip 6.*.*.* because that is the
+               U.S. Army Yuma Proving Ground and it is kindof wacky */
     strcpy(host_spec, inet_ntoa(ip));
   } else if (!inputfd) {
     return( (optind < argc)?  fakeargv[optind++] : NULL);

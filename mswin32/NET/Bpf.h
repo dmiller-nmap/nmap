@@ -40,6 +40,9 @@
  * @(#) $Header$ (LBL)
  */
 
+/* Ensure that this evil file is not accidently called from UNIX (which causes major trouble because some of the DLT_* definitions are different */
+
+
 #ifndef BPF_MAJOR_VERSION
 
 /* BSD style release date */
@@ -48,6 +51,11 @@
 #ifdef WIN32 
 #include <gnuc.h>
 #include <winsock.h>
+#else
+/* Ensure that this evil file is not accidently called from UNIX
+   (which causes major trouble because some of the DLT_* definitions
+   are different */
+#error "Detected attempt to include mswin32/NET/Bpf.h in UNIX compilation!"
 #endif
 
 typedef	int bpf_int32;

@@ -1073,9 +1073,21 @@ if (!pd) fatal("NULL packet device passed to readip_pcap");
  case DLT_FDDI: offset = 21; break;
 #ifdef DLT_ENC
  case DLT_ENC: offset = 12; break;
+#endif /* DLT_ENC */
+#ifdef DLT_LINUX_SLL
+ case DLT_LINUX_SLL: offset = 16; break;
 #endif
  default:
    p = (char *) pcap_next(pd, &head);
+   if (head.caplen == 0) {
+     /* Lets sleep a brief time and try again to increase the chance of seeing
+	a real packet ... */
+     usleep(500000);
+     p = (char *) pcap_next(pd, &head);
+   }
+   if (head.caplen > 100000) {
+     fatal("FATAL: readip_pcap: bogus caplen from libpcap (%d) on interface type %d", head.caplen, datalink);
+   } 
    error("FATAL:  Unknown datalink type (%d). Caplen: %d; Packet:\n", datalink, head.caplen);
    lamont_hdump(p, head.caplen);
    exit(1);
