@@ -1,9 +1,7 @@
-
-The Win32 version of Nmap is still in a BETA stage of development,
-although it has improved dramatically.  If you find bugs, you are
-strongly encouraged to report them to fyodor@insecure.org or
-nmap-dev@insecure.org .  Patches are very welcome too :).  Building
-and usage instructions are below. 
+This file details the installation, compilation, and limitations of
+the Nmap Security Scanner for the Windows platform.  If you find bugs,
+you are strongly encouraged to report them to fyodor@insecure.org or
+nmap-dev@insecure.org .  Patches are very welcome too :).
 
 I would like to thank the following people for doing much of the Win32
 porting work:
