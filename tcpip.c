@@ -64,7 +64,8 @@
 extern struct ops o;
 
 /*  predefined filters -- I need to kill these globals at some pont. */
-extern unsigned long flt_dsthost, flt_srchost, flt_baseport;
+extern unsigned long flt_dsthost, flt_srchost;
+extern unsigned short flt_baseport;
 
 #ifndef WIN32 /* Already defined in wintcpip.c for now */
 void sethdrinclude(int sd) {
@@ -1160,8 +1161,9 @@ void set_pcap_filter(struct hoststruct *target,
 
 #endif /* WIN32 */
 
-/* This is ugly :(.  We need to get rid of these at some poitn */
-unsigned long flt_dsthost, flt_srchost, flt_baseport;
+/* This is ugly :(.  We need to get rid of these at some point */
+unsigned long flt_dsthost, flt_srchost;	//	_net_ order
+unsigned short flt_baseport;	//	_host_ order
 
 int flt_icmptcp(const char *packet, int len)
 {
@@ -1175,6 +1177,7 @@ int flt_icmptcp(const char *packet, int len)
 
 int flt_icmptcp_2port(const char *packet, int len)
 {
+  unsigned short dport;
   struct ip* ip = (struct ip*)packet;
   if(ip->ip_dst.s_addr != flt_dsthost) return 0;
   if(ip->ip_p == IPPROTO_ICMP) return 1;
@@ -1183,7 +1186,8 @@ int flt_icmptcp_2port(const char *packet, int len)
     {
       struct tcphdr* tcp = (struct tcphdr *) (((char *) ip) + 4 * ip->ip_hl);
       if(len < 4 * ip->ip_hl + 4) return 0;
-      if(tcp->th_dport == flt_baseport || tcp->th_dport == flt_baseport + 1)
+	  dport = ntohs(tcp->th_dport);
+      if(dport == flt_baseport || dport == flt_baseport + 1)
 	return 1;
     }
   

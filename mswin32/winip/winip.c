@@ -128,7 +128,7 @@ typedef struct _OSVERSIONINFOEXA {
 
 void winip_barf(const char *msg)
 {
-	if(inited != 3) fatal("%s", msg ? msg : "You need raw support for this\n"
+	if(inited != 3) fatal("%s", msg ? msg : "You need raw support for this.\n"
 		" run \"nmap --win_list_interfaces --win_trace\" to troubleshoot\n");
 	if(msg) printf("%s\n\n", msg);
 	printf("\nYour system doesn't have iphlpapi.dll\n\nIf you have Win95, "
@@ -200,7 +200,7 @@ void winip_postopt_init()
 	}*/
 
 	//	Read the size
-	if(wo.trace) printf("***WinIP***  trying to initialize tables\n");
+	if(wo.trace) printf("***WinIP***  initializing if tables\n");
 	nRes = GetIfTableSafe(pTable, &cb, TRUE);
 
 	if(!net_avail)
@@ -285,7 +285,7 @@ void winip_postopt_init()
 		}
 	}
 
-	if(wo.trace) printf("***WinIP***  tables seem to be filled in correctly\n");
+	if(wo.trace) printf("***WinIP***  if tables complete :)\n");
 
 	//	Try to initialize winpcap
 #ifdef _MSC_VER

@@ -63,7 +63,8 @@
 
 extern struct ops o;
 /*  predefined filters -- I need to kill these globals at some pont. */
-extern unsigned long flt_dsthost, flt_srchost, flt_baseport;
+extern unsigned long flt_dsthost, flt_srchost;
+extern unsigned short flt_baseport;
 
 
 FingerPrint *get_fingerprint(struct hoststruct *target, struct seq_info *si) {

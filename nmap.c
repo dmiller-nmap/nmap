@@ -2221,7 +2221,11 @@ int nmap_fetchfile(char *filename_returned, int bufferlen, char *file) {
     res = snprintf(dot_buffer, sizeof(dot_buffer), "./%s", file);
     if (res > 0 && res < bufferlen) {
       if (fileexistsandisreadable(dot_buffer)) {
-	if (warningcount++ < 5)
+#ifdef WIN32
+	if (warningcount++ < 5 && o.debugging)
+#else
+	if(warningcount++ < 5)
+#endif
 	  error("WARNING!  The following files exist and are readable: %s and %s.  I am choosing %s for security reasons.  set NMAPDIR=. to give priority to files in your local directory", filename_returned, dot_buffer, filename_returned);
       }
     }

@@ -68,7 +68,8 @@
 extern struct ops o;
 
 /*  predefined filters -- I need to kill these globals at some point. */
-extern unsigned long flt_dsthost, flt_srchost, flt_baseport;
+extern unsigned long flt_dsthost, flt_srchost;
+extern unsigned short flt_baseport;
 
 
 struct idle_proxy_info {

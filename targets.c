@@ -53,7 +53,8 @@
 extern struct ops o;
 
 /*  predefined filters -- I need to kill these globals at some pont. */
-extern unsigned long flt_dsthost, flt_srchost, flt_baseport;
+extern unsigned long flt_dsthost, flt_srchost;
+extern unsigned short flt_baseport;
 
 /* Fills up the hostgroup_state structure passed in (which must point
    to valid memory).  Lookahead is the number of hosts that can be

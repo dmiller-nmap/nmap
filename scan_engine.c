@@ -51,7 +51,8 @@
 extern struct ops o;
 
 /*  predefined filters -- I need to kill these globals at some pont. */
-extern unsigned long flt_dsthost, flt_srchost, flt_baseport;
+extern unsigned long flt_dsthost, flt_srchost;
+extern unsigned short flt_baseport;
 
 
 /* Does the appropriate stuff when the port we are looking at is found

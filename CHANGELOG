@@ -1,5 +1,10 @@
 # Nmap Changelog ($Id$)
 
+o Applied patch from Andy Lutomirski (Luto@myrealbox.com) which fixes
+  some important Windows bugs.  Apparently this can cause a dramatic
+  speedup in some circumstances.  The patch had other misc. changes
+  too.
+
 Nmap 2.54BETA30
 
 o Added a Document Type Definition (DTD) for the Nmap XML output
