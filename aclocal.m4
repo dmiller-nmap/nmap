@@ -17,7 +17,8 @@ recvfrom (0, NULL, 0, 0, NULL, &arg);],[
    done
 
    if test "x$recvfrom6_t" = x; then
-     AC_MSG_ERROR([Cannot find type for 6th argument to recvfrom()])
+     AC_MSG_WARN([Cannot find type for 6th argument to recvfrom(). Using socklen_t ptr])
+     recvfrom6_t="socklen_t"
    fi
 
    AC_MSG_RESULT($recvfrom6_t)

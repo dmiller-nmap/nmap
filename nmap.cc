@@ -1832,7 +1832,7 @@ int ftp_anon_connect(struct ftpinfo *ftp) {
     exit(1);
   }
   if (o.verbose || o.debugging) log_write(LOG_STDOUT, "Connected:");
-  while ((res = recvtime(sd, recvbuf, sizeof(recvbuf) - 1,7)) > 0) 
+  while ((res = recvtime(sd, recvbuf, sizeof(recvbuf) - 1,7, NULL)) > 0) 
     if (o.debugging || o.verbose) {
       recvbuf[res] = '\0';
       log_write(LOG_STDOUT, "%s", recvbuf);
@@ -1845,7 +1845,7 @@ int ftp_anon_connect(struct ftpinfo *ftp) {
   snprintf(command, 511, "USER %s\r\n", ftp->user);
 
   send(sd, command, strlen(command), 0);
-  res = recvtime(sd, recvbuf, sizeof(recvbuf) - 1,12);
+  res = recvtime(sd, recvbuf, sizeof(recvbuf) - 1,12, NULL);
   if (res <= 0) {
     perror("recv problem from ftp bounce server");
     exit(1);
@@ -1861,7 +1861,7 @@ int ftp_anon_connect(struct ftpinfo *ftp) {
   snprintf(command, 511, "PASS %s\r\n", ftp->pass);
 
   send(sd, command, strlen(command), 0);
-  res = recvtime(sd, recvbuf, sizeof(recvbuf) - 1,12);
+  res = recvtime(sd, recvbuf, sizeof(recvbuf) - 1,12, NULL);
   if (res < 0) {
     perror("recv problem from ftp bounce server\n");
     exit(1);
@@ -1876,7 +1876,7 @@ int ftp_anon_connect(struct ftpinfo *ftp) {
       exit(1);
     }
   }
-  while ((res = recvtime(sd, recvbuf, sizeof(recvbuf) - 1,2)) > 0) 
+  while ((res = recvtime(sd, recvbuf, sizeof(recvbuf) - 1,2, NULL)) > 0) 
     if (o.debugging) {
       recvbuf[res] = '\0';
       log_write(LOG_STDOUT, "%s", recvbuf);

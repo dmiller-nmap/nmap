@@ -653,7 +653,7 @@ important hosts such as its internet gateway, DNS TLD servers, sites
 like Windows Update, etc.  Most such software offers whitelist
 capabilities, but you are unlikely to enumerate all of the critical
 machines.  For this reason we never recommend taking
-action against port scan that can be forged, including SYN scans, UDP
+action against port scans that can be forged, including SYN scans, UDP
 scans, etc.  The machine you block could just be a decoy.
 .Sp
 Decoys are used both in the initial ping scan (using ICMP,
@@ -1025,8 +1025,7 @@ administrators who become upset and may complain when their system is
 scanned.  Thus, it is often advisable to request permission before
 doing even a light scan of a network.
 .Sp
-Nmap should never be run with privileges (eg suid root) for security
-reasons.
+Nmap should never be installed with special privileges (eg suid root) for security reasons.
 .Sp 
 
 This product includes software developed by the Apache Software

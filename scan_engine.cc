@@ -1252,6 +1252,7 @@ void bounce_scan(Target *target, u16 *portarray, int numports,
   char hostname[1200];
   unsigned short portno,p1,p2;
   struct timeval now;
+  int timedout;
 
   if (! numports) return;		 /* nothing to scan for */
 
@@ -1299,8 +1300,9 @@ void bounce_scan(Target *target, u16 *portarray, int numports,
 	return;
       }
     } else { /* Our send is good */
-      res = recvtime(sd, recvbuf, 2048,15);
-      if (res <= 0) perror("recv problem from ftp bounce server\n");
+      res = recvtime(sd, recvbuf, 2048, 15, NULL);
+      if (res <= 0) 
+	perror("recv problem from ftp bounce server\n");
   
       else { /* our recv is good */
 	recvbuf[res] = '\0';
@@ -1326,23 +1328,28 @@ void bounce_scan(Target *target, u16 *portarray, int numports,
 	}
 	else  /* Not an error message */
 	  if (send(sd, "LIST\r\n", 6, 0) > 0 ) {
-	    res = recvtime(sd, recvbuf, 2048,12);
-	    if (res <= 0) {
+	    res = recvtime(sd, recvbuf, 2048,12, &timedout);
+	    if (res < 0) {
 	      perror("recv problem from ftp bounce server\n");
-	    }
-	    else {
+	    } else if (res == 0) {
+	      if (timedout)
+		target->ports.addPort(portarray[i], IPPROTO_TCP, NULL, 
+				      PORT_FIREWALLED);
+	      else target->ports.addPort(portarray[i], IPPROTO_TCP, NULL, 
+					 PORT_CLOSED);
+	    } else {
 	      recvbuf[res] = '\0';
 	      if (o.debugging) log_write(LOG_STDOUT, "result of LIST: %s", recvbuf);
 	      if (!strncmp(recvbuf, "500", 3)) {
 		/* fuck, we are not aligned properly */
 		if (o.verbose || o.debugging)
 		  fprintf(stderr, "FTP command misalignment detected ... correcting.\n");
-		res = recvtime(sd, recvbuf, 2048,10);
+		res = recvtime(sd, recvbuf, 2048,10, NULL);
 	      }
 	      if (recvbuf[0] == '1' || recvbuf[0] == '2') {
 		target->ports.addPort(portarray[i], IPPROTO_TCP, NULL, PORT_OPEN);
 		if (recvbuf[0] == '1') {
-		  res = recvtime(sd, recvbuf, 2048,5);
+		  res = recvtime(sd, recvbuf, 2048,5, NULL);
 		  recvbuf[res] = '\0';
 		  if (res > 0) {
 		    if (o.debugging) log_write(LOG_STDOUT, "nxt line: %s", recvbuf);

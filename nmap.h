@@ -415,7 +415,6 @@ int getidentinfoz(struct in_addr target, u16 localport, u16 remoteport,
 
 /* socket manipulation functions */
 void init_socket(int sd);
-int recvtime(int sd, char *buf, int len, int seconds);
 
 /* RAW packet building/dissasembling stuff */
 int isup(struct in_addr target);

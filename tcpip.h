@@ -581,8 +581,10 @@ void broadcast_socket(int sd);
 /* Do a receive (recv()) on a socket and stick the results (upt to
    len) into buf .  Give up after 'seconds'.  Returns the number of
    bytes read (or -1 in the case of an error.  It only does one recv
-   (it will not keep going until len bytes are read */
-int recvtime(int sd, char *buf, int len, int seconds);
+   (it will not keep going until len bytes are read).  If timedout is
+   not NULL, it will be set to zero (no timeout occured) or 1 (it
+   did). */
+int recvtime(int sd, char *buf, int len, int seconds, int *timedout);
 
 /* This attempts to calculate the round trip time (rtt) to a host by timing a
    connect() to a port which isn't listening.  A better approach is to time a

@@ -2096,8 +2096,10 @@ void broadcast_socket(int sd) {
 /* Do a receive (recv()) on a socket and stick the results (upt to
    len) into buf .  Give up after 'seconds'.  Returns the number of
    bytes read (or -1 in the case of an error.  It only does one recv
-   (it will not keep going until len bytes are read */
-int recvtime(int sd, char *buf, int len, int seconds) {
+   (it will not keep going until len bytes are read).  If timedout is
+   not NULL, it will be set to zero (no timeout occured) or 1 (it
+   did). */
+int recvtime(int sd, char *buf, int len, int seconds, int *timedout) {
 
   int res;
   struct timeval timeout;
@@ -2107,6 +2109,7 @@ int recvtime(int sd, char *buf, int len, int seconds) {
   timeout.tv_usec = 0;
   FD_ZERO(&readfd);
   FD_SET(sd, &readfd);
+  if (timedout) *timedout = 0;
   res = select(sd + 1, &readfd, NULL, NULL, &timeout);
   if (res > 0 ) {
     res = recv(sd, buf, len, 0);
@@ -2114,7 +2117,10 @@ int recvtime(int sd, char *buf, int len, int seconds) {
     perror("recv in recvtime");
     return 0; 
   }
-  else if (!res) return 0;
+  else if (!res) {
+    if (timedout) *timedout = 1;
+    return 0;
+  }
   perror("select() in recvtime");
   return -1;
 }

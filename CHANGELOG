@@ -2,6 +2,13 @@
 
 UNRELEASED:
 
+o I hope to have fixed this compile problem: "checking for type of 6th
+  argument to recvfrom()... configure: error: Cannot find type for 6th
+  argument to recvfrom()"
+
+o Fixed the FTP bounce scan to better detect filered ports on the
+  target network.
+
 o Fixed some minor bugs related to the new MAC address printing
   feature.
 

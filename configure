@@ -7476,9 +7476,9 @@ rm -f conftest.err conftest.$ac_objext conftest.$ac_ext
    done
 
    if test "x$recvfrom6_t" = x; then
-     { { echo "$as_me:$LINENO: error: Cannot find type for 6th argument to recvfrom()" >&5
-echo "$as_me: error: Cannot find type for 6th argument to recvfrom()" >&2;}
-   { (exit 1); exit 1; }; }
+     { echo "$as_me:$LINENO: WARNING: Cannot find type for 6th argument to recvfrom(). Using socklen_t ptr" >&5
+echo "$as_me: WARNING: Cannot find type for 6th argument to recvfrom(). Using socklen_t ptr" >&2;}
+     recvfrom6_t="socklen_t"
    fi
 
    echo "$as_me:$LINENO: result: $recvfrom6_t" >&5
