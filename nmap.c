@@ -1858,7 +1858,7 @@ if (o.debugging || o.verbose)
 	    if (current->trynum > 0) {
 	      /* We consider this port valid, move it to open list */
 	      if (o.debugging) { printf("Moving port %hi to the open list\n", current->portno); }
-	      current->state = port_open;	    
+	      current->state = port_open;    
 	      /* First delete from old list */
 	      if (current->next > -1) scan[current->next].prev = current->prev;
 	      if (current->prev > -1) scan[current->prev].next = current->next;
@@ -1897,6 +1897,7 @@ if (o.debugging || o.verbose)
 	} else { /* current->state == port_fresh */
 	  /* OK, now we have gone through our list of in-transit queries, so now
 	     we try to send off new queries if we can ... */
+	  printf("Sending initial query to port %hi\n", current->portno);
 	  if (numqueries_outstanding > (int) numqueries_ideal) break;
 	  /* Otherwise lets send a packet! */
 	  current->state = port_testing;
