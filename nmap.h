@@ -246,6 +246,17 @@ void *realloc();
 #define BSDUFIX(x) ntohs(x)
 #endif
 #endif /* BSDFIX */
+
+#define LOG_TYPES 4
+#define LOG_MASK 15
+#define LOG_NORMAL 1
+#define LOG_MACHINE 2
+#define LOG_HTML 4
+#define LOG_SKID 8
+#define LOG_STDOUT 1024
+#define LOG_SKID_NOXLT 2048
+
+#define LOG_NAMES {"normal", "machine", "HTML", "$Cr!pT |<!dd!3"}
 /********************** LOCAL INCLUDES *****************************/
 
 #include "tcpip.h"
@@ -314,7 +325,7 @@ void broadcast_socket(int sd);
 int recvtime(int sd, char *buf, int len, int seconds);
 void max_rcvbuf(int sd);
 int max_sd();
-
+int log_open(int logt, int append, char *filename);
 /* RAW packet building/dissasembling stuff */
 int isup(struct in_addr target);
 int listen_icmp(int icmpsock, unsigned short outports[],
@@ -342,6 +353,12 @@ int nmap_fetchfile(char *filename_returned, int bufferlen, char *file);
 int fileexistsandisreadable(char *pathname);
 void enforce_scan_delay(struct timeval *tv);
 int check_firewallmode(struct hoststruct *target, struct scanstats *ss);
+int gather_logfile_resumption_state(char *fname, int *myargc, char ***myargv);
+
+void log_write(int logt, char *fmt, ...);
+void log_close(int logt);
+void log_flush_all();
+
 /* From glibc 2.0.6 because Solaris doesn't seem to have this function */
 #ifndef HAVE_INET_ATON
 int inet_aton(register const char *, struct in_addr *);

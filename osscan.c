@@ -60,7 +60,7 @@ get_random_bytes(&sequence_base, sizeof(unsigned int));
      fatal("Cannot get hostname!  Try using -S <my_IP_address> or -e <interface to scan through>\n");
    memcpy(&target->source_ip, myhostent->h_addr_list[0], sizeof(struct in_addr));
    if (o.debugging || o.verbose)
-     fprintf(o.nmap_stdout, "We skillfully deduced that your address is %s\n",
+     log_write(LOG_STDOUT, "We skillfully deduced that your address is %s\n",
 	    inet_ntoa(target->source_ip));
  }
  /* Now for the pcap opening nonsense ... */
@@ -75,7 +75,7 @@ if (!(pd = pcap_open_live(target->device, 650,  (o.spoofsource)? 1 : 0, (ossoftt
   fatal("pcap_open_live: %s\nIf you are on Linux and getting Socket type not supported, try modprobe af_packet or recompile your kernel with SOCK_PACKET enabled.  If you are on bsd and getting device not configured, you need to recompile your kernel with Berkeley Packet Filter support.  If you are getting No such file or directory, try creating the device (eg cd /dev; MAKEDEV <device>; or use mknod)", err0r);
 
 if (o.debugging)
-  fprintf(o.nmap_stdout, "Wait time is %d\n", (ossofttimeout +500)/1000);
+   log_write(LOG_STDOUT, "Wait time is %d\n", (ossofttimeout +500)/1000);
 
 if (pcap_lookupnet(target->device, &localnet, &netmask, err0r) < 0)
   fatal("Failed to lookup device subnet/netmask: %s", err0r);
@@ -87,7 +87,7 @@ snprintf(filter, sizeof(filter), "(icmp and dst host %s) or (tcp and src host %s
  if (islocalhost(&(target->host)))
    filter[0] = '\0';
  if (o.debugging)
-   fprintf(o.nmap_stdout, "Packet capture filter: %s\n", filter);
+   log_write(LOG_STDOUT, "Packet capture filter: %s\n", filter);
  if (pcap_compile(pd, &fcode, filter, 0, netmask) < 0)
    fatal("Error compiling our pcap filter: %s\n", pcap_geterr(pd));
  if (pcap_setfilter(pd, &fcode) < 0 )
@@ -121,7 +121,7 @@ snprintf(filter, sizeof(filter), "(icmp and dst host %s) or (tcp and src host %s
    closedport = (get_random_uint() % 14781) + 30000;
  }
 if (o.verbose && openport != -1)
-  fprintf(o.nmap_stdout, "For OSScan assuming that port %d is open and port %d is closed and neither are firewalled\n", openport, closedport);
+  log_write(LOG_STDOUT, "For OSScan assuming that port %d is open and port %d is closed and neither are firewalled\n", openport, closedport);
 
  current_port = o.magic_port + NUM_SEQ_SAMPLES +1;
  
@@ -215,7 +215,7 @@ if (o.verbose && openport != -1)
        if (testno <= 0 || testno > 7)
 	 continue;
        if (o.debugging > 1)
-	 fprintf(o.nmap_stdout, "Got packet for test number %d\n", testno);
+	 log_write(LOG_STDOUT, "Got packet for test number %d\n", testno);
        if (FPtests[testno]) continue;
        testsleft--;
        newcatches++;
@@ -418,10 +418,10 @@ if (o.verbose && openport != -1)
      }
    }
    else {
-     nmap_log("Insufficient responses for TCP sequencing (%d), OS detection will be MUCH less reliable\n", si->responses);
+     log_write(LOG_NORMAL|LOG_SKID,"Insufficient responses for TCP sequencing (%d), OS detection will be MUCH less reliable\n", si->responses);
    }
  } else {
-   nmap_log("Warning:  No tcp ports found open on this machine, OS detection will be MUCH less reliable\n");
+   log_write(LOG_NORMAL|LOG_SKID,"Warning:  No tcp ports found open on this machine, OS detection will be MUCH less reliable\n");
  }
 
 for(i=0; i < 9; i++) {
@@ -1110,11 +1110,11 @@ udp->uh_sum = realcheck;
      upi.target.s_addr = ip->ip_dst.s_addr;
    }
    if (TCPIP_DEBUGGING > 1) {
-     fprintf(o.nmap_stdout, "Raw UDP packet creation completed!  Here it is:\n");
+     log_write(LOG_STDOUT, "Raw UDP packet creation completed!  Here it is:\n");
      readudppacket(packet,1);
    }
    if (TCPIP_DEBUGGING > 1)     
-     fprintf(o.nmap_stdout, "\nTrying sendto(%d , packet, %d, 0 , %s , %d)\n",
+     log_write(LOG_STDOUT, "\nTrying sendto(%d , packet, %d, 0 , %s , %d)\n",
 	    sd, BSDUFIX(ip->ip_len), inet_ntoa(*victim),
 	    (int) sizeof(struct sockaddr_in));
 
@@ -1125,7 +1125,7 @@ udp->uh_sum = realcheck;
        return NULL;
      }
 
-   if (TCPIP_DEBUGGING > 1) fprintf(o.nmap_stdout, "successfully sent %d bytes of raw_tcp!\n", res);
+   if (TCPIP_DEBUGGING > 1) log_write(LOG_STDOUT, "successfully sent %d bytes of raw_tcp!\n", res);
  }
 
 return &upi;

@@ -33,6 +33,11 @@ int main(int argc, char *argv[], char *envp[]) {
   char *endptr;
   int interactivemode = 0;
   int fd;
+  struct timeval tv;
+
+  /* You never know when "random" numbers will come in handy ... */
+  gettimeofday(&tv, NULL);
+  srand((tv.tv_sec ^ tv.tv_usec) ^ getpid());
 
   /* initialize our options */
   options_init();
@@ -81,6 +86,14 @@ int main(int argc, char *argv[], char *envp[]) {
 
   if (!interactivemode) {
     options_init();
+    if (argc == 3 && strcmp("--resume", argv[1]) == 0) {
+      /* OK, they want to resume an aborted scan given the log file specified.
+	 Lets gather our state from the log file */
+      if (gather_logfile_resumption_state(argv[2], &myargc, &myargv) == -1) {
+	fatal("Cannot resume from (supposed) log file %s", argv[2]);
+      }
+      return nmap_main(myargc, myargv);
+    }
     return nmap_main(argc, argv);
   }
   printf("\nStarting nmap V. %s by fyodor@insecure.org ( www.insecure.org/nmap/ )\n", VERSION);
@@ -245,6 +258,7 @@ int nmap_main(int argc, char *argv[]) {
   int numhosts_scanned = 0;
   char **host_exp_group;
   int num_host_exp_groups = 0;
+  char *machinefilename = NULL, *kiddiefilename = NULL, *normalfilename = NULL;
   struct hostgroup_state hstate;
   int numhosts_up = 0;
   int starttime;
@@ -281,12 +295,15 @@ int nmap_main(int argc, char *argv[]) {
     {"initial_rtt_timeout", required_argument, 0, 0},
     {"oN", required_argument, 0, 0},
     {"oM", required_argument, 0, 0},  
+    {"oS", required_argument, 0, 0},
     {"oH", required_argument, 0, 0},  
     {"iL", required_argument, 0, 0},  
     {"iR", no_argument, 0, 0},  
     {"initial_rtt_timeout", required_argument, 0, 0},
     {"randomize_hosts", no_argument, 0, 0},
     {"rH", no_argument, 0, 0},
+    {"append_output", no_argument, 0, 0},
+    {"noninteractive", no_argument, 0, 0},
     {0, 0, 0, 0}
   };
 
@@ -300,8 +317,8 @@ int nmap_main(int argc, char *argv[]) {
       fatal("Failed to resolve %s\n", argv[1]);
     dev = routethrough(&dest, &source);
     if (dev)
-      fprintf(o.nmap_stdout, "%s routes through device %s using IP address %s\n", argv[1], dev, inet_ntoa(source));
-    else fprintf(o.nmap_stdout, "Could not determine which device to route through for %s!!!\n", argv[1]);
+      log_write(LOG_STDOUT, "%s routes through device %s using IP address %s\n", argv[1], dev, inet_ntoa(source));
+    else log_write(LOG_STDOUT, "Could not determine which device to route through for %s!!!\n", argv[1]);
 
     exit(0);
   }
@@ -338,6 +355,10 @@ int nmap_main(int argc, char *argv[]) {
 	if (o.host_timeout <= 200) {
 	  fatal("host_timeout is given in milliseconds and must be greater than 200");
 	}
+      } else if (strcmp(long_options[option_index].name, "append_output") == 0) {
+	o.append_output = 1;
+      } else if (strcmp(long_options[option_index].name, "noninteractive") == 0) {
+	/* Do nothing */
       } else if (strcmp(long_options[option_index].name, "scan_delay") == 0) {
 	o.scan_delay = atoi(optarg);
 	if (o.scan_delay <= 0) {
@@ -354,33 +375,11 @@ int nmap_main(int argc, char *argv[]) {
 	  fatal("scan_delay must be greater than 0");
 	}   
       } else if (strcmp(long_options[option_index].name, "oN") == 0) {
-	if (o.logfd != NULL) fatal("Only one normal log filename allowed");
-	if (*optarg == '-' && *(optarg + 1) == '\0') {    
-	  o.logfd = stdout;
-	  o.nmap_stdout = fopen("/dev/null", "w");
-	  if (!o.nmap_stdout) {
-	    fatal("Could not open /dev/null for writing for use with -oN - ");
-	  }
-	} else {    
-	  o.logfd = fopen(optarg, "w");
-	  if (!o.logfd) 
-	    fatal("Failed to open output file %s for writing", optarg);
-	}
-
+	normalfilename = optarg;
       } else if (strcmp(long_options[option_index].name, "oM") == 0) {
-	if (o.machinelogfd != NULL) fatal("Only one machine log filename allowed");
-	if (*optarg == '-' && *(optarg + 1) == '\0') {    
-	  o.machinelogfd = stdout;
-	  o.nmap_stdout = fopen("/dev/null", "w");
-	  if (!o.nmap_stdout) {
-	    fatal("Could not open /dev/null for writing for use with -oN - ");
-	  }
-	} else {    
-	  o.machinelogfd = fopen(optarg, "w");
-	  if (!o.machinelogfd) 
-	    fatal("Failed to open machine output file %s for writing", optarg);
-	}
-
+	machinefilename = optarg;
+      } else if (strcmp(long_options[option_index].name, "oS") == 0) {
+	kiddiefilename = optarg;
       } else if (strcmp(long_options[option_index].name, "oH") == 0) {
 	fatal("HTML output is not yet supported");
       } else if (strcmp(long_options[option_index].name, "iL") == 0) {
@@ -389,13 +388,13 @@ int nmap_main(int argc, char *argv[]) {
 	}
 	if (!strcmp(optarg, "-")) {
 	  inputfd = stdin;
-	  fprintf(o.nmap_stdout, "Reading target specifications from stdin\n");
+	  log_write(LOG_STDOUT, "Reading target specifications from stdin\n");
 	} else {    
 	  inputfd = fopen(optarg, "r");
 	  if (!inputfd) {
 	    fatal("Failed to open input file %s for reading", optarg);
 	  }  
-	  fprintf(o.nmap_stdout, "Reading target specifications from FILE: %s\n", optarg);
+	  log_write(LOG_STDOUT, "Reading target specifications from FILE: %s\n", optarg);
 	}
       } else if (strcmp(long_options[option_index].name, "iR") == 0) {
 	o.generate_random_ips = 1;
@@ -458,13 +457,13 @@ int nmap_main(int argc, char *argv[]) {
       }
       if (!strcmp(optarg, "-")) {
 	inputfd = stdin;
-	fprintf(o.nmap_stdout, "Reading target specifications from stdin\n");
+	log_write(LOG_STDOUT, "Reading target specifications from stdin\n");
       } else {    
 	inputfd = fopen(optarg, "r");
 	if (!inputfd) {
 	  fatal("Failed to open input file %s for reading", optarg);
 	}  
-	fprintf(o.nmap_stdout, "Reading target specifications from FILE: %s\n", optarg);
+	log_write(LOG_STDOUT, "Reading target specifications from FILE: %s\n", optarg);
       }
       break;  
     case 'M': 
@@ -476,20 +475,7 @@ int nmap_main(int argc, char *argv[]) {
       }
       break;
     case 'm': 
-      if (o.machinelogfd != NULL)
-	fatal("Only one machine log filename allowed");
-      if (*optarg == '-' && *(optarg + 1) == '\0') {    
-	o.machinelogfd = stdout;
-	o.nmap_stdout = fopen("/dev/null", "w");
-	if (!o.nmap_stdout) {
-	  fatal("Could not open /dev/null for writing for use with -m - ");
-	}
-      }
-      else { 
-	o.machinelogfd = fopen(optarg, "w");
-	if (!o.machinelogfd)
-	  fatal("Failed to open machine parseable log file %s", optarg);
-      }
+      machinefilename = optarg;
       break;
     case 'N': o.force++; break;
     case 'n': o.noresolve++; break;
@@ -497,21 +483,8 @@ int nmap_main(int argc, char *argv[]) {
       o.osscan++; 
       o.reference_FPs = parse_fingerprint_reference_file();
       break;
-    case 'o': 
-
-      if (o.logfd != NULL) fatal("Only one normal log filename allowed");
-      if (*optarg == '-' && *(optarg + 1) == '\0') {    
-	o.logfd = stdout;
-	o.nmap_stdout = fopen("/dev/null", "w");
-	if (!o.nmap_stdout) {
-	  fatal("Could not open /dev/null for writing for use with -o - ");
-	}
-      } else {    
-	o.logfd = fopen(optarg, "w");
-	if (!o.logfd) 
-	  fatal("Failed to open output file %s for writing", optarg);
-      }
-
+    case 'o':
+      normalfilename = optarg;
       break;
     case 'P': 
       if (*optarg == '\0' || *optarg == 'I')
@@ -522,23 +495,23 @@ int nmap_main(int argc, char *argv[]) {
 	o.pingtype |= (PINGTYPE_TCP|PINGTYPE_TCP_USE_SYN);
 	if (isdigit((int) *(optarg+1))) {      
 	  o.tcp_probe_port = atoi(optarg+1);
-	  fprintf(o.nmap_stdout, "TCP probe port is %hu\n", o.tcp_probe_port);
+	  log_write(LOG_STDOUT, "TCP probe port is %hu\n", o.tcp_probe_port);
 	} else if (o.verbose)
-	  fprintf(o.nmap_stdout, "TCP probe port is %hu\n", o.tcp_probe_port);
+	  log_write(LOG_STDOUT, "TCP probe port is %hu\n", o.tcp_probe_port);
       }
       else if (*optarg == 'T' || *optarg == 'A') {
 	o.pingtype |= (PINGTYPE_TCP|PINGTYPE_TCP_USE_ACK);
 	if (isdigit((int) *(optarg+1))) {      
 	  o.tcp_probe_port = atoi(optarg+1);
-	  fprintf(o.nmap_stdout, "TCP probe port is %hu\n", o.tcp_probe_port);
+	  log_write(LOG_STDOUT, "TCP probe port is %hu\n", o.tcp_probe_port);
 	} else if (o.verbose)
-	  fprintf(o.nmap_stdout, "TCP probe port is %hu\n", o.tcp_probe_port);
+	  log_write(LOG_STDOUT, "TCP probe port is %hu\n", o.tcp_probe_port);
       }
       else if (*optarg == 'B') {
 	o.pingtype = (PINGTYPE_TCP|PINGTYPE_TCP_USE_ACK|PINGTYPE_ICMP);
 	if (isdigit((int) *(optarg+1)))
 	  o.tcp_probe_port = atoi(optarg+1);
-	fprintf(o.nmap_stdout, "TCP probe port is %hu\n", o.tcp_probe_port);
+	log_write(LOG_STDOUT, "TCP probe port is %hu\n", o.tcp_probe_port);
       }
       else {fatal("Illegal Argument to -P, use -P0, -PI, -PT, or -PT80 (or whatever number you want for the TCP probe destination port)"); }
       break;
@@ -552,7 +525,6 @@ int nmap_main(int argc, char *argv[]) {
     case 'R': resolve_all++; break;
     case 'r': 
       randomize = 0;
-      error("Warning: Randomize syntax has been changed, -r now requests that ports NOT be randomized");
       break;
     case 'S': 
       if (o.spoofsource)
@@ -570,6 +542,7 @@ int nmap_main(int argc, char *argv[]) {
       p = optarg;
       while(*p) {
 	switch(*p) {
+	case 'A': o.ackscan = 1; break;
 	case 'B':  fatal("No scan type 'B', did you mean bounce scan (-b)?");
 	  break;
 	case 'F':  o.finscan = 1; break;
@@ -626,17 +599,25 @@ int nmap_main(int argc, char *argv[]) {
     signal(SIGSEGV, sigdie); 
 
   if (!o.interactivemode)
-    fprintf(o.nmap_stdout, "\nStarting nmap V. %s by fyodor@insecure.org ( www.insecure.org/nmap/ )\n", VERSION);
+    log_write(LOG_STDOUT|LOG_SKID, "\nStarting nmap V. %s by fyodor@insecure.org ( www.insecure.org/nmap/ )\n", VERSION);
 
   if (o.pingtype == PINGTYPE_UNKNOWN) {
     if (o.isr00t) o.pingtype = PINGTYPE_TCP|PINGTYPE_TCP_USE_ACK|PINGTYPE_ICMP;
     else o.pingtype = PINGTYPE_TCP;
   }
 
+  /* Open the log files, now that we know whether the user wants them appended
+     or overwritten */
+  if (normalfilename)
+    log_open(LOG_NORMAL, o.append_output, normalfilename);
+  if (machinefilename)
+    log_open(LOG_MACHINE, o.append_output, machinefilename);
+  if (kiddiefilename)
+    log_open(LOG_SKID, o.append_output, kiddiefilename);
 
   /* Now we check the option sanity */
   /* Insure that at least one scantype is selected */
-  if (!o.connectscan && !o.udpscan && !o.synscan && !o.windowscan && !o.finscan && !o.maimonscan &&  !o.nullscan && !o.xmasscan && !o.bouncescan && !o.pingscan) {
+  if (!o.connectscan && !o.udpscan && !o.synscan && !o.windowscan && !o.finscan && !o.maimonscan &&  !o.nullscan && !o.xmasscan && !o.ackscan && !o.bouncescan && !o.pingscan) {
     o.connectscan++;
     if (o.verbose) error("No tcp,udp, or ICMP scantype specified, assuming vanilla tcp connect() scan. Use -sP if you really don't want to portscan (and just want to see what hosts are up).");
   }
@@ -652,7 +633,7 @@ int nmap_main(int argc, char *argv[]) {
   if (fastscan && ports) {
     fatal("You can specify fast scan (-F) or explicitly select individual ports (-p), but not both");
   } else if (fastscan) {
-    ports = getfastports(o.windowscan|o.synscan|o.connectscan|o.fragscan|o.finscan|o.maimonscan|o.bouncescan|o.nullscan|o.xmasscan,o.udpscan);
+    ports = getfastports(o.windowscan|o.synscan|o.connectscan|o.fragscan|o.finscan|o.maimonscan|o.bouncescan|o.nullscan|o.xmasscan|o.ackscan,o.udpscan);
   }
 
   if (o.pingscan && ports) {
@@ -665,7 +646,7 @@ int nmap_main(int argc, char *argv[]) {
 
   if (!ports) {
     ports = getdefaultports(o.windowscan|o.synscan|o.connectscan|o.fragscan|o.finscan|
-			    o.maimonscan|o.bouncescan|o.nullscan|o.xmasscan,
+			    o.maimonscan|o.bouncescan|o.nullscan|o.xmasscan|o.ackscan,
 			    o.udpscan);
   }
 
@@ -673,7 +654,7 @@ int nmap_main(int argc, char *argv[]) {
   if (!o.tcp_probe_port) o.tcp_probe_port = 80;
 
 
-  if (o.pingscan && (o.connectscan || o.udpscan || o.windowscan || o.synscan || o.finscan || o.maimonscan ||  o.nullscan || o.xmasscan || o.bouncescan)) {
+  if (o.pingscan && (o.connectscan || o.udpscan || o.windowscan || o.synscan || o.finscan || o.maimonscan ||  o.nullscan || o.xmasscan || o.ackscan || o.bouncescan)) {
     fatal("Ping scan is not valid with any other scan types (the other ones all include a ping scan");
   }
 
@@ -685,7 +666,7 @@ int nmap_main(int argc, char *argv[]) {
       o.pingtype = PINGTYPE_TCP;
     }
 
-    if (o.finscan || o.windowscan || o.synscan || o.maimonscan || o.nullscan || o.xmasscan 
+    if (o.finscan || o.windowscan || o.synscan || o.maimonscan || o.nullscan || o.xmasscan || o.ackscan
 	|| o.udpscan ) {
       fatal("You requested a scan type which requires r00t privileges, and you do not have them.\n");
     }
@@ -708,10 +689,10 @@ int nmap_main(int argc, char *argv[]) {
   }
 
   if (o.bouncescan && o.pingtype != PINGTYPE_NONE) 
-    fprintf(o.nmap_stdout, "Hint: if your bounce scan target hosts aren't reachable from here, remember to use -P0 so we don't try and ping them prior to the scan\n");
+    log_write(LOG_STDOUT, "Hint: if your bounce scan target hosts aren't reachable from here, remember to use -P0 so we don't try and ping them prior to the scan\n");
 
-  if (o.connectscan + o.windowscan + o.synscan + o.finscan + o.maimonscan + o.xmasscan + o.nullscan > 1) {
-    fatal("You specified more than one type of TCP scan.  Please choose only one of -sT, -sS, -sF, -sM, -sX, -sW, and -sN");
+  if (o.connectscan + o.windowscan + o.synscan + o.finscan + o.maimonscan + o.xmasscan + o.nullscan + o.ackscan  > 1) {
+    fatal("You specified more than one type of TCP scan.  Please choose only one of -sT, -sS, -sF, -sM, -sX, -sA, -sW, and -sN");
   }
 
   if (o.numdecoys > 0 && (o.bouncescan || o.connectscan)) {
@@ -720,7 +701,7 @@ int nmap_main(int argc, char *argv[]) {
 
   if (o.fragscan && (o.connectscan || 
 		     (o.udpscan && (o.windowscan + o.synscan + o.finscan + o.maimonscan + 
-				    o.xmasscan + o.nullscan == 0))))
+				    o.xmasscan + o.ackscan + o.nullscan == 0))))
     fatal("Fragmentation scan can only be used with SYN, FIN, Maimon, XMAS, ACK, or NULL scan types");
  
   if (o.identscan && !o.connectscan) {
@@ -786,38 +767,21 @@ int nmap_main(int argc, char *argv[]) {
 	exit(1);
       } 
     }  else if (o.verbose)
-      fprintf(o.nmap_stdout, "Resolved ftp bounce attack proxy to %s (%s).\n", 
+      log_write(LOG_STDOUT, "Resolved ftp bounce attack proxy to %s (%s).\n", 
 	      ftp.server_name, inet_ntoa(ftp.server)); 
   }
   fflush(stdout);
 
-  if (o.logfd || o.machinelogfd) {
     timep = time(NULL);
 
     /* Brief info incase they forget what was scanned */
     Strncpy(mytime, ctime(&timep), sizeof(mytime));
     chomp(mytime);
-    if (o.logfd) {
-      fprintf(o.logfd, "# Nmap (V. %s) scan initiated %s as: ", VERSION, mytime);
-    }
+  log_write(LOG_NORMAL|LOG_MACHINE, "# Nmap (V. %s) scan initiated %s as: ", VERSION, mytime);
 
-    if (o.machinelogfd) {
-      fprintf(o.machinelogfd, "# Nmap (V. %s) scan initiated %s as: ", VERSION, mytime);
-    }
+  for(i=0; i < argc; i++) log_write(LOG_NORMAL|LOG_MACHINE,"%s ", fakeargv[i]);
+  log_write(LOG_NORMAL|LOG_MACHINE,"\n");  
 
-    if (o.logfd) {
-      for(i=0; i < argc; i++)
-	fprintf(o.logfd, "%s ", fakeargv[i]);
-      fprintf(o.logfd, "\n");
-    }
-
-    if (o.machinelogfd) {
-      for(i=0; i < argc; i++)
-	fprintf(o.machinelogfd, "%s ", fakeargv[i]);
-      fprintf(o.machinelogfd, "\n");
-    }
-
-  }
 
   /* more fakeargv junk, BTW malloc'ing extra space in argv[0] doesn't work */
   if (quashargv) {
@@ -840,7 +804,7 @@ int nmap_main(int argc, char *argv[]) {
     fprintf(stderr, "WARNING:  Your specified max_parallel_sockets of %d, but your system says it might only give us %d.  Trying anyway\n", o.max_parallelism, i);
   }
 
-  if (o.debugging > 1) fprintf(o.nmap_stdout, "The max # of sockets we are using is: %d\n", o.max_parallelism);
+  if (o.debugging > 1) log_write(LOG_STDOUT, "The max # of sockets we are using is: %d\n", o.max_parallelism);
 
   if (randomize)
     shortfry(ports, o.numports); 
@@ -892,33 +856,33 @@ int nmap_main(int argc, char *argv[]) {
       if (o.source) memcpy(&currenths->source_ip, o.source, sizeof(struct in_addr));
       if (!o.pingscan) {
 	if (o.pingtype != PINGTYPE_NONE && (currenths->flags & HOST_UP) && (o.verbose || o.debugging)) 
-	  fprintf(o.nmap_stdout, "Host %s (%s) appears to be up ... good.\n", currenths->name, inet_ntoa(currenths->host));    
+	  log_write(LOG_STDOUT, "Host %s (%s) appears to be up ... good.\n", currenths->name, inet_ntoa(currenths->host));
 	else if (o.verbose && o.pingtype != PINGTYPE_NONE && !(currenths->flags & HOST_UP)) {  
 	  if (resolve_all)
-	    nmap_log("Host %s (%s) appears to be down, skipping it.\n", currenths->name, inet_ntoa(currenths->host));
-	  else fprintf(o.nmap_stdout, "Host %s (%s) appears to be down, skipping it.\n", currenths->name, inet_ntoa(currenths->host));
+	    log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Host %s (%s) appears to be down, skipping it.\n", currenths->name, inet_ntoa(currenths->host));
+	  else log_write(LOG_STDOUT,"Host %s (%s) appears to be down, skipping it.\n", currenths->name, inet_ntoa(currenths->host));
 	}
 
       }
       else {
 	if (currenths->flags & HOST_UP) {  
-	  nmap_log("Host %s (%s) appears to be up.\n", currenths->name, inet_ntoa(currenths->host));    
-	  nmap_machine_log("Host: %s (%s)\tStatus: Up\n", inet_ntoa(currenths->host), currenths->name);
+	  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Host %s (%s) appears to be up.\n", currenths->name, inet_ntoa(currenths->host));
+	  log_write(LOG_MACHINE,"Host: %s (%s)\tStatus: Up\n", inet_ntoa(currenths->host), currenths->name);
 	}
 	else 
 	  if (o.verbose || o.debugging || resolve_all) {    
 	    if (resolve_all)
-	      nmap_log("Host %s (%s) appears to be down.\n", currenths->name, inet_ntoa(currenths->host));
-	    else fprintf(o.nmap_stdout, "Host %s (%s) appears to be down.\n", currenths->name, inet_ntoa(currenths->host));
+	      log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Host %s (%s) appears to be down.\n", currenths->name, inet_ntoa(currenths->host));
+	    else log_write(LOG_STDOUT,"Host %s (%s) appears to be down.\n", currenths->name, inet_ntoa(currenths->host));
 	  }
       }
 
       if (currenths->wierd_responses) {  
 	if (!(currenths->flags & HOST_UP))
-	  nmap_log("Host  %s (%s) seems to be a subnet broadcast address (returned %d extra pings).  Skipping host.\n",  currenths->name, inet_ntoa(currenths->host), currenths->wierd_responses);
+	  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Host  %s (%s) seems to be a subnet broadcast address (returned %d extra pings).  Skipping host.\n",  currenths->name, inet_ntoa(currenths->host), currenths->wierd_responses);
 	else
-	  nmap_log("Host  %s (%s) seems to be a subnet broadcast address (returned %d extra pings).  Still scanning it.\n",  currenths->name, inet_ntoa(currenths->host), currenths->wierd_responses);
-	nmap_machine_log("Host: %s (%s)\tStatus: Smurf (%d responses)\n",  inet_ntoa(currenths->host), currenths->name, currenths->wierd_responses);
+	  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Host  %s (%s) seems to be a subnet broadcast address (returned %d extra pings).  Still scanning it.\n",  currenths->name, inet_ntoa(currenths->host), currenths->wierd_responses);
+	log_write(LOG_MACHINE,"Host: %s (%s)\tStatus: Smurf (%d responses)\n",  inet_ntoa(currenths->host), currenths->name, currenths->wierd_responses);
       }
  
       /* The !currenths->wierd_responses was commented out after I found
@@ -930,7 +894,7 @@ int nmap_main(int argc, char *argv[]) {
       if (currenths->flags & HOST_UP /*&& !currenths->wierd_responses*/ &&
 	  !o.pingscan) {
    
-	if (currenths->flags & HOST_UP && !currenths->source_ip.s_addr && ( o.windowscan || o.synscan || o.finscan || o.maimonscan || o.udpscan || o.nullscan || o.xmasscan)) {
+	if (currenths->flags & HOST_UP && !currenths->source_ip.s_addr && ( o.windowscan || o.synscan || o.finscan || o.maimonscan || o.udpscan || o.nullscan || o.xmasscan || o.ackscan )) {
 	  if (gethostname(myname, MAXHOSTNAMELEN) || 
 	      !(target = gethostbyname(myname)))
 	    fatal("Cannot get hostname!  Try using -S <my_IP_address> or -e <interface to scan through>\n"); 
@@ -942,7 +906,7 @@ int nmap_main(int argc, char *argv[]) {
 	}
    
 	/* Figure out what link-layer device (interface) to use (ie eth0, ppp0, etc) */
-	if (!*currenths->device && currenths->flags & HOST_UP && (o.nullscan || o.xmasscan || o.udpscan || o.finscan || o.maimonscan ||  o.synscan || o.osscan || o.windowscan) && (ipaddr2devname( currenths->device, &currenths->source_ip) != 0))
+	if (!*currenths->device && currenths->flags & HOST_UP && (o.nullscan || o.xmasscan || o.ackscan || o.udpscan || o.finscan || o.maimonscan ||  o.synscan || o.osscan || o.windowscan) && (ipaddr2devname( currenths->device, &currenths->source_ip) != 0))
 	  fatal("Could not figure out what device to send the packet out on!  You might possibly want to try -S (but this is probably a bigger problem).  If you are trying to sp00f the source of a SYN/FIN scan with -S <fakeip>, then you must use -e eth0 (or other devicename) to tell us what interface to use.\n");
 	/* Set up the decoy */
 	o.decoys[o.decoyturn] = currenths->source_ip;
@@ -951,6 +915,7 @@ int nmap_main(int argc, char *argv[]) {
 	if (o.synscan) pos_scan(currenths, ports, SYN_SCAN);
 	if (o.windowscan) pos_scan(currenths, ports, WINDOW_SCAN);
 	if (o.connectscan) pos_scan(currenths, ports, CONNECT_SCAN);      
+	if (o.ackscan) pos_scan(currenths, ports, ACK_SCAN);
 
 	if (o.finscan) super_scan(currenths, ports, FIN_SCAN);
 	if (o.xmasscan) super_scan(currenths, ports, XMAS_SCAN);
@@ -972,62 +937,62 @@ int nmap_main(int argc, char *argv[]) {
 	}
 
 	if (currenths->timedout) {
-	  nmap_log("Skipping host  %s (%s) due to host timeout\n", currenths->name,
+	  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Skipping host  %s (%s) due to host timeout\n", currenths->name,
 		   inet_ntoa(currenths->host));
-	  nmap_machine_log("Host: %s (%s)\tStatus: Timeout", 
+	  log_write(LOG_MACHINE,"Host: %s (%s)\tStatus: Timeout", 
 			   inet_ntoa(currenths->host), currenths->name);
 	}
 	else if (!currenths->ports.numports && !o.pingscan) {
-	  nmap_log("No ports open for host %s (%s)\n", currenths->name,
+	  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"No ports open for host %s (%s)\n", currenths->name,
 		   inet_ntoa(currenths->host));
-	  nmap_machine_log("Host: %s (%s)\tStatus: Up", 
+	  log_write(LOG_MACHINE,"Host: %s (%s)\tStatus: Up", 
 			   inet_ntoa(currenths->host), currenths->name);
 	}
 	else {
 	  if (currenths->ports.numports) {
-	    nmap_log("Interesting ports on %s (%s):\n", currenths->name, 
+	    log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Interesting ports on %s (%s):\n", currenths->name, 
 		     inet_ntoa(currenths->host));
-	    nmap_machine_log("Host: %s (%s)", inet_ntoa(currenths->host), 
+	    log_write(LOG_MACHINE,"Host: %s (%s)", inet_ntoa(currenths->host), 
 			     currenths->name);	
 	    invertfirewalled(&currenths->ports, ports);
 	    printandfreeports(&currenths->ports);
 	  }
 	  if (o.osscan) {
 	    if (currenths->seq.responses > 3) {
-	      nmap_log("%s", seqreport(&(currenths->seq)));
-	      nmap_machine_log("\tSeq Index: %d", currenths->seq.index);
+	      log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"%s", seqreport(&(currenths->seq)));
+	      log_write(LOG_MACHINE,"\tSeq Index: %d", currenths->seq.index);
 	    }
 	    if (currenths->FP_matches[0]) {
-	      nmap_machine_log("\tOS: %s",  currenths->FP_matches[0]->OS_name);
+	      log_write(LOG_MACHINE,"\tOS: %s",  currenths->FP_matches[0]->OS_name);
 	      i = 1;
 	      while(currenths->FP_matches[i]) {
-		nmap_machine_log("|%s", currenths->FP_matches[i]->OS_name);
+		log_write(LOG_MACHINE,"|%s", currenths->FP_matches[i]->OS_name);
 		i++;
 	      }
 	      if (!currenths->FP_matches[1])
-		nmap_log("Remote operating system guess: %s", 
+		log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Remote operating system guess: %s", 
 			 currenths->FP_matches[0]->OS_name);
 	      else  {
-		nmap_log("Remote OS guesses: %s", 
+		log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Remote OS guesses: %s", 
 			 currenths->FP_matches[0]->OS_name);
 		i = 1;
 		while(currenths->FP_matches[i]) {
-		  nmap_log(", %s", currenths->FP_matches[i]->OS_name);
+		  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,", %s", currenths->FP_matches[i]->OS_name);
 		  i++;
 		}
 	      }
-	      nmap_log("\n");	  
+	      log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"\n");	  
 	      if (currenths->goodFP >= 0 && (o.debugging || o.verbose > 1)) {
-		nmap_log("OS Fingerprint:\n%s\n", fp2ascii(currenths->FPs[currenths->goodFP]));
+		log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"OS Fingerprint:\n%s\n", fp2ascii(currenths->FPs[currenths->goodFP]));
 	      }
-	      nmap_log("\n");
+	      log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"\n");
 	    } else {
 	      if (currenths->goodFP == ENOMATCHESATALL && o.scan_delay < 500) {
-		nmap_log("No OS matches for host (If you know what OS is running on it, see http://www.insecure.org/cgi-bin/nmap-submit.cgi).\nTCP/IP fingerprint:\n%s\n\n", mergeFPs(currenths->FPs, currenths->numFPs));
+		log_write(LOG_NORMAL|LOG_SKID_NOXLT|LOG_STDOUT,"No OS matches for host (If you know what OS is running on it, see http://www.insecure.org/cgi-bin/nmap-submit.cgi).\nTCP/IP fingerprint:\n%s\n\n", mergeFPs(currenths->FPs, currenths->numFPs));
 	      } else if (currenths->goodFP == ETOOMANYMATCHES) {
-		nmap_log("Too many fingerprints match this host for me to give an accurate OS guess\n");
+		log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Too many fingerprints match this host for me to give an accurate OS guess\n");
 		if (o.debugging || o.verbose) {
-		  nmap_log("TCP/IP fingerprint:\n%s\n\n",  mergeFPs(currenths->FPs, currenths->numFPs));
+		  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"TCP/IP fingerprint:\n%s\n\n",  mergeFPs(currenths->FPs, currenths->numFPs));
 		}
 	      }
 	    }
@@ -1036,13 +1001,10 @@ int nmap_main(int argc, char *argv[]) {
 	  }
 	}
 
-	if (o.machinelogfd) fflush(o.machinelogfd);
-	if (o.debugging) fprintf(o.nmap_stdout, "Final times for host: srtt: %d rttvar: %d  to: %d\n", currenths->to.srtt, currenths->to.rttvar, currenths->to.timeout);
-	nmap_machine_log("\n");
+	if (o.debugging) log_write(LOG_STDOUT, "Final times for host: srtt: %d rttvar: %d  to: %d\n", currenths->to.srtt, currenths->to.rttvar, currenths->to.timeout);
+	log_write(LOG_MACHINE,"\n");
       }
-      fflush(stdout);
-      if (o.machinelogfd) fflush(o.machinelogfd);
-      if (o.logfd) fflush(o.logfd);
+      log_flush_all();
     }
     /* Free my host expressions */
     for(i=0; i < num_host_exp_groups; i++)
@@ -1053,21 +1015,15 @@ int nmap_main(int argc, char *argv[]) {
   timep = time(NULL);
   i = timep - starttime;
   if (numhosts_scanned == 1 && numhosts_up == 0)
-    fprintf(o.nmap_stdout, "Note: Host seems down. If it is really up, but blocking our ping probes, try -P0\n");
-  fprintf(o.nmap_stdout, "Nmap run completed -- %d %s (%d %s up) scanned in %d %s\n", numhosts_scanned, (numhosts_scanned == 1)? "IP address" : "IP addresses", numhosts_up, (numhosts_up == 1)? "host" : "hosts",  i, (i == 1)? "second": "seconds");
-  if (o.logfd || o.machinelogfd) {
+    log_write(LOG_STDOUT, "Note: Host seems down. If it is really up, but blocking our ping probes, try -P0\n");
+  log_write(LOG_STDOUT|LOG_SKID, "Nmap run completed -- %d %s (%d %s up) scanned in %d %s\n", numhosts_scanned, (numhosts_scanned == 1)? "IP address" : "IP addresses", numhosts_up, (numhosts_up == 1)? "host" : "hosts",  i, (i == 1)? "second": "seconds");
 
-    Strncpy(mytime, ctime(&timep), sizeof(mytime));
-    chomp(mytime);
-    if (o.logfd) {
-      fprintf(o.logfd, "# Nmap run completed at %s -- %d %s (%d %s up) scanned in %d %s\n", mytime, numhosts_scanned, (numhosts_scanned == 1)? "IP address" : "IP addresses", numhosts_up, (numhosts_up == 1)? "host" : "hosts",  i, (i == 1)? "second": "seconds");
-    }
 
-    if (o.machinelogfd) {
-      fprintf(o.machinelogfd, "# Nmap run completed at %s -- %d %s (%d %s up) scanned in %d %s\n", mytime, numhosts_scanned, (numhosts_scanned == 1)? "IP address" : "IP addresses", numhosts_up, (numhosts_up == 1)? "host" : "hosts",  i, (i == 1)? "second": "seconds");
-    }
+  Strncpy(mytime, ctime(&timep), sizeof(mytime));
+  chomp(mytime);
+  
+  log_write(LOG_NORMAL|LOG_MACHINE, "# Nmap run completed at %s -- %d %s (%d %s up) scanned in %d %s\n", mytime, numhosts_scanned, (numhosts_scanned == 1)? "IP address" : "IP addresses", numhosts_up, (numhosts_up == 1)? "host" : "hosts",  i, (i == 1)? "second": "seconds");
 
-  }
 
   /* Free fake argv */
   for(i=0; i < argc; i++)
@@ -1077,7 +1033,102 @@ int nmap_main(int argc, char *argv[]) {
   return 0;
 }
 
+
+/* Reads in a (normal or machine format) Nmap log file and gathers enough
+   state to allow Nmap to continue where it left off.  The important things
+   it must gather are:
+   1) The last host completed
+   2) The command arguments
+*/
+   
+int gather_logfile_resumption_state(char *fname, int *myargc, char ***myargv) {
+  char *filestr;
+  int filelen;
+  char nmap_arg_buffer[1024];
+  struct in_addr lastip;
+  char *p, *q, *found; /* I love C! */
+  /* We mmap it read/write since we will change the last char to a newline if it is not already */
+  filestr = mmapfile(fname, &filelen, O_RDWR);
+  if (!filestr) {
+    fatal("Could not mmap() %s read/write", fname);
+  }
+
+  if (filelen < 20) {
+    fatal("Output file %s is too short -- no use resuming", fname);
+  }
+
+  /* For now we terminate it with a NUL, but we will terminate the file with
+     a '\n' later */
+  filestr[filelen - 1] = '\0';
+
+  /* First goal is to find the nmap args */
+  p = strstr(filestr, " as: ");
+  p += 5;
+  while(*p && !isspace(*p))
+    p++;
+  if (!*p) fatal("Unable to parse supposed log file %s.  Sorry", fname);
+  p++; /* Skip the space between program name and first arg */
+  if (*p == '\n' || !*p) fatal("Unable to parse supposed log file %s.  Sorry", fname);
+
+  q = strchr(p, '\n');
+  if (!q || (q - p >= sizeof(nmap_arg_buffer) - 32))
+    fatal("Unable to parse supposed log file %s.  Sorry", fname);
+
+  strcpy(nmap_arg_buffer, "nmap --append_output ");
+  memcpy(nmap_arg_buffer + 21, p, q-p);
+  nmap_arg_buffer[21 + q-p] = '\0';
+
+  *myargc = arg_parse(nmap_arg_buffer, myargv);
+  if (*myargc == -1) {  
+    fatal("Unable to parse supposed log file %s.  Sorry", fname);
+  }
+     
+  /* Now it is time to figure out the last IP that was scanned */
+  q = p;
+  found = NULL;
+  /* Lets see if its a machine log first */
+  while((q = strstr(q, "\nHost: ")))
+    found = q = q + 7;
+
+  if (found) {
+    q = strchr(found, ' ');
+    if (!q) fatal("Unable to parse supposed log file %s.  Sorry", fname);
+    *q = '\0';
+    if (inet_aton(found, &lastip) == 0)
+      fatal("Unable to parse supposed log file %s.  Sorry", fname);
+    *q = ' ';
+  } else {
+    /* OK, I guess (hope) it is a normal log then */
+    q = p;
+    found = NULL;
+    while((q = strstr(q, "\nInteresting ports on ")))
+      found = q++;
+
+    if (found) {    
+      found = strchr(found, '(');
+      if (!found) fatal("Unable to parse supposed log file %s.  Sorry", fname);
+      found++;
+      q = strchr(found, ')');
+      if (!q) fatal("Unable to parse supposed log file %s.  Sorry", fname);
+      *q = '\0';
+      if (inet_aton(found, &lastip) == 0)
+	fatal("Unable to parse ip (%s) supposed log file %s.  Sorry", found, fname);
+      *q = ')';
+    } else {
+      error("Warning: You asked for --resume but it doesn't look like any hosts in the log file were successfully scanned.  Starting from the beginning.");
+      lastip.s_addr = 0;
+    }
+  }
+  o.resume_ip = lastip;
+
+  /* Ensure the log file ends with a newline */
+ filestr[filelen - 1] = '\n';
+ munmap(filestr, filelen);
+ return 0;
+}
+
 void options_init() {
+
   bzero( (char *) &o, sizeof(struct ops));
   o.isr00t = !(geteuid());
   o.debugging = DEBUGGING;
@@ -1103,7 +1154,7 @@ inline void max_rcvbuf(int sd) {
     if (o.debugging) perror("Problem setting large socket recieve buffer");
   if (o.debugging) {
     getsockopt(sd, SOL_SOCKET, SO_RCVBUF,(void *) &optval, &optlen);
-    fprintf(o.nmap_stdout, "Our buffer size is now %d\n", optval);
+    log_write(LOG_STDOUT, "Our buffer size is now %d\n", optval);
   }
 }
 /* Maximize the open file descriptor limit for this process go up to the
@@ -1596,14 +1647,14 @@ void printandfreeports(portlist *plist) {
 
   
   if (!o.rpcscan) {  
-    nmap_log("Port    State       Protocol  Service");
+    log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Port    State       Protocol  Service");
   } else {
-    nmap_log("Port    State       Protocol  Service (RPC)");
+    log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Port    State       Protocol  Service (RPC)");
   }
-  nmap_log("%s", (o.identscan)?"         Owner\n":"\n");
-  nmap_machine_log("\tPorts: ");
+  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"%s", (o.identscan)?"         Owner\n":"\n");
+  log_write(LOG_MACHINE,"\tPorts: ");
   while(current != NULL) {
-    if (!first) nmap_machine_log(", ");
+    if (!first) log_write(LOG_MACHINE,", ");
     else first = 0;
     strcpy(protocol,(current->proto == IPPROTO_TCP)? "tcp": "udp");
     state = statenum2str(current->state);
@@ -1644,11 +1695,11 @@ void printandfreeports(portlist *plist) {
       Strncpy(serviceinfo, (service)? service->s_name : "unknown" , sizeof(serviceinfo));
       strcpy(rpcmachineinfo, "");
     }
-    nmap_log("%-8d%-12s%-10s%-24s", current->portno, state, protocol, 
+    log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"%-8d%-12s%-10s%-24s", current->portno, state, protocol, 
 	     serviceinfo);
-    nmap_log("%s\n", (current->owner)? current->owner : "");
+    log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"%s\n", (current->owner)? current->owner : "");
 
-    nmap_machine_log("%d/%s/%s/%s/%s/%s//", current->portno, state, 
+    log_write(LOG_MACHINE,"%d/%s/%s/%s/%s/%s//", current->portno, state, 
 		     protocol, (current->owner)? current->owner : "",
 		     (service)? service->s_name: "", rpcmachineinfo);    
 
@@ -1657,61 +1708,8 @@ void printandfreeports(portlist *plist) {
     if (tmp->owner) free(tmp->owner);
     free(tmp);
   }
-  nmap_log("\n");
+  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"\n");
   bzero(plist, sizeof(portlist));
-}
-
-int listen_icmp(int icmpsock,  unsigned short outports[], 
-		unsigned short numtries[], int *num_out, struct in_addr target,
-		portlist *ports) {
-  char response[1024];
-  struct sockaddr_in stranger;
-  int sockaddr_in_size = sizeof(struct sockaddr_in);
-  struct in_addr bs;
-  struct ip *ip = (struct ip *)response;
-  struct ip *ip2;
-  struct icmp *icmp = (struct icmp *) (response + sizeof(struct ip));
-  unsigned short *data;
-  int badport, numcaught=0, bytes, i, tmptry=0, found=0;
-  
-  while  ((bytes = recvfrom(icmpsock, response, 1024, 0,
-			    (struct sockaddr *) &stranger,
-			    &sockaddr_in_size)) > 0) {
-    numcaught++;
-    
-    bs.s_addr = ip->ip_src.s_addr;
-    if (ip->ip_src.s_addr == target.s_addr && ip->ip_p == IPPROTO_ICMP 
-	&& icmp->icmp_type == 3 && icmp->icmp_code == 3) {    
-      ip2 = (struct ip *) (response + 4 * ip->ip_hl + sizeof(struct icmp));
-      data = (unsigned short *) ((char *)ip2 + 4 * ip2->ip_hl);
-      
-      badport = ntohs(data[1]);
-      /*delete it from our outports array */
-      found = 0;
-      for(i=0; i < o.max_parallelism; i++) 
-	if (outports[i] == badport) {
-	  found = 1;
-	  tmptry = numtries[i];
-	  outports[i] = numtries[i] = 0;
-	  (*num_out)--;
-	  break;
-	}
-      if (o.debugging && found && tmptry > 0) 
-	fprintf(stderr, "Badport: %d on try number %d\n", badport, tmptry);
-      if (!found) {
-	if (o.debugging) 
-	  fprintf(o.nmap_stdout, "Badport %d came in late, deleting from portlist.\n", badport);
-	if (deleteport(ports, badport, IPPROTO_UDP) < 0)
-	  if (o.debugging) fprintf(o.nmap_stdout, "Port deletion failed.\n");
-      }
-    }
-    else {
-      
-      if (o.debugging) fprintf(o.nmap_stdout, "Caught icmp type %d code %d\n", icmp->icmp_type, icmp->icmp_code);
-      
-    }
-  }
-  return numcaught;
 }
 
 /* This attempts to calculate the round trip time (rtt) to a host by timing a
@@ -1793,12 +1791,12 @@ int check_ident_port(struct in_addr target) {
 
  failure:
   close(sd);
-  if (o.debugging || o.verbose) fprintf(o.nmap_stdout, "identd port not active\n");
+  if (o.debugging || o.verbose) log_write(LOG_STDOUT, "identd port not active\n");
   return 0;
 
  success:
   close(sd);
-  if (o.debugging || o.verbose) fprintf(o.nmap_stdout, "identd port is active\n");
+  if (o.debugging || o.verbose) log_write(LOG_STDOUT, "identd port is active\n");
   return 1;
 }
 
@@ -1832,7 +1830,7 @@ int getidentinfoz(struct in_addr target, int localport, int remoteport,
     return -1;
   }
   snprintf(request, sizeof(request), "%hu,%hu\r\n", remoteport, localport);
-  if (o.debugging > 1) fprintf(o.nmap_stdout, "Connected to identd, sending request: %s", request);
+  if (o.debugging > 1) log_write(LOG_STDOUT, "Connected to identd, sending request: %s", request);
   if (write(sd, request, strlen(request) + 1) == -1) {
     perror("identd write");
     close(sd);
@@ -1845,16 +1843,16 @@ int getidentinfoz(struct in_addr target, int localport, int remoteport,
   }
   else {
     close(sd);
-    if (o.debugging > 1) fprintf(o.nmap_stdout, "Read %d bytes from identd: %s\n", res, response);
+    if (o.debugging > 1) log_write(LOG_STDOUT, "Read %d bytes from identd: %s\n", res, response);
     if ((p = strchr(response, ':'))) {
       p++;
       if ((q = strtok(p, " :"))) {
 	if (!strcasecmp( q, "error")) {
 	  if (strstr(response, "HIDDEN-USER") || strstr(response, "hidden-user")) {
-	    fprintf(o.nmap_stdout, "identd returning HIDDEN-USER, giving up on it\n");
+	    log_write(LOG_STDOUT, "identd returning HIDDEN-USER, giving up on it\n");
 	    return -1;
 	  }
-	  if (o.debugging) fprintf(o.nmap_stdout, "ERROR returned from identd for port %d\n", remoteport);
+	  if (o.debugging) log_write(LOG_STDOUT, "ERROR returned from identd for port %d\n", remoteport);
 	  return 0;
 	}
 	if ((os = strtok(NULL, " :"))) {
@@ -1918,7 +1916,7 @@ void super_scan(struct hoststruct *target, unsigned short *portarray, stype scan
     return;
 
   if (o.debugging) 
-    fprintf(o.nmap_stdout, "Starting super_scan\n");
+    log_write(LOG_STDOUT, "Starting super_scan\n");
 
   max_width = (o.max_parallelism)? o.max_parallelism : 125;
   numqueries_ideal = initial_packet_width = MIN(max_width, 10);
@@ -1967,7 +1965,7 @@ void super_scan(struct hoststruct *target, unsigned short *portarray, stype scan
       fatal("Cannot get hostname!  Try using -S <my_IP_address> or -e <interface to scan through>\n"); 
     memcpy(&target->source_ip, myhostent->h_addr_list[0], sizeof(struct in_addr));
     if (o.debugging || o.verbose) 
-      fprintf(o.nmap_stdout, "We skillfully deduced that your address is %s\n",
+      log_write(LOG_STDOUT, "We skillfully deduced that your address is %s\n",
 	      inet_ntoa(target->source_ip));
   }
 
@@ -1989,7 +1987,7 @@ void super_scan(struct hoststruct *target, unsigned short *portarray, stype scan
     filter[0] = '\0';
 
   if (o.debugging)
-    fprintf(o.nmap_stdout, "Packet capture filter: %s\n", filter);
+    log_write(LOG_STDOUT, "Packet capture filter: %s\n", filter);
   if (pcap_compile(pd, &fcode, filter, 0, netmask) < 0)
     fatal("Error compiling our pcap filter: %s\n", pcap_geterr(pd));
   if (pcap_setfilter(pd, &fcode) < 0 )
@@ -2004,7 +2002,7 @@ void super_scan(struct hoststruct *target, unsigned short *portarray, stype scan
   starttime = time(NULL);
 
   if (o.debugging || o.verbose)
-    fprintf(o.nmap_stdout, "Initiating FIN,NULL, UDP, or Xmas stealth scan against %s (%s)\n", target->name, inet_ntoa(target->host));
+    log_write(LOG_STDOUT, "Initiating FIN,NULL, UDP, or Xmas stealth scan against %s (%s)\n", target->name, inet_ntoa(target->host));
   
 
   do {
@@ -2029,7 +2027,7 @@ void super_scan(struct hoststruct *target, unsigned short *portarray, stype scan
 	    if ( TIMEVAL_SUBTRACT(now, current->sent[current->trynum]) > target->to.timeout) {
 	      if (current->trynum > 0) {
 		/* We consider this port valid, move it to open list */
-		if (o.debugging > 1) { fprintf(o.nmap_stdout, "Moving port %lu to the open list\n", current->portno); }
+		if (o.debugging > 1) { log_write(LOG_STDOUT, "Moving port %lu to the open list\n", current->portno); }
 		freshportstried--;
 		current->state = PORT_OPEN;
 		/* First delete from old list */
@@ -2050,7 +2048,7 @@ void super_scan(struct hoststruct *target, unsigned short *portarray, stype scan
 	      } else {
 		/* Initial timeout ... we've got to resend */
 		if (o.scan_delay) enforce_scan_delay(NULL);
-		if (o.debugging > 1) { fprintf(o.nmap_stdout, "Initial timeout, resending to portno %lu\n", current->portno); }
+		if (o.debugging > 1) { log_write(LOG_STDOUT, "Initial timeout, resending to portno %lu\n", current->portno); }
 		current->trynum++;
 		/* If they didn't specify the magic port, we use magic_port +1
 		   so we can tell that it was a retransmit later */
@@ -2074,7 +2072,7 @@ void super_scan(struct hoststruct *target, unsigned short *portarray, stype scan
 	       so now we try to send off new queries if we can ... */
 	    if (numqueries_outstanding >= (int) numqueries_ideal) break;
 	    if (o.scan_delay) enforce_scan_delay(NULL);
-	    if (o.debugging > 1) fprintf(o.nmap_stdout, "Sending initial query to port %lu\n", current->portno);
+	    if (o.debugging > 1) log_write(LOG_STDOUT, "Sending initial query to port %lu\n", current->portno);
 	    freshportstried++;
 	    /* lets send a packet! */
 	    current->state = PORT_TESTING;
@@ -2092,7 +2090,7 @@ void super_scan(struct hoststruct *target, unsigned short *portarray, stype scan
 	  }
 	}
 
-	if (o.debugging > 1) fprintf(o.nmap_stdout, "Ideal number of queries: %d\n", (int) numqueries_ideal);
+	if (o.debugging > 1) log_write(LOG_STDOUT, "Ideal number of queries: %d\n", (int) numqueries_ideal);
 	tmp++;
 	/* Now that we have sent the packets we wait for responses */
 	windowdecrease = 0;
@@ -2124,7 +2122,7 @@ void super_scan(struct hoststruct *target, unsigned short *portarray, stype scan
 		  newport = ntohs(tcp->th_sport);
 		  if (portlookup[newport] < 0) {
 		    if (o.debugging) {
-		      fprintf(o.nmap_stdout, "Strange packet from port %d:\n", ntohs(tcp->th_sport));
+		      log_write(LOG_STDOUT, "Strange packet from port %d:\n", ntohs(tcp->th_sport));
 		      readtcppacket((char *)ip, bytes);
 		    }
 		    current = NULL;
@@ -2158,13 +2156,13 @@ void super_scan(struct hoststruct *target, unsigned short *portarray, stype scan
 		if (ip2->ip_dst.s_addr != target->host.s_addr)
 		  continue;
 		data = (unsigned short *) ((char *)ip2 + 4 * ip2->ip_hl);
-		/*	    fprintf(o.nmap_stdout, "Caught ICMP packet:\n");
+		/*	    log_write(LOG_STDOUT, "Caught ICMP packet:\n");
 			    hdump(icmp, ntohs(ip->ip_len) - sizeof(struct ip)); */
 		if (icmp->icmp_type == 3) {
 		  newport = ntohs(data[1]);
 		  if (portlookup[newport] < 0) {
 		    if (o.debugging) {
-		      fprintf(o.nmap_stdout, "Strange ICMP packet type 3 code %d related to port %d:\n", icmp->icmp_code, newport);
+		      log_write(LOG_STDOUT, "Strange ICMP packet type 3 code %d related to port %d:\n", icmp->icmp_code, newport);
 		      readtcppacket((char *)ip, bytes);		
 		    }
 		    continue;		
@@ -2219,7 +2217,7 @@ void super_scan(struct hoststruct *target, unsigned short *portarray, stype scan
 	      if (current) {	  
 		if (current->state == PORT_CLOSED && (packet_trynum < 0)) {
 		  target->to.rttvar *= 1.2;
-		  if (o.debugging) { fprintf(o.nmap_stdout, "Late packet, couldn't figure out sendno so we do varianceincrease to %d\n", target->to.rttvar); 
+		  if (o.debugging) { log_write(LOG_STDOUT, "Late packet, couldn't figure out sendno so we do varianceincrease to %d\n", target->to.rttvar); 
 		  }
 		} 
 		if (packet_trynum > -1) {		
@@ -2237,17 +2235,17 @@ void super_scan(struct hoststruct *target, unsigned short *portarray, stype scan
 		      freshportstried = 0;
 		      dropped = 0;
 		      if (o.verbose || o.debugging )  
-			fprintf(o.nmap_stdout, "Too many drops ... increasing senddelay to %d\n", senddelay);
+			log_write(LOG_STDOUT, "Too many drops ... increasing senddelay to %d\n", senddelay);
 		    }
 		    if (windowdecrease == 0) {
 		      numqueries_ideal *= fallback_percent;
 		      if (numqueries_ideal < 1) numqueries_ideal = 1;
-		      if (o.debugging) { fprintf(o.nmap_stdout, "Lost a packet, decreasing window to %d\n", (int) numqueries_ideal);
+		      if (o.debugging) { log_write(LOG_STDOUT, "Lost a packet, decreasing window to %d\n", (int) numqueries_ideal);
 		      windowdecrease++;
 		      if (scantype == UDP_SCAN) usleep(250000);
 		      }
 		    } else if (o.debugging > 1) { 
-		      fprintf(o.nmap_stdout, "Lost a packet, but not decreasing\n");
+		      log_write(LOG_STDOUT, "Lost a packet, but not decreasing\n");
 		    }
 		  }
 		}    
@@ -2282,17 +2280,17 @@ void super_scan(struct hoststruct *target, unsigned short *portarray, stype scan
       current->state = PORT_FRESH;
       current->trynum = 0;
       if (o.debugging) { 
-	fprintf(o.nmap_stdout, "Preparing for retry, open port %lu noted\n", current->portno); 
+	log_write(LOG_STDOUT, "Preparing for retry, open port %lu noted\n", current->portno); 
       }
     }
     
     openlist = NULL;
     numqueries_ideal = initial_packet_width;
     if (o.debugging)
-      fprintf(o.nmap_stdout, "Done with round %d\n", tries);
+      log_write(LOG_STDOUT, "Done with round %d\n", tries);
     if (scantype == UDP_SCAN && changed && (tries + 1) < 100) {
       if (o.debugging) {
-	fprintf(o.nmap_stdout, "Sleeping for 1/2 second to overcome ICMP error rate limiting\n");
+	log_write(LOG_STDOUT, "Sleeping for 1/2 second to overcome ICMP error rate limiting\n");
       }
       usleep(500000);
     }
@@ -2301,7 +2299,7 @@ void super_scan(struct hoststruct *target, unsigned short *portarray, stype scan
   openlist = testinglist;
 
   if (o.debugging || o.verbose)
-    fprintf(o.nmap_stdout, "The UDP or stealth FIN/NULL/XMAS scan took %ld seconds to scan %d ports.\n", 
+    log_write(LOG_STDOUT, "The UDP or stealth FIN/NULL/XMAS scan took %ld seconds to scan %d ports.\n", 
 	    (long) time(NULL) - starttime, o.numports);
   
   for (current = openlist; current;  current = (current->next >= 0)? &scan[current->next] : NULL) {
@@ -2433,7 +2431,7 @@ void pos_scan(struct hoststruct *target, unsigned short *portarray, stype scanty
     return;
 
   if (o.debugging)
-    fprintf(o.nmap_stdout, "Starting pos_scan\n");
+    log_write(LOG_STDOUT, "Starting pos_scan\n");
 
   if (scantype == RPC_SCAN) initial_packet_width = 2;
   else initial_packet_width = 10;
@@ -2458,10 +2456,11 @@ void pos_scan(struct hoststruct *target, unsigned short *portarray, stype scanty
   if (o.max_parallelism) {
     ss.max_width = o.max_parallelism;
   } else {
-    if (scantype == SYN_SCAN || scantype == RPC_SCAN || 
-	scantype == WINDOW_SCAN)
+    if (scantype == CONNECT_SCAN) {
+      ss.max_width = MAX(5, max_sd() - 4);
+    } else {
       ss.max_width = 150;
-    else ss.max_width = MAX(5, max_sd() - 4);
+    }
   }
 
   if (initial_packet_width > ss.max_width)
@@ -2489,7 +2488,8 @@ void pos_scan(struct hoststruct *target, unsigned short *portarray, stype scanty
   }
    
   /* Init our raw socket */
-  if ((scantype == SYN_SCAN) || (scantype == WINDOW_SCAN)) {  
+  if ((scantype == SYN_SCAN) || (scantype == WINDOW_SCAN) || 
+      (scantype == ACK_SCAN)) {  
     if ((rawsd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) < 0 )
       pfatal("socket troubles in pos_scan");
     /* We do not wan't to unblock the socket since we want to wait 
@@ -2510,7 +2510,7 @@ void pos_scan(struct hoststruct *target, unsigned short *portarray, stype scanty
 	fatal("Cannot get hostname!  Try using -S <my_IP_address> or -e <interface to scan through>\n"); 
       memcpy(&target->source_ip, myhostent->h_addr_list[0], sizeof(struct in_addr));
       if (o.debugging || o.verbose) 
-	fprintf(o.nmap_stdout, "We skillfully deduced that your address is %s\n",
+	log_write(LOG_STDOUT, "We skillfully deduced that your address is %s\n",
 		inet_ntoa(target->source_ip));
     }
     
@@ -2534,7 +2534,7 @@ void pos_scan(struct hoststruct *target, unsigned short *portarray, stype scanty
       filter[0] = '\0';
      
     if (o.debugging)
-      fprintf(o.nmap_stdout, "Packet capture filter: %s\n", filter);
+      log_write(LOG_STDOUT, "Packet capture filter: %s\n", filter);
     if (pcap_compile(pd, &fcode, filter, 0, netmask) < 0)
       fatal("Error compiling our pcap filter: %s\n", pcap_geterr(pd));
     if (pcap_setfilter(pd, &fcode) < 0 )
@@ -2571,13 +2571,15 @@ void pos_scan(struct hoststruct *target, unsigned short *portarray, stype scanty
 
   if (o.debugging || o.verbose) {  
     if (scantype == SYN_SCAN)
-      fprintf(o.nmap_stdout, "Initiating SYN half-open stealth scan against %s (%s)\n", target->name, inet_ntoa(target->host));
+      log_write(LOG_STDOUT, "Initiating SYN half-open stealth scan against %s (%s)\n", target->name, inet_ntoa(target->host));
     else if (scantype == CONNECT_SCAN)
-      fprintf(o.nmap_stdout, "Initiating TCP connect() scan against %s (%s)\n",target->name, inet_ntoa(target->host)); 
+      log_write(LOG_STDOUT, "Initiating TCP connect() scan against %s (%s)\n",target->name, inet_ntoa(target->host)); 
     else if (scantype == WINDOW_SCAN)
-      fprintf(o.nmap_stdout, "Initiating ACK scan against %s (%s)\n",target->name, inet_ntoa(target->host));
+      log_write(LOG_STDOUT, "Initiating Window scan against %s (%s)\n",target->name, inet_ntoa(target->host));
+    else if (scantype == ACK_SCAN)
+      log_write(LOG_STDOUT, "Initiating ACK scan against %s (%s)\n",target->name, inet_ntoa(target->host));
     else {
-      fprintf(o.nmap_stdout, "Initiating RPC scan against %s (%s)\n",target->name, inet_ntoa(target->host)); 
+      log_write(LOG_STDOUT, "Initiating RPC scan against %s (%s)\n",target->name, inet_ntoa(target->host)); 
     }
   }
 
@@ -2585,10 +2587,10 @@ void pos_scan(struct hoststruct *target, unsigned short *portarray, stype scanty
     ss.changed = 0;
     if (tries > 3 && tries < 10) {
       senddelay += 10000 * (tries - 3); 
-      if (o.verbose) fprintf(o.nmap_stdout, "Bumping up senddelay by %d (to %d), due to excessive drops\n", 10000 * (tries - 3), senddelay);
+      if (o.verbose) log_write(LOG_STDOUT, "Bumping up senddelay by %d (to %d), due to excessive drops\n", 10000 * (tries - 3), senddelay);
     } else if (tries >= 10) {
       senddelay += 75000; 
-      if (o.verbose) fprintf(o.nmap_stdout, "Bumping up senddelay by 75000 (to %d), due to excessive drops\n", senddelay);
+      if (o.verbose) log_write(LOG_STDOUT, "Bumping up senddelay by 75000 (to %d), due to excessive drops\n", senddelay);
     }
     
     if (senddelay > 200000) {
@@ -2638,7 +2640,7 @@ void pos_scan(struct hoststruct *target, unsigned short *portarray, stype scanty
 		if (scantype == RPC_SCAN) {
 		  if (rsi.valid_responses_this_port == 0) {	       
 		    if (o.debugging) {
-		      fprintf(o.nmap_stdout, "RPC Scan giving up on port %hi proto %d due to repeated lack of response\n", rsi.rpc_current_port->portno,  rsi.rpc_current_port->proto);
+		      log_write(LOG_STDOUT, "RPC Scan giving up on port %hi proto %d due to repeated lack of response\n", rsi.rpc_current_port->portno,  rsi.rpc_current_port->proto);
 		    }
 		    rsi.rpc_status = RPC_STATUS_NOT_RPC;
 		    break;
@@ -2648,7 +2650,7 @@ void pos_scan(struct hoststruct *target, unsigned short *portarray, stype scanty
 		    target->to.rttvar = MIN(2000000, target->to.rttvar * 1.2);
 		  }	      
 		}
-		if (o.debugging) { fprintf(o.nmap_stdout, "Moving port or prog %lu to the potentially firewalled list\n", current->portno); }
+		if (o.debugging) { log_write(LOG_STDOUT, "Moving port or prog %lu to the potentially firewalled list\n", current->portno); }
 		target->firewallmode.nonresponsive_ports++;
 		current->state = PORT_FIREWALLED; /* For various reasons */
 		/* First delete from old list */
@@ -2667,9 +2669,7 @@ void pos_scan(struct hoststruct *target, unsigned short *portarray, stype scanty
 		    scan[current->next].prev = current - scan;	      
 		  }
 		}
-		if (scantype == SYN_SCAN || scantype == RPC_SCAN || scantype == WINDOW_SCAN)
-		  ss.numqueries_outstanding--;
-		else {
+		if (scantype == CONNECT_SCAN) {
 		  /* close the appropriate sd for each try */
 		  for(i=0; i <= current->trynum; i++) {
 		    if (current->sd[i] >= 0) {
@@ -2682,14 +2682,14 @@ void pos_scan(struct hoststruct *target, unsigned short *portarray, stype scanty
 		      ss.numqueries_outstanding--;
 		    }
 		  }
-		}
+		} else { ss.numqueries_outstanding--; }
 	      } else {  /* timeout ... we've got to resend */
 		if (o.scan_delay) enforce_scan_delay(NULL);
-		if (o.debugging > 1) { fprintf(o.nmap_stdout, "Timeout, resending to portno/progno %lu\n", current->portno); }
+		if (o.debugging > 1) { log_write(LOG_STDOUT, "Timeout, resending to portno/progno %lu\n", current->portno); }
 		current->trynum++;
 		gettimeofday(&current->sent[current->trynum], NULL);
 		now = current->sent[current->trynum];
-		if ((scantype == SYN_SCAN) || (scantype == WINDOW_SCAN)) {	      
+		if ((scantype == SYN_SCAN) || (scantype == WINDOW_SCAN) || (scantype == ACK_SCAN)) {	      
 		  if (o.fragscan)
 		    send_small_fragz_decoys(rawsd, &target->host, sequences[current->trynum], o.magic_port + tries * 3 + current->trynum, current->portno, scanflags);
 		  else 
@@ -2772,14 +2772,15 @@ void pos_scan(struct hoststruct *target, unsigned short *portarray, stype scanty
 	       we try to send off new queries if we can ... */
 	    if (ss.numqueries_outstanding >= (int) ss.numqueries_ideal) break;
 	    if (o.scan_delay) enforce_scan_delay(NULL);
-	    if (o.debugging > 1) fprintf(o.nmap_stdout, "Sending initial query to port/prog %lu\n", current->portno);
+	    if (o.debugging > 1) log_write(LOG_STDOUT, "Sending initial query to port/prog %lu\n", current->portno);
 	    /* Otherwise lets send a packet! */
 	    current->state = PORT_TESTING;
 	    current->trynum = 0;
 	    /*	if (!testinglist) testinglist = current; */
 	    ss.numqueries_outstanding++;
 	    gettimeofday(&current->sent[0], NULL);
-	    if ((scantype == SYN_SCAN) || (scantype == WINDOW_SCAN)) {	  
+	    if ((scantype == SYN_SCAN) || (scantype == WINDOW_SCAN) || 
+		(scantype == ACK_SCAN)) {	  
 	      if (o.fragscan)
 		send_small_fragz_decoys(rawsd, &target->host, sequences[current->trynum], o.magic_port + tries * 3, current->portno, scanflags);
 	      else
@@ -2830,11 +2831,11 @@ void pos_scan(struct hoststruct *target, unsigned short *portarray, stype scanty
 	    if (senddelay) usleep(senddelay);
 	  }
 	}
-	/*      if (o.debugging > 1) fprintf(o.nmap_stdout, "Ideal number of queries: %d outstanding: %d max %d ports_left %d timeout %d\n", (int) ss.numqueries_ideal, ss.numqueries_outstanding, ss.max_width, ss.ports_left, target->to.timeout);*/
+	/*      if (o.debugging > 1) log_write(LOG_STDOUT, "Ideal number of queries: %d outstanding: %d max %d ports_left %d timeout %d\n", (int) ss.numqueries_ideal, ss.numqueries_outstanding, ss.max_width, ss.ports_left, target->to.timeout);*/
 
 	/* Now that we have sent the packets we wait for responses */
 	ss.alreadydecreasedqueries = 0;
-	if ((scantype == SYN_SCAN) || (scantype == WINDOW_SCAN))
+	if ((scantype == SYN_SCAN) || (scantype == WINDOW_SCAN) || (scantype == ACK_SCAN))
 	  get_syn_results(target, scan, &ss, &pil, portlookup, pd, sequences, scantype);
 	else if (scantype == RPC_SCAN) {
 	  /* We only bother worrying about responses if we haven't reached
@@ -2900,7 +2901,7 @@ void pos_scan(struct hoststruct *target, unsigned short *portarray, stype scanty
 	  current->trynum = 0;
 	  current->sd[0] = current->sd[1] = current->sd[2] = -1;
 	  if (o.debugging) { 
-	    fprintf(o.nmap_stdout, "Preparing for retry, nonresponsive port %lu noted\n", current->portno); 
+	    log_write(LOG_STDOUT, "Preparing for retry, nonresponsive port %lu noted\n", current->portno); 
 	  }
 	}
 	pil.firewalled = NULL;
@@ -2916,7 +2917,7 @@ void pos_scan(struct hoststruct *target, unsigned short *portarray, stype scanty
     }
     ss.numqueries_ideal = initial_packet_width;
     if (o.debugging)
-      fprintf(o.nmap_stdout, "Done with round %d\n", tries);
+      log_write(LOG_STDOUT, "Done with round %d\n", tries);
   } while(pil.testinglist && tries < 20);
 
   if (tries == 20) {
@@ -2924,7 +2925,7 @@ void pos_scan(struct hoststruct *target, unsigned short *portarray, stype scanty
   }
   
   if (o.verbose)
-    fprintf(o.nmap_stdout, "The %s scan took %ld seconds to scan %d ports.\n", (scantype == WINDOW_SCAN) ? "Window" : (scantype == SYN_SCAN)? "SYN" : (scantype == CONNECT_SCAN)? "TCP connect" : "RPC",  (long) time(NULL) - starttime, o.numports);
+    log_write(LOG_STDOUT, "The %s scan took %ld seconds to scan %d ports.\n", (scantype == WINDOW_SCAN) ? "Window" : (scantype == SYN_SCAN)? "SYN" : (scantype == CONNECT_SCAN)? "TCP connect" : "RPC",  (long) time(NULL) - starttime, o.numports);
   
  posscan_timedout:
   
@@ -3058,7 +3059,7 @@ void posportupdate(struct hoststruct *target, struct portinfo *current,
   current->next = -1;
   current->prev = -1;
   if (newstate == PORT_OPEN || newstate == PORT_FIREWALLED) {
-    if (o.verbose) fprintf(o.nmap_stdout, "Adding TCP port %lu (state %s).\n", current->portno, (current->state == PORT_OPEN)? "Open" : "Firewalled");
+    if (o.verbose) log_write(LOG_STDOUT, "Adding TCP port %lu (state %s).\n", current->portno, (current->state == PORT_OPEN)? "Open" : "Firewalled");
 
     addport(&target->ports, current->portno, IPPROTO_TCP, owner, newstate);
   }
@@ -3071,7 +3072,7 @@ inline void adjust_timeouts(struct timeval sent, struct timeout_info *to) {
   gettimeofday(&end, NULL);
 
   if (o.debugging > 1) {
-    fprintf(o.nmap_stdout, "Timeout vals: srtt: %d rttvar: %d to: %d ", to->srtt, to->rttvar, to->timeout);
+    log_write(LOG_STDOUT, "Timeout vals: srtt: %d rttvar: %d to: %d ", to->srtt, to->rttvar, to->timeout);
   }
   if (to->srtt == -1 && to->rttvar == -1) {
     /* We need to initialize the sucker ... */
@@ -3091,7 +3092,7 @@ inline void adjust_timeouts(struct timeval sent, struct timeout_info *to) {
     if (delta > 1500000 && delta > 3 * to->srtt + 2 * to->rttvar) {
       /* WANKER ALERT! */
       if (o.debugging) {
-	fprintf(o.nmap_stdout, "Bogus delta: %d (srtt %d) ... ignoring\n", delta, to->srtt);
+	log_write(LOG_STDOUT, "Bogus delta: %d (srtt %d) ... ignoring\n", delta, to->srtt);
       }
       return;
     }
@@ -3113,7 +3114,7 @@ inline void adjust_timeouts(struct timeval sent, struct timeout_info *to) {
     to->timeout = MAX(to->timeout, o.scan_delay * 1000);
 
   if (o.debugging > 1) {
-    fprintf(o.nmap_stdout, "delta %d ==> srtt: %d rttvar: %d to: %d\n", delta, to->srtt, to->rttvar, to->timeout);
+    log_write(LOG_STDOUT, "delta %d ==> srtt: %d rttvar: %d to: %d\n", delta, to->srtt, to->rttvar, to->timeout);
   }
 
   if (to->srtt < 0 || to->rttvar < 0 || to->timeout < 0 || delta < -50000000) {
@@ -3211,21 +3212,21 @@ int get_connect_results(struct hoststruct *target, struct portinfo *scan,
 	  }
 
 	if (o.debugging > 1 && current != NULL)
-	  fprintf(o.nmap_stdout, "portnumber %lu (try %d) selected for", current->portno, trynum);
+	  log_write(LOG_STDOUT, "portnumber %lu (try %d) selected for", current->portno, trynum);
 	if (FD_ISSET(sd, &fds_rtmp)) {
-	  if (o.debugging > 1) fprintf(o.nmap_stdout, " READ");
+	  if (o.debugging > 1) log_write(LOG_STDOUT, " READ");
 	  selectedfound++;
 	}
 	if (FD_ISSET(sd, &fds_wtmp)) {
-	  if (o.debugging > 1) fprintf(o.nmap_stdout, " WRITE");
+	  if (o.debugging > 1) log_write(LOG_STDOUT, " WRITE");
 	  selectedfound++;
 	}
 	if (FD_ISSET(sd, &fds_xtmp)) {
-	  if (o.debugging > 1) fprintf(o.nmap_stdout, " EXCEPT");
+	  if (o.debugging > 1) log_write(LOG_STDOUT, " EXCEPT");
 	  selectedfound++;
 	}
 	if (o.debugging > 1 && current != NULL)
-	  fprintf(o.nmap_stdout, "\n");
+	  log_write(LOG_STDOUT, "\n");
 
 	assert(trynum != -1);
 
@@ -3241,7 +3242,7 @@ int get_connect_results(struct hoststruct *target, struct portinfo *scan,
 
 	    if (res < 0 ) {
 	      if (o.debugging > 1) {
-		fprintf(o.nmap_stdout, "Bad port %lu caught by 0-byte write: ", current->portno);
+		log_write(LOG_STDOUT, "Bad port %lu caught by 0-byte write: ", current->portno);
 		perror("");
 	      }
 	      posportupdate(target, current, trynum, scan, ss, CONNECT_SCAN, PORT_CLOSED, pil, csi);
@@ -3330,7 +3331,7 @@ void get_syn_results(struct hoststruct *target, struct portinfo *scan,
     current = NULL;
     trynum = newport = -1;
     newstate = PORT_UNKNOWN;
-	
+    
     /* Insure there is no timeout ... */
     if (o.host_timeout) {	
       gettimeofday(&tv, NULL);
@@ -3350,12 +3351,13 @@ void get_syn_results(struct hoststruct *target, struct portinfo *scan,
       }
       newport = ntohs(tcp->th_sport);
       /* In case we are scanning localhost and see outgoing packets */
-      if (ip->ip_src.s_addr == target->source_ip.s_addr && !tcp->th_ack) {
+      /* If only one of SYN, ACK flags are set, we skip it */
+      if (ip->ip_src.s_addr == target->source_ip.s_addr && (((tcp->th_flags & (TH_SYN|TH_ACK)) == TH_ACK) || ((tcp->th_flags & (TH_SYN|TH_ACK)) == TH_SYN))) {
 	continue;
       }
       if (portlookup[newport] < 0) {
 	if (o.debugging) {
-	  fprintf(o.nmap_stdout, "Strange packet from port %d:\n", ntohs(tcp->th_sport));
+	  log_write(LOG_STDOUT, "Strange packet from port %d:\n", ntohs(tcp->th_sport));
 	  readtcppacket((char *)ip, bytes);
 	}
 	current = NULL;
@@ -3370,7 +3372,7 @@ void get_syn_results(struct hoststruct *target, struct portinfo *scan,
       if (i < 3) trynum = i;
       else {
 	if (o.debugging) 
-	  fprintf(o.nmap_stdout, "Strange ACK number from target: %lX\n", (unsigned long) ntohl(tcp->th_ack));
+	  log_write(LOG_STDOUT, "Strange ACK number from target: %lX\n", (unsigned long) ntohl(tcp->th_ack));
 	trynum = (current->trynum == 0)? 0 : -1;	    
       }
       if (current->trynum < trynum) {
@@ -3392,6 +3394,11 @@ void get_syn_results(struct hoststruct *target, struct portinfo *scan,
 	} else {
 	  newstate = PORT_CLOSED;
 	}
+      }
+      else if (scantype == ACK_SCAN) {
+	if (tcp->th_flags & TH_RST) {	  
+	  newstate = PORT_UNFIREWALLED;
+	}
       } 
     } else if (ip->ip_p == IPPROTO_ICMP) {
       icmp = (struct icmp *) ((char *)ip + 4 * ip->ip_hl);
@@ -3406,7 +3413,7 @@ void get_syn_results(struct hoststruct *target, struct portinfo *scan,
 	  continue;
 	}
       data = (unsigned short *) ((char *)ip2 + 4 * ip2->ip_hl);
-      /*	    fprintf(o.nmap_stdout, "Caught ICMP packet:\n");
+      /*	    log_write(LOG_STDOUT, "Caught ICMP packet:\n");
 		    hdump(icmp, ntohs(ip->ip_len) - sizeof(struct ip)); */
       if (icmp->icmp_type == 3) {
 	if (icmp->icmp_code != 1 && icmp->icmp_code != 2 && 
@@ -3456,7 +3463,7 @@ void invertfirewalled(portlist *plist, unsigned short *ports) {
 
   if (firewalledports > 10 && (((double) firewalledports / plist->numports ) > 0.6))
     {
-      nmap_log("(Ports scanned but not shown below are in state: filtered)\n");
+      log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"(Ports scanned but not shown below are in state: filtered)\n");
       /* OK, we are going to add an UNFIREWALLED entry for every port not
 	 listed and then we will delete every port that is firewalled */
       for(i=0; i < o.numports; i++) {
@@ -3471,7 +3478,8 @@ void invertfirewalled(portlist *plist, unsigned short *ports) {
 	  }
 	}
 	if (o.connectscan || o.nullscan || o.xmasscan || o.synscan ||
-            o.windowscan || o.maimonscan || o.finscan || o.bouncescan) {
+            o.windowscan || o.maimonscan || o.finscan || o.ackscan || 
+	    o.bouncescan) {
 	  current = lookupport(plist, ports[i], IPPROTO_TCP);
 	  if (!current)
 	    addport(plist, ports[i], IPPROTO_TCP, NULL, PORT_UNFIREWALLED);
@@ -3495,7 +3503,7 @@ int ftp_anon_connect(struct ftpinfo *ftp) {
   char command[512];
 
   if (o.verbose || o.debugging) 
-    fprintf(o.nmap_stdout, "Attempting connection to ftp://%s:%s@%s:%i\n", ftp->user, ftp->pass,
+    log_write(LOG_STDOUT, "Attempting connection to ftp://%s:%s@%s:%i\n", ftp->user, ftp->pass,
 	    ftp->server_name, ftp->port);
 
   if ((sd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0) {
@@ -3511,11 +3519,11 @@ int ftp_anon_connect(struct ftpinfo *ftp) {
     fprintf(stderr, "Your ftp bounce proxy server won't talk to us!\n");
     exit(1);
   }
-  if (o.verbose || o.debugging) fprintf(o.nmap_stdout, "Connected:");
+  if (o.verbose || o.debugging) log_write(LOG_STDOUT, "Connected:");
   while ((res = recvtime(sd, recvbuf, 2048,7)) > 0) 
     if (o.debugging || o.verbose) {
       recvbuf[res] = '\0';
-      fprintf(o.nmap_stdout, "%s", recvbuf);
+      log_write(LOG_STDOUT, "%s", recvbuf);
     }
   if (res < 0) {
     perror("recv problem from ftp bounce server");
@@ -3531,7 +3539,7 @@ int ftp_anon_connect(struct ftpinfo *ftp) {
     exit(1);
   }
   recvbuf[res] = '\0';
-  if (o.debugging) fprintf(o.nmap_stdout, "sent username, received: %s", recvbuf);
+  if (o.debugging) log_write(LOG_STDOUT, "sent username, received: %s", recvbuf);
   if (recvbuf[0] == '5') {
     fprintf(stderr, "Your ftp bounce server doesn't like the username \"%s\"\n", 
 	    ftp->user);
@@ -3549,7 +3557,7 @@ int ftp_anon_connect(struct ftpinfo *ftp) {
   if (!res) fprintf(stderr, "Timeout from bounce server ...");
   else {
     recvbuf[res] = '\0';
-    if (o.debugging) fprintf(o.nmap_stdout, "sent password, received: %s", recvbuf);
+    if (o.debugging) log_write(LOG_STDOUT, "sent password, received: %s", recvbuf);
     if (recvbuf[0] == '5') {
       fprintf(stderr, "Your ftp bounce server refused login combo (%s/%s)\n",
 	      ftp->user, ftp->pass);
@@ -3559,13 +3567,13 @@ int ftp_anon_connect(struct ftpinfo *ftp) {
   while ((res = recvtime(sd, recvbuf, 2048,2)) > 0) 
     if (o.debugging) {
       recvbuf[res] = '\0';
-      fprintf(o.nmap_stdout, "%s", recvbuf);
+      log_write(LOG_STDOUT, "%s", recvbuf);
     }
   if (res < 0) {
     perror("recv problem from ftp bounce server");
     exit(1);
   }
-  if (o.verbose) fprintf(o.nmap_stdout, "Login credentials accepted by ftp server!\n");
+  if (o.verbose) log_write(LOG_STDOUT, "Login credentials accepted by ftp server!\n");
 
   ftp->sd = sd;
   return sd;
@@ -3608,7 +3616,7 @@ void bounce_scan(struct hoststruct *target, unsigned short *portarray,
 
   starttime = time(NULL);
   if (o.verbose || o.debugging)
-    fprintf(o.nmap_stdout, "Initiating TCP ftp bounce scan against %s (%s)\n",
+    log_write(LOG_STDOUT, "Initiating TCP ftp bounce scan against %s (%s)\n",
 	    target->name,  inet_ntoa(target->host));
   for(i=0; portarray[i]; i++) {
 
@@ -3626,12 +3634,12 @@ void bounce_scan(struct hoststruct *target, unsigned short *portarray,
     p1 = ((unsigned char *) &portno)[0];
     p2 = ((unsigned char *) &portno)[1];
     snprintf(command, 512, "PORT %s%i,%i\r\n", targetstr, p1,p2);
-    if (o.debugging) fprintf(o.nmap_stdout, "Attempting command: %s", command);
+    if (o.debugging) log_write(LOG_STDOUT, "Attempting command: %s", command);
     if (send(sd, command, strlen(command), 0) < 0 ) {
       perror("send in bounce_scan");
       if (retriesleft) {
 	if (o.verbose || o.debugging) 
-	  fprintf(o.nmap_stdout, "Our ftp proxy server hung up on us!  retrying\n");
+	  log_write(LOG_STDOUT, "Our ftp proxy server hung up on us!  retrying\n");
 	retriesleft--;
 	close(sd);
 	ftp->sd = ftp_anon_connect(ftp);
@@ -3651,7 +3659,7 @@ void bounce_scan(struct hoststruct *target, unsigned short *portarray,
   
       else { /* our recv is good */
 	recvbuf[res] = '\0';
-	if (o.debugging) fprintf(o.nmap_stdout, "result of port query on port %i: %s", 
+	if (o.debugging) log_write(LOG_STDOUT, "result of port query on port %i: %s", 
 				 portarray[i],  recvbuf);
 	if (recvbuf[0] == '5') {
 	  if (portarray[i] > 1023) {
@@ -3677,7 +3685,7 @@ void bounce_scan(struct hoststruct *target, unsigned short *portarray,
 	    if (res <= 0)  perror("recv problem from ftp bounce server\n");
 	    else {
 	      recvbuf[res] = '\0';
-	      if (o.debugging) fprintf(o.nmap_stdout, "result of LIST: %s", recvbuf);
+	      if (o.debugging) log_write(LOG_STDOUT, "result of LIST: %s", recvbuf);
 	      if (!strncmp(recvbuf, "500", 3)) {
 		/* fuck, we are not aligned properly */
 		if (o.verbose || o.debugging)
@@ -3685,19 +3693,19 @@ void bounce_scan(struct hoststruct *target, unsigned short *portarray,
 		res = recvtime(sd, recvbuf, 2048,10);
 	      }
 	      if (recvbuf[0] == '1' || recvbuf[0] == '2') {
-		if (o.verbose || o.debugging) fprintf(o.nmap_stdout, "Port number %i appears good.\n",
+		if (o.verbose || o.debugging) log_write(LOG_STDOUT, "Port number %i appears good.\n",
 						      portarray[i]);
 		addport(&target->ports, portarray[i], IPPROTO_TCP, NULL, PORT_OPEN);
 		if (recvbuf[0] == '1') {
 		  res = recvtime(sd, recvbuf, 2048,5);
 		  recvbuf[res] = '\0';
 		  if (res > 0) {
-		    if (o.debugging) fprintf(o.nmap_stdout, "nxt line: %s", recvbuf);
+		    if (o.debugging) log_write(LOG_STDOUT, "nxt line: %s", recvbuf);
 		    if (recvbuf[0] == '4' && recvbuf[1] == '2' && 
 			recvbuf[2] == '6') {	      	
 		      deleteport(&target->ports, portarray[i], IPPROTO_TCP);
 		      if (o.debugging || o.verbose)
-			fprintf(o.nmap_stdout, "Changed my mind about port %i\n", portarray[i]);
+			log_write(LOG_STDOUT, "Changed my mind about port %i\n", portarray[i]);
 		    }
 		  }
 		}
@@ -3709,7 +3717,7 @@ void bounce_scan(struct hoststruct *target, unsigned short *portarray,
   }
 
   if (o.debugging || o.verbose) 
-    fprintf(o.nmap_stdout, "Scanned %d ports in %ld seconds via the Bounce scan.\n",
+    log_write(LOG_STDOUT, "Scanned %d ports in %ld seconds via the Bounce scan.\n",
 	    o.numports, (long) time(NULL) - starttime);
   return;
 }
@@ -3734,7 +3742,7 @@ int parse_bounce(struct ftpinfo *ftp, char *url) {
       strncpy(ftp->pass, s, 255);
     }
     else { /* Username ONLY given */
-      fprintf(o.nmap_stdout, "Assuming %s is a username, and using the default password: %s\n",
+      log_write(LOG_STDOUT, "Assuming %s is a username, and using the default password: %s\n",
 	      p, ftp->pass);
       strncpy(ftp->user, p, 63);
     }
@@ -3753,27 +3761,108 @@ int parse_bounce(struct ftpinfo *ftp, char *url) {
   return 1;
 }
 
-void nmap_log(char *fmt, ...) {
-  va_list  ap;
-  va_start(ap, fmt);
-  vfprintf(o.nmap_stdout, fmt, ap);
-  fflush(o.nmap_stdout);
+char *logtypes[LOG_TYPES]={"normal","machine","HTML","$cR1pT |<1dd13"};
 
-  if (o.logfd && o.logfd != o.nmap_stdout) {
-    vfprintf(o.logfd, fmt, ap);
+int log_open(int logt, int append, char *filename)
+{
+  int i=0;
+  if (logt<=0 || logt>LOG_MASK) return -1;
+  while ((logt&1)==0) { i++; logt>>=1; }
+  if (o.logfd[i]) fatal("Only one %s output filename allowed",logtypes[i]);
+  if (*filename == '-' && *(filename + 1) == '\0')
+    {
+      o.logfd[i]=stdout;
+      o.nmap_stdout = fopen("/dev/null", "w");
+      if (!o.nmap_stdout)
+	fatal("Could not assign /dev/null to stdout for writing");
   }
-  va_end(ap);
-  return;
+  else
+    {
+      if (o.append_output)
+	o.logfd[i] = fopen(filename, "a");
+      else
+	o.logfd[i] = fopen(filename, "w");
+      if (!o.logfd[i])
+	fatal("Failed to open %s output file %s for writing", logtypes[i], filename);
+    }
+  return 1;
 }
 
-/* For logging machine readable stuff */
-void nmap_machine_log(char *fmt, ...) {
+void skid_output(char *s)
+{
+  int i;
+  for (i=0;s[i];i++)
+    if (rand()%2==0)
+      /* Substitutions commented out are not known to me, but maybe look nice */
+      switch(s[i])
+	{
+	case 'A': s[i]='4'; break;
+	  /*	case 'B': s[i]='8'; break;
+	 	case 'b': s[i]='6'; break;
+	        case 'c': s[i]='k'; break;
+	        case 'C': s[i]='K'; break; */
+	case 'e':
+	case 'E': s[i]='3'; break;
+	case 'i':
+	case 'I': s[i]="!|1"[rand()%3]; break;
+	  /*      case 'k': s[i]='c'; break;
+	        case 'K': s[i]='C'; break;*/
+	case 'o':
+	case 'O': s[i]='0'; break;
+	case 's':
+	case 'S': 
+	  if (s[i+1] && !isalnum(s[i+1])) 
+	    s[i] = 'z';
+	  else s[i] = '$';
+	  break;
+	case 'z': s[i]='s'; break;
+	case 'Z': s[i]='S'; break;
+	}  
+    else
+      {
+	if (s[i]>='A' && s[i]<='Z' && (rand()%3==0)) s[i]+='a'-'A';
+	else if (s[i]>='a' && s[i]<='z' && (rand()%3==0)) s[i]-='a'-'A';
+      }
+}
+
+void log_write(int logt, char *fmt, ...)
+{
   va_list  ap;
-  if (!o.machinelogfd) return;
+  int i,l=logt,skid=1;
+  char buffer[1000];
+
   va_start(ap, fmt);
-  vfprintf(o.machinelogfd, fmt, ap);
+  if (l & LOG_STDOUT) {
+    vfprintf(o.nmap_stdout, fmt, ap);
+    l-=LOG_STDOUT;
+  }
+  if (l & LOG_SKID_NOXLT) { skid=0; l -= LOG_SKID_NOXLT; l |= LOG_SKID; }
+  if (l<0 || l>LOG_MASK) return;
+  for (i=0;l;l>>=1,i++)
+    {
+      if (!o.logfd[i] || !(l&1)) continue;
+      vsnprintf(buffer,sizeof(buffer)-1,fmt,ap);
+      if (skid && ((1<<i)&LOG_SKID)) skid_output(buffer);
+      fwrite(buffer,1,strlen(buffer),o.logfd[i]);
+    }
   va_end(ap);
-  return;
+}
+
+void log_close(int logt)
+{
+  int i;
+  if (logt<0 || logt>LOG_MASK) return;
+  for (i=0;logt;logt>>=1,i++) if (o.logfd[i] && (logt&1)) fclose(o.logfd[i]);
+}
+
+void log_flush_all() {
+  int fileno;
+
+  for(fileno = 0; fileno < LOG_TYPES; fileno++) {
+    if (o.logfd[fileno]) fflush(o.logfd[fileno]);
+  }
+  fflush(stdout);
+  fflush(stderr);
 }
 
 void reaper(int signo) {
@@ -3810,7 +3899,7 @@ void sigdie(int signo) {
     break;
   }
   fflush(stdout);
-  if (o.logfd && o.logfd != stdout) fclose(o.logfd);
+  log_close(LOG_MACHINE|LOG_NORMAL|LOG_SKID);
   exit(1);
 }
 

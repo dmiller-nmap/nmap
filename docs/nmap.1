@@ -331,11 +331,25 @@ form into the file you specify as an argument.
 .B \-oM <logfilename>
 This logs the results of your scans in a
 .B machine parseable
-form into the file you specify as an argument.  You can give -m the
-argument '-' (without quotes) to shoot output into stdout (for shell
+form into the file you specify as an argument.  You can give the
+argument \'-\' (without quotes) to shoot output into stdout (for shell
 pipelines, etc).  In this case normal output will be suppressed.
 Watch out for error messages if you use this (they will still go to
 stderr).
+.TP
+.B \-oS <logfilename>
+thIs l0gz th3 r3suLtS of YouR ScanZ iN a
+.B s|<ipT kiDd|3  
+f0rM iNto THe fiL3 U sPec\|fy 4s an arGuMEnT!  U kAn gIv3 the 
+4rgument \'-\' (wItHOUt qUOteZ) to sh00t output iNT0 stDouT!@!!
+.TP
+.B \--resume <logfilename>
+A network scan that is cancelled due to control-C, network outage,
+etc. can be resumed using this option.  The logfilename must be either
+a normal (-oN) or machine parsable (-oM) log from the aborted scan.
+No other options can be given (they will be the same as the aborted
+scan).  Nmap will start on the machine after the last one successfully
+scanned in the log file.
 .TP
 .B \-iL <inputfilename>
 Reads target specifications from the file specified RATHER than from
@@ -359,7 +373,7 @@ to find some web servers to look at.
 .B \-p <port ranges>
 This option specifies what ports you want to specify. For example '-p
 23' will only try port 23 of the target host(s).  
-'-p 20-30,139,60000-' scans ports between 20 and 30, port 139, and all
+\'\-p 20-30,139,60000-\' scans ports between 20 and 30, port 139, and all
 ports greater than 60000.  The default is to scan all ports between 1
 and 1024 as well as any ports listed in the services file which comes
 with nmap.
@@ -565,7 +579,7 @@ Nmap also has a more powerful notation which lets you specify an IP
 address using lists/ranges for each element.  Thus you can scan the
 whole class 'B' network 128.210.*.* by specifying '128.210.*.*' or '128.210.0-255.0-255' or even '128.210.1-50,51-255.1,2,3,4,5-255'.
 And of course you can use the mask notation: '128.210.0.0/16'.  These
-are all equivalent.  If you use astericts ('*'), remember that most
+are all equivalent.  If you use asterisks ('*'), remember that most
 shells require you to escape them with back slashes or protect them with quotes.
 .Sp
 Another interesting thing to do is slice the Internet the other way.
@@ -615,7 +629,7 @@ slice.  This command finds all web servers on machines with IP
 addresses ending in .2.3, .2.4, or .2.5 .  If you are root you might
 as well add -sS.  Also you will find more interesting machines
 starting at 127. so you might want to use '127-222' instead of the
-first asterict because that section has a greater density of
+first asterisks because that section has a greater density of
 interesting machines (IMHO).
 .Sp
 .B host -l company.com | cut '-d ' -f 4 | ./nmap -v -iL -

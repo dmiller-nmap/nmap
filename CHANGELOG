@@ -1,8 +1,63 @@
 # Nmap Changelog
 
--- Ensured that Nmap always gives up on ident scan after the first port attempt finds it to be closed (problem noticed by Matt FIXME:lastname)
+-- Added ACK scanning!  This scan technique (which van Houser and
+   others have been bugging me to add for years :), is great for
+   testing firewall rulesets.  It can NOT find open ports, but it can
+   distinguish between filtered/unfilterd by sending an ACK packet to
+   each port and waiting for a RST to come back.  Filtered ports will
+   not send back a RST.  This scan type is activated with -sA .
 
--- Changed strsep's in nmapfe to more portable strtok's
+-- Changed version number from 2.3BETA* to 2.30BETA* to appease
+   various packaging systems that thought 2.3BETA was < 2.12 .
+
+-- Nmap output to files now correctly flushes output after scanning
+   for each host is finished.
+
+-- Fixed compiler -L flags error found by  Ralf Hildebrandt <R.Hildebrandt@tu-bs.de>
+
+-- Added --noninteractive option for when nmap is called from scripts
+(where stuff like prompting users for info is unacceptable).  It does
+not currently do anything (Nmap never prompts) and script writers
+should probably wait until at least May '2000 so their scripts still
+work with earlier versions of Nmap.
+
+-- Updated to the latest config.guess and config.sub from Autoconf 2.13
+
+-- Applied patch by Sven <s.carstens@gmx.de> which fixes a segmentation
+   fault problem in Nmapfe colored mode as well as some output niceties.
+
+-- Changed some C++ comments to C-style for portability (noticed by 
+   "Sergei V. Rousakov" <sergei@cas.Vanderbilt.Edu> )
+
+-- Added --resume option to continue a large network scan where you
+   left off.  This is useful for recovering from errors (modem drops
+   carrier, network outage, etc).  It also allows you to start and
+   stop for policy reasons (like if a client only wants you to scan on
+   weekends or at night) or if you want to run the scan on a different
+   host.  Usage is 'nmap --resume logfile' where logfile can be either
+   normal (-oN) or machine parseable (-oM) logfile from the scan that
+   was aborted.  No other options can be given (the options in the
+   logfile from the original scan will be used).  Nmap will start off
+   with the host after the last one successfully scanned in the log
+   file.
+
+-- Added --append_output option which causes -oN/-oM/-oS to APPEND to
+   the output file you specify rather than overwriting it.
+
+** Version 2.3BETA14
+
+-- Peter Kosinar <goober@gjh.sk> performed some cleanup of the output
+   routines and as a bonus he added skript kiddie output mode!!!  Try
+   it out by adding "-oS - " to your nmap command line.  Note that
+   using '-' to represent stdout instead of a filename is something
+   you can do with any of the output modes.
+
+-- Ensured that Nmap always gives up on ident scan after the first
+   port attempt finds it to be closed (problem noticed by Matt
+   <matt@use.net>)
+
+-- Changed strsep's in nmapfe to more portable strtok's (should
+   especially help Nmapfe compiles on Solaris)
 
 -- Changed permutation algorithm to make port order and host order
    shuffling more random.
@@ -11,7 +66,7 @@
 
 -- Fixed integer overflow that was limiting the max --host_timeout value 
    to about 2,000,000 milliseconds (~1/2 hour).  The limit is now
-   about 4,000,000,000 milliseconds (~125 years).  I really hope you don't 
+   about 4,000,000,000 milliseconds (~1 month).  I really hope you don't 
    need more than that :).
 
 ** Version 2.3BETA13

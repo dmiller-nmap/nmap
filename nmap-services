@@ -1094,6 +1094,7 @@ supfilesrv        871/tcp    # SUP server
 accessbuilder     888/tcp    # or Audio CD Database
 accessbuilder     888/udp    # 
 ftps-data         989/tcp    # ftp protocol, data, over TLS/SSL
+samba-swat        901/tcp    # Samba SWAT tool
 ftps              990/tcp    # ftp protocol, control, over TLS/SSL
 telnets           992/tcp    # telnet protocol over TLS/SSL
 imaps             993/tcp    # imap4 protocol over TLS/SSL
@@ -1149,6 +1150,7 @@ lupa              1212/tcp   #
 lupa              1212/udp   # 
 nerv              1222/tcp   # SNI R&D network
 nerv              1222/udp   # SNI R&D network
+hotline           1234/tcp   # 
 msg               1241/tcp   # remote message server
 hermes            1248/tcp   # 
 hermes            1248/udp   # 
@@ -1601,6 +1603,7 @@ netview-aix-12    1672/udp   #
 pptp              1723/tcp   # Point-to-point tunnelling protocol
 radius            1812/udp   # RADIUS authentication protocol (RFC 2138)
 radacct           1813/udp   # RADIUS accounting protocol (RFC 2139)
+pcm               1827/tcp   # PCM Agent (AutoSecure Policy Compliance Manager
 licensedaemon     1986/tcp   # cisco license management
 licensedaemon     1986/udp   # cisco license management
 tr-rsrb-p1        1987/tcp   # cisco RSRB Priority 1 port
@@ -1872,9 +1875,9 @@ sdreport          5540/tcp   # ACE/Server services
 sdxauthd          5540/udp   # ACE/Server services
 sdadmind          5550/tcp   # ACE/Server services
 rplay             5555/udp   # 
-pcanywhere        5631/tcp   # 
-pcanywhere        5632/tcp   # 
-pcanywhere        5632/udp   # 
+pcanywheredata    5631/tcp   # 
+pcanywherestat    5632/tcp   # 
+pcanywherestat    5632/udp   # 
 canna             5680/tcp   # Canna (Japanese Input)
 proshareaudio     5713/tcp   # proshare conf audio
 proshareaudio     5713/udp   # proshare conf audio
@@ -1888,6 +1891,9 @@ prosharenotify    5717/tcp   # proshare conf notify
 prosharenotify    5717/udp   # proshare conf notify
 vnc               5800/tcp
 vnc               5801/tcp
+vnc               5900/tcp   # Virtual Network Computer
+vnc-1             5901/tcp   # Virtual Network Computer Display :1
+vnc-2             5902/tcp   # Virtual Network Computer Display :2
 ncd-pref-tcp      5977/tcp   # NCD preferences tcp port
 ncd-diag-tcp      5978/tcp   # NCD diagnostic tcp port
 ncd-conf-tcp      5979/tcp   # NCD configuration tcp port
@@ -1967,6 +1973,8 @@ cucme-3           7650/udp   # cucme live video/audio server
 cucme-4           7651/udp   # cucme live video/audio server
 http-proxy        8080/tcp   # Common HTTP proxy/second web server port
 sun-answerbook    8888/tcp   # Sun Answerbook HTTP server
+seosload          8892/tcp   # From the new Computer Associates eTrust ACX
+zeus-admin        9090/tcp   # Zeus admin server
 jetdirect         9100/tcp   # HP JetDirect card
 man               9535/tcp   # 
 man               9535/udp   # 

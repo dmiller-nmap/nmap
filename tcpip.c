@@ -248,8 +248,8 @@ ip->ip_sum = in_cksum((unsigned short *)ip, sizeof(struct ip));
 #endif
 
 if (TCPIP_DEBUGGING > 1) {
-printf("Raw TCP packet creation completed!  Here it is:\n");
-readtcppacket(packet,BSDUFIX(ip->ip_len));
+  log_write(LOG_STDOUT, "Raw TCP packet creation completed!  Here it is:\n");
+  readtcppacket(packet,BSDUFIX(ip->ip_len));
 }
 
 res = Sendto("send_tcp_raw", sd, packet, BSDUFIX(ip->ip_len), 0,
@@ -270,7 +270,7 @@ int sleeptime = 0;
 
 do {
   if (TCPIP_DEBUGGING > 1) {  
-    printf("trying sendto(%d, packet, %d, 0, %s, %d)",
+    log_write(LOG_STDOUT, "trying sendto(%d, packet, %d, 0, %s, %d)",
 	   sd, len, inet_ntoa(sin->sin_addr), tolen);
   }
   if ((res = sendto(sd, packet, len, flags, to, tolen)) == -1) {
@@ -288,7 +288,7 @@ do {
 } while( res == -1);
 
 if (TCPIP_DEBUGGING > 1)
-  printf("successfully sent %d bytes of raw_tcp!\n", res);
+  log_write(LOG_STDOUT, "successfully sent %d bytes of raw_tcp!\n", res);
 
 return res;
 }
@@ -612,11 +612,11 @@ ip->ip_dst.s_addr = victim->s_addr;
 ip->ip_sum= in_cksum((unsigned short *)ip, sizeof(struct ip));
 #endif
 if (o.debugging > 1) {
-  fprintf(o.nmap_stdout, "Raw TCP packet fragment #1 creation completed!  Here it is:\n");
+  log_write(LOG_STDOUT, "Raw TCP packet fragment #1 creation completed!  Here it is:\n");
   hdump(packet,20);
 }
 if (o.debugging > 1) 
-  fprintf(o.nmap_stdout, "\nTrying sendto(%d , packet, %d, 0 , %s , %d)\n",
+  log_write(LOG_STDOUT, "\nTrying sendto(%d , packet, %d, 0 , %s , %d)\n",
 	 sd, ntohs(ip->ip_len), inet_ntoa(*victim),
 	 (int) sizeof(struct sockaddr_in));
 /* Lets save this and send it AFTER we send the second one, just to be
@@ -628,7 +628,7 @@ if ((res = sendto(sd, packet,sizeof(struct ip) + 16 , 0,
     perror("sendto in send_syn_fragz");
     return -1;
   }
-if (o.debugging > 1) fprintf(o.nmap_stdout, "successfully sent %d bytes of raw_tcp!\n", res);
+if (o.debugging > 1) log_write(LOG_STDOUT, "successfully sent %d bytes of raw_tcp!\n", res);
 
 /* Create the second fragment */
 
@@ -647,12 +647,12 @@ ip2->ip_dst.s_addr = victim->s_addr;
 ip2->ip_sum = in_cksum((unsigned short *)ip2, sizeof(struct ip));
 #endif
 if (o.debugging > 1) {
-  fprintf(o.nmap_stdout, "Raw TCP packet fragment creation completed!  Here it is:\n");
+  log_write(LOG_STDOUT, "Raw TCP packet fragment creation completed!  Here it is:\n");
   hdump(packet,20);
 }
 if (o.debugging > 1) 
 
-  fprintf(o.nmap_stdout, "\nTrying sendto(%d , ip2, %d, 0 , %s , %d)\n", sd, 
+  log_write(LOG_STDOUT, "\nTrying sendto(%d , ip2, %d, 0 , %s , %d)\n", sd, 
 	 ntohs(ip2->ip_len), inet_ntoa(*victim), (int) sizeof(struct sockaddr_in));
 if ((res = sendto(sd, (void *)ip2,sizeof(struct ip) + 4 , 0, 
 		  (struct sockaddr *)&sock, (int) sizeof(struct sockaddr_in))) == -1)

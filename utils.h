@@ -2,6 +2,7 @@
 #define UTILS_H
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include <string.h>
 #include <errno.h>
 #include <ctype.h>
@@ -10,6 +11,7 @@
 #include <sys/time.h>
 #include <unistd.h>
 #include <assert.h>
+#include <sys/mman.h>
 #include "config.h"
 
 #if TIME_WITH_SYS_TIME
@@ -24,6 +26,8 @@
 #endif
 
 #include "error.h"
+#include "nmap.h"
+#include "global_structures.h"
 
 #ifndef MAX
 #define MAX(x,y) (((x)>(y))?(x):(y))
@@ -95,5 +99,16 @@ void usleep(unsigned long usec);
 char *strerror(int errnum);
 #endif
 
-#endif
 
+/* mmap() an entire file into the address space.  Returns a pointer
+   to the beginning of the file.  The mmap'ed length is returned
+   inside the length parameter.  If there is a problem, NULL is
+   returned, the value of length is undefined, and errno is set to
+   something appropriate.  The user is responsible for doing
+   an munmap(ptr, length) when finished with it.  openflags should 
+   be O_RDONLY or O_RDWR, or O_WRONLY
+*/
+char *mmapfile(char *fname, int *length, int openflags);
+
+
+#endif

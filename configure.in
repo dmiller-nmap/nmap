@@ -155,7 +155,7 @@ if test $have_libpcap = yes; then
   PCAP_DIST_CLEAN=""
   AC_DEFINE(HAVE_LIBPCAP)
 else
-  LDFLAGS="$LDFLAGS -L$libpcapdir"
+  LDFLAGS="-L$libpcapdir $LDFLAGS"
   CFLAGS="$CFLAGS -I$libpcapdir"
   PCAP_DEPENDS='$(LIBPCAPDIR)/libpcap.a'
   PCAP_CLEAN="pcap_clean"

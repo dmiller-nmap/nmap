@@ -40,7 +40,7 @@ s%@CPPFLAGS@%%g
 s%@CXXFLAGS@%%g
 s%@FFLAGS@%%g
 s%@DEFS@%-DHAVE_CONFIG_H%g
-s%@LDFLAGS@% -Llibpcap-possiblymodified%g
+s%@LDFLAGS@%-Llibpcap-possiblymodified %g
 s%@LIBS@%-lpcap -lnsl %g
 s%@exec_prefix@%${prefix}%g
 s%@prefix@%/usr/local%g

@@ -317,7 +317,7 @@ int rpc_are_we_done(char *msg, int msg_len, struct hoststruct *target,
       if (ss->numqueries_ideal < 1.0) ss->numqueries_ideal = 1.0;
       if (o.debugging) 
 	{ 
-	  fprintf(o.nmap_stdout, "Lost a packet, decreasing window to %d\n", (int) ss->numqueries_ideal);
+	  log_write(LOG_STDOUT, "Lost a packet, decreasing window to %d\n", (int) ss->numqueries_ideal);
 	}
     }
   }

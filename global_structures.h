@@ -204,7 +204,11 @@ struct ops /* someone took struct options, <grrr> */ {
   unsigned long host_timeout;
   int scan_delay;
   int initial_rtt_timeout;
-
+  struct in_addr resume_ip; /* The last IP in the log file if user 
+			       requested --restore .  Otherwise 
+			       restore_ip.s_addr == 0.  Also 
+			       target_struct_get will eventually set it 
+			       to 0. */
   int isr00t;
   struct in_addr decoys[MAX_DECOYS];
   int numdecoys;
@@ -215,6 +219,7 @@ struct ops /* someone took struct options, <grrr> */ {
   int pingscan;
   int allowall;
   int numports;
+  int ackscan;
   int connectscan;
   int bouncescan;
   int rpcscan;
@@ -228,12 +233,12 @@ struct ops /* someone took struct options, <grrr> */ {
   int udpscan;
   int noresolve;
   int force; /* force nmap to continue on even when the outcome seems somewhat certain */
-  FILE *logfd; /* Output log file descriptor */
-  FILE *machinelogfd; /* Machine parseable log file descriptor */
+  int append_output; /* Append to any output files rather than overwrite */
+  FILE *logfd[LOG_TYPES];
   FILE *nmap_stdout; /* Nmap standard output */
 };
   
-typedef enum { SYN_SCAN, FIN_SCAN, XMAS_SCAN, UDP_SCAN, CONNECT_SCAN, NULL_SCAN, WINDOW_SCAN, RPC_SCAN, MAIMON_SCAN } stype;
+typedef enum { ACK_SCAN, SYN_SCAN, FIN_SCAN, XMAS_SCAN, UDP_SCAN, CONNECT_SCAN, NULL_SCAN, WINDOW_SCAN, RPC_SCAN, MAIMON_SCAN } stype;
 
 #endif /*GLOBAL_STRUCTURES_H */
 

@@ -466,3 +466,48 @@ void arg_parse_free(char **argv) {
   }
   free(argv);
 }
+
+
+/* mmap() an entire file into the address space.  Returns a pointer
+   to the beginning of the file.  The mmap'ed length is returned
+   inside the length parameter.  If there is a problem, NULL is
+   returned, the value of length is undefined, and errno is set to
+   something appropriate.  The user is responsible for doing
+   an munmap(ptr, length) when finished with it.  openflags should 
+   be O_RDONLY or O_RDWR, or O_WRONLY
+*/
+char *mmapfile(char *fname, int *length, int openflags) {
+  struct stat st;
+  int fd;
+  char *fileptr;
+
+  if (!length || !fname) {
+    errno = EINVAL;
+    return NULL;
+  }
+
+  *length = -1;
+
+  if (stat(fname, &st) == -1) {
+    errno = ENOENT;
+    return NULL;
+  }
+
+  fd = open(fname, openflags);
+  if (fd == -1) {
+    return NULL;
+  }
+
+  fileptr = (char *) mmap(0, st.st_size, (openflags & O_RDONLY)? PROT_READ :
+                 (openflags & O_RDWR)? (PROT_READ|PROT_WRITE) : PROT_WRITE,
+                 MAP_SHARED, fd, 0);
+
+  close(fd);
+
+  if (fileptr == MAP_FAILED) {
+    return NULL;
+  }
+
+  *length = st.st_size;
+  return fileptr;
+}

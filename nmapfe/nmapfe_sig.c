@@ -661,6 +661,7 @@ gint read_data(gpointer data)
 {
   char *str;
   char *newstr;	
+  char *tmpstr;
   GdkFont *fixed;
   GdkFont *bold;
   GdkColormap *cmap;
@@ -701,140 +702,148 @@ gint read_data(gpointer data)
       if(view_type == 1){
 	str = buf;
 	newstr = strtok(str, " ");
-	gtk_text_insert(GTK_TEXT(MW->output), fixed, NULL, NULL, newstr, -1); 
+	if(newstr) gtk_text_insert(GTK_TEXT(MW->output), fixed, NULL, NULL, newstr, -1); 
 	gtk_text_insert(GTK_TEXT(MW->output), fixed, NULL, NULL, " ", -1);
 	do{
+ 	  tmpstr = newstr;
 	  newstr = strtok(NULL, " ");
+      if(tmpstr) tmpstr += strlen(tmpstr)+1; /* position on the start of next token */
+	  while(tmpstr && (tmpstr++)[0] == 0x20) /* print the leading spaces */
+	  	gtk_text_insert(GTK_TEXT(MW->output), fixed, NULL, NULL, " ", -1);
+
 	  if(newstr != NULL){
 	    /********* CATCH STUFF ****************************/
-	    if(strstr(newstr, "http://")){
-	      gtk_text_insert(GTK_TEXT(MW->output), fixed, NULL, NULL, "http://www.insecure.org/", -1);
+		if(newstr[0] == '('){
+	      gtk_text_insert(GTK_TEXT(MW->output), fixed, NULL, NULL, newstr, -1); 
+	      gtk_text_insert(GTK_TEXT(MW->output), fixed, NULL, NULL, " ", -1);
+	    }else if(strstr(newstr, "http://")){
+	      gtk_text_insert(GTK_TEXT(MW->output), bold, NULL, NULL, newstr, -1);
 	      gtk_text_insert(GTK_TEXT(MW->output), fixed, NULL, NULL, " ", -1);
 	    }else if(strstr(newstr, "fingerprint")){
-	      gtk_text_insert(GTK_TEXT(MW->output), fixed, NULL, NULL, "fingerprint:", -1);
+	      gtk_text_insert(GTK_TEXT(MW->output), bold, NULL, NULL, newstr, -1);
 	      gtk_text_insert(GTK_TEXT(MW->output), fixed, NULL, NULL, " ", -1);
 	      /********* BEGIN PORT COLOR CODING ****************/
 	    }else if(strstr(newstr, "sftp")){
-	      gtk_text_insert(GTK_TEXT(MW->output), bold, &red, NULL, "sftp", -1);
+	      gtk_text_insert(GTK_TEXT(MW->output), bold, &red, NULL, newstr, -1);
 	      gtk_text_insert(GTK_TEXT(MW->output), fixed, NULL, NULL, " ", -1);			
 	    }else if(strstr(newstr, "mftp")){
-	      gtk_text_insert(GTK_TEXT(MW->output), bold, &red, NULL, "mftp", -1);
+	      gtk_text_insert(GTK_TEXT(MW->output), bold, &red, NULL, newstr, -1);
 	      gtk_text_insert(GTK_TEXT(MW->output), fixed, NULL, NULL, " ", -1);			
 	    }else if(strstr(newstr, "bftp")){
-	      gtk_text_insert(GTK_TEXT(MW->output), bold, &red, NULL, "bftp", -1);
+	      gtk_text_insert(GTK_TEXT(MW->output), bold, &red, NULL, newstr, -1);
 	      gtk_text_insert(GTK_TEXT(MW->output), fixed, NULL, NULL, " ", -1);			
 	    }else if(strstr(newstr, "NetBus")){
-	      gtk_text_insert(GTK_TEXT(MW->output), bold, &red, NULL, "NetBus", -1);
+	      gtk_text_insert(GTK_TEXT(MW->output), bold, &red, NULL, newstr, -1);
 	      gtk_text_insert(GTK_TEXT(MW->output), fixed, NULL, NULL, " ", -1);			
 	    }else if(strstr(newstr, "kshell")){
-	      gtk_text_insert(GTK_TEXT(MW->output), bold, &red, NULL, "kshell", -1);
+	      gtk_text_insert(GTK_TEXT(MW->output), bold, &red, NULL, newstr, -1);
 	      gtk_text_insert(GTK_TEXT(MW->output), fixed, NULL, NULL, " ", -1);			
 	    }else if(strstr(newstr, "klogin")){
-	      gtk_text_insert(GTK_TEXT(MW->output), bold, &red, NULL, "klogin", -1);
+	      gtk_text_insert(GTK_TEXT(MW->output), bold, &red, NULL, newstr, -1);
 	      gtk_text_insert(GTK_TEXT(MW->output), fixed, NULL, NULL, " ", -1);			
 	    }else if(strstr(newstr, "rtelnet")){
-	      gtk_text_insert(GTK_TEXT(MW->output), bold, &red, NULL, "rtelnet", -1);
+	      gtk_text_insert(GTK_TEXT(MW->output), bold, &red, NULL, newstr, -1);
 	      gtk_text_insert(GTK_TEXT(MW->output), fixed, NULL, NULL, " ", -1);			
 	    }else if(strstr(newstr, "telnet")){
-	      gtk_text_insert(GTK_TEXT(MW->output), bold, &red, NULL, "telnet", -1);
+	      gtk_text_insert(GTK_TEXT(MW->output), bold, &red, NULL, newstr, -1);
 	      gtk_text_insert(GTK_TEXT(MW->output), fixed, NULL, NULL, " ", -1);
 	    }else if(strstr(newstr, "X11")){
-	      gtk_text_insert(GTK_TEXT(MW->output), bold, NULL, NULL, "X11", -1);
+	      gtk_text_insert(GTK_TEXT(MW->output), bold, NULL, NULL, newstr, -1);
 	      gtk_text_insert(GTK_TEXT(MW->output), fixed, NULL, NULL, " ", -1);
 	    }else if(strstr(newstr, "tftp")){
-	      gtk_text_insert(GTK_TEXT(MW->output), bold, &red, NULL, "tftp", -1);
+	      gtk_text_insert(GTK_TEXT(MW->output), bold, &red, NULL, newstr, -1);
 	      gtk_text_insert(GTK_TEXT(MW->output), fixed, NULL, NULL, " ", -1);
 	    }else if(strstr(newstr, "login")){
-	      gtk_text_insert(GTK_TEXT(MW->output), bold, &red, NULL, "login", -1);
+	      gtk_text_insert(GTK_TEXT(MW->output), bold, &red, NULL, newstr, -1);
 	      gtk_text_insert(GTK_TEXT(MW->output), fixed, NULL, NULL, " ", -1);
 	    }else if(strstr(newstr, "imap2")){
-	      gtk_text_insert(GTK_TEXT(MW->output), bold, &blue, NULL, "imap2", -1);
+	      gtk_text_insert(GTK_TEXT(MW->output), bold, &blue, NULL, newstr, -1);
 	      gtk_text_insert(GTK_TEXT(MW->output), fixed, NULL, NULL, " ", -1);
 	    }else if(strstr(newstr, "ftp")){
-	      gtk_text_insert(GTK_TEXT(MW->output), bold, &red, NULL, "ftp", -1);
+	      gtk_text_insert(GTK_TEXT(MW->output), bold, &red, NULL, newstr, -1);
 	      gtk_text_insert(GTK_TEXT(MW->output), fixed, NULL, NULL, " ", -1);
 	    }else if(strstr(newstr, "pop-3")){
-	      gtk_text_insert(GTK_TEXT(MW->output), bold, &blue, NULL, "pop-3", -1);
+	      gtk_text_insert(GTK_TEXT(MW->output), bold, &blue, NULL, newstr, -1);
 	      gtk_text_insert(GTK_TEXT(MW->output), fixed, NULL, NULL, " ", -1);
 	    }else if(strstr(newstr, "exec")){
-	      gtk_text_insert(GTK_TEXT(MW->output), bold, &red, NULL, "exec", -1);
+	      gtk_text_insert(GTK_TEXT(MW->output), bold, &red, NULL, newstr, -1);
 	      gtk_text_insert(GTK_TEXT(MW->output), fixed, NULL, NULL, " ", -1);
 	    }else if(strstr(newstr, "imap3")){
-	      gtk_text_insert(GTK_TEXT(MW->output), bold, &blue, NULL, "imap3", -1);
+	      gtk_text_insert(GTK_TEXT(MW->output), bold, &blue, NULL, newstr, -1);
 	      gtk_text_insert(GTK_TEXT(MW->output), fixed, NULL, NULL, " ", -1);					
 	    }else if(strstr(newstr, "smtps")){
-	      gtk_text_insert(GTK_TEXT(MW->output), bold, &blue, NULL, "smtps", -1);
+	      gtk_text_insert(GTK_TEXT(MW->output), bold, &blue, NULL, newstr, -1);
 	      gtk_text_insert(GTK_TEXT(MW->output), fixed, NULL, NULL, " ", -1);			
 	    }else if(strstr(newstr, "smtp")){
-	      gtk_text_insert(GTK_TEXT(MW->output), bold, &blue, NULL, "smtp", -1);
+	      gtk_text_insert(GTK_TEXT(MW->output), bold, &blue, NULL, newstr, -1);
 	      gtk_text_insert(GTK_TEXT(MW->output), fixed, NULL, NULL, " ", -1);
 	    }else if(strstr(newstr, "pop-2")){
-	      gtk_text_insert(GTK_TEXT(MW->output), bold, &blue, NULL, "pop-2", -1);
+	      gtk_text_insert(GTK_TEXT(MW->output), bold, &blue, NULL, newstr, -1);
 	      gtk_text_insert(GTK_TEXT(MW->output), fixed, NULL, NULL, " ", -1);	
 	    }else if(strstr(newstr, "systat")){
-	      gtk_text_insert(GTK_TEXT(MW->output), bold, NULL, NULL, "systat", -1);
+	      gtk_text_insert(GTK_TEXT(MW->output), bold, NULL, NULL, newstr, -1);
 	      gtk_text_insert(GTK_TEXT(MW->output), fixed, NULL, NULL, " ", -1);	
 	    }else if(strstr(newstr, "netstat")){
-	      gtk_text_insert(GTK_TEXT(MW->output), bold, NULL, NULL, "netstat", -1);
+	      gtk_text_insert(GTK_TEXT(MW->output), bold, NULL, NULL, newstr, -1);
 	      gtk_text_insert(GTK_TEXT(MW->output), fixed, NULL, NULL, " ", -1);	
 	    }else if(strstr(newstr, "cfingerd")){
-	      gtk_text_insert(GTK_TEXT(MW->output), bold, NULL, NULL, "cfingerd", -1);
+	      gtk_text_insert(GTK_TEXT(MW->output), bold, NULL, NULL, newstr, -1);
 	      gtk_text_insert(GTK_TEXT(MW->output), fixed, NULL, NULL, " ", -1);	
 	    }else if(strstr(newstr, "finger")){
-	      gtk_text_insert(GTK_TEXT(MW->output), bold, NULL, NULL, "finger", -1);
+	      gtk_text_insert(GTK_TEXT(MW->output), bold, NULL, NULL, newstr, -1);
 	      gtk_text_insert(GTK_TEXT(MW->output), fixed, NULL, NULL, " ", -1);	
 	    }else if(strstr(newstr, "netbios")){
-	      gtk_text_insert(GTK_TEXT(MW->output), bold, NULL, NULL, "netbios-ssn", -1);
+	      gtk_text_insert(GTK_TEXT(MW->output), bold, NULL, NULL, newstr, -1);
 	      gtk_text_insert(GTK_TEXT(MW->output), fixed, NULL, NULL, " ", -1);	
 	    }else if(strstr(newstr, "X11")){
-	      gtk_text_insert(GTK_TEXT(MW->output), bold, NULL, NULL, "X11", -1);
+	      gtk_text_insert(GTK_TEXT(MW->output), bold, NULL, NULL, newstr, -1);
 	      gtk_text_insert(GTK_TEXT(MW->output), fixed, NULL, NULL, " ", -1);	
 	    }else if(strstr(newstr, "nfs")){
-	      gtk_text_insert(GTK_TEXT(MW->output), bold, NULL, NULL, "nfs", -1);
+	      gtk_text_insert(GTK_TEXT(MW->output), bold, NULL, NULL, newstr, -1);
 	      gtk_text_insert(GTK_TEXT(MW->output), fixed, NULL, NULL, " ", -1);	
 	    }else if(strstr(newstr, "sunrpc")){
-	      gtk_text_insert(GTK_TEXT(MW->output), bold, NULL, NULL, "sunrpc", -1);
+	      gtk_text_insert(GTK_TEXT(MW->output), bold, NULL, NULL, newstr, -1);
 	      gtk_text_insert(GTK_TEXT(MW->output), fixed, NULL, NULL, " ", -1);	
 	    }else if(strstr(newstr, "https")){
-	      gtk_text_insert(GTK_TEXT(MW->output), bold, NULL, NULL, "https", -1);
+	      gtk_text_insert(GTK_TEXT(MW->output), bold, NULL, NULL, newstr, -1);
 	      gtk_text_insert(GTK_TEXT(MW->output), fixed, NULL, NULL, " ", -1);	
 	    }else if(strstr(newstr, "kpasswds")){
-	      gtk_text_insert(GTK_TEXT(MW->output), bold, NULL, NULL, "kpasswd", -1);
+	      gtk_text_insert(GTK_TEXT(MW->output), bold, NULL, NULL, newstr, -1);
 	      gtk_text_insert(GTK_TEXT(MW->output), fixed, NULL, NULL, " ", -1);					
 	    }else if(strstr(newstr, "http")){
-	      gtk_text_insert(GTK_TEXT(MW->output), bold, NULL, NULL, "http", -1);
+	      gtk_text_insert(GTK_TEXT(MW->output), bold, NULL, NULL, newstr, -1);
 	      gtk_text_insert(GTK_TEXT(MW->output), fixed, NULL, NULL, " ", -1);	
 	    }else if(strstr(newstr, "ssh")){
-	      gtk_text_insert(GTK_TEXT(MW->output), bold, &red, NULL, "ssh", -1);
+	      gtk_text_insert(GTK_TEXT(MW->output), bold, &red, NULL, newstr, -1);
 	      gtk_text_insert(GTK_TEXT(MW->output), fixed, NULL, NULL, " ", -1);	
 	    }else if(strstr(newstr, "shell")){
-	      gtk_text_insert(GTK_TEXT(MW->output), bold, &red, NULL, "shell", -1);
+	      gtk_text_insert(GTK_TEXT(MW->output), bold, &red, NULL, newstr, -1);
 	      gtk_text_insert(GTK_TEXT(MW->output), fixed, NULL, NULL, " ", -1);	
 	    }else if(strstr(newstr, "linuxconf")){
-	      gtk_text_insert(GTK_TEXT(MW->output), bold, &red, NULL, "linuxconf", -1);
+	      gtk_text_insert(GTK_TEXT(MW->output), bold, &red, NULL, newstr, -1);
 	      gtk_text_insert(GTK_TEXT(MW->output), fixed, NULL, NULL, " ", -1);	
 
 				/******* END PORT COLOR CODING, BEGIN OS COLORS *****************/		
 	    }else if(strstr(newstr, "Linux")){
-	      gtk_text_insert(GTK_TEXT(MW->output), bold, &blue, NULL, "Linux", -1);
+	      gtk_text_insert(GTK_TEXT(MW->output), bold, &blue, NULL, newstr, -1);
 	      gtk_text_insert(GTK_TEXT(MW->output), fixed, NULL, NULL, " ", -1);
 	    }else if(strstr(newstr, "FreeBSD")){
-	      gtk_text_insert(GTK_TEXT(MW->output), bold, &blue, NULL, "FreeBSD", -1);
+	      gtk_text_insert(GTK_TEXT(MW->output), bold, &blue, NULL, newstr, -1);
 	      gtk_text_insert(GTK_TEXT(MW->output), fixed, NULL, NULL, " ", -1);
 	    }else if(strstr(newstr, "Win")){
-	      gtk_text_insert(GTK_TEXT(MW->output), bold, &blue, NULL, "Win", -1);
+	      gtk_text_insert(GTK_TEXT(MW->output), bold, &blue, NULL, newstr, -1);
 	      gtk_text_insert(GTK_TEXT(MW->output), fixed, NULL, NULL, " ", -1);
 	    }else if(strstr(newstr, "MacOS")){
-	      gtk_text_insert(GTK_TEXT(MW->output), bold, &blue, NULL, "MacOS", -1);
+	      gtk_text_insert(GTK_TEXT(MW->output), bold, &blue, NULL, newstr, -1);
 	      gtk_text_insert(GTK_TEXT(MW->output), fixed, NULL, NULL, " ", -1);
 	    }else if(strstr(newstr, "OpenBSD")){
-	      gtk_text_insert(GTK_TEXT(MW->output), bold, &blue, NULL, "OpenBSD", -1);
+	      gtk_text_insert(GTK_TEXT(MW->output), bold, &blue, NULL, newstr, -1);
 	      gtk_text_insert(GTK_TEXT(MW->output), fixed, NULL, NULL, " ", -1);
 	    }else if(strstr(newstr, "IRIX")){
-	      gtk_text_insert(GTK_TEXT(MW->output), bold, &blue, NULL, "IRIX", -1);
+	      gtk_text_insert(GTK_TEXT(MW->output), bold, &blue, NULL, newstr, -1);
 	      gtk_text_insert(GTK_TEXT(MW->output), fixed, NULL, NULL, " ", -1);
 	    }else if(strstr(newstr, "Windows")){
-	      gtk_text_insert(GTK_TEXT(MW->output), bold, &blue, NULL, "Windows", -1);
+	      gtk_text_insert(GTK_TEXT(MW->output), bold, &blue, NULL, newstr, -1);
 	      gtk_text_insert(GTK_TEXT(MW->output), fixed, NULL, NULL, " ", -1);
 					
 	    }else{ 

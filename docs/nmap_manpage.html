@@ -444,17 +444,45 @@
        <B>-oM</B> <B>&lt;logfilename&gt;</B>
               This  logs  the  results of your scans in a <B>machine</B>
               <B>parseable</B> form into the  file  you  specify  as  an
-              argument.   You can give -m the argument '-' (with-
-              out quotes) to shoot output into stdout (for  shell
+              argument.   You  can give the argument '-' (without
+              quotes) to shoot  output  into  stdout  (for  shell
               pipelines,  etc).   In this case normal output will
               be suppressed.  Watch out for error messages if you
               use this (they will still go to stderr).
+
+       <B>-oS</B> <B>&lt;logfilename&gt;</B>
+              thIs  l0gz  th3  r3suLtS  of YouR ScanZ iN a <B>s|&lt;ipT</B>
+              <B>kiDd|3</B> f0rM iNto THe fiL3 U sPecfy 4s an  arGuMEnT!
+              U  kAn  gIv3  the  4rgument '-' (wItHOUt qUOteZ) to
+              sh00t output iNT0 stDouT!@!!
+
+       <B>--resume</B> <B>&lt;logfilename&gt;</B>
+              A network scan that is cancelled due to  control-C,
+              network  outage,  etc.  can  be  resumed using this
+              option.  The logfilename must be  either  a  normal
+              (-oN)  or  machine  parsable  (-oM)  log  from  the
+              aborted scan.  No other options can be given  (they
+              will  be  the same as the aborted scan).  Nmap will
+              start on the machine after the  last  one  success-
+              fully scanned in the log file.
 
        <B>-iL</B> <B>&lt;inputfilename&gt;</B>
               Reads target specifications from the file specified
               RATHER than from the command line.  The file should
               contain  a  list  of  host  or  network expressions
               seperated by spaces,  tabs,  or  newlines.   Use  a
+
+
+
+                                                                7
+
+
+
+
+
+<B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
+
+
               hyphen  (-)  as  <I>inputfilename</I>  if you want nmap to
               read host expressions from stdin (like at  the  end
               of  a  pipe).  See the section <I>target</I> <I>specification</I>
@@ -471,22 +499,11 @@
        <B>-p</B> <B>&lt;port</B> <B>ranges&gt;</B>
               This option specifies what ports you want to  spec-
               ify.  For  example '-p 23' will only try port 23 of
-
-
-
-                                                                7
-
-
-
-
-
-<B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
-
-
-              the target host(s).  ports greater than 60000.  The
-              default  is to scan all ports between 1 and 1024 as
-              well as any ports listed in the services file which
-              comes with nmap.
+              the target host(s).   '-p  20-30,139,60000-'  scans
+              ports  between  20  and 30, port 139, and all ports
+              greater than 60000.  The default  is  to  scan  all
+              ports  between  1  and  1024  as  well as any ports
+              listed in the services file which comes with  nmap.
 
        <B>-F</B> <B>Fast</B> <B>scan</B> <B>mode.</B>
               Specifies  that  you  only  wish  to scan for ports
@@ -520,6 +537,18 @@
               Also it will be pretty easy to determine which host
               is  scanning if only one is actually up on the net-
               work.  You might want to use IP  addresses  instead
+
+
+
+                                                                8
+
+
+
+
+
+<B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
+
+
               of  names  (so  the decoy networks don't see you in
               their nameserver logs).
 
@@ -537,18 +566,6 @@
               them.  It could just be a decoy!
 
               Decoys  are  used  both  in  the  initial ping scan
-
-
-
-                                                                8
-
-
-
-
-
-<B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
-
-
               (using ICMP, SYN, ACK, or whatever) and during  the
               actual  port  scanning phase.  Decoys are also used
               during remote OS detection ( <B>-O</B> ).
@@ -586,6 +603,18 @@
               naive firewall and packet filter installations make
               an exception in their ruleset to allow DNS (53)  or
               FTP-DATA (20) packets to come through and establish
+
+
+
+                                                                9
+
+
+
+
+
+<B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
+
+
               a connection.  Obviously this  completely  subverts
               the  security  advantages  of  the  firewall  since
               intruders can just masquerade as FTP or DNS by mod-
@@ -603,18 +632,6 @@
               port number.
 
        <B>-r</B>     Tells Nmap <B>NOT</B> to  randomize  the  order  in  which
-
-
-
-                                                                9
-
-
-
-
-
-<B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
-
-
               ports are scanned.
 
        <B>--randomize_hosts</B>
@@ -652,6 +669,18 @@
               lar,  except it only waits 15 seconds between send-
               ing packets.  <B>Polite</B> is meant to ease load  on  the
               network   and   reduce   the  chances  of  crashing
+
+
+
+                                                               10
+
+
+
+
+
+<B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
+
+
               machines.  It serializes the probes  and  waits  <B>at</B>
               <B>least</B>  0.4  seconds  between  them.   <B>Normal</B> is the
               default Nmap  behaviour,  which  tries  to  run  as
@@ -669,18 +698,6 @@
 
               These  canned  timing  modes  should NOT be used in
               combination with the  lower  level  controls  given
-
-
-
-                                                               10
-
-
-
-
-
-<B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
-
-
               below.
 
        <B>--host_timeout</B> <B>&lt;milliseconds&gt;</B>
@@ -719,6 +736,17 @@
               port  at  a  time.   It also effects other parallel
               scans such as ping sweep, RPC scan, etc.
 
+
+
+                                                               11
+
+
+
+
+
+<B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
+
+
        <B>--scan_delay</B> <B>&lt;milliseconds&gt;</B>
               Specifies the <B>minimum</B> amount of time Nmap must wait
               between  probes.   This  is mostly useful to reduce
@@ -738,24 +766,13 @@
        and  32 (scan the single host specified).  Use /24 to scan
        a class 'C' address and /16 for a class 'B'.
 
-
-
-                                                               11
-
-
-
-
-
-<B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
-
-
        Nmap also has a more  powerful  notation  which  lets  you
        specify an IP address using lists/ranges for each element.
        Thus you can scan the whole class 'B' network  128.210.*.*
        by  specifying  '128.210.*.*'  or '128.210.0-255.0-255' or
        even '128.210.1-50,51-255.1,2,3,4,5-255'.  And  of  course
        you  can  use  the mask notation: '128.210.0.0/16'.  These
-       are all equivalent.  If you use astericts ('*'),  remember
+       are all equivalent.  If you use asterisks ('*'),  remember
        that  most  shells  require  you  to escape them with back
        slashes or protect them with quotes.
 
@@ -789,6 +806,17 @@
 
        <B>nmap</B> <B>-sS</B> <B>-O</B> <B>target.example.com/24</B>
 
+
+
+                                                               12
+
+
+
+
+
+<B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
+
+
        Launches a stealth SYN scan against each machine  that  is
        up out of the 255 machines on class 'C' where target.exam-
        ple.com resides.  It also tries to determine what  operat-
@@ -806,17 +834,6 @@
        cient TCP stack.  Same goes with CISCO, IRIX,  HP/UX,  and
        BSDI boxes.
 
-
-
-                                                               12
-
-
-
-
-
-<B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
-
-
        <B>nmap</B> <B>-v</B> <B>--randomize_hosts</B> <B>-p</B> <B>80</B> <B>'*.*.2.3-5'</B>
 
        Rather  than focus on a specific IP range, it is sometimes
@@ -826,8 +843,8 @@
        .2.4,  or  .2.5  .   If you are root you might as well add
        -sS.  Also you will find more interesting machines  start-
        ing  at 127. so you might want to use '127-222' instead of
-       the first asterict because that section has a greater den-
-       sity of interesting machines (IMHO).
+       the first asterisks because that  section  has  a  greater
+       density of interesting machines (IMHO).
 
        <B>host</B> <B>-l</B> <B>company.com</B> <B>|</B> <B>cut</B> <B>'-d</B> <B>'</B> <B>-f</B> <B>4</B> <B>|</B> <B>./nmap</B> <B>-v</B> <B>-iL</B> <B>-</B>
 
@@ -860,6 +877,18 @@
 
        <I>libpcap</I>  is also distributed along with nmap.  It is copy-
        righted by Van Jacobson, Craig Leres and  Steven  McCanne,
+
+
+
+                                                               13
+
+
+
+
+
+<B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
+
+
        all   of   the Lawrence Berkeley National Laboratory, Uni-
        versity of California, Berkeley,  CA.   The  version  dis-
        tributed  with  nmap may be modified, pristine sources are
@@ -877,18 +906,6 @@
        users have a right to know exactly what a program is going
        to  do  before they run it.  This also allows you to audit
        the software for security holes (none have been  found  so
-
-
-
-                                                               13
-
-
-
-
-
-<B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
-
-
        far).
 
        Source code also allows you to port nmap to new platforms,
@@ -922,23 +939,6 @@
        that  Nmap  comes with no warranty.  There is no reason to
        believe versions earlier than 2.0 are susceptible to prob-
        lems, but we have not tested them.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
