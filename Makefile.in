@@ -128,9 +128,8 @@ distro:
 
 	$(SHTOOL) mkdir /usr/tmp/nmap-$(NMAP_VERSION)/mswin32
 	cd mswin32; cp -ra *.[hHcC] *.cc ARPA NET NETINET RPC icon1.ico \
-                    ifaddrlist.h lib libpcap-note.txt nmap.dsp \
-                    nmap.dsw nmap.rc winip \
-                    /usr/tmp/nmap-$(NMAP_VERSION)/mswin32
+                    ifaddrlist.h lib libpcap-note.txt nmap.sln nmap.vcproj \
+                    winip /usr/tmp/nmap-$(NMAP_VERSION)/mswin32
 
 	$(SHTOOL) mkdir /usr/tmp/nmap-$(NMAP_VERSION)/$(LIBPCAPDIR)
 	cd $(LIBPCAPDIR); cp -ra acconfig.h aclocal.m4 arcnet.h bpf \
@@ -169,7 +168,7 @@ distro:
 
 	$(SHTOOL) mkdir /usr/tmp/nmap-$(NMAP_VERSION)/nbase
 	cd $(NBASEDIR); cp -ra Makefile.in aclocal.m4 configlocal.m4 \
-                        configure configure.ac nbase_config.h.in \
+                        nbase.vcproj configure configure.ac nbase_config.h.in \
                         *.c *.h CHANGELOG /usr/tmp/nmap-$(NMAP_VERSION)/nbase
 
 	$(SHTOOL) mkdir /usr/tmp/nmap-$(NMAP_VERSION)/libpcre
@@ -187,7 +186,7 @@ distro:
 	$(SHTOOL) mkdir /usr/tmp/nmap-$(NMAP_VERSION)/nsock/include
 	$(SHTOOL) mkdir /usr/tmp/nmap-$(NMAP_VERSION)/nsock/src
 	cd nsock/include; cp -ra nsock.h /usr/tmp/nmap-$(NMAP_VERSION)/nsock/include/
-	cd nsock/src; cp -ra  aclocal.m4 config.guess config.sub \
+	cd nsock/src; cp -ra  aclocal.m4 config.guess config.sub nsock.vcproj \
                             configure configure.ac error.c error.h \
                             filespace.c filespace.h gh_list.c gh_list.h \
                             install-sh Makefile.in netutils.c netutils.h \
