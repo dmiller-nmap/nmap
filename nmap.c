@@ -1765,7 +1765,7 @@ portlist super_scan(struct hoststruct *target, unsigned short *portarray, stype 
     enum { port_open, port_closed, port_testing, port_fresh } state;
     short next;
     short prev;
-  } *scan, *openlist, *current, *fresh, *testinglist;
+  } *scan, *openlist, *current, *fresh, *testinglist, *next;
   short portlookup[65536]; /* Indexes port number -> scan[] index */
   int next_unused_port = 0;
   int decoy;
@@ -1852,8 +1852,8 @@ if (o.debugging || o.verbose)
     {
       /* Check the possible retransmissions first */
       gettimeofday(&now, NULL);
-      for( current = testinglist; current ;
-	   current = (current->next >= 0)? &scan[current->next] : NULL) {
+      for( current = testinglist; current ; current = next) {
+	next = (current->next > -1)? &scan[current->next] : NULL;
 	if (current->state == port_testing) {
 	  if ( TIMEVAL_SUBTRACT(now, current->sent[current->trynum]) > to.timeout) {
 	    if (current->trynum > 0) {
@@ -1894,7 +1894,8 @@ if (o.debugging || o.verbose)
 	    }	    
 	    }
 	  }
-	} else { /* current->state == port_fresh */
+	} else { 
+	  /* current->state == port_fresh */
 	  /* OK, now we have gone through our list of in-transit queries, so now
 	     we try to send off new queries if we can ... */
 	  if (numqueries_outstanding > (int) numqueries_ideal) break;
