@@ -1,5 +1,9 @@
 # Nmap Changelog ($Id$)
 
+Nmap 3.00
+
+o Woohoo! :)
+
 Nmap 2.99RC2
 
 o Fixed an important memory initialization bug which was causing
@@ -664,7 +668,7 @@ o Applied RPM spec file changes from "Benjamin Reed"
 -- Added a warning when you scan 0 hosts (eg "nmap -v").  There are
    various other output tweaks as well.
 
--- Insured that 0.0.0.0 can be scanned by nmap (although on some OSs, like
+-- Ensured that 0.0.0.0 can be scanned by nmap (although on some OSs, like
    Linux, it won't work due to what seem to be kernel bugs).  Oh
    well.  I'll look into it later.
 
