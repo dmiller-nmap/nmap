@@ -59,10 +59,17 @@ static struct port *freeportlist = NULL;
 int addport(portlist *plist, u16 portno, u8 protocol, char *owner, int state) {
   struct port *current = NULL;
   struct port **portarray = NULL;
+  char msg[128];
 
-  if (o.debugging > 1) {
-    error("addport: Adding port %hi/%s (owner: %s) in state %s",
-	  portno, (protocol == IPPROTO_TCP)? "tcp" : "udp", (owner)? owner : "none", statenum2str(state));
+  if (state == PORT_OPEN || (o.debugging > 1)) {
+    if (owner && *owner) {
+      snprintf(msg, sizeof(msg), " (owner: %s)", owner);
+    } else msg[0] = '\0';
+
+    log_write(LOG_STDOUT, "Adding %s port %hi/%s%s\n",
+	      statenum2str(state), portno, 
+	      (protocol == IPPROTO_TCP)? "tcp" : "udp", msg);
+    log_flush(LOG_STDOUT);
   }
 
 /* Make sure state is OK */
@@ -151,6 +158,13 @@ int deleteport(portlist *plist, u16 portno, u8 protocol) {
 
   if (!answer)
     return -1;
+
+  if (o.verbose) {  
+    log_write(LOG_STDOUT, "Deleting port %hi/%s, which we thought was %s\n",
+	      portno, (answer->proto == IPPROTO_TCP)? "tcp" : "udp", 
+	      statenum2str(answer->state));
+    log_flush(LOG_STDOUT);
+  }    
 
   free_port(answer);
   return 0;

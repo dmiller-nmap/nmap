@@ -458,7 +458,7 @@ void write_host_status(struct hoststruct *currenths, int resolve_all) {
     
     if (o.pingscan)
       log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Host  %s (%s) seems to be a subnet broadcast address (returned %d extra pings).%s\n",  currenths->name, inet_ntoa(currenths->host), currenths->wierd_responses, 
-		(currenths->flags & HOST_UP)? "Note -- the actual IP also responded." : "");
+		(currenths->flags & HOST_UP)? " Note -- the actual IP also responded." : "");
     else {
       log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Host  %s (%s) seems to be a subnet broadcast address (returned %d extra pings). %s.\n",  currenths->name, 
 		inet_ntoa(currenths->host), currenths->wierd_responses,

@@ -178,10 +178,6 @@ static void posportupdate(struct hoststruct *target, struct portinfo *current,
   current->state = newstate;
   current->next = -1;
   current->prev = -1;
-  if (newstate == PORT_OPEN && o.verbose) {
-    log_write(LOG_STDOUT, "Adding TCP port %lu (state %s).\n", current->portno, statenum2str(current->state));
-    log_flush(LOG_STDOUT);
-  }
   addport(&target->ports, current->portno, IPPROTO_TCP, owner, newstate);
   return;
 }
@@ -1174,8 +1170,6 @@ void bounce_scan(struct hoststruct *target, u16 *portarray,
 		res = recvtime(sd, recvbuf, 2048,10);
 	      }
 	      if (recvbuf[0] == '1' || recvbuf[0] == '2') {
-		if (o.verbose || o.debugging) log_write(LOG_STDOUT, "Port number %i appears good.\n",
-						      portarray[i]);
 		addport(&target->ports, portarray[i], IPPROTO_TCP, NULL, PORT_OPEN);
 		if (recvbuf[0] == '1') {
 		  res = recvtime(sd, recvbuf, 2048,5);

@@ -1,5 +1,6 @@
 # Nmap Changelog
 
+
 -- Added Idlescan (IPID blind scan).  IMHO, this is one of the coolest
    scan types in existance!  The options is "-sI <proxyhost>".
 
@@ -19,6 +20,9 @@
 
 -- Fixed an OS fingerprinting bug that caused many extra packets to be
    sent if you request a lot of decoys.
+
+-- Added a bunch of IDS sensor/console/agent port numbers from
+   Patrick Mueller (pmueller@neohapsis.com)
 
 ** 2.54BETA25
 
