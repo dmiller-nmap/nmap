@@ -209,7 +209,7 @@ if (o.logfd) {
     fprintf(o.logfd, "%s ", fakeargv[i]);
   fprintf(o.logfd, "\n");
 }
-printf("\nStarting nmap V. %s by Fyodor (fyodor@dhp.com, www.dhp.com/~fyodor/nmap/)\n", VERSION);
+printf("\nStarting nmap V. %s by Fyodor (fyodor@dhp.com, www.insecure.org/nmap/)\n", VERSION);
 /* I seriously doubt anyone likes this "feature"
 if (!o.verbose) 
   error("Hint: The -v option notifies you of open ports as they are found.\n");
@@ -1456,6 +1456,7 @@ int packets_out;
 pcap_t *pd;
 struct bpf_program fcode;
 char filter[512];
+int tmpsocket;
 unsigned int localnet, netmask;
 char *p = NULL;
 char err0r[PCAP_ERRBUF_SIZE];
@@ -1515,11 +1516,16 @@ do {
       perror("socket trobles in syn_scan");
     else {
       for(decoy=0; decoy < o.numdecoys; decoy++) {
+	if (decoy != o.decoyturn) {
+	  if ((tmpsocket = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) < 0 ) /* It is lame that we have to do this */
+	    perror("decoy socket trobles in syn_scan");
+	} else tmpsocket = sockets[i];
 	if (o.fragscan)
-	  send_small_fragz(sockets[i], &o.decoys[decoy], &target->host, MAGIC_PORT,
+	  send_small_fragz(tmpsocket, &o.decoys[decoy], &target->host, MAGIC_PORT,
 			   portarray[j++], TH_SYN);
-	else send_tcp_raw(sockets[i], &o.decoys[decoy] , &target->host, MAGIC_PORT, 
+	else send_tcp_raw(tmpsocket, &o.decoys[decoy] , &target->host, MAGIC_PORT, 
 			  portarray[j++],0,0,TH_SYN,0,0,0);
+	if (decoy != o.decoyturn) close(tmpsocket);
 	usleep(10000);
       }
     }    
