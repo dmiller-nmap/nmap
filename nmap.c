@@ -6,10 +6,12 @@ extern int optind;
 struct ops o;  /* option structure */
 
 int main(int argc, char *argv[]) {
+char *p;
 int i, j, arg, argvlen;
 short fastscan=0, tcpscan=0, randomize=1, resolve_all=0;
-short quashargv = 0, pingscan = 0;
+short quashargv = 0;
 int lookahead = LOOKAHEAD;
+struct timeval tv; /* Just for seeding random generator */
 short bouncescan = 0;
 unsigned short *ports = NULL;
 char myname[MAXHOSTNAMELEN + 1];
@@ -46,7 +48,7 @@ signal(SIGHUP, sigdie);
 if (argc < 2 ) printusage(argv[0]);
 
 /* OK, lets parse these args! */
-while((arg = getopt(argc,fakeargv,"Ab:Dde:FfhiL:lM:Nno:Pp:qrRS:sT:tUuw:Vv")) != EOF) {
+while((arg = getopt(argc,fakeargv,"Ab:Dde:FfhiL:lM:Nno:P::p:qrRS:s:T:tUuw:Vv")) != EOF) {
   switch(arg) {
   case 'A': o.allowall++; break;
   case 'b': 
@@ -55,7 +57,7 @@ while((arg = getopt(argc,fakeargv,"Ab:Dde:FfhiL:lM:Nno:Pp:qrRS:sT:tUuw:Vv")) != 
       fprintf(stderr, "Your argument to -b is fucked up. Use the normal url style:  user:pass@server:port or just use server and use default anon login\n  Use -h for help\n");
     }
     break;
-  case 'D': o.dontping++; break;
+  case 'D': o.pingtype = none; break;
   case 'd': o.debugging++; break;
   case 'e': strncpy(o.device, optarg,63); o.device[63] = '\0'; break;
   case 'F': fastscan++; break;
@@ -80,7 +82,17 @@ while((arg = getopt(argc,fakeargv,"Ab:Dde:FfhiL:lM:Nno:Pp:qrRS:sT:tUuw:Vv")) != 
     if (!o.logfd) 
       fatal("Failed to open output file %s for writing", optarg);
     break;
-  case 'P': pingscan++; break;
+  case 'P': 
+    if (*optarg && *(optarg+1)) 
+      error("Too many arguments to -P, use -P0, -PI, or -PT");
+    if (*optarg == '\0' || *optarg == 'I')
+      o.pingtype = icmp;
+    else if (*optarg == '0' || *optarg == 'N' || *optarg == 'D')
+      o.pingtype = none;
+    else if (*optarg == 'T')
+      o.pingtype = tcp;
+    else {printf("Illegal Argument to -P, use -P0, -PI, or -PT\n"); }
+    break;
   case 'p': 
     if (ports)
       fatal("Only 1 -p option allowed, seperate multiple ranges with commas.");
@@ -90,14 +102,30 @@ while((arg = getopt(argc,fakeargv,"Ab:Dde:FfhiL:lM:Nno:Pp:qrRS:sT:tUuw:Vv")) != 
     randomize = 0;
     printf("Warning: Randomize syntax has been changed, -r now requests that ports NOT be randomized\n");
     break;
-  case 's': o.synscan++; break;
+  case 's': 
+    if (!*optarg) {
+      fprintf(stderr, "An option is required for -s, most common are -sT (tcp scan), -sS (SYN scan), and -sP (Ping scan)");
+      printusage(argv[0]);
+    }
+      p = optarg;
+      while(*p) {
+	switch(*p) {
+	case 'F':  o.finscan++;break;
+	case 'P':  o.pingscan++;break;
+	case 'S':  o.synscan++;break;
+	case 'U':  o.udpscan++;break;
+	default:  error("Scantype %c not supported\n",p); printusage(argv[0]); break;
+	}
+	p++;
+      }
+      break;
   case 'S': 
     if (o.spoofsource)
       fatal("You can only use the source option once!\n");
     source = safe_malloc(sizeof(struct in_addr));
     o.spoofsource = 1;
     if (!resolve(optarg, source))
-      fatal("Failed to resolve source address, try dotted decimal of check for type\n");
+      fatal("Failed to resolve source address, try dotted decimal IP address\n");
     break;
   case 'T': o.ptime = atoi(optarg); break;
   case 't': tcpscan++; break;
@@ -114,13 +142,13 @@ while((arg = getopt(argc,fakeargv,"Ab:Dde:FfhiL:lM:Nno:Pp:qrRS:sT:tUuw:Vv")) != 
 }
 
 /* Take care of user wierdness */
-o.isr00t = !(geteuid()|geteuid());
-if (!o.isr00t && pingscan) fatal("You can't do a ping scan if you aren't root");
-if (pingscan && o.dontping) fatal("ICMP ping scan -P and don't ping -D are incompatible options, Duh.");
-if (!o.isr00t) o.dontping++;
-if (bouncescan && !o.dontping) printf("Hint: if your bounce scan target hosts aren't reachable from here, remember to use -D\n");
+if (!o.isr00t && o.pingtype == icmp) {
+  error("Warning:  You are not root -- using TCP pingscan rather than ICMP");
+  o.pingtype = tcp;
+}
+if (bouncescan && o.pingtype != none) printf("Hint: if your bounce scan target hosts aren't reachable from here, remember to use -P0 so we don't try and ping them prior to the scan\n");
 if (tcpscan && (o.synscan || o.finscan)) 
-  fatal("Pick one of -t, -s, and -U.  They all do a TCP portscan.\
+  fatal("Pick just one of -t, -s, and -U.  They all do a TCP portscan.\
  If you are trying to do TCP SYN scanning, just use -s, for FIN use -U, and \
  for normal connect() style scanning, use -t");
 if ((o.fragscan && !o.synscan && !o.finscan)) {
@@ -128,12 +156,12 @@ if ((o.fragscan && !o.synscan && !o.finscan)) {
 }
 if (o.udpscan || o.lamerscan) 
   printf("Warning: udp scan is not always 100%c accurate, I will be rewriting it\n", '%'); /* Due to gcc -Wall stupidity */
-if ((o.synscan || o.finscan || o.fragscan || pingscan) && !o.isr00t)
+if ((o.synscan || o.finscan || o.fragscan) && !o.isr00t)
   fatal("Options specified require r00t privileges.  You don't have them!");
-if (!tcpscan && !o.udpscan && !o.synscan && !o.finscan && !bouncescan && !pingscan) {
+if (!tcpscan && !o.udpscan && !o.synscan && !o.finscan && !bouncescan && !o.pingscan) {
   tcpscan++;
   if (o.verbose) error("No scantype specified, assuming vanilla tcp connect()\
- scan. Use -P if you really don't want to portscan (and just want to ping).");
+ scan. Use -sP if you really don't want to portscan (and just want to see what hosts are up).");
 if (fastscan && ports)
   fatal("You can use -F (fastscan) OR -p for explicit port specification.\
   Not both!\n");
@@ -174,7 +202,7 @@ if (!o.verbose)
 if (fastscan)
   ports = getfastports(o.synscan|tcpscan|o.fragscan|o.finscan|bouncescan,
                        o.udpscan|o.lamerscan);
-if (!ports && !pingscan) ports = getpts("1-1024");
+if (!ports && !o.pingscan) ports = getpts("1-1024");
 
 
 /* more fakeargv junk, BTW malloc'ing extra space in argv[0] doesn't work */
@@ -198,7 +226,12 @@ if ((i = max_sd()) && i < o.max_sockets) {
   printf("Your specified max_parallel_sockets of %d, but your system says it might only give us %d.  Trying anyway\n", o.max_sockets, i);
 }
 if (o.debugging > 1) printf("The max # of sockets on your system is: %d\n", i);
-srand(time(NULL));
+
+/* Seed our random generator */
+gettimeofday(&tv, NULL);
+if (tv.tv_usec) srand(tv.tv_usec);
+else if (tv.tv_sec) srand(tv.tv_sec);
+else srand(time(NULL));
 
 if (randomize)
   shortfry(ports); 
@@ -216,10 +249,10 @@ while(optind < argc) {
     }
     if (o.wait && currenths->rtt) currenths->rtt += o.wait;
     if (source) memcpy(&currenths->source_ip, source, sizeof(struct in_addr));
-if (!pingscan) {
-  if (!o.dontping && (currenths->flags & HOST_UP) && (o.verbose || o.debugging)) 
+if (!o.pingscan) {
+  if (o.pingtype != none && (currenths->flags & HOST_UP) && (o.verbose || o.debugging)) 
     printf("Host %s (%s) appears to be up ... good.\n", currenths->name, inet_ntoa(currenths->host));    
-  else if (o.verbose && !o.dontping && !(currenths->flags & HOST_UP)) {  
+  else if (o.verbose && o.pingtype != none && !(currenths->flags & HOST_UP)) {  
     if (resolve_all)
       nmap_log("Host %s (%s) appears to be down, skipping it.\n", currenths->name, inet_ntoa(currenths->host));
     else printf("Host %s (%s) appears to be down, skipping it.\n", currenths->name, inet_ntoa(currenths->host));
@@ -240,7 +273,7 @@ else {
 if (currenths->flags & HOST_UP && !currenths->source_ip.s_addr && ( o.synscan || o.finscan)) {
   if (gethostname(myname, MAXHOSTNAMELEN) || 
       !(target = gethostbyname(myname)))
-    fatal("Your system is fucked up.  Cannot get hostname!\n"); 
+    fatal("Your system is messed up.  Cannot get hostname!  You might have to use -S <my_IP_address>\n"); 
   memcpy(&currenths->source_ip, target->h_addr_list[0], sizeof(struct in_addr));
   if (! sourceaddrwarning) {
     printf("We could not determine for sure which interface to use, so we are guessing %s .  If this is wrong, use -S.\n", inet_ntoa(currenths->source_ip));
@@ -273,7 +306,7 @@ if (!o.device[0] && currenths->flags & HOST_UP && (o.finscan || o.synscan) && !i
 	else udp_scan(currenths, ports);
       }
     
-      if (!currenths->ports && !pingscan) {
+      if (!currenths->ports && !o.pingscan) {
 	nmap_log("No ports open for host %s (%s)\n", currenths->name,
 	       inet_ntoa(currenths->host));
 	if (currenths->wierd_responses)
@@ -297,6 +330,7 @@ return 0;
 
 void options_init() {
 bzero( (char *) &o, sizeof(struct ops));
+o.isr00t = !(geteuid()|geteuid());
 o.debugging = DEBUGGING;
 o.verbose = DEBUGGING;
 o.max_sockets = MAX_SOCKETS;
@@ -304,6 +338,7 @@ o.max_sockets = MAX_SOCKETS;
 o.allowall = !(IGNORE_ZERO_AND_255_HOSTS);
 #endif
 o.ptime = PING_TIMEOUT;
+o.pingtype = (o.isr00t)? icmp : tcp;
 }
 
 __inline__ void max_rcvbuf(int sd) {

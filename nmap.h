@@ -119,7 +119,7 @@ void *realloc();
 /* #define to zero if you don't want to	ignore hosts of the form 
    xxx.xxx.xxx.{0,255} (usually network and broadcast addresses) */
 #define IGNORE_ZERO_AND_255_HOSTS 0
-#define VERSION "1.51"
+#define VERSION "1.60"
 #ifndef DEBUGGING
 #define DEBUGGING 0
 #endif
@@ -236,7 +236,8 @@ struct ops /* someone took struct options, <grrr> */ {
   int max_sockets;
   int isr00t;
   int identscan;
-  int dontping;
+  enum { icmp, tcp, none} pingtype;
+  int pingscan;
   int allowall;
   int wait;
   int ptime;
@@ -300,6 +301,7 @@ int listen_icmp(int icmpsock, unsigned short outports[],
 		unsigned short numtries[], int *num_out,
 		struct in_addr target, portlist *ports);
 void massping(struct hoststruct *hostbatch, int numhosts, int pingtimeout);
+void masstcpping(struct hoststruct *hostbatch, int num_hosts, int pingtimeout);
 /* general helper functions */
 void hdump(unsigned char *packet, int len);
 void *safe_malloc(int size);

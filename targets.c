@@ -80,8 +80,10 @@ do {
     hostbatch[i].host.s_addr = 0;
   }
 
-if (hostbatch[0].host.s_addr && !o.dontping ) 
+if (hostbatch[0].host.s_addr && o.pingtype == icmp ) 
   massping(hostbatch, i, pingtimeout);
+else if (hostbatch[0].host.s_addr && o.pingtype == tcp)
+  masstcpping(hostbatch, i, pingtimeout);
 else for(i=0; hostbatch[i].host.s_addr; i++) 
 	hostbatch[i].flags |= HOST_UP; /*hostbatch[i].up = 1;*/
 
@@ -346,4 +348,134 @@ close(sd);
 free(time);
 if (o.debugging) 
   printf("massping done:  num_hosts: %d  num_responses: %d\n", num_hosts, num_responses);
+}
+
+void masstcpping(struct hoststruct *hostbatch, int num_hosts, int pingtimeout) {
+  int sockets[MAX_SOCKETS_ALLOWED];
+  int hostindex = 0;
+  struct timeval start, end, waittime, tmptv;
+  int numretries = 1;
+  int maxsock = 0;
+  int res;
+  int numcomplete = 0;
+  struct sockaddr_in sock;
+  int sockaddr_in_len = sizeof(struct sockaddr_in);
+  int retry;
+  fd_set fds_read, fds_write, fds_ex;
+  gettimeofday(&start, NULL);
+  bzero(sockets, sizeof(int) * MAX_SOCKETS_ALLOWED);
+  bzero(&sock, sockaddr_in_len);
+  sock.sin_family = AF_INET;
+  waittime.tv_sec = pingtimeout / (numretries + 1);
+  waittime.tv_usec = ((pingtimeout % (numretries +1)) * 1e6) / (numretries +1);
+  /*  unsigned short tport = rand() % 27500 + 38000;  */
+  for(retry = 0;(numcomplete < num_hosts) && retry <= numretries; retry++) {
+    printf("Retry number %d\n", retry);
+    for(hostindex = 0; hostindex < num_hosts; hostindex++) {
+      if ((hostbatch[hostindex].flags & (HOST_UP|HOST_DOWN)) == 0) {
+	sockets[hostindex] = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	if (o.debugging > 1) {
+	  printf("Just created a socket for %d (flags %d)\n", hostindex,hostbatch[hostindex].flags );
+	}
+	if (sockets[hostindex] == -1) { pfatal("Socket troubles in masstcpping\n"); }
+	maxsock = MAX(maxsock, sockets[hostindex]);
+	unblock_socket(sockets[hostindex]);
+	init_socket(sockets[hostindex]);
+	sock.sin_port =  rand() % 27500 + 38000;  /* Grab a portno between 38000-65500 */
+	sock.sin_addr.s_addr = hostbatch[hostindex].host.s_addr;
+	res = connect(sockets[hostindex],(struct sockaddr *)&sock,sizeof(struct sockaddr));
+	if ((res != -1 || errno == ECONNREFUSED)) {
+	  /* This can happen on localhost, successful/failing connection immediately
+	     in non-blocking mode */
+	  close(sockets[hostindex]);
+	  if (maxsock == sockets[hostindex]) maxsock--;
+	  sockets[hostindex] = 0;
+	  hostbatch[hostindex].flags |= HOST_UP;	 
+	  numcomplete++;
+      }
+	else if (errno == ENETUNREACH) {
+	  if (o.debugging) error("Got ENETUNREACH from masstcpping connect()");
+	  close(sockets[hostindex]);
+	  if (maxsock == sockets[hostindex]) maxsock--;
+	  sockets[hostindex] = 0;
+	  hostbatch[hostindex].flags |= HOST_DOWN;	 
+	  numcomplete++;
+	}
+	else {
+	  /* We'll need to select() and wait it out */
+	  FD_SET(sockets[hostindex], &fds_read);
+	  FD_SET(sockets[hostindex], &fds_write);
+	  FD_SET(sockets[hostindex], &fds_ex);
+	}
+      }
+    }
+    tmptv = waittime;
+    while((numcomplete < num_hosts) && (res = select(maxsock+1, &fds_read, &fds_write, &fds_ex, &tmptv)) > 0) {
+      for(hostindex = 0; hostindex < num_hosts; hostindex++) {
+	if (sockets[hostindex]) {
+	  if (FD_ISSET(sockets[hostindex], &fds_write)) {
+	    printf("WRITE selected for machine %s\n", inet_ntoa(hostbatch[hostindex].host));  
+	  }
+	  if ( FD_ISSET(sockets[hostindex], &fds_read)) {
+	    printf("READ selected for machine %s\n", inet_ntoa(hostbatch[hostindex].host)); 
+	  }
+	  if  ( FD_ISSET(sockets[hostindex], &fds_ex)) {
+	    printf("EXC selected for machine %s\n", inet_ntoa(hostbatch[hostindex].host));
+	  }
+	  if (FD_ISSET(sockets[hostindex], &fds_write)) {
+	    char buf[256];
+	    res = connect(sockets[hostindex],(struct sockaddr *)&sock,sizeof(struct sockaddr));
+	    if (res != -1) printf("Connect to host suceeded!@#$!@#$\n");
+	    else {
+	      sprintf(buf, "connect to %s", inet_ntoa(hostbatch[hostindex].host));
+	      perror(buf);
+	    }
+	    close(sockets[hostindex]);
+	    if (maxsock == sockets[hostindex]) maxsock--;
+	    FD_CLR(sockets[hostindex], &fds_write);
+	    FD_CLR(sockets[hostindex], &fds_read);
+	    FD_CLR(sockets[hostindex], &fds_ex);
+	    sockets[hostindex] = 0;
+	    hostbatch[hostindex].flags |= HOST_UP;	 	    
+	    numcomplete++;
+	  }
+	  else if ( FD_ISSET(sockets[hostindex], &fds_read)) {
+	    close(sockets[hostindex]);
+	    if (maxsock == sockets[hostindex]) maxsock--;
+	    FD_CLR(sockets[hostindex], &fds_write);
+	    FD_CLR(sockets[hostindex], &fds_read);
+	    FD_CLR(sockets[hostindex], &fds_ex);
+	    sockets[hostindex] = 0;
+	    hostbatch[hostindex].flags |= HOST_UP;	 		    
+	    numcomplete++;
+	  }
+	  else if  ( FD_ISSET(sockets[hostindex], &fds_ex)) {
+	    close(sockets[hostindex]);
+	    if (maxsock == sockets[hostindex]) maxsock--;
+	    FD_CLR(sockets[hostindex], &fds_write);
+	    FD_CLR(sockets[hostindex], &fds_read);
+	    FD_CLR(sockets[hostindex], &fds_ex);
+	    sockets[hostindex] = 0;
+	    hostbatch[hostindex].flags |= HOST_UP;	 		    
+	    numcomplete++;
+	  }	  
+	}
+      }
+      tmptv = waittime;
+    }
+    /* Now we kill the sockets that haven't selected yet */
+    maxsock = 0;
+    FD_ZERO(&fds_read);
+    FD_ZERO(&fds_write);
+    FD_ZERO(&fds_ex);
+     for(hostindex = 0; hostindex < num_hosts; hostindex++) {
+       if (sockets[hostindex]) {
+	 close(sockets[hostindex]);
+	 sockets[hostindex] = 0;
+       }
+     }
+  }
+  if (o.debugging) {
+    printf("MassTCP ping got responses from %d of %d hosts\n", numcomplete, num_hosts);
+  }
 }
