@@ -917,8 +917,12 @@ void ServiceNFO::addToServiceFingerprint(const char *probeName, const u8 *resp,
    if (isalnum((int)resp[srcidx]))
       addServiceChar((char) resp[srcidx], servicewrap);
     else if (resp[srcidx] == '\0') {
-      addServiceString("\\0", servicewrap);
-    } else if (resp[srcidx] == '\\' || resp[srcidx] == '"') {
+      /* We need to be careful with this, because if it is followed by
+	 an ASCII number, PCRE will treat it differently. */
+      if (srcidx + 1 >= respused || !isdigit(resp[srcidx + 1]))
+	addServiceString("\\0", servicewrap);
+      else addServiceString("\\x00", servicewrap);
+    } else if (strchr(resp[srcidx], "\\?\"[]().*+")) {
       addServiceChar('\\', servicewrap);
       addServiceChar(resp[srcidx], servicewrap);
     } else if (ispunct((int)resp[srcidx])) {
@@ -1238,6 +1242,10 @@ static void startNextProbe(nsock_pool nsp, nsock_iod nsi, ServiceGroup *SG,
    should end the service with its successful match */
 static int scanThroughTunnel(nsock_pool nsp, nsock_iod nsi, ServiceGroup *SG, 
 			     ServiceNFO *svc) {
+
+#ifndef HAVE_OPENSSL
+  return 0;
+#endif
 
   if (svc->tunnel != SERVICE_TUNNEL_NONE) {
     // Another tunnel type has already been tried.  Let's not go recursive.

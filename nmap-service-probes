@@ -49,8 +49,12 @@
 #     This format takes a perl-compatable regular expression ( see
 #     http://www.libpcre.org/ ) between two delimiters (slash in this
 #     case, but you can use whatever you would like).  {options} is a
-#     string of one-character options.  The only one supported now is
-#     'i', which makes a match case-insensitive.
+#     string of one-character options.  The only ones supported now is
+#     'i', which makes a match case-insensitive and 's' which includes
+#     newlines in the '.' specifier.  Both of these are the same as
+#     their perl equivalents.  The Perl regex format is documented at
+#     http://www.perldoc.com/perl5.8.0/pod/perlre.html
+
 #
 #  The {versioninfo} is of the form v/vendorproductname/version/info/
 #  Where the slash can be replace by any character.  All 3 fields are
@@ -88,7 +92,9 @@ match daytime m|^[A-Z][a-z]{2} [A-Z][a-z]{2} +\d{1,2} +\d\d:\d\d:\d\d 20\d\d\r\n
 # Solaris 9
 match daytime m|^[A-Z][a-z]{2} [A-Z][a-z]{2} +\d{1,2} +\d\d:\d\d:\d\d 20\d\d\n\r| v/Sun Solaris daytime///
 # Windows daytime
-match daytime m|^\d\d:\d\d:\d\d [AP]M \d+/\d+/200\d\n$| v/Microsoft Windows US daytime///
+match daytime m|^\d+:\d\d:\d\d [AP]M \d+/\d+/200\d\n$| v/Microsoft Windows USA daytime///
+# HP-UX B.11.00 A inetd daytime
+match daytime m|^[A-Z][a-z]{2} [A-Z][a-z]{2} +\d{1,2} \d\d:\d\d:\d\d [A-Z]+ 200\d\r\n$| v/HP-UX daytime///
 
 match time m|^[\xc0-\xc5]...$|
 match chargen m|^!"#\$%\&'\(\)\*\+,-\./0123456789:;<=>\?\@ABCDEFGHIJKLMNOPQRSTUVWXYZ\[\\\]\^_`abcdefgh\r\n"#\$%\&'\(\)\*\+,-\./0123456789:;<=>\?\@ABCDEF| v/Linux chargen///
@@ -141,6 +147,8 @@ match ftp m|^220 ([-.\w]+) Network Management Card AOS v([-.\w]+) FTP server rea
 # G-Net BB0060 ADSL Modem - the ftpd might be by "GlobespanVirata" as that
 # is what the telnetd on this device said.
 match ftp m|^220 FTP Server \(Version 1.0\) ready.\r\n$| v/G-Net DSL Modem ftpd/1.0//
+# HP-UX B.11.00
+match ftp m|^220 [-.\w ]+ FTP server \(Version (1.1.2[.\d]+) [A-Z][a-z]{2} [A-Z][a-z]{2} .*\) ready.\r\n| v/HP-UX ftpd/$1//
 # 220 mirrors.midco.net FTP server ready.
 softmatch ftp m/^220 [-.\w ]+ftp.*\r\n$/i
 softmatch ftp m/^220-[-.\w ]+ftp.*\r\n220/i
@@ -176,7 +184,10 @@ match telnet m|^\xff\xfd\x18\xff\xfd\x1f\xff\xfd#\xff\xfd'\xff\xfd\$$| v/Sun Sol
 match telnet m|^\xff\xfd\x18\xff\xfd \xff\xfd#\xff\xfd'$| v/Linux telnetd///
 match telnet m|^\xff\xfb\x01\n\rUser Name : $| v/APC network management card telnetd///
 # G-Net BB0060 ADSL Modem
-match telnetd m|^\xff\xfb\x01\xff\xfd\x03\xff\xfb\x03\n\r                         \*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\n\r.*GlobespanVirata Inc\., Software Release ([-.\w]+)\n\r|s v/GlobespanVirata telnetd/$1/on broadbrand router/
+match telnet m|^\xff\xfb\x01\xff\xfd\x03\xff\xfb\x03\n\r                         \*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\n\r.*GlobespanVirata Inc\., Software Release ([-.\w]+)\n\r|s v/GlobespanVirata telnetd/$1/on broadbrand router/
+# HP-UX B.11.00 A
+match telnet m|^\xff\xfd\$$| v/HP-UX telnetd///
+match telnet m|^\xff\xfd\x18$| v/Cisco microswitch telnetd///
 
 match smtp m/^220 [-.+\w]+ \(IMail ([^)]+)\) NT-ESMTP Server/ v/IMail NT-ESMTP/$1//
 match smtp m/^220 X1 NT-ESMTP Server [-.+\w]+ \(IMail ([^)]+)\)\r\n/ v/IMail NT-ESMTP/$1//
@@ -240,6 +251,7 @@ match pop3 m/^\+OK CommuniGate Pro POP3 Server ([-.\w]+) ready/ v/CommuniGate Pr
 match pop3 m/^\+OK\r\n$/ v/Openwall popa3d///
 match pop3 m|^\+OK [-.\w]+ MultiNet POP3 Server Process V(\S+) at| v/DEC OpenVMS MultiNet pop3d/$1//
 match pop3 m|^\+OK <.*>, MercuryP/NLM v(\d[-.\w]+) ready.\r\n$| v/Mercury POP3 server/$1/on Novell Netware/
+match pop3 m|^\+OK Microsoft Windows POP3 Service Version 1.0 <| v/Microsoft Windows 2003 POP3 Service/1.0//
 softmatch pop3 m|^\+OK [-\[\]\(\)!,/+:<>@.\w ]+\r\n$|
 
 match nntp m|^200 Lotus Domino NNTP Server for UNIX \(Release (\d[-.\w]+), .*\) - Not OK to post\r\n$| v/Lotus Domino nntpd/$1/posting denied/
@@ -256,8 +268,10 @@ match imap2 m|^\* OK CommuniGate Pro IMAP Server ([-.\w]+) at [-.\w]+ ready\r\n$
 # W-Imapd-SSL v2001adebian-6
 match imap4 m|^\* OK \[CAPABILITY IMAP4REV1 X-NETSCAPE LOGIN-REFERRALS STARTTLS AUTH=LOGIN\] \S+ IMAP4rev1 ([-.\w]+) at| v/UW-Imapd-SSL/$1//
 match imap4 m|^\* OK Domino IMAP4 Server Release (\d[-.\w]+) +ready| v/Lotus Domino imapd/$1//
+match imap4 m|^\* OK Microsoft Exchange IMAP4rev1 server version ([-.\w]+) | v/Microsoft Exchange IMAP4rev1 server/$1//
 softmatch imap m/^\* OK [-.\w ]+\r\n$/
 
+match identd m|^flock\(\) on closed filehandle .*midentd| v/midentd//broken/
 match mysql m/^.\0\0\0\xffj\x04Host .* is not allowed to connect to this MySQL server$/ v/MySQL//unauthorized/
 # MySQL 4.0.13
 match mysql m/^.\0\0\0...Al sistema '[-.\w]+' non e` consentita la connessione a questo server MySQL$/ v/MySQL///
@@ -275,10 +289,14 @@ match issrealsecure m|^\0\0\0\x9d\x08\x01\x03\x01\0\x95\x02\0\0\x03\xe6\0\0\xac\
 match vnc m|^RFB 003.003\n$| v/VNC//protocol 3.3/
 match irc-proxy m|^:Welcome!psyBNC@lam3rz\.de NOTICE \* :psyBNC([-.\w]+)\r\n| v/psyBNC/$1//
 match hylafax m|^220 [-.\w]+ server \(HylaFAX \(tm\) Version ([\d.]+)\) ready\.\r\n$| v/HylaFAX/$1//
+# HP-UX B.11.00 A 9000/785
+match shell m|^\x01remshd: getservbyname\n$| v/HP-UX Remshd///
 match snpp m|^220 [-.\w]+ SNPP server \(HylaFAX \(tm\) Version ([-.\w]+)\) ready.\r\n| v/HylaFAX SNPP/$1//
 match snpp m|^220 QuickPage v(\d[-.\w]+) SNPP server ready at | v/QuickPage SNPP/$1//
 # RedHat 7.3 - rsync server version 2.5.4  protocol version 26
 match rsync m|^@RSYNCD: (\d+)\n\n| v///protocol version $1/
+# Unreal IRCD Server version 3.2 beta 17
+match ircd m|^:[-.\w]+ NOTICE AUTH :\*\*\* Looking up your hostname\.\.\.\r\n| v/Unreal IRCD///
 
 Probe TCP GenericLines q|\r\n\r\n|
 ports 21,43,110,113,540
@@ -304,7 +322,7 @@ match whois m|^%  No entries found for the selected source\(s\)\.\n$| v/Merit IR
 
 
 Probe TCP GetRequest q|GET / HTTP/1.0\r\n\r\n|
-ports 79,80-85,113,139,143,280,515,554,631,783,993,995,1220,5432,5900,8000-8010,8080-8085,40193
+ports 79,80-85,113,139,143,280,515,554,631,783,993,995,1220,5000,5432,5900,8000-8010,8080-8085,40193
 # Server: CUPS/1.1
 match ipp m|^HTTP/1\.0.*Server: CUPS/(\S+)|s v/CUPS $1///
 # My junbuster proxy gives me this.
@@ -312,6 +330,9 @@ match http-proxy m|^HTTP/1\.0 400 Invalid header received from browser\n\n| v/Ju
 # HTTP/1.1 200 OK
 # The 's' option below causes . to match newlines (just as in perl)
 match http m|^HTTP/1\.[01].*Server: Apache/(\d+\.\d+\.[-.\w]+) ([^\r\n]+)|s v/Apache httpd/$1/$2/
+# apache 1.3.26-0woody3 or Apache 2.0.45
+match http m|^HTTP/1\.[01] \d\d\d.*\r\nDate: .*\r\nServer: Apache\r\n| v/Apache httpd///
+match http m|^HTTP/1.[10] \d\d\d.*\r\nDate:.*\r\nServer: Stronghold/([-.\w]+) Apache/([-.\w]+)| v/Apache Stronghold httpd/$1/based on Apache $2/
 match http m|^HTTP/1\.1.*\r\nServer: Netscape-Enterprise/([-.\w]+)\r\n| v/Netscape Enterprise httpd/$1//
 match http m|^HTTP/1\.1.*\r\nServer: Microsoft-IIS/([-.\w]+)\r\n|s v/Microsoft IIS httpd/$1//
 match http m|^HTTP/1\.0 200 OK\r\nDate: .+\r\nServer: Tomcat/([-.\w]+)\r\nContent-Type: text/html\r\nContent-Length: \d+\r\nServlet-Engine: Tomcat/[-.\w]+ \(Java ([-.\w]+); SunOS ([-.\w]+) (\w+); java\.vendor=Sun Microsystems Inc\.\)\r\n| v/Solaris management console server//SunOS $3 $4; Java $2; Tomcat $1/
@@ -329,9 +350,16 @@ match http m|^HTTP/1.1 \d\d\d .*\r\nServer: Lotus-Domino/0\r\n| v/Lotus Domino h
 match http m|^HTTP/1.1 302 Document Follows\r\nLocation: /hag/pages/home.ssi\r\n\r\n$| v/GlobespanVirata httpd//on broadband router/
 match http m|^HTTP/1.0 200 OK\r\nServer:HTTP/1.0\r\n.*<title>Hewlett Packard</title>|s v/HP Jetdirect httpd///
 match http m|^HTTP/1\.0 \d{3}.*\r\nServer: CompaqHTTPServer/([\.\w]+)\r\n|s v/Compaq Insight Manager/$1//
-softmatch http m|^HTTP/1.[01] \d\d\d|
+match http m|^HTTP/1.1 401 Authorization Required\r\nWWW-Authenticate: Basic realm="Linksys ([-A-Z\d/]+)"\r\n| v/Linksys router web admin server//device model $1/
 
-match http-proxy m|^HTTP/1\.0 400 Bad Request\r\nServer: Squid/([-.\w]+)\r\n| v/Squid webproxy/$1//
+# No more HTTP softmatch because many services that I don't think are
+# best classified 'http' use http-like semantics (for example UPnP,
+# some https servers, etc).  Maybe I should make softmatch allow
+# future services that start with the service name, and relable all of
+# those.  Shrug.  For now it is gone.
+# softmatch http m|^HTTP/1.[01] \d\d\d|
+
+match http-proxy m|^HTTP/1\.0 400 Bad Request\r\nServer: [sS]quid/([-.\w]+)\r\n| v/Squid webproxy/$1//
 # TightVNC 1.2.6
 match vnc-http m|^HTTP/1.0 200 OK\n\n<HTML>\n  <HEAD><TITLE>TightVNC desktop \[[-.\w]+\]| v/TightVNC///
 match rtsp m|^RTSP/1.0 400 Bad Request\r\nServer: DSS/([-.\w]+) \[(v\d+)]-(\w+)\r\n| v/DarwinStreamingServer/$1/$2 on $3/
@@ -356,6 +384,9 @@ match pop3s m|^-ERR \[SYS/PERM\] Fatal error: tls_start_servertls\(\) failed\r\n
 match postgres m|^EFATAL:  invalid length of startup packet\n\0$| v/Postgresql///
 # Netware 6 NetWare/IP
 match netwareip m|^\xfb\xff\xfe\xff\xfb\xff\xfe\xff\xfb\xff\xfe\xff$| v|Novell Netware/IP|||
+# Windows XP 8/2003
+match upnp m|^HTTP/1.1 400 Bad Request\r\n\r\n$| v/Microsoft Windows UPnP///
+
 
 # This probe sends an RPC "Null command" to the port for service
 # 100000 (portmapper).
@@ -391,6 +422,8 @@ match domain m|^\0\x1e\0\x06\x81\x04\0\x01\0\0\0\0\0\0\x07version\x04bind\0\0\x1
 # OpenBSD 2.3
 match rlogind m|^\x01rlogind: Permission denied\.\r\n$| v/OpenBSD rlogind///
 match exec m|^\x01Login incorrect\.\n$| v/Solaris rexecd///
+# HP-UX B.11.00 A
+match exec m|^\x01rexecd: Login incorrect.\n$| v/HP-UX rexecd///
 # RedHat 7.3 - Oracle TNS Listener Oracle 8.1.7
 match oracle-tns m|^\0\x1c\0\0\x04\x01\0\0\0X\0\0\xc4W\xdc3\x04\xc38\x81\xe00\xe6\x83\x05\xfa\n;$| v/Oracle TNS listener///
 match ssc-agent m|^\0\x1e\0\x06\0\t\0\0$| v/Novell Netware ssc-agent///
@@ -454,11 +487,14 @@ match cvspserver m|^cvs \[pserver aborted\]: bad auth protocol start: HELP\r\n\n
 match cvspserver m|^cvs-pserver \[pserver aborted\]: bad auth protocol start: HELP\r\n\n| v/cvs pserver///
 
 Probe TCP SSLSessionReq q|\x16\x03\0\0S\x01\0\0O\x03\0?G\xd7\xf7\xba,\xee\xea\xb2`~\xf3\0\xfd\x82{\xb9\xd5\x96\xc8w\x9b\xe6\xc4\xdb<=\xdbo\xef\x10n\0\0(\0\x16\0\x13\0\x0a\0f\0\x05\0\x04\0e\0d\0c\0b\0a\0`\0\x15\0\x12\0\x09\0\x14\0\x11\0\x08\0\x06\0\x03\x01\0|
-ports 443
+ports 443,636,8009
 # OpenSSL/0.9.7aa
 match ssl m|^\x16\x03\0\0J\x02\0\0F\x03\0\?| v/OpenSSL///
 # Microsoft-IIS/5.0
 match ssl m|^\x16\x03\0..\x02\0\0F\x03\0\?|s v/Microsoft IIS SSL///
+# Novell Netware 6 Enterprise Web server 5.1 https
+# Novell Netware Ldap over SSL or enterprise web server 5.1 over SSL
+match ssl m|^\x16\x03\0\0:\x02\0\x006\x03\0| v/Novell Netware SSL///
 
 #Probe TCP SSLSessionReq q|\x80\x67\x01\x03\x01\0\x4e\0\0\0\x10\x01\0\x80\x03\0\x80\x07\0\xc0\x06\0\x40\x02\0\x80\x04\0\x80\0\0\x39\0\0\x38\0\0\x35\0\0\x33\0\0\x32\0\0\x04\0\0\x05\0\0\x2f\0\0\x16\0\0\x13\0\xfe\xff\0\0\x0a\0\0\x15\0\0\x12\0\xfe\xfe\0\0\x09\0\0\x64\0\0\x62\0\0\x03\0\0\x06\xc8\xd5\x5a\x76\x5c\x0a\x7d\x9e\x9d\x47\xcd\x7d\xce\x4a\x06\x9a|
 #ports 443
@@ -466,18 +502,23 @@ match ssl m|^\x16\x03\0..\x02\0\0F\x03\0\?|s v/Microsoft IIS SSL///
 Probe UDP Sqlping q|\x02|
 ports 1434
 
-# SMB Negociate Protocol
+# SMB Negotiate Protocol
 Probe TCP SMBProgNeg q|\0\0\0\xa4\xff\x53\x4d\x42\x72\0\0\0\0\x08\x01\x40\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x40\x06\0\0\x01\0\0\x81\0\x02PC NETWORK PROGRAM 1.0\0\x02MICROSOFT NETWORKS 1.03\0\x02MICROSOFT NETWORKS 3.0\0\x02LANMAN1.0\0\x02LM1.2X002\0\x02Samba\0\x02NT LANMAN 1.0\0\x02NT LM 0.12\0|
-ports 135,445
+ports 135,139,445
 # Windows XP SP1
 match microsoft-ds m|^\0\0\0.\xffSMBr\0\0\0\0\x88\x01@\0\0\0\0\0\0\0\0\0\0\0\0\0\0@\x06\0\0\x01\0\x11\x07\0\x03\n\0\x01\0\x04\x11\0\0\0\0\x01\0\0\0\0\0\xfd\xe3\0\0| v/Microsoft Windows XP microsoft-ds///
 # Microsoft Windows XP SP1
 match msrpc m|^\x05\0\r\x03\x10\0\0\0\x18\0\0\0\0\x08\x01@\x04\0\x01\x05\0\0\0\0$| v/Microsoft Windows XP msrpc///
 # Microsoft Windows 2000
-match microsoft-ds m|^\0\0\0.\xffSMBr\0\0\0\0\x88\x01@\0\0\0\0\0\0\0\0\0\0\0\0\0\0@\x06\0\0\x01\0\x11\x07\0\x032\0\x01\0\x04A\0\0\0\0\x01\0\0\0\0\0\xfd\xf3\0\0| v/Microsoft Windows 2000 microsoft-ds///
+match microsoft-ds m|^\0\0\0.\xffSMBr\0\0\0\0\x88\x01@\0\0\0\0\0\0\0\0\0\0\0\0\0\0@\x06\0\0\x01\0\x11\x07\0.2\0\x01\0\x04A\0\0\0\0\x01\0\0\0\0\0\xfd\xf3\0\0| v/Microsoft Windows 2000 microsoft-ds///
 # Microsoft Windows 2003
 match microsoft-ds m|^\0\0\0.\xffSMBr\0\0\0\0\x88\x01@\0\0\0\0\0\0\0\0\0\0\0\0\0\0@\x06\0\0\x01\0\x11\x07\0\x032\0\x01\0\x04A\0\0\0\0\x01\0\0\0\0\0\xfd\xf3\x01\0| v/Microsoft Windows 2003 microsoft-ds///
-
+# samba-2.2.7-5.8.0 on RedHat 8
+match netbios-ssn m|^\0\0\0X\xffSMBr\0\0\0\0\x88\x01\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0@\x06\0\0\x01\0\x11\x06\0\x032\0\x01\0\x04A\0\0\0\0\x01\0kb\0\0\xf9\xe3\0\0\x80\xbd8\x01\x8bj\xc3\x01,\x01\x08\x13\0\xed{\xcb\x80t\xd3w\xcd(\w+)\0$| v/Samba smbd//workgroup: $1/
+# samba-2.2.7a-8.9.0 on Red Hat Linux 7.x
+match netbios-ssn m|^\0\0\0.\xffSMBr\0\0\0\0\x88\x01\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0@\x06\0\0\x01\0\x11\x06\0\x032\0\x01\0\x04A\0\0\0\0\x01\0..\0\0\xf9\xe3\0\0.*(\w+)\0$|s v/Samba smbd//workgroup: $1/
+# Netware might just be using Samba?
+match netbios-ssn m|^\0\0\0M\xffSMBr\0\0\0\0\x80\x01\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0@\x06\0\0\x01\0\x11\x07\0\x032\0\x01\0\xff\xff\0\0\0\0\x01\0\x84\xdeu\x07\x01\x02\0\0\x80\xaa\xa0\x83{k\xc3\x01\xa4\x01\x08\x08\0\x8a\xffp\xd3\x1d\?\xdbl$| v/Netware 6 SMB Services///
 # From xlsclients
 Probe TCP X11Probe q|\x6C\0\x0B\0\0\0\0\0\0\0\0\0|
 ports 6000-6020,7100
@@ -499,9 +540,12 @@ match printer m|^\x01no connect permissions\n$| v/LPRng///
 
 # Ldap bind request, version 2, null DN, AUTH_TYPE simple, null password
 Probe TCP LDAPBindReq q|\x30\x0c\x02\x01\x01\x60\x07\x02\x01\x02\x04\0\x80\0|
-# OpenLDAP 2.0.15 on RH Linux 7.3
-match ldap m|^0%\x02\x01\x01a \n\x010\x04\0\x04\x19anonymous bind disallowed$| v/OpenLDAP///
 ports 389
+# OpenLDAP 2.0.15 on RH Linux 7.3
+match ldap m|^0%\x02\x01\x01a \n\x010\x04\0\x04\x19anonymous bind disallowed$| v/OpenLDAP//access denied/
+match ldap m|^0\x0c\x02\x01\x01a\x07\n\x01\0\x04\0\x04\0| v/Netware 6 ldap//Anonymous bind OK/
+# MS Windows Win2K SP4 AD server
+match ldap m|^0\x84\0\0\0\x10\x02\x01\x01a\x84\0\0\0\x07\n\x01\0\x04\0\x04\0$| v/Microsoft LDAP server///
 
 Probe TCP LANDesk-RC q|\x54\x4e\x4d\x50\x04\0\0\0\x54\x4e\x4d\x45\0\0\x04\0|
 ports 1761

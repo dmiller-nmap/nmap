@@ -130,6 +130,35 @@ case "$host" in
     ;;
 esac
 
+dnl Checks for header files.
+AC_HEADER_STDC
+AC_CHECK_HEADERS(string.h getopt.h strings.h memory.h sys/param.h sys/sockio.h bstring.h sys/time.h pwd.h unistd.h )
+AC_CHECK_HEADERS(netinet/in.h)
+AC_CHECK_HEADERS(sys/socket.h)
+AC_CHECK_HEADERS([net/if.h],[],[],
+[#if HAVE_SYS_TYPES_H
+# include <sys/types.h>
+# endif
+#if HAVE_SYS_SOCKET_H
+# include <sys/socket.h>
+# endif
+])
+AC_CHECK_HEADERS([netinet/if_ether.h],[],[],
+[#if HAVE_SYS_TYPES_H
+# include <sys/types.h>
+# endif
+#if HAVE_NETINET_IN_H
+# include <netinet/in.h>
+# endif
+# if HAVE_SYS_SOCKET_H
+# include <sys/socket.h>
+# endif
+# if HAVE_NET_IF_H
+# include <net/if.h>
+# endif
+])
+AC_HEADER_TIME
+
 dnl Checks for libraries.
 dnl AC_CHECK_LIB(m, pow)
 dnl on Mac OSX the math library seems to contain unwanted getopt cruft
@@ -158,6 +187,75 @@ AC_ARG_WITH(nmapfe, [  --without-nmapfe    skip nmapfe X-window GUI],
 )
 AC_SUBST(TARGETNMAPFE)
 AC_SUBST(INSTALLNMAPFE)
+
+# First we test whether they specified openssl desires explicitly
+use_openssl="yes"
+specialssldir=""
+
+AC_ARG_WITH(openssl,
+[  --with-openssl=DIR    Use optional openssl libs and includes from [DIR]/lib/ and [DIR]/include/openssl/)],
+[  case "$with_openssl" in
+  yes)
+    ;;
+  no)
+    use_openssl="no"
+    ;;
+  *)
+    specialssldir="$with_openssl"
+    LDFLAGS="$LDFLAGS -L$with_openssl/lib"
+    ;;
+  esac]
+)
+
+# First we test whether they specified openssl desires explicitly
+use_openssl="yes"
+specialssldir=""
+
+AC_ARG_WITH(openssl,
+[  --with-openssl=DIR    Use optional openssl libs and includes from [DIR]/lib/ and [DIR]/include/openssl/)],
+[  case "$with_openssl" in
+  yes)
+    ;;
+  no)
+    use_openssl="no"
+    ;;
+  *)
+    specialssldir="$with_openssl"
+    LDFLAGS="$LDFLAGS -L$with_openssl/lib"
+    ;;
+  esac]
+)
+
+# If they didn't specify it, we try to find it
+if test "$use_openssl" == "yes" -a "${specialssldir+set}" == "set" ; then
+  AC_CHECK_HEADER(openssl/ssl.h,,
+  [ use_openssl="no"
+    AC_MSG_WARN([Failed to find openssl/ssl.h so OpenSSL will not be used. If it is installed you can try the --with-openssl=DIR argument]) ])
+
+ if test "$use_openssl" == "yes"; then
+   AC_CHECK_HEADER(openssl/err.h,,
+    [ use_openssl="no"
+    AC_MSG_WARN([Failed to find openssl/err.h so OpenSSL will not be used. If it is installed you can try the --with-openssl=DIR argument]) ])
+ fi
+
+ if test "$use_openssl" == "yes"; then
+   AC_CHECK_HEADER(openssl/rand.h,,
+    [ use_openssl="no"
+    AC_MSG_WARN([Failed to find openssl/rand.h so OpenSSL will not be used. If it is installed you can try the --with-openssl=DIR argument]) ])
+ fi
+
+ if test "$use_openssl" == "yes"; then
+   AC_CHECK_LIB(ssl, SSL_new,
+    [],
+    [ use_openssl="no"
+    AC_MSG_WARN([Failed to find libssl so OpenSSL will not be used. If it is installed you can try the --with-openssl=DIR argument]) ])
+ fi
+fi
+
+if test "$use_openssl" == "yes"; then
+  AC_DEFINE(HAVE_OPENSSL)
+  LIBS="$LIBS -lssl -lcrypt"
+fi
 
 dnl Check whether libpcap is already available
 have_libpcap=no
@@ -309,34 +407,6 @@ AC_SUBST(PCRE_DIST_CLEAN)
 
 
 
-dnl Checks for header files.
-AC_HEADER_STDC
-AC_CHECK_HEADERS(string.h getopt.h strings.h memory.h sys/param.h sys/sockio.h bstring.h sys/time.h pwd.h unistd.h )
-AC_CHECK_HEADERS(netinet/in.h)
-AC_CHECK_HEADERS(sys/socket.h)
-AC_CHECK_HEADERS([net/if.h],[],[],
-[#if HAVE_SYS_TYPES_H
-# include <sys/types.h>
-# endif
-#if HAVE_SYS_SOCKET_H
-# include <sys/socket.h>
-# endif
-])
-AC_CHECK_HEADERS([netinet/if_ether.h],[],[],
-[#if HAVE_SYS_TYPES_H
-# include <sys/types.h>
-# endif
-#if HAVE_NETINET_IN_H
-# include <netinet/in.h>
-# endif
-# if HAVE_SYS_SOCKET_H
-# include <sys/socket.h>
-# endif
-# if HAVE_NET_IF_H
-# include <net/if.h>
-# endif
-])
-AC_HEADER_TIME
 
 dnl Checks for typedefs, structures, and compiler characteristics.
 
@@ -530,6 +600,8 @@ RECVFROM_ARG6_TYPE
 
 dnl AC_CHECK_FUNCS(gethostname gettimeofday select socket strdup strstr )
 
+
+
 AC_ARG_WITH(libnbase,
 [  --with-libnbase=DIR     Look for nbase include/libs in DIR],
 [  case "$with_libnbase" in
@@ -578,6 +650,7 @@ if test $have_libpcap = yes ; then
 else
         subdirs="$NBASEDIR $libpcapdir $subdirs"
 fi
+
 
 if test "${with_nmapfe}" = "yes"; then
 dnl Check for GTK+

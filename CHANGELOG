@@ -1,9 +1,25 @@
 # Nmap Changelog ($Id$)
 
+o Added SSL-scanthru support.  If service detection finds a port to be
+  SSL, it will transparently connect to the port using OpenSSL and use version
+  detection to determine what service lies beneath.  This feature
+  is only enabled if OpenSSL is available at build time.  A new
+  --with-openssl=DIR configure option is available if OpenSSL is not
+  in your default compiler paths.  You can use --without-openssl to
+  disable this functionality.  Thanks to Brian Hatch (bri@ifokr.org)
+  for sample code and other assitance.  Make sure you use a version
+  without known exploitable overflows.  At the time of this writing, I
+  think post-beta 0.9.7 and 0.9.6e or later (in 0.9.6 series) are OK.
+
 o Fixed a problem reported by Solar Designer and MadHat (
   madhat@unspecific.com ) where Nmap would bail when certain Apache
   version/info responses were particularly long.  It could happen in
   other cases as well.  Now Nmap just prints a warning.
+
+o Integrated many more services thanks to submissions from Brian
+  Hatch, HellNBack ( hellnbak(a)nmrc.org ), MadHat, Solar Designer,
+  Simple Nomad, and Shawn Wallis (swallis@ku.edu).  The number of
+  signatures hsa grown from 242 to 271.  Thanks!
 
 o Fixed some portability issues reported by Solar Designer 
   ( solar@openwall.com )
