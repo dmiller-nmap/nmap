@@ -1,5 +1,5 @@
 /***********************************************************************
- * fingermatch.c -- A relatively simple utility for determining        *
+ * fingermatch.cc -- A relatively simple utility for determining        *
  * whether a given Nmap fingerprint matches (or comes close to         *
  * matching) any of the fingerprints in a collection such as the       *
  * nmap-os-fingerprints file that ships with Nmap.                     *
@@ -65,13 +65,15 @@ int main(int argc, char *argv[]) {
   FingerPrint *testFP;
   struct FingerPrintResults FPR;
   char fprint[2048];
-  int printlen = 0;
+  unsigned int printlen = 0;
   char line[512];
-  int linelen;
-  int i;
+  unsigned int linelen;
   char lasttestname[32];
-  int lastlinelen = 0;
+  unsigned int lastlinelen = 0;
   char *p;
+  int i;
+  char gen[128]; /* temporary buffer for os generation part of classification */
+
   int adjusted = 0; /* Flags if we have adjusted the entered fingerprint */
 
   if (argc != 2)
@@ -111,8 +113,9 @@ int main(int argc, char *argv[]) {
       *p = '(';
     } else {
       /* The only legitimate non-comment line that doesn't have a ( is the 
-	 initial Fingerprint line */
-      if (strncmp(line, "Fingerprint ", 12) != 0) {
+	 initial Fingerprint and the following Class line(s) */
+      if (strncmp(line, "Fingerprint ", 12) != 0 &&
+	  strncmp(line, "Class ", 6) != 0) {
 	printf("Warning: Bogus line skipped\n");
 	continue;
       }
@@ -156,15 +159,21 @@ int main(int argc, char *argv[]) {
   case OSSCAN_SUCCESS:
     if (FPR.num_perfect_matches > 0) {
       printf("Found **%d PERFECT MATCHES** for entered fingerprint in %s:\n", FPR.num_perfect_matches, fingerfile);
-      printf("Accu Line# OS\n");      
+      printf("Accu Line# OS (classification)\n");      
       for(i=0; i < FPR.num_matches && FPR.accuracy[i] == 1; i++) {
-	printf("100%% %5d %s\n", FPR.prints[i]->line, FPR.prints[i]->OS_name);
+	if (FPR.prints[i]->OS_class[0].OS_Generation)
+	  snprintf(gen, sizeof(gen), " %s ", FPR.prints[i]->OS_class[0].OS_Generation);
+	else gen[0] = '\0';	
+	printf("100%% %5d %s (%s | %s |%s| %s)\n", FPR.prints[i]->line, FPR.prints[i]->OS_name, FPR.prints[i]->OS_class[0].OS_Vendor, FPR.prints[i]->OS_class[0].OS_Family, gen, FPR.prints[i]->OS_class[0].Device_Type );
       }
     } else {
       printf("No perfect matches found, **GUESSES AVAILABLE** for entered fingerprint in %s:\n", fingerfile);
-      printf("Accu Line# OS\n");
+      printf("Accu Line# OS (classification)\n");
       for(i=0; i < 10 && i < FPR.num_matches; i++) {
-	printf("%3d%% %5d %s\n", (int) (FPR.accuracy[i] * 100), FPR.prints[i]->line, FPR.prints[i]->OS_name);
+	if (FPR.prints[i]->OS_class[0].OS_Generation)
+	  snprintf(gen, sizeof(gen), " %s ", FPR.prints[i]->OS_class[0].OS_Generation);
+	else gen[0] = '\0';	
+	printf("%3d%% %5d %s (%s | %s |%s| %s)\n", (int) (FPR.accuracy[i] * 100), FPR.prints[i]->line, FPR.prints[i]->OS_name, FPR.prints[i]->OS_class[0].OS_Vendor, FPR.prints[i]->OS_class[0].OS_Family, gen, FPR.prints[i]->OS_class[0].Device_Type );
       }
     }
     printf("\n");

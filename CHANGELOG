@@ -1,6 +1,19 @@
 # Nmap Changelog ($Id$)
 
-o Went through every one of the 850+ fingerprints to normalize the
+Nmap 3.30
+
+o Implemented the largest-ever OS fingerprint update!  Roughtly 300
+  fingerprints were added/modified.  These massive changes span the
+  gamut from AIX 5.1 to the ZyXEL Prestige broadband router line.
+  Notable updates include OpenBSD 3.3, FreeBSD 5.1, Mac OS X 10.2.6,
+  Windows 2003 server, and more WAPs and broadband routers than you
+  can shake a stick at.  Someone even submitted a fingerprint for
+  Debian Linux running on the Microsoft Xbox.  You have to love that
+  irony :).  Thanks to everyone who submitted fingerprints using the
+  URL Nmap gives you when it gets a clean reading but is stumped.  The
+  fingerprint DB now contains almost 1000 fingerprints.
+
+o Went through every one of the fingerprints to normalize the
   descriptions a bit.  I also looked up what all of the devices are
   (thanks E*Bay and Google!).  Results like "Nexland ISB Pro800 Turbo"
   and "Siemens 300E Release 6.5" are much more useful when you add the

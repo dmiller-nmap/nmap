@@ -137,7 +137,7 @@ struct OS_Classification {
   char *Device_Type;
 };
 
-#define MAX_OS_CLASSIFICATIONS_PER_FP 5
+#define MAX_OS_CLASSIFICATIONS_PER_FP 8
 typedef struct FingerTest {
   char *OS_name;
   struct OS_Classification OS_class[MAX_OS_CLASSIFICATIONS_PER_FP];

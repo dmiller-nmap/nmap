@@ -19,7 +19,7 @@ while(<>) {
     $line = $_;
 
     if ($line eq "." || $line eq "") { last; }
-    if (!$line =~ /(Fingerprint\s+\S)|(^T[1-7])|(^PU)|(^Contributed by)/i) { next; }
+    if (!$line =~ /(Fingerprint\s+\S)|(Class\s+\S)|(^T[1-7])|(^PU)|(^Contributed by)/i) { next; }
 
     if ($line =~ /Contributed by (.*)/) {
 	if (!$fp{contrib}) {
@@ -29,6 +29,12 @@ while(<>) {
 
     elsif ($line =~ /Fingerprint\s+(.*)/i) {
 	$fp{os} = $1;
+    }
+
+   elsif ($line =~ /Class\s+(.*)/i) {
+       if (!$fp{class} or !($fp{class} =~ /\Q$line\E/)) {
+	   $fp{class} .= $line . "\n";
+       }
     }
 
     elsif ($line =~ /TSeq\(Class=([^%\)]+)(%gcd=([^%]+)%SI=([^%\)]+))?(%IPID=([^%\)]+))?(%TS=([^%\)]+))?\)/) {
@@ -304,6 +310,9 @@ while(<>) {
 # licensees nervous.
 # if ($fp{contrib}) { print "# Contributed by $fp{contrib}\n"; }
 print "Fingerprint $fp{os}\n";
+if ($fp{class}) { print $fp{class}; }
+else { print "Class \n"; }
+
 if ($fp{tseq}{cls}) {
     print("TSeq(Class=$fp{tseq}{cls}");
     if ($fp{tseq}{cls} ne "64K" and $fp{tseq}{cls} ne "i800") {

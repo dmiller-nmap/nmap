@@ -782,6 +782,36 @@ struct AVal *fingerprint_iptcppacket(struct ip *ip, int mss, u32 syn) {
   return AVs;
 }
 
+// Prints a note if observedFP has a classification and it is not in referenceFP
+// Returns 0 if they match, nonzero otherwise
+static int compareclassifications(FingerPrint *referenceFP, 
+				  FingerPrint *observedFP, bool verbose) {
+  int refclassno;
+  struct OS_Classification *obclass, *refclass;
+  if (observedFP->num_OS_Classifications > 0) {
+    obclass = &(observedFP->OS_class[0]);
+    for(refclassno = 0; refclassno < referenceFP->num_OS_Classifications; refclassno++) {
+      refclass = &(referenceFP->OS_class[refclassno]);
+      if (strcmp(obclass->OS_Vendor, refclass->OS_Vendor) == 0 &&
+	  strcmp(obclass->OS_Family, refclass->OS_Family) == 0 &&
+	  strcmp(obclass->Device_Type, refclass->Device_Type) == 0 &&
+	  (obclass->OS_Generation == refclass->OS_Generation ||
+	   (obclass->OS_Generation != NULL && refclass->OS_Generation != NULL && 
+	    strcmp(obclass->OS_Generation, refclass->OS_Generation) == 0))) {
+	// A match!  lets get out of here
+	return 0;
+      }
+    }
+  } else {
+    if (verbose)
+      printf("Observed fingerprint lacks a classification\n");
+    return 1;
+  }
+  if (verbose)
+    printf("Warning: Classification of observed fingerprint does not appear in reference fingerprint.\n");
+  return 1;
+}
+
 /* Compares 2 fingerprints -- a referenceFP (can have expression
    attributes) with an observed fingerprint (no expressions).  If
    verbose is nonzero, differences will be printed.  The comparison
@@ -794,6 +824,8 @@ double compare_fingerprints(FingerPrint *referenceFP, FingerPrint *observedFP,
   unsigned long  new_subtests, new_subtests_succeeded;
   assert(referenceFP);
   assert(observedFP);
+
+  if (verbose) compareclassifications(referenceFP, observedFP, true);
 
   for(currentReferenceTest = referenceFP; currentReferenceTest; 
       currentReferenceTest = currentReferenceTest->next) {
@@ -1386,7 +1418,7 @@ FingerPrint *parse_single_fingerprint(char *fprint_orig) {
       while(*p && isspace((int) *p)) p++;
 
       q = strpbrk(p, "\n#");
-      if (!p) fatal("Parse error on line %d of fingerprint: %s", lineno, nextline);
+      if (!q) q = p + strlen(p);
       while(isspace(*(--q)))
 	;
 

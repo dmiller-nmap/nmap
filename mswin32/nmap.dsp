@@ -177,6 +177,10 @@ SOURCE=..\charpool.cc
 # End Source File
 # Begin Source File
 
+SOURCE=..\FingerPrintResults.cc
+# End Source File
+# Begin Source File
+
 SOURCE=..\idle_scan.cc
 # End Source File
 # Begin Source File
@@ -310,6 +314,10 @@ SOURCE=..\nbase\nbase_winconfig.h
 # Begin Source File
 
 SOURCE=..\charpool.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\FingerPrintResults.h
 # End Source File
 # Begin Source File
 
