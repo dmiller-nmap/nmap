@@ -1,7 +1,27 @@
 # Nmap Changelog ($Id$)
 
-o Applied some portability fixes from  albert chin
+Nmap 2.54BETA35
+
+o Fixed an issue that could cause the abort message "Serious time
+  computation problem in adjust_timeout ...".  If you still see this,
+  please let me know.
+
+o Fixed Windows compilation (and I really mean it this time -- tested
+  myself).
+
+o Applied configure script patch to recognize Solaris 2.10 when it
+  eventually becomes available (from James Carlson
+  (james.d.carlson@east.sun.com)
+
+o Applied some portability fixes from Albert Chin
   (china@thewrittenword.com)
+
+o Applied libpcap aclocal.m4 patch to enable debugging (-g) when
+  compiling libpcap with gcc.  Patch from Ping Huang
+  (pshuang@alum.mit.edu)
+
+o Restructured "TCP probe port" output message a bit as suggested by
+  Ping Huang (pshuang@alum.mit.edu)
 
 Nmap 2.54BETA34
 

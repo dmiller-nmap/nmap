@@ -116,7 +116,8 @@ void adjust_timeouts2(const struct timeval *sent,
     log_write(LOG_STDOUT, "delta %d ==> srtt: %d rttvar: %d to: %d\n", delta, to->srtt, to->rttvar, to->timeout);
   }
 
-  if (to->srtt < 0 || to->rttvar < 0 || to->timeout < 0 || delta < -50000000) {
+  if (to->srtt < 0 || to->rttvar < 0 || to->timeout < 0 || delta < -50000000 || 
+      sent->tv_sec == 0 || received->tv_sec == 0 ) {
     fatal("Serious time computation problem in adjust_timeout ... received = (%d, %d) sent=(%d,%d) delta = %d srtt = %d rttvar = %d to = %d", received->tv_sec, received->tv_usec, sent->tv_sec, sent->tv_usec, delta, to->srtt, to->rttvar, to->timeout);
   }
 }

@@ -398,7 +398,7 @@ static void get_syn_results(struct hoststruct *target, struct portinfo *scan,
       if (ip->ip_src.s_addr == target->source_ip.s_addr && ((tcp->th_flags == TH_ACK) || (tcp->th_flags == TH_SYN))) {
 	continue;
       }
-      if (portlookup[newport] < 0) {
+      if (portlookup[newport] < 0 || scan[portlookup[newport]].state == PORT_FRESH) {
 	if (o.debugging) {
 	  log_write(LOG_STDOUT, "Strange packet from port %d:\n", ntohs(tcp->th_sport));
 	  readtcppacket((unsigned char *)ip, bytes);
@@ -493,7 +493,7 @@ static void get_syn_results(struct hoststruct *target, struct portinfo *scan,
 	}
        
 	newport = ntohs(data[1]);
-	if (portlookup[newport] >= 0) {
+	if (portlookup[newport] >= 0 && scan[portlookup[newport]].state != PORT_FRESH) {
 	  current = &scan[portlookup[newport]];
 	  trynum = (current->trynum == 0)? 0 : -1;
 	  newstate = PORT_FIREWALLED;
@@ -610,6 +610,7 @@ void pos_scan(struct hoststruct *target, u16 *portarray, int numports, stype sca
   if (scantype != RPC_SCAN) {
     /* Initialize our portlist (scan) */
     scan = (struct portinfo *) safe_malloc(numports * sizeof(struct portinfo));
+    bzero(scan, sizeof(struct portinfo) * numports);
     for(i = 0; i < numports; i++) {
       scan[i].state = PORT_FRESH;
       scan[i].portno = portarray[i];
@@ -662,38 +663,40 @@ void pos_scan(struct hoststruct *target, u16 *portarray, int numports, stype sca
     flt_dsthost = target->source_ip.s_addr;
 
     p = strdup(inet_ntoa(target->host));
-    snprintf(filter, sizeof(filter), "(icmp and dst host %s) or (tcp and src host %s and dst host %s)", inet_ntoa(target->source_ip), p, inet_ntoa(target->source_ip));
+    snprintf(filter, sizeof(filter), "dst host %s and (icmp or (tcp and src host %s))", inet_ntoa(target->source_ip), p);
     free(p);
 
     set_pcap_filter(target, pd, flt_icmptcp, filter);
 
-    if (o.scanflags != -1) scanflags = o.scanflags;
+    if (scantype == CONNECT_SCAN) {
+      rawsd = -1;
+      /* Init our sock */
+      bzero((char *)&sock,sizeof(struct sockaddr_in));
+      sock.sin_addr.s_addr = target->host.s_addr;
+      sock.sin_family=AF_INET;
+    } else if (scantype == RPC_SCAN) {
+      get_rpc_procs(&(rsi.rpc_progs), &(rsi.rpc_number));
+      scan = (struct portinfo *) safe_malloc(rsi.rpc_number * sizeof(struct portinfo));
+      for(j = 0; j < rsi.rpc_number; j++) {
+	scan[j].state = PORT_FRESH;
+	scan[j].portno = rsi.rpc_progs[j];
+	scan[j].trynum = 0;
+	scan[j].prev = j-1;
+	scan[j].sd[0] = scan[j].sd[1] = scan[j].sd[2] = -1;
+	if (j < rsi.rpc_number -1 ) scan[j].next = j+1;
+	else scan[j].next = -1;
+      }
+      current = pil.testinglist = &scan[0]; 
+      rawsd = -1;
+      rsi.rpc_current_port = NULL; /*nextport(&target->ports, NULL, 0, PORT_OPEN); */
+    }
+    else if (o.scanflags != -1) scanflags = o.scanflags;
     else if (scantype == SYN_SCAN)
       scanflags = TH_SYN;
     else
       scanflags = TH_ACK;
-  } else if (scantype == CONNECT_SCAN) {
-    rawsd = -1;
-    /* Init our sock */
-    bzero((char *)&sock,sizeof(struct sockaddr_in));
-    sock.sin_addr.s_addr = target->host.s_addr;
-    sock.sin_family=AF_INET;
   } else {
-    /* RPC Scan */
-    get_rpc_procs(&(rsi.rpc_progs), &(rsi.rpc_number));
-    scan = (struct portinfo *) safe_malloc(rsi.rpc_number * sizeof(struct portinfo));
-    for(j = 0; j < rsi.rpc_number; j++) {
-      scan[j].state = PORT_FRESH;
-      scan[j].portno = rsi.rpc_progs[j];
-      scan[j].trynum = 0;
-      scan[j].prev = j-1;
-      scan[j].sd[0] = scan[j].sd[1] = scan[j].sd[2] = -1;
-      if (j < rsi.rpc_number -1 ) scan[j].next = j+1;
-      else scan[j].next = -1;
-    }
-    current = pil.testinglist = &scan[0]; 
-    rawsd = -1;
-    rsi.rpc_current_port = NULL; /*nextport(&target->ports, NULL, 0, PORT_OPEN); */
+    assert("Unknown scan type given to pos_scan()");
   }
 
   starttime = time(NULL);
