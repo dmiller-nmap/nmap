@@ -79,6 +79,7 @@ distro:
 	nroff -man docs/nmap.1 | man2html -nodepage -title 'Nmap network security scanner man page' > docs/nmap_manpage.html
 	nroff -man docs/nmap_spanish.1 | man2html -nodepage -title 'Nmap network security scanner man page (Spanish translation)' > docs/nmap_manpage-es.html
 	nroff -man docs/nmap_italian.1 | man2html -nodepage -title 'Nmap network security scanner man page (Italian translation)' > docs/nmap_manpage-it.html
+	nroff -man docs/nmap_portuguese.1 | man2html -nodepage -title 'Nmap network security scanner man page (Portuguese translation)' > docs/nmap_manpage-pt.html
 	nroff -Tlatin1 -man docs/nmap_lithuanian.1 | man2html -nodepage -title 'Nmap network security scanner man page (Lithuanian translation)' > docs/nmap_manpage-lt.html
 # We need a content-type for the Lithuanian version
 	sr '<HEAD>' '<HEAD><META http-equiv="Content-Type" content="text/html; charset=windows-1257">' docs/nmap_manpage-lt.html
@@ -100,7 +101,8 @@ distro:
                     nmap_manpage-es.html nmap_manpage-fr.html \
                     nmap_manpage-lt.html nmap_manpage-ru.html \
 	            nmap_manpage-it.html nmap_manpage.html \
-                    nmap_spanish.1 nmap_lithuanian.1 nmap_italian.1 nmapfe.1 \
+                    nmap_spanish.1 nmap_lithuanian.1 nmap_italian.1 \
+                    nmap_portuguese.1 nmapfe.1 \
 	            xnmap.1 \
                     /usr/tmp/nmap-$(NMAP_VERSION)/docs
 	$(SHTOOL) mkdir /usr/tmp/nmap-$(NMAP_VERSION)/nmapfe

@@ -1,10 +1,15 @@
 # Nmap Changelog
 
 -- Applied patch from Steve Bleazard (steve@bleazard.com) which fixed
-   bug in internal Smooth Round Trim Time calculations.
+   bug in internal Smoothed Round Trim Time calculations.
 
 -- Added more debugging code for "Unknown datalink type" error -- if
    you get this, please send me the full error msg including hex values.
+
+-- Added Portuguese man page translations from Antonio Pires de Castro
+   Junior (apcastro@ic.unicamp.br).
+
+-- Capitalized all references to God in error messages.
 
 ** Version 2.54BETA7
 

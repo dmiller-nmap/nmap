@@ -1933,7 +1933,7 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=0%ULEN=134%DAT=E)
 
-Fingerprint Digital UNIX OSF1 V 4.0,4.0B,4.0D,4.0E  # Thanks to Mea Culpa & Lamont Grsnquist & Izar Tarandach
+Fingerprint Digital UNIX OSF1 V 4.0,4.0B,4.0D,4.0E,4.0F  # Thanks to Mea Culpa & Lamont Grsnquist & Izar Tarandach
 TSeq(Class=RI|TD|64K%gcd=<6)  # Boy, OSF1 comes in all colors!
 T1(DF=Y%W=805C|8000%ACK=S++%Flags=AS%Ops=MNW)
 T2(Resp=N)
@@ -3212,7 +3212,7 @@ T7(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(Resp=Y%DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 # Contributed by Roberto Totaro (roto@enigma.ethz.ch)
-Fingerprint IRIX 6.5.7f-6.5.8
+Fingerprint IRIX 6.5.7f-6.5.8f
 TSeq(Class=64K)
 T1(DF=N%W=EF2A%ACK=S++%Flags=AS%Ops=MNWNNTNNM)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -3225,7 +3225,7 @@ PU(Resp=N)
 
 # Contributed by Justin Alcorn justin@jalcorn.net
 # SGI O2 running IRIX 6.5.7f
-Fingerprint IRIX 6.5.7f
+Fingerprint IRIX 6.5.7f-6.5.8f
 TSeq(Class=64K)
 T1(DF=N%W=EF2A%ACK=S++%Flags=AS%Ops=MNWNNTNNM)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)

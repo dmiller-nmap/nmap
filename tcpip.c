@@ -1192,7 +1192,7 @@ struct interface_info *getinterfaces(int *howmany) {
 
       numinterfaces++;
       if (numinterfaces == 47)  {      
-	error("My god!  You seem to have WAY too many interfaces!  Things may not work right\n");
+	error("My God!  You seem to have WAY too many interfaces!  Things may not work right\n");
 	break;
       }
 #if HAVE_SOCKADDR_SA_LEN
@@ -1296,7 +1296,7 @@ char *routethrough(struct in_addr *dest, struct in_addr *source) {
 	    fatal("Failed to find interface %s mentioned in /proc/net/route\n", iface);
 	  numroutes++;
 	  if (numroutes == ROUTETHROUGH_MAXROUTES)
-	    fatal("My god!  You seem to have WAY to many routes!\n");
+	    fatal("My God!  You seem to have WAY to many routes!\n");
       }
       fclose(routez);
     } else {
