@@ -869,6 +869,18 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=15C%RID=E%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
+Contributed by David E. Weekly (dweekly@legato.com)
+Fingerprint Mac OS X 10.1
+TSeq(Class=TR%gcd=<6%IPID=I%TS=2HZ)
+T1(DF=Y%W=807A%ACK=S++%Flags=AS%Ops=MNWNNT)
+T2(Resp=N)
+T3(Resp=Y%DF=Y%W=807A%ACK=S++%Flags=AS%Ops=MNWNNT)
+T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=0%ULEN=134%DAT=E)
+
 # Actually it is not constant seq class -- it just seems that way
 # because it takes so long to increment
 Fingerprint Apple Color LaserWrite 600 Printer # Thanks to Pluvius
@@ -1325,7 +1337,7 @@ T7(Resp=N)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 # Contributed by Dragos Ruiu <dr@kyx.net>
-Fingerprint NFR IDS Appliance ( 12/10/00 )
+Fingerprint OpenBSD 2.7/SPARC or NFR IDS Appliance ( 12/10/00 )
 TSeq(Class=RI%gcd=<6%SI=<8FC28&>16EC)
 T1(DF=N%W=403D%ACK=S++%Flags=AS%Ops=MNWNNT)
 T2(Resp=N)
@@ -2119,6 +2131,17 @@ T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=0%ULEN=134%DAT=E)
+
+# Contributed by David E. Weekly (dweekly@legato.com)
+TSeq(Class=RI%gcd=<6%SI=<81650&>E57%IPID=I%TS=U)
+T1(DF=N%W=F000%ACK=S++%Flags=AS%Ops=MNW)
+T2(Resp=N)
+T3(Resp=Y%DF=N%W=F000%ACK=O%Flags=A%Ops=)
+T4(Resp=N)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 # Contributed by RaW
 Fingerprint OS-9/68K V2.4 (Quanterra Q4124 - 68030)
@@ -2967,6 +2990,18 @@ T6(DF=N%W=0%ACK=S++%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
+# Contributed by David E. Weekly (dweekly@legato.com)
+Fingerprint IBM 3494 Magnetic Tape Library
+TSeq(Class=RI%gcd=<6%SI=<A5B22&>1A6E%IPID=I%TS=U)
+T1(DF=Y%W=805C%ACK=O|S++%Flags=A|AS%Ops=|MNW)
+T2(Resp=N)
+T3(Resp=Y%DF=Y%W=805C%ACK=O%Flags=A%Ops=)
+T4(DF=N%W=8000%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=F%RIPCK=0%UCK=0%ULEN=134%DAT=E)
+
 # Contributed by Wade Morris (wade.morris@dal.ca)
 # IBM AIX v3.2.5 running on 8xPower-2 wide nodes
 # Fingerprint AIX Version 4
@@ -3787,7 +3822,7 @@ T6(Resp=Y%DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=C0|A0|0%IPLEN=164%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
-Fingerprint Linux 2.1.19 - 2.2.17
+Fingerprint Linux 2.1.19 - 2.2.19
 TSeq(Class=RI%gcd=<8%SI=>10000%IPID=I%TS=100HZ)
 T1(DF=Y|N%W=3C0A|3F25|7B2F|7F53|7C38|B63%ACK=S++%Flags=AS%Ops=MENNTNW)
 T2(Resp=N)
@@ -3940,7 +3975,7 @@ T4(DF=Y%W=0%ACK=O%Flags=R%Ops=)
 T5(DF=Y%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=Y%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=Y%W=0%ACK=S++%Flags=AR%Ops=)
-PU(DF=Y%TOS=C0|0%IPLEN=164%RIPTL=148%RID=E%RIPCK=E%UCK=E|F%ULEN=134%DAT=E)
+PU(DF=Y|N%TOS=C0|0%IPLEN=164%RIPTL=148%RID=E%RIPCK=E%UCK=E|F%ULEN=134%DAT=E)
 
 Fingerprint Linux 2.4.7 (X86)
 TSeq(Class=RI%gcd=<6%SI=<2AEC8D6&>2FF0F%IPID=Z%TS=U)
@@ -6533,7 +6568,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(Resp=N)
 
 # Contributed by kribe@iname.com
-Fingerprint Hardware: Zyxel Prestige 128L router
+Fingerprint Hardware: Zyxel Prestige router
 T1(DF=N%W=0%ACK=S++%Flags=BAR%Ops=)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
 T3(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
