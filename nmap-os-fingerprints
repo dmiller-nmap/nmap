@@ -78,7 +78,7 @@ T7(DF=N%W=0%ACK=S%Flags=APR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 # Contributed by bithuntah <bithuntah@mindless.com>
-Fingerprint 3Com SuperSTack II switch SW/NBSI-CF,11.1.0.00S38
+Fingerprint 3Com SuperStack II switch SW/NBSI-CF,11.1.0.00S38
 TSeq(Class=TD%gcd=<68%SI=<3C)
 T1(DF=N%W=800%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=O%Flags=AR%Ops=)
@@ -854,7 +854,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 # Contributed by Travis Stevenson  (stevensontw@usa.net)
-Fingerprint Macintosh GS Server with MacOS 8.5.1 (Appleshare IP 6.0)
+Fingerprint Macintosh GS Server with Mac OS 8.5.1 (Appleshare IP 6.0)
 TSeq(Class=64K)
 T1(DF=Y%W=455B%ACK=S++%Flags=AS%Ops=MEWL)
 T2(Resp=Y%DF=N%W=800%ACK=S++%Flags=AR%Ops=)
@@ -866,7 +866,7 @@ T7(DF=N%W=800%ACK=S++%Flags=AR%Ops=)
 PU(DF=Y%TOS=0%IPLEN=70%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 # Contributed by Anonymous
-Fingerprint MacOS 8.1 running on a PowerPC G3 (iMac)
+Fingerprint Mac OS 8.1 running on a PowerPC G3 (iMac)
 TSeq(Class=64K)
 T1(DF=N%W=455B%ACK=S++%Flags=AS%Ops=MEWL)
 T2(Resp=N)
@@ -878,7 +878,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=70%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 # Contributed by Sean-Paul Rees <sean@dreamfire.net>
-Fingerprint MacOS 8.6
+Fingerprint Mac OS 8.6
 TSeq(Class=64K)
 T1(Resp=Y%DF=N%W=4000%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -889,7 +889,7 @@ T6(Resp=Y%DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=15C%RID=E%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
-#  MacOS 9 on a Power Macintosh 7200/75
+#  Mac OS 9 on a Power Macintosh 7200/75
 # iMac running Mac OS 9.1
 Fingerprint Mac OS 9 - 9.1
 TSeq(Class=RI%gcd=<6%SI=<9CE0&>17D)
@@ -940,7 +940,7 @@ PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=0%ULEN=134%DAT=E)
 
 # Actually it is not constant seq class -- it just seems that way
 # because it takes so long to increment
-Fingerprint Apple Color LaserWrite 600 Printer # Thanks to Pluvius
+Fingerprint Apple Color LaserWriter 600 Printer # Thanks to Pluvius
 TSeq(Class=C)
 T1(DF=N%W=A28%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -951,7 +951,7 @@ T6(DF=N%W=800%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=800%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
-Fingerprint Apple Color LaserWrite 600 Printer # Thanks to Pluvius
+Fingerprint Apple Color LaserWriter 600 Printer # Thanks to Pluvius
 TSeq(Class=C)
 T1(DF=N%W=A28%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=1000%ACK=S%Flags=AR%Ops=)
@@ -1336,7 +1336,7 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=15C%RID=F%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
-Fingerprint BSDI BSD/OS 3.0-3.1 (or possibly MacOS, NetBSD)
+Fingerprint BSDI BSD/OS 3.0-3.1 (or possibly Mac OS, NetBSD)
 TSeq(Class=RI%gcd=<6)
 T1(DF=Y%W=2017%ACK=S++%Flags=AS%Ops=MNWNNT)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -1490,7 +1490,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 # Contributed by Eto eto@massive.ch
-Fingerprint CISCO 2620 running IOS 12.1(6)
+Fingerprint Cisco 2620 running IOS 12.1(6)
 TSeq(Class=RI%gcd=<6%SI=<ABC2&>78%IPID=Z%TS=U)
 T1(DF=N%W=1020%ACK=S++%Flags=AS%Ops=ME)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -1502,7 +1502,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(Resp=N)
 
 # Contributed by Eto eto@massive.ch
-Fingerprint CISCO 4500 running IOS 11.2(2)
+Fingerprint Cisco 4500 running IOS 11.2(2)
 T1(DF=N%W=860%ACK=S++|O%Flags=AS|A%Ops=M|)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
 T3(Resp=N)
@@ -1648,7 +1648,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 # Contributed by lapwing@dds.nl
-Fingerprint CISCO Catalyst 2820 Management Console
+Fingerprint Cisco Catalyst 2820 Management Console
 TSeq(Class=TD%gcd=<6%SI=<1B8%IPID=I%TS=U)
 T1(DF=N%W=400%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -1696,7 +1696,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(Resp=N)
 
 # Contributed by Excalibur excalibur@exc.org
-Fingerprint CISCO 827 running IOS 12.1(1)XB1
+Fingerprint Cisco 827 running IOS 12.1(1)XB1
 TSeq(Class=RI%gcd=<6%SI=<9B28&>3E%IPID=Z%TS=U)
 T1(DF=N%W=1020%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=C00%ACK=S++%Flags=AR%Ops=)
@@ -2012,7 +2012,7 @@ T6(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(Resp=N)
 
-Fingerprint Cray Unicos 9.0 - 10.0 or Unicos/mk 1.5.1  # Thanks to Mea Culpa
+Fingerprint Cray UNICOS 9.0 - 10.0 or UNICOS/mk 1.5.1  # Thanks to Mea Culpa
 TSeq(Class=RI%gcd=<6)
 T1(DF=Y%W=FFFF%ACK=S++%Flags=AS%Ops=MWNTL)
 T2(Resp=N)
@@ -2024,7 +2024,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
 # Contributed by "Richard Johnson" <rdump@river.com>
-Fingerprint Unicos 10.0.0 on Cray 90
+Fingerprint UNICOS 10.0.0 on Cray 90
 TSeq(Class=RI%gcd=<F%SI=<22222&>2222)
 T1(Resp=Y%DF=Y%W=8000%ACK=S++%Flags=AS%Ops=MWNTL)
 T2(Resp=N)
@@ -2684,7 +2684,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=E0%IPLEN=164%RIPTL=134%RID=E%RIPCK=F%UCK=0%ULEN=134%DAT=E)
 
 # Contributed by Nir Zuk, nir@nirzuk.com
-Fingerprint NOKIA IPSO 3.2 Running Checkpoint Firewall-1
+Fingerprint Nokia IPSO 3.2 Running Checkpoint Firewall-1
 TSeq(Class=RI%gcd=<6%SI=<E4656&>2476)
 T1(DF=N%W=4000%ACK=O|S++%Flags=A|AS%Ops=NNT|MNWNNT)
 T2(Resp=N)
@@ -3745,7 +3745,7 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=O%Flags=R%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
-Fingerprint Mulit-Tech standalone firewall box, version 3
+Fingerprint MultiTech standalone firewall box, version 3
 TSeq(Class=TD%gcd=<714%SI=<14)
 T1(DF=N%W=600%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=O%Flags=R%Ops=)
@@ -3918,7 +3918,7 @@ PU(Resp=Y%DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 # Contributed by foo@porto.bmb.uga.edu
 # IP19/IP27/IP30
-Fingerprint Irix 6.5-6.5.15m
+Fingerprint IRIX 6.5-6.5.15m
 TSeq(Class=RI%gcd=<144%SI=<FFFF&>8%IPID=I%TS=2HZ)
 T1(DF=N%W=C000%ACK=S++%Flags=AS%Ops=MNWNNTNNM)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -4494,7 +4494,7 @@ PU(DF=N%TOS=C0%IPLEN=164%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 # Not really constant -- just slow incrementation
 # This is an LCIII
-Fingerprint MacOS 7.1   # Thanks to  Renaud Deraison 
+Fingerprint Mac OS 7.1   # Thanks to  Renaud Deraison 
 TSeq(Class=C)
 T1(DF=N%W=192F%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -4517,7 +4517,7 @@ T6(DF=N%W=400|800|C00|1000%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=400|800|C00|1000%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
-Fingerprint MacOS 7.5.5 - 9 # Thanks to //Stany <stany@zerkalo.notbsd.org>
+Fingerprint Mac OS 7.5.5 - 9 # Thanks to //Stany <stany@zerkalo.notbsd.org>
 TSeq(Class=64K)
 T1(Resp=Y%DF=Y%W=455B%ACK=S++%Flags=AS%Ops=MEWL)
 T2(Resp=N)
@@ -4529,7 +4529,7 @@ T7(Resp=Y%DF=Y%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=Y%TOS=0%IPLEN=70%RIPTL=148%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 # Contributed by ra5en
-Fingerprint MacOS 8.0
+Fingerprint Mac OS 8.0
 TSeq(Class=RI%gcd=<6%SI=<8294C&>14D0)
 T1(DF=N|Y%W=8000%ACK=S++%Flags=AS%Ops=MEWNNNT)
 T2(Resp=Y%DF=N|Y%W=0%ACK=S%Flags=AR%Ops=)
@@ -4541,7 +4541,7 @@ T7(DF=Y%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=Y%TOS=0%IPLEN=70%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 # Contributed by davidj@zip.com.au
-Fingerprint MacOS 8 running on an LC 475
+Fingerprint Mac OS 8 running on an LC 475
 TSeq(Class=TR)
 T1(DF=N%W=7FE0%ACK=S++%Flags=AS%Ops=ME)
 T2(Resp=N)
@@ -4553,7 +4553,7 @@ T7(DF=Y%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=Y%TOS=0%IPLEN=70%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 # Contributed by Ben Lukens <ben@jbic.com>
-Fingerprint MacOS 8.1
+Fingerprint Mac OS 8.1
 TSeq(Class=64K)
 T1(DF=Y%W=FFFF%ACK=S++%Flags=AS%Ops=MEWL)
 T2(Resp=N)
@@ -4565,7 +4565,7 @@ T7(DF=Y%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=Y%TOS=0%IPLEN=70%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 # Contributed by Andy Lyttle <nmap@phroggy.com>
-Fingerprint MacOS 8.1
+Fingerprint Mac OS 8.1
 TSeq(Class=64K)
 T1(DF=Y%W=4240%ACK=S++%Flags=AS%Ops=MEWL)
 T2(Resp=N)
@@ -4577,7 +4577,7 @@ T7(DF=Y%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=Y%TOS=0%IPLEN=70%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 # Contributed by Ben Lukens <ben@jbic.com>
-Fingerprint MacOS 8.1
+Fingerprint Mac OS 8.1
 TSeq(Class=64K)
 T1(DF=Y%W=FFFF%ACK=S++%Flags=AS%Ops=MEWL)
 T2(Resp=N)
@@ -4588,7 +4588,7 @@ T6(DF=Y%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=Y%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=Y%TOS=0%IPLEN=70%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
-Fingerprint MacOS 8.5  # Thanks to A.j. Effin ReznoR <spork@exo.com>
+Fingerprint Mac OS 8.5  # Thanks to A.j. Effin ReznoR <spork@exo.com>
 TSeq(Class=64K)
 T1(DF=Y%W=455B%ACK=S++%Flags=AS%Ops=MEWL)
 T2(Resp=N)
@@ -4598,7 +4598,7 @@ T5(DF=Y%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=Y%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=Y%W=0%ACK=S%Flags=AR%Ops=)
 
-#FingerPrint  MacOS 8.5.1 w/MacTCP
+#FingerPrint  Mac OS 8.5.1 w/MacTCP
 #TSeq(Class=64K)
 #T1(Resp=Y%DF=Y%W=4137%ACK=S++%Flags=AS%Ops=MEWL)
 #T2(Resp=Y%DF=Y%W=0%ACK=S%Flags=AR%Ops=)
@@ -4624,7 +4624,7 @@ T7(DF=N%W=400%ACK=S%Flags=AR%Ops=)
 PU(Resp=N)
 
 # Contributed by Lynda L. True <shrdlu@hazel.sdd.TRW.COM>
-Fingerprint HP-UX 11 or Apple MacOS 9.04 or HP-UX B.11.00
+Fingerprint HP-UX 11 or Apple Mac OS 9.04 or HP-UX B.11.00
 TSeq(Class=RI%gcd=<9%SI=>3FFF)
 T1(DF=Y%W=8000%ACK=S++%Flags=AS%Ops=MEWNNNT)
 T2(Resp=Y%DF=Y%W=0%ACK=S%Flags=AR%Ops=)
@@ -4636,7 +4636,7 @@ T7(DF=Y%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=Y%TOS=0%IPLEN=70%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 # Contributed by Marcus Mueller <marcus.mueller@pixelpark.com>
-Fingerprint MacOS X Server 1.2 (ppc)
+Fingerprint Mac OS X Server 1.2 (ppc)
 TSeq(Class=RI%gcd=<6%SI=<199A9C&>4177)
 T1(DF=N|Y%W=805C|2017%ACK=S++%Flags=AS%Ops=MNWNNT)
 T2(Resp=N)
@@ -4648,7 +4648,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=Y%TOS=0%IPLEN=38%RIPTL=15C%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
 # Contributed by Brian Vancil <bvancil@leland.stanford.edu>
-Fingerprint FreeBSD 4.4-5 or MacOS X 10.0.4 (Darwin V. 1.3-1.3.7 or 4P13)
+Fingerprint FreeBSD 4.4-5 or Mac OS X 10.0.4 (Darwin V. 1.3-1.3.7 or 4P13)
 TSeq(Class=RI%gcd=<6%SI=<6E99C&>2A1%IPID=I%TS=2HZ)
 T1(DF=Y%W=807A|C0B7%ACK=S++%Flags=AS%Ops=MNWNNT)
 T2(Resp=N)
@@ -6431,7 +6431,7 @@ T7(DF=Y%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=Y%TOS=0%IPLEN=70%RIPTL=148%RID=E%RIPCK=E|F%UCK=E|F%ULEN=134%DAT=E)
 
 # Contributed by elliotb@flash.net, redpriest
-Fingerprint Sun Solaris 8 early acces beta through actual release
+Fingerprint Sun Solaris 8 early access beta through actual release
 TSeq(Class=RI|TR%gcd=<8%SI=<FEC86&>E0F%IPID=I%TS=100HZ)
 T1(DF=Y%W=60DA|807A|B68%ACK=S++%Flags=AS%Ops=NNTNWM|NNTM)
 T2(Resp=N)
@@ -6940,7 +6940,7 @@ PU(Resp=N)
 # Winodws XP professional version 2002 on PC Intel processor
 # Windows XP Build 2600
 # Windows 2000 with SP2 and long fat pipe (RFC 1323)
-Fingerprint Windows Millennim Edition (Me), Win 2000, or WinXP
+Fingerprint Windows Millennium Edition (Me), Win 2000, or WinXP
 TSeq(Class=RI%gcd=<6%SI=<23726&>49C%IPID=I%TS=0)
 T1(DF=Y%W=402E|B5C9|D304|FFFF%ACK=S++%Flags=AS%Ops=NNT|MNWNNT)
 T2(Resp=Y|N%DF=N%W=0%ACK=S%Flags=AR%Ops=)
