@@ -366,6 +366,9 @@ void masstcpping(struct hoststruct *hostbatch, int num_hosts, int pingtimeout) {
   gettimeofday(&start, NULL);
   bzero(sockets, sizeof(int) * MAX_SOCKETS_ALLOWED);
   bzero(&sock, sockaddr_in_len);
+  FD_ZERO(&fds_read);
+  FD_ZERO(&fds_write);
+  FD_ZERO(&fds_ex);
   sock.sin_family = AF_INET;
   waittime.tv_sec = pingtimeout / (numretries + 1);
   waittime.tv_usec = ((pingtimeout % (numretries +1)) * 1e6) / (numretries +1);
@@ -411,6 +414,7 @@ void masstcpping(struct hoststruct *hostbatch, int num_hosts, int pingtimeout) {
     }
     tmptv = waittime;
     while((numcomplete < num_hosts) && (res = select(maxsock+1, &fds_read, &fds_write, &fds_ex, &tmptv)) > 0) {
+      if (FD_ISSET(0, &fds_read) || FD_ISSET(0, &fds_write) ||  FD_ISSET(0, &fds_ex)) { fatal("Ack, 0 is set!"); }	
       for(hostindex = 0; hostindex < num_hosts; hostindex++) {
 	if (sockets[hostindex]) {
 	  if (o.debugging > 1) {
