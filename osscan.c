@@ -9,6 +9,7 @@ struct AVal *seq_AVs;
 int last;
 struct ip *ip;
 struct tcphdr *tcp;
+struct timeval t1,t2;
 int i;
 struct hostent *myhostent = NULL;
 unsigned int localnet, netmask;
@@ -16,10 +17,11 @@ pcap_t *pd;
 char myname[513];
 int rawsd;
 int tries = 0;
+int newcatches;
 int current_port = 0;
 int testsleft;
 int testno;
-int timeouts;
+int  timeout;
 unsigned long sequence_base = rand() + rand();
 unsigned int openport;
 int bytes;
@@ -101,13 +103,20 @@ if (o.verbose && openport != -1)
    }
    /* Now we collect  the replies */
    target->seq.responses = 0;
-   timeouts = 0; /* number of timeouts in a row */
-   while(target->seq.responses < NUM_SEQ_SAMPLES && timeouts < 10) {
+   timeout = 0; 
+   gettimeofday(&t1,NULL);
+   while(target->seq.responses < NUM_SEQ_SAMPLES && !timeout) {
      ip = (struct ip*) readip_pcap(pd, &bytes);
-     if (!ip) { timeouts++; continue; }
+     gettimeofday(&t2, NULL);
+     if (!ip) { 
+       if (TIMEVAL_SUBTRACT(t2,t1) > target->to.timeout)
+	 timeout = 1;
+       continue; 
+     } else if (TIMEVAL_SUBTRACT(t2,t1) > 5 * target->to.timeout) {
+       timeout = 1;
+     }		  
      printf("GOT RESPONSE\n");
      readtcppacket((char *) ip, ntohs(ip->ip_len));
-     timeouts = 0;
      if (bytes < (4 * ip->ip_hl) + 4)
        continue;
      if (ip->ip_p == IPPROTO_TCP) {
@@ -175,7 +184,8 @@ if (o.verbose && openport != -1)
 	 seq_inc_sum += pow(MOD_DIFF(seq_diffs[i], seq_avg_inc), 2);
        }
        printf("The sequence sum is %e\n", seq_inc_sum);
-       target->seq.index = (unsigned long) (0.5 + pow(seq_inc_sum, 0.5)/(target->seq.responses - 1));
+       seq_inc_sum /= (target->seq.responses - 1);
+       target->seq.index = (unsigned long) (0.5 + pow(seq_inc_sum, 0.5));
        printf("The sequence index is %d\n", target->seq.index);
        if (target->seq.index < 50) {
 	 target->seq.class = SEQ_TD;
@@ -193,8 +203,8 @@ if (o.verbose && openport != -1)
      else FPtmp->next = FP;
      FP = FPtmp;
      FP->name = "TSeq";
-     seq_AVs = safe_malloc(sizeof(struct AVal) * 2);
-     bzero(seq_AVs, sizeof(struct AVal) * 2);
+     seq_AVs = safe_malloc(sizeof(struct AVal) * 3);
+     bzero(seq_AVs, sizeof(struct AVal) * 3);
      FP->results = seq_AVs;
      seq_AVs[0].attribute = "Class";
      switch(target->seq.class) {
@@ -209,12 +219,18 @@ if (o.verbose && openport != -1)
        seq_AVs[0].next = &seq_AVs[1];
        seq_AVs[1].attribute= "gcd";     
        sprintf(seq_AVs[1].value, "%lu", seq_gcd);
+       seq_AVs[1].next = &seq_AVs[2];
+       seq_AVs[2].attribute="SI";
+       sprintf(seq_AVs[2].value, "%d", target->seq.index);
        break;
      case SEQ_RI:
        strcpy(seq_AVs[0].value, "RI");
        seq_AVs[0].next = &seq_AVs[1];
        seq_AVs[1].attribute= "gcd";     
        sprintf(seq_AVs[1].value, "%lu", seq_gcd);
+       seq_AVs[1].next = &seq_AVs[2];
+       seq_AVs[2].attribute="SI";
+       sprintf(seq_AVs[2].value, "%d", target->seq.index);
        break;
      case SEQ_TR:
        strcpy(seq_AVs[0].value, "TR");
@@ -236,6 +252,7 @@ if (o.verbose && openport != -1)
  bzero(FPtests, sizeof(FPtests));
  tries = 0;
  do { 
+   newcatches = 0;
    if (openport != -1) {   
      /* Test 2 */
      if (!FPtests[2])
@@ -274,8 +291,13 @@ if (o.verbose && openport != -1)
        send_tcp_raw(rawsd, &o.decoys[decoy], &target->host, current_port +5, 
 		    closedport, sequence_base, 0,TH_FIN|TH_PUSH|TH_URG, 0,"\003\003\012\001\002\004\001\011\010\012\077\077\077\077\000\000\000\000\000\000" , 20, NULL, 0);
      }
-   usleep(50000);
-   while(( ip = (struct ip*) readip_pcap(pd, &bytes))) {
+   gettimeofday(&t1, NULL);
+   timeout = 0;
+   while(( ip = (struct ip*) readip_pcap(pd, &bytes)) && !timeout) {
+     gettimeofday(&t2, NULL);
+     if (TIMEVAL_SUBTRACT(t2,t1) > 5 * target->to.timeout) {
+       timeout = 1;
+     }
      if (bytes < (4 * ip->ip_hl) + 4)
        continue;
      if (ip->ip_p == IPPROTO_TCP) {
@@ -287,13 +309,14 @@ if (o.verbose && openport != -1)
        printf("Got packet for test number %d\n", testno);
        if (FPtests[testno]) continue;
        testsleft--;
+       newcatches++;
        FPtests[testno] = safe_malloc(sizeof(FingerPrint));
        bzero(FPtests[testno], sizeof(FingerPrint));
        FPtests[testno]->results = fingerprint_iptcppacket(ip, 255, sequence_base);
        FPtests[testno]->name = (testno == 2)? "T2" : (testno == 3)? "T3" : (testno == 4)? "T4" : (testno == 5)? "T5" : (testno == 6)? "T6" : (testno == 7)? "T7" : "T8";
      }
    }     
- } while ( testsleft > 0 && tries++ < 3);
+ } while ( testsleft > 0 && (tries++ < 5 && (newcatches || tries == 1)));
  
 
  last = 0;
@@ -417,12 +440,18 @@ struct AVal *fingerprint_iptcppacket(struct ip *ip, int mss, unsigned long syn) 
 
 FingerPrint **match_fingerprint(FingerPrint *FP) {
   static FingerPrint *matches[10];
+  int max_matches = 10;
   int matches_found = 0;
   FingerPrint *current_os;
   FingerPrint *current_test;
   struct AVal *tst;
   int match = 1;
   int i;
+
+  if (!FP) {
+    matches[0] = NULL;
+    return matches;
+  }
 
   for(i = 0; o.reference_FPs[i]; i++) {
     current_os = o.reference_FPs[i];
@@ -437,9 +466,14 @@ FingerPrint **match_fingerprint(FingerPrint *FP) {
       }
     if (match) {
       /* Yeah, we found a match! */
+      if (matches_found >= max_matches -1) {
+	matches[0] = NULL;
+	return matches;
+      }
       matches[matches_found++] = current_os;
     }
   }
+  matches[matches_found] = NULL;
   return matches;
 }
 
@@ -468,6 +502,7 @@ struct AVal *getattrbyname(struct AVal *AV, char *name) {
 int AVal_match(struct AVal *reference, struct AVal *fprint) {
   struct AVal *current_ref;
   struct AVal *current_fp;
+  unsigned long number;
   unsigned long val;
   char *endptr;
 
@@ -480,8 +515,18 @@ int AVal_match(struct AVal *reference, struct AVal *fprint) {
       val = strtol(current_fp->value, &endptr, 16);
       if (val == 0 || *endptr) return 0;
       }
+    } else if (*current_ref->value == '<' && isdigit(current_ref->value[1])) {
+      if (!*current_fp->value) return 0;
+      number = strtol(current_ref->value + 1, &endptr, 16);
+      val = strtol(current_fp->value, &endptr, 16);
+      if (val > number || *endptr) return 0;          
+    } else if (*current_ref->value == '>' && isdigit(current_ref->value[1])) {
+      if (!*current_fp->value) return 0;
+      number = strtol(current_ref->value + 1, &endptr, 16);
+      val = strtol(current_fp->value, &endptr, 16);
+      if (val < number || *endptr) return 0;
     }
-    if (strcmp(current_ref->value, current_fp->value))
+    else if (strcmp(current_ref->value, current_fp->value))
       return 0;    
   }
   return 1;  
@@ -513,6 +558,8 @@ struct AVal *AV;
 char *p = str;
 
 bzero(str, sizeof(str));
+
+if (!FP) return "(None)";
 
 if(*(FP->OS_name)) {
   int len = 0;

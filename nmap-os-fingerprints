@@ -13,8 +13,24 @@ T5(DF=N&W=0&ACK=S++&Flags=AR&Ops=)
 T6(DF=N&W=0&ACK=O&Flags=R&Ops=)
 T7(DF=N&W=0&ACK=S&Flags=AR&Ops=)
 
+FingerPrint AIX 4.2
+TSeq(Class=TR)
+T1(DF=N&W=FFAF&ACK=S++&Flags=AS&Ops=M)
+T4(DF=N&W=0&ACK=O&Flags=R&Ops=)
+T5(DF=N&W=0&ACK=S++&Flags=AR&Ops=)
+T6(DF=N&W=0&ACK=O&Flags=R&Ops=)
+T7(DF=N&W=0&ACK=S&Flags=AR&Ops=)
+
+FingerPrint  AIX 4.x (where x > 1)
+TSeq(Class=TR)
+T1(DF=N&W=3F25&ACK=S++&Flags=AS&Ops=M)
+T4(DF=N&W=4000&ACK=O&Flags=R&Ops=)
+T5(DF=N&W=0&ACK=S++&Flags=AR&Ops=)
+T6(DF=N&W=0&ACK=O&Flags=R&Ops=)
+T7(DF=N&W=0&ACK=S&Flags=AR&Ops=)
+
 FingerPrint  BSDI BSD/OS 3.0
-TSeq(Class=RI&gcd=1)
+TSeq(Class=RI&gcd=<5)
 T1(DF=Y&W=2017&ACK=S++&Flags=AS&Ops=MNWNNT)
 T2(DF=N&W=0&ACK=S&Flags=AR&Ops=)
 T3(DF=Y&W=2017&ACK=O&Flags=A&Ops=NNT)
@@ -24,7 +40,7 @@ T6(DF=N&W=0&ACK=O&Flags=R&Ops=)
 T7(DF=N&W=0&ACK=S&Flags=AR&Ops=)
 
 FingerPrint  BSDI BSD/OS 2.1
-TSeq(Class=RI&gcd=1)
+TSeq(Class=RI&gcd=<5)
 T1(DF=N&W=805C&ACK=S++&Flags=AS&Ops=MNWNNT)
 T2(DF=N&W=0&ACK=S&Flags=AR&Ops=)
 T3(DF=N&W=805C&ACK=O&Flags=A&Ops=NNT)
@@ -34,7 +50,7 @@ T6(DF=N&W=0&ACK=O&Flags=R&Ops=)
 T7(DF=N&W=0&ACK=S&Flags=AR&Ops=)
 
 FingerPrint  FreeBSD 2.2.6-RELEASE
-TSeq(Class=RI&gcd=1)
+TSeq(Class=RI&gcd=<5)
 T1(DF=Y&W=403D&ACK=S++&Flags=AS&Ops=MNWNNT)
 T3(DF=Y&W=403D&ACK=S++&Flags=AS&Ops=MNWNNT)
 T4(DF=N&W=4000&ACK=O&Flags=R&Ops=)
@@ -79,8 +95,17 @@ T5(DF=N&W=0&ACK=S++&Flags=AR&Ops=)
 T6(DF=N&W=0&ACK=O&Flags=R&Ops=)
 T7(DF=N&W=0&ACK=S&Flags=AR&Ops=)
 
+FingerPrint  Linux 2.0.35
+TSeq(Class=TR)
+T1(DF=N&W=7FE0&ACK=S++&Flags=AS&Ops=ME)
+T3(DF=N&W=7FE0&ACK=S++&Flags=ASF&Ops=M)
+T4(DF=N&W=0&ACK=O&Flags=R&Ops=)
+T5(DF=N&W=0&ACK=S++&Flags=AR&Ops=)
+T6(DF=N&W=0&ACK=O&Flags=R&Ops=)
+T7(DF=N&W=0&ACK=S&Flags=AR&Ops=)
+
 FingerPrint NetBSD        # www.netbsd.org
-TSeq(Class=RI&gcd=1)
+TSeq(Class=RI&gcd=<5)
 T1(DF=N&W=4000&ACK=S++&Flags=AS&Ops=MNWNNT)
 T3(DF=N&W=4000&ACK=S++&Flags=AS&Ops=MNWNNT)
 T4(DF=N&W=0&ACK=O&Flags=R&Ops=)
@@ -89,7 +114,7 @@ T6(DF=N&W=0&ACK=O&Flags=R&Ops=)
 T7(DF=N&W=0&ACK=S&Flags=AR&Ops=)
 
 FingerPrint OpenBSD 2.2
-TSeq(Class=RI&gcd=1)
+TSeq(Class=RI&gcd=<5)
 T1(DF=N&W=402E&ACK=S++&Flags=AS&Ops=MNWNNT)
 T3(DF=N&W=402E&ACK=S++&Flags=AS&Ops=MNWNNT)
 T4(DF=N&W=4000&ACK=O&Flags=R&Ops=)
@@ -98,7 +123,7 @@ T6(DF=N&W=0&ACK=O&Flags=R&Ops=)
 T7(DF=N&W=0&ACK=S&Flags=AR&Ops=)
 
 FingerPrint  Solaris 2.51
-TSeq(Class=RI&gcd=1)
+TSeq(Class=RI&gcd=<5)
 T1(DF=Y&W=2332&ACK=S++&Flags=AS&Ops=ME)
 T4(DF=Y&W=0&ACK=O&Flags=R&Ops=)
 T5(DF=Y&W=0&ACK=S++&Flags=AR&Ops=)
@@ -106,7 +131,7 @@ T6(DF=Y&W=0&ACK=O&Flags=R&Ops=)
 T7(DF=Y&W=0&ACK=S&Flags=AR&Ops=)
 
 FingerPrint  Solaris 2.6
-TSeq(Class=RI&gcd=1)
+TSeq(Class=RI&gcd=<5)
 T1(DF=Y&W=2297&ACK=S++&Flags=AS&Ops=NNTNWME)
 T4(DF=Y&W=0&ACK=O&Flags=R&Ops=)
 T5(DF=Y&W=0&ACK=S++&Flags=AR&Ops=)
@@ -122,23 +147,24 @@ T5(DF=N&W=0&ACK=S++&Flags=AR&Ops=)
 T6(DF=N&W=0&ACK=O&Flags=R&Ops=)
 T7(DF=N&W=0&ACK=S&Flags=AR&Ops=)
 
-FingerPrint Windows NT 4.0 / Windows 95
-TSeq(Class=TD)
+FingerPrint Windows 95/98/NT  #I think this counts Win98, can anyone verify?
+TSeq(SI=<75)
 T1(DF=Y&W=2017&ACK=S++&Flags=AS&Ops=M)
 T2(DF=N&W=0&ACK=S&Flags=AR&Ops=)
 T3(DF=Y&W=2017&ACK=S++&Flags=AS&Ops=M)
-T4(DF=N&W=0&ACK=S++&Flags=R&Ops=)
+T4(DF=N&W=0&Flags=R&Ops=)
 T5(DF=N&W=0&ACK=S++&Flags=AR&Ops=)
-T6(DF=N&W=0&ACK=O&Flags=R&Ops=)
+T6(DF=N&W=0&Flags=R&Ops=)
 T7(DF=N&W=0&ACK=S++&Flags=AR&Ops=)
 
-FingerPrint Windows NT 4.0 / Windows95
-TSeq(Class=TD)
-T1(DF=Y&W=2017&ACK=S++&Flags=AS&Ops=M)
-T2(DF=N&W=0&ACK=S&Flags=AR&Ops=)
-T3(DF=Y&W=2017&ACK=S++&Flags=AS&Ops=M)
-T4(DF=N&W=0&ACK=S++&Flags=R&Ops=)
-T5(DF=N&W=0&ACK=S++&Flags=AR&Ops=)
-T6(DF=N&W=0&ACK=S++&Flags=R&Ops=)
-T7(DF=N&W=0&ACK=S++&Flags=AR&Ops=)
+
+
+
+
+
+
+
+
+
+
 
