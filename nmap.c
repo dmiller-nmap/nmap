@@ -414,6 +414,7 @@ o.decoys[o.decoyturn] = currenths->source_ip;
 	  else  nmap_log("Suspected operating systems:");
 	  while(currenths->FP_matches[i]) {
 	    nmap_log(" %s", currenths->FP_matches[i]->OS_name);
+	    i++;
 	  }
 	  nmap_log("\n");
 	  if (o.debugging || o.verbose > 1) {
