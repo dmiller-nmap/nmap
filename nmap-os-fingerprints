@@ -3453,20 +3453,6 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=C0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
-# Cisco 1720 router running 12.2.8T4 with IP/FW/PLUS/3DES feature set
-# Cisco 801 router running IOS 12.2(8)T1 (image: c800-k8nosy6-mw.122-8.T1)
-Fingerprint Cisco 801/1720 router running IOS 12.2.8
-Class Cisco | IOS | 12.X | router
-TSeq(Class=TR%gcd=<6%IPID=Z%TS=U)
-T1(DF=N%W=1020%ACK=S++%Flags=AS%Ops=ME)
-T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
-T3(Resp=Y%DF=N%W=1020%ACK=S++%Flags=AS%Ops=ME)
-T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
-T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
-T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
-T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
-PU(DF=N%TOS=C0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
-
 # Cisco 837 router running IOS 12.3(11)T
 Fingerprint Cisco 837 router running IOS 12.3(11)T
 Class Cisco | IOS | 12.X | router
@@ -3555,6 +3541,21 @@ T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(Resp=N)
+
+# Cisco 1720 router running 12.2.8T4 with IP/FW/PLUS/3DES feature set
+# Cisco 801 router running IOS 12.2(8)T1 (image: c800-k8nosy6-mw.122-8.T1)
+# Cisco Aironet 1100/1200/1400 access point running IOS 12.2.15
+Fingerprint Cisco router or WAP running IOS 12.2
+Class Cisco | IOS | 12.X | router
+TSeq(Class=TR%gcd=<6%IPID=Z%TS=U)
+T1(DF=N%W=1020%ACK=S++%Flags=AS%Ops=ME)
+T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
+T3(Resp=Y%DF=N%W=1020%ACK=S++%Flags=AS%Ops=ME)
+T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
+PU(DF=N%TOS=C0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 # Cisco 12008 running IOS 12.0(18.6)S1
 # Cisco 7206VXR running IOS 12.0(18)S
@@ -12322,7 +12323,7 @@ PU(DF=N%TOS=0%IPLEN=B0%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 # Microsoft Windows XP Pro with SP2 (Version 5.1 Build 2600.xpsp_sp2_rtm.040803-2158 : Service Pack 2)
 Fingerprint Microsoft Windows XP SP2 (firewall enabled)
 Class Microsoft | Windows | NT/2K/XP | general purpose
-TSeq(Class=TR%gcd=<6%IPID=I%TS=U)
+TSeq(Class=TR%gcd=<6%IPID=I%TS=U|0)
 T1(DF=Y%W=6360|FC94|FFFF%ACK=S++%Flags=AS%Ops=MNWNNT|MNW)
 T2(Resp=N)
 T3(Resp=N)

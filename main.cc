@@ -207,7 +207,9 @@ int main(int argc, char *argv[], char *envp[]) {
   } else nmapcalledas++;
 
   if ((cptr = getenv("NMAP_ARGS"))) {
-    snprintf(command, sizeof(command), "nmap %s", cptr);
+    if (snprintf(command, sizeof(command), "nmap %s", cptr) >= (int) sizeof(command)) {
+        error("Warning: NMAP_ARGS variable is too long, truncated");
+    }
     myargc = arg_parse(command, &myargv);
     if (myargc < 1) {
       fatal("NMAP_ARG variable could not be parsed");

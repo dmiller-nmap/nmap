@@ -114,6 +114,7 @@ va_start(ap, fmt);
 fflush(stdout);
 vfprintf(stderr, fmt, ap);
 fprintf(stderr, "\nQUITTING!\n");
+fflush(stderr);
 va_end(ap);
 exit(1);
 }
@@ -124,6 +125,7 @@ va_start(ap, fmt);
 fflush(stdout);
 vfprintf(stderr, fmt, ap);
 fprintf(stderr, "\n");
+fflush(stderr);
 va_end(ap);
 return;
 }

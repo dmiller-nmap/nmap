@@ -317,7 +317,7 @@ const char *ippackethdrinfo(const u8 *packet, u32 len) {
   char srchost[INET6_ADDRSTRLEN], dsthost[INET6_ADDRSTRLEN];
   char *p;
   struct in_addr saddr, daddr;
-  int frag_off = 0;
+  int frag_off = 0, more_fragments = 0;
   char fragnfo[64] = "";
   char tflags[10];
   if (ip->ip_v != 4)
@@ -332,10 +332,12 @@ const char *ippackethdrinfo(const u8 *packet, u32 len) {
   inet_ntop(AF_INET, &saddr, srchost, sizeof(srchost));
   inet_ntop(AF_INET, &daddr, dsthost, sizeof(dsthost));
 
-  frag_off = BSDFIX(ntohs(ip->ip_off) & 8191 /* 2^13 - 1 */);
-  if (frag_off) {
-    snprintf(fragnfo, sizeof(fragnfo), " frag offset=%d)", frag_off);
+  frag_off = 8 * (BSDUFIX(ip->ip_off) & 8191) /* 2^13 - 1 */;
+  more_fragments = BSDUFIX(ip->ip_off) & IP_MF;
+  if (frag_off || more_fragments) {
+    snprintf(fragnfo, sizeof(fragnfo), " frag offset=%d%s", frag_off, more_fragments ? "+" : "");
   }
+  
 
   snprintf(ipinfo, sizeof(ipinfo), "ttl=%d id=%d iplen=%d%s", 
 	   ip->ip_ttl, ntohs(ip->ip_id), BSDUFIX(ip->ip_len), fragnfo);
@@ -344,9 +346,37 @@ const char *ippackethdrinfo(const u8 *packet, u32 len) {
     char tcpinfo[64] = "";
     char buf[32];
     tcp = (struct tcphdr *)  (packet + ip->ip_hl * 4);
-    if ((len < (u32) ip->ip_hl * 4 + 20) || len < (u32) ( ip->ip_hl + tcp->th_off) * 4)
-      Strncpy(protoinfo, "TCP header incomplete", sizeof(protoinfo));
-    else {
+    if (frag_off > 8 || len < (u32) ip->ip_hl * 4 + 8) 
+      snprintf(protoinfo, sizeof(protoinfo), "TCP %s:?? > %s:?? ?? %s (incomplete)", srchost, dsthost, ipinfo);
+    else if (frag_off == 8 && len >= (u32) ip->ip_hl * 4 + 8) {// we can get TCP flags nad ACKn
+      tcp = (struct tcphdr *)((u8 *) tcp - frag_off); // ugly?
+      p = tflags;
+      /* These are basically in tcpdump order */
+      if (tcp->th_flags & TH_SYN) *p++ = 'S';
+      if (tcp->th_flags & TH_FIN) *p++ = 'F';
+      if (tcp->th_flags & TH_RST) *p++ = 'R';
+      if (tcp->th_flags & TH_PUSH) *p++ = 'P';
+      if (tcp->th_flags & TH_ACK) {
+	*p++ = 'A';
+	snprintf(tcpinfo, sizeof(tcpinfo), " ack=%lu", 
+		 (unsigned long) ntohl(tcp->th_ack));
+      }
+      if (tcp->th_flags & TH_URG) *p++ = 'U';
+      if (tcp->th_flags & TH_ECE) *p++ = 'E'; /* rfc 2481/3168 */
+      if (tcp->th_flags & TH_CWR) *p++ = 'C'; /* rfc 2481/3168 */
+      *p++ = '\0';
+
+      snprintf(protoinfo, sizeof(protoinfo), "TCP %s:?? > %s:?? %s %s %s",
+	       srchost, dsthost, tflags, ipinfo, tcpinfo);
+    } else if (len < (u32) ip->ip_hl * 4 + 16) { // we can get ports an seq
+      snprintf(tcpinfo, sizeof(tcpinfo), "seq=%lu (incomplete)", (unsigned long) ntohl(tcp->th_seq));
+      snprintf(protoinfo, sizeof(protoinfo), "TCP %s:%d > %s:%d ?? %s %s",
+	       srchost, ntohs(tcp->th_sport), dsthost, ntohs(tcp->th_dport), ipinfo, tcpinfo);
+    } else if (len < (u32) ip->ip_hl * 4 + 16 && !frag_off) { // we can't get TCP flags
+      snprintf(protoinfo, sizeof(protoinfo), "TCP %s:%d > %s:%d ?? %s %s (incomplete)",
+	       srchost, ntohs(tcp->th_sport), dsthost, ntohs(tcp->th_dport),
+	       ipinfo, tcpinfo);
+    } else { // at least first 16 bytes of TCP header are there (everything we need)
 
       snprintf(tcpinfo, sizeof(tcpinfo), "seq=%lu win=%hi", 
 	       (unsigned long) ntohl(tcp->th_seq),
@@ -372,12 +402,16 @@ const char *ippackethdrinfo(const u8 *packet, u32 len) {
 	       srchost, ntohs(tcp->th_sport), dsthost, ntohs(tcp->th_dport),
 	       tflags, ipinfo, tcpinfo);
     }
+  } else if (ip->ip_p == IPPROTO_UDP && frag_off) {
+      snprintf(protoinfo, sizeof(protoinfo), "UDP %s:?? > %s:?? fragment %s (incomplete)", srchost, dsthost, ipinfo);
   } else if (ip->ip_p == IPPROTO_UDP) {
     udp =  (udphdr_bsd *) (packet + sizeof(struct ip));
 
     snprintf(protoinfo, sizeof(protoinfo), "UDP %s:%d > %s:%d %s",
 	     srchost, ntohs(udp->uh_sport), dsthost, ntohs(udp->uh_dport),
 	     ipinfo);
+  } else if (ip->ip_p == IPPROTO_ICMP && frag_off) {
+      snprintf(protoinfo, sizeof(protoinfo), "ICMP %s > %s fragment %s (incomplete)", srchost, dsthost, ipinfo);
   } else if (ip->ip_p == IPPROTO_ICMP) {
     char icmptype[128];
     struct ppkt {
@@ -662,7 +696,7 @@ assert(victim);
 assert(source);
 
 if (optlen % 4) {
-  fatal("send_tcp_raw called with an option length argument of %d which is illegal because it is not divisible by 4", optlen);
+  fatal("build_tcp_raw() called with an option length argument of %d which is illegal because it is not divisible by 4", optlen);
 }
 
 /* Time to live */
@@ -777,6 +811,10 @@ int send_ip_packet(int sd, u8 *packet, unsigned int packetlen) {
   assert(packet);
   assert( (int) packetlen > 0);
 
+  // fragmentation requested && packet is bigger than MTU
+  if (o.fragscan && ( packetlen - ip->ip_hl * 4 > (unsigned int) o.fragscan ))
+      return send_frag_ip_packet(sd, packet, packetlen, o.fragscan);
+
   memset(&sock, 0, sizeof(sock));
   sock.sin_family = AF_INET;
 #if HAVE_SOCKADDR_SA_LEN
@@ -794,13 +832,59 @@ int send_ip_packet(int sd, u8 *packet, unsigned int packetlen) {
       sock.sin_port = udp->uh_dport;
     }
   }
-  /* I'll try leaving out port and est address and see what happens */
+  /* I'll try leaving out dest port and address and see what happens */
   /* sock.sin_port = htons(dport);
      sock.sin_addr.s_addr = victim->s_addr; */
   
   res = Sendto("send_ip_packet", sd, packet, BSDUFIX(ip->ip_len), 0,
 	       (struct sockaddr *)&sock,  (int)sizeof(struct sockaddr_in));
   return res;
+}
+
+/* Create and send all fragments of a pre-built IPv4 packet
+ * Minimal MTU for IPv4 is 68 and maximal IPv4 header size is 60
+ * which gives us a right to cut TCP header after 8th byte
+ * (shouldn't we inflate the header to 60 bytes too?) */
+int send_frag_ip_packet(int sd, u8 *packet, unsigned int packetlen, unsigned int mtu)
+{
+    struct ip *ip = (struct ip *) packet;
+    int headerlen = ip->ip_hl * 4; // better than sizeof(struct ip)
+    unsigned int datalen = packetlen - headerlen;
+    int fdatalen = 0, res = 0;
+
+    assert(headerlen <= (int) packetlen);
+    assert(headerlen >= 20 && headerlen <= 60); // sanity check (RFC791)
+    assert(mtu > 0 && mtu % 8 == 0); // otherwise, we couldn't set Fragment offset (ip->ip_off) correctly
+
+    if (datalen <= mtu) {
+        error("Warning: fragmentation (mtu=%i) requested but the payload is too small already (%i)", mtu, datalen);
+        return send_ip_packet(sd, packet, packetlen);
+    }
+
+    u8 *fpacket = (u8 *) safe_malloc(headerlen + mtu);
+    memcpy(fpacket, packet, headerlen + mtu);
+    ip = (struct ip *) fpacket;
+
+    // create fragments and send them
+    for (int fragment = 1; fragment * mtu < datalen + mtu; fragment++) {
+        fdatalen = (fragment * mtu <= datalen ? mtu : datalen % mtu);
+        ip->ip_len = BSDFIX(headerlen + fdatalen);
+        ip->ip_off = BSDFIX((fragment-1) * mtu / 8);
+        if ((fragment-1) * mtu + fdatalen < datalen)
+            ip->ip_off |= BSDFIX(IP_MF);
+#if HAVE_IP_IP_SUM
+        ip->ip_sum = in_cksum((unsigned short *)ip, headerlen);
+#endif
+        if (fragment > 1) // copy data payload
+            memcpy(fpacket + headerlen, packet + headerlen + (fragment - 1) * mtu, fdatalen);
+        res = send_ip_packet(sd, fpacket, headerlen + fdatalen);
+        if (res == -1)
+            break;
+    }
+
+    free(fpacket);
+
+    return res;
 }
 
 /* Builds an ICMP packet (including an IP header) by packing the fields
@@ -1097,176 +1181,6 @@ int send_udp_raw( int sd, struct in_addr *source, const struct in_addr *victim,
 
   free(packet);
   return res;
-}
-
-int send_small_fragz_decoys(int sd, const struct in_addr *victim, u32 seq,
-			    int ttl, u16 sport, u16 dport, int flags) {
-  int decoy;
-
-  for(decoy = 0; decoy < o.numdecoys; decoy++) 
-    if (send_small_fragz(sd, &o.decoys[decoy], victim, seq, ttl, sport, 
-				dport, 
-				flags) == -1)
-      return -1;
-
-  return 0;
-}
-/* Much of this is swiped from my send_tcp_raw function above, which 
-   doesn't support fragmentation */
-int send_small_fragz(int sd, struct in_addr *source, 
-		     const struct in_addr *victim, u32 seq, int ttl,
-		     u16 sport, u16 dport, int flags)
- {
-
-struct pseudo_header { 
-/*for computing TCP checksum, see TCP/IP Illustrated p. 145 */
-  u32 s_addy;
-  u32 d_addr;
-  u8 zer0;
-  u8 protocol;
-  u16 length;
-};
-/*In this placement we get data and some field alignment so we aren't wasting
-  too much to compute the TCP checksum.*/
-
-unsigned char packet[sizeof(struct ip) + sizeof(struct tcphdr) + 100];
-struct ip *ip = (struct ip *) packet;
-struct tcphdr *tcp = (struct tcphdr *) (packet + sizeof(struct ip));
-struct pseudo_header *pseudo = (struct pseudo_header *) (packet + sizeof(struct ip) - sizeof(struct pseudo_header)); 
-unsigned char *frag2 = packet + sizeof(struct ip) + 16;
-struct ip *ip2 = (struct ip *) (frag2 - sizeof(struct ip));
-static int myttl = 0;
-int res;
-struct sockaddr_in sock;
-int id;
-
-assert(source);
-
-/* Time to live */
-if (ttl == -1) {
-  myttl = (time(NULL) % 14) + 51;
-} else {
-  myttl = ttl;
-}
-
-#ifndef WIN32
-/* It was a tough decision whether to do this here for every packet
-   or let the calling function deal with it.  In the end I grudgingly decided
-   to do it here and potentially waste a couple microseconds... */
-sethdrinclude(sd);
-#endif
-
-/*Why do we have to fill out this damn thing? This is a raw packet, after all */
-sock.sin_family = AF_INET;
-sock.sin_port = htons(dport);
-
-sock.sin_addr.s_addr = victim->s_addr;
-
-memset((char *)packet, 0, sizeof(struct ip) + sizeof(struct tcphdr));
-
-pseudo->s_addy = source->s_addr;
-pseudo->d_addr = victim->s_addr;
-pseudo->protocol = IPPROTO_TCP;
-pseudo->length = htons(sizeof(struct tcphdr));
-
-tcp->th_sport = htons(sport);
-tcp->th_dport = htons(dport);
-tcp->th_seq = (seq)? htonl(seq) : get_random_uint();
-
-tcp->th_off = 5 /*words*/;
-tcp->th_flags = flags;
-
-tcp->th_win = htons(2048); /* Who cares */
-
-tcp->th_sum = in_cksum((unsigned short *)pseudo, 
-		       sizeof(struct tcphdr) + sizeof(struct pseudo_header));
-
-/* Now for the ip header of frag1 */
-
-memset((char *) packet, 0, sizeof(struct ip)); 
-ip->ip_v = 4;
-ip->ip_hl = 5;
-/*RFC 791 allows 8 octet frags, but I get "operation not permitted" (EPERM)
-  when I try that.  */
-ip->ip_len = BSDFIX(sizeof(struct ip) + 16);
-id = ip->ip_id = get_random_uint();
-ip->ip_off = BSDFIX(MORE_FRAGMENTS);
-ip->ip_ttl = myttl;
-ip->ip_p = IPPROTO_TCP;
-ip->ip_src.s_addr = source->s_addr;
-ip->ip_dst.s_addr = victim->s_addr;
-
-#if HAVE_IP_IP_SUM
-ip->ip_sum= in_cksum((unsigned short *)ip, sizeof(struct ip));
-#endif
-if (o.debugging > 1) {
-  log_write(LOG_STDOUT, "Raw TCP packet fragment #1 creation completed!  Here it is:\n");
-  hdump(packet,20);
-}
-if (o.debugging > 1) 
-  log_write(LOG_STDOUT, "\nTrying sendto(%d , packet, %d, 0 , %s , %d)\n",
-	 sd, ntohs(ip->ip_len), inet_ntoa(*victim),
-	 (int) sizeof(struct sockaddr_in));
-
-if ((res = Sendto("send_small_fragz", sd, packet,sizeof(struct ip) + 16 , 0, (struct sockaddr *)&sock, sizeof(struct sockaddr_in))) == -1)
-  {
-    perror("sendto in send_syn_fragz");
-    return -1;
-  }
-if (o.debugging > 1) log_write(LOG_STDOUT, "successfully sent %d bytes of raw_tcp!\n", res);
-
-/* Create the second fragment */
-
-memset((char *) ip2, 0, sizeof(struct ip));
-ip2->ip_v= 4;
-ip2->ip_hl = 5;
-ip2->ip_len = BSDFIX(sizeof(struct ip) + 4); /* the rest of our TCP packet */
-ip2->ip_id = id;
-ip2->ip_off = BSDFIX(2);
-ip2->ip_ttl = myttl;
-ip2->ip_p = IPPROTO_TCP;
-ip2->ip_src.s_addr = source->s_addr;
-#ifdef WIN32
-// I'm not sure exactly why this is neccessary --Fyodor
- if(source->s_addr == victim->s_addr) ip2->ip_src.s_addr++;
-#endif
-ip2->ip_dst.s_addr = victim->s_addr;
-
-#if HAVE_IP_IP_SUM
-ip2->ip_sum = in_cksum((unsigned short *)ip2, sizeof(struct ip));
-#endif
-if (o.debugging > 1) {
-  log_write(LOG_STDOUT, "Raw TCP packet fragment creation completed!  Here it is:\n");
-  hdump(packet,20);
-}
-if (o.debugging > 1) 
-
-  log_write(LOG_STDOUT, "\nTrying sendto(%d , ip2, %d, 0 , %s , %d)\n", sd, 
-	 ntohs(ip2->ip_len), inet_ntoa(*victim), (int) sizeof(struct sockaddr_in));
-if ((res = Sendto("send_small_fragz", sd, (const unsigned char *) ip2,
-		  sizeof(struct ip) + 4 , 0,  (struct sockaddr *)&sock, 
-		  (int) sizeof(struct sockaddr_in))) == -1)
-  {
-    perror("sendto in send_tcp_raw frag #2");
-    return -1;
-  }
-
-return 1;
-}
-
-int send_ip_raw_decoys( int sd, const struct in_addr *victim, int ttl,
-			u8 proto, char *data, u16 datalen) {
-
-  int decoy;
-
-  for(decoy = 0; decoy < o.numdecoys; decoy++) 
-    if (send_ip_raw(sd, &o.decoys[decoy], victim, ttl, proto, data, 
-			   datalen) == -1)
-      return -1;
-
-  return 0;
-
-
 }
 
 /* Builds an IP packet (including an IP header) by packing the fields
@@ -1800,13 +1714,13 @@ void set_pcap_filter(Target *target,
   if (vsnprintf(buf, sizeof(buf), bpf, ap) >= (int) sizeof(buf))
     fatal("set_pcap_filter called with too-large filter arg\n");
   va_end(ap);
-  
-  if (o.debugging)
-    log_write(LOG_STDOUT, "Packet capture filter (device %s): %s\n", target->device, buf);
-  
+
   /* Due to apparent bug in libpcap */
   if (islocalhost(target->v4hostip()))
     buf[0] = '\0';
+
+  if (o.debugging)
+    log_write(LOG_STDOUT, "Packet capture filter (device %s): %s\n", target->device, buf);
   
   if (pcap_compile(pd, &fcode, buf, 0, netmask) < 0)
     fatal("Error compiling our pcap filter: %s\n", pcap_geterr(pd));

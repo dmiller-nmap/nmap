@@ -1674,6 +1674,7 @@ static UltraProbe *sendConnectScanProbe(UltraScanInfo *USI, HostScanStats *hss,
 	connecterror = true;
 	fprintf(stderr, "Strange error from connect (%d):", connect_errno);
 	fflush(stdout);
+	fflush(stderr);
 	perror(""); /*falling through intentionally*/
       }
     case ECONNREFUSED:
@@ -2468,7 +2469,7 @@ static bool get_pcap_result(UltraScanInfo *USI, struct timeval *stime) {
 	      tcp->th_seq != ipp->tcp->th_seq)
 	    continue;
 	} else if (ip2->ip_p == IPPROTO_UDP && !USI->prot_scan) {
-	  /* TOOD: IPID verification */
+	  /* TODO: IPID verification */
 	  udp = (udphdr_bsd *) ((u8 *) ip2 + ip->ip_hl * 4);
 	  if (udp->uh_sport != ipp->udp->uh_sport || 
 	      udp->uh_dport != ipp->udp->uh_dport)

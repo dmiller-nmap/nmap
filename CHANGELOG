@@ -2,8 +2,27 @@
 
 UNRELEASED:
 
+o Fixed (I hope) an error which would cause the Windows version of
+  Nmap to abort under some circumstances with the error message
+  "Unexpected error in NSE_TYPE_READ callback.  Error code: 10053
+  (Unknown error)".  Problem reported by "Tony Golding"
+  (biz(a)tonygolding.com).
+
+o Fixed fragmentatation option (-f).  One -f now sets sends fragments
+  with just 8 bytes after the IP header, while -ff sends 16 bytes to
+  reduce the number of fragments needed.  You can specify your own
+  fragmentation offset (must be a multiple of 8) with the new --mtu
+  flag.  Don't also specify -f if you use --mtu.  Remember that some
+  systems (such as Linux with connection tracking) will defragment in
+  the kernel anyway -- so test first while sniffing with ethereal.
+  These changes are from a patch by Martin Maèok
+  (martin.macok(a)underground.cz).
+
 o Applied several Nmap service detection database updates sent in by
-  Martin Maèok (martin.macok@underground.cz).
+  Martin Maèok (martin.macok(a)underground.cz).
+
+o Applied Martin Maèok's (martin.macok(a)underground.cz) "cosmetics
+  patch", which fixes a few typos and minor problems.
 
 o The XML nmaprun element now has a startstr attribute which gives the
   human readable calendar time format that a scan started.  Similarly

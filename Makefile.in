@@ -1,4 +1,4 @@
-NMAP_VERSION = 3.78
+NMAP_VERSION = 3.80
 NMAP_NAME= nmap
 NMAP_URL= http://www.insecure.org/nmap/
 NMAP_PLATFORM=@host@
@@ -180,7 +180,7 @@ distro:
                     nmap_manpage-ru.html nmap_manpage.html \
                     nmap.1 nmapfe.1 nmap_french.1 nmap_german.1 \
                     nmap_italian.1 nmap_lithuanian.1 nmap_portuguese.1 \
-                    nmap_spanish.1 nmap_russian.1 xnmap.1 nmap.dtd \
+                    nmap_spanish.1 nmap_russian.1 xnmap.1 nmap.dtd nmap.xsl \
                     /usr/tmp/nmap-$(NMAP_VERSION)/docs
 
 	$(SHTOOL) mkdir /usr/tmp/nmap-$(NMAP_VERSION)/nmapfe
@@ -228,6 +228,7 @@ distro:
 	cd /usr/tmp; tar cjf nmap-$(NMAP_VERSION).tar.bz2 nmap-$(NMAP_VERSION)
 	cd /usr/tmp; tar czf nmap-$(NMAP_VERSION).tgz nmap-$(NMAP_VERSION)
 # Make the actual RPM
+# Note -- on newer systems rpmbuild -ta is needed instead.
 #	rpm -ta /usr/tmp/nmap-$(NMAP_VERSION).tgz
 #	cp -f $(RPMTDIR)/RPMS/i386/nmap-$(NMAP_VERSION)-1.i386.rpm /usr/tmp
 #	cp -f $(RPMTDIR)/RPMS/i386/nmap-frontend-$(NMAP_VERSION)-1.i386.rpm /usr/tmp
@@ -269,6 +270,8 @@ install-nmap: $(TARGET)
 	$(SHTOOL) mkdir -f -p -m 755 $(DESTDIR)$(bindir) $(DESTDIR)$(mandir)/man1 $(DESTDIR)$(nmapdatadir)
 	$(INSTALL) -c -m 755 nmap -s $(DESTDIR)$(bindir)/nmap
 	$(INSTALL) -c -m 644 docs/$(TARGET).1 $(DESTDIR)$(mandir)/man1/$(TARGET).1
+	$(INSTALL) -c -m 644 docs/nmap.xsl $(DESTDIR)$(nmapdatadir)/
+	$(INSTALL) -c -m 644 docs/nmap.dtd $(DESTDIR)$(nmapdatadir)/
 	$(INSTALL) -c -m 644 nmap-services $(DESTDIR)$(nmapdatadir)/
 	$(INSTALL) -c -m 644 nmap-rpc $(DESTDIR)$(nmapdatadir)/
 	$(INSTALL) -c -m 644 nmap-os-fingerprints $(DESTDIR)$(nmapdatadir)/

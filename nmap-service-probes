@@ -50,10 +50,12 @@ match bittorent m|^\x13BitTorrent protocol\0\0\0\0\0\0\0\0| v/Bittorrent P2P cli
 # BMC Software Patrol Agent 3.45
 match bmc-softwarepatrol m|^\0\0\0\x17i\x02\x03..\0\x05\x02\0\x04\x02\x04\x03..\0\x03\x04\0\0\0\0\x01\x01\0| v/BMC Software Patrol Agent///
 match chargen m|^!"#\$%\&'\(\)\*\+,-\./0123456789:;<=>\?\@ABCDEFGHIJKLMNOPQRSTUVWXYZ\[\\\]\^_`abcdefgh\r\n"#\$%\&'\(\)\*\+,-\./0123456789:;<=>\?\@ABCDEF| v/Linux chargen///
-# Redhat 7.2, Xinetd 2.3.7 chargen
-match chargen m|^\*\+,-\./0123456789:;<=>\?@ABCDEFGHIJKLMNOPQRSTUVWXYZ\[\\\]\^_`abcdefghijklmnopq\r\n\+,-\./| v/Xinetd chargen///
+# Redhat 7.2, xinetd 2.3.7 chargen
+match chargen m|^\*\+,-\./0123456789:;<=>\?@ABCDEFGHIJKLMNOPQRSTUVWXYZ\[\\\]\^_`abcdefghijklmnopq\r\n\+,-\./| v/xinetd chargen///
 # Sun Solaris 9; Windows
 match chargen m|^\ !"#\$%&'\(\)\*\+,-\./0123456789:;<=>\?@ABCDEFGHIJKLMNOPQRSTUVWXYZ\[\\\]\^_|
+# Mandrake Linux 9.2, xinetd 2.3.11 chargen
+match chargen m|NOPQRSTUVWXYZ\[\\\]\^_`abcdefghijklm|
 
 # Citrix, Metaframe XP on Windows
 match citrix-ica m|^\x7f\x7fICA\0\x7f\x7fICA\0| v/Citrix Metaframe XP ICA///
@@ -275,6 +277,7 @@ match imap m|^\* OK \[CAPABILITY IMAP4REV1 .*IMAP4rev1 (200\d\.[-.\w]+) at| v/UW
 match imap m|^\* OK [-.\w]+ Cyrus IMAP4 v([-.\w]+) server ready\r\n| v/Cyrus IMAP4 server/$1//
 match imap m|^\* OK Welcome to Binc IMAP v(\d[-.\w]+)| v/Binc IMAPd/$1//
 match imap m|^\* OK [-.\w]+ IMAP4rev1 AppleMailServer (\d[-.\w]+) ready\r\n| v/AppleMailServer imapd/$1//
+match imap m|^\* BYE Connection refused\r\n| v/Microsoft Exchange IMAP server//refused/
 softmatch imap m/^\* OK [-.\w,:+ ]+imap[-.\w,:+ ]+\r\n$/i
 
 # Cyrus IMSPD
@@ -366,6 +369,7 @@ softmatch nntp m|^200 [-\[\]\(\)!,/+:<>@.\w ]*nntp[-\[\]\(\)!,/+:<>@.\w ]*\r\n$|
 # Windows 2000 Server read:
 match nntp m|^200 NNTP Service 5\.00\.0984 Version: (5\.0\.2159.1) Posting Allowed \r\n| v/Microsoft NNTP Service/$1/posting OK/
 match nntp m|^200 NNTP Service Microsoft\xae Internet Services \d[-.\w]+ Version: (\d[-.\w]+) Posting Allowed \r\n| v/Microsoft NNTP Service/$1/posting OK/
+match nntp m|^502 Connection refused\r\n| v/Microsoft NNTP Service//refused/
 # Windows NT 4.0 SP5-SP6 
 match nntp m|^200 Microsoft Exchange Internet News Service Version (5\.5\.[.\d]+) \(posting allowed\)\r\n| v/Microsoft Exchange Internet News Service/$1/posting allowed/
 #match nntp m|^200 [-.\w]+ InterNetNews NNRP server INN (\d[-.\w]+) ready \(posting ok\)\.\r\n| v/InterNetNews (INN)/$1/posting ok/
@@ -790,6 +794,14 @@ match pcp m|^\0\0\0\x14\0\0p\0\0\0..\0\0\0\0\x02\x01\0\0| v/SGI Performance Co-P
 
 match smtp m|^220 SPAM, we hates it.\r\n| v/Barracuda Spam firewall///
 
+# 13720/tcp
+match bprd m|^\0\0\0\x0eEXIT STATUS 23$| v/Veritas Netbackup///
+# 13782/tcp
+match bpcd m|^gethostbyaddr: [\w ]+\n$| v/Veritas Netbackup//refused/
+
+# PostCast SMTP server 2.6.0 ( http://www.postcastserver.com/ )
+match smtp m|^220 PostCast SMTP server.*\r\n$| v/PostCast SMTP server///
+
 ##############################NEXT PROBE##############################
 Probe TCP GenericLines q|\r\n\r\n|
 ports 21,23,43,98,110,113,199,505,540,628,1040,1248,1467,1501,2010,3333,5432,5555,6112,6667-6670,11965,30444
@@ -900,6 +912,11 @@ match whois m|^%  No entries found for the selected source\(s\)\.\n$| v/Merit IR
 match zebedee m|^\x02\x01$| v/Zebedee encrypted tunnel///
 
 match bmc-perform-service m|^SDPACK$| v/BMC Perform Service Daemon///
+# Grisoft AVG antivirus server (distributing virus database updates)
+match http m|HTTP/1\.0 404 Not Found\r\nServer: GRISOFT-AVG TCP Server/(\d[-.\w ]+) .*\r\n| v/Grisoft AVG TCP Server/$1/antivirus updates/
+
+# Ubicom embedded ( http://www.ubicom.com/home.htm )
+match http m|^HTTP/1\.1 400 Bad Request\r\nCache-control: no-cache\r\nServer: Ubicom/(\d[-.\w ]+)\r\n| v/Ubicom embedded HTTP server/$1//
 
 ##############################NEXT PROBE##############################
 Probe TCP GetRequest q|GET / HTTP/1.0\r\n\r\n|
@@ -1267,7 +1284,7 @@ match irc m|^:Default-Chat-Community 421 \* GET :Unknown command\r\n| v/Microsof
 
 # Jabber 1.4.2
 match jabber m|^<stream:error>Invalid XML</stream:error>$| v/Jabber instant messaging server///
-match kazaa-http m|^HTTP/1\.0 404 Not Found\(\r\)?\nX-Kazaa-Username: ([-.+\w]+)\r\nX-Kazaa-Network: ([-.\w]+)\r\n| v/KaZaA P2P client//username: $1; network: $2/
+match kazaa-http m|^HTTP/1\.0 404 Not Found\r?\nX-Kazaa-Username: ([-.+\w]+)\r\nX-Kazaa-Network: ([-.\w]+)\r\n| v/KaZaA P2P client//username: $1; network: $2/
 match kazaa-peerpoint m|^HTTP/1\.0 404 Not Found\n\r\n$| v/KaZaA P2P client Peer Point Manager///
 match msdtc m|^...\0..$|s v/Microsoft Distributed Transaction Coordinator///
 match msdtc m|^ERROR\n$|s v/Microsoft Distributed Transaction Coordinator//error/
@@ -1340,8 +1357,12 @@ match http m|^HTTP/1\.0\x20250\x20Ok\r\n.*\r\n\r\n.*<title>PowerMTA monitoring</
 
 # Kerio MailServer 5.7.9, 5.7.10
 match http m|^HTTP/1\.1 302 Redirected\r\nConnection: close\r\nContent-Length: 0\r\nLocation: /login\r\n\r\n$| v/Kerio MailServer Webmail///
-
 match http m|^HTTP/1\.0\x20250\x20Ok\r\n.*\r\n\r\n.*<title>PowerMTA monitoring</title>|s v/Port25 PowerMTA web monitor///
+# Dell OpenManage Version 3.5.0 on MS Windows 2000 server / PowerEdge 6400/700
+match http m|^HTTP/1\.1 200 OK\r\nConnection: Close\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n<html>\r\n    <head>\r\n        <script language=\"javascript\">\r\n\t\t\t\t\tif| v/Dell Openmanage Server Administrator//PowerEdge/
+# ASPI server (www.aspi.cz) on Solaris 6666/tcp
+match aspi m|^HTTP/1\.0 404 Not Found\r\nDate: .*\r\nServer: ByllSoftware Gurda/([\d.]+)\r\n| v/ASPI server/$1//
+match sunscreen-adm m|^\x01\0\0\0\0\0\0\0T\x03\0\0\0\0\0\x01\x1e\0\0\0\0\0\0;\0\0\0\0\0\0\0\0Error: incompatible with administration server \(version (\d[-.\w ]*)\)\nc\0\0\0\0\0\0\0\0\0\0\x01\0\0\0\0$| v/SunScreen Remote Administration server/$1//
 
 ##############################NEXT PROBE##############################
 Probe TCP HTTPOptions q|OPTIONS / HTTP/1.0\r\n\r\n|
@@ -1358,6 +1379,10 @@ match http m|^HTTP/1\.1 \d\d\d .*\r\nServer: webfs/(\d[-.\w]+)\r\n| v/WebFS http
 
 # HP OpenView ITO agent (probably version 7.25) on Windows, port 381
 match http m|^HTTP/1\.1 \d\d\d .*\r\nserver: BBC \d[-.\w]+; com\.hp\.openview\.Coda \d[-.\w]+\r\n\r\n| v/HP OpenView ITO agent - Coda///
+
+# Zero One Technology ( http://www.01tech.com/ ) print servers embedded HTTP service
+match http m|^HTTP/1\.\d\x20200\x20OK\r\nDate:\x20.*\r\nMIME-version:\x201\.\d\r\nServer:\x20ZOT-PS-(\d+)/(\d[-.\w]+)\r\n| v/Zero One Technology print server model $1 HTTP server/$2//
+
 
 ##############################NEXT PROBE##############################
 Probe TCP RTSPRequest q|OPTIONS / RTSP/1.0\r\n\r\n|
@@ -1397,11 +1422,15 @@ match securetransport m|^\xde\xad\xbe\xef\x04\0\xff\0\0\0\0\0\0\0\0\0\0\0\0\0\0\
 
 ##############################NEXT PROBE##############################
 Probe UDP RPCCheck q|\x72\xFE\x1D\x13\0\0\0\0\0\0\0\x02\0\x01\x86\xA0\0\x01\x97\x7C\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0|
-ports 88,111,4045,32750-32810,38978
+ports 88,111,517,518,4045,32750-32810,38978
 match rpc m|^\x72\xFE\x1D\x13\0\0\0\x01\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x01|
 match rpc m|^\x72\xFE\x1D\x13\0\0\0\x01\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x02|
 # OpenAFS 1.2.10 on Linux 2.4.22
 match kerberos-sec m|^\x04\n\0\0\0\0\0\0\0\0\0\0\x04code = 4: packet version number unknown\0| v/OpenAFS///
+# talk-server-0.17 (linux), ports 517-518/udp
+match talk m|^\x01\xfe\x05\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0| v/Talk server///
+# Mandrake Linux 9.2, xinetd 2.3.11 chargen
+match chargen m|NOPQRSTUVWXYZ\[\\\]\^_`abcdefghijklm|
 
 ##############################NEXT PROBE##############################
 Probe UDP DNSVersionBindReq q|\0\x06\x01\0\0\x01\0\0\0\0\0\0\x07version\x04bind\0\0\x10\0\x03|
@@ -1417,9 +1446,7 @@ match domain m|^\0\x06\x81\x04\0\x01\0\0\0\0\0\0\x07version\x04bind\0\0\x10\0\x0
 match domain m|^\0\x06\x81\x04\0\0\0\0\0\0\0\0$| v/MyDNS///
 
 # Symantec Antivirus (rtvscan.exe)
-match symantec-av m|^\0\x06\x01\x01\0\x10.\x01\xe0\nI\0\xe0\nI\0$| v/Symantec rtvscan antivirus///
-# Symantec Antivirus (rtvscan.exe) 8.1.0.825 scan eng. 4.2.0.7
-match symantec-av m|^\0\x06\x01\x01\0\x10L\0\xb4\xffG\x01\xf4\x0e\x96\0$| v/Symantec rtvscan antivirus///
+match symantec-av m|^\0\x06\x01\x01\0\x10..........$| v/Symantec rtvscan antivirus///
 
 # pdnsd 1.1.8b1
 match domain m|^\0\x06\x81\x84\0\x01\0\0\0\0\0\0\x07version\x04bind\0\0\x10\0\x03$| v/pdnsd///
@@ -1471,6 +1498,9 @@ match apcnisd m|^\0\x11Invalid command\n\0\0\0$| v/apcupsd///
 match klogin m|^\x01krlogind: Kerberos Authentication Failed\.\r\n\0| v/AIX kerberized rlogin///
 match kshell m|^\x01rshd: [-\d]+ The host name for your address is not known\.\n| v/AIX (kerberized?) rshd///
 
+# 13724/tcp
+match vnetd m|^1\0$| v/Veritas Netbackup Network Utility///
+
 # DNS Server status request: http://www.crynwr.com/crynwr/rfc1035/rfc1035.html
 ##############################NEXT PROBE##############################
 Probe UDP DNSStatusRequest q|\0\0\x10\0\0\0\0\0\0\0\0\0|
@@ -1509,10 +1539,10 @@ ports 137
 
 # I'm not convinced that these next 4 work on a very wide variety of
 # machines.  I think most of the real matching comes in the next block.
-match netbios-ns m|^\x80\xf0\x84\0\0\0\0\x01\0\0\0\0 CKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\0\0!\0\x01\0\0\0\0...(\w{1,15}) *\0\x04\0(\w{1,15}) *\0\x84\0\w{1,15} *\x03\x04\0\w{1,15} *\x04\0\w{1,15} *\x1e\x84\0\w{1,15} *\x1d\x04\0\x01\x02__MSBROWSE__\x02\x01\x84\0(\w{1,15}) *\x03| v/Microsoft Windows XP netbios-ssn//host: $1 workgroup: $2 user: $3/
-match netbios-ns m|^\x80\xf0\x84\0\0\0\0\x01\0\0\0\0 CKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\0\0!\0\x01\0\0\0\0...(\w{1,15}) *\0\x04\0(\w{1,15}) *\0\x84\0\w{1,15} *\x03\x04\0\w{1,15} *\x04\0\w{1,15} *\x1e\x84\0\w{1,15} *\x1d\x04\0\x01\x02__MSBROWSE__\x02\x01\x84\0\0| v/Microsoft Windows XP netbios-ssn//host: $1 workgroup: $2/
-match netbios-ns m|^\x80\xf0\x84\0\0\0\0\x01\0\0\0\0 CKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\0\0!\0\x01\0\0\0\0...(\w{1,15}) *\0\x04\0(\w{1,15}) *\0\x84\0\w{1,15} *\x03\x04\0\w{1,15} *\x04\0(\w{1,15}) *\x03\x04\0\w{1,15} *\x1e\x84\0| v/Microsoft Windows XP netbios-ssn//host: $1 workgroup: $2 user: $3/
-match netbios-ns m|^\x80\xf0\x84\0\0\0\0\x01\0\0\0\0 CKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\0\0!\0\x01\0\0\0\0...(\w{1,15}) *\0\x04\0(\w{1,15}) *\0\x84\0\w{1,15} *\x03\x04\0\w{1,15} *\x04\0\w{1,15} *\x1e\x84\0| v/Microsoft Windows XP netbios-ssn//host: $1 workgroup: $2/
+match netbios-ns m|^\x80\xf0\x84\0\0\0\0\x01\0\0\0\0 CKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\0\0!\0\x01\0\0\0\0...(\w{1,15}) *\0\x04\0(\w{1,15}) *\0\x84\0\w{1,15} *\x03\x04\0\w{1,15} *\x04\0\w{1,15} *\x1e\x84\0\w{1,15} *\x1d\x04\0\x01\x02__MSBROWSE__\x02\x01\x84\0(\w{1,15}) *\x03|s v/Microsoft Windows XP netbios-ssn//host: $1 workgroup: $2 user: $3/
+match netbios-ns m|^\x80\xf0\x84\0\0\0\0\x01\0\0\0\0 CKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\0\0!\0\x01\0\0\0\0...(\w{1,15}) *\0\x04\0(\w{1,15}) *\0\x84\0\w{1,15} *\x03\x04\0\w{1,15} *\x04\0\w{1,15} *\x1e\x84\0\w{1,15} *\x1d\x04\0\x01\x02__MSBROWSE__\x02\x01\x84\0\0|s v/Microsoft Windows XP netbios-ssn//host: $1 workgroup: $2/
+match netbios-ns m|^\x80\xf0\x84\0\0\0\0\x01\0\0\0\0 CKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\0\0!\0\x01\0\0\0\0...(\w{1,15}) *\0\x04\0(\w{1,15}) *\0\x84\0\w{1,15} *\x03\x04\0\w{1,15} *\x04\0(\w{1,15}) *\x03\x04\0\w{1,15} *\x1e\x84\0|s v/Microsoft Windows XP netbios-ssn//host: $1 workgroup: $2 user: $3/
+match netbios-ns m|^\x80\xf0\x84\0\0\0\0\x01\0\0\0\0 CKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\0\0!\0\x01\0\0\0\0...(\w{1,15}) *\0\x04\0(\w{1,15}) *\0\x84\0\w{1,15} *\x03\x04\0\w{1,15} *\x04\0\w{1,15} *\x1e\x84\0|s v/Microsoft Windows XP netbios-ssn//host: $1 workgroup: $2/
 
 # It would be really nice if we could get username and/or OS
 # information from this.  But it is quite hard to parse out the proper
@@ -1521,16 +1551,16 @@ match netbios-ns m|^\x80\xf0\x84\0\0\0\0\x01\0\0\0\0 CKAAAAAAAAAAAAAAAAAAAAAAAAA
 #
 # nbtstat
 #
-match netbios-ns m|^\x80\xf0\x84\0\0\0\0\x01\0\0\0\0 CKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\0\0!\0\x01\0\0\0\0\0..([\w\-]{1,15}) *\0D\0.*\0([\w\-]{1,15}) *\0\xc4\0| v/Microsoft Windows netbios-ssn//host: $1 workgroup: $2/
-match netbios-ns m|^\x80\xf0\x84\0\0\0\0\x01\0\0\0\0 CKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\0\0!\0\x01\0\0\0\0\0..([\w\-]{1,15}) *\0D\0([\w\-]{1,15}) *\0\xc4\0| v/Microsoft Windows netbios-ssn//host: $1 workgroup: $2/
-match netbios-ns m|^\x80\xf0\x84\0\0\0\0\x01\0\0\0\0 CKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\0\0!\0\x01\0\0\0\0\0...*\0([\w\-]{1,15}) *\0D\0.*\0([\w\-]{1,15}) *\0\xc4\0| v/Microsoft Windows netbios-ssn//host: $1 workgroup: $2/
-match netbios-ns m|^\x80\xf0\x84\0\0\0\0\x01\0\0\0\0 CKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\0\0!\0\x01\0\0\0\0\0...*\0([\w\-]{1,15}) *\0D\0([\w\-]{1,15}) *\0\xc4\0| v/Microsoft Windows netbios-ssn//host: $1 workgroup: $2/
+match netbios-ns m|^\x80\xf0\x84\0\0\0\0\x01\0\0\0\0 CKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\0\0!\0\x01\0\0\0\0\0..([\w\-]{1,15}) *\0D\0.*\0([\w\-]{1,15}) *\0\xc4\0|s v/Microsoft Windows netbios-ssn//host: $1 workgroup: $2/
+match netbios-ns m|^\x80\xf0\x84\0\0\0\0\x01\0\0\0\0 CKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\0\0!\0\x01\0\0\0\0\0..([\w\-]{1,15}) *\0D\0([\w\-]{1,15}) *\0\xc4\0|s v/Microsoft Windows netbios-ssn//host: $1 workgroup: $2/
+match netbios-ns m|^\x80\xf0\x84\0\0\0\0\x01\0\0\0\0 CKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\0\0!\0\x01\0\0\0\0\0...*\0([\w\-]{1,15}) *\0D\0.*\0([\w\-]{1,15}) *\0\xc4\0|s v/Microsoft Windows netbios-ssn//host: $1 workgroup: $2/
+match netbios-ns m|^\x80\xf0\x84\0\0\0\0\x01\0\0\0\0 CKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\0\0!\0\x01\0\0\0\0\0...*\0([\w\-]{1,15}) *\0D\0([\w\-]{1,15}) *\0\xc4\0|s v/Microsoft Windows netbios-ssn//host: $1 workgroup: $2/
 # Windows NT 4.0 SP6a
-match netbios-ns m|^\x80\xf0\x84\0\0\0\0\x01\0\0\0\0 CKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\0\0!\0\x01\0\0\0\0...([\w\-]{1,15}).*\04\0([\w\-]{1,15}) *\0\x84\0| v/Microsoft Windows NT netbios-ssn//host: $1 workgroup: $2/
+match netbios-ns m|^\x80\xf0\x84\0\0\0\0\x01\0\0\0\0 CKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\0\0!\0\x01\0\0\0\0...([\w\-]{1,15}).*\04\0([\w\-]{1,15}) *\0\x84\0|s v/Microsoft Windows NT netbios-ssn//host: $1 workgroup: $2/
 #
 # Samba has a version too
 # nmbd version 2.2.7 on Linux 2.4.20
-match netbios-ns m|^\x80\xf0\x84\0\0\0\0\x01\0\0\0\0 CKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\0\0!\0\x01\0\0\0\0...([\w\-]{1,15}).*\x04\0([\w\-]{1,15}) *\x1e\x84\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0| v/Samba nmbd//host: $1 workgroup: $2/
+match netbios-ns m|^\x80\xf0\x84\0\0\0\0\x01\0\0\0\0 CKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\0\0!\0\x01\0\0\0\0...([\w\-]{1,15}).*\x04\0([\w\-]{1,15}) *\x1e\x84\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0|s v/Samba nmbd//host: $1 workgroup: $2/
 
 ##############################NEXT PROBE##############################
 Probe UDP Help q|help\r\n\r\n|
@@ -1539,8 +1569,15 @@ match chargen m|@ABCDEFGHIJKLMNOPQRSTUVWXYZ|
 match echo m|^help\r\n\r\n$|
 # Solaris 8, 9
 match daytime m|^[A-Z][a-z]{2} [A-Z][a-z]{2} +\d{1,2} +\d\d:\d\d:\d\d 20\d\d\n\r| v/Sun Solaris daytime///
+# Mandrake Linux 9.2, xinetd daytime
+match daytime m|^[0-3]\d [A-Z][A-Z][A-Z] 20\d\d \d\d:\d\d:\d\d \S+\r\n|
 # Will last until 0xC5FFFFFF, in April 2005 - need to shift in advance.
 match time m|^[\xc0-\xc5]...$|
+# Solaris Internet Name Server (42/udp), see ien116.txt
+match nameserver m|^help\r\n\r\n\0\0\0\0\x20CKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\0\0!\0\x01| v/Solaris Internet Name Server//IEN 116/
+match nameserver m|^\x03\x03\x02$| v/Solaris Internet Name Server//IEN 116/
+match nameserver m|^\0\x06\x01\0\0\x01\0\0\x03\x03\x02$| v/Solaris Internet Name Server//IEN 116/
+
 
 ##############################NEXT PROBE##############################
 Probe TCP Help q|HELP\r\n|
@@ -1730,6 +1767,7 @@ match X11 m|^\x01\0\x0b\0\0\0.\0..\0\0\0\0..\xff\xff\?\0\x01\0\0\0.\0\xff\xff\x0
 # HP MC/ServiceGuard for Linux A.11.14.02
 match X11 m|^\0\0\0\x01\0\0\0\x0c\0\0\0\0$| v|HP MC/ServiceGuard|||
 match X11 m|^\x01\0\x0b\0\0\0%\0\0\x19\0\0\0\0\0\x01\xff\xff\?\0\0\x01\0\0\x12\0\xff\xff\x01\x02\0\0  \x08\xfe\xba\x1dF\0Labtam Europe Ltd\.\0\0\x01\x01| v/Labtam X-WinPro///
+match omninames m|^GIOP\x01\0\x01\x06\0\0\0\0$| v/omniORB omniNames//Corba naming service/
 
 ##############################NEXT PROBE##############################
 # ftp://ftp.rfc-editor.org/in-notes/rfc1179.txt
@@ -1829,6 +1867,13 @@ Probe UDP NTPRequest q|\xe3\x00\x04\xfa\x00\x01\x00\x00\x00\x01\x00\x00\x00\x00\
 ports 123
 match ntp m|^\$[\x01-\x0f]..............................................$|s  v/NTP/v4//
 match ntp m|^\xe4\0..............................................$|s  v/NTP/v4/unsynchronized/
+# Solaris Internet Name Server (42/udp), see ien116.txt
+match nameserver m|^help\r\n\r\n\0\0\0\0\x20CKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\0\0!\0\x01| v/Solaris Internet Name Server//IEN 116/
+
+##############################NEXT PROBE##############################
+Probe UDP SNMPv1public q|0\x82\0/\x02\x01\0\x04\x06public\xa0\x82\0\x20\x02\x04\x4c\x33\xa7\x56\x02\x01\0\x02\x01\0\x30\x82\0\x10\x30\x82\0\x0c\x06\x08\x2b\x06\x01\x02\x01\x01\x05\0\x05\0|
+ports 161
+match snmp m|^0.\x02\x01\0\x04\x06public\xa2| v/SNMPv1 server//public/
 
 ##############################NEXT PROBE##############################
 Probe TCP WMSRequest q|\x01\0\0\xfd\xce\xfa\x0b\xb0\xa0\0\0\0MMS\x14\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x12\0\0\0\x01\0\x03\0\xf0\xf0\xf0\xf0\x0b\0\x04\0\x1c\0\x03\0N\0S\0P\0l\0a\0y\0e\0r\0/\09\0.\00\0.\00\0.\02\09\08\00\0;\0 \0{\00\00\00\00\0A\0A\00\00\0-\00\0A\00\00\0-\00\00\0a\00\0-\0A\0A\00\0A\0-\00\00\00\00\0A\00\0A\0A\00\0A\0A\00\0}\0\0\0\xe0\x6d\xdf\x5f|
@@ -1838,10 +1883,18 @@ match shivahose m|^\x02\x06$| v///Shiva network modem access/
 match wms m|^\x01\0\0.\xce\xfa\x0b\xb0.\0\0\0MMS .\0{7}.{9}\0\0\0\x01\0\x04\0\0\0\0\0\xf0\xf0\xf0\xf0\x0b\0\x04\0\x1c\0\x03\0\0\0\0\0\0\0\xf0\?\x01\0\0\0\x01\0\0\0\0\x80\0\0...\0.\0\0\0\0\0\0\0\0\0\0\0.\0\0\x00(\d)\0\.\x00(\d)\0\.\x00(\d)\0\.\x00(\d)\x00(\d)\x00(\d)\x00(\d)\0\0\0|s v/Microsoft Windows Media Service/$1.$2.$3.$4$5$6$7//
 match wms m|^\x01\0\0.\xce\xfa\x0b\xb0.\0\0\0MMS .\0{7}.{9}\0\0\0\x01\0\x04\0\0\0\0\0\xf0\xf0\xf0\xf0\x0b\0\x04\0\x1c\0\x03\0\0\0\0\0\0\0\xf0\?\x01\0\0\0\x01\0\0\0\0\x80\0\0...\0.\0\0\0\0\0\0\0\0\0\0\0.\0\0\x00(\d)\0\.\x00(\d)\x00(\d)\0\.\x00(\d)\x00(\d)\0\.\x00(\d)\x00(\d)\x00(\d)\x00(\d)\0\0\0|s v/Microsoft Windows Media Service/$1.$2$3.$4$5.$6$7$8$9//
 
-
+##############################NEXT PROBE##############################
 Probe TCP oracle-tns q|\0Z\0\0\x01\0\0\0\x016\x01,\0\0\x08\0\x7F\xFF\x7F\x08\0\0\0\x01\0 \0:\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\04\xE6\0\0\0\x01\0\0\0\0\0\0\0\0(CONNECT_DATA=(COMMAND=version))|
 ports 1521,1522,1525,1574
 match oracle-tns m|^\0.\0\0\x02\0\0\0.*TNSLSNR for ([-.+/ \w]{2,20}): Version ([-\d.]+) - Production|s v/Oracle DB Listener/$2 (for $1)//
+
+##############################NEXT PROBE##############################
+Probe UDP xdmcp q|\0\x01\0\x02\0\x01\0\0|
+ports 177
+match xdmcp m/^\0\x01\0\x05..\0\0\0.(.+)\0.(.+)/ v/XDMCP/host $1 willing/Status: $2/
+match xdmcp m/^\0\x01\0\x06..\0.(.+)\0.(.+)/ v/XDMCP/host $1 unwilling/Status: $2/
+
+
 
 ### do not slow down the scan
 

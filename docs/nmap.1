@@ -150,7 +150,7 @@ to ping sweep
 doing any actual port scans.
 .TP
 .B \-sV
-Version detection: Afer TCP and/or UDP ports are discovered using one
+Version detection: After TCP and/or UDP ports are discovered using one
 of the other scan methods, version detection communicates with those
 ports to try and determine more about what is actually running.  A
 file called nmap-service-probes is used to determine the best probes
@@ -481,19 +481,28 @@ and TCP connect() Ping scan are supported.  If you need UDP or other
 scan types, have a look at http://nmap6.sourceforge.net/ .
 .TP
 .B \-f
-This option causes the requested SYN, FIN, XMAS, or NULL
-scan to use tiny fragmented IP packets.  The idea is to
-split up the TCP header over several packets to make it
-harder for packet filters, intrusion detection systems, and
-other annoyances to detect what you are doing. Be careful
-with this! Some programs have trouble handling these tiny
-packets. My favorite sniffer segmentation faulted
-immediately upon receiving the first 36-byte fragment. After
-that comes a 24 byte one! While this method won't get by
-packet filters and firewalls that queue all IP fragments
-(like the CONFIG_IP_ALWAYS_DEFRAG option in the Linux
-kernel), some networks can't afford the performance hit this
-causes and thus leave it disabled.
+This option causes the requested scan (including ping scans) to use
+tiny fragmented IP packets.  The idea is to split up the TCP header
+over several packets to make it harder for packet filters, intrusion
+detection systems, and other annoyances to detect what you are
+doing. Be careful with this! Some programs have trouble handling these
+tiny packets. The old-school sniffer named Sniffit segmentation
+faulted immediately upon receiving the first fragment.  Specify this
+option once, and Nmap splits the packets into 8 bytes or less after
+the IP header.  So a 20-byte TCP header would be split into 3 packets.
+ Two with eight bytes of the TCP header, and one with the final four.
+Of course each fragment also has an IP header.  Specify -f again to
+use 16 bytes per fragment (reducing the number of fragments).  Or you
+can specify your own offset size with the --mtu option.  Don't also
+specify -f if you use --mtu.  The offset must be a multiple of 8.
+While fragmented packets won't get by packet filters and firewalls
+that queue all IP fragments, such as the CONFIG_IP_ALWAYS_DEFRAG
+option in the Linux kernel, some networks can't afford the performance
+hit this causes and thus leave it disabled.  Some source systems
+defragment outgoing packets in the kernel.  Linux with the ip tables
+connection tracking module is one such example.  Do a scan with a
+sniffer such as ethereal running to ensure that sent packets are
+fragmented.
 .Sp
 Note that I do not yet have this option working on all
 systems.  It works fine for my Linux, FreeBSD, and OpenBSD
@@ -529,6 +538,27 @@ Watch out for error messages if you use this (they will still go to
 stderr).  Also note that "-v" may cause some extra information to be
 printed.  The Document Type Definition (DTD) defining the XML output
 structure is available at http://www.insecure.org/nmap/data/nmap.dtd .
+.TP
+.B \--stylesheet <filename>
+Nmap ships with an XSL stylesheet named nmap.xsl for viewing or
+translating XML output to HTML.  The XML output includes an
+xml-stylesheet directive which points to nmap.xml where it was
+initially installed by Nmap.  Simply load Nmap's XML output in a
+modern web browser and it should retrieve nmap.xsl from the filesystem
+and use it to render results.  If you wish to use a different
+stylesheet, specify it as the argument to --stylesheet.  You must pass
+the full pathname or URL.  One common invocation is --stylesheet
+http://www.insecure.org/nmap/data/nmap.xsl .  This tells a browser to
+load the latest version of the stylesheet from Insecure.Org.  This
+makes it easier to view results on a machine that doesn't have Nmap
+(and thus nmap.xsl) installed.  So the URL is often more useful, but
+the local filesystem locaton of nmap.xsl is used by default for
+privacy reasons.
+.TP
+.B \--no-stylesheet
+Specify this option to prevent Nmap from associating any XSL
+stylesheet with its XML output.  The xml-stylesheet directive is
+omitted.
 .TP
 .B \-oG <logfilename>
 This logs the results of your scans in a
@@ -850,7 +880,7 @@ Specifies the maximum number of hosts that Nmap is allowed to scan in
 parallel.  Most of the port scan techniques support multi-host
 operation, which makes them much quicker.  Spreading the load among
 multiple target hosts makes the scans gentler.  The downside is
-increast results latency.  You need to wait for all hosts in a group
+increased results latency.  You need to wait for all hosts in a group
 to finish, rather than having them pop up one by one.  Specify an
 argument of one for old-style (one host at a time) Nmap behavior.
 Note that the ping scanner handles its own grouping, and ignores this

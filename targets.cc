@@ -1157,7 +1157,8 @@ int get_ping_results(int sd, pcap_t *pd, Target *hostbatch[], int pingtype,
       /* if it is our response */
       ping = (struct ppkt *) ((ip->ip_hl * 4) + (char *) ip);
       if (bytes < ip->ip_hl * 4 + 8U) {
-	error("Supposed ping packet is only %d bytes long!", bytes);
+	if (!ip->ip_off && !ip->ip_off&IP_MF)
+           error("Supposed ping packet is only %d bytes long!", bytes);
 	continue;
       }
       /* Echo reply, Timestamp reply, or Address Mask Reply */
@@ -1345,6 +1346,10 @@ int get_ping_results(int sd, pcap_t *pd, Target *hostbatch[], int pingtype,
 	if (!ptech->rawtcpscan) {
 	  continue;
 	}
+        if (bytes < 4 * ip->ip_hl + 16U) {
+	    error("TCP packet is only %d bytes, we can't get enough information from it\n", bytes);
+            continue;
+        }
 	tcp = (struct tcphdr *) (((char *) ip) + 4 * ip->ip_hl);
 	if (!(tcp->th_flags & TH_RST) && ((tcp->th_flags & (TH_SYN|TH_ACK)) != (TH_SYN|TH_ACK)))
 	  continue;
@@ -1394,7 +1399,7 @@ int get_ping_results(int sd, pcap_t *pd, Target *hostbatch[], int pingtype,
 	}
 
 	if (o.debugging) 
-	  log_write(LOG_STDOUT, "We got a TCP ping packet back from %s port %hi (hostnum = %d trynum = %d\n", inet_ntoa(ip->ip_src), htons(tcp->th_sport), hostnum, trynum);
+	  log_write(LOG_STDOUT, "We got a TCP ping packet back from %s port %hi (hostnum = %d trynum = %d\n", inet_ntoa(ip->ip_src), ntohs(tcp->th_sport), hostnum, trynum);
 	pingstyle = pingstyle_rawtcp;
 	foundsomething = 1;
 	dotimeout = 1;

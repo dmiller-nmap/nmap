@@ -271,8 +271,6 @@ extern "C" {
 #define TH_CWR        0x80
 #endif
 
-#define MORE_FRAGMENTS 8192 /*NOT a user serviceable parameter*/
-
 /* Used for tracing all packets sent or received (eg the
    --packet_trace option) */
 class PacketTrace {
@@ -549,11 +547,10 @@ u8 *build_ip_raw(const struct in_addr *source, const struct in_addr *victim,
 /* Send a pre-built IPv4 packet */
 int send_ip_packet(int sd, u8 *packet, unsigned int packetlen);
 
-/* Much of this is swiped from my send_tcp_raw function above, which 
-   doesn't support fragmentation */
-int send_small_fragz(int sd, struct in_addr *source, 
-		     const struct in_addr *victim, u32 seq,
-		     int ttl, u16 sport, u16 dport, int flags);
+/* Create and send all fragments of the pre-built packet */
+/* mtu = MTU - ipv4_headerlen */
+int send_frag_ip_packet(int sd, u8 *packet, unsigned int packetlen, unsigned int mtu);
+
 /* Decoy versions of the raw packet sending functions ... */
 int send_tcp_raw_decoys( int sd, const struct in_addr *victim, int ttl,
 			 u16 sport, u16 dport, u32 seq, u32 ack, u8 flags,
@@ -564,11 +561,6 @@ int send_udp_raw_decoys( int sd, const struct in_addr *victim, int ttl,
 			 u16 sport, u16 dport, u16 ipid, char *data, 
 			 u16 datalen);
 
-int send_small_fragz_decoys( int sd, const struct in_addr *victim, u32 seq,
-			     int ttl, u16 sport, u16 dport, int flags);
-
-int send_ip_raw_decoys( int sd, const struct in_addr *victim, int ttl, u8 proto,
-			char *data, u16 datalen);
 
 /* Calls pcap_open_live and spits out an error (and quits) if the call fails.
    So a valid pcap_t will always be returned. */

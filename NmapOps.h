@@ -187,6 +187,16 @@ class NmapOps {
   void setMaxTCPScanDelay(unsigned int delayMS) { max_tcp_scan_delay = delayMS; }
   void setMaxUDPScanDelay(unsigned int delayMS) { max_udp_scan_delay = delayMS; }
 
+  /* Sets the Name of the XML stylesheet to be printed in XML output.
+     If this is never called, a default stylesheet distributed with
+     Nmap is used.  If you call it with NULL as the xslname, no
+     stylesheet line is printed. */
+  void setXSLStyleSheet(char *xslname);
+  /* Returns the full path or URL that should be printed in the XML
+     output xml-stylesheet element.  Returns NULL if the whole element
+     should be skipped */
+  char *XSLStyleSheet() { return xsl_stylesheet; }
+
   int max_ips_to_scan; // Used for Random input (-iR) to specify how 
                        // many IPs to try before stopping. 0 means unlimited.
   int extra_payload_length; /* These two are for --data_length op */
@@ -217,7 +227,7 @@ class NmapOps {
   int listscan;
   int pingscan;
   int allowall;
-  int fragscan;
+  int fragscan; /* 0 or MTU (without IPv4 header size) */
   int ackscan;
   int bouncescan;
   int connectscan;
@@ -253,5 +263,6 @@ class NmapOps {
   struct timeval start_time;
   bool pTrace; // Whether packet tracing has been enabled
   bool vTrace; // Whether version tracing has been enabled
+  char *xsl_stylesheet;
 };
   

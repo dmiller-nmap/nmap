@@ -22,7 +22,7 @@ servicematch: dummy
 web:
 	test x$(wroot) != x
 	cd .. && cp -a CHANGELOG HACKING COPYING COPYING.OpenSSL INSTALL $(DATAFILES) README-WIN32 mswin32/nmap_performance.reg $(wroot)/nmap/data
-	cd ../docs && cp -a nmap_manpage*.html nmap*.1 xnmap.1 nmap.usage.txt nmap.dtd $(wroot)/nmap/data/
+	cd ../docs && cp -a nmap_manpage*.html nmap*.1 xnmap.1 nmap.usage.txt nmap.dtd nmap.xsl $(wroot)/nmap/data/
 	./sort-prints.pl ../nmap-os-fingerprints > nos && mv nos ../nmap-os-fingerprints
 	./produceosclasschoosebox.pl ../nmap-os-fingerprints > $(wroot)/nmap/data/os-classes.txt
 	./sign_release.pl $(wroot)/nmap/dist

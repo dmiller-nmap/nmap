@@ -235,12 +235,14 @@ struct bpf_version {
  * OpenBSD DLT_LOOP, for loopback devices; it's like DLT_NULL, except
  * that the AF_ type in the link-layer header is in network byte order.
  *
- * OpenBSD defines it as 12, but that collides with DLT_RAW, so we
- * define it as 108 here.  If OpenBSD picks up this file, it should
- * define DLT_LOOP as 12 in its version, as per the comment above -
- * and should not use 108 as a DLT_ value.
+ * OpenBSD defines it as 12, but that collides with DLT_RAW, so 108 is
+ * used for other platforms.
  */
+#ifdef __OpenBSD__
+#define DLT_LOOP       12
+#else
 #define DLT_LOOP	108
+#endif
 
 /*
  * Encapsulated packets for IPsec; DLT_ENC is 13 in OpenBSD, but that's
