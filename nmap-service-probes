@@ -633,7 +633,8 @@ match netbios-ssn m|^\0\0\0.\xffSMBr\0\0\0\0\x88\x01\0\0\0\0\0\0\0\0\0\0\0\0\0\0
 # Netware might just be using Samba?
 match netbios-ssn m|^\0\0\0M\xffSMBr\0\0\0\0\x80\x01\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0@\x06\0\0\x01\0\x11\x07\0\x032\0\x01\0\xff\xff\0\0\0\0\x01\0\x84\xdeu\x07\x01\x02\0\0\x80\xaa\xa0\x83{k\xc3\x01\xa4\x01\x08\x08\0\x8a\xffp\xd3\x1d\?\xdbl$| v/Netware 6 SMB Services///
 # Windows 2000 Server Wins name resolution service
-match wins m|^\0\0\0\x1e\xffS\xad\x80\0\0\0\x01\0\0\0\0\0\0\0\0\0\0\0\x07\xe9\0\0\0\x01\0\0\x81\0\x02| v/Microsoft Windows 2000 Wins///
+# Windows NT 4.0 Wins
+match wins m|^\0\0\0\x1e\xffS\xad\x80\0\0\0\x01\0\0\0\0\0\0\0\0\0\0\0\x07\xe9\0\0\0\x01\0\0\x81\0\x02| v/Microsoft Windows Wins///
 
 # From xlsclients
 ##############################NEXT PROBE##############################

@@ -240,6 +240,7 @@ struct NmapFEoptions {
   GtkWidget *RPCInfo;
   GtkWidget *IdentdInfo;
   GtkWidget *OSInfo;
+  GtkWidget *VersionInfo;
   /* ping types */
   GtkWidget *dontPing;
   GtkWidget *icmpechoPing;

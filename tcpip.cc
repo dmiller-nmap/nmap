@@ -134,6 +134,29 @@ setsockopt(sd, IPPROTO_IP, IP_HDRINCL, (const char *) &one, sizeof(one));
 }
 #endif /* WIN32 */
 
+// Takes a protocol number like IPPROTO_TCP, IPPROTO_UDP, or
+// IPPROTO_TCP and returns a ascii representation (or "unknown" if it
+// doesn't recognize the number).  If uppercase is true, the returned
+// value will be in all uppercase letters.  You can skip this
+// parameter to use lowercase.
+const char *proto2ascii(u8 proto, bool uppercase) {
+
+  switch(proto) {
+  case IPPROTO_TCP:
+    return uppercase? "TCP" : "tcp"; break;
+  case IPPROTO_UDP:
+    return uppercase? "UDP" : "udp"; break;
+  case IPPROTO_IP:
+    return uppercase? "IP" : "ip"; break;
+  default:
+    return uppercase? "UNKNOWN" : "unknown";
+  }
+
+  return NULL; // Unreached
+
+}
+
+
   /* Takes an IP PACKET and prints it if packet tracing is enabled.
      'packet' must point to the IPv4 header. The direction must be
      PacketTrace::SENT or PacketTrace::RCVD .  Optional 'now' argument

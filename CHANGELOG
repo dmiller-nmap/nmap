@@ -1,5 +1,49 @@
 # Nmap Changelog ($Id$)
 
+o Fixed the problem several people reported where Nmap would quit with
+  a "broken pipe" error during service scanning.  Thanks to Jari Ruusu
+  (jari.ruusu(a)pp.inet.fi) for sending a patch.  The actual error
+  message was "Unexpected error in NSE_TYPE_READ callback.  Error
+  code: 32 (Broken pipe)"
+
+o Fixed protocol scan (-sO), which I had broken when adding the new
+  output table format.  It would complain "NmapOutputTable.cc:128:
+  failed assertion `row < numRows'".  Thanks to Matt Burnett
+  (marukka(a)mac.com) for notifying me of the problem.
+
+o Upgraded Libpcap to the latest tcpdump.org version (0.7.2) from
+  0.7.1
+
+o Applied a patch from Peter Marschall (peter(a)adpm.de) which adds
+  version detection support to nmapfe.
+
+o Fixed a problem with XML output being invalid when service detection
+  was done on SSL-tunneled ports.  Thanks to the several people who
+  reported this - it means that folks are actually using the XML
+  output :).
+
+o Fixed (I hope) some Solaris Sune ONE compiler compilation problems
+  reported (w/patches) by Mikael Mannstrom (candyman(a)penti.org)
+
+o Fixed the --with-openssl configure option for people who have
+  OpenSSL installed in a path not automatically found by their
+  compilers.  Thanks to  Marius Strobl (marius(a)alchemy.franken.de) for
+  the patch.
+
+o Made some portability changes for HP-UX and possibly other types of
+  machines, thanks to a patch from Petter Reinholdtsen (pere(a)hungry.com)
+
+o Applied a patch from Matt Selsky (selsky@columbia.edu) which fixes
+  compilation on some Solaris boxes, and maybe others.  The error said
+  "cannot compute sizeof (char)"
+
+o Applied some patches from the NetBSD ports tree that Hubert Feyrer
+  (hubert.feyrer(a)informatik.fh-regensburg.de) sent me.  The NetBSD
+  Nmap ports page is at http://www.NetBSD.org/packages/net/nmap/ .
+
+o Applied some Makefile patches from the FreeBSD ports tree that I
+  found at http://www.freebsd.org/cgi/cvsweb.cgi/ports/security/nmap/files/
+
 Nmap 3.45
 
 o Integrated more service signatures from MadHat

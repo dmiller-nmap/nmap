@@ -379,13 +379,13 @@ int PortList::addPort(u16 portno, u8 protocol, char *owner, int state) {
     
     log_write(LOG_STDOUT, "Adding %s port %hu/%s%s\n",
 	      statenum2str(state), portno, 
-	      (protocol == IPPROTO_TCP)? "tcp" : "udp", msg);
+	      proto2ascii(protocol), msg);
     log_flush(LOG_STDOUT);
     
     /* Write out add port messages for XML format so wrapper libraries can
        use it and not have to parse LOG_STDOUT ;), which is a pain! */
     
-    log_write(LOG_XML, "<addport state=\"%s\" portid=\"%hu\" protocol=\"%s\" owner=\"%s\"/>\n", statenum2str(state), portno, (protocol == IPPROTO_TCP)? "tcp" : "udp", ((owner && *owner) ? owner : ""));
+    log_write(LOG_XML, "<addport state=\"%s\" portid=\"%hu\" protocol=\"%s\" owner=\"%s\"/>\n", statenum2str(state), portno, proto2ascii(protocol), ((owner && *owner) ? owner : ""));
     log_flush(LOG_XML); 
   }
 
@@ -418,9 +418,7 @@ int PortList::addPort(u16 portno, u8 protocol, char *owner, int state) {
        if a complete duplicate */
     current = portarray[portno];    
     if (o.debugging && current->state == state && (!owner || !*owner)) {
-      error("Duplicate port (%hu/%s)\n", portno ,
-	    (protocol == IPPROTO_TCP)? "tcp":
-	    (protocol == IPPROTO_UDP)? "udp": "ip");
+      error("Duplicate port (%hu/%s)\n", portno, proto2ascii(protocol));
     } 
     state_counts[current->state]--;
     if (current->proto == IPPROTO_TCP) {
@@ -475,7 +473,7 @@ int PortList::removePort(u16 portno, u8 protocol) {
 
   if (o.verbose) {  
     log_write(LOG_STDOUT, "Deleting port %hu/%s, which we thought was %s\n",
-	      portno, (answer->proto == IPPROTO_TCP)? "tcp" : "udp", 
+	      portno, proto2ascii(answer->proto),
 	      statenum2str(answer->state));
     log_flush(LOG_STDOUT);
   }    

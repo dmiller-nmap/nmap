@@ -19,13 +19,17 @@ Additional people who have contributed patches:
 	Chris G. Demetriou		<cgd@netbsd.org>
 	Chris Pepper			<pepper@mail.reppep.com>
 	Darren Reed			<darrenr@reed.wattle.id.au>
+	David Kaelbling			<drk@sgi.com>
 	Franz Schaefer			<schaefer@mond.at>
+	Graeme Hewson			<ghewson@cix.compulink.co.uk>
 	Greg Troxel			<gdt@ir.bbn.com>
 	Hyung Sik Yoon			<hsyn@kr.ibm.com>
 	Igor Khristophorov		<igor@atdot.org>
+	Jan-Philip Velders		<jpv@veldersjes.net>
 	Jason R. Thorpe			<thorpej@zembu.com>
 	Javier Achirica			<achirica@ttd.net>
 	Jefferson Ogata			<jogata@nodc.noaa.gov>
+	John Bankier			<jbankier@rainfinity.com>
 	Juergen Schoenwaelder		<schoenw@ibr.cs.tu-bs.de>
 	Klaus Klein			<kleink@netbsd.org>
 	Lorenzo Cavallaro		<sullivan@sikurezza.org>
@@ -34,6 +38,7 @@ Additional people who have contributed patches:
 	Marcus Felipe Pereira		<marcus@task.com.br>
 	Martin Husemann			<martin@netbsd.org>
 	Monroe Williams			<monroe@pobox.com>
+	Octavian Cerna			<tavy@ylabs.com>
 	Olaf Kirch			<okir@caldera.de>
 	Onno van der Linden		<onno@simplex.nl>
 	Pavel Kankovsky			<kan@dcit.cz>
@@ -43,8 +48,9 @@ Additional people who have contributed patches:
 	Rick Jones			<raj@cup.hp.com>
 	Scott Barron			<sb125499@ohiou.edu>
 	Scott Gifford			<sgifford@tir.com>
+	Solomon Peachy			<pizza@shaftnet.org>
 	Stefan Hudson			<hudson@mbay.net>
-	Tony Li				<tli@jnx.com>
+	Tony Li				<tli@procket.com>
 	Uns Lider			<unslider@miranda.org>
 	Uwe Girlich			<Uwe.Girlich@philosys.de>
 	Xianjie Zhang			<xzhang@cup.hp.com>

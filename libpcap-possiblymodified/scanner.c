@@ -1756,25 +1756,21 @@ static const char rcsid[] =
 #include "config.h"
 #endif
 
-#include <sys/types.h>
-#include <sys/time.h>
-
 #include <ctype.h>
-#include <unistd.h>
 #include <string.h>
 
 #include "pcap-int.h"
 
 #include "gencode.h"
-#include <pcap-namedb.h>
 #ifdef INET6
-#include <netdb.h>
-#include <sys/socket.h>
+#include <sys/socket.h>	/* for "struct sockaddr" in "struct addrinfo" */
+#include <netdb.h>	/* for "struct addrinfo" */
 /* Workaround for AIX 4.3 */
 #if !defined(AI_NUMERICHOST)
 #define AI_NUMERICHOST 0x04
 #endif
 #endif /*INET6*/
+#include <pcap-namedb.h>
 #include "tokdefs.h"
 
 #ifdef HAVE_OS_PROTO_H
@@ -1947,7 +1943,7 @@ YY_DECL
 	register char *yy_cp = NULL, *yy_bp = NULL;
 	register int yy_act;
 
-#line 164 "scanner.l"
+#line 160 "scanner.l"
 
 
 	if ( yy_init )
@@ -2033,82 +2029,82 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 165 "scanner.l"
+#line 161 "scanner.l"
 return DST;
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 166 "scanner.l"
+#line 162 "scanner.l"
 return SRC;
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 168 "scanner.l"
+#line 164 "scanner.l"
 return LINK;
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 169 "scanner.l"
+#line 165 "scanner.l"
 return LINK;
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 170 "scanner.l"
+#line 166 "scanner.l"
 return ARP;
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 171 "scanner.l"
+#line 167 "scanner.l"
 return RARP;
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 172 "scanner.l"
+#line 168 "scanner.l"
 return IP;
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 173 "scanner.l"
+#line 169 "scanner.l"
 return SCTP;
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 174 "scanner.l"
+#line 170 "scanner.l"
 return TCP;
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 175 "scanner.l"
+#line 171 "scanner.l"
 return UDP;
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 176 "scanner.l"
+#line 172 "scanner.l"
 return ICMP;
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 177 "scanner.l"
+#line 173 "scanner.l"
 return IGMP;
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 178 "scanner.l"
+#line 174 "scanner.l"
 return IGRP;
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 179 "scanner.l"
+#line 175 "scanner.l"
 return PIM;
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 180 "scanner.l"
+#line 176 "scanner.l"
 return VRRP;
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 182 "scanner.l"
+#line 178 "scanner.l"
 {
 #ifdef INET6
 		return IPV6;
@@ -2119,7 +2115,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 189 "scanner.l"
+#line 185 "scanner.l"
 {
 #ifdef INET6
 		return ICMPV6;
@@ -2130,122 +2126,122 @@ YY_RULE_SETUP
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 196 "scanner.l"
+#line 192 "scanner.l"
 return AH;
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 197 "scanner.l"
+#line 193 "scanner.l"
 return ESP;
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 199 "scanner.l"
+#line 195 "scanner.l"
 return ATALK;
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 200 "scanner.l"
+#line 196 "scanner.l"
 return AARP;
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 201 "scanner.l"
+#line 197 "scanner.l"
 return DECNET;
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 202 "scanner.l"
+#line 198 "scanner.l"
 return LAT;
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 203 "scanner.l"
+#line 199 "scanner.l"
 return SCA;
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 204 "scanner.l"
+#line 200 "scanner.l"
 return MOPRC;
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
-#line 205 "scanner.l"
+#line 201 "scanner.l"
 return MOPDL;
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 207 "scanner.l"
+#line 203 "scanner.l"
 return ISO;
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 208 "scanner.l"
+#line 204 "scanner.l"
 return ESIS;
 	YY_BREAK
 case 29:
 YY_RULE_SETUP
-#line 209 "scanner.l"
+#line 205 "scanner.l"
 return ESIS;
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
-#line 210 "scanner.l"
+#line 206 "scanner.l"
 return ISIS;
 	YY_BREAK
 case 31:
 YY_RULE_SETUP
-#line 211 "scanner.l"
+#line 207 "scanner.l"
 return ISIS;
 	YY_BREAK
 case 32:
 YY_RULE_SETUP
-#line 212 "scanner.l"
+#line 208 "scanner.l"
 return CLNP;
 	YY_BREAK
 case 33:
 YY_RULE_SETUP
-#line 214 "scanner.l"
+#line 210 "scanner.l"
 return STP;
 	YY_BREAK
 case 34:
 YY_RULE_SETUP
-#line 216 "scanner.l"
+#line 212 "scanner.l"
 return IPX;
 	YY_BREAK
 case 35:
 YY_RULE_SETUP
-#line 218 "scanner.l"
+#line 214 "scanner.l"
 return NETBEUI;
 	YY_BREAK
 case 36:
 YY_RULE_SETUP
-#line 220 "scanner.l"
+#line 216 "scanner.l"
 return HOST;
 	YY_BREAK
 case 37:
 YY_RULE_SETUP
-#line 221 "scanner.l"
+#line 217 "scanner.l"
 return NET;
 	YY_BREAK
 case 38:
 YY_RULE_SETUP
-#line 222 "scanner.l"
+#line 218 "scanner.l"
 return MASK;
 	YY_BREAK
 case 39:
 YY_RULE_SETUP
-#line 223 "scanner.l"
+#line 219 "scanner.l"
 return PORT;
 	YY_BREAK
 case 40:
 YY_RULE_SETUP
-#line 224 "scanner.l"
+#line 220 "scanner.l"
 return PROTO;
 	YY_BREAK
 case 41:
 YY_RULE_SETUP
-#line 225 "scanner.l"
+#line 221 "scanner.l"
 {
 #ifdef NO_PROTOCHAIN
 		  bpf_error("%s not supported", yytext);
@@ -2256,135 +2252,135 @@ YY_RULE_SETUP
 	YY_BREAK
 case 42:
 YY_RULE_SETUP
-#line 233 "scanner.l"
+#line 229 "scanner.l"
 return GATEWAY;
 	YY_BREAK
 case 43:
 YY_RULE_SETUP
-#line 235 "scanner.l"
+#line 231 "scanner.l"
 return LESS;
 	YY_BREAK
 case 44:
 YY_RULE_SETUP
-#line 236 "scanner.l"
+#line 232 "scanner.l"
 return GREATER;
 	YY_BREAK
 case 45:
 YY_RULE_SETUP
-#line 237 "scanner.l"
+#line 233 "scanner.l"
 return BYTE;
 	YY_BREAK
 case 46:
 YY_RULE_SETUP
-#line 238 "scanner.l"
+#line 234 "scanner.l"
 return TK_BROADCAST;
 	YY_BREAK
 case 47:
 YY_RULE_SETUP
-#line 239 "scanner.l"
+#line 235 "scanner.l"
 return TK_MULTICAST;
 	YY_BREAK
 case 48:
 YY_RULE_SETUP
-#line 241 "scanner.l"
+#line 237 "scanner.l"
 return AND;
 	YY_BREAK
 case 49:
 YY_RULE_SETUP
-#line 242 "scanner.l"
+#line 238 "scanner.l"
 return OR;
 	YY_BREAK
 case 50:
 YY_RULE_SETUP
-#line 243 "scanner.l"
+#line 239 "scanner.l"
 return '!';
 	YY_BREAK
 case 51:
 YY_RULE_SETUP
-#line 245 "scanner.l"
+#line 241 "scanner.l"
 return LEN;
 	YY_BREAK
 case 52:
 YY_RULE_SETUP
-#line 246 "scanner.l"
+#line 242 "scanner.l"
 return INBOUND;
 	YY_BREAK
 case 53:
 YY_RULE_SETUP
-#line 247 "scanner.l"
+#line 243 "scanner.l"
 return OUTBOUND;
 	YY_BREAK
 case 54:
 YY_RULE_SETUP
-#line 249 "scanner.l"
+#line 245 "scanner.l"
 return VLAN;
 	YY_BREAK
 case 55:
 YY_RULE_SETUP
-#line 251 "scanner.l"
+#line 247 "scanner.l"
 ;
 	YY_BREAK
 case 56:
 YY_RULE_SETUP
-#line 252 "scanner.l"
+#line 248 "scanner.l"
 return yytext[0];
 	YY_BREAK
 case 57:
 YY_RULE_SETUP
-#line 253 "scanner.l"
+#line 249 "scanner.l"
 return GEQ;
 	YY_BREAK
 case 58:
 YY_RULE_SETUP
-#line 254 "scanner.l"
+#line 250 "scanner.l"
 return LEQ;
 	YY_BREAK
 case 59:
 YY_RULE_SETUP
-#line 255 "scanner.l"
+#line 251 "scanner.l"
 return NEQ;
 	YY_BREAK
 case 60:
 YY_RULE_SETUP
-#line 256 "scanner.l"
+#line 252 "scanner.l"
 return '=';
 	YY_BREAK
 case 61:
 YY_RULE_SETUP
-#line 257 "scanner.l"
+#line 253 "scanner.l"
 return LSH;
 	YY_BREAK
 case 62:
 YY_RULE_SETUP
-#line 258 "scanner.l"
+#line 254 "scanner.l"
 return RSH;
 	YY_BREAK
 case 63:
 YY_RULE_SETUP
-#line 259 "scanner.l"
+#line 255 "scanner.l"
 { yylval.e = pcap_ether_aton(((char *)yytext)+1);
 			  return AID; }
 	YY_BREAK
 case 64:
 YY_RULE_SETUP
-#line 261 "scanner.l"
+#line 257 "scanner.l"
 { yylval.i = stoi((char *)yytext); return NUM; }
 	YY_BREAK
 case 65:
 YY_RULE_SETUP
-#line 262 "scanner.l"
+#line 258 "scanner.l"
 {
 			yylval.s = sdup((char *)yytext); return HID; }
 	YY_BREAK
 case 66:
 YY_RULE_SETUP
-#line 264 "scanner.l"
+#line 260 "scanner.l"
 { yylval.e = pcap_ether_aton((char *)yytext);
 			  return EID; }
 	YY_BREAK
 case 67:
 YY_RULE_SETUP
-#line 266 "scanner.l"
+#line 262 "scanner.l"
 {
 #ifdef INET6
 			  struct addrinfo hints, *res;
@@ -2403,154 +2399,154 @@ YY_RULE_SETUP
 	YY_BREAK
 case 68:
 YY_RULE_SETUP
-#line 281 "scanner.l"
+#line 277 "scanner.l"
 { bpf_error("bogus ethernet address %s", yytext); }
 	YY_BREAK
 case 69:
 YY_RULE_SETUP
-#line 282 "scanner.l"
+#line 278 "scanner.l"
 { yylval.i = 0; return NUM; }
 	YY_BREAK
 case 70:
 YY_RULE_SETUP
-#line 283 "scanner.l"
+#line 279 "scanner.l"
 { yylval.i = 1; return NUM; }
 	YY_BREAK
 case 71:
 YY_RULE_SETUP
-#line 284 "scanner.l"
+#line 280 "scanner.l"
 { yylval.i = 0; return NUM; }
 	YY_BREAK
 case 72:
 YY_RULE_SETUP
-#line 285 "scanner.l"
+#line 281 "scanner.l"
 { yylval.i = 3; return NUM; }
 	YY_BREAK
 case 73:
 YY_RULE_SETUP
-#line 286 "scanner.l"
+#line 282 "scanner.l"
 { yylval.i = 4; return NUM; }
 	YY_BREAK
 case 74:
 YY_RULE_SETUP
-#line 287 "scanner.l"
+#line 283 "scanner.l"
 { yylval.i = 5; return NUM; }
 	YY_BREAK
 case 75:
 YY_RULE_SETUP
-#line 288 "scanner.l"
+#line 284 "scanner.l"
 { yylval.i = 8; return NUM; }
 	YY_BREAK
 case 76:
 YY_RULE_SETUP
-#line 289 "scanner.l"
+#line 285 "scanner.l"
 { yylval.i = 9; return NUM; }
 	YY_BREAK
 case 77:
 YY_RULE_SETUP
-#line 290 "scanner.l"
+#line 286 "scanner.l"
 { yylval.i = 10; return NUM; }
 	YY_BREAK
 case 78:
 YY_RULE_SETUP
-#line 291 "scanner.l"
+#line 287 "scanner.l"
 { yylval.i = 11; return NUM; }
 	YY_BREAK
 case 79:
 YY_RULE_SETUP
-#line 292 "scanner.l"
+#line 288 "scanner.l"
 { yylval.i = 12; return NUM; }
 	YY_BREAK
 case 80:
 YY_RULE_SETUP
-#line 293 "scanner.l"
+#line 289 "scanner.l"
 { yylval.i = 13; return NUM; }
 	YY_BREAK
 case 81:
 YY_RULE_SETUP
-#line 294 "scanner.l"
+#line 290 "scanner.l"
 { yylval.i = 14; return NUM; }
 	YY_BREAK
 case 82:
 YY_RULE_SETUP
-#line 295 "scanner.l"
+#line 291 "scanner.l"
 { yylval.i = 15; return NUM; }
 	YY_BREAK
 case 83:
 YY_RULE_SETUP
-#line 296 "scanner.l"
+#line 292 "scanner.l"
 { yylval.i = 16; return NUM; }
 	YY_BREAK
 case 84:
 YY_RULE_SETUP
-#line 297 "scanner.l"
+#line 293 "scanner.l"
 { yylval.i = 17; return NUM; }
 	YY_BREAK
 case 85:
 YY_RULE_SETUP
-#line 298 "scanner.l"
+#line 294 "scanner.l"
 { yylval.i = 18; return NUM; }
 	YY_BREAK
 case 86:
 YY_RULE_SETUP
-#line 299 "scanner.l"
+#line 295 "scanner.l"
 { yylval.i = 13; return NUM; }
 	YY_BREAK
 case 87:
 YY_RULE_SETUP
-#line 300 "scanner.l"
+#line 296 "scanner.l"
 { yylval.i = 0x01; return NUM; }
 	YY_BREAK
 case 88:
 YY_RULE_SETUP
-#line 301 "scanner.l"
+#line 297 "scanner.l"
 { yylval.i = 0x02; return NUM; }
 	YY_BREAK
 case 89:
 YY_RULE_SETUP
-#line 302 "scanner.l"
+#line 298 "scanner.l"
 { yylval.i = 0x04; return NUM; }
 	YY_BREAK
 case 90:
 YY_RULE_SETUP
-#line 303 "scanner.l"
+#line 299 "scanner.l"
 { yylval.i = 0x08; return NUM; }
 	YY_BREAK
 case 91:
 YY_RULE_SETUP
-#line 304 "scanner.l"
+#line 300 "scanner.l"
 { yylval.i = 0x10; return NUM; }
 	YY_BREAK
 case 92:
 YY_RULE_SETUP
-#line 305 "scanner.l"
+#line 301 "scanner.l"
 { yylval.i = 0x20; return NUM; }
 	YY_BREAK
 case 93:
 YY_RULE_SETUP
-#line 306 "scanner.l"
+#line 302 "scanner.l"
 {
 			 yylval.s = sdup((char *)yytext); return ID; }
 	YY_BREAK
 case 94:
 YY_RULE_SETUP
-#line 308 "scanner.l"
+#line 304 "scanner.l"
 { yylval.s = sdup((char *)yytext + 1); return ID; }
 	YY_BREAK
 case 95:
 YY_RULE_SETUP
-#line 309 "scanner.l"
+#line 305 "scanner.l"
 {
 			bpf_error("illegal token: %s", yytext); }
 	YY_BREAK
 case 96:
 YY_RULE_SETUP
-#line 311 "scanner.l"
+#line 307 "scanner.l"
 { bpf_error("illegal char '%c'", *yytext); }
 	YY_BREAK
 case 97:
 YY_RULE_SETUP
-#line 312 "scanner.l"
+#line 308 "scanner.l"
 ECHO;
 	YY_BREAK
 case YY_STATE_EOF(INITIAL):
@@ -3433,7 +3429,7 @@ int main()
 	return 0;
 	}
 #endif
-#line 312 "scanner.l"
+#line 308 "scanner.l"
 
 void
 lex_init(buf)

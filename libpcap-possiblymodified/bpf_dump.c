@@ -27,9 +27,6 @@ static const char rcsid[] =
 #include "config.h"
 #endif
 
-#include <sys/types.h>
-#include <sys/time.h>
-
 #include <pcap.h>
 #include <stdio.h>
 

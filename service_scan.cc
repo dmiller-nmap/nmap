@@ -251,7 +251,7 @@ ServiceProbeMatch::~ServiceProbeMatch() {
 // is provided so that it can be reported in error messages.  This
 // function will abort the program if there is a syntax problem.
 void ServiceProbeMatch::InitMatch(const char *matchtext, int lineno) {
-  char *p;
+  const char *p;
   char delimchar;
   int pcre_compile_ops = 0;
   const char *pcre_errptr = NULL;
@@ -948,9 +948,10 @@ void ServiceNFO::addToServiceFingerprint(const char *probeName, const u8 *resp,
   int spaceleft = servicefpalloc - servicefplen;
   int servicewrap=74; // Wrap after 74 chars / line
   int respused = MIN(resplen, (o.debugging)? 1000 : 400); // truncate to reasonable size
-  int spaceneeded = respused * 6 + 20;  // every char could require \xHH escape,
-                                      // plus there is the matter of \n and spaces.
-                                      // Oh, and the SF-PortXXXXX-TCP stuff, etc
+  // every char could require \xHH escape, plus there is the matter of 
+  // "\nSF:" for each line, plus "%r(probename,probelen,"") Oh, and 
+  // the SF-PortXXXX-TCP stuff, etc
+  int spaceneeded = respused * 5 + strlen(probeName) + 128;  
   int srcidx;
   struct tm *ltime;
   time_t timep;
@@ -964,7 +965,7 @@ void ServiceNFO::addToServiceFingerprint(const char *probeName, const u8 *resp,
     return; // it is large enough.
 
   if (spaceneeded >= spaceleft) {
-    spaceneeded = MAX(spaceneeded, 256); // No point in tiny allocations
+    spaceneeded = MAX(spaceneeded, 512); // No point in tiny allocations
     spaceneeded += servicefpalloc;
 
     servicefp = (char *) safe_realloc(servicefp, spaceneeded);
@@ -975,7 +976,7 @@ void ServiceNFO::addToServiceFingerprint(const char *probeName, const u8 *resp,
   if (servicefplen == 0) {
     timep = time(NULL);
     ltime = localtime(&timep);
-    servicefplen = snprintf(servicefp, spaceleft, "SF-Port%hu-%s:V=%s%s%%D=%d/%d%%Time=%X", portno, (proto == IPPROTO_TCP)? "TCP" : "UDP", NMAP_VERSION, (tunnel == SERVICE_TUNNEL_SSL)? "%T=SSL" : "", ltime->tm_mon + 1, ltime->tm_mday, (int) timep);
+    servicefplen = snprintf(servicefp, spaceleft, "SF-Port%hu-%s:V=%s%s%%D=%d/%d%%Time=%X", portno, proto2ascii(proto, true), NMAP_VERSION, (tunnel == SERVICE_TUNNEL_SSL)? "%T=SSL" : "", ltime->tm_mon + 1, ltime->tm_mday, (int) timep);
   }
 
   // Note that we give the total length of the response, even though we 
@@ -1577,6 +1578,7 @@ void servicescan_read_handler(nsock_pool nsp, nsock_event nse, void *mydata) {
       // something else nasty during the scan.  Shrug.  I'll give up on this port
       end_svcprobe(nsp, PROBESTATE_INCOMPLETE, SG, svc, nsi);
       break;
+    case EPIPE:
     case EIO:
       // Usually an SSL error of some sort (those are presently
       // hardcoded to EIO).  I'll just try the next probe.
@@ -1653,7 +1655,7 @@ int launchSomeServiceProbes(nsock_pool nsp, ServiceGroup *SG) {
       fatal("Failed to allocate Nsock I/O descriptor in launchSomeServiceProbes()");
     }
     if (o.debugging > 1) {
-      printf("Starting probes against new service: %s:%hi (%s)\n", svc->target->targetipstr(), svc->portno, (svc->proto == IPPROTO_TCP)? "tcp" : "udp");
+      printf("Starting probes against new service: %s:%hi (%s)\n", svc->target->targetipstr(), svc->portno, proto2ascii(svc->proto));
     }
     svc->target->TargetSockAddr(&ss, &ss_len);
     if (svc->proto == IPPROTO_TCP)

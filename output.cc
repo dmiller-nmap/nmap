@@ -143,10 +143,12 @@ static int getServiceXMLBuf(struct serviceDeductions *sd, char *xmlbuf,
   } else rpcbuf[0] = '\0';
 
   snprintf(xmlbuf, xmlbuflen, 
-	   "<service name=\"%s\"%s %smethod=\"%s\" conf=\"%d\"%s />", sd->name, 
-	   versionxmlstring.c_str(), 
-	   (sd->dtype == SERVICE_DETECTION_TABLE)? "table" : "probed", 
+	   "<service name=\"%s\"%s %smethod=\"%s\" conf=\"%d\"%s />", 
+	   sd->name,
+	   versionxmlstring.c_str(),
 	   (sd->service_tunnel == SERVICE_TUNNEL_SSL)? "tunnel=\"ssl\" " : "",
+	   (sd->dtype == SERVICE_DETECTION_TABLE)? "table" : "probed", 
+
 	   sd->name_confidence, rpcbuf);
 
   return 0;
@@ -305,7 +307,6 @@ void printportoutput(Target *currenths, PortList *plist) {
 	proto = nmap_getprotbynum(htons(current->portno));
 	snprintf(portinfo, sizeof(portinfo), "%-24s",
 		 proto?proto->p_name: "unknown");
-	rowno++;
 	Tbl->addItemFormatted(rowno, portcol, "%d", portno);
 	Tbl->addItem(rowno, statecol, true, state);
 	Tbl->addItem(rowno, servicecol, true, portinfo);

@@ -50,8 +50,8 @@ static const char rcsid[] =
 #endif
 #include <sys/time.h>				/* concession to AIX */
 
-struct mbuf;
-struct rtentry;
+struct mbuf;		/* Squelch compiler warnings on some platforms for */
+struct rtentry;		/* declarations in <net/if.h> */
 #include <net/if.h>
 #include <netinet/in.h>
 

@@ -2510,6 +2510,75 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 
+
+echo "$as_me:$LINENO: checking for inline" >&5
+echo $ECHO_N "checking for inline... $ECHO_C" >&6
+if test "${ac_cv_c_inline+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  ac_cv_c_inline=no
+for ac_kw in inline __inline__ __inline; do
+  cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+#ifndef __cplusplus
+typedef int foo_t;
+static $ac_kw foo_t static_foo () {return 0; }
+$ac_kw foo_t foo () {return 0; }
+#endif
+
+_ACEOF
+rm -f conftest.$ac_objext
+if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
+  (eval $ac_compile) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+         { ac_try='test -s conftest.$ac_objext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_c_inline=$ac_kw; break
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+fi
+rm -f conftest.$ac_objext conftest.$ac_ext
+done
+
+fi
+echo "$as_me:$LINENO: result: $ac_cv_c_inline" >&5
+echo "${ECHO_T}$ac_cv_c_inline" >&6
+case $ac_cv_c_inline in
+  inline | yes) ;;
+  no)
+cat >>confdefs.h <<\_ACEOF
+#define inline
+_ACEOF
+ ;;
+  *)  cat >>confdefs.h <<_ACEOF
+#define inline $ac_cv_c_inline
+_ACEOF
+ ;;
+esac
+
+if test -n "$sgi_cc"; then
+   cat >>confdefs.h <<\_ACEOF
+#define inline
+_ACEOF
+
+fi
+
+
+
+
 ac_aux_dir=
 for ac_dir in $srcdir $srcdir/.. $srcdir/../..; do
   if test -f $ac_dir/install-sh; then
@@ -2746,7 +2815,6 @@ _ACEOF
     needs_cpp_precomp=yes
     ;;
 esac
-
 
 ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
@@ -4251,6 +4319,7 @@ if test "${with_openssl+set}" = set; then
     ;;
   *)
     specialssldir="$with_openssl"
+    CXXFLAGS="$CXXFLAGS -I$with_openssl/include"
     LDFLAGS="$LDFLAGS -L$with_openssl/lib"
     ;;
   esac
@@ -4677,6 +4746,77 @@ else
 echo "$as_me: WARNING: Failed to find openssl/rand.h so OpenSSL will not be used. If it is installed you can try the --with-openssl=DIR argument" >&2;}
 fi
 
+
+ fi
+
+ if test "$use_openssl" = "yes"; then
+
+echo "$as_me:$LINENO: checking for BIO_int_ctrl in -lcrypto" >&5
+echo $ECHO_N "checking for BIO_int_ctrl in -lcrypto... $ECHO_C" >&6
+if test "${ac_cv_lib_crypto_BIO_int_ctrl+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lcrypto  $LIBS"
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+/* Override any gcc2 internal prototype to avoid an error.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+/* We use char because int might match the return type of a gcc2
+   builtin and then its argument prototype would still apply.  */
+char BIO_int_ctrl ();
+int
+main ()
+{
+BIO_int_ctrl ();
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+         { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_lib_crypto_BIO_int_ctrl=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+ac_cv_lib_crypto_BIO_int_ctrl=no
+fi
+rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+echo "$as_me:$LINENO: result: $ac_cv_lib_crypto_BIO_int_ctrl" >&5
+echo "${ECHO_T}$ac_cv_lib_crypto_BIO_int_ctrl" >&6
+if test $ac_cv_lib_crypto_BIO_int_ctrl = yes; then
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_LIBCRYPTO 1
+_ACEOF
+
+  LIBS="-lcrypto $LIBS"
+
+else
+   use_openssl="no"
+    { echo "$as_me:$LINENO: WARNING: Failed to find libcrypto so OpenSSL will not be used. If it is installed you can try the --with-openssl=DIR argument" >&5
+echo "$as_me: WARNING: Failed to find libcrypto so OpenSSL will not be used. If it is installed you can try the --with-openssl=DIR argument" >&2;}
+fi
 
  fi
 
@@ -5722,73 +5862,6 @@ fi
 
 
 
-
-
-
-echo "$as_me:$LINENO: checking for inline" >&5
-echo $ECHO_N "checking for inline... $ECHO_C" >&6
-if test "${ac_cv_c_inline+set}" = set; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  ac_cv_c_inline=no
-for ac_kw in inline __inline__ __inline; do
-  cat >conftest.$ac_ext <<_ACEOF
-#line $LINENO "configure"
-/* confdefs.h.  */
-_ACEOF
-cat confdefs.h >>conftest.$ac_ext
-cat >>conftest.$ac_ext <<_ACEOF
-/* end confdefs.h.  */
-#ifndef __cplusplus
-typedef int foo_t;
-static $ac_kw foo_t static_foo () {return 0; }
-$ac_kw foo_t foo () {return 0; }
-#endif
-
-_ACEOF
-rm -f conftest.$ac_objext
-if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
-  (eval $ac_compile) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } &&
-         { ac_try='test -s conftest.$ac_objext'
-  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
-  (eval $ac_try) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; }; then
-  ac_cv_c_inline=$ac_kw; break
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-fi
-rm -f conftest.$ac_objext conftest.$ac_ext
-done
-
-fi
-echo "$as_me:$LINENO: result: $ac_cv_c_inline" >&5
-echo "${ECHO_T}$ac_cv_c_inline" >&6
-case $ac_cv_c_inline in
-  inline | yes) ;;
-  no)
-cat >>confdefs.h <<\_ACEOF
-#define inline
-_ACEOF
- ;;
-  *)  cat >>confdefs.h <<_ACEOF
-#define inline $ac_cv_c_inline
-_ACEOF
- ;;
-esac
-
-if test -n "$sgi_cc"; then
-   cat >>confdefs.h <<\_ACEOF
-#define inline
-_ACEOF
-
-fi
 
 
 echo "$as_me:$LINENO: checking struct ip" >&5

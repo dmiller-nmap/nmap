@@ -37,15 +37,11 @@ static const char rcsid[] =
 #include "config.h"
 #endif
 
-#include <sys/types.h>
-#include <sys/time.h>
-
 #include <errno.h>
 #include <memory.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 
 #include "pcap-int.h"
 
@@ -171,13 +167,16 @@ static const char rcsid[] =
 /*
  * These types are reserved for future use.
  */
-#define LINKTYPE_FR		107		/* BSD/OS Frame Relay */
+#define LINKTYPE_FRELAY		107		/* Frame Relay */
 #define LINKTYPE_ENC		109		/* OpenBSD IPSEC enc */
 #define LINKTYPE_LANE8023	110		/* ATM LANE + 802.3 */
 #define LINKTYPE_HIPPI		111		/* NetBSD HIPPI */
 #define LINKTYPE_HDLC		112		/* NetBSD HDLC framing */
 #define LINKTYPE_IPFILTER	116		/* IP Filter capture files */
 #define LINKTYPE_PFLOG		117		/* OpenBSD DLT_PFLOG */
+#define LINKTYPE_HHDLC		121		/* Siemens HiPath HDLC */
+#define LINKTYPE_IP_OVER_FC	122		/* RFC 2625 IP-over-Fibre Channel */
+#define LINKTYPE_SUNATM		123		/* Solaris+SunATM */
 
 static struct linktype_map {
 	int	dlt;
@@ -205,6 +204,10 @@ static struct linktype_map {
 	 * have values that should never be equal to any DLT_*
 	 * code.
 	 */
+#ifdef DLT_FR
+	/* BSD/OS Frame Relay */
+	{ DLT_FR,		LINKTYPE_FRELAY },
+#endif
 	{ DLT_ATM_RFC1483, 	LINKTYPE_ATM_RFC1483 },
 	{ DLT_RAW,		LINKTYPE_RAW },
 	{ DLT_SLIP_BSDOS,	LINKTYPE_SLIP_BSDOS },
@@ -232,6 +235,9 @@ static struct linktype_map {
 	/* IEEE 802.11 wireless */
 	{ DLT_IEEE802_11,	LINKTYPE_IEEE802_11 },
 
+	/* Frame Relay */
+	{ DLT_FRELAY,		LINKTYPE_FRELAY },
+
 	/* OpenBSD loopback */
 	{ DLT_LOOP,		LINKTYPE_LOOP },
 
@@ -252,6 +258,15 @@ static struct linktype_map {
 
 	/* FreeBSD Aironet driver stuff */
 	{ DLT_AIRONET_HEADER,	LINKTYPE_AIRONET_HEADER },
+
+	/* Siemens HiPath HDLC */
+	{ DLT_HHDLC,		LINKTYPE_HHDLC },
+
+	/* RFC 2625 IP-over-Fibre Channel */
+	{ DLT_IP_OVER_FC,	LINKTYPE_IP_OVER_FC },
+
+	/* Solaris+SunATM */
+	{ DLT_SUNATM,		LINKTYPE_SUNATM },
 
 	/*
 	 * Any platform that defines additional DLT_* codes should:

@@ -177,7 +177,7 @@ pcap_read(pcap_t *p, int cnt, pcap_handler callback, u_char *user)
 	cc = p->cc;
 	if (cc == 0) {
 		data.buf = (char *)p->buffer + p->offset;
-		data.maxlen = MAXDLBUF;
+		data.maxlen = p->bufsize;
 		data.len = 0;
 		do {
 			if (getmsg(p->fd, &ctl, &data, &flags) < 0) {
@@ -223,7 +223,8 @@ pcap_read(pcap_t *p, int cnt, pcap_handler callback, u_char *user)
 		++p->md.stat.ps_recv;
 		if (bpf_filter(fcode, pk, origlen, caplen)) {
 #ifdef HAVE_SYS_BUFMOD_H
-			pkthdr.ts = sbp->sbh_timestamp;
+			pkthdr.ts.tv_sec = sbp->sbh_timestamp.tv_sec;
+			pkthdr.ts.tv_usec = sbp->sbh_timestamp.tv_usec;
 #else
 			(void)gettimeofday(&pkthdr.ts, NULL);
 #endif
@@ -488,7 +489,7 @@ pcap_open_live(char *device, int snaplen, int promisc, int to_ms, char *ebuf)
 
 	default:
 		snprintf(ebuf, PCAP_ERRBUF_SIZE, "unknown mac type %lu",
-		    infop->dl_mac_type);
+		    (unsigned long)infop->dl_mac_type);
 		goto bad;
 	}
 
@@ -1146,8 +1147,8 @@ get_dlpi_ppa(register int fd, register const char *device, register int unit,
 	    
 	if (ctl.len < DL_HP_PPA_ACK_SIZE) {
 		snprintf(ebuf, PCAP_ERRBUF_SIZE,
-		    "get_dlpi_ppa: hpppa ack too small (%d < %d)",
-		     ctl.len, DL_HP_PPA_ACK_SIZE);
+		    "get_dlpi_ppa: hpppa ack too small (%d < %lu)",
+		     ctl.len, (unsigned long)DL_HP_PPA_ACK_SIZE);
 		return (-1);
 	}
 	    

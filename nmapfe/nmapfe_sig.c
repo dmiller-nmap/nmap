@@ -451,6 +451,10 @@ static int command_size = 0;
       GTK_TOGGLE_BUTTON(opt.RPCInfo)->active)
     strcat(command, "-sR ");
    
+  if (GTK_WIDGET_SENSITIVE(opt.VersionInfo) &&
+      GTK_TOGGLE_BUTTON(opt.VersionInfo)->active)
+    strcat(command, "-sV ");
+
   if (GTK_WIDGET_SENSITIVE(opt.IdentdInfo) &&
       GTK_TOGGLE_BUTTON(opt.IdentdInfo)->active)
     strcat(command, "-I ");
@@ -766,10 +770,13 @@ void scanType_changed_fcb(int *variable, guint action, GtkWidget *w)
       gtk_widget_set_sensitive(GTK_WIDGET(opt.OSInfo), TRUE);
     }
 
-    if ((action == PING_SCAN) || (action == LIST_SCAN) || (action == PROT_SCAN))
+    if ((action == PING_SCAN) || (action == LIST_SCAN) || (action == PROT_SCAN)) {
       gtk_widget_set_sensitive(GTK_WIDGET(opt.RPCInfo), FALSE);
-    else
+      gtk_widget_set_sensitive(GTK_WIDGET(opt.VersionInfo), FALSE);
+    } else {
       gtk_widget_set_sensitive(GTK_WIDGET(opt.RPCInfo), TRUE);
+      gtk_widget_set_sensitive(GTK_WIDGET(opt.VersionInfo), TRUE);
+    }
 
     if ((action == CONNECT_SCAN) || (action == BOUNCE_SCAN)) {
       gtk_widget_set_sensitive(GTK_WIDGET(opt.useDecoy), FALSE);
@@ -1095,12 +1102,13 @@ GdkColor red, blue, green;
     while (((str = next_token(line, token, sizeof(token) / sizeof(*token))) != NULL) && (*str != '\0')) {
       /********* CATCH STUFF ****************************/
       if (strstr(str, "http://") ||
-          strstr(str, "Port") ||
-          strstr(str, "Protocol") ||
-          strstr(str, "State") ||
-          strstr(str, "Service") ||
+          strstr(str, "PORT") ||
+          strstr(str, "PROTOCOL") ||
+          strstr(str, "STATE") ||
+          strstr(str, "SERVICE") ||
+          strstr(str, "VERSION") ||
           strstr(str, "(RPC)") ||
-          strstr(str, "Owner") ||
+          strstr(str, "OWNER") ||
 	  strstr(str, "fingerprint")) {
 	gtk_text_insert(gtktext, bold, NULL, NULL, str, -1);
       /********* BEGIN PORT COLOR CODING ****************/

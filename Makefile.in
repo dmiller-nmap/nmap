@@ -1,4 +1,4 @@
-NMAP_VERSION = 3.45
+NMAP_VERSION = 3.46
 NMAP_NAME= nmap
 NMAP_URL= http://www.insecure.org/nmap/
 NMAP_PLATFORM=@host@
@@ -254,7 +254,7 @@ depend:
 	$(MAKEDEPEND) $(INCLS) -s "# DO NOT DELETE" -- $(DEFS) -- $(SRCS)
 
 install-nmap: $(TARGET)
-	$(SHTOOL) mkdir -f -p -m 755 $(bindir) $(mandir)/man1 $(nmapdatadir) $(deskdir)
+	$(SHTOOL) mkdir -f -p -m 755 $(bindir) $(mandir)/man1 $(nmapdatadir)
 	$(INSTALL) -c -m 755 nmap $(bindir)/nmap
 	$(INSTALL) -c -m 644 docs/$(TARGET).1 $(mandir)/man1/$(TARGET).1
 	$(INSTALL) -c -m 644 nmap-os-fingerprints  $(nmapdatadir)/nmap-os-fingerprints

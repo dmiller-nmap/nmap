@@ -233,11 +233,11 @@ distclean-depend:
 maintainer-clean-depend:
 	-rm -rf .deps
 
-%.o: %.c
+.c.o:
 	@echo '$(COMPILE) -c $<'; \
 	$(COMPILE) -c $<
 
-%.lo: %.c
+.c.lo:
 	@echo '$(LTCOMPILE) -c $<'; \
 	$(LTCOMPILE) -c $<
 	@-sed -e 's/^\([^:]*\)\.o:/\1.lo \1.o:/' \

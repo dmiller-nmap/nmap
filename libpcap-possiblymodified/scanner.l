@@ -29,25 +29,21 @@ static const char rcsid[] =
 #include "config.h"
 #endif
 
-#include <sys/types.h>
-#include <sys/time.h>
-
 #include <ctype.h>
-#include <unistd.h>
 #include <string.h>
 
 #include "pcap-int.h"
 
 #include "gencode.h"
-#include <pcap-namedb.h>
 #ifdef INET6
-#include <netdb.h>
-#include <sys/socket.h>
+#include <sys/socket.h>	/* for "struct sockaddr" in "struct addrinfo" */
+#include <netdb.h>	/* for "struct addrinfo" */
 /* Workaround for AIX 4.3 */
 #if !defined(AI_NUMERICHOST)
 #define AI_NUMERICHOST 0x04
 #endif
 #endif /*INET6*/
+#include <pcap-namedb.h>
 #include "tokdefs.h"
 
 #ifdef HAVE_OS_PROTO_H
@@ -77,10 +73,10 @@ B		([0-9A-Fa-f][0-9A-Fa-f]?)
 W		([0-9A-Fa-f][0-9A-Fa-f]?[0-9A-Fa-f]?[0-9A-Fa-f]?)
 
 %a 15000
-%o 17000
+%o 19000
 %e 6000
 %k 4000
-%p 19000
+%p 21000
 %n 2000
 
 V680		{W}:{W}:{W}:{W}:{W}:{W}:{W}:{W}

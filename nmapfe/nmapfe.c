@@ -447,7 +447,7 @@ GtkAdjustment *adjust;
   // gtk_box_pack_start(GTK_BOX(nbpage), frame, FALSE, FALSE, 0);
   gtk_table_attach_defaults(GTK_TABLE(nbpage), frame, 0, 2, 3, 5);
 
-  table = gtk_table_new(1, 3, FALSE);
+  table = gtk_table_new(1, 4, FALSE);
   gtk_container_set_border_width(GTK_CONTAINER(table), 5);
   gtk_table_set_col_spacings(GTK_TABLE(table), 5);
   gtk_table_set_row_spacings(GTK_TABLE(table), 5);
@@ -460,7 +460,7 @@ GtkAdjustment *adjust;
   gtk_widget_show(opt.RPCInfo);
 
 
-  opt.IdentdInfo = gtk_check_button_new_with_label("Get identd Info");
+  opt.IdentdInfo = gtk_check_button_new_with_label("Identd Info");
   gtk_signal_connect(GTK_OBJECT(opt.IdentdInfo), "released",
 			GTK_SIGNAL_FUNC(validate_option_change), NULL);
   if (opt.scanValue != CONNECT_SCAN)
@@ -478,6 +478,14 @@ GtkAdjustment *adjust;
     gtk_widget_set_sensitive(GTK_WIDGET(opt.OSInfo), FALSE);
   gtk_table_attach_defaults(GTK_TABLE(table), opt.OSInfo, 2, 3, 0, 1);
   gtk_widget_show(opt.OSInfo);
+
+
+  opt.VersionInfo = gtk_check_button_new_with_label("Version Probe");
+  gtk_signal_connect(GTK_OBJECT(opt.VersionInfo), "released",
+		     GTK_SIGNAL_FUNC(display_nmap_command_cb), NULL);
+  gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(opt.VersionInfo), FALSE);
+  gtk_table_attach_defaults(GTK_TABLE(table), opt.VersionInfo, 3, 4, 0, 1);
+  gtk_widget_show(opt.VersionInfo);
 
   gtk_widget_show(table);
   gtk_widget_show(frame);

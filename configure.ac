@@ -45,6 +45,24 @@ AC_PROG_CXX
 dnl AC_PROG_INSTALL
 dnl AC_PATH_PROG(MAKEDEPEND, makedepend)
 
+dnl Checks for typedefs, structures, and compiler characteristics.
+
+dnl check for void should be put in
+dnl AC_MSG_CHECKING(for void)
+dnl AC_TRY_COMPILE(, [void *foo = 0;], 
+dnl [AC_MSG_RESULT(yes); AC_DEFINE(HAVE_VOID)], [AC_MSG_RESULT(no)])
+
+dnl so should check for 'const'
+dnl AC_MSG_CHECKING(for const)
+dnl AC_TRY_COMPILE(, [const int foo = 0;], 
+dnl [AC_MSG_RESULT(yes); AC_DEFINE(HAVE_CONST)], [AC_MSG_RESULT(no)])
+
+dnl equiv to '#define inline' to 'inline', '__inline__', '__inline' or ''
+AC_C_INLINE
+if test -n "$sgi_cc"; then
+   AC_DEFINE(inline, )
+fi
+
 AC_SUBST(COMPAT_OBJS)
 AC_SUBST(COMPAT_SRCS)
 
@@ -202,6 +220,7 @@ AC_ARG_WITH(openssl,
     ;;
   *)
     specialssldir="$with_openssl"
+    CXXFLAGS="$CXXFLAGS -I$with_openssl/include"
     LDFLAGS="$LDFLAGS -L$with_openssl/lib"
     ;;
   esac]
@@ -223,6 +242,13 @@ if test "$use_openssl" = "yes" -a -z "$specialssldir"; then
    AC_CHECK_HEADER(openssl/rand.h,,
     [ use_openssl="no"
     AC_MSG_WARN([Failed to find openssl/rand.h so OpenSSL will not be used. If it is installed you can try the --with-openssl=DIR argument]) ])
+ fi
+
+ if test "$use_openssl" = "yes"; then
+   AC_CHECK_LIB(crypto, BIO_int_ctrl,
+    [],
+    [ use_openssl="no"
+    AC_MSG_WARN([Failed to find libcrypto so OpenSSL will not be used. If it is installed you can try the --with-openssl=DIR argument]) ])
  fi
 
  if test "$use_openssl" = "yes"; then
@@ -390,23 +416,6 @@ AC_SUBST(PCRE_DEPENDS)
 AC_SUBST(PCRE_CLEAN)
 AC_SUBST(PCRE_DIST_CLEAN)
 
-dnl Checks for typedefs, structures, and compiler characteristics.
-
-dnl check for void should be put in
-dnl AC_MSG_CHECKING(for void)
-dnl AC_TRY_COMPILE(, [void *foo = 0;], 
-dnl [AC_MSG_RESULT(yes); AC_DEFINE(HAVE_VOID)], [AC_MSG_RESULT(no)])
-
-dnl so should check for 'const'
-dnl AC_MSG_CHECKING(for const)
-dnl AC_TRY_COMPILE(, [const int foo = 0;], 
-dnl [AC_MSG_RESULT(yes); AC_DEFINE(HAVE_CONST)], [AC_MSG_RESULT(no)])
-
-dnl equiv to '#define inline' to 'inline', '__inline__', '__inline' or ''
-AC_C_INLINE
-if test -n "$sgi_cc"; then
-   AC_DEFINE(inline, )
-fi
 
 dnl AC_HEADER_TIME
 

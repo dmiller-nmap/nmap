@@ -236,12 +236,15 @@ pcap_open_live(char *device, int snaplen, int promisc, int to_ms, char *ebuf)
 	/*
 	 * Try finding a good size for the buffer; 32768 may be too
 	 * big, so keep cutting it in half until we find a size
-	 * that works, or run out of sizes to try.
+	 * that works, or run out of sizes to try.  If the default
+	 * is larger, don't make it smaller.
 	 *
 	 * XXX - there should be a user-accessible hook to set the
 	 * initial buffer size.
 	 */
-	for (v = 32768; v != 0; v >>= 1) {
+	if ((ioctl(fd, BIOCGBLEN, (caddr_t)&v) < 0) || v < 32768)
+		v = 32768;
+	for ( ; v != 0; v >>= 1) {
 		/* Ignore the return value - this is because the call fails
 		 * on BPF systems that don't have kernel malloc.  And if
 		 * the call fails, it's no big deal, we just continue to
@@ -295,7 +298,7 @@ pcap_open_live(char *device, int snaplen, int promisc, int to_ms, char *ebuf)
 		/*
 		 * We don't know what to map this to yet.
 		 */
-		snprintf(ebuf, PCAP_ERRBUF_SIZE, "unknown interface type %lu",
+		snprintf(ebuf, PCAP_ERRBUF_SIZE, "unknown interface type %u",
 		    v);
 		goto bad;
 	}
@@ -313,7 +316,7 @@ pcap_open_live(char *device, int snaplen, int promisc, int to_ms, char *ebuf)
 		break;
 
 	case 11:	/*DLT_FR*/
-		v = DLT_RAW;	/*XXX*/
+		v = DLT_FRELAY;
 		break;
 
 	case 12:	/*DLT_C_HDLC*/

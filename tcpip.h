@@ -504,6 +504,12 @@ int unblock_socket(int sd);
 int Sendto(char *functionname, int sd, const unsigned char *packet, int len, 
 	   unsigned int flags, struct sockaddr *to, int tolen);
 
+// Takes a protocol number like IPPROTO_TCP, IPPROTO_UDP, or
+// IPPROTO_TCP and returns a ascii representation (or "unknown" if it
+// doesn't recognize the number).  If uppercase is true, the returned
+// value will be in all uppercase letters.  You can skip this
+// parameter to use lowercase.
+const char *proto2ascii(u8 proto, bool uppercase=false);
 /* Hex dump */
 int get_link_offset(char *device);
 char *readip_pcap(pcap_t *pd, unsigned int *len, long to_usec, struct timeval *rcvdtime);
