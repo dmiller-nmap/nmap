@@ -77,6 +77,7 @@ while((arg = getopt(argc,fakeargv,"Ab:D:de:FfhiL:lM:Nno:P::p:qrRS:s:T:tUuw:Vv"))
   case 'l': o.lamerscan++; o.udpscan++; break;
   case 'M': 
     o.max_sockets = atoi(optarg); 
+    if (o.max_sockets < 1) fatal("Argument to -M must be at least 1!");
     if (o.max_sockets > MAX_SOCKETS_ALLOWED) {
       printf("Warning: You are limited to MAX_SOCKETS_ALLOWD (%d) paralell sockets.  If you really need more, change the #define and recompile.\n", MAX_SOCKETS_ALLOWED);
       o.max_sockets = MAX_SOCKETS_ALLOWED;

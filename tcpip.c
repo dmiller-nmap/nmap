@@ -94,6 +94,7 @@ char *packet = safe_malloc(sizeof(struct ip) + sizeof(struct tcphdr) + datalen);
 struct ip *ip = (struct ip *) packet;
 struct tcphdr *tcp = (struct tcphdr *) (packet + sizeof(struct ip));
 struct pseudo_header *pseudo =  (struct pseudo_header *) (packet + sizeof(struct ip) - sizeof(struct pseudo_header)); 
+static int myttl = (time(NULL) % 14) + 51;
 
  /*With these placement we get data and some field alignment so we aren't
    wasting too much in computing the checksum */
@@ -171,7 +172,7 @@ ip->ip_v = 4;
 ip->ip_hl = 5;
 ip->ip_len = BSDFIX(sizeof(struct ip) + sizeof(struct tcphdr) + datalen);
 ip->ip_id = rand();
-ip->ip_ttl = 255;
+ip->ip_ttl = ttl;
 ip->ip_p = IPPROTO_TCP;
 ip->ip_src.s_addr = source->s_addr;
 ip->ip_dst.s_addr= victim->s_addr;
