@@ -54,8 +54,10 @@ if (! -f $infile) { print "ERROR: Could not find input file $infile"; usage(); }
 open INFILE, "<$infile" or die "Could not open input file $infile";
 open OUTFILE, ">$outfile" or die "Could not open output file $outfile";
 
-print OUTFILE "# \$Id$ generated with make-mac-prefixes.pl\n";
+print OUTFILE "# \$Id" . ": \$ generated with make-mac-prefixes.pl\n";
 print OUTFILE "# Original data comes from http://standards.ieee.org/regauth/oui/oui.txt\n";
+print OUTFILE "# These values are known as Organizationally Unique Identifiers (OUIs)\n";
+print OUTFILE "# See http://standards.ieee.org/faqs/OUI.html\n";
 
 while($ln = <INFILE>) {
     if ($ln =~ /\s*([0-9a-fA-F]{2})-([0-9a-fA-F]{2})-([0-9a-fA-F]{2})\s+\(hex\)\s+(\S.*)$/) { 

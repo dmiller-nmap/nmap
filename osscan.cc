@@ -194,7 +194,7 @@ oshardtimeout = MAX(500000, 5 * target->to.timeout);
 
  pd = my_pcap_open_live(target->device, /*650*/ 8192,  (o.spoofsource)? 1 : 0, (ossofttimeout + 500)/ 1000);
 
-if (o.debugging)
+if (o.debugging > 1)
    log_write(LOG_STDOUT, "Wait time is %dms\n", (ossofttimeout +500)/1000);
 
  flt_srchost = target->v4host().s_addr;
@@ -227,7 +227,7 @@ snprintf(filter, sizeof(filter), "dst host %s and (icmp or (tcp and src host %s)
  }
 
 if (o.verbose && openport != (unsigned long) -1)
-  log_write(LOG_STDOUT, "For OSScan assuming that port %d is open and port %d is closed and neither are firewalled\n", openport, closedport);
+  log_write(LOG_STDOUT, "For OSScan assuming port %d is open, %d is closed, and neither are firewalled\n", openport, closedport);
 
  current_port = o.magic_port + NUM_SEQ_SAMPLES +1;
  
@@ -361,19 +361,25 @@ if (o.verbose && openport != (unsigned long) -1)
    seq_packets_sent = 0;
    while (seq_packets_sent < NUM_SEQ_SAMPLES) {
      if (o.scan_delay) enforce_scan_delay(NULL);
+     if (seq_packets_sent > 0) {
+       gettimeofday(&t1, NULL);
+       int remaining_us = 110000 - TIMEVAL_SUBTRACT(t1, seq_send_times[seq_packets_sent - 1]);
+       if (remaining_us > 0) {
+	 /* Need to spend at least .5 seconds in sending all packets to
+	    reliably detect 2HZ timestamp sequencing */
+	 usleep(remaining_us);
+       }
+     }
      send_tcp_raw_decoys(rawsd, target->v4hostip(), o.ttl, 
 			 o.magic_port + seq_packets_sent + 1, 
 			 openport, 
 			 sequence_base + seq_packets_sent + 1, 0, 
 			 TH_SYN, 0 , (u8 *) "\003\003\012\001\002\004\001\011\010\012\077\077\077\077\000\000\000\000\000\000" , 20, NULL, 0);
-     if (!o.scan_delay)
-       usleep( MAX(110000, target->to.srtt)); /* Main reason we wait so long is that we need to spend more than .5 seconds to detect 2HZ timestamp sequencing -- this also should make ISN sequencing more regular */
-   
      gettimeofday(&seq_send_times[seq_packets_sent], NULL);
+     t1 = seq_send_times[seq_packets_sent];
      seq_packets_sent++;
-     
+   
      /* Now we collect  the replies */
-     
      while(si->responses < seq_packets_sent && !timeout) {
        
        if (seq_packets_sent == NUM_SEQ_SAMPLES)
@@ -408,7 +414,9 @@ if (o.verbose && openport != (unsigned long) -1)
        if (ip->ip_p == IPPROTO_TCP) {
 	 /*       readtcppacket((char *) ip, ntohs(ip->ip_len));  */
 	 tcp = ((struct tcphdr *) (((char *) ip) + 4 * ip->ip_hl));
-	 if (ntohs(tcp->th_dport) < o.magic_port || ntohs(tcp->th_dport) - o.magic_port > NUM_SEQ_SAMPLES || ntohs(tcp->th_sport) != openport) {
+	 if (ntohs(tcp->th_dport) < o.magic_port || 
+	     ntohs(tcp->th_dport) - o.magic_port > NUM_SEQ_SAMPLES || 
+	     ntohs(tcp->th_sport) != openport) {
 	   continue;
 	 }
 	 if ((tcp->th_flags & TH_RST)) {
@@ -433,21 +441,24 @@ if (o.verbose && openport != (unsigned long) -1)
 	     }
 	     seq_response_num = si->responses;
 	   }
-	   si->responses++;
-	   si->seqs[seq_response_num] = ntohl(tcp->th_seq); /* TCP ISN */
-	   si->ipids[seq_response_num] = ntohs(ip->ip_id);
-	   if ((gettcpopt_ts(tcp, &timestamp, NULL) == 0))
-	     si->ts_seqclass = TS_SEQ_UNSUPPORTED;
-	   else {
-	     if (timestamp == 0) {
-	       si->ts_seqclass = TS_SEQ_ZERO;
+	   if (si->seqs[seq_response_num] == 0) {
+	     /* New response found! */
+	     si->responses++;
+	     si->seqs[seq_response_num] = ntohl(tcp->th_seq); /* TCP ISN */
+	     si->ipids[seq_response_num] = ntohs(ip->ip_id);
+	     if ((gettcpopt_ts(tcp, &timestamp, NULL) == 0))
+	       si->ts_seqclass = TS_SEQ_UNSUPPORTED;
+	     else {
+	       if (timestamp == 0) {
+		 si->ts_seqclass = TS_SEQ_ZERO;
+	       }
+	     }
+	     si->timestamps[seq_response_num] = timestamp;
+	     /*           printf("Response #%d -- ipid=%hu ts=%i\n", seq_response_num, ntohs(ip->ip_id), timestamp); */
+	     if (si->responses > 1) {
+	       seq_diffs[si->responses-2] = MOD_DIFF(ntohl(tcp->th_seq), si->seqs[si->responses-2]);
 	     }
 	   }
-	   si->timestamps[seq_response_num] = timestamp;
-	   /*           printf("Response #%d -- ipid=%hu ts=%i\n", seq_response_num, ntohs(ip->ip_id), timestamp); */
-	   if (si->responses > 1) {
-	     seq_diffs[si->responses-2] = MOD_DIFF(ntohl(tcp->th_seq), si->seqs[si->responses-2]);
-	   }      
 	 }
        }
      }
@@ -1139,10 +1150,16 @@ int i;
 struct timeval now;
 double bestacc;
 int bestaccidx;
+ int starttimems = 0;
 
  if (target->timedOut(NULL))
    return 1;
  
+ if (o.debugging > 2) {
+   starttimems = o.TimeSinceStartMS();
+   log_write(LOG_STDOUT|LOG_NORMAL|LOG_SKID, "Initiating OS Detection against %s at %.3fs\n", target->targetipstr(), starttimems / 1000.0);
+ }
+
  if (target->FPR == NULL)
    target->FPR = new FingerPrintResults;
 
@@ -1215,6 +1232,9 @@ int bestaccidx;
    match_fingerprint(target->FPR->FPs[target->FPR->goodFP], target->FPR, 
 		     o.reference_FPs, OSSCAN_GUESS_THRESHOLD);
 
+ if (o.debugging > 2) {
+   log_write(LOG_STDOUT|LOG_NORMAL|LOG_SKID, "Completed OS Detection against %s at %.3fs (took %.3fs)\n", target->targetipstr(), o.TimeSinceStartMS() / 1000.0, (o.TimeSinceStartMS() - starttimems) / 1000.0);
+ }
  
  return 1;
 }
@@ -1223,19 +1243,26 @@ int bestaccidx;
    top of a fingerprint.  Gives info which might be useful when the
    FPrint is submitted (eg Nmap version, etc).  Result is written (up
    to ostrlen) to the ostr var passed in */
-void WriteSInfo(char *ostr, int ostrlen, int openport, int closedport) {
+void WriteSInfo(char *ostr, int ostrlen, int openport, int closedport, 
+		const u8 *mac) {
   struct tm *ltime;
   time_t timep;
-  
+  char macbuf[16];
   timep = time(NULL);
   ltime = localtime(&timep);
 
-  snprintf(ostr, ostrlen, "SInfo(V=%s%%P=%s%%D=%d/%d%%Time=%X%%O=%d%%C=%d)\n", 
+  macbuf[0] = '\0';
+  if (mac)
+    snprintf(macbuf, sizeof(macbuf), "%%M=%02X%02X%02X", mac[0], mac[1], 
+	     mac[2]);
+
+  snprintf(ostr, ostrlen, "SInfo(V=%s%%P=%s%%D=%d/%d%%Tm=%X%%O=%d%%C=%d%s)\n", 
 	   NMAP_VERSION, NMAP_PLATFORM, ltime->tm_mon + 1, ltime->tm_mday, 
-	   (int) timep, openport, closedport);
+	   (int) timep, openport, closedport, macbuf);
 }
 
-char *mergeFPs(FingerPrint *FPs[], int numFPs, int openport, int closedport) {
+char *mergeFPs(FingerPrint *FPs[], int numFPs, int openport, int closedport, 
+	       const u8 *mac) {
 static char str[10240];
 struct AVal *AV;
 FingerPrint *currentFPs[32];
@@ -1255,7 +1282,7 @@ for(i=0; i < numFPs; i++) {
 }
 
 /* Lets start by writing the fake "Info" test for submitting fingerprints */
- WriteSInfo(str, sizeof(str), openport, closedport); 
+ WriteSInfo(str, sizeof(str), openport, closedport, mac); 
  p = p + strlen(str);
 
 do {
@@ -1861,7 +1888,7 @@ current_testno++;
 
 /* This next test doesn't work on Solaris because the lamers
    overwrite our ip_id */
-#if !defined(SOLARIS) && !defined(SUNOS) && !defined(IRIX)
+#if !defined(SOLARIS) && !defined(SUNOS) && !defined(IRIX) && !defined(HPUX)
 
 #ifdef WIN32
 if(!winip_corruption_possible()) {

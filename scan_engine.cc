@@ -341,6 +341,10 @@ public:
   /* The most recently received probe response time -- initialized to scan start time. */
   struct timeval lastrcvd;
   struct timeval lastping_sent; /* The time the most recent ping was sent (initialized to scan begin time) */
+
+/* Value of numprobes_sent at lastping_sent time -- to ensure that we
+   don't send too many pings when probes are going slowly. */
+  int lastping_sent_numprobes; 
   struct timeval lastprobe_sent; /* Most recent probe send (including pings) by host.  Init to scan begin time. */
   /* A valid portnumber for sending scanpings.  -1 if none yet found */
   int pingport;
@@ -641,6 +645,7 @@ HostScanStats::HostScanStats(Target *t, UltraScanInfo *UltraSI) {
   num_probes_active = 0; 
   num_probes_waiting_retransmit = 0;
   lastping_sent = lastprobe_sent = lastrcvd = USI->now;
+  lastping_sent_numprobes = 0;
   pingport = -1;
   pingportstate = PORT_UNKNOWN;
   nxtpseq = 1;
@@ -1279,7 +1284,7 @@ void HostScanStats::getTiming(struct ultra_timing_vals *tmng) {
 void HostScanStats::boostScanDelay() {
   if (sdn.delayms == 0)
     sdn.delayms = (USI->udp_scan)? 50 : 5; // In many cases, a pcap wait takes a minimum of 80ms, so this matters little :(
-  else sdn.delayms = MIN(sdn.delayms * 2, 1000);
+  else sdn.delayms = MIN(sdn.delayms * 2, MAX(sdn.delayms, 1000));
   sdn.last_boost = USI->now;
   sdn.droppedRespSinceDelayChanged = 0;
   sdn.goodRespSinceDelayChanged = 0;
@@ -1826,11 +1831,13 @@ static void doAnyPings(UltraScanInfo *USI) {
       hostI != USI->incompleteHosts.end(); hostI++) {
     hss = *hostI;
     if (hss->pingport >= 0 && hss->rld.rld_waiting == false && 
+	hss->numprobes_sent >= hss->lastping_sent_numprobes + 10 &&
 	TIMEVAL_SUBTRACT(USI->now, hss->lastrcvd) > USI->perf.pingtime && 
 	TIMEVAL_SUBTRACT(USI->now, hss->lastping_sent) > USI->perf.pingtime &&
 	USI->gstats->sendOK() && hss->sendOK(NULL)) {
       sendPingProbe(USI, hss);
       hss->lastping_sent = USI->now;
+      hss->lastping_sent_numprobes = hss->numprobes_sent;
     }    
   }
 }
@@ -2118,7 +2125,8 @@ static bool do_one_select_round(UltraScanInfo *USI, struct timeval *stime) {
 	case ECONNREFUSED:
 	  newstate = PORT_CLOSED;
 	  break;
-	  case EHOSTUNREACH:
+	case ENOPROTOOPT:
+	case EHOSTUNREACH:
 	case ETIMEDOUT:
 	case EHOSTDOWN:
 	  /* It could be the host is down, or it could be firewalled.  We
@@ -2166,7 +2174,7 @@ bool allow_ipid_match(u16 ipid_sent, u16 ipid_rcvd) {
 
   /* TODO: I should check if this applies to more recent Solaris releases */
   /* These systems seem to hose sent IPID */
-#if defined(SOLARIS) || defined(SUNOS) || defined(IRIX)
+#if defined(SOLARIS) || defined(SUNOS) || defined(IRIX) || defined(HPUX)
   return true;
 #endif
 
@@ -2927,6 +2935,7 @@ void pos_scan(Target *target, u16 *portarray, int numports, stype scantype) {
   char hostname[1200];
   unsigned long j;
   struct serviceDeductions sd;
+  bool doingOpenFiltered = false;
 
   if (target->timedOut(NULL))
     return;
@@ -2934,7 +2943,8 @@ void pos_scan(Target *target, u16 *portarray, int numports, stype scantype) {
   if (scantype != RPC_SCAN)
     fatal("pos_scan now handles only rpc scan");
 
-  if (target->ports.state_counts[PORT_OPEN] == 0)
+  if (target->ports.state_counts[PORT_OPEN] == 0 && 
+      (o.servicescan || target->ports.state_counts[PORT_OPENFILTERED] == 0))
     return; // RPC Scan only works against already known-open ports
 
   if (o.debugging)
@@ -3008,8 +3018,17 @@ void pos_scan(Target *target, u16 *portarray, int numports, stype scantype) {
 
     /* Make sure we have ports left to scan */
     while(1) {
-      rsi.rpc_current_port = target->ports.nextPort(rsi.rpc_current_port,
-						    0, PORT_OPEN, true);
+      if (doingOpenFiltered) {
+	rsi.rpc_current_port = target->ports.nextPort(rsi.rpc_current_port, 0, 
+						      PORT_OPENFILTERED, true);
+      } else {
+	rsi.rpc_current_port = target->ports.nextPort(rsi.rpc_current_port,
+						      0, PORT_OPEN, true);
+	if (!rsi.rpc_current_port && !o.servicescan) {
+	  doingOpenFiltered = true;
+	  continue;
+	}
+      }
       // When service scan is in use, we only want to scan ports that have already
       // been determined to be RPC
       
@@ -3018,7 +3037,8 @@ void pos_scan(Target *target, u16 *portarray, int numports, stype scantype) {
       if (!rsi.rpc_current_port) 
 	break; // done!
       rsi.rpc_current_port->getServiceDeductions(&sd);
-      if (sd.name && sd.service_tunnel == SERVICE_TUNNEL_NONE && strcmp(sd.name, "rpc") == 0)
+      if (sd.name && sd.service_tunnel == SERVICE_TUNNEL_NONE && 
+	  strcmp(sd.name, "rpc") == 0)
 	break; // Good - an RPC port for us to scan.
     }
     
@@ -3106,7 +3126,8 @@ void pos_scan(Target *target, u16 *portarray, int numports, stype scantype) {
 	       we try to send off new queries if we can ... */
 	    if (ss.numqueries_outstanding >= (int) ss.numqueries_ideal) break;
 	    if (o.scan_delay) enforce_scan_delay(NULL);
-	    if (o.debugging > 2) log_write(LOG_STDOUT, "Sending initial query to port/prog %lu\n", current->portno);
+	    if (o.debugging > 2) 
+	      log_write(LOG_STDOUT, "Sending initial query to port/prog %lu\n", current->portno);
 	    /* Otherwise lets send a packet! */
 	    current->state = PORT_TESTING;
 	    current->trynum = 0;

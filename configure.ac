@@ -100,6 +100,9 @@ case "$host" in
       sgi_cc=yes
     fi
     ;;
+  *-hpux*)
+    AC_DEFINE(HPUX)
+    ;;
   *-solaris2.0*)  
     AC_DEFINE(STUPID_SOLARIS_CHECKSUM_BUG)
     AC_DEFINE(SOLARIS)

@@ -1,5 +1,7 @@
 # $Id$ generated with make-mac-prefixes.pl
 # Original data comes from http://standards.ieee.org/regauth/oui/oui.txt
+# These values are known as Organizationally Unique Identifiers (OUIs)
+# See http://standards.ieee.org/faqs/OUI.html
 000000 Xerox
 000001 Xerox
 000002 Xerox
@@ -324,7 +326,7 @@
 000141 Cable Print
 000142 Cisco Systems
 000143 Cisco Systems
-000144 Cereva Networks
+000144 EMC
 000145 Winsystems
 000146 Tesco Controls
 000147 Zhone Technologies
@@ -460,7 +462,7 @@
 0001C8 Conrad
 0001C9 Cisco Systems
 0001CA Geocast Network Systems
-0001CB NetGame
+0001CB EVR
 0001CC Japan Total Design Communication Co.
 0001CD ARtem
 0001CE Custom Micro Products
@@ -747,7 +749,7 @@
 0002E7 CAB GmbH & Co KG
 0002E8 E.d.&a.
 0002E9 CS Systemes De Securite - C3S
-0002EA Videonics
+0002EA Focus Enhancements
 0002EB Pico Communications
 0002EC Maschoff Design Engineering
 0002ED DXO Telecom Co.
@@ -2633,7 +2635,7 @@
 000A6C Walchem
 000A6D EKS Elektronikservice GmbH
 000A6E Broadcast Technology Limited
-000A6F ZyTera Technologies
+000A6F ZyFLEX Technologies
 000A70 Mpls Forum
 000A71 Avrio Technologies
 000A72 SimpleTech
@@ -3199,7 +3201,7 @@
 000CA2 Scopus Network Technologies
 000CA3 Rancho Technology
 000CA4 Prompttec Product Management GmbH
-000CA5 Private
+000CA5 Naman NZ
 000CA6 Mintera
 000CA7 Metro (Suzhou) Technologies Co.
 000CA8 Garuda Networks
@@ -3439,7 +3441,7 @@
 000D92 Arima Communication
 000D93 Apple Computer
 000D94 Afar Communications
-000D95 Private
+000D95 Opti-cell
 000D96 Vtera Technology
 000D97 Tropos Networks
 000D98 S.W.A.C. Schmitt-Walter Automation Consult GmbH
@@ -3504,7 +3506,7 @@
 000DD3 Samwoo Telecommunication Co.
 000DD4 Revivio
 000DD5 O'rite Technology Co.
-000DD6 Private
+000DD6 ITI
 000DD7 Bright
 000DD8 BBN
 000DD9 Anton Paar GmbH
@@ -3572,7 +3574,7 @@
 000E17 Private
 000E18 MyA Technology
 000E19 LogicaCMG
-000E1A Private
+000E1A JPS Communications
 000E1B IAV GmbH
 000E1C Hach Company
 000E1D Private
@@ -4077,7 +4079,7 @@
 001010 Initio
 001011 Cisco Systems
 001012 Processor Systems (I) PVT
-001013 Industrial Computer Source
+001013 Kontron
 001014 Cisco Systems
 001015 OOmon
 001016 T.sqware
@@ -4207,7 +4209,7 @@
 001092 Netcore
 001093 CMS Computers
 001094 Performance Analysis Broadband, Spirent plc
-001095 Thomson Multimedia
+001095 Thompson
 001096 Tracewell Systems
 001097 WinNet Metropolitan Communications Systems
 001098 Starnet Technologies
@@ -4339,6 +4341,7 @@
 001117 Cesnet
 001118 BLX IC Design
 001119 Solteras
+00111A Motorola BCS
 00111B Targa Systems Div L-3 Communications Canada
 00111C Pleora Technologies
 00111D Hectrix Limited
@@ -4350,6 +4353,332 @@
 001123 Appointech
 001124 Apple Computer
 001125 IBM
+001126 Venstar
+001127 TASI
+001128 Streamit
+001129 Paradise Datacom
+00112A Niko NV
+00112B NetModule
+00112C IZT GmbH
+00112D Guys Without Ties
+00112E Ceicom
+00112F Asustek Computer
+001130 Allied Telesis (Hong Kong)
+001131 Unatech. Co.
+001132 Synology Incorporated
+001133 Siemens Austria Simea
+001134 MediaCell
+001135 Grandeye
+001136 Goodrich Sensor Systems
+001137 Aichi Electric CO.
+001138 Taishin CO.
+001139 Stoeber Antriebstechnik Gmbh + Co. KG.
+00113A Shinboram
+00113B Micronet Communications
+00113C Micronas GmbH
+00113D KN Soltec Co.
+00113E JL
+00113F Alcatel DI
+001140 Nanometrics
+001141 GoodMan
+001142 E-smartcom 
+001143 Dell   (WW Pcba Test)
+001144 Assurance Technology
+001145 ValuePoint Networks
+001146 Private
+001147 Secom-IndustryLTD.
+001148 Prolon Control Systems
+001149 Proliphix
+00114A Kayaba Industry Co
+00114B Francotyp-Postalia AG & Co. KG
+00114C caffeina applied research
+00114D Atsumi Electric Co.
+00114E 690885 Ontario
+00114F US Digital Television
+001150 Belkin
+001151 Mykotronx
+001152 Eidsvoll Electronics AS
+001153 Trident Tek
+001154 Webpro Technologies
+001155 Sevis Systems
+001156 Pharos Systems NZ
+001157 OF Networks Co.
+001158 Nortel Networks
+001159 Matisse Networks
+00115A Ivoclar Vivadent AG
+00115B Elitegroup Computer System Co. (ECS)
+00115C Cisco
+00115D Cisco
+00115E ProMinent Dosiertechnik GmbH
+00115F Intellix Co.
+001160 Artdio Company Co.
+001161 NetStreams
+001162 Star Micronics Co.
+001163 System SPA DEPT. Electronics
+001164 Acard Technology
+001165 Znyx Networks
+001166 Taelim Electronics Co.
+001167 Integrated System Solution
+001168 HomeLogic
+001169 EMS Satcom
+00116A Domo
+00116B Digital Data Communications Asia Co.
+00116C Nanwang Multimedia
+00116D American Time and Signal
+00116E PePLink
+00116F Netforyou Co.
+001170 GSC SRL
+001171 Dexter Communications
+001172 Cotron
+001173 Adtron
+001174 Wibhu Technologies
+001175 PathScale
+001176 Intellambda Systems
+001177 Coaxial Networks
+001178 Chiron Technology
+001179 Singular Technology Co.
+00117A Singim International
+00117B Büchi Labortechnik AG
+00117C e-zy.net
+00117D ZMD America
+00117E Progeny
+00117F Neotune Information Technology
+001180 Motorola BCS
+001181 InterEnergyLtd,
+001182 IMI Norgren
+001183 PSC Scanning
+001184 Humo Laboratory
+001185 Hewlett Packard
+001186 Prime Systems
+001187 Category Solutions
+001188 Enterasys
+001189 Aerotech
+00118A Viewtran Technology Limited
+00118B NetDevices
+00118C Missouri Department of Transportation
+00118D Hanchang System
+00118E Halytech Mace
+00118F Eutech Instruments PTE.
+001190 Digital Design
+001191 CTS-Clima Temperatur Systeme GmbH
+001192 Cisco Systems
+001193 Cisco Systems
+001194 Chi Mei Communication Systems
+001195 Alpha Networks
+001196 Actuality Systems
+001197 Monitoring Technologies Limited
+001198 Prism Media Products Limited
+001199 2wcom GmbH
+00119A Alkeria srl
+00119B Telesynergy Research
+00119C EP&T Energy
+00119D Diginfo Technology
+00119E Solectron Brazil
+00119F Nokia Danmark A/S
+0011A0 Vtech Engineering Canada
+0011A1 Vision Netware Co.
+0011A2 Manufacturing Technology
+0011A3 LanReady Technologies
+0011A4 JStream Technologies
+0011A5 Fortuna Electronic
+0011A6 Sypixx Networks
+0011A7 Infilco Degremont
+0011A8 Quest Technologies
+0011A9 Moimstone Co.
+0011AA Uniclass Technology, Co.
+0011AB Trustable Technology Co.
+0011AC Simtec Electronics
+0011AD Shanghai Ruijie Technology
+0011AE Motorola BCS
+0011AF Medialink-i
+0011B0 Fortelink
+0011B1 BlueExpert Technology
+0011B2 2001 Technology
+0011B3 Yoshimiya Co.
+0011B4 Westermo Teleindustri AB
+0011B5 Shenzhen Powercom Co.
+0011B6 Open Systems International
+0011B7 Melexis Nederland B.V.
+0011B8 Liebherr - Elektronik GmbH
+0011B9 Inner Range
+0011BA Elexol
+0011BB Cisco Systems
+0011BC Cisco Systems
+0011BD Bombardier Transportation
+0011BE AGP Telecom Co.
+0011BF Aesys S.p.a.
+0011C0 Aday Technology
+0011C1 4P Mobile Data Processing
+0011C2 United Fiber Optic Communication
+0011C3 Transceiving System Technology
+0011C4 Terminales de Telecomunicacion Terrestre
+0011C5 TEN Technology
+0011C6 Seagate Technology
+0011C7 Raymarine Group
+0011C8 Powercom Co.
+0011C9 MTT
+0011CA Long Range Systems
+0011CB Jacobsons RKH AB
+0011CC Guangzhou Jinpeng Group Co.
+0011CD Axsun Technologies
+0011CE Ubisense Limited
+0011CF Thrane & Thrane A/S
+0011D0 Tandberg Data ASA
+0011D1 Soft Imaging System GmbH
+0011D2 Perception Digital
+0011D3 NextGenTel Holding ASA
+0011D4 NetEnrich
+0011D5 Hangzhou Sunyard System Engineering Co.
+0011D6 HandEra
+0011D7 eWerks
+0011D8 Asustek Computer
+0011D9 TiVo
+0011DA Vivaas Technology
+0011DB Land-Cellular
+0011DC Glunz & Jensen
+0011DD Fromus TEC. Co.
+0011DE Eurilogic
+0011DF Arecont Systems
+0011E0 U-media Communications
+0011E1 Beko Electronics Co.
+0011E2 Hua Jung Components Co.
+0011E3 Broadband Access Products
+0011E4 Danelec Electronics A/S
+0011E5 KCodes
+0011E6 Scientific Atlanta
+0011E7 Worldsat - Texas de France
+0011E8 Tixi.Com
+0011E9 Starnex CO.
+0011EA Iwics
+0011EB Innovative Integration
+0011EC Avix
+0011ED 802 Global
+0011EE Estari
+0011EF Conitec Datensysteme GmbH
+0011F0 Wideful Limited
+0011F1 QinetiQ
+0011F2 Institute of Network Technologies
+0011F3 Gavitec AG- mobile digit
+0011F4 woori-net
+0011F5 Askey Computer
+0011F6 Asia Pacific Microsystems 
+0011F7 Shenzhen Forward Industry Co.
+0011F8 Airaya
+0011F9 Nortel Networks
+0011FA Rane
+0011FB Heidelberg Engineering GmbH
+0011FC Harting Electric Gmbh &KG
+0011FD Korg
+0011FE Keiyo System Research
+0011FF Digitro Tecnologia Ltda
+001200 Cisco
+001201 Cisco
+001202 Audio International
+001203 Activ Networks
+001204 u10 Networks
+001205 Terrasat Communications
+001206 iQuest (NZ)
+001207 Head Strong International Limited
+001208 Gantner Electronic GmbH
+001209 Fastrax
+00120A Emerson Electric GmbH & Co. OHG
+00120B Chinasys Technologies Limited
+00120C CE-Infosys Pte
+00120D Advanced Telecommunication Technologies
+00120E AboCom
+00120F Ieee 802.3
+001210 WideRay
+001211 Protechna Herbst GmbH & Co. KG
+001212 Plus Vision
+001213 Metrohm AG
+001214 Koenig & Bauer AG
+001215 iStor Networks
+001216 ICP Internet Communication Payment AG
+001217 Cisco-Linksys
+001218 Aruze
+001219 Ahead Communication Systems
+00121A Techno Soft Systemnics
+00121B Sound Devices
+00121C Parrot S.A.
+00121D Netfabric
+00121E Juniper Networks
+00121F Harding Intruments
+001220 Cadco Systems
+001221 B.Braun Melsungen AG
+001222 Skardin (UK)
+001223 Pixim
+001224 NexQL
+001225 Motorola BCS
+001226 Japan Direx
+001227 Franklin Electric Co.
+001228 Data
+001229 BroadEasy Technologies Co.
+00122A VTech Telecommunications
+00122B Virbiage
+00122C Soenen Controls N.V.
+00122D SiNett
+00122E Signal Technology - Aisd
+00122F Sanei Electric
+001230 Picaso Infocommunication CO.
+001231 Motion Control Systems
+001232 LeWiz Communications
+001233 JRC Tokki Co.
+001234 Camille Bauer
+001235 Andrew
+001236 Tidal Networks
+001237 Texas Instruments
+001238 SetaBox Technology Co.
+001239 S Net Systems
+00123A Posystech
+00123B KeRo Systems ApS
+00123C IP3 Networks
+00123D GES
+00123E Erune Technology Co.
+00123F Dell
+001240 Amoi Electronics Co.
+001241 a2i marketing center
+001242 Millennial Net
+001243 Cisco
+001244 Cisco
+001245 Zellweger Analytics
+001246 T.O.M Technology.
+001247 Samsung Electronics Co.
+001248 Kashya
+001249 Delta Elettronica S.p.A.
+00124A Dedicated Devices
+00124B Chipcon AS
+00124C Bbwm
+00124D Inducon BV
+00124E XAC Automation
+00124F Tyco Thermal Controls
+001250 Tokyo Aircaft Instrument Co.
+001251 Silink
+001252 Citronix
+001253 AudioDev AB
+001254 Spectra Technologies Holdings Company
+001255 NetEffect Incorporated
+001256 LG Information & COMM.
+001257 LeapComm Communication Technologies
+001258 Activis Polska
+001259 Thermo Electron Karlsruhe
+00125A Microsoft
+00125B Kaimei Electroni
+00125C Green Hills Software
+00125D CyberNet
+00125E Caen
+00125F Awind
+001260 Stanton Magnetics
+001261 Adaptix
+001262 Nokia Danmark A/S
+001263 Data Voice Technologies GmbH
+001264 daum electronic gmbh
+001265 Enerdyne Technologies
+001266 Private
+001267 Matsushita Electronic Components Co.
+001268 IPS d.o.o.
+001269 Value Electronics
+00126A Optoelectronics Co.
+00126B Ascalade Communications Limited
 001C7C Perq Systems
 002000 Lexmark International
 002001 DSP Solutions
@@ -4377,7 +4706,7 @@
 002017 Orbotech
 002018 CIS Technology
 002019 Ohler Gmbh
-00201A N-base Switch Communications
+00201A MRV Communications
 00201B Northern Telecom/network
 00201C Excel
 00201D Katana Products
@@ -4539,7 +4868,7 @@
 0020B9 Metricom
 0020BA Center FOR High Performance
 0020BB ZAX
-0020BC Jtec
+0020BC Long Reach Networks
 0020BD Niobrara R &
 0020BE LAN Access
 0020BF Aehr Test Systems
@@ -4887,7 +5216,7 @@
 004014 Comsoft Gmbh
 004015 Ascom Infrasys AG
 004016 Hadax Electronics
-004017 XCD
+004017 Troy Group
 004018 Adobe Systems
 004019 Aeon Systems
 00401A Fuji Electric CO.
@@ -5143,7 +5472,7 @@
 005015 Bright Star Engineering
 005016 Sst/woodhead Industries
 005017 RSR S.r.l.
-005018 Advanced Multimedia Internet Technology
+005018 AMIT
 005019 Spring Tide Networks
 00501A Uisiqn
 00501B ABL Canada
@@ -5202,7 +5531,7 @@
 005055 Doms A/S
 005056 VMWare
 005057 Broadband Access Systems
-005058 Vegastream Limited
+005058 VegaStream Limted
 005059 Suite Technology Systems Network
 00505A Network Alchemy
 00505B Kawasaki LSI U.s.a.
@@ -5318,7 +5647,7 @@
 0050CF Vanlink Communication Technology Research Institute
 0050D0 Minerva Systems
 0050D1 Cisco Systems
-0050D2 BAE Systems Canada
+0050D2 CMC Electronics
 0050D3 Digital Audio Processing
 0050D4 Joohong Information
 0050D5 AD Systems
@@ -5436,7 +5765,7 @@
 006049 Vina Technologies
 00604A Saic Ideas Group
 00604B Biodata Gmbh
-00604C SAT
+00604C Sagem SA
 00604D MMC Networks
 00604E Cycle Computer
 00604F Suzuki MFG. CO.
@@ -6031,7 +6360,7 @@
 00909A ONE World Systems
 00909B Markpoint AB
 00909C Terayon Communications Systems
-00909D GSE Systems
+00909D NovaTech Process Solutions
 00909E Critical IO
 00909F Digi-data
 0090A0 8X8
@@ -6133,7 +6462,7 @@
 0091D6 Crystal Group
 009D8E Cardiac Recorders
 00A000 Centillion Networks
-00A001 Watkins-johnson Company
+00A001 DRS Signal Solutions
 00A002 Leeds & Northrup Australia
 00A003 Staefa Control System
 00A004 Netpower
@@ -6197,7 +6526,7 @@
 00A03E ATM Forum
 00A03F Computer Society Microprocessor & Microprocessor Standards
 00A040 Apple Computer
-00A041 Leybold-inficon
+00A041 Inficon
 00A042 Spur Products
 00A043 American Technology LABS
 00A044 NTT IT CO.
@@ -6993,7 +7322,7 @@
 00E01F Avidia Systems
 00E020 Tecnomen OY
 00E021 Freegate
-00E022 MediaLight
+00E022 Analog Devices
 00E023 Telrad
 00E024 Gadzoox Networks
 00E025 dit CO.

@@ -741,7 +741,9 @@ void output_xml_scaninfo_records(struct scan_lists *scanlist) {
    into the XML log */
 static void write_xml_initial_hostinfo(Target *currenths,
 				  const char *status) {
+  
   log_write(LOG_XML, "<status state=\"%s\" />\n<address addr=\"%s\" addrtype=\"%s\" />\n", status,currenths->targetipstr(), (o.af() == AF_INET)? "ipv4" : "ipv6");
+  print_MAC_XML_Info(currenths);
   if (*currenths->HostName()) {
     log_write(LOG_XML, "<hostnames><hostname name=\"%s\" type=\"PTR\" /></hostnames>\n", currenths->HostName());
   } else /* If machine is up, put blank hostname so front ends know that
@@ -936,22 +938,37 @@ static void printosclassificationoutput(const struct OS_Classification_Results *
 
 /* Prints the MAC address if one was found for the target (generally
    this means that the target is directly connected on an ethernet
-   network. */
+   network.  This only prints to human output -- XML is handled by a
+   separate call ( print_MAC_XML_Info ) because it needs to be printed
+   in a certain place to conform to DTD. */
 void printmacinfo(Target *currenths) {
   const u8 *mac = currenths->MACAddress();
   char macascii[32];
-  char vendorstr[128];
 
   if (mac) {
     const char *macvendor = MACPrefix2Corp(mac);
+    snprintf(macascii, sizeof(macascii), "%02X:%02X:%02X:%02X:%02X:%02X",  mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+    log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT, "MAC Address: %s (%s)\n", macascii, macvendor? macvendor : "Unknown");
+  }
+}
+
+/* Prints the MAC address (if discovered) to XML output */
+void print_MAC_XML_Info(Target *currenths) {
+  const u8 *mac = currenths->MACAddress();
+  char macascii[32];
+  char vendorstr[128];
+  char *xml_mac = NULL;
+
+  if (mac) {
+    const char *macvendor = MACPrefix2Corp(mac);
+    snprintf(macascii, sizeof(macascii), "%02X:%02X:%02X:%02X:%02X:%02X",
+	     mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
     if (macvendor) {
-      char *xml_mac = xml_convert(macvendor);
+      xml_mac = xml_convert(macvendor);
       snprintf(vendorstr, sizeof(vendorstr), " vendor=\"%s\"", xml_mac);
       free(xml_mac);
     } else vendorstr[0] = '\0';
-    snprintf(macascii, sizeof(macascii), "%02X:%02X:%02X:%02X:%02X:%02X",  mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-    log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT, "MAC Address: %s (%s)\n", macascii, macvendor? macvendor : "Unknown");
-    log_write(LOG_XML, "<address addr=\"%s\"%s addrtype=\"%s\" />\n", macascii, vendorstr, "mac");
+    log_write(LOG_XML, "<address addr=\"%s\" addrtype=\"mac\"%s />\n", macascii, vendorstr);
   }
 }
 
@@ -1030,11 +1047,11 @@ void printosscanoutput(Target *currenths) {
 	  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT, "\n");
 	}
 	if (currenths->FPR->fingerprintSuitableForSubmission()) {
-	  log_write(LOG_NORMAL|LOG_SKID_NOXLT|LOG_STDOUT,"No exact OS matches for host (If you know what OS is running on it, see http://www.insecure.org/cgi-bin/nmap-submit.cgi).\nTCP/IP fingerprint:\n%s\n", mergeFPs(currenths->FPR->FPs, currenths->FPR->numFPs, currenths->FPR->osscan_opentcpport, currenths->FPR->osscan_closedtcpport));
+	  log_write(LOG_NORMAL|LOG_SKID_NOXLT|LOG_STDOUT,"No exact OS matches for host (If you know what OS is running on it, see http://www.insecure.org/cgi-bin/nmap-submit.cgi).\nTCP/IP fingerprint:\n%s\n", mergeFPs(currenths->FPR->FPs, currenths->FPR->numFPs, currenths->FPR->osscan_opentcpport, currenths->FPR->osscan_closedtcpport, currenths->MACAddress()));
 	} else {
 	  log_write(LOG_NORMAL|LOG_SKID_NOXLT|LOG_STDOUT,"No exact OS matches for host (test conditions non-ideal).");
 	  if (o.verbose > 1)
-	    log_write(LOG_NORMAL|LOG_SKID_NOXLT|LOG_STDOUT, "\nTCP/IP fingerprint:\n%s", mergeFPs(currenths->FPR->FPs, currenths->FPR->numFPs, currenths->FPR->osscan_opentcpport, currenths->FPR->osscan_closedtcpport));
+	    log_write(LOG_NORMAL|LOG_SKID_NOXLT|LOG_STDOUT, "\nTCP/IP fingerprint:\n%s", mergeFPs(currenths->FPR->FPs, currenths->FPR->numFPs, currenths->FPR->osscan_opentcpport, currenths->FPR->osscan_closedtcpport, currenths->MACAddress()));
 	}
       }
       
@@ -1045,15 +1062,15 @@ void printosscanoutput(Target *currenths) {
     } else if (currenths->FPR->overall_results == OSSCAN_NOMATCHES) {
       if (o.scan_delay < 500  && currenths->FPR->osscan_opentcpport > 0 &&
 	  currenths->FPR->osscan_closedtcpport > 0 ) {
-	log_write(LOG_NORMAL|LOG_SKID_NOXLT|LOG_STDOUT,"No OS matches for host (If you know what OS is running on it, see http://www.insecure.org/cgi-bin/nmap-submit.cgi).\nTCP/IP fingerprint:\n%s\n", mergeFPs(currenths->FPR->FPs, currenths->FPR->numFPs, currenths->FPR->osscan_opentcpport, currenths->FPR->osscan_closedtcpport));
+	log_write(LOG_NORMAL|LOG_SKID_NOXLT|LOG_STDOUT,"No OS matches for host (If you know what OS is running on it, see http://www.insecure.org/cgi-bin/nmap-submit.cgi).\nTCP/IP fingerprint:\n%s\n", mergeFPs(currenths->FPR->FPs, currenths->FPR->numFPs, currenths->FPR->osscan_opentcpport, currenths->FPR->osscan_closedtcpport, currenths->MACAddress()));
       } else {
-	log_write(LOG_NORMAL|LOG_SKID_NOXLT|LOG_STDOUT,"No OS matches for host (test conditions non-ideal).\nTCP/IP fingerprint:\n%s\n", mergeFPs(currenths->FPR->FPs, currenths->FPR->numFPs, currenths->FPR->osscan_opentcpport, currenths->FPR->osscan_closedtcpport));
+	log_write(LOG_NORMAL|LOG_SKID_NOXLT|LOG_STDOUT,"No OS matches for host (test conditions non-ideal).\nTCP/IP fingerprint:\n%s\n", mergeFPs(currenths->FPR->FPs, currenths->FPR->numFPs, currenths->FPR->osscan_opentcpport, currenths->FPR->osscan_closedtcpport, currenths->MACAddress()));
       }
     } else if (currenths->FPR->overall_results == OSSCAN_TOOMANYMATCHES || currenths->FPR->num_perfect_matches > 8)
       {
 	log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Too many fingerprints match this host to give specific OS details\n");
 	if (o.debugging || o.verbose) {
-	  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"TCP/IP fingerprint:\n%s",  mergeFPs(currenths->FPR->FPs, currenths->FPR->numFPs, currenths->FPR->osscan_opentcpport, currenths->FPR->osscan_closedtcpport));
+	  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"TCP/IP fingerprint:\n%s",  mergeFPs(currenths->FPR->FPs, currenths->FPR->numFPs, currenths->FPR->osscan_opentcpport, currenths->FPR->osscan_closedtcpport, currenths->MACAddress()));
 	}
       } else { assert(0); }
     

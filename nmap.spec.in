@@ -61,7 +61,7 @@ make
 
 make prefix=$RPM_BUILD_ROOT%{prefix} mandir=$RPM_BUILD_ROOT%{prefix}/share/man install
 
-mkdir -p $RPM_BUILD_ROOT%{prefix}/share/gnome/apps/Utilities
+mkdir -p $RPM_BUILD_ROOT%{prefix}/share/applications
 
 strip $RPM_BUILD_ROOT%{prefix}/bin/* || :
 gzip $RPM_BUILD_ROOT%{prefix}/share/man/man1/* || :
@@ -80,7 +80,7 @@ gzip $RPM_BUILD_ROOT%{prefix}/share/man/man1/* || :
 %files 
 %defattr(-,root,root)
 %doc COPYING
-%doc docs/README docs/copying.html docs/nmap-fingerprinting-article.txt
+%doc docs/README docs/nmap-fingerprinting-article.txt
 %doc docs/nmap.deprecated.txt docs/nmap.usage.txt docs/nmap_doc.html
 %doc docs/nmap_manpage.html docs/nmap_manpage-es.html
 %doc docs/nmap_manpage-fr.html docs/nmap_manpage-lt.html 
@@ -95,29 +95,33 @@ gzip $RPM_BUILD_ROOT%{prefix}/share/man/man1/* || :
 %defattr(-,root,root)
 %{prefix}/bin/nmapfe
 %{prefix}/bin/xnmap
-%{prefix}/share/gnome/apps/Utilities/nmapfe.desktop
+%{prefix}/share/applications/nmapfe.desktop
 %{prefix}/share/man/man1/xnmap.1.gz
 %{prefix}/share/man/man1/nmapfe.1.gz
 %endif
 
 %changelog
 
-* Mon Dec 16 2002 Matthieu Verbert (mve@zurich.ibm.com)
+* Sat Sep 01 2004 Stephane Loeuillet (stephane.loeuillet(a)tiscali.fr)
+- Place .desktop file under ${prefix}/share/applications rather than
+  ${prefix}/share/gnome/apps/Utilities
+
+* Mon Dec 16 2002 Matthieu Verbert (mve(a)zurich.ibm.com)
 - Place man pages under ${prefix}/share/man rather than ${prefix}/man
 
-* Fri Jun 01 2001 GOMEZ Henri (hgomez@slib.fr)
+* Fri Jun 01 2001 GOMEZ Henri (hgomez(a)slib.fr)
 - Patch which checks that $RPM_BUILD_ROOT is not "/" before rm'ing it.
 
-* Tue Mar 06 2001 Ben Reed <ben@opennms.org>
+* Tue Mar 06 2001 Ben Reed <ben(a)opennms.org>
 - changed spec to handle not building the frontend
 
-* Thu Dec 30 1999 Fyodor (fyodor@insecure.org)
+* Thu Dec 30 1999 Fyodor (fyodor(a)insecure.org)
 - Updated description
 - Eliminated source1 (nmapfe.desktop) directive and simply packaged it with Nmap
 - Fixed nmap distribution URL (source0)
 - Added this .rpm to base Nmap distribution
 
-* Mon Dec 13 1999 Tim Powers <timp@redhat.com>
+* Mon Dec 13 1999 Tim Powers <timp(a)redhat.com>
 - based on origional spec file from
 	http://www.insecure.org/nmap/index.html#download
 - general cleanups, removed lots of commenrts since it made the spec hard to
@@ -136,12 +140,12 @@ gzip $RPM_BUILD_ROOT%{prefix}/share/man/man1/* || :
 	many files/dirs
 - added desktop entry for gnome
 
-* Sun Jan 10 1999 Fyodor (fyodor@insecure.org)
-- Merged in spec file sent in by Ian Macdonald <ianmacd@xs4all.nl>
+* Sun Jan 10 1999 Fyodor (fyodor(a)insecure.org)
+- Merged in spec file sent in by Ian Macdonald <ianmacd(a)xs4all.nl>
 
-* Tue Dec 29 1998 Fyodor (fyodor@insecure.org)
+* Tue Dec 29 1998 Fyodor (fyodor(a)insecure.org)
 - Made some changes, and merged in another .spec file sent in
-  by Oren Tirosh <oren@hishome.net>
+  by Oren Tirosh <oren(a)hishome.net>
 
-* Mon Dec 21 1998 Riku Meskanen (mesrik@cc.jyu.fi)
+* Mon Dec 21 1998 Riku Meskanen (mesrik(a)cc.jyu.fi)
 - initial build for RH 5.x

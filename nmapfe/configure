@@ -2631,6 +2631,12 @@ _ACEOF
       sgi_cc=yes
     fi
     ;;
+  *-hpux*)
+    cat >>confdefs.h <<\_ACEOF
+#define HPUX 1
+_ACEOF
+
+    ;;
   *-solaris2.0*)
     cat >>confdefs.h <<\_ACEOF
 #define STUPID_SOLARIS_CHECKSUM_BUG 1

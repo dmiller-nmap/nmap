@@ -1726,7 +1726,7 @@ void set_pcap_filter(Target *target,
 		     pcap_t *pd, PFILTERFN filter, char *bpf, ...)
 {
   va_list ap;
-  char buf[1024];
+  char buf[3072];
   struct bpf_program fcode;
 #ifndef __amigaos__
   unsigned int localnet, netmask;

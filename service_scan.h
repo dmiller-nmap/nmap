@@ -242,7 +242,7 @@ class ServiceProbe {
   void setProbeProtocol(u8 protocol) { probeprotocol = protocol; }
 
   // Takes a string as given in the 'ports '/'sslports ' line of
-  // nmap-services-probes.  Pass in the list from the appropriate
+  // nmap-service-probes.  Pass in the list from the appropriate
   // line.  For 'sslports', tunnel should be specified as
   // SERVICE_TUNNEL_SSL.  Otherwise use SERVICE_TUNNEL_NONE.  The line
   // number is requested because this function will bail with an error

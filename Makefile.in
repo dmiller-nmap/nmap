@@ -1,4 +1,4 @@
-NMAP_VERSION = 3.70
+NMAP_VERSION = 3.71-PRE1
 NMAP_NAME= nmap
 NMAP_URL= http://www.insecure.org/nmap/
 NMAP_PLATFORM=@host@
@@ -9,7 +9,7 @@ sbindir = @sbindir@
 mandir = @mandir@
 srcdir = @srcdir@
 nmapdatadir = @datadir@/nmap
-deskdir = $(prefix)/share/gnome/apps/Utilities
+deskdir = $(prefix)/share/applications
 
 NBASEDIR=@NBASEDIR@
 NSOCKDIR=@NSOCKDIR@

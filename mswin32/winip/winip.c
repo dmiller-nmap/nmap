@@ -860,7 +860,7 @@ void set_pcap_filter(Target *target,
        pcap_t *pd, PFILTERFN filter, char *bpf, ...)
 {
   va_list ap;
-  char buf[512];
+  char buf[3072]; // same size as bpf ie size of filter in scan_engine.cc
   struct bpf_program fcode;
   unsigned int localnet, netmask;
   char err0r[256];
@@ -875,7 +875,10 @@ void set_pcap_filter(Target *target,
     ; /* fatal("Failed to lookup device subnet/netmask: %s", err0r);*/
 
   va_start(ap, bpf);
-  vsprintf(buf, bpf, ap);
+  if (vsnprintf(buf, sizeof(buf), bpf, ap) < 0)
+    {
+      fatal("Failed to copy the filter string %s",bpf);
+    }
   va_end(ap);
 
   if (o.debugging)

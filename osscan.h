@@ -169,13 +169,15 @@ struct AVal *gettestbyname(FingerPrint *FP, const char *name);
 int AVal_match(struct AVal *reference, struct AVal *fprint, unsigned long *num_subtests, unsigned long *num_subtests_succeeded, int shortcut);
 
 void freeFingerPrint(FingerPrint *FP);
-char *mergeFPs(FingerPrint *FPs[], int numFPs, int openport, int closedport);
+char *mergeFPs(FingerPrint *FPs[], int numFPs, int openport, int closedport,
+	       const u8 *mac);
 
 /* Writes an informational "Test" result suitable for including at the
    top of a fingerprint.  Gives info which might be useful when the
    FPrint is submitted (eg Nmap version, etc).  Result is written (up
    to ostrlen) to the ostr var passed in */
-void WriteSInfo(char *ostr, int ostrlen, int openport, int closedport);
+void WriteSInfo(char *ostr, int ostrlen, int openport, int closedport, 
+		const u8 *mac);
 
 /* This function takes an array of "numSamples" IP IDs and analyzes
  them to determine their sequenceability classification.  It returns

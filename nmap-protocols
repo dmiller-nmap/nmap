@@ -4,6 +4,8 @@
 # This was created by Gerhard Rieger - privat <rieger@iue.tuwien.ac.at>
 # based on IANA docs per 2000/05/28 .  Gerhard was the initial author of
 # the Nmap IP protocol scanning code.
+# Updated 9/20/04 by Fyodor from IEEE data at 
+# http://www.iana.org/assignments/protocol-numbers
 
 hopopt           0     HOPOPT      # IPv6 Hop-by-Hop Option
 icmp             1     ICMP        # Internet Control Message
@@ -139,6 +141,11 @@ sps            130     SPS         # Secure Packet Shield
 pipe           131     PIPE        # Private IP Encapsulation within IP
 sctp           132     SCTP        # Stream Control Transmission Protocol
 fc             133     FC          # Fibre Channel
-#   134-254             # Unassignedraw            255                 # Reserved
+rsvp-e2e-ignore 134                # [RFC3175]
+mobility        135                # [RFC3775]
+udplite         136                # [RFC3828]
+#   134-252 Unassigned
+#   253-254 experimentation and testing
+#   255 reserved
 
 

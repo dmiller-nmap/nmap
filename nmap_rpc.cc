@@ -341,6 +341,12 @@ int rpc_are_we_done(char *msg, int msg_len, Target *target,
   int trynum;
   struct portinfo *current;
 
+  if (rsi->rpc_current_port->state == PORT_OPENFILTERED) {
+    /* Received a packet, so this port is actually open */
+     target->ports.addPort(rsi->rpc_current_port->portno, 
+			   rsi->rpc_current_port->proto, NULL, PORT_OPEN);
+  }
+
   rpc_pack = (struct rpc_hdr_rcv *) msg;     
   if (msg_len < 24 || msg_len > 32 || (msg_len < 32 && rpc_pack->accept_stat == PROG_MISMATCH)) {
     /* This is not a valid reply -- we kill the port 
@@ -390,7 +396,6 @@ int rpc_are_we_done(char *msg, int msg_len, Target *target,
   /* OK, now that we know what this is a response to, we delete the
       appropriate entry from our scanlist */
   current = &scan[scan_offset];
-    
    
   if (current->state != PORT_TESTING && current->state != PORT_CLOSED &&
       current->state != PORT_FILTERED) {
@@ -508,7 +513,6 @@ unsigned long current_msg_len;
 
  while (ss->numqueries_outstanding > 0) {
 
-   
    /* Insure there is no timeout ... */
    gettimeofday(&tv, NULL);
    if (target->timedOut(&tv))

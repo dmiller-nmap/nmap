@@ -1,10 +1,11 @@
 [Desktop Entry]
+Encoding=UTF-8
 Name=NmapFE
 GenericName=Security Scanner
 Comment=GUI frontend for Nmap security/port scanner
 Version=1.0
-Encoding=UTF-8
 TryExec=nmapfe
+Exec=nmapfe
 Icon=icon-network
 Terminal=false
 Type=Application

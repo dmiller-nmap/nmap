@@ -299,7 +299,8 @@ up.  Thus you can effectively obtain the same info as
 "rpcinfo -p" even if the target's portmapper is behind a
 firewall (or protected by TCP wrappers).  Decoys do not
 currently work with RPC scan, at some point I may add decoy
-support for UDP RPC scans.
+support for UDP RPC scans.  This is automatically enabled as part of
+version scan (-sV) if you request that.
 .TP
 .B \-sL
 List scan.  This method simply generates and prints a list of
@@ -760,12 +761,15 @@ and is also a good learning tool.
 .TP
 .B --datadir [directoryname]
 Nmap obtains some special data at runtime in files named
-nmap-services, nmap-protocols, nmap-rpc, and nmap-os-fingerprints.
-Nmap first searches these files in the directory option to --nmapdir.
-Any files not found there, are searched for in the directory specified
-by the NMAPDIR environmental variable.  Next comes ~/nmap, and then
-a compiled-in location such as /usr/share/nmap .  As a last resort,
-Nmap will look in the current directory.
+nmap-service-probes, nmap-services, nmap-protocols, nmap-rpc,
+nmap-mac-prefixes, and nmap-os-fingerprints.  Nmap first searches
+these files in the directory option to --datadir.  Any files not found
+there, are searched for in the directory specified by the NMAPDIR
+environmental variable.  Next comes ~/.nmap for real and effective
+UIDs (POSIX systems only) or location of the Nmap executable (Win32
+only), and then a compiled-in location such as /usr/local/share/nmap
+or /usr/share/nmap .  As a last resort, Nmap will look in the current
+directory.
 .TP
 .B TIMING OPTIONS
 Generally Nmap does a good job at adjusting for Network
@@ -810,7 +814,10 @@ minutes and won't wait more than 0.3 seconds for individual probes.
 It does allow for very quick network sweeps though :).  
 .Sp 
 You can also reference these by number (0-5).  For example, "-T0"
-gives you Paranoid mode and "-T5" is Insane mode.
+gives you Paranoid mode and "-T5" is Insane mode.  If you wish to set
+specific timing values such as --max_rtt_timeout or --host_timeout,
+place them after any -T option on the command line.  Otherwise the
+defaults for the selected timing mode will override your choices.
 .TP
 .B --host_timeout <milliseconds>
 Specifies the amount of time Nmap is allowed to spend

@@ -456,6 +456,15 @@ pt.group_size = MAX(pt.group_size, o.min_parallelism);
 pt.group_size = MAX(pt.min_group_size, 0.9999 + pt.group_size / probes_per_host);
 max_block_size /= probes_per_host;
 
+/* TODO: I need to move ping scanning to ultra_scan or fix this
+   function to handle scan_delay the way ultra scan does (limit the
+   amount of time between probes sent to the SAME machine.  This func
+   does the opposite -- sends same-box probes immediately and waits to
+   go on to the next machine. */
+ if (o.scan_delay > 1000) {
+   pt.group_size = max_block_size = 1;
+ }
+
 time = (struct timeval *) safe_zalloc(sizeof(struct timeval) * ((pt.max_tries) * num_hosts));
 id = (unsigned short) get_random_uint();
 
@@ -469,6 +478,8 @@ if (ptech.connecttcpscan)  {
     max_block_size = MIN(50, max_sockets / probes_per_host);
   }
   max_block_size = MAX(1, max_block_size);
+  if (o.scan_delay > 1000)
+    max_block_size = 1;
   pt.group_size = MIN(pt.group_size, max_block_size);
   memset((char *)&tqi, 0, sizeof(tqi));
 
@@ -1053,7 +1064,7 @@ int get_ping_results(int sd, pcap_t *pd, Target *hostbatch[], int pingtype,
 		     struct timeout_info *to, int id, struct pingtech *ptech, 
 		     struct scan_lists *ports) {
   fd_set fd_r, fd_x;
-  struct timeval myto, tmpto, start, end, rcvdtime;
+  struct timeval myto, tmpto, start, rcvdtime;
   unsigned int bytes;
   int res;
   struct ppkt {
@@ -1108,6 +1119,8 @@ int get_ping_results(int sd, pcap_t *pd, Target *hostbatch[], int pingtype,
 
     if (pd) {
       ip = (struct ip *) readip_pcap(pd, &bytes, to->timeout, &rcvdtime, &linkhdr);
+      if (!ip)
+	gettimeofday(&rcvdtime, NULL);
     } else {    
       FD_SET(sd, &fd_r);
       FD_SET(sd, &fd_x);
@@ -1115,14 +1128,14 @@ int get_ping_results(int sd, pcap_t *pd, Target *hostbatch[], int pingtype,
       if (res == 0) break;
       bytes = recv(sd, response,sizeof(response), 0 );
       ip = (struct ip *) response;
+      gettimeofday(&rcvdtime, NULL);
       if (bytes > 0) {
-	gettimeofday(&rcvdtime, NULL);
 	PacketTrace::trace(PacketTrace::RCVD, (u8 *) response, bytes, &rcvdtime);
       }
     }
 
-    gettimeofday(&end, NULL);
-    tm = TIMEVAL_SUBTRACT(end,start);  
+    tm = TIMEVAL_SUBTRACT(rcvdtime,start);  
+
     if (tm > (MAX(400000,3 * to->timeout)))
       timeout = 1;
     if (bytes == 0 &&  tm > to->timeout) {  

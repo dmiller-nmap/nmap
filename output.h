@@ -130,8 +130,13 @@ void printportoutput(Target *currenths, PortList *plist);
 
 /* Prints the MAC address if one was found for the target (generally
    this means that the target is directly connected on an ethernet
-   network. */
+   network.  This only prints to human output -- XML is handled by a
+   separate call ( print_MAC_XML_Info ) because it needs to be printed
+   in a certain place to conform to DTD. */
 void printmacinfo(Target *currenths);
+
+/* Prints the MAC address (if discovered) to XML output */
+void print_MAC_XML_Info(Target *currenths);
 
 /* Write some information (printf style args) to the given log stream(s).
    Remember to watch out for format string bugs. */

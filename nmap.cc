@@ -1940,7 +1940,7 @@ int nmap_fetchfile(char *filename_returned, int bufferlen, char *file) {
     }
   }
 
-  if ((dirptr = getenv("NMAPDIR"))) {
+  if (!foundsomething && (dirptr = getenv("NMAPDIR"))) {
     res = snprintf(filename_returned, bufferlen, "%s/%s", dirptr, file);
     if (res > 0 && res < bufferlen) {
       if (fileexistsandisreadable(filename_returned))
@@ -1960,7 +1960,7 @@ int nmap_fetchfile(char *filename_returned, int bufferlen, char *file) {
     if (!foundsomething && getuid() != geteuid()) {
       pw = getpwuid(geteuid());
       if (pw) {
-	res = snprintf(filename_returned, bufferlen, "%s/nmap/%s", pw->pw_dir, file);
+	res = snprintf(filename_returned, bufferlen, "%s/.nmap/%s", pw->pw_dir, file);
 	if (res > 0 && res < bufferlen) {
 	  if (fileexistsandisreadable(filename_returned))
 	    foundsomething = 1;
@@ -1997,11 +1997,11 @@ int nmap_fetchfile(char *filename_returned, int bufferlen, char *file) {
     if (res > 0 && res < bufferlen) {
       if (fileexistsandisreadable(dot_buffer)) {
 #ifdef WIN32
-	if (warningcount++ < 5 && o.debugging)
+	if (warningcount++ < 1 && o.debugging)
 #else
-	if(warningcount++ < 5)
+	if(warningcount++ < 1)
 #endif
-	  error("WARNING!  The following files exist and are readable: %s and %s.  I am choosing %s for security reasons.  set NMAPDIR=. to give priority to files in your local directory", filename_returned, dot_buffer, filename_returned);
+	  error("Warning: File %s exists, but Nmap is using %s for security and consistency reasons.  set NMAPDIR=. to give priority to files in your local directory (may affect the other data files too).", dot_buffer, filename_returned);
       }
     }
   }

@@ -870,16 +870,15 @@ PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=F%ULEN=134%DAT=E)
 # APC AP9617  network management card inside Matrix 5000 UPS
 Fingerprint APC network-enabled UPS
 Class APC | embedded || power-device
-SInfo(V=3.40PVT10%P=i686-pc-windows-windows%D=8/18%Time=3F416004%O=21%C=1)
-TSeq(Class=TD%gcd=30D4%SI=4%IPID=I%TS=1000HZ)
-T1(Resp=Y%DF=N%W=10CD%ACK=S++%Flags=AS%Ops=MENWNNT)
+TSeq(Class=TD%gcd=<61AC%SI=<3C%IPID=I%TS=1000HZ)
+T1(DF=N%W=10CD%ACK=S++%Flags=AS%Ops=MENWNNT)
 T2(Resp=N)
 T3(Resp=Y%DF=N%W=0%ACK=O%Flags=AR%Ops=)
-T4(Resp=Y%DF=N%W=0%ACK=O%Flags=R%Ops=)
-T5(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
-T6(Resp=Y%DF=N%W=0%ACK=O%Flags=R%Ops=)
+T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(Resp=N)
-PU(Resp=Y%DF=N%TOS=0%IPLEN=38%RIPTL=148%RIPCK=E%UCK=E%ULEN=134%DAT=E)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint APC Web/SNMP UPS management card
 Class APC | embedded || power-device
@@ -2501,16 +2500,15 @@ PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Cisco Catalyst 4006 Switch running NmpSW 7.4(2)
 Class Cisco | NmpSW || switch
-SInfo(V=3.00%P=i686-pc-linux-gnu%D=2/12%Time=3E4A758F%O=23%C=1)
-TSeq(Class=TR%IPID=I%TS=U)
-T1(Resp=Y%DF=N%W=1000%ACK=S++%Flags=AS%Ops=M)
+TSeq(Class=TR%gcd=<6%IPID=I%TS=U)
+T1(DF=N%W=1000%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
 T3(Resp=Y%DF=N%W=1000%ACK=S++%Flags=AS%Ops=M)
-T4(Resp=Y%DF=N%W=1000%ACK=O%Flags=R%Ops=)
-T5(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
-T6(Resp=Y%DF=N%W=0%ACK=O%Flags=R%Ops=)
-T7(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
-PU(Resp=Y%DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=0%UCK=0%ULEN=134%DAT=E)
+T4(DF=N%W=1000%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
 # The "True Random" is bogus, it is because of sequences
 # from servers behind the LB like: 4B028A43 E016F844 4B05F5D2 4DB8B4C E402869
@@ -4315,8 +4313,8 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(Resp=N)
 
 Fingerprint OSF1 5.0 Rev. 910 (AKA Compaq/DIGITAL Tru64 UNIX)
-TSeq(Class=RI%gcd=<6%SI=<E88&>11)
 Class Compaq | Tru64 UNIX | 5.X | general purpose
+TSeq(Class=RI%gcd=<6%SI=<E88&>11)
 T1(DF=N%W=805C%ACK=S++%Flags=AS%Ops=MNW)
 T2(Resp=N)
 T3(Resp=Y%DF=N%W=805C%ACK=O%Flags=A%Ops=)
@@ -16820,7 +16818,7 @@ T7(DF=N%W=400|800|C00|1000%ACK=S++%Flags=AR%Ops=)
 PU(Resp=N)
 
 Fingerprint Apple MacOS 9.2.2
-Class Apple | Mac OS | 9.X | general purpose 
+Class Apple | Mac OS | 9.X | general purpose
 TSeq(Class=RI%gcd=<6%SI=<32EA6&>111%IPID=I%TS=1000HZ)
 T1(DF=Y%W=8000%ACK=S++%Flags=AS%Ops=MEWNNNT)
 T2(Resp=Y%DF=Y%W=0%ACK=S%Flags=AR%Ops=)

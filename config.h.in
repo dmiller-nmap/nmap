@@ -197,6 +197,7 @@ extern "C" int gethostname (char *, unsigned int);
 #undef SUNOS
 #undef BSDI
 #undef IRIX
+#undef HPUX
 #undef NETBSD
 #undef MACOSX
 

@@ -300,7 +300,7 @@ void NmapOps::ValidateOptions() {
  }
 
  if (ipprotscan + (TCPScan() || UDPScan()) + listscan + pingscan > 1) {
-   fatal("Sorry, the IPProtoscan, Listscan, and Pingscan (-sO, -sL, -sP) must currently be used alone rathre than combined with other scan types.");
+   fatal("Sorry, the IPProtoscan, Listscan, and Pingscan (-sO, -sL, -sP) must currently be used alone rather than combined with other scan types.");
  }
 
  if ((pingscan && pingtype == PINGTYPE_NONE)) {

@@ -822,20 +822,20 @@ void ServiceProbe::setProbeDetails(char *pd, int lineno) {
   char delimiter;
 
   if (!pd || !*pd)
-    fatal("Parse error on line %d of nmap-services-probes: no arguments found!", lineno);
+    fatal("Parse error on line %d of nmap-service-probes: no arguments found!", lineno);
 
   // First the protocol
   if (strncmp(pd, "TCP ", 4) == 0)
       probeprotocol = IPPROTO_TCP;
   else if (strncmp(pd, "UDP ", 4) == 0)
       probeprotocol = IPPROTO_UDP;
-  else fatal("Parse error on line %d of nmap-services-probes: invalid protocol", lineno);
+  else fatal("Parse error on line %d of nmap-service-probes: invalid protocol", lineno);
   pd += 4;
 
   // Next the service name
-  if (!isalnum(*pd)) fatal("Parse error on line %d of nmap-services-probes - bad probe name", lineno);
+  if (!isalnum(*pd)) fatal("Parse error on line %d of nmap-service-probes - bad probe name", lineno);
   p = strchr(pd, ' ');
-  if (!p) fatal("Parse error on line %d of nmap-services-probes - nothing after probe name", lineno);
+  if (!p) fatal("Parse error on line %d of nmap-service-probes - nothing after probe name", lineno);
   len = p - pd;
   probename = (char *) safe_malloc(len + 1);
   memcpy(probename, pd, len);
@@ -844,13 +844,13 @@ void ServiceProbe::setProbeDetails(char *pd, int lineno) {
   // Now for the probe itself
   pd = p+1;
 
-  if (*pd != 'q') fatal("Parse error on line %d of nmap-services-probes - probe string must begin with 'q'", lineno);
+  if (*pd != 'q') fatal("Parse error on line %d of nmap-service-probes - probe string must begin with 'q'", lineno);
   delimiter = *(++pd);
   p = strchr(++pd, delimiter);
-  if (!p) fatal("Parse error on line %d of nmap-services-probes -- no ending delimiter for probe string", lineno);
+  if (!p) fatal("Parse error on line %d of nmap-service-probes -- no ending delimiter for probe string", lineno);
   *p = '\0';
   if (!cstring_unescape(pd, &len)) {
-    fatal("Parse error on line %d of nmap-services-probes: bad probe string escaping", lineno);
+    fatal("Parse error on line %d of nmap-service-probes: bad probe string escaping", lineno);
   }
   setProbeString((const u8 *)pd, len);
 }
@@ -878,12 +878,12 @@ void ServiceProbe::setPortVector(vector<u16> *portv, const char *portstr,
     if (isdigit((int) *current_range)) {
       rangestart = strtol(current_range, &endptr, 10);
       if (rangestart < 0 || rangestart > 65535) {
-	fatal("Parse error on line %d of nmap-services-probes: Ports must be between 0 and 65535 inclusive", lineno);
+	fatal("Parse error on line %d of nmap-service-probes: Ports must be between 0 and 65535 inclusive", lineno);
       }
       current_range = endptr;
       while(isspace((int) *current_range)) current_range++;
     } else {
-      fatal("Parse error on line %d of nmap-services-probes: An example of proper portlist form is \"21-25,53,80\"", lineno);
+      fatal("Parse error on line %d of nmap-service-probes: An example of proper portlist form is \"21-25,53,80\"", lineno);
     }
 
     /* Now I have a rangestart, time to go after rangeend */
@@ -895,14 +895,14 @@ void ServiceProbe::setPortVector(vector<u16> *portv, const char *portstr,
       if (isdigit((int) *current_range)) {
 	rangeend = strtol(current_range, &endptr, 10);
 	if (rangeend < 0 || rangeend > 65535 || rangeend < rangestart) {
-	  fatal("Parse error on line %d of nmap-services-probes: Ports must be between 0 and 65535 inclusive", lineno);
+	  fatal("Parse error on line %d of nmap-service-probes: Ports must be between 0 and 65535 inclusive", lineno);
 	}
 	current_range = endptr;
       } else {
-	fatal("Parse error on line %d of nmap-services-probes: An example of proper portlist form is \"21-25,53,80\"", lineno);
+	fatal("Parse error on line %d of nmap-service-probes: An example of proper portlist form is \"21-25,53,80\"", lineno);
       }
     } else {
-      fatal("Parse error on line %d of nmap-services-probes: An example of proper portlist form is \"21-25,53,80\"", lineno);
+      fatal("Parse error on line %d of nmap-service-probes: An example of proper portlist form is \"21-25,53,80\"", lineno);
     }
 
     /* Now I have a rangestart and a rangeend, so I can add these ports */
@@ -914,7 +914,7 @@ void ServiceProbe::setPortVector(vector<u16> *portv, const char *portstr,
     /* Find the next range */
     while(isspace((int) *current_range)) current_range++;
     if (*current_range && *current_range != ',') {
-      fatal("Parse error on line %d of nmap-services-probes: An example of proper portlist form is \"21-25,53,80\"", lineno);
+      fatal("Parse error on line %d of nmap-service-probes: An example of proper portlist form is \"21-25,53,80\"", lineno);
     }
     if (*current_range == ',')
       current_range++;
@@ -922,7 +922,7 @@ void ServiceProbe::setPortVector(vector<u16> *portv, const char *portstr,
 }
 
   // Takes a string as given in the 'ports '/'sslports ' line of
-  // nmap-services-probes.  Pass in the list from the appropriate
+  // nmap-service-probes.  Pass in the list from the appropriate
   // line.  For 'sslports', tunnel should be specified as
   // SERVICE_TUNNEL_SSL.  Otherwise use SERVICE_TUNNEL_NONE.  The line
   // number is requested because this function will bail with an error

@@ -210,6 +210,9 @@ match ftp-proxy m|^220 [-.+\w]+ FTP AnalogX Proxy (\d[-.\w]+) \(Release\) ready\
 match ftp-proxy m|^220 Secure Gateway FTP server ready\.\r\n| v/Symantec Enterprise Firewall FTP proxy///
 match ftp-proxy m/^220-Sidewinder ftp proxy\.  You must login to the proxy first/ v/Sidewinder FTP proxy///
 match ftp-proxy m/^220-\r\x0a220-Sidewinder ftp proxy/s v/Sidewinder FTP proxy///
+# TODO kerio?
+#match ftp m|^421 Service not available \(The FTP server is not responding\.\)\n$| v/unknown FTP server//service not responding/
+
 softmatch ftp m/^220 [-.\w ]+ftp.*\r\n$/i
 softmatch ftp m/^220-[-.\w ]+ftp.*\r\n220/i
 softmatch ftp m/^220[- ].*ftp server.*\r\n/i
@@ -462,6 +465,7 @@ match pop3 m|^\+OK Microsoft Windows POP3 Service Version 1.0 <| v/Microsoft Win
 match pop3 m|^\+OK POP3 [-.\w]+ v?(200\d\.[-.\w]+) server ready\r\n| v/UW Imap pop3 server/$1//
 match pop3 m|^\+OK POP3 server ready <\w{11}>\r\n$| v/WebSTAR pop-3 server///
 match pop3 m|^\+OK TrendMicro IMSS (\d[-.\w ]+) POP3 Proxy at [-.\w]+\r\n| v/TrendMicro IMSS virus scanning POP3 proxy/$1//
+match pop3 m|^\+OK Kerio MailServer (\d[-.\w]+) POP3 server ready <([-.\w@:]+)>\r\n$| v/Kerio MailServer POP3 Server/$1/$2/
 softmatch pop3 m|^\+OK [-\[\]\(\)!,/+:<>@.\w ]+\r\n$|
 
 # http://echelon.pl/pubs/poppassd.html
@@ -588,6 +592,7 @@ match smtp m|^relaylock: Error: PRODUCT_ROOT_D not defined\nrelaylock: Error: PR
 match smtp m|^220 [-.\w]+ WebSTAR Mail Simple Mail Transfer Service Ready\r\n| v/WebSTAR SMTP server///
 match smtp m|^220 [-.\w]+ Lotus SMTP MTA Service Ready\r\n$| v/Lotus Notes SMTP///
 match smtp m|^220 [-.\w]+ SMTP NAVGW (\d[-.\w]+);| v/Norton Antivirus Gateway NAVGW/$1//
+match smtp m|^220 ([-.\w]+) Kerio MailServer (\d[-.\w]+) ESMTP ready\r\n$| v/Kerio MailServer/$1/$2/
 softmatch smtp m|^220 [-.\w ]+SMTP.*\r\n|
 
 match snpp m|^220 [-.\w]+ SNPP server \(HylaFAX \(tm\) Version ([-.\w]+)\) ready.\r\n| v/HylaFAX SNPP/$1//
@@ -1122,6 +1127,8 @@ match http m|^HTTP/1.[10] \d\d\d.*\r\nDate:.*\r\nServer: Stronghold/([-.\w]+) Ap
 match http m|^HTTP/1\.1 \d\d\d .*\r\nServer: Apache Tomcat/(\d[-.\w]+)|s v/Apache Tomcat/$1//
 match http m|^HTTP/1\.1 \d\d\d.*\r\nServer: Apache[- ]Coyote/(\d[-\d.]+)\r\n|s v|Apache Tomcat/Coyote JSP engine|$1||
 match http m|^HTTP/1\.1.*\r\nServer: Netscape-Enterprise/([-.\w]+)\r\n| v/Netscape Enterprise httpd/$1//
+# Citrix NFuse 2.0 on MS IIS 5.0
+match http m|^HTTP/1\.[01].*\r\nServer: Microsoft-IIS/([-.\w]+)\r\n.*\r\nContent-Location: http://[^/]+/nfuse.htm\r\n.*\r\n---- NFuse ([-.\w]+) \(Build |s v/Citrix NFuse/$2/Microsoft IIS $1/
 match http m|^HTTP/1\.[01].*\r\nServer: Microsoft-IIS/([-.\w]+)\r\n|s v/Microsoft IIS webserver/$1//
 match http m|^HTTP/1\.0 200 OK\r\nDate: .+\r\nServer: Tomcat/([-.\w]+)\r\nContent-Type: text/html\r\nContent-Length: \d+\r\nServlet-Engine: Tomcat/[-.\w]+ \(Java ([-.\w]+); SunOS ([-.\w]+) (\w+); java\.vendor=Sun Microsystems Inc\.\)\r\n| v/Solaris management console server//SunOS $3 $4; Java $2; Tomcat $1/
 match http m|^HTTP/1\.1 200 OK\r\n.+Server: CommuniGatePro/([-.\w]+)\r\n|s v/CommuniGate Pro httpd/$1//
@@ -1327,6 +1334,10 @@ match vnc-http m|^HTTP/1\.0 200 OK\n\n<HTML>\n  <HEAD><TITLE>Ultr@VNC Desktop \[
 match xml-rpc m|^HTTP/1\.0 400 Bad Request\r\nServer: Apache XML-RPC (\d[-.\w ]+)\r\n\r\nMethod GET not implemented \(try POST\)$| v/Apache XML-RPC/$1//
 
 match wsmserver m|^Language received from client: GET\nSetlocale: C\n$| v/AIX Web-based System Manager///
+match http m|^HTTP/1\.0\x20250\x20Ok\r\n.*\r\n\r\n.*<title>PowerMTA monitoring</title>|s v/Port25 PowerMTA web monitor///
+
+# Kerio MailServer 5.7.9, 5.7.10
+match http m|^HTTP/1\.1 302 Redirected\r\nConnection: close\r\nContent-Length: 0\r\nLocation: /login\r\n\r\n$| v/Kerio MailServer Webmail///
 
 ##############################NEXT PROBE##############################
 Probe TCP HTTPOptions q|OPTIONS / HTTP/1.0\r\n\r\n|
@@ -1348,6 +1359,7 @@ match rtsp m|^RTSP/1\.0 200 OK\r\n.*Server: RealMedia EncoderServer Version (\d[
 match rtsp m|^RTSP/1\.0 200 OK\r\n.*Server: RealServer Version (\d[-.\w]+) \(([-.+\w]+)\)\r\n|s v/RealOne Server/$1/platform: $2/
 # APC PowerChute Business Edition Agent 6.1.0.0 on Windows 2000 Server
 match powerchute m|^RTSP/1\.0 400 Bad request\r\nContent-type: text/html\r\n\r\n| v/APC PowerChute Agent///
+match msdtc m|^ERROR\n$|s v/Microsoft Distributed Transaction Coordinator//error/
 
 # This probe sends an RPC "Null command" to the port for service
 # 100000 (portmapper).
@@ -1764,14 +1776,15 @@ match landesk-rc m|^TNMP\x16\0\0\0TNME\x80\0\xfe\xff..([\w.]+):(\d)$| v/LANDesk 
 
 ##############################NEXT PROBE##############################
 Probe TCP TerminalServer q|\x03\0\0\x0b\x06\xe0\0\0\0\0\0|
-ports 3389
-# I don't know why this stupid service is answering to TerminalServer probe,
-# but that has been verified.  I'm not going to add 515 to the TerminalServer
-# ports line unless I see more like this.
+ports 515,3389
+# \x03 is queue status command for LPD service.  Should be terminated
+# by \n, but apparently some dumb lpds allow \0.  For now I will keep
+# 515 in the common ports line, I suppose
 match printer m/^no entries\n$/ v/Xerox LPD///
 # Windows 2000 Server
 # Windows 2000 Advanced Server
-match microsoft-rdp m|^\x03\0\0\x0b\x06\xd0\0\0\x12.\0$|s v/Microsoft Terminal Service//Windows 2000 Server/
+# Windows XP Professional
+match microsoft-rdp m|^\x03\0\0\x0b\x06\xd0\0\0\x12.\0$|s v|Microsoft Terminal Service|||
 match microsoft-rdp m|^\x03\0\0\x17\x08\x02\0\0Z~\0\x0b\x05\x05@\x06\0\x08\x91J\0\x02X$| v/Microsoft Terminal Service//Used with Netmeeting, Remote Desktop, Remote Assistance/
 match teleconference m|^\x03\0\0\x11\x08\x02..}\x08\x03\0\0\xdf\x14\x01\x01$|s v/Microsoft NetMeeting Remote Desktop Service///
 

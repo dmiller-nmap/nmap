@@ -1,5 +1,79 @@
 # Nmap Changelog ($Id$)
 
+o Fixed a bug that prevented RPC scan (-sR) from working for UDP ports
+  unless service detection (-sV) was used.  -sV is still usually a
+  better approach than -sR, as the latter ONLY handles RPC.  Thanks to
+  Stephen Bishop (sbishop(a)idsec.co.uk) for reporting the problem and
+  sending a patch.
+
+o Fixed nmap_fetchfile() to better find custom versions of data files
+  such as nmap-services.  Note that the implicitly read directory should
+  be ~/.nmap rather than ~/nmap .  So you may have to move any
+  customized files you now have in ~/nmap .  Thanks to nnposter
+  nnposter(a)users.sourceforge.net for reporting the problem and sending
+  a patch.
+
+o Updated nmap-mac-prefixes with the latest OUIs from the IEEE.
+  [ http://standards.ieee.org/regauth/oui/oui.txt ]
+
+o Updated nmap-protocols with the latest IP protocols from IANA 
+  [ http://www.iana.org/assignments/protocol-numbers ]
+
+o Changed XML output so that the MAC address [address] element comes
+  right after the IPv4/IPv6 [address] element.  Apparently this is
+  needed to comply with the DTD (
+  http://www.insecure.org/nmap/data/nmap.dtd ).  Thanks to Adam Morgan
+  (adam.morgan(a)Q1Labs.com) and Florian Ebner
+  (Florian.Ebner(a)e-bros.de) for the problem reports.
+
+o Fixed a crash problem in the Windows version of Nmap, thanks to a
+  patch from Ganga Bhavani GBhavani(a)everdreamcorp.com).
+
+o Fixed an error in the Nmap RPM spec file reported by Pascal TROUVIN
+  (pascal.trouvin(a)wanadoo.fr)
+
+o Fixed a timing problem in which a specified large --send_delay would
+  sometimes be reduced to 1 second during a scan.  Thanks to Martin
+  Maèok (martin.macok(a)underground.cz) for reporting the problem.
+
+o Fixed a timing problem with sneaky and paranoid modes (-T1 and -T0)
+  which would cause Nmap to continually scan the same port and never
+  hit other ports when scanning certain firewalled hosts.  Thanks to
+  Curtis Doty (Curtis(a)GreenKey.net) for reporting the problem.
+
+o Fixed (I hope) an OS detection timing issue which would in some
+  cases lead to the warning that "insufficient responses for TCP
+  sequencing (3), OS detection may be less accurate."  Thanks to Adam
+  Kerrison (adam(a)tideway.com) for reporting the problem.
+
+o Added a few new Nmap version detection signatures thanks to a patch
+  from Martin Maèok (martin.macok(a)underground.cz).
+
+o Modified the warning given when files such as nmap-services exist in
+  both the compiled in NMAPDATADIR and the current working directory.
+  That message should now only appear once and is more clear.
+
+o Fixed Windows service scan crashes that occur with the error message
+  "Unexpected nsock_loop error. Error code 10022 (Unknown error)".  It
+  turns out that Windows does not allow select() calls with all three
+  FD sets empty.  Lame.  The Linux select() man page even suggests
+  calling "select with all three sets empty, n zero, and a non-null
+  timeout as a fairly portable way to sleep with subsecond precision."
+  Thanks to Gisle Vanem (giva(a)bgnett.no) for debugging help.
+
+o Fixed ping scan subsystem to work a little bit better when
+  --scan_delay (or some of the slower -T templates which include a scan
+  delay) is specified.  Thanks to Shahid Khan (khan(a)asia.apple.com)
+  for suggestions.
+
+o Taught connect() scan to properly interpret ICMP protocol
+  unreachable messages.  Thanks to Alan Bishoff
+  (abishoff(a)arc.nasa.gov) for the report.
+
+o Improved the nmapfe.desktop file to better comply with standards.
+  Thanks to Stephane Loeuillet (stephane.loeuillet(a)tiscali.fr) for
+  sending the patch.
+
 Nmap 3.70
 
 o Rewrote core port scanning engine, which is now named ultra_scan().
@@ -187,6 +261,10 @@ o Changed the argument parser to better detect bogus arguments to the
 o Removed a spurious warning message relating to the Windows ARP cache
   being empty.  Patch by Gisle Vanem (giva(a)bgnett.no).
 
+o Removed some C++-style line comments (//) from nbase, because some C
+  compilers (particularly on Solaris) barf on those.  Problem reported
+  by Raju Alluri <Raju.Alluri(a)Sun.COM>
+
 Nmap 3.55
 
 o Added MAC address printing.  If Nmap receives packet from a target
@@ -310,6 +388,13 @@ o Removed unnecessary banner printing in the non-root connect() ping
 o Updated the headers at the top of each source file (mostly to
   advance the copyright year to 2004 and note that Nmap is a registered
   trademark).
+
+o The SInfo line of submitted fingerprints now provides the target's
+  OUI (first three bytes of the MAC address) if available.  Example:
+  "M=00A0CC".  To save a couple bytes, the "Time" field in SInfo has
+  been renamed to "Tm".  The OUI helps identify the device vendor, and
+  is only available when the source and target machines are on the
+  same ethernet network.
 
 Nmap 3.50
 

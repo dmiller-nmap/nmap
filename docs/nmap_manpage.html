@@ -280,7 +280,9 @@
               effectively obtain the same info as "rpcinfo  -p"  even  if  the
               target’s  portmapper  is  behind a firewall (or protected by TCP
               wrappers).  Decoys do not currently work with RPC scan, at  some
-              point I may add decoy support for UDP RPC scans.
+              point  I may add decoy support for UDP RPC scans.  This is auto-
+              matically enabled as part of version scan (-sV) if  you  request
+              that.
 
        <B>-sL</B>    List scan.  This method simply generates and prints a list of IP
               addresses or hostnames without actually pinging or port scanning
@@ -408,10 +410,10 @@
               remote  host.   This  is  useful  for exploiting source-IP based
               trust relationships (rlogin, firewall filters, etc) or for  hid-
               ing  the  source  of an attack.  The actual difficulty number is
-              based on statistical sampling and may fluctuate.  It  is  gener-
-              ally  better  to  use the English classification such as "worthy
-              challenge" or "trivial joke".  This is only reported  in  normal
-              output with -v.
+              based  on  statistical  sampling  and  may  fluctuate.   It   is
+              generally better to use the English classification such as "wor-
+              thy challenge" or "trivial joke".  This is only reported in nor-
+              mal output with -v.
 
               When  verbose  mode (-v) is on with -O, IPID Sequence Generation
               is also reported.  Most machines are in the "incremental" class,
@@ -476,9 +478,9 @@
 
        <B>-oX</B> <B>&lt;logfilename&gt;</B>
               This logs the results of your scans in <B>XML</B> form  into  the  file
-              you specify as an argument.  This allows programs to easily cap-
-              ture and interpret Nmap results.  You can give the argument  "-"
-              (without   quotes)  to  shoot  output  into  stdout  (for  shell
+              you  specify  as  an  argument.   This allows programs to easily
+              capture and interpret Nmap results.  You can give  the  argument
+              "-"  (without  quotes)  to  shoot  output into stdout (for shell
               pipelines, etc).  In this case normal output will be suppressed.
               Watch out for error messages if you use this (they will still go
               to stderr).  Also note that "-v" may cause some  extra  informa-
@@ -703,13 +705,15 @@
 
        <B>--datadir</B> <B>[directoryname]</B>
               Nmap obtains some special data at runtime in files  named  nmap-
-              services,  nmap-protocols,  nmap-rpc,  and nmap-os-fingerprints.
-              Nmap first searches these  files  in  the  directory  option  to
-              --nmapdir.   Any  files not found there, are searched for in the
-              directory specified by the NMAPDIR environmental variable.  Next
-              comes   ~/nmap,   and   then  a  compiled-in  location  such  as
-              /usr/share/nmap .  As a last resort, Nmap will look in the  cur-
-              rent directory.
+              service-probes,  nmap-services,  nmap-protocols, nmap-rpc, nmap-
+              mac-prefixes, and  nmap-os-fingerprints.   Nmap  first  searches
+              these files in the directory option to --datadir.  Any files not
+              found there, are searched for in the directory specified by  the
+              NMAPDIR environmental variable.  Next comes ~/.nmap for real and
+              effective UIDs (POSIX systems only) or location of the Nmap exe-
+              cutable  (Win32  only),  and then a compiled-in location such as
+              /usr/local/share/nmap or /usr/share/nmap .  As  a  last  resort,
+              Nmap will look in the current directory.
 
        <B>TIMING</B> <B>OPTIONS</B>
               Generally  Nmap does a good job at adjusting for Network charac-
@@ -742,7 +746,11 @@
               work sweeps though :).
 
               You  can  also  reference  these  by number (0-5).  For example,
-              "-T0" gives you Paranoid mode and "-T5" is Insane mode.
+              "-T0" gives you Paranoid mode and "-T5" is Insane mode.  If  you
+              wish  to set specific timing values such as --max_rtt_timeout or
+              --host_timeout, place them after any -T option  on  the  command
+              line.   Otherwise the defaults for the selected timing mode will
+              override your choices.
 
        <B>--host_timeout</B> <B>&lt;milliseconds&gt;</B>
               Specifies the amount of time Nmap is allowed to spend scanning a
@@ -915,123 +923,122 @@
        port scanning code.
 
        Note that the GPL places important restrictions on "derived works", yet
-       it  does  not  provide  a  detailed  definition of that term.  To avoid
-       misunderstandings, we consider an application to constitute a  "deriva-
-       tive  work"  for the purpose of this license if it does any of the fol-
-       lowing:
+       it  does not provide a detailed definition of that term.  To avoid mis-
+       understandings, we consider an application to constitute a  "derivative
+       work" for the purpose of this license if it does any of the following:
 
        o Integrates source code from Nmap
 
-       o Reads or includes Nmap copyrighted data files, such  as  nmap-os-fin-
+       o  Reads  or includes Nmap copyrighted data files, such as nmap-os-fin-
        gerprints or nmap-service-probes.
 
-       o  Executes Nmap and parses the results (as opposed to typical shell or
-       execution-menu apps, which simply display raw Nmap output  and  so  are
+       o Executes Nmap and parses the results (as opposed to typical shell  or
+       execution-menu  apps,  which  simply display raw Nmap output and so are
        not derivative works.)
 
-       o  Integrates/includes/aggregates  Nmap  into  a proprietary executable
+       o Integrates/includes/aggregates Nmap  into  a  proprietary  executable
        installer, such as those produced by InstallShield.
 
        o Links to a library or executes a program that does any of the above
 
        The term "Nmap" should be taken to also include any portions or derived
-       works  of Nmap.  This list is not exclusive, but is just meant to clar-
-       ify our interpretation of derived  works  with  some  common  examples.
+       works of Nmap.  This list is not exclusive, but is just meant to  clar-
+       ify  our  interpretation  of  derived  works with some common examples.
        These restrictions only apply when you actually redistribute Nmap.  For
-       example, nothing stops you  from  writing  and  selling  a  proprietary
-       front-end  to  Nmap.  Just distribute it by itself, and point people to
+       example,  nothing  stops  you  from  writing  and selling a proprietary
+       front-end to Nmap.  Just distribute it by itself, and point  people  to
        http://www.insecure.org/nmap/ to download Nmap.
 
        We don’t consider these to be added restrictions on top of the GPL, but
-       just  a clarification of how we interpret "derived works" as it applies
-       to our GPL-licensed Nmap product.  This is similar  to  the  way  Linus
-       Torvalds  has  announced  his  interpretation  of  how  "derived works"
-       applies to Linux kernel modules.  Our  interpretation  refers  only  to
+       just a clarification of how we interpret "derived works" as it  applies
+       to  our  GPL-licensed  Nmap  product.  This is similar to the way Linus
+       Torvalds has  announced  his  interpretation  of  how  "derived  works"
+       applies  to  Linux  kernel  modules.  Our interpretation refers only to
        Nmap - we don’t speak for any other GPL products.
 
        If you have any questions about the GPL licensing restrictions on using
-       Nmap in non-GPL works, we would be happy to help.  As mentioned  above,
-       we  also  offer  alternative license to integrate Nmap into proprietary
-       applications and appliances.  These contracts have been  sold  to  many
-       security  vendors, and generally include a perpetual license as well as
-       providing for priority support and updates as well as helping  to  fund
+       Nmap  in non-GPL works, we would be happy to help.  As mentioned above,
+       we also offer alternative license to integrate  Nmap  into  proprietary
+       applications  and  appliances.   These contracts have been sold to many
+       security vendors, and generally include a perpetual license as well  as
+       providing  for  priority support and updates as well as helping to fund
        the continued development of Nmap technology.  Please email sales@inse-
        cure.com for further information.
 
-       As a special exception to the GPL terms, Insecure.Com LLC  grants  per-
-       mission  to  link  the  code  of  this  program with any version of the
-       OpenSSL library which is distributed under a license identical to  that
+       As  a  special exception to the GPL terms, Insecure.Com LLC grants per-
+       mission to link the code of  this  program  with  any  version  of  the
+       OpenSSL  library which is distributed under a license identical to that
        listed in the included Copying.OpenSSL file, and distribute linked com-
-       binations including the two. You must obey the GNU GPL in all  respects
-       for  all of the code used other than OpenSSL.  If you modify this file,
-       you may extend this exception to your version of the file, but you  are
+       binations  including the two. You must obey the GNU GPL in all respects
+       for all of the code used other than OpenSSL.  If you modify this  file,
+       you  may extend this exception to your version of the file, but you are
        not obligated to do so.
 
-       If  you  received  these files with a written license agreement or con-
-       tract stating terms other than the terms above, then  that  alternative
+       If you received these files with a written license  agreement  or  con-
+       tract  stating  terms other than the terms above, then that alternative
        license agreement takes precedence over these comments.
 
-       Source  is  provided  to  this software because we believe users have a
+       Source is provided to this software because we  believe  users  have  a
        right to know exactly what a program is going to do before they run it.
-       This  also  allows  you  to audit the software for security holes (none
+       This also allows you to audit the software  for  security  holes  (none
        have been found so far).
 
-       Source code also allows you to port Nmap to new  platforms,  fix  bugs,
-       and  add  new features.  You are highly encouraged to send your changes
+       Source  code  also  allows you to port Nmap to new platforms, fix bugs,
+       and add new features.  You are highly encouraged to send  your  changes
        to fyodor@insecure.org for possible incorporation into the main distri-
-       bution.   By  sending  these  changes to Fyodor or one the Insecure.Org
-       development mailing lists, it is assumed that you are  offering  Fyodor
-       and  Insecure.Com LLC the unlimited, non-exclusive right to reuse, mod-
-       ify, and relicense the  code.   Nmap  will  always  be  available  Open
-       Source,  but  this is important because the inability to relicense code
-       has caused devastating problems for other Free Software projects  (such
-       as  KDE  and  NASM).   We also occasionally relicense the code to third
-       parties as discussed above.  If you wish  to  specify  special  license
+       bution.  By sending these changes to Fyodor  or  one  the  Insecure.Org
+       development  mailing  lists, it is assumed that you are offering Fyodor
+       and Insecure.Com LLC the unlimited, non-exclusive right to reuse,  mod-
+       ify,  and  relicense  the  code.   Nmap  will  always be available Open
+       Source, but this is important because the inability to  relicense  code
+       has  caused devastating problems for other Free Software projects (such
+       as KDE and NASM).  We also occasionally relicense  the  code  to  third
+       parties  as  discussed  above.   If you wish to specify special license
        conditions of your contributions, just say so when you send them.
 
-       This  program  is  distributed  in the hope that it will be useful, but
-       WITHOUT ANY  WARRANTY;  without  even  the  implied  warranty  of  MER-
-       CHANTABILITY  or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General
+       This program is distributed in the hope that it  will  be  useful,  but
+       WITHOUT  ANY  WARRANTY;  without  even  the  implied  warranty  of MER-
+       CHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU  General
        Public License for more details at http://www.gnu.org/copyleft/gpl.html
        , or in the COPYING file included with Nmap.
 
-       It  should  also  be  noted  that  Nmap has been known to crash certain
+       It should also be noted that Nmap  has  been  known  to  crash  certain
        poorly written applications, TCP/IP stacks, and even operating systems.
-       <B>Nmap</B>  <B>should</B>  <B>never</B>  <B>be</B> <B>run</B> <B>against</B> <B>mission</B> <B>critical</B> <B>systems</B> unless you
-       are prepared to suffer downtime.  We acknowledge  here  that  Nmap  may
-       crash  your  systems  or networks and we disclaim all liability for any
+       <B>Nmap</B> <B>should</B> <B>never</B> <B>be</B> <B>run</B> <B>against</B> <B>mission</B> <B>critical</B>  <B>systems</B>  unless  you
+       are  prepared  to  suffer  downtime.  We acknowledge here that Nmap may
+       crash your systems or networks and we disclaim all  liability  for  any
        damage or problems Nmap could cause.
 
        Because of the slight risk of crashes and because a few black hats like
-       to  use  Nmap  for reconnaissance prior to attacking systems, there are
-       administrators who become upset and may complain when their  system  is
-       scanned.   Thus,  it  is  often  advisable to request permission before
+       to use Nmap for reconnaissance prior to attacking  systems,  there  are
+       administrators  who  become upset and may complain when their system is
+       scanned.  Thus, it is often  advisable  to  request  permission  before
        doing even a light scan of a network.
 
-       Nmap should never be installed with special privileges (eg  suid  root)
+       Nmap  should  never be installed with special privileges (eg suid root)
        for security reasons.
 
        This product includes software developed by the Apache Software Founda-
-       tion (http://www.apache.org/).  The  <I>Libpcap</I>  portable  packet  capture
-       library  is  distributed along with nmap.  Libpcap was originally copy-
-       righted by Van Jacobson, Craig Leres and Steven  McCanne,  all  of  the
+       tion  (http://www.apache.org/).   The  <I>Libpcap</I>  portable packet capture
+       library is distributed along with nmap.  Libpcap was  originally  copy-
+       righted  by  Van  Jacobson,  Craig Leres and Steven McCanne, all of the
        Lawrence Berkeley National Laboratory, University of California, Berke-
        ley, CA.  It is now maintained by http://www.tcpdump.org .
 
-       Regular expression support is provided by  the  PCRE  library  package,
-       which  is  open source software, written by Philip Hazel, and copyright
+       Regular  expression  support  is  provided by the PCRE library package,
+       which is open source software, written by Philip Hazel,  and  copyright
        by the University of Cambridge, England.  See http://www.pcre.org/ .
 
-       Nmap can optionally link to the OpenSSL cryptography toolkit, which  is
+       Nmap  can optionally link to the OpenSSL cryptography toolkit, which is
        available from http://www.openssl.org/ .
 
-       US  Export  Control: Insecure.Com LLC believes that Nmap falls under US
-       ECCN (export control classification number) 5D992.   This  category  is
-       called  ’"Information  Security"  "software"  not controlled by 5D002’.
-       The only restriction of this  classification  is  AT  (anti-terrorism),
-       which  applies  to  almost  all goods and denies export to a handful of
-       rogue nations such as Iran and North Korea.  Thus exporting  Nmap  does
-       not  require  any special license, permit, or other governmental autho-
+       US Export Control: Insecure.Com LLC believes that Nmap falls  under  US
+       ECCN  (export  control  classification number) 5D992.  This category is
+       called ’"Information Security" "software"  not  controlled  by  5D002’.
+       The  only  restriction  of  this classification is AT (anti-terrorism),
+       which applies to almost all goods and denies export  to  a  handful  of
+       rogue  nations  such as Iran and North Korea.  Thus exporting Nmap does
+       not require any special license, permit, or other  governmental  autho-
        rization.
 
 

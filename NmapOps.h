@@ -188,6 +188,7 @@ class NmapOps {
   int extra_payload_length; /* These two are for --data_length op */
   char *extra_payload;
   unsigned long host_timeout;
+  /* Delay between probes, in milliseconds */
   int scan_delay;
   int scanflags; /* if not -1, this value should dictate the TCP flags
 		    for the core portscaning routine (eg to change a

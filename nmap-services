@@ -1653,6 +1653,7 @@ radacct           1813/udp   # RADIUS accounting protocol (RFC 2139)
 pcm               1827/tcp   # PCM Agent (AutoSecure Policy Compliance Manager
 UPnP              1900/tcp   # Universal PnP
 UPnP              1900/udp   # Universal PnP
+rmtp              1935/tcp   # Macromedia FlasComm Server
 bigbrother        1984/tcp   # Big Brother monitoring server - www.bb4.com
 licensedaemon     1986/tcp   # cisco license management
 licensedaemon     1986/udp   # cisco license management
@@ -1866,6 +1867,7 @@ vat-control       3457/udp   # VAT default control
 track             3462/tcp   # software distribution
 peerenabler       3531/tcp   # P2PNetworking/PeerEnabler protocol
 peerenabler       3531/udp   # P2PNetworking/PeerEnabler protocol
+distccd           3632/tcp   # Distributed compiler daemon
 rendezvous        3689/tcp   # Rendezvous Zeroconf (used by Apple)
 udt_os            3900/tcp   # Unidata UDT OS
 udt_os            3900/udp   # Unidata UDT OS
@@ -2152,6 +2154,7 @@ opsec_sam         18183/tcp  # Check Point OPSEC
 opsec_lea         18184/tcp  # Check Point OPSEC
 opsec_omi         18185/tcp  # Check Point OPSEC
 opsec_ela         18187/tcp  # Check Point OPSEC
+gkrellmd          19150/tcp    # GKrellM remote system activity meter daemon
 btx               20005/tcp  # xcept4 (Interacts with German Telekom's CEPT videotext service)
 wnn6              22273/tcp  # Wnn6 (Japanese input)
 wnn6_Cn           22289/tcp  # Wnn6 (Chinese input)
