@@ -1,9 +1,11 @@
+# $Id$
 # This was created by Vik Bajaj <vbajaj@sas.upenn.edu> with help
 # from various members of the nmap-hackers list.  
 # To join nmap-hackers send mail to nmap-hackers-subscribe@insecure.org
 # Nmap is available from http://www.insecure.org/nmap/
 # All the rpc services we could find as of Feb22, 1999
 # Tweaked a bit by Fyodor <fyodor@dhp.com>
+#
 # NOTE:  Eilon Gishri <eilon@aristo.tau.ac.il> has merged the nmap-rpc
 # with his massive rpc file (see comments below).  So as of 4/30/00,
 # this is an exact copy (except for these comments) of 
@@ -49,7 +51,7 @@
 rpcbind		100000	portmap sunrpc rpcbind
 rstatd		100001	rstat rup perfmeter rstat_svc
 rusersd		100002	rusers
-nfs		100003	nfsprog
+nfs		100003	nfsprog nfsd
 ypserv		100004	ypprog
 mountd		100005	mount showmount
 remote_dbx	100006
@@ -62,9 +64,9 @@ sprayd          100012  spray
 3270_mapper     100013
 rje_mapper      100014
 selection_svc   100015  selnsvc
-database_svc    100016
+database_svc    100016	dbsessionmgr unify netdbms dbms
 rexd            100017  rex
-alis            100018
+alis            100018	alice office_auto
 sched           100019
 llockmgr        100020
 nlockmgr        100021
@@ -86,8 +88,11 @@ passwd_auth	100036
 tfsd		100037
 nsed		100038
 nsemntd		100039
+pfs_mountd	100040
 showfhd		100043	showfh
+mvsmount	100044	# MVSmount daemon (for mvslogin mvslogout)
 ioadmd		100055	rpc.ioadmd
+showattrd	100059	DFSMS/MVS NFS server
 NETlicense	100062
 sunisamd	100065
 debug_svc 	100066	dbsrv
@@ -132,7 +137,9 @@ amiaux		100147
 ocfserv		100150
 kcms_server	100221			# SunKCMS Profile Server
 nfs_acl		100227
-# rpc.metad
+#
+# rpc.metad - SUNWmd - Sun Solstice DiskSuite
+#
 metad		100229	metad	rpc.metad
 metamhd		100230	metamhd	rpc.metamhd
 #
@@ -150,36 +157,74 @@ rpc.pts         105004  Protoserver	# Advanced Printing Software
 nf_snmd		120126			# SunNet Manager
 nf_snmd		120127
 pcnfsd		150001	pcnfs
+#
 # Pyramid
+#
 PyramidLock	200000
 PyramidSys5	200001 # Sys5
 #
 CADDS_Image     200002 			# CV CADDS images.
 #
 pdbDA		200005
+SWG		200020	swg # DMFE/DAWS (Defense Automated Warning System)
 exportmap	200023
+#
+# DMFE/DAWS (Defense Automated Warning System)
+#
+Gqsrv		200034	gqsrv
+Ppt		200035	ppt
+Pmt		200036	pmt
+Msgt		200037	msgt
+Walerts		200038	walerts
+Mgt		200039	mgt
+Pft		200040	pft
+Msgq		200041	msgq
+Smpsrv		200042	smpsrv
+Dexsrv		200043	dexsrv
+Statussrv	200044	statussrv
+Pmsgq		200048	pmsgq
+Filesrv		200049	filesrv
+Magfetch	200050	magfetch
+Optfetch	200051	optfetch
+Securitysrv	200052	securitysrv
+#
 # EcoTools daemons/programs
+#
 ecodisc		200201
 ecolic		200202
 eamon		200203
 ecoad		200205
+#
 # VERSANT
+#
 rpc.dbserv      211637  dbserv rpc.dbserv_dir
 rpc.taped       217854  taped  rpc.taped_dir
 #
 ADTFileLock     300001			# ADT file locking service.
+#
 # FrameMaker
+#
+rpc.frameusersd	300004				# FrameMaker
 fmclient	300006				# FrameMaker Client
 fmeditor	300007				# FrameMaker Editor
 fmserver	300009  stdfm FrameServer	# FrameMaker Server
 #
 amd		300019  amq
 rpc.ldmd	300029  ldm		# Unidata LDM
-dr_daemon       300326	# Sun Enterprise Server Alternate Pathing
+#
+# DMFE/DAWS (Defense Automated Warning System)
+#
+UpdtAuditsS	300030	
+Dbpass		300091	dbpass
+#
 # FrameMaker
 fm_flb          300214			# FrameMaker
 fm_fls          300215			# FrameMaker licnese server
+#
+dr_daemon       300326	# Sun Enterprise Server Alternate Pathing
+#
 # FA&O Command Post App
+#
 rmd		300375
 agcd		300376
 #
@@ -192,7 +237,9 @@ cluinfod	300527		# cluster information server (Digital UNIX)
 dmispd		300598     # Sun Solstice Enterprise DMI Service Provider
 prpasswd	300632
 prestoctl_svc	390100	presto	# Prestoserve control daemon
+#
 # Legato Networker
+#
 rap		390101	rapla
 rapserv		390102	raprd
 nsrd		390103	nsr
@@ -203,12 +250,50 @@ nsrstat		390109
 nsrjb		390110	nsrjbd
 nsrexec		390113	nsrexecd
 nsrnotd		390400
+#
 # Remedy AR System daemons
+#
 arserverd       390600  arserverd
 ntserverd       390601  ntserverd
 ntclientd       390602  ntclientd
+aresclsrv       390603  aresclsrv
 arservtcd       390604  arservtcd
+arflashbd       390619  arflashbd
+#
+arfastsrv       390620  arfastsrv
+arfastsrv       390621  arfastsrv
+arfastsrv       390622  arfastsrv
+arfastsrv       390623  arfastsrv
+arfastsrv       390624  arfastsrv
+arfastsrv       390625  arfastsrv
+arfastsrv       390626  arfastsrv
+arfastsrv       390627  arfastsrv
+arfastsrv       390628  arfastsrv
+arfastsrv       390629  arfastsrv
+arfastsrv       390630  arfastsrv
+arfastsrv       390631  arfastsrv
+arfastsrv       390632  arfastsrv
+arfastsrv       390633  arfastsrv
+arfastsrv       390634  arfastsrv
+#
+arlistsrv       390635  arlistsrv
+arlistsrv       390636  arlistsrv
+arlistsrv       390637  arlistsrv
+arlistsrv       390638  arlistsrv
+arlistsrv       390639  arlistsrv
+arlistsrv       390640  arlistsrv
+arlistsrv       390641  arlistsrv
+arlistsrv       390642  arlistsrv
+arlistsrv       390643  arlistsrv
+arlistsrv       390644  arlistsrv
+arlistsrv       390645  arlistsrv
+arlistsrv       390646  arlistsrv
+arlistsrv       390647  arlistsrv
+arlistsrv       390648  arlistsrv
+arlistsrv       390649  arlistsrv
+#
 # SGI
+#
 sgi_snoopd	391000	snoopd snoop
 sgi_toolkitbus	391001
 sgi_fam		391002
@@ -274,6 +359,16 @@ sgi_reserved	391061
 sgi_reserved	391062
 sgi_reserved	391063
 #
+# AEDIS
+#
+afsd		391200
+dhc		391201
+cmsd		391202
+xxx2trif	391203
+trif2xxx	391204
+dx		391205
+licd		391206
+#
 asedirector	395175  asedirector
 aseagent	395176  aseagent
 asehsm		395177  asehsm
@@ -281,17 +376,22 @@ aselogger	395179  aselogger
 #
 retherif	20000000	na.retherif
 genagnt		20000001	na.genagnt
+#
 # ACeDB database server
+#
 acedb           20000114  rpc.acedbd
 aboutdb         20000115  rpc.acedbd
 aatdb           20000116  rpc.acedbd
 #
 seagent		20000777	# Memco/Platinum/CA SeOS security product
+#
 # MIDAS - Software for Nuclear Physics data aqcuisition and analysis
+#
 egts		28000205	# Eurogam Tape Server       (10205/udp)
 ers		28000220	# Eurogam Register Server   (10220/udp)
 sas		28000230	# Spectrum Access Server    (10230/udp)
 #
+SLSd_daemon	536870913	# HP Distributed Single Logical Screen
 uidd		536870915
 userd		536870916
 bondd		536870917
@@ -306,8 +406,118 @@ priced		536870928
 ladderd		536870929
 optiond		536870937	# FIRM option server
 #
+# IBM Network Database (DB2)
+# NDB Program numbers added for more useful rpcinfo output
+# Values are in decimal. Corresponding hexadecimal values
+# for the NDB port manager is X'20000020' and for the NDB
+# servers are from X'20000021' to X'20000084'.
+#
+ndbportmgr	536870944
+ndbserver1	536870945
+ndbserver2	536870946
+ndbserver3	536870947
+ndbserver4	536870948
+ndbserver5	536870949
+ndbserver6	536870950
+ndbserver7	536870951
+ndbserver8	536870952
+ndbserver9	536870953
+ndbserver10	536870954
+ndbserver11	536870955
+ndbserver12	536870956
+ndbserver13	536870957
+ndbserver14	536870958
+ndbserver15	536870959
+ndbserver16	536870960
+ndbserver17	536870961
+ndbserver18	536870962
+ndbserver19	536870963
+ndbserver20	536870964
+ndbserver21	536870965
+ndbserver22	536870966
+ndbserver23	536870967
+ndbserver24	536870968
+ndbserver25	536870969
+ndbserver26	536870970
+ndbserver27	536870971
+ndbserver28	536870972
+ndbserver29	536870973
+ndbserver30	536870974
+ndbserver31	536870975
+ndbserver32	536870976
+ndbserver33	536870977
+ndbserver34	536870978
+ndbserver35	536870979
+ndbserver36	536870980
+ndbserver37	536870981
+ndbserver38	536870982
+ndbserver39	536870983
+ndbserver40	536870984
+ndbserver41	536870985
+ndbserver42	536870986
+ndbserver43	536870987
+ndbserver44	536870988
+ndbserver45	536870989
+ndbserver46	536870990
+ndbserver47	536870991
+ndbserver48	536870992
+ndbserver49	536870993
+ndbserver50	536870994
+ndbserver51	536870995
+ndbserver52	536870996
+ndbserver53	536870997
+ndbserver54	536870998
+ndbserver55	536870999
+ndbserver56	536871000
+ndbserver57	536871001
+ndbserver58	536871002
+ndbserver59	536871003
+ndbserver60	536871004
+ndbserver61	536871005
+ndbserver62	536871006
+ndbserver63	536871007
+ndbserver64	536871008
+ndbserver65	536871009
+ndbserver66	536871010
+ndbserver67	536871011
+ndbserver68	536871012
+ndbserver69	536871013
+ndbserver70	536871014
+ndbserver71	536871015
+ndbserver72	536871016
+ndbserver73	536871017
+ndbserver74	536871018
+ndbserver75	536871019
+ndbserver76	536871020
+ndbserver77	536871021
+ndbserver78	536871022
+ndbserver79	536871023
+ndbserver80	536871024
+ndbserver81	536871025
+ndbserver82	536871026
+ndbserver83	536871027
+ndbserver84	536871028
+ndbserver85	536871029
+ndbserver86	536871030
+ndbserver87	536871031
+ndbserver88	536871032
+ndbserver89	536871033
+ndbserver90	536871034
+ndbserver91	536871035
+ndbserver92	536871036
+ndbserver93	536871037
+ndbserver94	536871038
+ndbserver95	536871039
+ndbserver96	536871040
+ndbserver97	536871041
+ndbserver98	536871042
+ndbserver99	536871043
+ndbserver100	536871044
+#
 bwnfsd		545580417
+#
 # Inetray - Raytrace
+#
 inetray.start   555555554
 inetray         555555555
 inetray         555555556
@@ -317,10 +527,12 @@ inetray         555555559
 inetray         555555560
 #
 fypxfrd		600100069	freebsd-ypxfrd
+bminrd		630474513	# MacroModel - BatchMin Network Server
 bwnfsd          788585389	# (PC)NFS server by Beame & Whiteside, Inc.
 dmispd		805306368  # Sun Solstice Enterprise DMI Service Provider
 cfsd		824395111
 fmproduct	1073741824  _Frame_RPC		# FrameMaker
 cfsd		1092830567
 dtcm		1289637086
-ttsession	1342177279
+ttsession	1289637087  # Sun Solaris 7 (2.7) and up.
+ttsession	1342177279  # Sun Solaris upto 2.6

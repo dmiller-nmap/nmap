@@ -1,5 +1,8 @@
 # Nmap Changelog
 
+-- Updated to Eilon Gishri's (eilon@aristo.tau.ac.il) newest version
+   of nmap-rpc at ftp://ftp.tau.ac.il/pub/users/eilon/rpc/rpc
+
 ** Version 2.54BETA6
 
 -- Added XML output (-oX).  Hopefully this will help those of you
@@ -11,7 +14,7 @@
 
 -- Applied patch from Stefan Rapp <s.rapp@hrz.uni-dortmund.de> which fixes
    a variable argument integer promotion problem in the new snprintf 
-   compatability file.
+   compatability file.  This is important for Redhat 7 systems.
 
 -- Reorganized output-related routines so that they now reside in
    output.c & output.h.  Let me know if I accidently screwed up the
