@@ -1,5 +1,11 @@
 # Nmap Changelog
 
+-- Fixed a bunch of fingerprints that were corrupt due to violations
+   of the fingerprint syntax/grammar (problems were found by Raymond
+   Mercier of VIGILANTe )
+
+** 2.54BETA25
+
 -- Added a whole bunch of new OS fingerprints (and adjustments)
    ranging from big important ones (Linux 2.4.X, OpenBSD 2.9, FreeBSD
    4.3, Cisco 12.2.1, MacOS X, etc) to some that are more obscure (
