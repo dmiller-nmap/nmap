@@ -333,18 +333,29 @@ foreach $t (1 .. 7) {
 	print "$test(Resp=N)\n";
     }
 }
-    
+
 if ($fp{pu}{resp} eq "Y") {
     print "PU(";
     $fp{pu}{tos} =~ s/NULL/0/;
     $fp{pu}{uck} =~ s/NULL/0/;
     $fp{pu}{ripck} =~ s/NULL/0/;
-    print "DF=$fp{pu}{df}%TOS=$fp{pu}{tos}%IPLEN=$fp{pu}{iplen}%RIPTL=$fp{pu}{riptl}%RID=$fp{pu}{rid}%RIPCK=$fp{pu}{ripck}%UCK=$fp{pu}{uck}%ULEN=$fp{pu}{ulen}%DAT=$fp{pu}{dat})\n";
+    if ($fp{pu}{rid}) {
+	$rid = "RID=$fp{pu}{rid}\%";
+    } else { $ridwarning = 1; $rid = "RID=E|F\%"; }
+    print "DF=$fp{pu}{df}%TOS=$fp{pu}{tos}%IPLEN=$fp{pu}{iplen}%RIPTL=$fp{pu}{riptl}%${rid}RIPCK=$fp{pu}{ripck}%UCK=$fp{pu}{uck}%ULEN=$fp{pu}{ulen}%DAT=$fp{pu}{dat})\n";
 } else {
-    print "PU(Resp=N)\n";
+    print "PU(Resp=N)\n";    
 }
 
-					      
+if ($ridwarning == 1) {
+    $ridwarning = 0;
+    print "*******************************************************\n" .
+          "* WARNING: Missing PU RID value -- this is normal for *\n" .
+          "* hosts submitted by Solaris or Windows boxes.  You   *\n" .
+          "* may want to get RID from similar fingerprints       *\n" .
+          "*******************************************************\n";
+}
+             
 
 
 
