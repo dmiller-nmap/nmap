@@ -1,0 +1,137 @@
+# Nmap service detection probe list
+# $Id$ 
+#
+# This is a database of custom probes and expected responses that the
+# Nmap Security Scanner ( http://www.insecure.org/nmap/ ) uses to
+# identify what services (eg http, smtp, dns, etc.) are listening on
+# open ports.  Contributions to this database are welcome.  We hope to
+# create an automated submission system (as with OS fingerprints), but
+# for now you can email fyodor any new probes you develop so that he
+# can include them in the main Nmap distributon.  By sending new
+# probe/matches to Fyodor or one the insecure.org development mailing
+# lists, it is assumed that you are transfering any and all copyright
+# interest in the data to Fyodor so that he can modify it, relicense
+# it, incorporate it into programs, etc. This is important because the
+# inability to relicense code has caused devastating problems for
+# other Free Software projects (such as KDE and NASM).  Nmap will
+# always be available Open Source.  If you wish to specify special
+# license conditions of your contributions, just say so when you send
+# them.
+#
+# This collection of probe data is (C) 2003 by Insecure.Com LLC It is
+# available for free use by open source software under the terms of
+# the GNU General Public License.  We also license the data to
+# selected commercial/proprietary vendors under less restrictive
+# terms.  Contact sales@insecure.com for more information.
+#
+# Grammar of this file is as follows:
+#
+# Probe {protocol} {name} {probestring}
+#   This directive defines a new probe definition.  The variables are:
+#     {protocol} must be TCP|UDP
+#     {name} is just an arbitrary name for the probe (for debugging)
+#     {probestring} must start with a q, then a delimiter character which
+#       begins and ends the string.  The string between the delimiters is
+#       formatted mostly like a "C" string.  The supported escape characters 
+#       are: \\ \a \b \f \n \r \t \v \xHH 
+#   Note that exactly one Probe line has an empty probestring.  This is
+#   the TCP NULL probe which just listens for the initial banners that
+#   some services send.  Note that Probes are executed in parallel and
+#   that a new connection is established between non-NULL TCP probes.
+#
+# match {service} {pattern}
+#   This directive comes within a Probe section and does a pattern match 
+#   against any response received from the target service.  If the
+#   {pattern} matches, than the port is deemed to be running {service}
+#   and detection ceases for that port.  The pattern must be one of two
+#   forms:
+#   SERVICEMATCH_REGEX: m/{regex}/{options}
+#     This format takes a perl-compatable regular expression ( see
+#     http://www.libpcre.org/ ) between two delimiters (slash in this
+#     case, but you can use whatever you would like).  {options} is a
+#     string of one-character options.  The only one supported now is
+#     'i', which makes a match case-insensitive.
+#   SERVICEMATCH_STATIC: q/{string}/{options}
+#     In this format, {string} is a static string that must exist in the
+#     response.  The same C-style escaping as in the "Probe" directive is used.
+#
+# ports {portlist}
+#   This line tells Nmap what ports the services identified by this
+#   Probe are commonly found on.  The syntax is the same as the Nmap
+#   -p option (example: 1-11,24,38-70).
+#
+# totalwaitms {milliseconds}
+#   This directive specifies the amount of time Nmap should wait before
+#   giving up on a particular probe against a particular service.  You can
+#   skip this directive to use the Nmap default.  I may replace this with
+#   a new parameter to the match directive which specifies the amount of 
+#   time, bytes, or lines to wait for before giving up.
+
+# This is the NULL probe that just compares any banners given to us
+Probe TCP NULL q||
+# Wait for at least 5 seconds for data.  Otherwise an Nmap default is used.
+totalwaitms 5000
+# 220 mirrors.midco.net FTP server ready.
+match ftp m/^220 .*ftp/i
+# 220 core.foo.com ESMTP
+match smtp m/^220 .*smtp/i
+match ssh m/^SSH-/
+
+Probe TCP GetRequest q|GET / HTTP/1.0\r\n\r\n|
+ports 80,81,8000-8010,8080-8085
+# Server: CUPS/1.1
+match ipp q|Server: CUPS/1.|
+# My junbuster proxy gives me this.
+match http-proxy m|^HTTP/1.0 400 Invalid header received from browser\n\n|
+# HTTP/1.1 200 OK
+match http m|^HTTP/1.[01] |i
+match ftp m/^200 OK/
+
+# DNS Server status request: http://www.crynwr.com/crynwr/rfc1035/rfc1035.html
+Probe UDP DNSStatusRequest-UDP q|\0\0\x10\0\0\0\0\0\0\0\0\0|
+ports 53
+# The 'a' option, followed by a number, means that the matchstring
+# must begin at exactly the specified offset within the response text.
+match domain q|\0\0\x90\x04\0\0\0\0\0\0\0\0|a0
+
+# DNS Server status request: http://www.crynwr.com/crynwr/rfc1035/rfc1035.html
+Probe TCP DNSStatusRequest-TCP q|\0\x0C\0\0\x10\0\0\0\0\0\0\0\0\0|
+ports 53
+# The 'a' option, followed by a number, means that the matchstring
+# must begin at exactly the specified offset within the response text.
+match domain q|\0\x0C\0\0\x90\x04\0\0\0\0\0\0\0\0|a0
+
+# This probe sends an RPC "Null command" to the port for service
+# 100000 (portmapper).
+# Some of these numbers are abitrary (such as ID).  I could consider
+# adding an \R escape in the string logic to provide a random byte.
+# This would make IDS detection and such a bit harder.  On the other
+# hand, that would make the response a little harder to recognize too.
+Probe TCP RPCCheck-TCP q|\x80\0\0\x28\x72\xFE\x1D\x13\0\0\0\0\0\0\0\x02\0\x01\x86\xA0\0\x01\x97\x7C\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0|
+ports 111,4045
+match rpc q|\x80\0\0\x18\x72\xFE\x1D\x13\0\0\0\x01\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x01|a0
+match rpc q|\x80\0\0\x20\x72\xFE\x1D\x13\0\0\0\x01\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x02|a0
+
+Probe UDP RPCCheck-UDP q|\x72\xFE\x1D\x13\0\0\0\0\0\0\0\x02\0\x01\x86\xA0\0\x01\x97\x7C\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0|
+ports 111,4045
+match rpc q|\x72\xFE\x1D\x13\0\0\0\x01\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x01|a0
+match rpc q|\x72\xFE\x1D\x13\0\0\0\x01\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x02|a0
+
+Probe UDP EchoTest q|help\r\n\r\n|
+ports 7
+match echo m|^help\r\n\r\n|
+
+# ftp://ftp.rfc-editor.org/in-notes/rfc1179.txt
+Probe TCP LPDString q|\x01default\n|
+ports 515
+match printer m|^\0$|
+
+# From xlsclients
+Probe TCP X11Probe q|\x6C\0\x0B\0\0\0\0\0\0\0\0\0|
+ports 6000-6020
+match X11 q|\0\x2D\x0B\0\0\0\x0C\0|a0
+match X11 q|\x01\0\x0b\0\0\0\x4C\0\xA0\xE0\x63\x02\0\0|a0
+
+# These are empty now, but may prove useful later
+Probe TCP GenericLines q|\r\n\r\n|
+Probe TCP GenericHelp q|HELP\r\n|
