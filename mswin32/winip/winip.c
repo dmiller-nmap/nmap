@@ -60,6 +60,9 @@ static void winip_init_pcap(char *a);
 static void winip_test(int needraw);
 static void winip_list_interfaces();
 
+/*   delay-load hooks only for troubleshooting   */
+static FARPROC WINAPI winip_dli_fail_hook(unsigned code, PDelayLoadInfo info);
+
 //	The tables
 
 typedef struct _WINIP_NAME {
@@ -97,7 +100,8 @@ static IPNODE *ipblock;
 
 void winip_barf(const char *msg)
 {
-	if(inited != 3) fatal("%s", msg);
+	if(inited != 3) fatal("%s", msg ? msg : "You need raw support for this\n"
+		" run \"nmap --win_list_interfaces --win_trace\" to troubleshoot\n");
 	if(msg) printf("%s\n\n", msg);
 	printf("\nYour system doesn't have iphlpapi.dll\n\nIf you have Win95, "
 		"maybe you could grab it from a Win98 system\n"
@@ -133,6 +137,8 @@ void winip_postopt_init()
 		return;
 	inited = 2;
 
+	if(wo.trace) __pfnDliFailureHook = winip_dli_fail_hook;
+
 	werd = MAKEWORD( 2, 2 );
 	if( (WSAStartup(werd, &data)) !=0 )
 		fatal("failed to start winsock.\n");
@@ -140,6 +146,7 @@ void winip_postopt_init()
 	ver.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
 	if(!GetVersionEx((LPOSVERSIONINFO)&ver))
 	{
+		if(wo.trace) printf("***WinIP***  not win2k -- trying basic version info\n");
 		ver.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
 		if(!GetVersionEx((LPOSVERSIONINFO)&ver))
 			fatal("GetVersionEx failed\n");
@@ -151,6 +158,7 @@ void winip_postopt_init()
 	//	Test for win_noiphlpapi
 	if(wo.noiphlpapi)
 	{
+		if(wo.trace) printf("***WinIP***  testing absence of iphlpapi\n");
 		o.isr00t = 0;
 		inited = 3;
 		if(wo.listinterfaces) winip_barf(0);
@@ -158,12 +166,14 @@ void winip_postopt_init()
 	}
 
 	//	Read the size
+	if(wo.trace) printf("***WinIP***  trying to initialize tables\n");
 	__try { nRes = GetIfTable(pTable, &cb, TRUE); }
 	__except(GetExceptionCode() == DLI_ERROR)
 	{
 		//	we have no iphlpapi.dll
 		o.isr00t = 0;
 		inited = 3;
+		if(wo.trace) printf("***WinIP***  no iphlpapi\n");
 		if(wo.listinterfaces) winip_barf(0);
 		return;
 	}
@@ -237,6 +247,8 @@ void winip_postopt_init()
 		}
 	}
 
+	if(wo.trace) printf("***WinIP***  tables seem to be filled in correctly\n");
+
 	//	Try to initialize winpcap
 	__try
 	{
@@ -244,21 +256,22 @@ void winip_postopt_init()
 
 		if(wo.nopcap)
 		{
-			if(o.debugging > 1)
-				printf("winpcap support disabled\n");
+			if(o.debugging > 1 && wo.trace)
+				printf("***WinIP***  winpcap support disabled\n");
 			__leave;
 		}
 
 		pcap_avail = 1;
+		if(wo.trace) printf("***WinIP***  trying to initialize winpcap 2.1\n");
 		PacketGetAdapterNames(pcaplist, &len);
-		if(o.debugging > 1)
-			printf("winpcap is present\n");
+		if(o.debugging > 1 || wo.trace)
+			printf("***WinIP***  winpcap is present\n");
 	}
 	__except(GetExceptionCode() == DLI_ERROR)
 	{
 		pcap_avail = 0;
-		if(o.debugging > 1)
-			printf("winpcap is not present\n");
+		if(o.debugging > 1 || wo.trace)
+			printf("***WinIP***  winpcap is not present\n");
 	}
 
 	//	Do we have rawsock?
@@ -273,20 +286,27 @@ void winip_postopt_init()
 		ZeroMemory(&sin, sizeof(sin));
 		sin.sin_family = AF_INET;
 		sin.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+
+		if(wo.trace) printf("***WinIP***  testing for raw sockets\n");
+
 		s = socket(AF_INET, SOCK_RAW, IPPROTO_RAW);
 		if(s != INVALID_SOCKET
 			&& !bind(s, (struct sockaddr*)&sin, sizeof(sin)))
 		{
 			rawsock_avail = 1;
 			closesocket(s);
-			if(o.debugging > 1)
-				printf("rawsock is available\n");
+			if(o.debugging > 1 || wo.trace)
+				printf("***WinIP***  rawsock is available\n");
 		}
-		else if(o.debugging > 1)
-			printf("rawsock is not available\n");
+		else if(o.debugging > 1 || wo.trace)
+		{
+			if(s == INVALID_SOCKET)
+				printf("***WinIP***  rawsock init failed\n");
+			else printf("***WinIP***  rawsock bind failed (most likely not admin)\n");
+		}
 	}
-	else if(o.debugging > 1)
-		printf("didn't try rawsock\n");
+	else if(o.debugging > 1 || wo.trace)
+		printf("***WinIP***  didn't try rawsock\n");
 
 	if(rawsock_avail && o.ipprotscan
 		&& ver.dwPlatformId == VER_PLATFORM_WIN32_NT
@@ -295,12 +315,14 @@ void winip_postopt_init()
 		&& ver.wServicePackMajor == 0)
 	{
 		//	Prevent a BSOD (we're on W2K SP0)
+		if(wo.trace) printf("***WinIP***  disabling rawsock to avoid BSOD due to ipprotoscan\n");
 		winbug = 1;
 		rawsock_avail = 0;
 	}
 
 	if(pcap_avail)
 	{
+		if(wo.trace) printf("***WinIP***  reading winpcap interface list\n");
 		if(ver.dwPlatformId == VER_PLATFORM_WIN32_NT)
 		{
 			//	NT version
@@ -324,6 +346,8 @@ void winip_postopt_init()
 	}
 
 	o.isr00t = (pcap_avail | rawsock_avail);
+	if(wo.trace) printf("***WinIP***  o.isr00t = %d\n", o.isr00t);
+
 	qsort(nametable, numifs, sizeof(WINIP_NAME), strcmp);
 	atexit(winip_cleanup);
 
@@ -356,6 +380,14 @@ static void winip_init_pcap(char *a)
 	int len = 6;	//	Ethernet
 
 	LPADAPTER pAdap;
+
+	char *foobar = a[1] ? "%s" : "%S";
+	if(wo.trace)
+	{
+		printf("pcap device:  ");
+		printf(foobar, a);
+		printf("\n");
+	}
 	
 	OidData=(struct _PACKET_OID_DATA *) _alloca(sizeof(PACKET_OID_DATA)+MAXLEN_PHYSADDR-1);
 
@@ -364,7 +396,11 @@ static void winip_init_pcap(char *a)
 	OidData->Length = len;
 
 	pAdap = PacketOpenAdapter(a);
-	if(!pAdap) return;	//	unopenable
+	if(!pAdap)
+	{
+		if(wo.trace) printf(" result:       failed to open\n");
+		return;	//	unopenable
+	}
 
 	if(PacketRequest(pAdap,FALSE,OidData))
 	{
@@ -374,12 +410,36 @@ static void winip_init_pcap(char *a)
 			if(iftable[i].physlen == 6
 				&& 0 == memcmp(iftable[i].physaddr, OidData->Data, len))
 			{
+				if(wo.trace)
+				{
+					int l;
+					printf(" result:       physaddr (0x");
+					for(l = 0; l < len; l++)
+					{
+						char blah[3];
+						printf("%02s", _itoa(OidData->Data[l], blah, 16));
+					}
+					printf(") matches %s\n", iftable[i].name);
+				}
 				iftable[i].pcapname = a;
 				break;	//	Out of the j-loop
 			}
 		}
+
+		//	else ignore the non-Ethernet device
+		if(i == numifs && wo.trace)
+		{
+			int l;
+			printf(" result:      no match (physaddr = 0x");
+			for(l = 0; l < len; l++)
+			{
+				char blah[3];
+				printf("%02s", _itoa(OidData->Data[l], blah, 16));
+			}
+			printf(")\n");
+		}
 	}
-	//	else ignore the non-Ethernet device
+
 
 	PacketCloseAdapter(pAdap);
 }
@@ -761,4 +821,29 @@ void set_pcap_filter(struct hoststruct *target,
 		fatal("Error compiling our pcap filter: %s\n", pcap_geterr(pd));
 	if (pcap_setfilter(pd, &fcode) < 0 )
 		fatal("Failed to set the pcap filter: %s\n", pcap_geterr(pd));
+}
+
+static FARPROC WINAPI winip_dli_fail_hook(unsigned code, PDelayLoadInfo info)
+{
+	printf("***WinIP***  delay load error:\n");
+	switch(code)
+	{
+	case dliFailLoadLib:
+		printf(" failed to load dll: %s\n", info->szDll);
+		break;
+
+	case dliFailGetProc:
+		printf(" failed to load ");
+		if(info->dlp.fImportByName)
+			printf("function %s", info->dlp.szProcName + 2);
+		else printf("ordinal %d", info->dlp.dwOrdinal);
+		printf(" in dll %s\n", info->szDll);
+		break;
+
+	default:
+		printf(" unknown error\n");
+		break;
+	}
+
+	return 0;
 }

@@ -1,5 +1,9 @@
 # Nmap Changelog
 
+-- Applied patch from Andy Lutomirski (Luto@mailandnews.com) which
+   enhances some of the Win* error messages and adds the --win_trace
+   debugging option.
+
 -- Applied some patches from Jay Freeman (saurik@saurik.com)
    -- New --data_length option adds indicated number of random data
    bytes to send with scan packet and tcp ping packet (does not

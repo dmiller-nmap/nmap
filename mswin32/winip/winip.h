@@ -105,7 +105,7 @@ frame-relay(32)
 
 //	windows-specific options
 struct winops {
-	int norawsock, nopcap, forcerawsock, listinterfaces, nt4route, noiphlpapi;
+	int norawsock, nopcap, forcerawsock, listinterfaces, nt4route, noiphlpapi, trace;
 };
 
 extern struct winops wo;

@@ -2055,6 +2055,7 @@ sometimes-rpc26   32786/udp  # Sometimes an RPC port
 sometimes-rpc27   32787/tcp  # Sometimes an RPC port dmispd (DMI Service Provider)
 sometimes-rpc28   32787/udp  # Sometimes an RPC port
 reachout          43188/tcp
+ciscopop          45000/udp  # Cisco Postoffice Protocol for Cisco Secure IDS
 dbbrowse          47557/tcp  # Databeam Corporation
 dbbrowse          47557/udp  # Databeam Corporation
 bo2k              54320/tcp  # Back Orifice 2K Default Port

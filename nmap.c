@@ -412,6 +412,7 @@ int nmap_main(int argc, char *argv[]) {
     {"win_nt4route", no_argument, 0, 0}, 
     {"win_noiphlpapi", no_argument, 0, 0}, 
     {"win_help", no_argument, 0, 0},
+	{"win_trace", no_argument, 0, 0},
 #endif
     {0, 0, 0, 0}
   };
@@ -477,6 +478,8 @@ int nmap_main(int argc, char *argv[]) {
 	wo.nt4route = 1; 
       } else if (strcmp(long_options[option_index].name, "win_noiphlpapi") == 0 ) { 
 	wo.noiphlpapi = 1; 
+      } else if (strcmp(long_options[option_index].name, "win_trace") == 0 ) { 
+	wo.trace++; 
       } else if (strcmp(long_options[option_index].name, "win_help") == 0 ) { 
 	printf("Windows-specific options:\n\n"); 
 	printf(" --win_list_interfaces : list all network interfaces\n"); 
@@ -485,6 +488,7 @@ int nmap_main(int argc, char *argv[]) {
 	printf(" --win_nopcap          : disable winpcap support\n"); 
 	printf(" --win_nt4route        : test nt4 route code\n"); 
 	printf(" --win_noiphlpapi      : test response to lack of iphlpapi.dll\n"); 
+	printf(" --win_trace           : trace through raw IP initialization\n");
 	exit(0);
 #endif
       } else if (strcmp(long_options[option_index].name, "append_output") == 0) {
@@ -843,38 +847,34 @@ int nmap_main(int argc, char *argv[]) {
     if (o.finscan || o.windowscan || o.synscan || o.maimonscan || o.nullscan || o.xmasscan || o.ackscan
 	|| o.udpscan || o.ipprotscan) {
 #ifndef WIN32
-      fatal
+      fatal("You requested a scan type which requires r00t privileges, and you do not have them.\n");
 #else
-      winip_barf
+      winip_barf(0);
 #endif
-      ("You requested a scan type which requires r00t privileges, and you do not have them.\n");
     }
   
     if (o.numdecoys > 0) {
 #ifndef WIN32
-      fatal
+      fatal("Sorry, but you've got to be r00t to use decoys, boy!");
 #else
-      winip_barf
+      winip_barf(0);
 #endif
-      ("Sorry, but you've got to be r00t to use decoys, boy!");
     }
   
     if (o.fragscan) {
 #ifndef WIN32
-      fatal
+      fatal("Sorry, but fragscan requires r00t privileges\n");
 #else
-      winip_barf
+      winip_barf(0);
 #endif
-      ("Sorry, but fragscan requires r00t privileges\n");
     }
 
     if (o.osscan) {
 #ifndef WIN32
-      fatal
+      fatal("TCP/IP fingerprinting (for OS scan) requires root privileges which you do not appear to possess.  Sorry, dude.\n");
 #else
-      winip_barf
+      winip_barf(0);
 #endif
-      ("TCP/IP fingerprinting (for OS scan) requires root privileges which you do not appear to possess.  Sorry, dude.\n");
     }
   }
 
