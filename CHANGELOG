@@ -1,8 +1,18 @@
 # Nmap Changelog ($Id$)
 
+Nmap 3.27
+
+o Nmap now compiles under Amiga thanks to patches sent by Diego
+  Casorran (dcr8520@amiga.org).
+
 o Fixed a backwards WIN32 ifdef that broke UDP and small-fragment
- scans for some operating systems.  Thanks to Guido van Rooij
- (guido@gvr.org) for reporting the problem and sending a patch.
+  scans for some operating systems other than Linux and Windows.
+  Thanks to Guido van Rooij (guido@gvr.org) for reporting the problem
+  and sending a patch.
+
+o Applied patch from Marius Strobl (marius@alchemy.franken.de) which improves
+  the definition of NET_SIZE_T on FreeBSD so that it compiles on
+  64-bit platforms.
 
 Nmap 3.26
 

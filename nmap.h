@@ -351,9 +351,12 @@ void *realloc();
 #elif defined(UW)
 #  define NET_SIZE_T size_t
 #elif defined(__FreeBSD__)
-  /* XXX: Apache didn't have this one,
-          so watch it be wrong :)... */
-#  define NET_SIZE_T size_t
+#  if __FreeBSD__ >= 2
+#    include <osreldate.h>
+#    if __FreeBSD_version >= 400000
+#      define NET_SIZE_T socklen_t
+#    endif
+#  endif
 #elif defined(OPENBSD)
 #  define NET_SIZE_T socklen_t
 #elif defined(NETBSD)
