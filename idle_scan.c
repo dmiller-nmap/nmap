@@ -56,6 +56,15 @@
 
 #include <stdio.h>
 
+/* For unknown reasons, MS VC++ is warning about lines like:
+   proxy->senddelay *= 0.95;
+
+   This is the brute-force way to fix that.
+ */ 
+#ifdef _MSC_VER
+#pragma warning(disable: 4244)
+#endif
+
 extern struct ops o;
 
 /*  predefined filters -- I need to kill these globals at some point. */
@@ -151,7 +160,7 @@ int ipid_proxy_probe(struct idle_proxy_info *proxy, int *probes_sent,
 		error("Received IPID zombie probe response which probably came from an earlier prober instance ... increasing rttvar from %d to %d", 
 		      proxy->host.to.rttvar, (int) (proxy->host.to.rttvar * 1.2));
 	      }
-	      proxy->host.to.rttvar = proxy->host.to.rttvar * 1.2;
+	      proxy->host.to.rttvar *= 1.2;
 	      rcvd++;
 	    }
 	    else if (o.debugging > 1) {
@@ -474,9 +483,8 @@ void adjust_idle_timing(struct idle_proxy_info *proxy,
 	 about the first two.  The solution is to decrease our group
 	 size and add a sending delay */
 
-      proxy->current_groupsz = proxy->current_groupsz * 0.80; /* packets
-					could be dropped because too
-					many sent at once */
+      proxy->current_groupsz *= 0.80; /* packets could be dropped because
+					too many sent at once */
       proxy->current_groupsz = MAX(proxy->current_groupsz, 1);
       proxy->senddelay += 10000;
       proxy->senddelay = MIN(proxy->max_senddelay, proxy->senddelay);
@@ -486,7 +494,7 @@ void adjust_idle_timing(struct idle_proxy_info *proxy,
     } else if (testcount > realcount) {
       /* Perhaps the proxy host is not really idle ... */
       /* I guess all I can do is decrease the group size, so that if the proxy is not really idle, at least we may be able to scan cnunks more quickly in between outside packets */
-      proxy->current_groupsz = proxy->current_groupsz * 0.8;
+      proxy->current_groupsz *= 0.8;
       proxy->current_groupsz = MAX(proxy->current_groupsz, 2);
 
       if (!notidlewarning && o.verbose) {
@@ -497,7 +505,7 @@ void adjust_idle_timing(struct idle_proxy_info *proxy,
       /* W00p We got a perfect match.  That means we get a slight increase
 	 in allowed group size and we can lightly decrease the senddelay */
 
-      proxy->senddelay = proxy->senddelay * 0.9;
+      proxy->senddelay *= 0.9;
       proxy->current_groupsz = MIN(proxy->current_groupsz * 1.1, 500000 / (proxy->senddelay + 1));
       proxy->current_groupsz = MIN(proxy->max_groupsz, proxy->current_groupsz);
 
@@ -640,7 +648,7 @@ int idlescan_countopen2(struct idle_proxy_info *proxy,
   } else {
     /* Yeah, we got as many responses as we sent probes.  This calls for a 
        very light timing acceleration ... */
-    proxy->senddelay = proxy->senddelay * 0.95;
+    proxy->senddelay *= 0.95;
     proxy->current_groupsz = MAX(2, MIN(proxy->current_groupsz, 500000 / (proxy->senddelay+1)));
   }
 
