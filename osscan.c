@@ -154,21 +154,26 @@ if (o.verbose && openport != -1)
      printf("\n");
      seq_gcd = get_gcd_n_ulong(target->seq.responses -1, seq_diffs);
      /*     printf("The GCD is %lu\n", seq_gcd);*/
-     for(i=0; i < target->seq.responses - 1; i++)
-       seq_diffs[i] /= seq_gcd;
-     for(i=0; i < target->seq.responses - 1; i++) {     
-       if (MOD_DIFF(target->seq.seqs[i+1],target->seq.seqs[i]) > 10000000) {
-	 target->seq.class = SEQ_TR;
-	 target->seq.index = 999999;
-	 /*	 printf("Target is a TR box\n");*/
-	 break;
-       }	
-       seq_avg_inc += seq_diffs[i];
+     if (seq_gcd) {     
+       for(i=0; i < target->seq.responses - 1; i++)
+	 seq_diffs[i] /= seq_gcd;
+       for(i=0; i < target->seq.responses - 1; i++) {     
+	 if (MOD_DIFF(target->seq.seqs[i+1],target->seq.seqs[i]) > 10000000) {
+	   target->seq.class = SEQ_TR;
+	   target->seq.index = 999999;
+	   /*	 printf("Target is a TR box\n");*/
+	   break;
+	 }	
+	 seq_avg_inc += seq_diffs[i];
+       }
      }
-     if (seq_gcd % 64000 == 0) {
+     if (seq_gcd == 0) {
+       target->seq.class = SEQ_CONSTANT;
+       target->seq.index = 0;
+     } else if (seq_gcd % 64000 == 0) {
        target->seq.class = SEQ_64K;
        /*       printf("Target is a 64K box\n");*/
-       target->seq.index = 0;
+       target->seq.index = 1;
      } else if (seq_gcd % 800 == 0) {
        target->seq.class = SEQ_i800;
        /*       printf("Target is a i800 box\n");*/
@@ -206,6 +211,12 @@ if (o.verbose && openport != -1)
      FP->results = seq_AVs;
      seq_AVs[0].attribute = "Class";
      switch(target->seq.class) {
+     case SEQ_CONSTANT:
+       strcpy(seq_AVs[0].value, "C");
+       seq_AVs[0].next = &seq_AVs[1];
+       seq_AVs[1].attribute= "Val";     
+       sprintf(seq_AVs[1].value, "%lX", target->seq.seqs[0]);
+       break;
      case SEQ_64K:
        strcpy(seq_AVs[0].value, "64K");      
        break;

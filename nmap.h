@@ -182,6 +182,7 @@ void *realloc();
 #define SEQ_RI 4
 #define SEQ_TR 8
 #define SEQ_i800 16
+#define SEQ_CONSTANT 32
 
 #ifndef MAXHOSTNAMELEN
 #define MAXHOSTNAMELEN 64

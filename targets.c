@@ -362,7 +362,8 @@ group_end = MIN(group_start + group_size -1, num_hosts -1);
 	       to.srtt += delta >> 3;
 	       to.rttvar += (ABS(delta) - to.rttvar) >> 2;
 	       to.timeout = to.srtt + (to.rttvar << 2);
-	       printf(" %d %d %d\n", to.srtt, to.rttvar, to.timeout);
+	       if (o.debugging > 1)
+		 printf(" %d %d %d\n", to.srtt, to.rttvar, to.timeout);
 	     }
 	     hostbatch[hostnum].to = to;
 	     if (!(hostbatch[hostnum].flags & HOST_UP)) {	  
@@ -397,11 +398,13 @@ group_end = MIN(group_start + group_size -1, num_hosts -1);
 	     to.rttvar = MAX(5000, MIN(to.srtt, 500000));
 	   } else {	   
 	     delta = TIMEVAL_SUBTRACT(end, time[ushorttmp]) - to.srtt;
-	     printf("Dest unreach (delta %d) changing srtt %d rttvar %d timeout %d to ", delta, to.srtt, to.rttvar, to.timeout);
+	     if (o.debugging > 1)
+	       printf("Dest unreach (delta %d) changing srtt %d rttvar %d timeout %d to ", delta, to.srtt, to.rttvar, to.timeout);
 	     to.srtt += delta >> 3;
 	     to.rttvar += (ABS(delta) - to.rttvar) >> 2;
 	     to.timeout = to.srtt + (to.rttvar << 2);
-	     printf(" %d %d %d\n", to.srtt, to.rttvar, to.timeout);
+	     if (o.debugging > 1)
+	       printf(" %d %d %d\n", to.srtt, to.rttvar, to.timeout);
 	   }
 	   if (!(hostbatch[hostnum].flags & HOST_DOWN) &&
 	       !(hostbatch[hostnum].flags & HOST_UP)) {	   
