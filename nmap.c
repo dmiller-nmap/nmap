@@ -1992,7 +1992,7 @@ if (o.debugging || o.verbose)
 	    }
 	  } else if (packet_trynum > -1) {		
 	    /* Update our records */
-	    delta = TIMEVAL_SUBTRACT(now,current->sent[i]) - to.srtt;
+	    delta = TIMEVAL_SUBTRACT(now,current->sent[packet_trynum]) - to.srtt;
 	    if (o.debugging > 1) printf("Got packet (trynum %d, packetnum %d), delta %d srtt %d rttvar %d timeout %d ->", current->trynum, packet_trynum, delta, to.srtt, to.rttvar, to.timeout);
 	    numqueries_ideal = MIN(numqueries_ideal + (4/numqueries_ideal), max_width);
 	    to.srtt += delta >> 3;
