@@ -493,6 +493,8 @@ if (!to.srtt && !to.rttvar && !to.timeout) {
   /*  to.srtt = 800000;
       to.rttvar = 500000; */ /* we will init these when we get real data */
   to.timeout = o.initial_rtt_timeout * 1000;
+  to.srtt = -1;
+  to.rttvar = -1;
 } 
 
 /* Init our raw socket */

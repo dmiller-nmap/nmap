@@ -2354,7 +2354,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E|F%RIPCK=E|F%UCK=0%ULEN=134%DAT=E)
 
 # Contributed by pawel@essus.com.pl
-Fingerprint FreeBSD 3.2-STABLE
+Fingerprint FreeBSD 3.2-4.0
 TSeq(Class=RI%gcd=<6%SI=<92D42&>1769)
 T1(DF=Y%W=403D|402E%ACK=S++|O%Flags=AS|A%Ops=MNWNNT|NNT|M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -4035,7 +4035,8 @@ PU(Resp=N)
 # Host information:  @WorkStation (i960 based) X-terminal
 # Neoware (was HDS) NetOS V. 2.0.1
 # Hewlett-Packard ENTRIA Model C3230A Server Version B.05.30
-Fingerprint Neoware (was HDS) NetOS V. 2.0.1 or HP ENTRIA C3230A
+# Cisco 11151/Arrowpoint 150 Load Balancer
+Fingerprint Cisco 11151/Arrowpoint 150 load balancer, Neoware (was HDS) NetOS V. 2.0.1 or HP ENTRIA C3230A
 TSeq(Class=64K)
 T1(Resp=Y%DF=N%W=2000%ACK=S++%Flags=AS%Ops=|M)
 T2(Resp=N)

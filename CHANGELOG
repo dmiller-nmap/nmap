@@ -1,5 +1,11 @@
 # Nmap Changelog
 
+-- Applied patch from Steve Bleazard (steve@bleazard.com) which fixed
+   bug in internal Smooth Round Trim Time calculations.
+
+-- Added more debugging code for "Unknown datalink type" error -- if
+   you get this, please send me the full error msg including hex values.
+
 ** Version 2.54BETA7
 
 -- Applied patch from Hubert Feyrer
