@@ -94,6 +94,7 @@ int ipid_proxy_probe(struct idle_proxy_info *proxy, int *probes_sent,
   struct timeval tv_end;
   int tries = 0;
   int trynum;
+  int sent=0, rcvd=0;
   int maxtries = 3; /* The maximum number of tries before we give up */
   struct timeval tv_sent[3];
   int ipid = -1;
@@ -114,8 +115,6 @@ int ipid_proxy_probe(struct idle_proxy_info *proxy, int *probes_sent,
   if (seq_base == 0) seq_base = get_random_u32();
   if (!ack) ack = get_random_u32();
 
-  if (probes_sent) *probes_sent = 0;
-  if (probes_rcvd) *probes_rcvd = 0;
 
   do {
     timedout = 0;
@@ -127,16 +126,18 @@ int ipid_proxy_probe(struct idle_proxy_info *proxy, int *probes_sent,
 		 seq_base + (packet_send_count++ * 500) + 1, ack, 
 		 TH_SYN|TH_ACK, 0, 
 		 NULL, 0, NULL, 0);
-    if (probes_sent) (*probes_sent)++;
+    sent++;
     tries++;
 
     /* Now it is time to wait for the response ... */
     to_usec = proxy->host.to.timeout;
-    while(ipid == -1 && to_usec >= 0) {
+    gettimeofday(&tv_end, NULL);
+    while((ipid == -1 || sent > rcvd) && to_usec >= 0) {
+
+      to_usec = proxy->host.to.timeout - TIMEVAL_SUBTRACT(tv_end, tv_sent[tries-1]);
     
       ip = (struct ip *) readip_pcap(proxy->pd, &bytes, to_usec);      
       gettimeofday(&tv_end, NULL);
-      to_usec = proxy->host.to.timeout - TIMEVAL_SUBTRACT(tv_end, tv_sent[tries-1]);
       if (ip) {
 	if (bytes < ( 4 * ip->ip_hl) + 14U)
 	  continue;
@@ -151,7 +152,7 @@ int ipid_proxy_probe(struct idle_proxy_info *proxy, int *probes_sent,
 		      proxy->host.to.rttvar, (int) (proxy->host.to.rttvar * 1.2));
 	      }
 	      proxy->host.to.rttvar *= 1.2;
-	      if (probes_rcvd) (*probes_rcvd)++;
+	      rcvd++;
 	    }
 	    else if (o.debugging > 1) {
 	      error("Received unexpected response packet from %s during ipid proxy probing:", inet_ntoa(ip->ip_src));
@@ -161,7 +162,7 @@ int ipid_proxy_probe(struct idle_proxy_info *proxy, int *probes_sent,
 	  }
 	  
 	  trynum = ntohs(tcp->th_dport) - base_port;
-	  if (probes_rcvd) (*probes_rcvd)++;
+	  rcvd++;
 
 	  ipid = ntohs(ip->ip_id);
 	  adjust_timeouts2(&(tv_sent[trynum]), &tv_end, &(proxy->host.to));
@@ -169,6 +170,9 @@ int ipid_proxy_probe(struct idle_proxy_info *proxy, int *probes_sent,
       }
     }
   } while(ipid == -1 && tries < maxtries);
+
+  if (probes_sent) *probes_sent = sent;
+  if (probes_rcvd) *probes_rcvd = rcvd;
 
   return ipid;
 }

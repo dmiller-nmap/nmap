@@ -204,6 +204,29 @@ ICMP rate limit might apply too. But the IP
 protocol field has only 8 bits, so at most 256 protocols can be
 probed which should be possible in reasonable time anyway.
 .TP
+.B \-sI <zombie host>
+Idlescan: This advanced scan method allows for a truly blind TCP
+port scan of the target (meaning no packets are sent to the target from
+your real IP address).  Instead, a unique side-channel attack exploits
+predictable "IP fragmentation ID" sequence generation on the zombie host
+to glean information about the open ports on the target.  IDS systems
+will display the scan as coming from the zombie machine you specify
+(which must be up and meet certain criteria).  I am planning to put a
+more detailed explanation up at
+http://www.insecure.org/nmap/nmap_documentation.html in the near
+future.
+.Sp
+Besides being extraordinarily stealthy (due to its blind nature), this
+scan type permits mapping out trust relationships between machines.
+The port listing shows open ports
+.I from the perspective of the zombie host.
+So you can try scanning a target using various zombies that you think
+might be trusted (via router/packet filter rules).  Obviously this is
+crucial information when prioritizing attack targets.  Otherwise, you
+might have to expend considerable resources "owning" an intermediate
+system, only to find out that its IP isn't even trusted by the target
+host or network you are ultimately after.
+.TP
 .B \-sA
 ACK scan: This advanced method is usually used to map out
 firewall rulesets.  In particular, it can help determine

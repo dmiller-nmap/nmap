@@ -1,15 +1,9 @@
 # Nmap Changelog
 
+** 2.54BETA26
 
--- Added Idlescan (IPID blind scan).  IMHO, this is one of the coolest
-   scan types in existance!  The options is "-sI <proxyhost>".
-
--- Added some debug code to help diagnose the "Unknown datalink type"
-   error.  If Nmap is giving you this error, please send the following
-   info to fyodor@insecure.org :
-   1) The full output from Nmap (including the command arguments)
-   2) What OS and OS version are you using
-   3) What type of adaptor are you using (modem, ethernet, FDDI, etc)
+-- Added Idlescan (IPID blind scan).  The usage syntax is 
+   "-sI <zombie>".
 
 -- Fixed a bunch of fingerprints that were corrupt due to violations
    of the fingerprint syntax/grammar (problems were found by Raymond
@@ -20,6 +14,13 @@
 
 -- Fixed an OS fingerprinting bug that caused many extra packets to be
    sent if you request a lot of decoys.
+
+-- Added some debug code to help diagnose the "Unknown datalink type"
+   error.  If Nmap is giving you this error, please send the following
+   info to fyodor@insecure.org :
+   1) The full output from Nmap (including the command arguments)
+   2) What OS and OS version are you using
+   3) What type of adaptor are you using (modem, ethernet, FDDI, etc)
 
 -- Added a bunch of IDS sensor/console/agent port numbers from
    Patrick Mueller (pmueller@neohapsis.com)
