@@ -290,7 +290,8 @@ void printportoutput(Target *currenths, PortList *plist) {
   numrows = plist->state_counts[PORT_CLOSED] + 
     plist->state_counts[PORT_OPEN] + plist->state_counts[PORT_FILTERED] + 
     plist->state_counts[PORT_UNFILTERED] + 
-    plist->state_counts[PORT_OPENFILTERED];
+    plist->state_counts[PORT_OPENFILTERED] + 
+    plist->state_counts[PORT_CLOSEDFILTERED];
   if (istate != PORT_UNKNOWN)
     numrows -=  plist->state_counts[istate];
   assert(numrows > 0);

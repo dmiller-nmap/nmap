@@ -995,7 +995,7 @@ void idle_scan(Target *target, u16 *portarray, int numports,
   for(portidx = 0; portidx < numports; portidx++) {
     if (target->ports.lookupPort(portarray[portidx], IPPROTO_TCP) == NULL) {
       target->ports.addPort(portarray[portidx], IPPROTO_TCP, NULL,
-	      PORT_CLOSED);
+	      PORT_CLOSEDFILTERED);
     }
   }
 

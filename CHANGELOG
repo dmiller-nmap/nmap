@@ -1,8 +1,15 @@
 # Nmap Changelog ($Id$)
 
+o Fixed a memory leak that would generally consume several hundred
+  bytes per down host scanned.  While the effect for most scans is
+  negligible, it was overwhelming when Scott Carlson
+  (Scott.Carlson(a)schwab.com) tried to scan 24 million IPs
+  (10.0.0.0/8).  Thanks to him for reporting the problem.  Also thanks
+  to Valgrind ( http://valgrind.kde.org ) for making it easy to debug.
+
 o Fixed a bug in ACK scan that could cause Nmap to crash with the
-message "Unexpected port state: 6" in some cases.  Thanks to Glyn
-Geoghegan (glyng(a)corsaire.com) for reporting the problem.
+  message "Unexpected port state: 6" in some cases.  Thanks to Glyn
+  Geoghegan (glyng(a)corsaire.com) for reporting the problem.
 
 o Change IP protocol scan (-sO) so that a response from the target
   host in any protocol at all will prove that protocol is open.  As
@@ -36,6 +43,9 @@ o Ensured that the device type, os vendor, and os family OS
   fingerprinting classification values are scrubbed for XML compliance
   in the XML output.  Thanks to Matthieu Verbert
   (mve(a)zurich.ibm.com) for reporting the problem and sending a patch.
+
+o Rewrote the host IP (target specification) parser for easier
+  maintenance and to fix a bug found by Netris (netris(a)ok.kz)
 
 o Changed to Nmap XML DTD to use the same xmloutputversion (1.01) as
   newer versions of Nmap.  Thanks to Laurent Estieux

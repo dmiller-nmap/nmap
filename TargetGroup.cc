@@ -221,30 +221,24 @@ int TargetGroup::parse_expr(const char * const target_expr, int af) {
       return 1;
     }
     else {
-      i=0;
       targets_type = IPV4_RANGES;
+      i=0;
+
       while(*++r) {
 	if (*r == '.' && ++i < 4) {
 	  *r = '\0';
 	  addy[i] = r + 1;
 	}
-	else if (*r == '[') {
-	  *r = '\0';
-	  addy[i]++;
-	}
-	else if (*r == ']') *r = '\0';
-	/*else if ((*r == '/' || *r == '\\') && i == 3) {
-	 *r = '\0';
-	 addy[4] = r + 1;
-	 }*/
-	else if (*r != '*' && *r != ',' && *r != '-' && !isdigit((int)*r)) fatal("Invalid character in  host specification.");
+	else if (*r != '*' && *r != ',' && *r != '-' && !isdigit((int)*r)) 
+	  fatal("Invalid character in  host specification.  Note in particular that square brackets [] are no longer allowed.  They were redundant and can simply be removed.");
       }
-      if (i != 3) fatal("Target host specification is illegal.");
+      if (i != 3) fatal("Target host specification is illegal -- not enough dots in IP");
       
       for(i=0; i < 4; i++) {
 	j=0;
-	while((s = strchr(addy[i],','))) {
-	  *s = '\0';
+	do {
+	  s = strchr(addy[i],',');
+	  if (s) *s = '\0';
 	  if (*addy[i] == '*') { start = 0; end = 255; } 
 	  else if (*addy[i] == '-') {
 	    start = 0;
@@ -256,32 +250,17 @@ int TargetGroup::parse_expr(const char * const target_expr, int af) {
 	    if ((r = strchr(addy[i],'-')) && *(r+1) ) end = atoi(r + 1);
 	    else if (r && !*(r+1)) end = 255;
 	  }
-	  if (o.debugging > 2)
-	    log_write(LOG_STDOUT, "The first host is %d, and the last one is %d\n", start, end);
-	  if (start < 0 || start > end) fatal("Your host specifications are illegal!");
+	  /*	  if (o.debugging > 2)
+		  log_write(LOG_STDOUT, "The first host is %d, and the last one is %d\n", start, end); */
+	  if (start < 0 || start > end || start > 255 || end > 255)
+	    fatal("Your host specifications are illegal!");
+	  if (j + (end - start) > 255) 
+	    fatal("Your host specifications are illegal!");
 	  for(k=start; k <= end; k++)
 	    addresses[i][j++] = k;
-	  addy[i] = s + 1;
-	}
-	if (*addy[i] == '*') { start = 0; end = 255; } 
-	else if (*addy[i] == '-') {
-	  start = 0;
-	  if (!addy[i] + 1) end = 255;
-	  else end = atoi(addy[i]+ 1);
-	}
-	else {
-	  start = end = atoi(addy[i]);
-	  if ((r =  strchr(addy[i],'-')) && *(r+1) ) end = atoi(r+1);
-	  else if (r && !*(r+1)) end = 255;
-	}
-	if (o.debugging > 2)
-	  log_write(LOG_STDOUT, "The first host is %d, and the last one is %d\n", start, end);
-	if (start < 0 || start > end) fatal("Your host specifications are illegal!");
-	if (j + (end - start) > 255) fatal("Your host specifications are illegal!");
-	for(k=start; k <= end; k++) 
-	  addresses[i][j++] = k;
-	last[i] = j - 1;
-	
+	  last[i] = j-1;
+	  if (s) addy[i] = s + 1;
+	} while (s);
       }
     }
   memset((char *)current, 0, sizeof(current));

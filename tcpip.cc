@@ -1680,7 +1680,8 @@ if (!pd) fatal("NULL packet device passed to readip_pcap");
      }
    }
  } while(!timedout && (!p || (*p & 0x40) != 0x40)); /* Go until we get IPv4 packet */
- if (timedout) {
+ 
+if (timedout) {
    *len = 0;
    return NULL;
  }

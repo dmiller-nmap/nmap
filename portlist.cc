@@ -416,7 +416,8 @@ int PortList::addPort(u16 portno, u8 protocol, char *owner, int state) {
 
 /* Make sure state is OK */
   if (state != PORT_OPEN && state != PORT_CLOSED && state != PORT_FILTERED &&
-      state != PORT_UNFILTERED && state != PORT_OPENFILTERED)
+      state != PORT_UNFILTERED && state != PORT_OPENFILTERED && 
+      state != PORT_CLOSEDFILTERED)
     fatal("addPort: attempt to add port number %d with illegal state %d\n", portno, state);
 
   if (protocol == IPPROTO_TCP) {

@@ -1026,85 +1026,88 @@ int nmap_main(int argc, char *argv[]) {
     
       /* I used to check that !currenths->wierd_responses, but in some
 	 rare cases, such IPs CAN be port successfully scanned and even connected to */
-      if (currenths->flags & HOST_UP) {
-	if (o.af() == AF_INET && o.RawScan()) { 
-	  if (currenths->SourceSockAddr(NULL, NULL) != 0) {
-	    if (o.SourceSockAddr(&ss, &sslen) == 0) {
-	      currenths->setSourceSockAddr(&ss, sslen);
-	    } else {
-	      if (gethostname(myname, MAXHOSTNAMELEN) || 
-		  resolve(myname, &ss, &sslen, o.af()) == 0)
-		fatal("Cannot get hostname!  Try using -S <my_IP_address> or -e <interface to scan through>\n"); 
+      if (!(currenths->flags & HOST_UP)) {
+	delete currenths;
+	continue;
+      }
+
+      if (o.af() == AF_INET && o.RawScan()) { 
+	if (currenths->SourceSockAddr(NULL, NULL) != 0) {
+	  if (o.SourceSockAddr(&ss, &sslen) == 0) {
+	    currenths->setSourceSockAddr(&ss, sslen);
+	  } else {
+	    if (gethostname(myname, MAXHOSTNAMELEN) || 
+		resolve(myname, &ss, &sslen, o.af()) == 0)
+	      fatal("Cannot get hostname!  Try using -S <my_IP_address> or -e <interface to scan through>\n"); 
 	    
-	      o.setSourceSockAddr(&ss, sslen);
-	      currenths->setSourceSockAddr(&ss, sslen);
-	      if (! sourceaddrwarning) {
-		fprintf(stderr, "WARNING:  We could not determine for sure which interface to use, so we are guessing %s .  If this is wrong, use -S <my_IP_address>.\n", inet_socktop(&ss));
-		sourceaddrwarning = 1;
-	      }
+	    o.setSourceSockAddr(&ss, sslen);
+	    currenths->setSourceSockAddr(&ss, sslen);
+	    if (! sourceaddrwarning) {
+	      fprintf(stderr, "WARNING:  We could not determine for sure which interface to use, so we are guessing %s .  If this is wrong, use -S <my_IP_address>.\n", inet_socktop(&ss));
+	      sourceaddrwarning = 1;
 	    }
 	  }
-	  if (!*currenths->device)
-	    if (ipaddr2devname( currenths->device, currenths->v4sourceip()) != 0)
-	      fatal("Could not figure out what device to send the packet out on!  You might possibly want to try -S (but this is probably a bigger problem).  If you are trying to sp00f the source of a SYN/FIN scan with -S <fakeip>, then you must use -e eth0 (or other devicename) to tell us what interface to use.\n");
-	
-	  /* Groups should generally use the same device as properties
-	     change quite a bit between devices.  Plus dealing with a
-	     multi-device group can be a pain programmatically. So if
-	     this Target has a different device the rest, we give it
-	     back. */
-	  if (Targets.size() > 0 && strcmp(Targets[Targets.size() - 1]->device, currenths->device)) {
-	    returnhost(hstate);
-	    numhosts_scanned--; numhosts_up--;
-	    break;
-	  }
-	  o.decoys[o.decoyturn] = currenths->v4source();
 	}
-	Targets.push_back(currenths);
+	if (!*currenths->device)
+	  if (ipaddr2devname( currenths->device, currenths->v4sourceip()) != 0)
+	    fatal("Could not figure out what device to send the packet out on!  You might possibly want to try -S (but this is probably a bigger problem).  If you are trying to sp00f the source of a SYN/FIN scan with -S <fakeip>, then you must use -e eth0 (or other devicename) to tell us what interface to use.\n");
+	
+	/* Groups should generally use the same device as properties
+	   change quite a bit between devices.  Plus dealing with a
+	   multi-device group can be a pain programmatically. So if
+	   this Target has a different device the rest, we give it
+	   back. */
+	if (Targets.size() > 0 && strcmp(Targets[Targets.size() - 1]->device, currenths->device)) {
+	  returnhost(hstate);
+	  numhosts_scanned--; numhosts_up--;
+	  break;
+	}
+	o.decoys[o.decoyturn] = currenths->v4source();
       }
+      Targets.push_back(currenths);
     }
-  
+    
     if (Targets.size() == 0)
       break; /* Couldn't find any more targets */
-
+    
     // Our source must be set in decoy list because nexthost() call can
     // change it (that issue really should be fixed when possible)
     if (o.af() == AF_INET && o.RawScan())
       o.decoys[o.decoyturn] = Targets[0]->v4source();
-
+    
     /* I now have the group for scanning in the Targets vector */
     /* TODO: Add parallel-capable scans here */
     if (o.synscan)
       ultra_scan(Targets, ports, SYN_SCAN);
-
+    
     if (o.ackscan)
       ultra_scan(Targets, ports, ACK_SCAN);
-
+    
     if (o.windowscan)
       ultra_scan(Targets, ports, WINDOW_SCAN);
-
+    
     if (o.finscan)
       ultra_scan(Targets, ports, FIN_SCAN);
-
+    
     if (o.xmasscan)
       ultra_scan(Targets, ports, XMAS_SCAN);
-
+    
     if (o.nullscan)
       ultra_scan(Targets, ports, NULL_SCAN);
-
+    
     if (o.maimonscan)
       ultra_scan(Targets, ports, MAIMON_SCAN);
-
+    
     if (o.udpscan)
       ultra_scan(Targets, ports, UDP_SCAN);
-
+    
     if (o.connectscan)
       ultra_scan(Targets, ports, CONNECT_SCAN);
-
+    
     if (o.ipprotscan)
       ultra_scan(Targets, ports, IPPROT_SCAN);
-
-   /* These lame functions can only handle one target at a time */
+    
+    /* These lame functions can only handle one target at a time */
     for(targetno = 0; targetno < Targets.size(); targetno++) {
       currenths = Targets[targetno];
       if (o.idlescan) idle_scan(currenths, ports->tcp_ports, 
@@ -1777,6 +1780,7 @@ char *statenum2str(int state) {
   case PORT_UNFILTERED: return "UNfiltered"; break;
   case PORT_CLOSED: return "closed"; break;
   case PORT_OPENFILTERED: return "open|filtered"; break;
+  case PORT_CLOSEDFILTERED: return "closed|filtered"; break;
   default: return "unknown"; break;
   }
   return "unknown";

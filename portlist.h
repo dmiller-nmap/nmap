@@ -112,7 +112,8 @@
 #define PORT_TESTING 4
 #define PORT_FRESH 5
 #define PORT_UNFILTERED 6
-#define PORT_OPENFILTERED 7 /* Like udp scan with no response */
+#define PORT_OPENFILTERED 7 /* Like udp/fin/xmas/null/ipproto scan with no response */
+#define PORT_CLOSEDFILTERED 8 /* Idle scan */
 #define PORT_HIGHEST_STATE 8 /* ***IMPORTANT -- BUMP THIS UP WHEN STATES ARE 
 				ADDED *** */
  
