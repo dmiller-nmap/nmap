@@ -209,20 +209,6 @@ void *realloc();
 #define HOST_DOWN 2 
 #define HOST_FIREWALLED 4 
 #define HOST_BROADCAST 8 /* use the wierd_responses member of hoststruct instead */
-/* struct port stuff */
-#define PORT_UNKNOWN 0
-#define PORT_CLOSED 1
-#define PORT_OPEN 2
-#define PORT_FIREWALLED 3
-#define PORT_TESTING 4
-#define PORT_FRESH 5
-#define PORT_UNFIREWALLED 6
-#define PORT_HIGHEST_STATE 7 /* ***IMPORTANT -- BUMP THIS UP WHEN STATES ARE 
-				ADDED *** */
- 
-#define CONF_NONE 0
-#define CONF_LOW 1
-#define CONF_HIGH 2
 
 #define PINGTYPE_UNKNOWN 0
 #define PINGTYPE_NONE 1
@@ -267,6 +253,7 @@ void *realloc();
 #define LOG_NAMES {"normal", "machine", "HTML", "$Cr!pT |<!dd!3"}
 /********************** LOCAL INCLUDES *****************************/
 
+#include "portlist.h"
 #include "tcpip.h"
 #include "global_structures.h"
 #include "error.h"
@@ -318,13 +305,8 @@ inline void adjust_timeouts(struct timeval sent, struct timeout_info *to);
 /* port manipulators */
 unsigned short *getpts(char *expr); /* someone stole the name getports()! */
 
-int addport(portlist *plist, unsigned short portno, unsigned short protocol,
-	    char *owner, int state);
-int deleteport(portlist *plist, unsigned short portno,
-	       unsigned short protocol);
-struct port *lookupport(portlist *ports, unsigned short portno, 
-			unsigned short protocol);
-void printandfreeports(portlist *plist);
+void printportoutput(struct hoststruct *currenths, portlist *plist);
+
 /* socket manipulation functions */
 void init_socket(int sd);
 int unblock_socket(int sd);
@@ -356,7 +338,6 @@ void sigdie(int signo);
 void reaper(int signo);
 char *seqreport(struct seq_info *seq);
 char *seqclass2ascii(int clas);
-void invertfirewalled(portlist *pl, unsigned short *ports);
 int nmap_fetchfile(char *filename_returned, int bufferlen, char *file);
 int fileexistsandisreadable(char *pathname);
 void enforce_scan_delay(struct timeval *tv);

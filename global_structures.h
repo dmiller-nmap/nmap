@@ -1,35 +1,6 @@
 #ifndef GLOBAL_STRUCTURES_H
 #define GLOBAL_STRUCTURES_H
 
-struct port {
-  unsigned short portno;
-  unsigned char proto;
-  char *owner;
-  char *rpc_name;
-  int rpc_status; /* RPC_STATUS_UNTESTED means we haven't checked
-		    RPC_STATUS_UNKNOWN means the port appears to be RPC
-		    but we couldn't find a match
-		    RPC_STATUS_GOOD_PROG means rpc_program gives the prog #
-		    RPC_STATUS_NOT_RPC means the port doesn't appear to 
-		    be RPC */
-  unsigned long rpc_program; /* Only valid if rpc_state == RPC_STATUS_GOOD_PROG */
-  unsigned long rpc_lowver;
-  unsigned long rpc_highver;
-  int state; 
-  int confidence; /* How sure are we about the state? */
-  struct port *next;
-};
-
-typedef struct portlist {
-  struct port *ports;  /* The actual linked list of ports.  These are sorted by PORT NUMBER (of course there could be serval ports per port number -- one for each protocol */
-  int state_counts[PORT_HIGHEST_STATE]; /* How many ports in list are in each
-					   state */
-  int state_counts_udp[PORT_HIGHEST_STATE];
-  int state_counts_tcp[PORT_HIGHEST_STATE];
-  int ignored_port_state; /* The state of the port we ignore for output */
-  int numports; /* Total number of ports in list in ANY state */
-} portlist;
-
 /* Stores "port info" which is TCP/UDP ports or RPC program ids */
  struct portinfo {
    unsigned long portno; /* TCP/UDP port or RPC program id */

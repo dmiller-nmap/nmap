@@ -28,7 +28,7 @@ unsigned int sequence_base;
 unsigned int openport;
 int bytes;
 unsigned int closedport = 31337;
-struct port *tport;
+struct port *tport = NULL;
 char *p;
 int decoy;
 struct bpf_program fcode;
@@ -94,31 +94,27 @@ snprintf(filter, sizeof(filter), "(icmp and dst host %s) or (tcp and src host %s
 
  /* Lets find an open port to used */
  openport = -1;
- if (target->ports.state_counts[PORT_OPEN] > 0) { 
-   for(tport = target->ports.ports; tport; tport = tport->next) {
-     if (tport->state == PORT_OPEN && tport->proto == IPPROTO_TCP &&
-	 tport->confidence == CONF_HIGH) {   
-       openport = tport->portno;
-       break;
-     } else if  (tport->state == PORT_OPEN && tport->proto == IPPROTO_TCP) {
-       openport = tport->portno;
-     }
-   }
+ tport = NULL;
+ if (target->ports.state_counts_tcp[PORT_OPEN] > 0) { 
+   tport = nextport(&target->ports, NULL, IPPROTO_TCP, PORT_OPEN);
+   assert(tport);
+   openport = tport->portno;
  }
  
  /* Now we should find a closed port */
- for(i=0; i < o.numports; i++) {
-   tport = lookupport(&target->ports, portarray[i], IPPROTO_TCP);
-   if (!tport || tport->state == PORT_UNFIREWALLED) {
-     /* Great -- we found what we were looking for ... */
-     closedport = portarray[i];
-     break;
-   }
- }
- if (i == o.numports) { 
-   /* Uh-oh -- we don't know of any closed ports ... */
+ if (target->ports.state_counts_tcp[PORT_CLOSED] > 0) {
+   tport = nextport(&target->ports, NULL, IPPROTO_TCP, PORT_CLOSED);
+   assert(tport);
+   closedport = tport->portno;
+ } else if (target->ports.state_counts_tcp[PORT_UNFIREWALLED] > 0) {
+   /* Well, we will settle for unfiltered */
+   tport = nextport(&target->ports, NULL, IPPROTO_TCP, PORT_UNFIREWALLED);
+   assert(tport);
+   closedport = tport->portno;
+ } else {
    closedport = (get_random_uint() % 14781) + 30000;
  }
+
 if (o.verbose && openport != -1)
   log_write(LOG_STDOUT, "For OSScan assuming that port %d is open and port %d is closed and neither are firewalled\n", openport, closedport);
 

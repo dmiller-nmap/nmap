@@ -977,6 +977,9 @@ if (!pd) fatal("NULL packet device passed to readip_pcap");
  switch(datalink) {
  case DLT_EN10MB: offset = 14; break;
  case DLT_IEEE802: offset = 22; break;
+#ifdef DLT_LOOP
+ case DLT_LOOP:
+#endif
  case DLT_NULL: offset = 4; break;
  case DLT_SLIP:
 #ifdef DLT_SLIP_BSDOS
@@ -1004,6 +1007,9 @@ if (!pd) fatal("NULL packet device passed to readip_pcap");
    break;
  case DLT_RAW: offset = 0; break;
  case DLT_FDDI: offset = 21; break;
+#ifdef DLT_ENC
+ case DLT_ENC: offset = 12; break;
+#endif
  default: fatal("Unknown datalink type (%d)", datalink);
  }
 

@@ -65,7 +65,9 @@
 
 
 void *safe_malloc(int size);
+#ifndef HAVE_STRCASESTR
 char *strcasestr(char *haystack, char *pneedle);
+#endif
 void hdump(unsigned char *packet, int len);
 void lamont_hdump(unsigned char *bp, int length);
 int Strncpy(char *dest, const char *src, size_t n);

@@ -1,5 +1,24 @@
 # Nmap Changelog
 
+-- Apparently some Linux (glibc) systems now come with a "strcasestr"
+   function.  So I have made autoconf look for this and use the native
+   version if supported. (problem noted by Sami Farin
+   (sfarin@ratol.fi)).
+
+-- Tweaked the output so that it now tells how many ports are not
+   shown and what state the ignored ports are in.  This info could be
+   inferred before by people who had studied the manpage, but now the
+   info is explicitly available.  I cleaned up a bunch of stuff
+   internally to make this happen.  I hope I didn't break anything!
+
+-- Merged in a patch sent in by Mipam (reinoud@ibbnet.org) which is
+   apparently part of the OpenBSD Nmap "port".  Although Nmap seems to
+   work fine for me on my OpenBSD 2.4 box, a couple OpenBSD users have
+   complained of problems.  Hopefully this will help. (it adds
+   DLT_LOOP and DLT_ENC offset cases when reading from libpcap).
+
+-- A few really minor bugfixes.
+
 ** Version 2.3BETA18
 
 -- Fixed a very important bug that occurred when SYN scanning

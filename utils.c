@@ -94,6 +94,7 @@ void lamont_hdump(unsigned char *bp, int length) {
   printf("\n");
 }
 
+#ifndef HAVE_STRCASESTR
 char *strcasestr(char *haystack, char *pneedle) {
 char buf[512];
 unsigned int needlelen;
@@ -125,6 +126,7 @@ needlelen = strlen(pneedle);
    free(needle);
  return NULL;
 }
+#endif
 
 int Strncpy(char *dest, const char *src, size_t n) {
   strncpy(dest, src, n);

@@ -946,24 +946,11 @@ int nmap_main(int argc, char *argv[]) {
 	  log_write(LOG_MACHINE,"Host: %s (%s)\tStatus: Timeout", 
 			   inet_ntoa(currenths->host), currenths->name);
 	}
-	else if (!currenths->ports.numports && !o.pingscan) {
-	  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,
-		    "No scanned ports open for %s (%s); All are: %s\n", 
-		    currenths->name, inet_ntoa(currenths->host),
-		    (currenths->ports.ignored_port_state == PORT_FIREWALLED)?
-		    "filtered" : "UNfiltered");
-	  log_write(LOG_MACHINE,"Host: %s (%s)\tStatus: Up", 
-			   inet_ntoa(currenths->host), currenths->name);
-	}
-	else {
-	  if (currenths->ports.numports) {
-	    log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Interesting ports on %s (%s):\n", currenths->name, 
-		     inet_ntoa(currenths->host));
-	    log_write(LOG_MACHINE,"Host: %s (%s)", inet_ntoa(currenths->host), 
-			     currenths->name);	
-	    invertfirewalled(&currenths->ports, ports);
-	    printandfreeports(&currenths->ports);
-	  }
+	else if (!o.pingscan) {
+	  assignignoredportstate(&currenths->ports);
+	  printportoutput(currenths, &currenths->ports);
+	  resetportlist(&currenths->ports);
+	  
 	  if (o.osscan) {
 	    if (currenths->seq.responses > 3) {
 	      log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"%s", seqreport(&(currenths->seq)));
@@ -1435,169 +1422,6 @@ char *seqclass2ascii(int class) {
   }
 }
 
-
-
-struct port *lookupport(portlist *ports, unsigned short portno, unsigned short protocol) {
-  struct port *result = ports->ports;
-  while(result && result->portno <= portno) {
-    if(result->portno == portno && result->proto == protocol)
-      return result;
-    result = result->next;
-  }
-  return NULL;
-}
-
-
-
-/* gawd, my next project will be in c++ so I don't have to deal with
-   this crap ... simple linked list implementation */
-int addport(portlist *plist, unsigned short portno, unsigned short protocol,
-	    char *owner, int state) {
-  struct port *current = NULL, *tmp;
-  int len;
-  int isok = 0;
-
-/* Make sure state is OK */
-  if (state != PORT_OPEN && state != PORT_CLOSED && state != PORT_FIREWALLED &&
-      state != PORT_UNFIREWALLED)
-    fatal("addport: attempt to add port number %d with illegal state %d\n", portno, state);
-
-  if (plist->ports) {
-    current = plist->ports;
-    /* case 1: we add to the front of the list */
-
-    if (portno < current->portno || 
-	(current->portno == portno && current->proto == protocol)) {
-      if (current->portno == portno && current->proto == protocol) {
-	isok = 0;
-	if (current->state != state) { 
-	  plist->state_counts[current->state]--;
-	  plist->state_counts[state]++;
-	  if (protocol == IPPROTO_TCP) {
-	    plist->state_counts_tcp[current->state]--;
-	    plist->state_counts_tcp[state]++;
-	  } else {
-	    plist->state_counts_udp[current->state]--;
-	    plist->state_counts_udp[state]++;
-	  }
-	  current->state = state;
-	  isok = 1;
-	}
-	if (!current->owner && owner && *owner) {      
-	  current->owner = strdup(owner);
-	  isok = 1;
-	}
-	if (isok) return 0;
-	if (o.debugging || o.verbose) 
-	  fprintf(stderr, "Duplicate port (%hu/%s)\n", portno , 
-		  (protocol == IPPROTO_TCP)? "tcp": "udp");
-	return -1;
-      }
-
-      tmp = current;
-      current = safe_malloc(sizeof(struct port));
-      plist->ports = current;
-      current->next = tmp;
-    }
-    else { /* case 2: we add somewhere in the middle or end of the list */
-      while( current->next  && current->next->portno <= portno && 
-	     ( current->next->portno != portno || 
-	       current->next->proto != protocol ))
-	current = current->next;
-      if (current->next && current->next->portno == portno 
-	  && current->next->proto == protocol) {
-	isok = 0;
-	if (current->next->state != state) {      
-	  plist->state_counts[current->next->state]--;
-	  plist->state_counts[state]++;
-	  if (protocol == IPPROTO_TCP) {
-	    plist->state_counts_tcp[current->next->state]--;
-	    plist->state_counts_tcp[state]++;
-	  } else {
-	    plist->state_counts_udp[current->next->state]--;
-	    plist->state_counts_udp[state]++;
-	  }
-	  current->next->state = state;
-	  isok = 1;
-	}
-	if (!current->next->owner && owner && *owner) {      
-	  current->next->owner = strdup(owner);
-	  isok = 1;
-	}
-	if (isok) return 0;
-	if (o.debugging || o.verbose) 
-	  fprintf(stderr, "Duplicate port (%hu/%s)\n", portno , 
-		  (protocol == IPPROTO_TCP)? "tcp": "udp");
-	return -1;
-      }
-      tmp = current->next;
-      current->next = safe_malloc(sizeof(struct port));
-      current = current->next;
-      current->next = tmp;
-    }
-  }
-  else { /* Case 3, list is null */
-    plist->ports = safe_malloc(sizeof(struct port));
-    current = plist->ports;
-    current->next = NULL;
-  }
-
-  /* OK, now we have allocated 'current' if neccessary and linked it into
-   the list.  So we just fill it out and update our counts by one */
-  current->portno = portno;
-  current->proto = protocol;
-  current->confidence = CONF_HIGH;
-  current->rpc_status = RPC_STATUS_UNTESTED;
-  current->state = state;
-  if (owner && *owner) {
-    len = strlen(owner);
-    current->owner = malloc(sizeof(char) * (len + 1));
-    strncpy(current->owner, owner, len + 1);
-  }
-  else current->owner = NULL;
-
-  plist->state_counts[state]++;
-  if (protocol == IPPROTO_TCP) {
-    plist->state_counts_tcp[state]++;
-  } else {
-    plist->state_counts_udp[state]++;
-  }
-  plist->numports++;
-
-  return 0; /*success */
-}
-
-int deleteport(portlist *plist, unsigned short portno,
-	       unsigned short protocol) {
-  struct port *current, *tmp;
-  
-  if (!plist->ports) {
-    if (o.debugging > 1) error("Tried to delete from empty port list!");
-    return -1;
-  }
-  current = plist->ports;
-  /* Case 1, deletion from front of list*/
-  if (current->portno == portno && current->proto == protocol) {
-    tmp = current->next;
-    if (current->owner) free(current->owner);
-    current->next = NULL; /* Just because */
-    free(current);
-    plist->ports = tmp;
-  }
-  else {
-    for(;current->next && (current->next->portno != portno || current->next->proto != protocol); current = current->next)
-      ;
-    if (!current->next)
-      return -1;
-    tmp = current->next;
-    current->next = tmp->next;
-    if (tmp->owner) free(tmp->owner);
-    tmp->next = NULL; /* Just because */
-    free(tmp);
-  }
-  return 0; /* success */
-}
-
 char *grab_next_host_spec(FILE *inputfd, int argc, char **fakeargv) {
   static char host_spec[512];
   int host_spec_index;
@@ -1634,7 +1458,7 @@ char *statenum2str(int state) {
   switch(state) {
   case PORT_OPEN: return "open"; break;
   case PORT_FIREWALLED: return "filtered"; break;
-  case PORT_UNFIREWALLED: return "unfiltered"; break;
+  case PORT_UNFIREWALLED: return "UNfiltered"; break;
   case PORT_CLOSED: return "closed"; break;
   default: return "unknown"; break;
   }
@@ -1642,7 +1466,7 @@ char *statenum2str(int state) {
 }
 
 
-void printandfreeports(portlist *plist) {
+void printportoutput(struct hoststruct *currenths, portlist *plist) {
   char protocol[4];
   char rpcinfo[64];
   char rpcmachineinfo[64];
@@ -1652,16 +1476,36 @@ void printandfreeports(portlist *plist) {
   char *name;
   int first = 1;
   struct servent *service;
-  struct port *tmp, *current;
+  struct port *current;
+  int numignoredports;
+  int portno, protocount;
+  struct port **protoarrays[2];
 
-  /* If we are ignoring filtered ports, we always make a note of it.  
-     Otherwise, we only do so in verbose mode ... */
-  if (plist->ignored_port_state == PORT_FIREWALLED) {
-    log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"(Ports scanned but not shown below are in state: filtered)\n");
-  } else if (o.verbose) {
-    log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"(Ports scanned but not shown below are in state: UNfiltered)\n");
+  numignoredports = plist->state_counts[plist->ignored_port_state];
+
+  assert(numignoredports <= plist->numports);
+
+  if (numignoredports == plist->numports) {
+    log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,
+              "%s %d scanned ports on %s (%s) %s: %s\n",
+	      (numignoredports == 1)? "The" : "All", numignoredports,
+	      currenths->name, 
+	      inet_ntoa(currenths->host), 
+	      (numignoredports == 1)? "is" : "are", 
+	      statenum2str(currenths->ports.ignored_port_state));
+    log_write(LOG_MACHINE,"Host: %s (%s)\tStatus: Up", 
+	      inet_ntoa(currenths->host), currenths->name);
+    return;
   }
 
+  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Interesting ports on %s (%s):\n", currenths->name, 
+	    inet_ntoa(currenths->host));
+  log_write(LOG_MACHINE,"Host: %s (%s)", inet_ntoa(currenths->host), 
+	    currenths->name);
+  
+  if (numignoredports > 0) {
+    log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"(The %d %s scanned but not shown below %s in state: %s)\n", numignoredports, (numignoredports == 1)? "port" : "ports", (numignoredports == 1)? "is" : "are", statenum2str(plist->ignored_port_state));
+  }
 
   if (!o.rpcscan) {  
     log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Port       State       Service");
@@ -1671,66 +1515,69 @@ void printandfreeports(portlist *plist) {
   log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"%s", (o.identscan)?"         Owner\n":"\n");
   log_write(LOG_MACHINE,"\tPorts: ");
   
-  current = plist->ports;
-  while(current != NULL) {
-    if (current->state == plist->ignored_port_state)
-      continue;
-    if (!first) log_write(LOG_MACHINE,", ");
-    else first = 0;
-    strcpy(protocol,(current->proto == IPPROTO_TCP)? "tcp": "udp");
-    snprintf(portinfo, sizeof(portinfo), "%d/%s", current->portno, protocol);
-    state = statenum2str(current->state);
-    service = nmap_getservbyport(htons(current->portno), protocol);
-
-    if (o.rpcscan) {
-      switch(current->rpc_status) {
-      case RPC_STATUS_UNTESTED:
-	rpcinfo[0] = '\0';
-	strcpy(rpcmachineinfo, "");
-	break;
-      case RPC_STATUS_UNKNOWN:
-	strcpy(rpcinfo, "(RPC (Unknown Prog #))");
-	strcpy(rpcmachineinfo, "R");
-	break;
-      case RPC_STATUS_NOT_RPC:
-	rpcinfo[0] = '\0';
-	strcpy(rpcmachineinfo, "N");
-	break;
-      case RPC_STATUS_GOOD_PROG:
-	name = nmap_getrpcnamebynum(current->rpc_program);
-	snprintf(rpcmachineinfo, sizeof(rpcmachineinfo), "(%s:%li*%li-%li)", (name)? name : "", current->rpc_program, current->rpc_lowver, current->rpc_highver);
-	if (!name) {
-	  snprintf(rpcinfo, sizeof(rpcinfo), "(#%li (unknown) V%li-%li)", current->rpc_program, current->rpc_lowver, current->rpc_highver);
+  protoarrays[0] = plist->tcp_ports;
+  protoarrays[1] = plist->udp_ports;
+  current = NULL;
+  for(portno = 1; portno < 65536; portno++) {
+    for(protocount = 0; protocount < 2; protocount++) {
+      if (protoarrays[protocount] && protoarrays[protocount][portno]) 
+	current = protoarrays[protocount][portno];
+      else continue;
+      
+      if (current->state != plist->ignored_port_state) {    
+	if (!first) log_write(LOG_MACHINE,", ");
+	else first = 0;
+	strcpy(protocol,(current->proto == IPPROTO_TCP)? "tcp": "udp");
+	snprintf(portinfo, sizeof(portinfo), "%d/%s", current->portno, protocol);
+	state = statenum2str(current->state);
+	service = nmap_getservbyport(htons(current->portno), protocol);
+	
+	if (o.rpcscan) {
+	  switch(current->rpc_status) {
+	  case RPC_STATUS_UNTESTED:
+	    rpcinfo[0] = '\0';
+	    strcpy(rpcmachineinfo, "");
+	    break;
+	  case RPC_STATUS_UNKNOWN:
+	    strcpy(rpcinfo, "(RPC (Unknown Prog #))");
+	    strcpy(rpcmachineinfo, "R");
+	    break;
+	  case RPC_STATUS_NOT_RPC:
+	    rpcinfo[0] = '\0';
+	    strcpy(rpcmachineinfo, "N");
+	    break;
+	  case RPC_STATUS_GOOD_PROG:
+	    name = nmap_getrpcnamebynum(current->rpc_program);
+	    snprintf(rpcmachineinfo, sizeof(rpcmachineinfo), "(%s:%li*%i-%i)", (name)? name : "", current->rpc_program, current->rpc_lowver, current->rpc_highver);
+	    if (!name) {
+	      snprintf(rpcinfo, sizeof(rpcinfo), "(#%li (unknown) V%i-%i)", current->rpc_program, current->rpc_lowver, current->rpc_highver);
+	    } else {
+	      if (current->rpc_lowver == current->rpc_highver) {
+		snprintf(rpcinfo, sizeof(rpcinfo), "(%s V%i)", name, current->rpc_lowver);
+	      } else 
+		snprintf(rpcinfo, sizeof(rpcinfo), "(%s V%i-%i)", name, current->rpc_lowver, current->rpc_highver);
+	    }
+	    break;
+	  default:
+	    fatal("Unknown rpc_status %d", current->rpc_status);
+	    break;
+	  }
+	  snprintf(serviceinfo, sizeof(serviceinfo), "%s%s%s", (service)? service->s_name : ((*rpcinfo)? "" : "unknown"), (service)? " " : "",  rpcinfo);
 	} else {
-	  if (current->rpc_lowver == current->rpc_highver) {
-	    snprintf(rpcinfo, sizeof(rpcinfo), "(%s V%li)", name, current->rpc_lowver);
-	  } else 
-	    snprintf(rpcinfo, sizeof(rpcinfo), "(%s V%li-%li)", name, current->rpc_lowver, current->rpc_highver);
+	  Strncpy(serviceinfo, (service)? service->s_name : "unknown" , sizeof(serviceinfo));
+	  strcpy(rpcmachineinfo, "");
 	}
-	break;
-      default:
-	fatal("Unknown rpc_status %d", current->rpc_status);
-	break;
+	log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"%-11s%-12s%-24s", portinfo, state, serviceinfo);
+	log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"%s\n", (current->owner)? current->owner : "");
+	
+	log_write(LOG_MACHINE,"%d/%s/%s/%s/%s/%s//", current->portno, state, 
+		  protocol, (current->owner)? current->owner : "",
+		  (service)? service->s_name: "", rpcmachineinfo);    
+	
       }
-      snprintf(serviceinfo, sizeof(serviceinfo), "%s%s%s", (service)? service->s_name : ((*rpcinfo)? "" : "unknown"), (service)? " " : "",  rpcinfo);
-    } else {
-      Strncpy(serviceinfo, (service)? service->s_name : "unknown" , sizeof(serviceinfo));
-      strcpy(rpcmachineinfo, "");
     }
-    log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"%-11s%-12s%-24s", portinfo, state, serviceinfo);
-    log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"%s\n", (current->owner)? current->owner : "");
-
-    log_write(LOG_MACHINE,"%d/%s/%s/%s/%s/%s//", current->portno, state, 
-		     protocol, (current->owner)? current->owner : "",
-		     (service)? service->s_name: "", rpcmachineinfo);    
-
-    tmp = current;
-    current = current->next;
-    if (tmp->owner) free(tmp->owner);
-    free(tmp);
   }
   log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"\n");
-  bzero(plist, sizeof(portlist));
 }
 
 /* This attempts to calculate the round trip time (rtt) to a host by timing a
@@ -1931,6 +1778,7 @@ void super_scan(struct hoststruct *target, unsigned short *portarray, stype scan
   int packet_trynum = 0;
   int windowdecrease = 0; /* Has the window been decreased this round yet? */
   struct icmp *icmp;
+  int portno;
   struct port *current_port_tmp;
 
   if (target->timedout)
@@ -2284,11 +2132,10 @@ void super_scan(struct hoststruct *target, unsigned short *portarray, stype scan
 		if (current->prev >= 0) scan[current->prev].next = current->next;
 		current->next = current->prev = -1;
 		current->state = newstate;
-		if (current->state != PORT_CLOSED) {
-		  addport(&target->ports, current->portno, (scantype == UDP_SCAN)?
-			  IPPROTO_UDP : IPPROTO_TCP, NULL, current->state);
-		}
-	      }    
+		addport(&target->ports, current->portno, 
+			(scantype == UDP_SCAN)? IPPROTO_UDP : IPPROTO_TCP, 
+			NULL, current->state);	      
+	      }
 	    }
 	  }
       } 
@@ -2348,34 +2195,36 @@ void super_scan(struct hoststruct *target, unsigned short *portarray, stype scan
 	if (o.verbose) { 
 	  error("(no udp responses received -- assuming all ports filtered)");
 	}
-	for(current_port_tmp = target->ports.ports; current_port_tmp;
-	    current_port_tmp = current_port_tmp->next) {
-	  if (current_port_tmp->proto == IPPROTO_UDP) {
-	    assert(current_port_tmp->state == PORT_OPEN);
-	    current_port_tmp->state = PORT_FIREWALLED;
-	    target->ports.state_counts[PORT_OPEN]--;
-	    target->ports.state_counts[PORT_FIREWALLED]++;
-	    target->ports.state_counts_udp[PORT_OPEN]--;
-	    target->ports.state_counts_udp[PORT_FIREWALLED]++;
+	for(portno = 0; portno < 65536; portno++)
+	  {
+	    current_port_tmp = lookupport(&target->ports, portno, IPPROTO_UDP);
+	    if (current_port_tmp) {
+	      assert(current_port_tmp->state == PORT_OPEN);
+	      current_port_tmp->state = PORT_FIREWALLED;
+	      target->ports.state_counts[PORT_OPEN]--;
+	      target->ports.state_counts[PORT_FIREWALLED]++;
+	      target->ports.state_counts_udp[PORT_OPEN]--;
+	      target->ports.state_counts_udp[PORT_FIREWALLED]++;
+	    }
 	  }
-	}
       }
     } else { 
       if (target->ports.state_counts_tcp[PORT_OPEN] == o.numports) {
 	if (o.verbose) { 
 	  error("(no tcp responses received -- assuming all ports filtered)");
 	}
-	for(current_port_tmp = target->ports.ports; current_port_tmp;
-	    current_port_tmp = current_port_tmp->next) {
-	  if (current_port_tmp->proto == IPPROTO_TCP) {
-	    assert(current_port_tmp->state == PORT_OPEN);
-	    current_port_tmp->state = PORT_FIREWALLED;
-	    target->ports.state_counts[PORT_OPEN]--;
-	    target->ports.state_counts[PORT_FIREWALLED]++;
-	    target->ports.state_counts_tcp[PORT_OPEN]--;
-	    target->ports.state_counts_tcp[PORT_FIREWALLED]++;
+	for(portno = 0; portno < 65536; portno++)
+	  {
+	    current_port_tmp = lookupport(&target->ports, portno, IPPROTO_TCP);
+	    if (current_port_tmp) {
+	      assert(current_port_tmp->state == PORT_OPEN);
+	      current_port_tmp->state = PORT_FIREWALLED;
+	      target->ports.state_counts[PORT_OPEN]--;
+	      target->ports.state_counts[PORT_FIREWALLED]++;
+	      target->ports.state_counts_tcp[PORT_OPEN]--;
+	      target->ports.state_counts_tcp[PORT_FIREWALLED]++;
+	    }
 	  }
-	}
       }
     }
   }
@@ -2584,7 +2433,7 @@ void pos_scan(struct hoststruct *target, unsigned short *portarray, stype scanty
     }
     current = pil.testinglist = &scan[0]; 
     rawsd = -1;
-    rsi.rpc_current_port = target->ports.ports;
+    rsi.rpc_current_port = nextport(&target->ports, NULL, 0, PORT_OPEN);
   }
 
   starttime = time(NULL);
@@ -2629,8 +2478,8 @@ void pos_scan(struct hoststruct *target, unsigned short *portarray, stype scanty
     /* Find a good port to scan if we are rpc scanning */
     if (scantype == RPC_SCAN) {    
       /* Make sure we have ports left to scan */
-      while(rsi.rpc_current_port && rsi.rpc_current_port->state != PORT_OPEN)
-	rsi.rpc_current_port = rsi.rpc_current_port->next;
+      rsi.rpc_current_port = nextport(&target->ports, rsi.rpc_current_port,
+				      0, PORT_OPEN);
       if (!rsi.rpc_current_port) /* Woop!  Done! */ break;
 
       /* Reinit our testinglist so we try each RPC prog */
@@ -3040,6 +2889,10 @@ void posportupdate(struct hoststruct *target, struct portinfo *current,
     return;
     break;
   case PORT_CLOSED:
+    if (newstate == PORT_CLOSED)
+      return; /* Closed -> Closed is not important and can cause some 
+		 dup port problems */
+    ss->changed++;
     current->state = newstate;
     break;
   case PORT_TESTING:
@@ -3091,11 +2944,10 @@ void posportupdate(struct hoststruct *target, struct portinfo *current,
   current->state = newstate;
   current->next = -1;
   current->prev = -1;
-  if (newstate == PORT_OPEN || newstate == PORT_FIREWALLED) {
-    if (o.verbose) log_write(LOG_STDOUT, "Adding TCP port %lu (state %s).\n", current->portno, (current->state == PORT_OPEN)? "Open" : "Firewalled");
-
-    addport(&target->ports, current->portno, IPPROTO_TCP, owner, newstate);
-  }
+  if (newstate == PORT_OPEN && o.verbose)
+    log_write(LOG_STDOUT, "Adding TCP port %lu (state %s).\n", current->portno, statenum2str(current->state));
+  
+  addport(&target->ports, current->portno, IPPROTO_TCP, owner, newstate);
   return;
 }
 
@@ -3486,53 +3338,6 @@ void get_syn_results(struct hoststruct *target, struct portinfo *scan,
   return;
 }
 
-/* This is an ugly hack -- but the idea is that if 90% of the 
-   ports are in the firewalled state, we'd rather show the ports
-   in the UNFIREWALLED state */
-void invertfirewalled(portlist *plist, unsigned short *ports) {
-  int firewalledports = 0;
-  struct port *current;
-  int i;
-
-
-  firewalledports = plist->state_counts[PORT_FIREWALLED];
-
-  if (firewalledports > 10 && (((double) firewalledports / plist->numports ) > 0.6))
-    {
-      plist->ignored_port_state = PORT_FIREWALLED;
-      /* OK, we are going to add an UNFIREWALLED entry for every port not
-	 listed and then we will delete every port that is firewalled */
-      for(i=0; i < o.numports; i++) {
-	if (o.udpscan) {
-	  current = lookupport(plist, ports[i], IPPROTO_UDP);
-	  if (!current)
-	    addport(plist, ports[i], IPPROTO_UDP, NULL, PORT_UNFIREWALLED);
-	  else {
-	    if (current->state == PORT_FIREWALLED)
-	      if (deleteport(plist, ports[i], IPPROTO_UDP) == -1)
-		fatal("Deletion of port %d/UDP failed\n", ports[i]);
-	  }
-	}
-	if (o.connectscan || o.nullscan || o.xmasscan || o.synscan ||
-            o.windowscan || o.maimonscan || o.finscan || o.ackscan || 
-	    o.bouncescan) {
-	  current = lookupport(plist, ports[i], IPPROTO_TCP);
-	  if (!current)
-	    addport(plist, ports[i], IPPROTO_TCP, NULL, PORT_UNFIREWALLED);
-	  else {
-	    if (current->state == PORT_FIREWALLED)
-	      if (deleteport(plist, ports[i], IPPROTO_TCP) == -1)
-		fatal("Deletion of port %d/TCP failed\n", ports[i]);
-	  }	 
-	}
-      }
-    } else {
-      plist->ignored_port_state = PORT_UNFIREWALLED;
-    }
-}
-
-
-
 int ftp_anon_connect(struct ftpinfo *ftp) {
   int sd;
   struct sockaddr_in sock;
@@ -3720,7 +3525,9 @@ void bounce_scan(struct hoststruct *target, unsigned short *portarray,
 	else  /* Not an error message */
 	  if (send(sd, "LIST\r\n", 6, 0) > 0 ) {
 	    res = recvtime(sd, recvbuf, 2048,12);
-	    if (res <= 0)  perror("recv problem from ftp bounce server\n");
+	    if (res <= 0) {
+	      perror("recv problem from ftp bounce server\n");
+	    }
 	    else {
 	      recvbuf[res] = '\0';
 	      if (o.debugging) log_write(LOG_STDOUT, "result of LIST: %s", recvbuf);
@@ -3747,6 +3554,9 @@ void bounce_scan(struct hoststruct *target, unsigned short *portarray,
 		    }
 		  }
 		}
+	      } else {
+		/* This means the port is closed ... */
+		addport(&target->ports, portarray[i], IPPROTO_TCP, NULL, PORT_CLOSED);
 	      }
 	    }
 	  }

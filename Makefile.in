@@ -1,4 +1,4 @@
-VERSION = 2.30BETA18
+VERSION = 2.30BETA19
 prefix = @prefix@
 exec_prefix = @exec_prefix@
 bindir = @bindir@
@@ -28,11 +28,11 @@ RPMTDIR=$(HOME)/rpmdir
 
 TARGET = nmap
 
-SRCS = nmap.c targets.c tcpip.c error.c utils.c osscan.c charpool.c services.c rpc.c  @COMPAT_SRCS@
+SRCS = nmap.c targets.c tcpip.c error.c utils.c osscan.c charpool.c services.c rpc.c  portlist.c @COMPAT_SRCS@
 
-OBJS = nmap.o targets.o tcpip.o error.o utils.o osscan.o charpool.o services.o rpc.o @COMPAT_OBJS@
+OBJS = nmap.o targets.o tcpip.o error.o utils.o osscan.o charpool.o services.o rpc.o portlist.o @COMPAT_OBJS@
 
-DEPS = nmap.h error.h targets.h osscan.h tcpip.h utils.h global_structures.h charpool.h services.h rpc.h
+DEPS = nmap.h error.h targets.h osscan.h tcpip.h utils.h global_structures.h charpool.h services.h rpc.h portlist.h
 
 all: $(TARGET) nmapfe/nmapfe
 

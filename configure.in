@@ -323,7 +323,7 @@ fi
 
 dnl Checks for library functions.
 dnl AC_TYPE_SIGNAL
-AC_CHECK_FUNCS(bzero snprintf vsnprintf memcpy usleep nanosleep strerror)
+AC_CHECK_FUNCS( bzero snprintf vsnprintf memcpy usleep nanosleep strerror strcasestr )
 
 AC_CHECK_FUNC(snprintf, , 
   [ COMPAT_SRCS="$COMPAT_SRCS snprintf.c"
