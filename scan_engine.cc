@@ -1119,6 +1119,7 @@ void HostScanStats::destroyOutstandingProbe(list<UltraProbe *>::iterator probeI)
 void HostScanStats::markProbeTimedout(list<UltraProbe *>::iterator probeI) {
   UltraProbe *probe = *probeI;
   assert(!probe->timedout);
+  assert(!probe->retransmitted);
   probe->timedout = true;
   assert(num_probes_active > 0);
   num_probes_active--;
@@ -1358,7 +1359,7 @@ static void ultrascan_port_update(UltraScanInfo *USI, HostScanStats *hss,
   Port *currentp;
   UltraProbe *probe;
   u16 portno;
-  u8 proto;
+  u8 proto = 0;
   int oldstate = PORT_TESTING;
   bool swappingport = false;
   bool remove_probe = false; /* Whether to remove probe from outstanding list */
@@ -1791,7 +1792,7 @@ static void doAnyRetransmits(UltraScanInfo *USI) {
 	  probeI--;
 	  probe = *probeI;
 	  if (probe->timedout && !probe->retransmitted && 
-	      maxtries > probe->tryno) {
+	      maxtries > probe->tryno && !probe->isPing()) {
 	    /* For rate limit detection, we delay the first time a new tryno
 	       is seen, as long as we are scanning at least 2 ports */
 	    if (probe->tryno + 1 > host->rld.max_tryno_sent && 
@@ -1888,11 +1889,11 @@ static bool do_one_select_round(UltraScanInfo *USI, struct timeval *stime) {
   unsigned int probenum;
   int newstate = PORT_UNKNOWN;
   int optval;
-  int res;
   recvfrom6_t optlen = sizeof(int);
   char buf[128];
   int numGoodSD = 0;
 #ifdef LINUX
+  int res;
   struct sockaddr_storage sin,sout;
   struct sockaddr_in *s_in;
   struct sockaddr_in6 *s_in6;
@@ -2085,7 +2086,7 @@ static bool get_pcap_result(UltraScanInfo *USI, struct timeval *stime) {
   struct ip *ip = NULL, *ip2 = NULL;
   struct tcphdr *tcp = NULL;
   struct icmp *icmp = NULL;
-  struct udphdr_bsd *udp = NULL;
+  udphdr_bsd *udp = NULL;
   struct link_header linkhdr;
   unsigned int bytes;
   long to_usec;
@@ -2128,7 +2129,7 @@ static bool get_pcap_result(UltraScanInfo *USI, struct timeval *stime) {
       if (ip->ip_hl < 5)
 	continue;
     if (ip->ip_p == IPPROTO_TCP) {
-      if (ip->ip_hl * 4 + 20 > bytes)
+      if ((unsigned) ip->ip_hl * 4 + 20 > bytes)
 	continue;
       tcp = (struct tcphdr *) ((u8 *) ip + ip->ip_hl * 4);
       /* Now ensure this host is even in the incomplete list */
@@ -2214,7 +2215,7 @@ static bool get_pcap_result(UltraScanInfo *USI, struct timeval *stime) {
 	}
       }
     } else if (ip->ip_p == IPPROTO_ICMP) {
-      if (ip->ip_hl * 4 + 28 > bytes) {
+      if ((unsigned) ip->ip_hl * 4 + 28 > bytes) {
 	if (o.debugging) 
 	  error("Received short ICMP packet (%d bytes)\n", bytes);
 	continue;
@@ -2274,7 +2275,7 @@ static bool get_pcap_result(UltraScanInfo *USI, struct timeval *stime) {
 	    continue;
 	} else if (ip2->ip_p == IPPROTO_UDP && !USI->prot_scan) {
 	  /* TOOD: IPID verification */
-	  udp = (struct udphdr_bsd *) ((u8 *) ip2 + ip->ip_hl * 4);
+	  udp = (udphdr_bsd *) ((u8 *) ip2 + ip->ip_hl * 4);
 	  if (udp->uh_sport != ipp->udp->uh_sport || 
 	      udp->uh_dport != ipp->udp->uh_dport)
 	    continue;
@@ -2328,9 +2329,9 @@ static bool get_pcap_result(UltraScanInfo *USI, struct timeval *stime) {
 	}
       }
     } else if (ip->ip_p == IPPROTO_UDP) {
-      if (ip->ip_hl * 4 + 8 > bytes)
+      if ((unsigned) ip->ip_hl * 4 + 8 > bytes)
 	continue;
-      udp = (struct udphdr_bsd *) ((u8 *) ip + ip->ip_hl * 4);
+      udp = (udphdr_bsd *) ((u8 *) ip + ip->ip_hl * 4);
       /* Search for this host on the incomplete list */
       memset(&sin, 0, sizeof(sin));
       sin.sin_addr.s_addr = ip->ip_src.s_addr;

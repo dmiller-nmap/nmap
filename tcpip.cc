@@ -703,7 +703,7 @@ int send_ip_packet(int sd, u8 *packet, unsigned int packetlen) {
   int res;
   struct ip *ip = (struct ip *) packet;
   struct tcphdr *tcp = NULL;
-  struct udphdr_bsd *udp;
+  udphdr_bsd *udp;
 
   assert(sd >= 0);
   assert(packet);
@@ -715,11 +715,11 @@ int send_ip_packet(int sd, u8 *packet, unsigned int packetlen) {
      packet, but it doesn't seem to work w/o them */
   if (packetlen >= 20) {
     sock.sin_addr.s_addr = ip->ip_dst.s_addr;
-    if (ip->ip_p == IPPROTO_TCP && packetlen >= ip->ip_hl * 4 + 20) {
+    if (ip->ip_p == IPPROTO_TCP && packetlen >= (unsigned int) ip->ip_hl * 4 + 20) {
       tcp = (struct tcphdr *) ((u8 *) ip + ip->ip_hl * 4);
       sock.sin_port = tcp->th_dport;
-    } else if (ip->ip_p == IPPROTO_UDP && packetlen >= ip->ip_hl * 4 + 8) {
-      udp = (struct udphdr_bsd *) ((u8 *) ip + ip->ip_hl * 4);
+    } else if (ip->ip_p == IPPROTO_UDP && packetlen >= (unsigned int) ip->ip_hl * 4 + 8) {
+      udp = (udphdr_bsd *) ((u8 *) ip + ip->ip_hl * 4);
       sock.sin_port = udp->uh_dport;
     }
   }
@@ -923,7 +923,7 @@ u8 *build_udp_raw(struct in_addr *source, const struct in_addr *victim,
   
   /* OK, now we should be able to compute a valid checksum */
 #if STUPID_SOLARIS_CHECKSUM_BUG
-  udp->uh_sum = sizeof(struct udphdr_bsd) + datalen;
+  udp->uh_sum = sizeof(udphdr_bsd) + datalen;
 #else
   udp->uh_sum = in_cksum((unsigned short *)pseudo, 20 /* pseudo + UDP headers */ + datalen);
 #endif
@@ -1718,7 +1718,7 @@ int flt_icmptcp_2port(const char *packet, unsigned int len)
   if(ip->ip_p == IPPROTO_TCP)
     {
       struct tcphdr* tcp = (struct tcphdr *) (((char *) ip) + 4 * ip->ip_hl);
-      if(len < (unsigned int) 4 * ip->ip_hl + 4) return 0;
+      if(len < (unsigned) 4 * ip->ip_hl + 4) return 0;
 	  dport = ntohs(tcp->th_dport);
       if(dport == flt_baseport || dport == flt_baseport + 1)
 	return 1;
@@ -1736,7 +1736,7 @@ int flt_icmptcp_5port(const char *packet, unsigned int len)
   if(ip->ip_p == IPPROTO_TCP)
     {
       struct tcphdr* tcp = (struct tcphdr *) (((char *) ip) + 4 * ip->ip_hl);
-      if(len < (unsigned int) 4 * ip->ip_hl + 4) return 0;
+      if(len < (unsigned) 4 * ip->ip_hl + 4) return 0;
       dport = ntohs(tcp->th_dport);
       if(dport >= flt_baseport && dport <= flt_baseport + 4) return 1;
     }
@@ -1828,7 +1828,7 @@ struct interface_info *getinterfaces(int *howmany) {
     printf("ifnet list length = %d\n",ifc.ifc_len);
     printf("sa_len = %d\n",len);
     hdump((unsigned char *) buf, ifc.ifc_len);
-    printf("ifr = %X\n",(unsigned int)(*(char **)&ifr));
+    printf("ifr = %X\n",(unsigned)(*(char **)&ifr));
     printf("Size of struct ifreq: %d\n", sizeof(struct ifreq));
 #endif
 
@@ -1836,7 +1836,7 @@ struct interface_info *getinterfaces(int *howmany) {
 	((*(char **)&ifr) += len )) {
 #if TCPIP_DEBUGGING
       printf("ifr_name size = %d\n", sizeof(ifr->ifr_name));
-      printf("ifr = %X\n",(unsigned int)(*(char **)&ifr));
+      printf("ifr = %X\n",(unsigned)(*(char **)&ifr));
 #endif
 
       /* skip any device with no name */
@@ -2349,14 +2349,14 @@ int IPProbe::storePacket(u8 *ippacket, u32 len) {
   assert(len >= 20);
   assert(len == ntohs(ipv4->ip_len));
   if (ipv4->ip_p == IPPROTO_TCP) {
-    if (len >= ipv4->ip_hl * 4 + 20)
+    if (len >= (unsigned) ipv4->ip_hl * 4 + 20)
       tcp = (struct tcphdr *) ((u8 *) ipv4 + ipv4->ip_hl * 4);
   } else if (ipv4->ip_p == IPPROTO_ICMP) {
-    if (len >= ipv4->ip_hl * 4 + 8)
+    if (len >= (unsigned) ipv4->ip_hl * 4 + 8)
       icmp = (struct icmp *) ((u8 *) ipv4 + ipv4->ip_hl * 4);
   } else if (ipv4->ip_p == IPPROTO_UDP) {
-    if (len >= ipv4->ip_hl * 4 + 8)
-      udp = (struct udphdr_bsd *) ((u8 *) ipv4 + ipv4->ip_hl * 4);
+    if (len >= (unsigned) ipv4->ip_hl * 4 + 8)
+      udp = (udphdr_bsd *) ((u8 *) ipv4 + ipv4->ip_hl * 4);
   }
   return 0;
 }

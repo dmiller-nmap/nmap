@@ -22,7 +22,7 @@ linux=no
 macosx=no
 needs_cpp_precomp=no
 case "$host" in
-  *-netbsd*)
+  *-netbsd* | *-knetbsd*-gnu)
     AC_DEFINE(NETBSD)
     ;;
   *-openbsd*)
@@ -80,7 +80,7 @@ case "$host" in
     AC_DEFINE(PCAP_TIMEOUT_IGNORED)  # libpcap doesn't even LOOK at
                                      # the timeout you give it under Linux
     ;;
-  *-freebsd*)
+  *-freebsd* | *-kfreebsd*-gnu)
     AC_DEFINE(FREEBSD)
     ;;
   *-bsdi*)

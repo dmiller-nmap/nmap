@@ -162,7 +162,7 @@ Nmap was compiled with OpenSSL support, it will connect to SSL servers
 to deduce the service listening behind the encryption.  When RPC
 services are discovered, the Nmap RPC grinder is used to determine the
 RPC program and version numbers.  Some UDP ports are left in the
-"openfiltered" state after a UDP scan is unable to determine whether
+"open|filtered" state after a UDP scan is unable to determine whether
 the port is open or filtered.  Version detection will try to elicit a
 response from these ports (just as it does with open ports), and
 change the state to open if it succeeds. Note that the Nmap -A option
@@ -179,7 +179,7 @@ Protocol, RFC 768) ports are open on a host.  The technique is to send
 0 byte UDP packets to each port on the target machine.  If we receive
 an ICMP port unreachable message, then the port is closed.  If a UDP
 response is received to the probe (unusual), the port is open.  If we
-get no response at all, the state is "openfiltered", meaning that the
+get no response at all, the state is "open|filtered", meaning that the
 port is either open or packet filters are blocking the communication.
 Versions scan (-sV) can be used to help differentiate the truly open
 ports from the filtered ones.

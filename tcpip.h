@@ -428,7 +428,7 @@ class IPProbe {
   struct ip *ipv4; /* IP header of packet */
   struct icmp *icmp; /* icmp, tcp, and udp are NULL if the packet has no such header */
   struct tcphdr *tcp;
-  struct udphdr_bsd *udp;
+  udphdr_bsd *udp;
 
   u8 af; /* AF_INET or AF_INET6 */
   /* Resets everything to NULL.  Frees packetbuf if it is filled.  You

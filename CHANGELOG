@@ -15,7 +15,7 @@ o Rewrote core port scanning engine, which is now named ultra_scan().
   can still scan many ports at the same time, as well.  If you find
   cases where ultra_scan is slower or less accurate, please send a
   report (including exact command-lines, versions used, and output, if
-  posible) to Fyodor.
+  possible) to Fyodor.
 
 o Added --max_hostgroup option which specifies the maximum number of
   hosts that Nmap is allowed to scan in parallel.
@@ -33,10 +33,10 @@ o Rewrote FIN, Xmas, NULL, Maimon, UDP, and IP Protocol scans to use
   ultra_scan(), rather than the old super_scan().
 
 o Overhauled UDP scan.  Ports that don't respond are now classified as
-  "openfiltered" (open or filtered) rather than "open".  The (somewhat
+  "open|filtered" (open or filtered) rather than "open".  The (somewhat
   rare) ports that actually respond with a UDP packet to the empty
   probe are considered open.  If version detection is requested, it
-  will be performed on openfiltered ports.  Any that respond to any of
+  will be performed on open|filtered ports.  Any that respond to any of
   the UDP probes will have their status changed to open.  This avoids a
   the false-positive problem where filtered UDP ports appear to be
   open, leading to terrified newbies thinking their machine is
@@ -93,7 +93,7 @@ o Changed xmloutputversion in XML output from 1.0 to 1.01 to note that
   there was a slight change (which was actually the MAC stuff in 3.55).
   Thanks to Lionel CONS (lionel.cons(a)cern.ch) for the suggestion.
 
-o Removed identscan (-I).  It was rarely useful, and the
+o Removed Ident scan (-I).  It was rarely useful, and the
   implementation would have to be rewritten for the new ultra_scan()
   system.  If there is significant demand, perhaps I'll put it back in
   sometime.
@@ -103,6 +103,9 @@ o Removed (addport) tags from XML output.  They used to provide open
   scanners scan many hosts at once.  They did not specify an IP
   address.  Of course the appropriate (port) tags are still printed
   once scanning of a target is complete.
+
+o Configure script now detects GNU/k*BSD systems (whatever those are),
+  thanks to patch from Robert Millan (rmh@debian.org)
 
 Nmap 3.55
 
@@ -116,7 +119,7 @@ o Added MAC address printing.  If Nmap receives packet from a target
   adding it, you just need to implement IPisDirectlyConnected() in
   tcpip.cc and then please send me the patch.  Here are examples from
   normal and XML output (angle brackets replaced with [] for HTML
-  changelog compatability):
+  changelog compatibility):
   MAC Address: 08:00:20:8F:6B:2F (SUN Microsystems)
   [address addr="00:A0:CC:63:85:4B" vendor="Lite-on Communications" addrtype="mac" /]
 
@@ -134,7 +137,7 @@ o Normalized many of the OS names in nmap-os-fingerprints (fixed
   sending patches.
 
 o Modified the mswine32/nmap_performance.reg Windows registry file to
-  use an older and more compatable version.  It also now includes the
+  use an older and more compatible version.  It also now includes the
   value "StrictTimeWaitSeqCheck"=dword:00000001 , as suggested by Jim
   Harrison (jmharr(a)microsoft.com).  Without that latter value, the
   TcpTimedWaitDelay value apparently isn't checked.  Windows users
@@ -146,7 +149,7 @@ o Modified the mswine32/nmap_performance.reg Windows registry file to
 o Applied patch from Gisle Vanem (giva(a)bgnett.no) which allows the
   Windows version of Nmap to work with WinPCAP 3.1BETA (and probably
   future releases).  The Winpcap folks apparently changed the encoding
-  of adaptor names in this release.
+  of adapter names in this release.
 
 o Fixed a ping scanning bug that would cause this error message: "nmap:
   targets.cc:196: int hostupdate (Target **, Target *, int, int, int,
@@ -170,7 +173,7 @@ o Many people have reported this error: "checking for type of 6th
   broken C++ compiler.  That should now be detected earlier with a
   clearer message.
 
-o Fixed the FTP bounce scan to better detect filered ports on the
+o Fixed the FTP bounce scan to better detect filtered ports on the
   target network.
 
 o Fixed some minor bugs related to the new MAC address printing

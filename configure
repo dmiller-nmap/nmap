@@ -2855,7 +2855,7 @@ case "$host" in
 _ACEOF
 
     ;;
-  *-netbsd*)
+  *-netbsd* | *-knetbsd*-gnu)
     cat >>confdefs.h <<\_ACEOF
 #define NETBSD 1
 _ACEOF
@@ -2979,7 +2979,7 @@ _ACEOF
   # libpcap doesn't even LOOK at
                                      # the timeout you give it under Linux
     ;;
-  *-freebsd*)
+  *-freebsd* | *-kfreebsd*-gnu)
     cat >>confdefs.h <<\_ACEOF
 #define FREEBSD 1
 _ACEOF

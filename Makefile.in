@@ -140,21 +140,34 @@ distro:
                     /usr/tmp/nmap-$(NMAP_VERSION)/mswin32
 
 	$(SHTOOL) mkdir /usr/tmp/nmap-$(NMAP_VERSION)/$(LIBPCAPDIR)
-	cd $(LIBPCAPDIR); cp -ra acconfig.h aclocal.m4 arcnet.h bpf \
-                          bpf_dump.c bpf_filter.c bpf_image.c CHANGES \
-                          config.guess config.h.in config.sub configure \
-                          configure.ac CREDITS etherent.c ethertype.h FILES \
-                          gencode.c gencode.h grammar.c grammar.y inet.c \
-                          install-sh INSTALL.txt lbl LICENSE llc.h \
-                          Makefile.in mkdep nametoaddr.c net nlpid.h \
-                          NMAP_MODIFICATIONS optimize.c pcap.3 pcap-bpf.c \
-                          pcap.c pcap-dlpi.c pcap-enet.c pcap.h pcap-int.h \
-                          pcap-linux.c pcap-namedb.h pcap-nit.c pcap-nit.h \
-                          pcap-null.c pcap-pf.c pcap-pf.h pcap-snit.c \
-                          pcap-snoop.c ppp.h README README.aix README.linux \
-                          README.tru64 savefile.c scanner.c scanner.l sll.h \
-                          SUNOS4 TODO tokdefs.h VERSION \
-                          /usr/tmp/nmap-$(NMAP_VERSION)/$(LIBPCAPDIR)
+	cd $(LIBPCAPDIR); cp -ra --parents SUNOS4/nit_if.o.sparc \
+           SUNOS4/nit_if.o.sun3 SUNOS4/nit_if.o.sun4c.4.0.3c CHANGES \
+           CREDITS FILES INSTALL.txt LICENSE Makefile.in \
+           NMAP_MODIFICATIONS README README.aix README.linux \
+           README.tru64 TODO VERSION acconfig.h aclocal.m4 \
+           arcnet.h bpf_dump.c bpf_image.c config.guess config.h.in \
+           config.sub configure configure.ac etherent.c ethertype.h gencode.c \
+           gencode.h grammar.y inet.c install-sh llc.h mkdep nametoaddr.c \
+           nlpid.h optimize.c pcap-bpf.c pcap-dlpi.c pcap-enet.c pcap-int.h \
+           pcap-linux.c pcap-namedb.h pcap-nit.c pcap-nit.h pcap-null.c \
+           pcap-pf.c pcap-pf.h pcap-snit.c pcap-snoop.c pcap.3 pcap.c pcap.h \
+           ppp.h savefile.c scanner.c scanner.l sll.h tokdefs.h \
+           bpf/net/bpf_filter.c bpf/net/bpf.h lbl/os-aix4.h lbl/os-osf4.h \
+           lbl/os-solaris2.h lbl/os-sunos4.h lbl/os-ultrix4.h lbl/os-hpux11.h \
+           lbl/os-osf5.h atmuni31.h config.h fad-getad.c fad-gifc.c \
+           fad-glifc.c fad-null.c fad-win32.c pcap-bpf.h pcap-dag.c \
+           pcap-dag.h version.h grammar.c pcap-stdinc.h pcap-win32.c pf.h \
+           rawss7.h README.dag README.hpux README.Win32 snprintf.c \
+           sunatmpos.h Win32/Include/addrinfo.h Win32/Include/Gnuc.h \
+           Win32/Include/arpa/nameser.h Win32/Include/net/if.h \
+           Win32/Include/net/netdb.h Win32/Include/net/paths.h \
+           Win32/Include/bittypes.h Win32/Include/cdecl_ext.h \
+           Win32/Include/inetprivate.h Win32/Include/ip6_misc.h \
+           Win32/Include/sockstorage.h Win32/Prj/libpcap.dsp \
+           Win32/Prj/libpcap.dsw Win32/Src/getnetbynm.c Win32/Src/ffs.c \
+           Win32/Src/getaddrinfo.c Win32/Src/getnetent.c Win32/Src/getopt.c \
+           Win32/Src/getservent.c Win32/Src/inet_aton.c Win32/Src/inet_net.c \
+           Win32/Src/inet_pton.c /usr/tmp/nmap-$(NMAP_VERSION)/$(LIBPCAPDIR)
 
 	$(SHTOOL) mkdir /usr/tmp/nmap-$(NMAP_VERSION)/docs
 	cd docs; cp -ra README copying.html nmap-fingerprinting-article.txt \
