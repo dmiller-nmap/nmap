@@ -1587,25 +1587,116 @@ char *tsseqclass2ascii(int seqclass) {
   }
 }
 
+/**
+ * Returns 1 if this is a reserved IP address, where "reserved" means
+ * either a private address, non-routable address, or even a non-reserved
+ * but unassigned address which has an extremely high probability of being
+ * black-holed.
+ *
+ * We try to optimize speed when ordering the tests. This optimization
+ * assumes that all byte values are equally likely in the input.
+ *
+ * TODO: optimize some of the inequality tests with bit arithmetic, nest
+ * some of the if statements
+ *
+ * See: http://www.obfuscation.org/ipf/ipf-howto.txt Q10
+ */
+
+int is_reserved(struct in_addr *ip)
+{
+  char *ipc = (char *) &(ip->s_addr);
+  unsigned char i1 = ipc[0], i2 = ipc[1], i3 = ipc[2], i4 = ipc[3];
+
+  /* 224.0.0.0/3 (224.0.0.0 through 255.255.255.255) is all multicast stuff */
+  if (i1 >= 224)
+    return 1;
+  
+  /* 96.0.0.0/3 (96.0.0.0 through 127.255.255.255) is a huge unassigned range */
+  if (i1 >= 96 && i1 <= 127)
+    return 1;
+  
+  /* 72.0.0.0/5 (72.0.0.0 through 79.255.255.255) is empty */
+  /* 80.0.0.0/4 (80.0.0.0 through 95.255.255.255) is another big empty block */
+  if (i1 >= 72 && i1 <= 95)
+    return 1;
+  
+  /* do all the /7's and /8's with a big switch statement, hopefully the
+   * compiler will be able to optimize this a little better using a jump table
+   * or what have you
+   */
+  switch (i1)
+    {
+    case 0:    /* 0.0.0.0/8, 1.0.0.0/8, 2.0.0.0/8 */
+    case 1:
+    case 2:
+    case 5:    /* 5.0.0.0/8, 6.0.0.0/8, and 7.0.0.0/8 */
+    case 6:    /* U.S. Army Yuma Proving Ground -- kindof wacky */
+    case 7:
+    case 10:   /* the infamous 10.0.0.0/8 */
+    case 23:
+    case 27:
+    case 31:
+    case 36:   /* 36.0.0.0/7 */
+    case 37:
+    case 55: /* HD Moore suggested we kill this class 'A' because of strange
+		results */
+    case 58:   /* 58.0.0.0/7 */
+    case 59:
+    case 60:
+    case 69:
+    case 70:   /* 70.0.0.0/7 */
+    case 71:
+    case 82:   /* 82.0.0.0/7 */
+    case 83:
+      /*    case 127:  already accounted for in 96.0.0.0/3 above */
+    case 197:
+    case 201:
+    case 219:
+    case 220:
+      return 1;
+    default:
+      break;
+    }
+  
+  /* 172.16.0.0/12 is reserved for private nets by RFC1819 */
+  if (i1 == 172 && i2 >= 16 && i2 <= 31)
+    return 1;
+  
+  /* 192.168.0.0/16 is reserved for private nets by RFC1819 */
+  /* 192.0.2.0/24 is reserved for documentation and examples */
+  if (i1 == 192) {
+    if (i2 == 168)
+      return 1;
+    else if (i2 == 0 && i3 == 2)
+      return 1;
+  }
+  
+  /* reserved for DHCP clients seeking addresses, not routable outside LAN */
+  if (i1 == 169 && i2 == 254)
+    return 1;
+  
+  /* believe it or not, 204.152.64.0/23 is some bizarre Sun proprietary
+   * clustering thing */
+  if (i1 == 204 && i2 == 152 && (i3 == 64 || i3 == 65))
+    return 1;
+  
+  /* 255.255.255.255, note we already tested for i1 in this range */
+  if (i2 == 255 && i3 == 255 && i4 == 255)
+    return 1;
+  
+  return 0;
+}
 
 char *grab_next_host_spec(FILE *inputfd, int argc, char **fakeargv) {
   static char host_spec[512];
   int host_spec_index;
   int ch;
-  unsigned char *ipc;
   struct in_addr ip;
 
   if (o.generate_random_ips) {
-    do {    
-      ipc = (unsigned char *) &ip.s_addr;
-      get_random_bytes(ipc, 4);
-
-    } while(ipc[0] == 10 || ipc[0] > 224 || ipc[0] == 127 || !ipc[0] || 
-	    ipc[0] == 6 || ( ipc[0] == 192 && ipc[1] == 168) || 
-	    (ipc[0] == 172 && ipc[1] >= 16 && ipc[1] <= 31));  
-            /* Skip the above private, multicast, reserved, and localhost
-               addresses -- I also skip 6.*.*.* because that is the
-               U.S. Army Yuma Proving Ground and it is kindof wacky */
+    do {
+      ip.s_addr = get_random_u32();
+    } while (is_reserved(&ip));
     strcpy(host_spec, inet_ntoa(ip));
   } else if (!inputfd) {
     return( (optind < argc)?  fakeargv[optind++] : NULL);
