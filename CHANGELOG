@@ -1,5 +1,25 @@
 # Nmap Changelog
 
+-- Added a whole bunch of new OS fingerprints (and adjustments)
+   ranging from big important ones (Linux 2.4.X, OpenBSD 2.9, FreeBSD
+   4.3, Cisco 12.2.1, MacOS X, etc) to some that are more obscure (
+   such as Apple Color LaserWriter 12/660 PS and VirtualAccess
+   LinxpeedPro 120 )
+
+-- Upgraded Libpcap to the latest version (0.6.2) from tcpdump.org.  I
+   modified the build system slightly by shipping pre-generated
+   scanner.c/grammer.c (instead of using lex/yacc) and I also upgraded
+   to the newest config.sub/config.guess .
+
+-- Fixed some issues with the new Libpcap under Linux (patches will be
+   sent to the developers).
+
+-- Added "All zeros" IP.ID sequence classification to account for the
+   new Linux 2.4 scheme which seems to use 0 whenever the DF bit is
+   set (probably a good idea).
+
+-- Tweaked TCP Timestamp and IP.ID sequence classification algorithms
+
 ** 2.54BETA24
 
 -- Fixed compilation problems on MacOS X publis release.  Thanks to
