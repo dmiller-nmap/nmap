@@ -273,9 +273,9 @@ int send_udp_raw( int sd, struct in_addr *source,
 		  unsigned short dport, char *data, unsigned short datalen) 
 {
 
-char *packet = safe_malloc(sizeof(struct ip) + sizeof(struct udphdr) + datalen);
+char *packet = safe_malloc(sizeof(struct ip) + sizeof(struct udphdr_bsd) + datalen);
 struct ip *ip = (struct ip *) packet;
-struct udphdr *udp = (struct udphdr *) (packet + sizeof(struct ip));
+struct udphdr_bsd *udp = (struct udphdr_bsd *) (packet + sizeof(struct ip));
 static int myttl = 0;
 
 int res;
@@ -319,7 +319,7 @@ sock.sin_port = htons(dport);
 sock.sin_addr.s_addr = victim->s_addr;
 
 
-bzero((char *) packet, sizeof(struct ip) + sizeof(struct udphdr));
+bzero((char *) packet, sizeof(struct ip) + sizeof(struct udphdr_bsd));
 
 udp->uh_sport = htons(sport);
 udp->uh_dport = htons(dport);
@@ -343,7 +343,7 @@ ip->ip_sum = in_cksum((unsigned short *)ip, sizeof(struct ip));
 
  /* We should probably copy the data over too */
 if (data)
-  memcpy(packet + sizeof(struct ip) + sizeof(struct udphdr), data, datalen);
+  memcpy(packet + sizeof(struct ip) + sizeof(struct udphdr_bsd), data, datalen);
 
 if (TCPIP_DEBUGGING > 1) {
 printf("Raw UDP packet creation completed!  Here it is:\n");

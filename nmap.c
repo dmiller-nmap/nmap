@@ -175,7 +175,7 @@ if ((o.fragscan && !o.synscan && !o.finscan && !o.nullscan && !o.xmasscan)) {
 }
 if (o.udpscan || o.lamerscan) 
   printf("Warning: udp scan is not always 100%c accurate, I will be rewriting it\n", '%'); /* Due to gcc -Wall stupidity */
-if ((o.synscan || o.finscan || o.fragscan || o.xmasscan || o.nullscan) && !o.isr00t)
+if ((o.synscan || o.finscan || o.udpscan || o.fragscan || o.xmasscan || o.nullscan) && !o.isr00t)
   fatal("Options specified require r00t privileges.  You don't have them!");
 if (!o.connectscan && !o.udpscan && !o.synscan && !o.finscan && !o.nullscan && !o.xmasscan && !bouncescan && !o.pingscan) {
   o.connectscan++;
@@ -289,7 +289,7 @@ else {
   if (currenths->wierd_responses)
     nmap_log("Host  %s (%s) seems to be a subnet broadcast address (returned %d extra pings)\n",  currenths->name, inet_ntoa(currenths->host), currenths->wierd_responses);
 }
-if (currenths->flags & HOST_UP && !currenths->source_ip.s_addr && ( o.synscan || o.finscan || o.nullscan || o.xmasscan)) {
+if (currenths->flags & HOST_UP && !currenths->source_ip.s_addr && ( o.synscan || o.finscan || o.udpscan || o.nullscan || o.xmasscan)) {
   if (gethostname(myname, MAXHOSTNAMELEN) || 
       !(target = gethostbyname(myname)))
     fatal("Your system is messed up.  Cannot get hostname!  You might have to use -S <my_IP_address>\n"); 
@@ -303,7 +303,7 @@ if (currenths->flags & HOST_UP && !currenths->source_ip.s_addr && ( o.synscan ||
  if (o.device[0]) { strcpy(currenths->device, o.device); }
 
 /* Figure out what link-layer device (interface) to use (ie eth0, ppp0, etc) */
-if (!o.device[0] && currenths->flags & HOST_UP && (o.nullscan || o.xmasscan || o.finscan || o.synscan) && !ipaddr2devname( currenths->device, &currenths->source_ip))
+if (!o.device[0] && currenths->flags & HOST_UP && (o.nullscan || o.xmasscan || o.udpscan || o.finscan || o.synscan) && !ipaddr2devname( currenths->device, &currenths->source_ip))
   fatal("Could not figure out what device to send the packet out on!  You might possibly want to try -S (but this is probably a bigger problem).  If you are trying to sp00f the source of a SYN/FIN scan with -S <fakeip>, then you must use -e eth0 (or other devicename) to tell us what interface to use.\n");
 /* Set up the decoy */
 o.decoys[o.decoyturn] = currenths->source_ip;

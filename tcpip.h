@@ -155,6 +155,17 @@ struct ip
 
 #endif /* HAVE_STRUCT_IP */
 
+#ifdef LINUX
+struct udphdr_bsd {
+         u_int16_t uh_sport;           /* source port */
+         u_int16_t uh_dport;           /* destination port */
+         u_int16_t uh_ulen;            /* udp length */
+         u_int16_t uh_sum;             /* udp checksum */
+};
+#else
+typedef udphdr udphdr_bsd;
+#endif
+
 
 #ifndef HAVE_STRUCT_ICMP
 #define HAVE_STRUCT_ICMP
