@@ -12,7 +12,7 @@ if (jumpok)
 return;
 }
 
-__inline__ void sethdrinclude(int sd) {
+inline void sethdrinclude(int sd) {
 #ifdef IP_HDRINCL
 int one = 1;
 setsockopt(sd, IPPROTO_IP, IP_HDRINCL, (void *) &one, sizeof(one));
@@ -20,7 +20,7 @@ setsockopt(sd, IPPROTO_IP, IP_HDRINCL, (void *) &one, sizeof(one));
 }
 
 /* Standard swiped internet checksum routine */
-__inline__ unsigned short in_cksum(unsigned short *ptr,int nbytes) {
+inline unsigned short in_cksum(unsigned short *ptr,int nbytes) {
 
 register long           sum;            /* assumes long == 32 bits */
 u_short                 oddbyte;
@@ -97,7 +97,6 @@ struct ip *ip = (struct ip *) packet;
 struct tcphdr *tcp = (struct tcphdr *) (packet + sizeof(struct ip));
 struct pseudo_header *pseudo =  (struct pseudo_header *) (packet + sizeof(struct ip) - sizeof(struct pseudo_header)); 
 static int myttl = 0;
-int retries = 0;
 
  /*With these placement we get data and some field alignment so we aren't
    wasting too much in computing the checksum */
@@ -132,7 +131,7 @@ if (!source) {
   source = safe_malloc(sizeof(struct in_addr));
   if (gethostname(myname, MAXHOSTNAMELEN) || 
       !(myhostent = gethostbyname(myname)))
-    fatal("Your system is messed up.\n"); 
+       fatal("Cannot get hostname!  Try using -S <my_IP_address> or -e <interface to scan through>\n");
   memcpy(source, myhostent->h_addr_list[0], sizeof(struct in_addr));
 #if ( TCPIP_DEBUGGING )
     printf("We skillfully deduced that your address is %s\n", 
@@ -182,7 +181,7 @@ else tcp->th_win = htons(1024 * (myttl % 4 + 1)); /* Who cares */
  }
 
 #if STUPID_SOLARIS_CHECKSUM_BUG
- tcp->th_sum = sizeof(struct tcphdr); /* Do I have to add the data length??? */
+ tcp->th_sum = sizeof(struct tcphdr) + optlen + datalen; 
 #else
 tcp->th_sum = in_cksum((unsigned short *)pseudo, sizeof(struct tcphdr) + 
 		       optlen + sizeof(struct pseudo_header) + datalen);
@@ -207,38 +206,46 @@ printf("Raw TCP packet creation completed!  Here it is:\n");
 readtcppacket(packet,BSDUFIX(ip->ip_len));
 }
 
-do {
-  if (TCPIP_DEBUGGING > 1) 
-    printf("\nTrying sendto(%d , packet, %d, 0 , %s , %d)\n",
-	   sd, BSDUFIX(ip->ip_len), inet_ntoa(*victim),
-	   sizeof(struct sockaddr_in));
-  if ((res = sendto(sd, packet, BSDUFIX(ip->ip_len), 0,
-		    (struct sockaddr *)&sock, (int)sizeof(struct sockaddr_in)))
-      == -1)
-    {
-      if (errno != EINVAL || retries >= 2) {      
-	error("sendto in send_tcp_raw sendto(%d, packet, %d, 0, %s, %d): %s",
-	      sd, BSDUFIX(ip->ip_len), inet_ntoa(*victim), 
-	      sizeof(struct sockaddr_in), strerror(errno));
-	
-	if (source_malloced) free(source);
-	free(packet);
-	return -1;
-      }
-      printf("Sleeping due to (Linux only?) EINVAL lameness (%d seconds) ...", (retries + 1) * 60);
-      fflush(stdout);
-      sleep((retries + 1) * 60);
-      fflush(stdout);
-      printf("done\n");
-    }
-} while(res == -1 && errno == EINVAL && retries++ < 2);
-if (TCPIP_DEBUGGING > 1) printf("successfully sent %d bytes of raw_tcp!\n", res);
+res = Sendto("send_tcp_raw", sd, packet, BSDUFIX(ip->ip_len), 0,
+	     (struct sockaddr *)&sock,  (int)sizeof(struct sockaddr_in));
 
 if (source_malloced) free(source);
 free(packet);
 return res;
 }
 
+inline int Sendto(char *functionname, int sd, char *packet, int len, 
+	   unsigned int flags, struct sockaddr *to, int tolen) {
+
+struct sockaddr_in *sin = (struct sockaddr_in *) to;
+int res;
+int retries = 0;
+int sleeptime = 0;
+
+do {
+  if (TCPIP_DEBUGGING > 1) {  
+    printf("trying sendto(%d, packet, %d, 0, %s, %d)",
+	   sd, len, inet_ntoa(sin->sin_addr), tolen);
+  }
+  if ((res = sendto(sd, packet, len, flags, to, tolen)) == -1) {
+    error("sendto in %s: sendto(%d, packet, %d, 0, %s, %d) => %s",
+	  functionname, sd, len, inet_ntoa(sin->sin_addr), tolen,
+	  strerror(errno));
+    if (retries > 2 || errno == EPERM) 
+      return -1;
+    sleeptime = 15 * (1 << (2 * retries));
+    error("Sleeping %d seconds then retrying", sleeptime);
+    fflush(stderr);
+    sleep(sleeptime);
+  }
+  retries++;
+} while( res == -1);
+
+if (TCPIP_DEBUGGING > 1)
+  printf("successfully sent %d bytes of raw_tcp!\n", res);
+
+return res;
+}
 
 /* A simple function I wrote to help in debugging, shows the important fields
    of a TCP packet*/
@@ -281,7 +288,7 @@ if (ip->ip_p== IPPROTO_TCP) {
     if (tcp->th_flags & TH_URG) printf("URG ");
     printf("\n");
 
-    printf("ttl: %hi ", ip->ip_ttl);
+    printf("ttl: %hu ", ip->ip_ttl);
 
     if (tcp->th_flags & (TH_SYN | TH_ACK)) printf("Seq: %lu\tAck: %lu\n", 
 						  (unsigned long) ntohl(tcp->th_seq), (unsigned long) ntohl(tcp->th_ack));
@@ -329,7 +336,7 @@ if (ip->ip_p== IPPROTO_UDP) {
 	   ntohs(udp->uh_sport), inet_ntoa(bullshit2), 
 	   ntohs(udp->uh_dport), tot_len);
 
-    printf("ttl: %hi ", ip->ip_ttl);
+    printf("ttl: %hu ", ip->ip_ttl);
   }
 }
  if (readdata && i < tot_len) {
@@ -384,7 +391,7 @@ if (!source) {
   source = safe_malloc(sizeof(struct in_addr));
   if (gethostname(myname, MAXHOSTNAMELEN) || 
       !(myhostent = gethostbyname(myname)))
-    fatal("Your system is messed up.\n"); 
+    fatal("Cannot get hostname!  Try using -S <my_IP_address> or -e <interface to scan through>\n");
   memcpy(source, myhostent->h_addr_list[0], sizeof(struct in_addr));
 #if ( TCPIP_DEBUGGING )
     printf("We skillfully deduced that your address is %s\n", 
@@ -417,7 +424,12 @@ pseudo->proto = IPPROTO_UDP;
 pseudo->length = htons(sizeof(udphdr_bsd) + datalen);
 
 /* OK, now we should be able to compute a valid checksum */
+#if STUPID_SOLARIS_CHECKSUM_BUG
+ udp->uh_sum = sizeof(struct udphdr) + datalen;
+#else
 udp->uh_sum = in_cksum((unsigned short *)pseudo, 20 /* pseudo + UDP headers */ + datalen);
+#endif
+
 /* Goodbye, pseudo header! */
 bzero(pseudo, 12);
 
@@ -438,20 +450,9 @@ if (TCPIP_DEBUGGING > 1) {
   printf("Raw UDP packet creation completed!  Here it is:\n");
   readudppacket(packet,1);
 }
-if (TCPIP_DEBUGGING > 1) 
 
-  printf("\nTrying sendto(%d , packet, %d, 0 , %s , %d)\n",
-	 sd, BSDUFIX(ip->ip_len), inet_ntoa(*victim),
-	 sizeof(struct sockaddr_in));
-if ((res = sendto(sd, packet, BSDUFIX(ip->ip_len), 0,
-		  (struct sockaddr *)&sock, (int) sizeof(struct sockaddr_in))) == -1)
-  {
-    perror("sendto in send_udp_raw");
-    if (source_malloced) free(source);
-    free(packet);
-    return -1;
-  }
-if (TCPIP_DEBUGGING > 1) printf("successfully sent %d bytes of raw_tcp!\n", res);
+res = Sendto("send_udp_raw", sd, packet, BSDUFIX(ip->ip_len), 0,
+	     (struct sockaddr *)&sock,  (int)sizeof(struct sockaddr_in));
 
 if (source_malloced) free(source);
 free(packet);
@@ -469,7 +470,6 @@ struct ip *ip = (struct ip *) packet;
 static int myttl = 0;
 
 int res = -1;
-int retries = 0;
 struct sockaddr_in sock;
 char myname[MAXHOSTNAMELEN + 1];
 struct hostent *myhostent = NULL;
@@ -495,7 +495,7 @@ if (!source) {
   source = safe_malloc(sizeof(struct in_addr));
   if (gethostname(myname, MAXHOSTNAMELEN) || 
       !(myhostent = gethostbyname(myname)))
-    fatal("Your system is messed up.\n"); 
+    fatal("Cannot get hostname!  Try using -S <my_IP_address> or -e <interface to scan through>\n");
   memcpy(source, myhostent->h_addr_list[0], sizeof(struct in_addr));
 #if ( TCPIP_DEBUGGING )
     printf("We skillfully deduced that your address is %s\n", 
@@ -536,41 +536,16 @@ if (TCPIP_DEBUGGING > 1) {
   hdump(packet, BSDUFIX(ip->ip_len));
 }
 
-do {
-if (TCPIP_DEBUGGING > 1) 
-  printf("\nTrying sendto(%d , packet, %d, 0 , %s , %d)\n",
-	 sd, BSDUFIX(ip->ip_len), inet_ntoa(*victim),
-	 sizeof(struct sockaddr_in));
- if ((res = sendto(sd, packet, BSDUFIX(ip->ip_len), 0,
-		    (struct sockaddr *)&sock, (int)sizeof(struct sockaddr_in)))
-      == -1)
-    {
-      if (errno != EINVAL || retries >= 2) {      
-	error("sendto in send_tcp_raw sendto(%d, packet, %d, 0, %s, %d): %s",
-	      sd, BSDUFIX(ip->ip_len), inet_ntoa(*victim), 
-	      sizeof(struct sockaddr_in), strerror(errno));
-	if (source_malloced) free(source);
-	free(packet);
-	return -1;
-      }
-      printf("Sleeping due to (Linux only?) EINVAL lameness (%d seconds) ...",
-	     (retries + 1) * 60);
-      fflush(stdout);
-      sleep((retries + 1) * 60);
-      printf("done\n");
-      fflush(stdout);
-    }
-} while(res == -1 && errno == EINVAL && retries++ < 2);
 
-if (TCPIP_DEBUGGING > 1) printf("successfully sent %d bytes of raw_tcp!\n", res);
+res = Sendto("send_ip_raw", sd, packet, BSDUFIX(ip->ip_len), 0,
+	     (struct sockaddr *)&sock,  (int)sizeof(struct sockaddr_in));
 
 if (source_malloced) free(source);
 free(packet); 
 return res;
 }
 
-
-__inline__ int unblock_socket(int sd) {
+inline int unblock_socket(int sd) {
 int options;
 /*Unblock our socket to prevent recvfrom from blocking forever
   on certain target ports. */
@@ -878,7 +853,7 @@ struct interface_info *getinterfaces(int *howmany) {
   struct ifconf ifc;
   struct ifreq *ifr;
   struct sockaddr_in *sin;
-  
+
   if (!initialized) {
 
     initialized = 1;
@@ -930,10 +905,7 @@ struct interface_info *getinterfaces(int *howmany) {
 /* An awesome function to determine what interface a packet to a given
    destination should be routed through.  It returns NULL if no appropriate
    interface is found, oterwise it returns the device name and fills in the
-   source parameter.   A very small but very important portion of this
-   (the /proc/net/route stuff for Linux is from something I found in 
-   tcpip.c from the checkos program by the Confidence
-   Remains High folks.  Word to them!  Some of the other stuff is
+   source parameter.   Some of the stuff is
    from Stevens' Unix Network Programming V2.  He had an easier suggestion
    for doing this (in the book), but it isn't portable :( */
 char *routethrough(struct in_addr *dest, struct in_addr *source) {
@@ -959,16 +931,14 @@ char *routethrough(struct in_addr *dest, struct in_addr *source) {
   if (!initialized) {  
     /* Dummy socket for ioctl */
     initialized = 1;
-
     mydevs = getinterfaces(&numinterfaces);
 
     /* Now we must go through several techniques to determine info */
     routez = fopen("/proc/net/route", "r");
-    /*    routez = fopen("/tmp/route", "r");*/
+
     if (routez) {
       /* OK, linux style /proc/net/route ... we can handle this ... */
-      /* Now that we've got the interfaces, we g0 after the r0ut3Z, this
-	 is the part that is partially from CRH #7 */
+      /* Now that we've got the interfaces, we g0 after the r0ut3Z */
       
       fgets(buf, sizeof(buf), routez); /* Kill the first line */
       while(fgets(buf,sizeof(buf), routez)) {
@@ -1039,6 +1009,19 @@ char *routethrough(struct in_addr *dest, struct in_addr *source) {
     } else if (technique == connectsockettechnique) {
       if (!getsourceip(&addy, dest))
 	return NULL;
+      if (!addy.s_addr)  {  /* Solaris 2.4 */
+        struct hostent *myhostent = NULL;
+        char myname[MAXHOSTNAMELEN + 1];
+        if (gethostname(myname, MAXHOSTNAMELEN) || 
+           !(myhostent = gethostbyname(myname)))
+	  fatal("Cannot get hostname!  Try using -S <my_IP_address> or -e <interface to scan through>\n");
+        memcpy(&(addy.s_addr), myhostent->h_addr_list[0], sizeof(struct in_addr));
+#if ( TCPIP_DEBUGGING )
+      printf("We skillfully deduced that your address is %s\n", 
+        inet_ntoa(*source));
+#endif
+      }
+
       /* Now we insure this claimed address is a real interface ... */
       for(i=0; i < numinterfaces; i++)
 	if (mydevs[i].addr.s_addr == addy.s_addr) {

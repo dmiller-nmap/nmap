@@ -9,10 +9,6 @@
 #include "config.h"
 #endif
 
-#ifndef HAVE_INLINE
-#define __inline__
-#endif
-
 #ifdef STDC_HEADERS
 #include <stdlib.h>
 #else
@@ -28,6 +24,10 @@ void *realloc();
 #endif
 #if HAVE_STRINGS_H
 #include <strings.h>
+#endif
+
+#ifdef HAVE_BSTRING_H
+#include <bstring.h>
 #endif
 
 #ifndef HAVE_BZERO
@@ -72,7 +72,18 @@ void *realloc();
 #include <netinet/in.h>
 #include <errno.h>
 #include <netdb.h>
-#include <time.h>
+
+#if TIME_WITH_SYS_TIME
+# include <sys/time.h>
+# include <time.h>
+#else
+# if HAVE_SYS_TIME_H
+#  include <sys/time.h>
+# else
+#  include <time.h>
+# endif
+#endif
+
 #include <fcntl.h>
 #include <signal.h> 
 #include <signal.h>
@@ -89,7 +100,6 @@ void *realloc();
 #include <arpa/inet.h>
 #include <math.h>
 #include <assert.h>
-#include <sys/time.h> 
 #ifndef __FAVOR_BSD
 #define __FAVOR_BSD
 #endif
@@ -250,7 +260,7 @@ int get_connect_results(struct hoststruct *target, struct portinfo *scan,
 			 struct scanstats *ss, struct portinfolist *pil, 
 			 int *portlookup, unsigned long *sequences, 
 			 struct connectsockinfo *csi);
-__inline__ void adjust_timeouts(struct timeval sent, struct timeout_info *to);
+inline void adjust_timeouts(struct timeval sent, struct timeout_info *to);
 /* port manipulators */
 unsigned short *getpts(char *expr); /* someone stole the name getports()! */
 unsigned short *getfastports(int tcpscan, int udpscan);

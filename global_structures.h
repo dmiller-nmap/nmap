@@ -116,7 +116,9 @@ struct hoststruct {
   char *name;
   struct seq_info seq;
   FingerPrint **FP_matches;
-  FingerPrint *FP;
+  FingerPrint *FPs[10];
+  int numFPs;
+  int goodFP;
   struct port *ports;
   /*
   unsigned int up;
@@ -124,7 +126,6 @@ struct hoststruct {
   int wierd_responses; /* echo responses from other addresses, Ie a network broadcast address */
   unsigned int flags; /* HOST_UP, HOST_DOWN, HOST_FIREWALLED, HOST_BROADCAST (instead of HOST_BROADCAST use wierd_responses */
   struct timeout_info to;
-  unsigned long rtt; /* microseconds */
   char device[64]; /* The device we transmit on */
 };
 
@@ -148,7 +149,6 @@ struct ops /* someone took struct options, <grrr> */ {
   int pingtype;
   int pingscan;
   int allowall;
-  int wait;
   int ptime;
   int numports;
   int connectscan;
@@ -160,7 +160,6 @@ struct ops /* someone took struct options, <grrr> */ {
   int maimonscan;
   int finscan;
   int udpscan;
-  int lamerscan;
   int noresolve;
   int force; /* force nmap to continue on even when the outcome seems somewhat certain */
   FILE *logfd; /* Output log file descriptor */

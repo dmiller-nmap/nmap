@@ -32,13 +32,44 @@ AC_CANONICAL_HOST
 linux=no
 
 case "$host" in
+  *-openbsd*)
+    AC_DEFINE(OPENBSD)
+    ;;
   *-sgi-irix5*)
+    AC_DEFINE(IRIX)
     no_libsocket=yes
     no_libnsl=yes
+    if test -z "$GCC"; then
+      sgi_cc=yes
+    fi
     ;;
   *-sgi-irix6*)
+    AC_DEFINE(IRIX)
     no_libsocket=yes
     no_libnsl=yes
+    if test -z "$GCC"; then
+      sgi_cc=yes
+    fi
+    ;;
+  *-solaris2.0*)  
+    AC_DEFINE(STUPID_SOLARIS_CHECKSUM_BUG)
+    AC_DEFINE(SOLARIS)
+    ;;
+  *-solaris2.1*)
+    AC_DEFINE(STUPID_SOLARIS_CHECKSUM_BUG)
+    AC_DEFINE(SOLARIS)
+    ;;
+  *-solaris2.2*)
+    AC_DEFINE(STUPID_SOLARIS_CHECKSUM_BUG)
+    AC_DEFINE(SOLARIS)
+    ;;
+  *-solaris2.3*)
+    AC_DEFINE(STUPID_SOLARIS_CHECKSUM_BUG)
+    AC_DEFINE(SOLARIS)
+    ;;
+  *-solaris2.4*)
+    AC_DEFINE(STUPID_SOLARIS_CHECKSUM_BUG)
+    AC_DEFINE(SOLARIS)
     ;;
   *-solaris2.5.1)
     AC_DEFINE(STUPID_SOLARIS_CHECKSUM_BUG)
@@ -69,6 +100,9 @@ fi
 if test -z "$no_libsocket"; then
 AC_CHECK_LIB(socket, socket)
 fi
+
+dnl need posix4/nanosleep for solaris 2.4
+AC_CHECK_LIB(posix4, nanosleep)
 
 dnl Check whether libpcap is already available
 AC_CHECK_LIB(pcap, pcap_datalink, have_libpcap=yes, have_libpcap=no)
@@ -124,7 +158,9 @@ AC_SUBST(PCAP_DIST_CLEAN)
 
 dnl Checks for header files.
 AC_HEADER_STDC
-AC_CHECK_HEADERS(string.h strings.h memory.h sys/param.h sys/sockio.h netinet/if_ether.h )
+AC_CHECK_HEADERS(string.h strings.h memory.h sys/param.h sys/sockio.h netinet/if_ether.h bstring.h sys/time.h)
+AC_HEADER_TIME
+
 dnl AC_CHECK_HEADERS(fcntl.h sys/time.h unistd.h)
 
 dnl Checks for typedefs, structures, and compiler characteristics.
@@ -139,10 +175,11 @@ dnl AC_MSG_CHECKING(for const)
 dnl AC_TRY_COMPILE(, [const int foo = 0;], 
 dnl [AC_MSG_RESULT(yes); AC_DEFINE(HAVE_CONST)], [AC_MSG_RESULT(no)])
 
-AC_MSG_CHECKING(for __inline__)
-AC_TRY_COMPILE(, [ __inline__ void foo (void) ; ],
-               [AC_MSG_RESULT(yes); AC_DEFINE(HAVE_INLINE)],
-               [AC_MSG_RESULT(no)])
+dnl equiv to '#define inline' to 'inline', '__inline__', '__inline' or ''
+AC_C_INLINE
+if test -n "$sgi_cc"; then
+   AC_DEFINE(inline, )
+fi
 
 dnl AC_HEADER_TIME
 
@@ -272,7 +309,7 @@ fi
 
 dnl Checks for library functions.
 dnl AC_TYPE_SIGNAL
-AC_CHECK_FUNCS(bzero snprintf memcpy usleep nanosleep)
+AC_CHECK_FUNCS(bzero snprintf memcpy usleep nanosleep strerror)
 
 AC_CHECK_FUNC(inet_aton, , 
   [ COMPAT_SRCS="$COMPAT_SRCS inet_aton.c"

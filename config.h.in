@@ -11,13 +11,15 @@
 
 #undef HAVE_IP_IP_SUM
 
-#undef HAVE_INLINE
+#undef inline
 
 #undef STDC_HEADERS
 
 #undef HAVE_STRING_H
 
 #undef HAVE_STRINGS_H
+
+#undef HAVE_BSTRING_H
 
 #undef WORDS_BIGENDIAN
 
@@ -26,6 +28,7 @@
 /* both bzero() and memcpy() are used in the source */
 #undef HAVE_BZERO
 #undef HAVE_MEMCPY
+#undef HAVE_STRERROR
 
 #undef HAVE_SYS_PARAM_H
 
@@ -46,6 +49,14 @@
 #undef STUPID_SOLARIS_CHECKSUM_BUG
 
 #undef LINUX
-#undef SOLARIS
 #undef FREEBSD
+#undef OPENBSD
+#undef SOLARIS
 #undef BSDI
+#undef IRIX
+
+
+
+
+
+

@@ -149,7 +149,7 @@ addy[0] = r = hostexp;
    + the optional '/mask' */
 target_net = strtok(hostexp, "/");
 targets->netmask = (int) (s = strtok(NULL,""))? atoi(s) : 32;
-if (targets->netmask < 0 || targets->netmask > 32) {
+if ((int) targets->netmask < 0 || targets->netmask > 32) {
   printf("Illegal netmask value (%d), must be /0 - /32 .  Assuming /32 (one host)\n", targets->netmask);
   targets->netmask = 32;
 }

@@ -18,7 +18,7 @@ LDFLAGS = @LDFLAGS@
 LIBS =  @LIBS@ -lpcap -lm
 INSTALL = @INSTALL@
 MAKEDEPEND = @MAKEDEPEND@
-VERSION = 2.0-Beta13
+VERSION = 2.01
 
 TARGET = nmap
 
@@ -70,7 +70,7 @@ distro:
 	config.sub INSTALL docs  COPYING \
         $(LIBPCAPDIR) /usr/tmp/nmap-$(VERSION)
 	cd /usr/tmp; \
-	tar czf nmap-$(VERSION).tar.gz nmap-$(VERSION)
+	tar czf nmap-$(VERSION).tgz nmap-$(VERSION)
 	rm -rf /usr/tmp/nmap-$(VERSION)
 
 # For distributing the binary

@@ -47,12 +47,13 @@ bzero(FPtests, sizeof(FPtests));
  if ((rawsd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) < 0 )
    pfatal("socket trobles in get_fingerprint");
  unblock_socket(rawsd);
- 
+ broadcast_socket(rawsd);
+
  /* Do we have a correct source address? */
  if (!target->source_ip.s_addr) {
    if (gethostname(myname, MAXHOSTNAMELEN) != 0 &&
        !((myhostent = gethostbyname(myname))))
-     fatal("Your system is messed up.\n");
+     fatal("Cannot get hostname!  Try using -S <my_IP_address> or -e <interface to scan through>\n");
    memcpy(&target->source_ip, myhostent->h_addr_list[0], sizeof(struct in_addr));
    if (o.debugging || o.verbose)
      printf("We skillfully deduced that your address is %s\n",
@@ -418,7 +419,7 @@ struct AVal *fingerprint_iptcppacket(struct ip *ip, int mss, unsigned long syn) 
 
   /* Next we check whether the Don't Fragment bit is set */
   AVs[1].attribute = "DF";
-  if(ip->ip_off && 0x4000) {
+  if(ntohs(ip->ip_off) & 0x4000) {
     strcpy(AVs[1].value,"Y");
   } else strcpy(AVs[1].value, "N");
 
@@ -633,7 +634,6 @@ return;
 
 
 int os_scan(struct hoststruct *target) {
-FingerPrint *FPs[3];
 FingerPrint **FP_matches[3];
 struct seq_info si[3];
 int try;
@@ -642,40 +642,100 @@ int i;
 bzero(si, sizeof(si));
 
  for(try=0; try < 3; try++) {
-  FPs[try] = get_fingerprint(target, &si[try]); 
-  FP_matches[try] = match_fingerprint(FPs[try]);
+  target->FPs[try] = get_fingerprint(target, &si[try]); 
+  FP_matches[try] = match_fingerprint(target->FPs[try]);
   if (FP_matches[try][0]) 
     break;
-  sleep(2);
+  if (try < 2)
+    sleep(2);
  }
- if (try == 0) {
-   /* Everything is hunky-dory so we do nothing */
- } else if (try == 3) {
+ target->numFPs = (try == 3)? 3 : try + 1;
+ memcpy(&(target->seq), &si[target->numFPs - 1], sizeof(struct seq_info));
+ if (try != 3) {
+   if (try > 0) {
+     error("WARNING: OS didn't match until the %d try", try + 1);
+     for(i=0; i < try; i++) {
+       if (target->FPs[i]) {
+	 if (o.debugging)
+	   error("Failed match #%d (0-based):\n%s", i, fp2ascii(target->FPs[i]));
+	 freeFingerPrint(target->FPs[i]);
+	 target->FPs[i] = NULL;
+       }
+     }
+     target->FPs[0] = target->FPs[try];
+     target->FPs[try] = NULL;
+     try = 0;
+     target->numFPs = 1;
+   }
+   target->goodFP = 0;
+ } else  {
    /* Uh-oh, we were NEVER able to match, lets take
       the first fingerprint */
-   for(try=1; try < 3; try++) {
-     if (o.debugging)
-       error("Killing fingerprint #%d (0 based):\n%s", try, 
-	     fp2ascii(FPs[try]));
-     if (FPs[try]) freeFingerPrint(FPs[try]);
-   }
-   try = 0;
- } else {
-   error("WARNING: OS didn't match until the %d try", try + 1);
-   for(i=0; i < try; i++) {
-     if (FPs[i]) {
-       if (o.debugging)
-	 error("Failed match #%d (0-based):\n%s", i, fp2ascii(FPs[i]));
-       freeFingerPrint(FPs[i]);
-     }
-   }
+   target->goodFP = -1;
  }
 
- target->FP = FPs[try];
- target->FP_matches = FP_matches[try];
- memcpy(&(target->seq), &si[try], sizeof(struct seq_info));
+ if (target->goodFP >= 0)
+   target->FP_matches = FP_matches[target->goodFP];
+ else target->FP_matches = FP_matches[0];
  return 1;
 }
+
+char *mergeFPs(FingerPrint *FPs[], int numFPs) {
+static char str[10240];
+struct AVal *AV;
+FingerPrint *currentFPs[32];
+char *p = str;
+int i;
+int changed;
+
+if (numFPs <=0) return "(None)";
+if (numFPs > 32) return "(Too many)";
+  
+bzero(str, sizeof(str));
+for(i=0; i < numFPs; i++) {
+  if (FPs[i] == NULL) {
+    fatal("mergeFPs was handed a pointer to null fingerprint");
+  }
+  currentFPs[i] = FPs[i];
+}
+
+do {
+  changed = 0;
+  for(i = 0; i < numFPs; i++) {
+    if (currentFPs[i]) {
+      /* This junk means do not print this one if the next
+	 one is the same */
+      if (i == numFPs - 1 || !currentFPs[i+1] ||
+	  strcmp(currentFPs[i]->name, currentFPs[i+1]->name) != 0 ||
+	  AVal_match(currentFPs[i]->results,currentFPs[i+1]->results) ==0)
+	{
+	  changed = 1;
+	  strcpy(p, currentFPs[i]->name);
+	  p += strlen(currentFPs[i]->name);
+	  *p++='(';
+	  for(AV = currentFPs[i]->results; AV; AV = AV->next) {
+	    strcpy(p, AV->attribute);
+	    p += strlen(AV->attribute);
+	    *p++='=';
+	    strcpy(p, AV->value);
+	    p += strlen(AV->value);
+	    *p++ = '%';
+	  }
+	  if(*(p-1) != '(')
+	    p--; /* Kill the final & */
+	  *p++ = ')';
+	  *p++ = '\n';
+	}
+      /* Now prepare for the next one */
+      currentFPs[i] = currentFPs[i]->next;
+    }
+  }
+} while(changed);
+
+*p = '\0';
+return str;
+}
+
 
 char *fp2ascii(FingerPrint *FP) {
 static char str[2048];
@@ -769,17 +829,27 @@ while(fgets(line, sizeof(line), fp)) {
 
   if (strncmp(line, "FingerPrint", 11)) {
     printf("Parse error on line %d of nmap_os_fingerprints file: %s\n", lineno, line);
+    continue;
   }
   p = line + 12;
   while(*p && isspace((int) *p)) p++;
   if (!*p) {
     printf("Parse error on line %d of nmap_os_fingerprints file: %s\n", lineno, line);    
+    continue;
   }
   FPs[numrecords] = safe_malloc(sizeof(FingerPrint));
+  bzero(FPs[numrecords], sizeof(FingerPrint));
   q = FPs[numrecords]->OS_name;
   while(*p && *p != '\n' && *p != '#') {
     *q++ = *p++;
   }
+
+  /* Now let us back up through any ending spaces */
+  while(isspace((int)*q)) 
+    q--;
+
+  /* Terminate the sucker */
+  q++; 
   *q = '\0';
 
   current = FPs[numrecords];
@@ -874,6 +944,7 @@ udphdr_bsd *udp = (udphdr_bsd *) (packet + sizeof(struct ip));
 struct in_addr *source;
 int datalen = 300;
 char *data = packet + 28;
+unsigned short realcheck; /* the REAL checksum */
 int res;
 struct sockaddr_in sock;
 int decoy;
@@ -925,7 +996,14 @@ sethdrinclude(sd);
    pseudo->length = htons(sizeof(udphdr_bsd) + datalen);
 
    /* OK, now we should be able to compute a valid checksum */
-   udp->uh_sum = in_cksum((unsigned short *)pseudo, 20 /* pseudo + UDP headers */ + datalen);
+realcheck = in_cksum((unsigned short *)pseudo, 20 /* pseudo + UDP headers */ +
+ datalen);
+#if STUPID_SOLARIS_CHECKSUM_BUG
+ udp->uh_sum = sizeof(struct udphdr) + datalen;
+#else
+udp->uh_sum = realcheck;
+#endif
+
    /* Goodbye, pseudo header! */
    bzero(pseudo, 12);
 
@@ -951,7 +1029,7 @@ sethdrinclude(sd);
      upi.ipid = id;
      upi.sport = sport;
      upi.dport = dport;
-     upi.udpck = udp->uh_sum;
+     upi.udpck = realcheck;
      upi.udplen = 8 + datalen;
      upi.patternbyte = patternbyte;
      upi.target.s_addr = ip->ip_dst.s_addr;
@@ -963,7 +1041,7 @@ sethdrinclude(sd);
    if (TCPIP_DEBUGGING > 1)     
      printf("\nTrying sendto(%d , packet, %d, 0 , %s , %d)\n",
 	    sd, BSDUFIX(ip->ip_len), inet_ntoa(*victim),
-	 sizeof(struct sockaddr_in));
+	    (int) sizeof(struct sockaddr_in));
 
    if ((res = sendto(sd, packet, BSDUFIX(ip->ip_len), 0,
 		     (struct sockaddr *)&sock, (int) sizeof(struct sockaddr_in))) == -1)
@@ -989,7 +1067,7 @@ udphdr_bsd *udp;
 struct AVal *AVs;
 int i;
 int current_testno = 0;
-char *datastart, *dataend;
+unsigned char *datastart, *dataend;
 
 /* The very first thing we do is make sure this is the correct
    response */
@@ -1027,9 +1105,9 @@ strcpy(AVs[current_testno].value, "Y");
 
 current_testno++;
 
-/* First let us do an easy one, Don't fragment */
+/* Now let us do an easy one, Don't fragment */
 AVs[current_testno].attribute = "DF";
-  if(ip->ip_off && 0x4000) {
+  if(ntohs(ip->ip_off) & 0x4000) {
     strcpy(AVs[current_testno].value,"Y");
   } else strcpy(AVs[current_testno].value, "N");
 
@@ -1056,6 +1134,9 @@ sprintf(AVs[current_testno].value, "%hX", ntohs(ip2->ip_len));
 
 current_testno++;
 
+/* This next test doesn't work on Solaris because the lamers
+   overwrite our ip_id */
+#ifndef SOLARIS
 /* Now lets see how they treated the ID we sent ... */
 AVs[current_testno].attribute = "RID";
 if (ntohs(ip2->ip_id) == 0)
@@ -1065,8 +1146,10 @@ else if (ip2->ip_id == upi->ipid)
 else sprintf(AVs[current_testno].value, "F"); /* They fucked it up */
 
 current_testno++;
+#endif
 
 /* Let us see if the IP checksum we got back computes */
+
 AVs[current_testno].attribute = "RIPCK";
 /* Thanks to some machines not having struct ip member ip_sum we
    have to go with this BS */
@@ -1104,8 +1187,8 @@ sprintf(AVs[current_testno].value, "%hX", ntohs(udp->uh_ulen));
 current_testno++;
 
 /* Finally we ensure the data is OK */
-datastart = ((char *)udp) + 8;
-dataend = (char *)  ip + ntohs(ip->ip_len);
+datastart = ((unsigned char *)udp) + 8;
+dataend = (unsigned char *)  ip + ntohs(ip->ip_len);
 
 while(datastart < dataend) {
   if (*datastart != upi->patternbyte) break;

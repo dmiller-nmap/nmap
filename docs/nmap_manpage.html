@@ -20,15 +20,17 @@
        <I>Nmap</I>  is designed to allow system administrators and curi-
        ous individuals to scan large networks to determine  which
        hosts  are  up  and what services they are offering.  <I>nmap</I>
-       supports a large number of scanning techniques such as the
+       supports a large number of scanning  techniques  such  as:
        UDP, TCP connect(), TCP SYN (half open), ftp proxy (bounce
-       attack), Reverse-ident, ICMP (ping sweep), FIN, Xmas Tree,
-       and Null scanning methods.  See the <I>Scan</I> <I>Types</I> section for
-       more details.  <I>nmap</I> also offers a number of advanced  fea-
-       tures such as stealth scanning, dynamic delay and retrans-
-       mission calculations, parallel scanning, detection of down
-       hosts  via  parallel  pings, decoy scanning, fragmentation
-       scanning, and flexible target and port specification.
+       attack), Reverse-ident, ICMP (ping sweep), FIN, ACK sweep,
+       Xmas  Tree,  SYN sweep, and Null scan.  See the <I>Scan</I> <I>Types</I>
+       section for more details.  <I>nmap</I> also offers  a  number  of
+       advanced  features  such as remote OS detection via TCP/IP
+       fingerprinting,  stealth  scanning,  dynamic   delay   and
+       retransmission  calculations, parallel scanning, detection
+       of down hosts via parallel  pings,  decoy  scanning,  port
+       filtering  detection, fragmentation scanning, and flexible
+       target and port specification.
 
        Significant effort has been put into decent  <I>nmap</I>  perfor-
        mance  for  non-root  users.  Unfortunately, many critical
@@ -63,8 +65,8 @@
 
               This  sort  of  scan is easily detectable as target
               host logs will show a bunch of connection and error
-              messages  for  the services which accept() the con-
-              nection just to have it immediately shutdown.
+
+       <B>-sS</B>    TCP SYN scan: This technique is often  referred  to
               as  "half-open"  scanning, because you don't open a
               full TCP connection. You send a SYN packet,  as  if
               you  are  going  to  open a real connection and you
@@ -72,7 +74,7 @@
               is  listening.  A  RST  is indicative of a non-lis-
               tener.  If a SYN|ACK is received, a RST is  immedi-
               ately  sent  to  tear down the connection (actually
-              the OS kernel does this for us). The primary advan-
+              our OS kernel does this for us). The primary advan-
               tage to this scanning technique is that fewer sites
               will log it.  Unfortunately you  need  root  privi-
               leges to build these custom SYN packets.
@@ -81,12 +83,12 @@
               Stealth  FIN,  Xmas Tree, or Null scan modes: There
               are times when even SYN scanning isn't  clandestine
               enough. Some firewalls and packet filters watch for
-              SYNs to restricted ports, and programs like synlog-
+              SYNs to restricted ports, and programs like Synlog-
               ger  and  Courtney  are  available  to detect these
               scans. These advanced scans, on the other hand, may
               be able to pass through unmolested.
 
-              The  idea is that closed ports are require to reply
+              The idea is that closed ports are required to reply
               to your probe packet with an RST, while open  ports
               must ignore the packets in question (see RFC 794 pp
               64).  The FIN  scan  uses  a  bare  (surprise)  FIN
@@ -99,24 +101,31 @@
               On the positive side, this is a good way to distin-
               guish between the two platforms.  If the scan finds
               closed  ports,  you  probably  have a UNIX machine,
-              whereas all ports open is indicative of Windows.
+              whereas all ports open is indicative of Windows.  A
+              few  exceptions  are  that Cisco, BSDI, HP/UX, MVS,
+              and IRIX are also broken in that they  send  resets
+              when they should just drop the packet.
 
-       <B>-sP</B>    ICMP Echo scanning: This isn't  really  port  scan-
-              ning,  since  ICMP doesn't have a port abstraction.
-              But it is sometimes useful to determine what  hosts
-              in  a  network  are  up by pinging them all. the -P
-              option does this. ICMP scanning is done  in  paral-
-              lel,  so  it  can be quite fast. To speed things up
-              even more, you can increase the number of pings  in
-              parallel  with  the  '-L  '  option. It can also be
-              helpful to tweek the ping timeout value with '-T '.
+       <B>-sP</B>    Ping  scanning:  Sometimes  you  only  want to know
+              which hosts on a network are up.  Nmap can do  this
+              by  sending  ICMP  echo request packets to every IP
+              address on the networks you  specify.   Hosts  that
+              respond  are up.  Unfortunately, some sites such as
+              microsoft.com block  echo  request  packets.   Thus
+              nmap can also send a TCP ack packet to (by default)
+              port 80.  If we get an RST back,  that  machine  is
+              up.   A  thirt  technique  involves  sending  a SYN
+              packet and waiting for a RST  or  a  SYN/ACK.   For
+              non-root users, a connect() method is used.
+              ICMP and  ACK  techniques  in  parallel.   You  can
+              change the <B>-P</B> option described later.
 
               Note  that  pinging  is done by default anyway, and
               only hosts that respond are scanned.  Only use this
               option  if you wish to ping sweep <B>without</B> doing any
-              actual port scans.  You also  might  want  to  look
-              into  the  <B>-P</B>  option  for  specifying what type of
-              "ping" you wish to use.
+              actual port scans.
+
+       <B>-sU</B>    UDP scans: This method is used to  determine  which
               UDP  (User  Datagram  Protocol,  RFC 768) ports are
               open on a host.  The technique is to  send  0  byte
               udp packets to each port on the target machine.  If
@@ -132,7 +141,7 @@
               But can you find which of the more than 30,000 high
               ports it is listening on? With a  UDP  scanner  you
               can!   There  is  also the cDc Back Orfice backdoor
-              programs which hides on a configurable UDP port  on
+              program which hides on a configurable UDP  port  on
               Windows  machines.    Not  to mention the many com-
               monly vulnerable services that utilize UDP such  as
               snmp, tftp, NFS, etc.
@@ -160,8 +169,6 @@
               FTP  bounce attack: An interesting "feature" of the
               ftp protocol (RFC 959) is support for  "proxy"  ftp
               connections.  In  other  words, I should be able to
-              connect from evil.com to the  FTP  server  of  tar-
-              get.com  and  request  that  the server send a file
               ANYWHERE on the internet!  Now this may have worked
               well  in  1985  when  the  RFC  was written. But in
               today's Internet, we can't  have  people  hijacking
@@ -169,6 +176,8 @@
               arbitrary points on the internet. As *Hobbit* wrote
               back  in  1995,  this protocol flaw "can be used to
               post virtually untraceable mail and news, hammer on
+              servers at various sites, fill up disks, try to hop
+              firewalls, and generally be annoying  and  hard  to
               track  down at the same time." What we will exploit
               this for is to (surprise, surprise) scan TCP  ports
               from  a  "proxy" ftp server. Thus you could connect
@@ -177,7 +186,7 @@
               good one). If the ftp server  allows  reading  from
               and  writing to some directory (such as /incoming),
               you can send arbitrary data to ports  that  you  do
-              find open.
+              find open (nmap doesn't do this for you though).
 
               The  argument  passed to the 'b' option is the host
               you want to use as a proxy, in standard  URL  nota-
@@ -201,64 +210,91 @@
 
        <B>-PT</B>    Use TCP "ping" to  determine  what  hosts  are  up.
               Instead  of  sending  ICMP echo request packets and
-              waiting for a response, we spew out TCP  SYN  (con-
-              nection request) packets throughout the target net-
-              work (or to a single machine)  and  then  wait  for
-              responses  to  trickle  back.   Hosts  that  are up
-              should respond with a RST (or, rarely, a  SYN|ACK).
-              This  option preserves the efficiency of only scan-
-              ning hosts that are up while still allowing you  to
-              scan  networks/hosts that block ping packets.  This
-              is also very useful because it can be done by  non-
-              root  users.   To  set  the destination port of the
-              probe  packets  use  -PT&lt;port  number&gt;.   Sometimes
-              ports like 80 are much more useful than the default
-              anonymous high port  due  to  filtering,  so  using
-              -PT80 can help.
+              waiting for a response, we spew out TCP ACK packets
+              throughout  the  target  network  (or  to  a single
+              machine) and then watt  for  responses  to  trickle
+              back.  Hosts that are up should respond with a RST.
+              This option preserves the efficiency of only  scan-
+              ning  hosts that are up while still allowing you to
+              scan networks/hosts that block ping  packets.   For
+              non  root users, we use connect().  To set the des-
+              tination port of the  probe  packets  use  -PT&lt;port
+              number&gt;.   The  default port is 80, since this port
+              is often not filtered out.  <B>-PS</B>  This  option  uses
+              respond with a RST (or, rarely, a SYN|ACK).
 
+       <B>-PI</B>    This  option  uses  a true ping (ICMP echo request)
+              packet.  It finds hosts that are up and also  looks
+              for  subnet-directed  broadcast  addresses  on your
+              network.  These are IP addresses which  are  exter-
+              nally  reachable  and  translate  to a broadcast of
+              incomming IP packets  to  a  subnet  of  computers.
+              These  should  be eliminated if found as they allow
+              for numerous denial of service  attacks  (Smurf  is
+              the most common).
 
-       <B>-PI</B>    This  is  the  default  ping  type (for root users)
-              which uses a true ping (ICMP echo request)  packet.
-              It  finds hosts that are up and also looks for sub-
-              net-directed broadcast addresses on  your  network.
-              IP  packets to a subnet of computers.  These should
-              be eliminated if found as they allow  for  numerous
-              denial  of  service attacks (Smurf is the most com-
-              mon).
+       <B>-PB</B>    This  is  the  default ping type.  It uses both the
+              ACK ( <B>-PT</B> ) and ICMP ( <B>-PI</B> )  sweeps  in  parallel.
+              This  way  you can get firewalls that filter either
+              one (but not both).
 
-       <B>-i</B>     This turns on TCP reverse ident scanning. As  noted
+       <B>-O</B>     This option activates  remote  host  identification
+              via TCP/IP fingerprinting.  In other words, it uses
+              a bunch of techniques to detect subtleties  in  the
+              underlying  operating  system  network stack of the
+              computers you are scanning.  It uses this  informa-
+              tion  to  create  a 'fingerprint' which it compares
+              with its database of  known  OS  fingerprints  (the
+              nmap-os-fingerprints  file)  to decide what type of
+              system you are scanning.
+
+              If you find a machine that is misdiagnosed and  has
+              at  least  one port open, it would be useful if you
+              mail me the details (ie OS  blah  version  foo  was
+              detected  as  OS  blah version bar).  If you find a
+              machine with at least one port open for which  nmap
+              says  'unknown  operating system', then it would be
+              useful if you send me the IP address along with the
+              OS  name and version number.  If you can't send the
+              IP address, the next best thing is to run nmap with
+              the  <B>-d</B>  option  and send me the three fingerprints
+              that should result along with the OS name and  ver-
+              sion  number.   By doing this you contribute to the
+              pool of operating systems known to nmap and thus it
+              will be more accurate for everyone.
+
+       <B>-I</B>     This  turns on TCP reverse ident scanning. As noted
               by Dave Goldsmith in a 1996 Bugtraq post, the ident
-              protocol (rfc 1413) allows for  the  disclosure  of
-              the  username  that  owns any process connected via
-              TCP, even if that process didn't initiate the  con-
-              nection.  So  you  can, for example, connect to the
-              http port and then use identd to find  out  whether
-              the  server  is  running  as root. This can only be
-              done with a full TCP connection to the target  port
-              (i.e.  the  -sT scanning option).  When <B>-i</B> is used,
-              the remote hosts identd is queried  for  each  open
-              port  found.  Obviously this won't work if the host
+              protocol  (rfc  1413)  allows for the disclosure of
+              the username that owns any  process  connected  via
+              TCP,  even if that process didn't initiate the con-
+              nection. So you can, for example,  connect  to  the
+              http  port  and then use identd to find out whether
+              the server is running as root.  This  can  only  be
+              done  with a full TCP connection to the target port
+              (i.e. the -sT scanning option).  When <B>-I</B>  is  used,
               is not running identd.
 
        <B>-f</B>     This option causes the requested SYN, FIN, XMAS, or
-              NULL  scan  to use tiny fragmented IP packets.  The
-              idea is to split up the  TCP  header  over  several
-              packets to make it harder for packet filters and so
-              forth to detect what you are doing. Be careful with
-              this!  Some  programs  have  trouble handling these
-              tiny  packets.  My  favorite  sniffer  segmentation
-              faulted   immediately   upon  receiving  the  first
-              36-byte fragment. After that comes a 24  byte  one!
-              While  this  method won't get by packet filters and
-              firewalls that queue all  IP  fragments  (like  the
-              CONFIG_IP_ALWAYS_DEFRAG option in Linux), some net-
-              works can't afford the performance hit this  causes
-              and thus leave it disabled.
+              NULL scan to use tiny fragmented IP  packets.   The
+              idea  is  to  split  up the TCP header over several
+              packets to  make  it  harder  for  packet  filters,
+              intrusion  detection  systems, and other annoyances
+              to detect what you are doing. Be careful with this!
+              Some  programs  have  trouble  handling  these tiny
+              packets. My favorite sniffer  segmentation  faulted
+              immediately  upon receiving the first 36-byte frag-
+              ment. After that comes a 24 byte  one!  While  this
+              method  won't  get  by packet filters and firewalls
+              that  queue  all  IP  fragments  (like   the   CON-
+              FIG_IP_ALWAYS_DEFRAG  option  in the Linux kernel),
+              some networks can't afford the performance hit this
+              causes and thus leave it disabled.
 
               Note  that I do not yet have this option working on
-              all systems.  It works fine for my Linux boxes  and
-              some  people  have reported success with other *NIX
-              variants.
+              all systems.  It works fine for my Linux,  FreeBSD,
+              and  OpenBSD  boxes  and  some people have reported
+              success with other *NIX variants.
 
        <B>-v</B>     Verbose mode.  This is a highly recommended  option
               and  it  gives  out  more information about what is
@@ -267,32 +303,56 @@
               crazy with scrolling the screen!
 
        <B>-h</B>     This handy option display a quick reference  screen
-              of nmap usage options.
+              of  nmap  usage  options.  As you may have noticed,
+              this man page is not exactly a 'quick reference' :)
 
        <B>-o</B> <B>&lt;logfilename&gt;</B>
-              This  logs  the results of your scans into the file
-              you specify as an argument.
+              This  logs  the  results  of  your scans in a <B>human</B>
+              <B>readable</B> form into the file you specify as an argu-
+              ment.
 
-              This option specifies what ports you want to  spec-
-              ify.  For  example '-p 23' will only try port 23 of
+       <B>-m</B> <B>&lt;logfilename&gt;</B>
+              This  logs  the  results of your scans in a <B>machine</B>
+              <B>parseable</B> form into the  file  you  specify  as  an
+              argument.
+
+       <B>-i</B> <B>&lt;inputfilename&gt;</B>
+              Reads target specifications from the file specified
+              RATHER than from the command line.  The file should
+              contain  a  list  of  host  or  network expressions
+              seperated by spaces,  tabs,  or  newlines.   Use  a
+              hyphen  (-)  as  <I>inputfilename</I>  if you want nmap to
+              read host expressions from stdin (like at  the  end
+              of  a  pipe).  See the section <I>target</I> <I>specification</I>
+              for more information on the  expressions  you  fill
+              This  option specifies what ports you want to spec-
+              ify. For example '-p 23' will only try port  23  of
               the target host(s).  ports greater than 60000.  The
-              default is to scan all ports between 1 and 1024.
+              default is to scan all ports between 1 and 1024  as
+              well as any ports listed in your /etc/services.
 
        <B>-F</B> <B>Fast</B> <B>scan</B> <B>mode.</B>
               Specifies  that  you  only  wish  to scan for ports
               listed in /etc/services.  This  is  obviously  much
               faster than scanning all 65535 ports on a host.
 
-       <B>-D</B> <B>&lt;hostname</B> <B>or</B> <B>IP</B> <B>address&gt;</B>
+       <B>-D</B> <B>&lt;decoy1</B> <B>[,decoy2][,ME],...&gt;</B>
               Causes  a decoy scan to be performed which makes it
-              appear to the remote host that the host you specify
-              is  scanning  the target network.  You can use this
-              option numerous times to make it appear  that  many
-              different   machines   are   scanning   the  target
-              addresses.  Then  even  if  the  administrators  <B>do</B>
-              detect  your stealth scan, they will see 5 or 10 of
-              them and will not have any idea which of the  hosts
-              were  actually scanning them and which were decoys.
+              appear to the remote  host  that  the  host(s)  you
+              specify  as  decoys are scanning the target network
+              too.  Thus their IDS might report 5-10  port  scans
+              from unique IP addresses, but they won't know which
+              IP  was  scanning  them  and  which  were  innocent
+              decoys.
+
+              Separate  each  decoy host with commas, and you can
+              optionally use 'ME' as one of the decoys to  repre-
+              sent  the  position  you want your IP address to be
+              used.  If your put 'ME'  in  the  6th  position  or
+              later,  some  common  port  scan detectors (such as
+              Solar Designer's excellent scanlogd) are  unlikeley
+              to  show  your IP address at all.  If you don't use
+              'ME', nmap will put you in a random position.
 
               Note that the hosts you use as decoys should be  up
               or  you  might  accidently  SYN flood your targets.
@@ -311,10 +371,16 @@
               The real moral of the story is  that  detectors  of
               spoofable port scans should not take action against
               the machine that seems like  it  is  port  scanning
-              them!
+              them.  It could just be a decoy!
 
-              This  option  is  only available for FIN,SYN, Xmas,
-              and ICMP ping scans.
+              Decoys  are  used  both  in  the  initial ping scan
+              (using ICMP, SYN, ACK, or whatever) as well as  the
+              actual  port  scanning phase.  Decoys are also used
+              during remote OS detection ( <B>-O</B> ).
+              slow  your  scan  and potentially even make it less
+              accurate.  Also, some ISPs  will  filter  out  your
+              spoofed  packets, although many (currently most) do
+              not restrict spoofed IP packets at all.
 
        <B>-S</B> <B>&lt;IP_Address&gt;</B>
               In some circumstances, <I>nmap</I>  may  not  be  able  to
@@ -325,6 +391,8 @@
 
               Another possible use of this flag is to  spoof  the
               scan to make the targets think that <B>someone</B> <B>else</B> is
+              scanning them.  Imagine a company being  repeatedly
+              port  scanned  by a competitor!  This is not a sup-
               ported usage (or the main purpose) of this flag.  I
               just  think  it  raises  an interesting possibility
               that people should  be  aware  of  before  they  go
@@ -340,12 +408,12 @@
               Sets the source port number used  in  scans.   Many
               naive firewall and packet filter installations make
               an exception in their ruleset to allow DNS (53)  or
-              FTP-DATA  (20) packets come through and establish a
-              connection.  Obviously this completely subverts the
-              security advantages of the firewall since intruders
-              can just masquerade as  FTP  or  DNS  by  modifying
-              their  source  port.   Obviously for a UDP scan you
-              should try 53 first and TCP  scans  should  try  20
+              FTP-DATA (20) packets to come through and establish
+              a connection.  Obviously this  completely  subverts
+              the  security  advantages  of  the  firewall  since
+              intruders can just masquerade as FTP or DNS by mod-
+              ifying their source port.  Obviously for a UDP scan
+              you should try 53 first and TCP scans should try 20
               before 53.
 
               Be  aware that there is a small performance penalty
@@ -353,31 +421,40 @@
               sometimes  store  useful  information in the source
               port number.
 
-       <B>Target</B> <B>specification</B>
-              Everything that isn't an option  (or  option  argu-
-              ment)  in nmap is treated as a target host specifi-
-              cation.  The simplest case is listing single  host-
-              names  or IP addresses on the command line.  If you
-              want to scan a subnet  of  IP  addresses,  you  can
+       <B>-M</B> <B>&lt;max</B> <B>sockets&gt;</B>
+              Sets the maximum number of  sockets  that  will  be
+              used  in  parallel  for  a  TCP connect() scan (the
+              default).  This is useful to slow down the  scan  a
+              little  bit  and  avoid  crashing  remote machines.
+              Another approach is to use -sS, which is  generally
+              easier for machines to handle.
+
+              Everything  that  isn't  an option (or option argu-
+              ment) in nmap is treated as a target host  specifi-
+              cation.   The simplest case is listing single host-
+              names or IP addresses on the command line.  If  you
+              want  to  scan  a  subnet  of IP addresses, you can
               append <B>'/mask'</B> to the hostname or IP address.  <B>mask</B>
-              must be between 0 (scan the whole internet) and  32
-              (scan  the single host specified).  Use /24 to scan
+              must  be between 0 (scan the whole internet) and 32
+              (scan the single host specified).  Use /24 to  scan
               a class 'C' address and /16 for a class 'B'.
 
-              Nmap also has a more powerful notation  which  lets
-              you  specify  an  IP address using lists/ranges for
-              each element.  Thus you can scan  the  whole  class
+              Nmap  also  has a more powerful notation which lets
+              you specify an IP address  using  lists/ranges  for
+              each  element.   Thus  you can scan the whole class
               'B' network 128.210.*.* by specifying '128.210.*.*'
-              or       '128.210.0-255.0-255'       or        even
+              or        '128.210.0-255.0-255'       or       even
               '128.210.1-50,51-255.1,2,3,4,5-255'.  And of course
-              you can use the  mask  notation:  '128.210.0.0/16'.
-              These  are  all  equivalent.   If you use astericts
-              ('*'), remember that most  shells  require  you  to
-              escape  them with back slashes or protect them with
+              you  can  use  the mask notation: '128.210.0.0/16'.
+              These are all equivalent.   If  you  use  astericts
+              ('*'),  remember  that  most  shells require you to
+              escape them with back slashes or protect them  with
               quotes.
 
               Another interesting thing to do is slice the Inter-
-              every  IP  address  that ends in .5.6 or .5.7  Pick
+              net the other way.  Instead  of  scanning  all  the
+              hosts  in  a  class  'B',  scan '*.*.5.6-7' to scan
+              every IP address that ends in .5.6  or  .5.7   Pick
               your own numbers.  For more information on specify-
               ing hosts to scan, see the <I>examples</I> section.
 
@@ -386,79 +463,64 @@
 </PRE>
 <H2>EXAMPLES</H2><PRE>
        Here are some examples of using nmap, from simple and nor-
-       mal to a little more complex/esoteric.  Note  that  actual
-       numbers  and  some  actual  domain  names are used to make
-       things more concrete.  In their place you  should  substi-
-       tute  addresses/names  from  <B>your</B>  <B>own</B>  <B>network.</B>  I do not
-       think portscanning other networks is illegal;  nor  should
-       portscans  be  construed  by  others as an attack.  I have
-       scanned hundreds of thousands of machines and  nobody  has
-       ever  complained.   But  I am not a lawyer and some (anal)
-       people may be annoyed  by  <I>nmap</I>  probes.   Get  permission
-       first or use at your own risk.
+       mal  to  a little more complex/esoteric.  Note that actual
+       numbers and some actual domain  names  are  used  to  make
+       things  more  concrete.  In their place you should substi-
+       tute addresses/names from <B>your</B>  <B>own</B>  <B>network.</B>   I  do  not
+       think  portscanning  other networks is illegal; nor should
+       portscans be construed by others as  an  attack.   I  have
+       scanned   hundreds  of  thousands  of  machines  and  have
+       received only one complaint.  But I am not  a  lawyer  and
+       some  (anal)  people  may  be annoyed by <I>nmap</I> probes.  Get
+       permission first or use at your own risk.
 
        <B>nmap</B> <B>-v</B> <B>target.example.com</B>
 
-       This  option  scans  all reserved TCP ports on the machine
+       This option scans all reserved TCP ports  on  the  machine
        target.example.com .  The -v means turn on verbose mode.
 
-       <B>nmap</B> <B>-sS</B> <B>target.example.com/24</B>
+       <B>nmap</B> <B>-sS</B> <B>-O</B> <B>target.example.com/24</B>
 
-       Launches a stealth SYN scan against each machine  that  is
+       Launches  a  stealth SYN scan against each machine that is
        up out of the 255 machines on class 'C' where target.exam-
-       ple.com resides.  This requires root privileges because of
-       the SYN scan.
+       running.  This requires root privileges because of the SYN
+       scan and the OS detection.
 
-       <B>nmap</B> <B>-sX</B> <B>-p</B> <B>22,53,110,143,4564</B> <B>128.210.*.1-127</B>
+       <B>nmap</B> <B>-sX</B> <B>-p</B> <B>22,53,110,143</B> <B>128.210.*.1-127</B>
 
-       Sends  an  Xmas tree scan to the first half of each of the
-       255 possible 8  bit  subnets  in  the  128.210  class  'B'
-       address  space.   We  are  testing whether the systems run
-       sshd, DNS, pop3d, imapd, or  port  4564.   The  latter  is
-       included  to filter out Windows boxes, which will show all
-       ports open (Xmas scan doesn't work on Microsoft boxes  due
-       to  their  deficient  TCP  stack).  Thus any machines that
-       show port 4564 can be marked down under 'Windows boxes'.
+       Sends an Xmas tree scan to the first half of each  of  the
+       255  possible  8  bit  subnets  in  the  128.210 class 'B'
+       address space.  We are testing  whether  the  systems  run
+       sshd,  DNS,  pop3d,  imapd,  or port 4564.  Note that Xmas
+       scan doesn't work on Microsoft boxes due  to  their  defi-
+       cient  TCP  stack.  Same goes with CISCO, IRIX, HP/UX, and
+       BSDI boxes.
 
        <B>nmap</B> <B>-v</B> <B>-p</B> <B>80</B> <B>'*.*.2.3-5'</B>
 
-       Rather than focus in a specific IP range, it is  sometimes
-       interesting  to  take  the entire Internet and try a small
-       sample of  each  section.   This  command  finds  all  web
+       Rather than focus on a specific IP range, it is  sometimes
+       interesting  to  slice  up  the entire Internet and scan a
+       small sample from each slice.  This command finds all  web
        servers  on  machines  with  IP  addresses ending in .2.3,
        .2.4, or .2.5 .  If you are root you  might  as  well  add
        -sS.   Also you will find more interesting machines start-
        ing at 127. so you might want to use '127-222' instead  of
        the first asterict because that section has a greater den-
        sity of interesting machines (IMHO).
-       <B>53,80,139</B> <B>-o</B> <B>logs/evil_empire.scan</B> <B>www.microsoft.com/24</B>
 
-       This  SYN scans 255 machines on the www.microsoft.com net-
-       work of web servers looking for  TCP  ports  53  (DNS)  80
-       (WWW)  and  139  (NetBIOS-SSN).  We use <B>-PT80</B> because that
-       network does not allow pings, so we use TCP ping  instead.
-       We  also  need  the '80' because SYN packets to most other
-       ports are blocked by  their  firewall.   We  use  <B>-g</B>  <B>6791</B>
-       because  the  source port of the scan must be greater than
-       1023.  Packets  coming  from  privileged  ports  are  also
-       dropped at the MS firewall.  The <B>-D</B> option makes it appear
-       (to MS) that 'lamer.example.com' is scanning them  at  the
-       same  time  we are.  MS won't know which is doing the real
-       scan and which is the decoy.  The <B>-o</B> option logs important
-       output to logs/evil_empire.scan for our later perusal.
+       <B>host</B> <B>-l</B> <B>company.com</B> <B>|</B> <B>cut</B> <B>'-d</B> <B>'</B> <B>-f</B> <B>4</B> <B>|</B> <B>./nmap</B> <B>-v</B> <B>-i</B> <B>-</B>
 
-       Most domains are not this much of a pain to scan.  MS just
-       has a paranoid-as-hell packet filtering policy.   This  is
-       actually  quite  prudent given that they must secure thou-
-       sands of hopelessly insecure NT boxes!  For more  info  on
-       MS   insecurity,   see   my   page   on   the  subject  at
-       <I>http://www.insecure.org/sploits.html.</I>
+       Do a DNS zone transfer to find the  hosts  in  company.com
+       and  then  feed  the IP addresses to <I>nmap.</I>  The above com-
+       mands are for my GNU/Linux box.  You  may  need  different
+       commands/options on other operating systems.
 
 
 </PRE>
 <H2>BUGS</H2><PRE>
-       <I>nmap</I> is still not as portable as I would like.   IP  frag-
-       mentation support is especially limited in portability.
+       Bugs?  What bugs?  Send me any that you find.  Patches are
+       nice too :) Remember to also send in new  OS  fingerprints
+       so we can grow the database.
 
 
 </PRE>
@@ -476,16 +538,58 @@
 
        This  program  is  free  software; you can redistribute it
        and/or modify it under the terms of the GNU General Public
-       License  as  published  by  the  Free Software Foundation;
-       either version 2 of the License, or (at your  option)  any
-       later version.
+       License as published by the Free Software Foundation; Ver-
+       sion 2.
 
-       This  program  is  distributed in the hope that it will be
-       useful, but WITHOUT ANY WARRANTY; without even the implied
-       warranty  of  MERCHANTABILITY  or FITNESS FOR A PARTICULAR
-       PURPOSE. See the  GNU  General  Public  License  for  more
-       details  (it  is in the COPYING file of the <I>nmap</I> distribu-
+       warranty of MERCHANTABILITY or FITNESS  FOR  A  PARTICULAR
+       PURPOSE.  See  the  GNU  General  Public  License for more
+       details (it is in the COPYING file of the  <I>nmap</I>  distribu-
        tion).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

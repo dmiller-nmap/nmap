@@ -5,10 +5,6 @@
 #include "config.h"
 #endif
 
-#ifndef HAVE_INLINE
-#define __inline__
-#endif
-
 #ifdef STDC_HEADERS
 #include <stdlib.h>
 #else
@@ -24,6 +20,10 @@ void *realloc();
 #endif
 #if HAVE_STRINGS_H
 #include <strings.h>
+#endif
+
+#ifdef HAVE_BSTRING_H
+#include <bstring.h>
 #endif
 
 #ifndef HAVE_BZERO
@@ -92,8 +92,18 @@ void *realloc();
 #define NETINET_IF_ETHER_H
 #endif /* NETINET_IF_ETHER_H */
 #endif /* HAVE_NETINET_IF_ETHER_H */
-#include <sys/time.h>
-/*#include <time.h>  does your system need this instead? */
+
+#if TIME_WITH_SYS_TIME
+# include <sys/time.h>
+# include <time.h>
+#else
+# if HAVE_SYS_TIME_H
+#  include <sys/time.h>
+# else
+#  include <time.h>
+# endif
+#endif
+
 #include <sys/ioctl.h>
 #include <pcap.h>
 #include <setjmp.h>
@@ -300,13 +310,15 @@ int ipaddr2devname( char *dev, struct in_addr *addr );
 int devname2ipaddr(char *dev, struct in_addr *addr);
 /* Where the above 2 functions get their info */
 struct interface_info *getinterfaces(int *howmany);
-void sethdrinclude(int sd);
+inline void sethdrinclude(int sd);
 int getsourceip(struct in_addr *src, struct in_addr *dst);
 /* Get the source IP and interface name that a packet
    to dst should be sent to.  Interface name is dynamically
    assigned and thus should be freed */
 char *getsourceif(struct in_addr *src, struct in_addr *dst);
 int unblock_socket(int sd);
+inline int Sendto(char *functionname, int sd, char *packet, int len, 
+	   unsigned int flags, struct sockaddr *to, int tolen);
 /* Standard swiped internet checksum routine */
 unsigned short in_cksum(unsigned short *ptr,int nbytes);
 /* Hex dump */
