@@ -39,7 +39,7 @@ emptystring[0] = '\0'; /* It wouldn't be an emptystring w/o this ;) */
 if (argc < 2 ) printusage(argv[0]);
 
 /* OK, lets parse these args! */
-while((arg = getopt(argc,fakeargv,"Ab:DdFfhiL:lM:nPp:qrRS:sT:tUuw:Vv")) != EOF) {
+while((arg = getopt(argc,fakeargv,"Ab:DdFfhiL:lM:NnPp:qrRS:sT:tUuw:Vv")) != EOF) {
   switch(arg) {
   case 'A': o.allowall++; break;
   case 'b': 
@@ -59,6 +59,7 @@ while((arg = getopt(argc,fakeargv,"Ab:DdFfhiL:lM:nPp:qrRS:sT:tUuw:Vv")) != EOF) 
   case 'l': lamerscan++; udpscan++; break;
   case 'M': o.max_sockets = atoi(optarg); break;
   case 'n': o.noresolve++; break;
+  case 'N': o.force++; break;
   case 'P': pingscan++; break;
   case 'p': 
     if (ports)
@@ -478,7 +479,6 @@ exit(1);
 
 portlist tcp_scan(struct hoststruct *target, unsigned short *portarray, int timeout) {
 
-
 int starttime, current_out = 0, res , deadindex = 0, i=0, j=0, k=0, max=0; 
 struct sockaddr_in sock, stranger, mysock;
 int sockaddr_in_len = sizeof(struct sockaddr_in);
@@ -495,7 +495,8 @@ char owner[513], buf[65536];
 int tryident = o.identscan, current_socket /*actually it is a socket INDEX*/;
 fd_set fds_read, fds_write;
 struct timeval nowait = {0,0},  longwait = {7,0}; 
-
+int timeouts=0;
+ static int threshold_warning = 0; /* Have we given the threshold warning yet?*/
 signal(SIGPIPE, SIG_IGN); /* ignore SIGPIPE so our 'write 0 bytes' test
 			     doesn't crash our program!*/
 owner[0] = '\0';
@@ -557,7 +558,7 @@ while(portarray[j] || retryindex >= 0) {
 	  tryident = 0;
       }	    
       addport(&target->ports, portno[current_socket], IPPROTO_TCP, owner);
-      
+
       if (max == sockets[current_socket])
 	max--;
       FD_CLR(sockets[current_socket], &fds_read);
@@ -571,7 +572,7 @@ while(portarray[j] || retryindex >= 0) {
       switch(errno) {
       case EINPROGRESS: /* The one I always see */
       case EAGAIN:
-	block_socket(sockets[current_socket]);  /* Why do I do this??? I don't remember  */
+	block_socket(sockets[current_socket]); 
 	FD_SET(sockets[current_socket], &fds_write);
 	FD_SET(sockets[current_socket], &fds_read);
 	break;
@@ -584,11 +585,12 @@ while(portarray[j] || retryindex >= 0) {
 	current_out--;
 	portno[current_socket] = 0;
 	close(sockets[current_socket]);
+	timeouts = 0; /* We may not want to give up on this host */
 	break;
       }
     }
   }
-  if (!portarray[j] && retryindex < 0) sleep(1); /*wait a second for any last packets*/
+  if (!portarray[j] && retryindex < 0) sleep(1); /*If we are done, wait a second for any last packets*/
   while((res = select(max + 1, &fds_read, &fds_write, NULL, 
 		      (current_out < o.max_sockets)?
 		      &nowait : &longwait)) > 0) {
@@ -667,7 +669,7 @@ while(portarray[j] || retryindex >= 0) {
 	  close(sockets[k]);
 	}
 	else { /* neither read nor write selected */
-	  if (time(NULL) - times[k] < 8) {
+	  if (time(NULL) - times[k] < o.ptime) {
 	  /*printf("Socket at port %hi not selecting, readding.\n",portno[k]);*/
 	  FD_SET(sockets[k], &fds_write);
 	  FD_SET(sockets[k], &fds_read);
@@ -678,8 +680,23 @@ while(portarray[j] || retryindex >= 0) {
 	      retries[portno[k]]++;
 	      retrystack[++retryindex] = portno[k];
 	    }
-	    else if (o.verbose || o.debugging)
-	      printf("Port %d timed out\n", portno[k]);
+	    else {
+	      if (o.verbose || o.debugging)
+		printf("Port %d timed out\n", portno[k]);
+	      timeouts++;	      
+	      if (timeouts > MAX_TIMEOUTS && !target->ports && !o.force) {
+		if (!o.verbose && !o.debugging  && !threshold_warning)
+		  printf("MAX_TIMEOUT threshold (%d) reached, giving up on host %s (%s).  Use -N to skip this check.  This warning won't be repeated during this session\n", MAX_TIMEOUTS, target->name, inet_ntoa(target->host));
+		else if (o.verbose || o.debugging)
+		  printf("MAX_TIMEOUT threshold (%d) reached, giving up on host %s (%s).  Use -N to skip this check.\n", MAX_TIMEOUTS, target->name, inet_ntoa(target->host));
+		threshold_warning++;
+		 for(k=0; k < o.max_sockets; k++) 
+		   if (portno[k]) 
+		     close(sockets[k]);
+		 return NULL;
+	      }
+	    }
+	    
 	    if (max == sockets[k]) max--;
 	    FD_CLR(sockets[k], &fds_write);
 	    FD_CLR(sockets[k], &fds_read);
@@ -700,6 +717,14 @@ while(portarray[j] || retryindex >= 0) {
       if (seconds2 - times[z] >= o.ptime) { /* Timed out, dr0p it */
 	    if (o.debugging)
 	      printf("Port %d timed out\n", portno[z]);
+	    timeouts++;	      
+	    if (timeouts > MAX_TIMEOUTS && !target->ports && !o.force) {
+	      printf("MAX_TIMEOUT threshold (%d) reached, giving up on host %s (%s).  Use -N to skip this check.\n", MAX_TIMEOUTS, target->name, inet_ntoa(target->host));		
+	      for(k=0; k < o.max_sockets; k++) 
+		if (portno[k]) 
+		  close(sockets[k]);
+	      return NULL;
+	    }
 	    if (max == sockets[z]) max--;
 	    FD_CLR(sockets[z], &fds_write);
 	    FD_CLR(sockets[z], &fds_read);
@@ -709,6 +734,13 @@ while(portarray[j] || retryindex >= 0) {
 	    close(sockets[z]);
       }
     }
+  }
+}
+
+for(k=0; k < o.max_sockets; k++) {
+  if (portno[k]) {
+    printf("Almost missed port %d\n", portno[k]);
+    close(sockets[k]);
   }
 }
 

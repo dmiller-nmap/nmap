@@ -7,6 +7,7 @@
 #define __FAVOR_BSD
 #define __USE_BSD
 
+/* BSDI needs this to insure the correct struct ip */
 #undef _IP_VHL
 
 #include <stdio.h>
@@ -47,7 +48,7 @@
 /* #define to zero if you don't want to	ignore hosts of the form 
    xxx.xxx.xxx.{0,255} (usually network and broadcast addresses) */
 #define IGNORE_ZERO_AND_255_HOSTS 0
-#define VERSION "1.36"
+#define VERSION "1.49"
 #ifndef DEBUGGING
 #define DEBUGGING 0
 #endif
@@ -71,6 +72,8 @@
 #define FTPPASS "-wwwuser@"
 #define FTP_RETRIES 2 /* How many times should we relogin if we lose control
                          connection? */
+#define MAX_TIMEOUTS 70   /* How many timed out connection attempts in a row
+			      before we decide the host is dead? */
 
 /* DO NOT change stuff after this point */
 #define UC(b)   (((int)b)&0xff)
@@ -152,6 +155,7 @@ struct ops /* someone took struct options, <grrr> */ {
   int synscan;
   int finscan;
   int noresolve;
+  int force;
 };
   
 typedef port *portlist;
