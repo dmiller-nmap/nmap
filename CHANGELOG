@@ -1,5 +1,13 @@
 # Nmap Changelog
 
+-- Included latest nmap-rpc from Eilon Gishri (eilon at aristo.tau.ac.il)
+
+-- Fixed an uninitialized variable problem in NmapFE (found by Alvin
+   Starr (alvin at iplink.net )
+
+-- Eliminated -I. from Nmap's and NmapFE's makefiles (suggested by
+   "Jay Freeman (saurik)" (saurik at saurik.com)
+
 -- Added Russian documentation by Alex Volkov
 
 -- Added Lithuanian documentation from Aurimas Mikalauskas (inner at dammit.lt) 
