@@ -110,7 +110,7 @@ static killthread = 0;
 extern NmapOps o;
 
 /* Standard swiped internet checksum routine */
-inline unsigned short in_cksum(unsigned short *ptr,int nbytes) 
+unsigned short in_cksum(unsigned short *ptr,int nbytes) 
 {
 	register int		sum;            /* XXX assumes long == 32 bits */
 	u_short				oddbyte;

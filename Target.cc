@@ -47,6 +47,7 @@
 
 #include "Target.h"
 #include "osscan.h"
+#include "nbase.h"
 
 Target::Target() {
   Initialize();

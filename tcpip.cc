@@ -77,6 +77,61 @@ setsockopt(sd, IPPROTO_IP, IP_HDRINCL, (const char *) &one, sizeof(one));
 }
 #endif /* WIN32 */
 
+
+/* Converts an IP address given in a sockaddr_storage to an IPv4 or
+   IPv6 IP address string.  Since a static buffer is returned, this is
+   not thread-safe and can only be used once in calls like printf() 
+*/
+const char *inet_socktop(struct sockaddr_storage *ss) {
+  static char buf[INET6_ADDRSTRLEN];
+  struct sockaddr_in *sin = (struct sockaddr_in *) ss;
+#if HAVE_IPV6
+  struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *) ss;
+#endif
+
+  if (inet_ntop(sin->sin_family, (sin->sin_family == AF_INET)? 
+                (char *) &sin->sin_addr : 
+#if HAVE_IPV6
+				(char *) &sin6->sin6_addr, 
+#else
+                (char *) NULL,
+#endif /* HAVE_IPV6 */
+                buf, sizeof(buf)) == NULL) {
+    fatal("Failed to convert target address to presentation format in inet_socktop!?!  Error: %s", strerror(errno));
+  }
+  return buf;
+}
+
+/* Tries to resolve the given name (or literal IP) into a sockaddr
+   structure.  The af should be PF_INET (for IPv4) or PF_INET6.  Returns 0
+   if hostname cannot be resolved.  It is OK to pass in a sockaddr_in or 
+   sockaddr_in6 casted to a sockaddr_storage as long as you use the matching 
+   pf.*/
+int resolve(char *hostname, struct sockaddr_storage *ss, size_t *sslen,
+	    int pf) {
+
+  struct addrinfo hints;
+  struct addrinfo *result;
+  int rc;
+
+  assert(ss);
+  assert(sslen);
+  bzero(&hints, sizeof(hints));
+  hints.ai_family = pf;
+  rc = getaddrinfo(hostname, NULL, &hints, &result);
+  if (rc != 0)
+    return 0;
+  assert(result->ai_addrlen > 0 && result->ai_addrlen <= sizeof(struct sockaddr_storage));
+  *sslen = result->ai_addrlen;
+  memcpy(ss, result->ai_addr, *sslen);
+  freeaddrinfo(result);
+  return 1;
+}
+
+
+
+
+
 /* Tests whether a packet sent to  IP is LIKELY to route 
  through the kernel localhost interface */
 #ifndef WIN32 /* This next group of functions are already defined in 
@@ -152,49 +207,6 @@ sum  = (sum >> 16) + (sum & 0xffff);    /* add high-16 to low-16 */
 sum += (sum >> 16);                     /* add carry */
 answer = ~sum;          /* ones-complement, then truncate to 16 bits */
 return(answer);
-}
-
-/* Converts an IP address given in a sockaddr_storage to an IPv4 or
-   IPv6 IP address string.  Since a static buffer is returned, this is
-   not thread-safe and can only be used once in calls like printf() 
-*/
-const char *inet_socktop(struct sockaddr_storage *ss) {
-  static char buf[INET6_ADDRSTRLEN];
-  struct sockaddr_in *sin = (struct sockaddr_in *) ss;
-  struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *) ss;
-  
-  if (inet_ntop(sin->sin_family, (sin->sin_family == AF_INET)? 
-                (char *) &sin->sin_addr : (char *) &sin6->sin6_addr, 
-		buf, sizeof(buf)) == NULL) {
-    fatal("Failed to convert target address to presentation format in inet_socktop!?!  Error: %s", strerror(errno));
-  }
-  return buf;
-}
-
-/* Tries to resolve the given name (or literal IP) into a sockaddr
-   structure.  The af should be PF_INET (for IPv4) or PF_INET6.  Returns 0
-   if hostname cannot be resolved.  It is OK to pass in a sockaddr_in or 
-   sockaddr_in6 casted to a sockaddr_storage as long as you use the matching 
-   pf.*/
-int resolve(char *hostname, struct sockaddr_storage *ss, size_t *sslen,
-	    int pf) {
-
-  struct addrinfo hints;
-  struct addrinfo *result;
-  int rc;
-
-  assert(ss);
-  assert(sslen);
-  bzero(&hints, sizeof(hints));
-  hints.ai_family = pf;
-  rc = getaddrinfo(hostname, NULL, &hints, &result);
-  if (rc != 0)
-    return 0;
-  assert(result->ai_addrlen > 0 && result->ai_addrlen <= sizeof(struct sockaddr_storage));
-  *sslen = result->ai_addrlen;
-  memcpy(ss, result->ai_addr, *sslen);
-  freeaddrinfo(result);
-  return 1;
 }
 
 /* LEGACY resolve() function that only supports IPv4 -- see IPv6 version

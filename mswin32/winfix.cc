@@ -3,7 +3,7 @@
 
 #include "nmap_error.h"
 
-inline int my_close(int sd)
+int my_close(int sd)
 {
 	if(sd == 501) return 0;
 	return closesocket(sd);

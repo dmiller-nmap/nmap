@@ -60,7 +60,8 @@ extern NmapOps o;
 int pcap_avail = 0;
 int rawsock_avail = 0;
 int winbug = 0;
-extern int iphlp_avail, net_avail;
+extern int iphlp_avail;
+extern int net_avail;
 
 /*   internal functions   */
 static void winip_cleanup(void);
@@ -588,7 +589,7 @@ int devname2ipaddr(char *dev, struct in_addr *addr)
 	return ifi2ipaddr(name2ifi(dev), addr);
 }
 
-int ipaddr2devname( char *dev, struct in_addr *addr )
+int ipaddr2devname( char *dev, const struct in_addr *addr )
 {
 	int ifi = ipaddr2ifi(addr->s_addr);
 	if(ifi == -1) return -1;
@@ -649,7 +650,7 @@ static void winip_list_interfaces()
 //	I will fail this if no raw, so nmap will still work
 
 typedef DWORD (__stdcall *PGBI)(IPAddr, PDWORD);
-char *routethrough(struct in_addr *dest, struct in_addr *source)
+char *routethrough(const struct in_addr *dest, struct in_addr *source)
 {
 /*
 	In theory, GetBestInterface is ideal. But we need

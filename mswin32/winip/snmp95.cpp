@@ -131,8 +131,8 @@ static DWORD szAddrtable = 0;
 static PMIB_IPFORWARDTABLE pRoutetable = 0;
 static DWORD szRoutetable = 0;
 
-extern "C" int iphlp_avail = 1;	//	Is the iphlpapi dll present?
-extern "C" int net_avail = 1;	//	Is some method of access present?
+int iphlp_avail = 1;	//	Is the iphlpapi dll present?
+int net_avail = 1;	//	Is some method of access present?
 
 static int __cdecl compip(const void *e1, const void *e2)
 {

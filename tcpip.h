@@ -430,8 +430,7 @@ int islocalhost(const struct in_addr * const addr);
 int unblock_socket(int sd);
 int Sendto(char *functionname, int sd, const unsigned char *packet, int len, 
 	   unsigned int flags, struct sockaddr *to, int tolen);
-/* Standard swiped internet checksum routine */
-unsigned short in_cksum(unsigned short *ptr,int nbytes);
+
 /* Hex dump */
 int get_link_offset(char *device);
 char *readip_pcap(pcap_t *pd, unsigned int *len, long to_usec);

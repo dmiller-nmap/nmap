@@ -132,6 +132,14 @@ SOURCE=.\wintcpip.cc
 # PROP Default_Filter ""
 # Begin Source File
 
+SOURCE=..\nbase\getaddrinfo.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\nbase\getnameinfo.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\nbase\getopt.c
 # End Source File
 # Begin Source File
@@ -141,6 +149,14 @@ SOURCE=..\nbase\getopt1.c
 # Begin Source File
 
 SOURCE=..\nbase\inet_aton.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\nbase\inet_ntop.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\nbase\inet_pton.c
 # End Source File
 # Begin Source File
 
@@ -285,6 +301,10 @@ SOURCE=..\nbase\getopt.h
 # Begin Source File
 
 SOURCE=..\nbase\nbase.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\nbase\nbase_ipv6.h
 # End Source File
 # Begin Source File
 
