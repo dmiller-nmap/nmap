@@ -441,6 +441,7 @@ void printportoutput(Target *currenths, PortList *plist) {
 
   // Now we write the table for the user
   log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT, "%s", Tbl->printableTable(NULL));
+  delete Tbl;
 
   // There may be service fingerprints I would like the user to submit
   if (saved_servicefps.size() > 0) {

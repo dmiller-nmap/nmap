@@ -1,5 +1,27 @@
 # Nmap Changelog ($Id$)
 
+o Many Windows portability fix and bug fixes, thanks to patch from
+  Gisle Vanem (giva(a)bgnett.no).  With these changes, he was able to
+  compile Nmap on Windows using MingW + gcc 3.4 C++ rather than MS
+  Visual Studio.
+
+o Fixed compilation on Solaris versions < 2.51 thanks to a patch by
+  Tom Duffy (tduffy(a)sun.com)
+
+Nmap 3.59ALPHA3
+
+o Fixed a segfault bug that could occur when certain ICMP messages are
+  received during a scan.
+
+o Fixed a memory leak related to ping and list scanning.  Found with
+  valgrind ( http://valgrind.kde.org/ ).
+
+o Fixed (I hope) the assertion failure "len == ntohs(ipv4->ip_len)"
+  reported by Eric (catastrophe.net).  I had forgotten that *BSD
+  treats ip_len strangely, and had to use the BSDUFIX macro there.
+
+o Fixed a memory leak related to the Nmap output table.
+
 Nmap 3.59ALPHA2
 
 o Fixed a segfault bug, occuring during certain connect() scans.

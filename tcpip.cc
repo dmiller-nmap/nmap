@@ -2294,10 +2294,12 @@ do {
 	   sd, len, inet_ntoa(sin->sin_addr), tolen);
   }
   if ((res = sendto(sd, (const char *) packet, len, flags, to, tolen)) == -1) {
+    int err = socket_errno();
+
     error("sendto in %s: sendto(%d, packet, %d, 0, %s, %d) => %s",
 	  functionname, sd, len, inet_ntoa(sin->sin_addr), tolen,
-	  strerror(socket_errno()));
-    if (retries > 2 || socket_errno() == EPERM || socket_errno() == EACCES || socket_errno() == EADDRNOTAVAIL)
+	  strerror(err));
+    if (retries > 2 || err == EPERM || err == EACCES || err == EADDRNOTAVAIL)
       return -1;
     sleeptime = 15 * (1 << (2 * retries));
     error("Sleeping %d seconds then retrying", sleeptime);
@@ -2323,7 +2325,7 @@ IPProbe::IPProbe() {
 }
 
 void IPProbe::Reset() {
-  if (packetbuflen > 0)
+  if (packetbuf)
     free(packetbuf);
   packetbuflen = 0;
   packetbuf = NULL;
@@ -2334,8 +2336,11 @@ void IPProbe::Reset() {
 }
 
 IPProbe::~IPProbe() {
-  if (packetbuflen > 0)
+  if (packetbuf) {
     free(packetbuf);
+    packetbuf = NULL;
+    packetbuflen = 0;
+  }
   Reset();
 }
 
@@ -2344,10 +2349,11 @@ int IPProbe::storePacket(u8 *ippacket, u32 len) {
   af = AF_INET;
   packetbuf = (u8 *) safe_malloc(len);
   memcpy(packetbuf, ippacket, len);
+  packetbuflen = len;
   ipv4 = (struct ip *) packetbuf;
   assert(ipv4->ip_v == 4);
   assert(len >= 20);
-  assert(len == ntohs(ipv4->ip_len));
+  assert(len == BSDUFIX(ipv4->ip_len));
   if (ipv4->ip_p == IPPROTO_TCP) {
     if (len >= (unsigned) ipv4->ip_hl * 4 + 20)
       tcp = (struct tcphdr *) ((u8 *) ipv4 + ipv4->ip_hl * 4);

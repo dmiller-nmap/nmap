@@ -141,7 +141,7 @@ static int __cdecl compip(const void *e1, const void *e2)
 
 static bool Populate()
 {
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(__MINGW32__)
 	if(populated) return szAddrtable != 0;
 	populated = true;
 

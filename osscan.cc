@@ -1709,7 +1709,7 @@ sethdrinclude(sd);
 realcheck = in_cksum((unsigned short *)pseudo, 20 /* pseudo + UDP headers */ +
  datalen);
 #if STUPID_SOLARIS_CHECKSUM_BUG
- udp->uh_sum = sizeof(struct udphdr_bsd) + datalen;
+ udp->uh_sum = sizeof(udphdr_bsd) + datalen;
 #else
 udp->uh_sum = realcheck;
 #endif

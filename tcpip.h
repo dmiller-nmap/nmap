@@ -218,14 +218,14 @@ extern "C" {
 }
 #endif
 
-#include <setjmp.h>
-#include <errno.h>
-#include <signal.h>
-
 #if HAVE_SYS_SOCKIO_H
 #include <sys/sockio.h>  /* SIOCGIFCONF for Solaris */
 #endif
 #endif /* WIN32 */
+
+#include <setjmp.h>
+#include <errno.h>
+#include <signal.h>
 
 #include "nmap_error.h"
 #include "utils.h"

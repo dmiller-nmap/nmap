@@ -180,9 +180,10 @@ int main(int argc, char *argv[], char *envp[]) {
 #if HAVE_SIGNAL
   signal(SIGINT, sigdie);
   signal(SIGTERM, sigdie);
+#ifndef WIN32
   signal(SIGHUP, sigdie); 
-
   signal(SIGCHLD, reaper);
+#endif
 #endif
 
   /* First we figure out whether the name nmap is called as qualifies it 
@@ -335,7 +336,9 @@ int main(int argc, char *argv[], char *envp[]) {
 #if HAVE_SIGNAL
 	signal(SIGINT, SIG_DFL);
 	signal(SIGTERM, SIG_DFL);
+#ifndef WIN32
 	signal(SIGHUP, SIG_DFL);
+#endif
 	signal(SIGSEGV, SIG_DFL);
 #endif
 

@@ -864,7 +864,7 @@ int nmap_main(int argc, char *argv[]) {
     }
   }
 
-#if HAVE_SIGNAL
+#if defined(HAVE_SIGNAL) && defined(SIGPIPE)
   signal(SIGPIPE, SIG_IGN); /* ignore SIGPIPE so our program doesn't crash because
 			       of it, but we really shouldn't get an unsuspected
 			       SIGPIPE */
@@ -960,6 +960,7 @@ int nmap_main(int argc, char *argv[]) {
 	//  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"\n");
 	log_write(LOG_XML, "</host>\n");
 	log_flush_all();
+	delete currenths;
 	continue;
       }
     
@@ -1287,7 +1288,7 @@ struct scan_lists *getpts(char *origexpr) {
   struct scan_lists *ports;
   int range_type = SCAN_TCP_PORT|SCAN_UDP_PORT|SCAN_PROTOCOLS;
 
-  porttbl = (u8 *) safe_zalloc(65535);
+  porttbl = (u8 *) safe_zalloc(65536);
 
   current_range = origexpr;
   do {
@@ -1819,6 +1820,7 @@ void reaper(int signo) {
     fprintf(stderr, "\n[%d finished status=%d (%s)]\nnmap> ", (int) pid, status, (status == 0)? "success"  : "failure");
   }
 }
+#endif
 
 void sigdie(int signo) {
   int abt = 0;
@@ -1827,20 +1829,33 @@ void sigdie(int signo) {
   case SIGINT:
     fprintf(stderr, "caught SIGINT signal, cleaning up\n");
     break;
+
+#ifdef SIGTERM
   case SIGTERM:
     fprintf(stderr, "caught SIGTERM signal, cleaning up\n");
     break;
+#endif
+
+#ifdef SIGHUP
   case SIGHUP:
     fprintf(stderr, "caught SIGHUP signal, cleaning up\n");
     break;
+#endif
+
+#ifdef SIGSEGV
   case SIGSEGV:
     fprintf(stderr, "caught SIGSEGV signal, cleaning up\n");
     abt = 1;
     break;
+#endif
+
+#ifdef SIGBUS
   case SIGBUS:
     fprintf(stderr, "caught SIGBUS signal, cleaning up\n");
     abt = 1;
     break;
+#endif
+
   default:
     fprintf(stderr, "caught signal %d, cleaning up\n", signo);
     abt = 1;
@@ -1852,7 +1867,6 @@ void sigdie(int signo) {
   exit(1);
 }
 
-#endif
 
 int nmap_fetchfile(char *filename_returned, int bufferlen, char *file) {
   char *dirptr;

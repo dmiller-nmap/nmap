@@ -598,7 +598,7 @@ gettimeofday(&start, NULL);
    /*   pt.block_unaccounted = pt.group_end - pt.group_start + 1;   */
  }
 
- close(sd);
+ if (sd >= 0) close(sd);
  if (ptech.connecttcpscan)
    for(p=0; p < o.num_ping_synprobes; p++)
      free(tqi.sockets[p]);
@@ -632,7 +632,7 @@ int sendconnecttcpquery(Target *hostbatch[], struct tcpqueryinfo *tqi,
 			struct timeval *time, struct pingtune *pt, 
 			struct timeout_info *to, int max_sockets) {
 
-  int res,i;
+  int res,sock_err,i;
   int tmpsd;
   int hostnum, trynum;
   struct sockaddr_storage sock;
@@ -682,15 +682,16 @@ int sendconnecttcpquery(Target *hostbatch[], struct tcpqueryinfo *tqi,
 #endif //HAVE_IPV6
 
   res = connect(tqi->sockets[probe_port_num][seq],(struct sockaddr *)&sock, socklen);
+  sock_err = socket_errno();
 
-  if ((res != -1 || socket_errno() == ECONNREFUSED)) {
+  if ((res != -1 || sock_err == ECONNREFUSED)) {
     /* This can happen on localhost, successful/failing connection immediately
        in non-blocking mode */
       hostupdate(hostbatch, target, HOST_UP, 1, trynum, to, 
 		 &time[seq], NULL, pt, tqi, pingstyle_connecttcp);
     if (tqi->maxsd == tqi->sockets[probe_port_num][seq]) tqi->maxsd--;
   }
-  else if (socket_errno() == ENETUNREACH) {
+  else if (sock_err == ENETUNREACH) {
     if (o.debugging) 
       error("Got ENETUNREACH from sendconnecttcpquery connect()");
     hostupdate(hostbatch, target, HOST_DOWN, 1, trynum, to, 
@@ -861,6 +862,8 @@ if (ptech.icmpscan) {
 
  for (decoy = 0; decoy < o.numdecoys; decoy++) {
    if (ptech.icmpscan && decoy == o.decoyturn) {
+      int sock_err = 0;
+
      /* FIXME: If EHOSTUNREACH (Windows does that) then we were
 	probably unable to obtain an arp response from the machine.
 	We should just consider the host down rather than ignoring
@@ -869,15 +872,15 @@ if (ptech.icmpscan) {
      //     PacketTrace::trace(PacketTrace::SENT, (u8 *) ping, icmplen); 
      if ((res = sendto(sd,(char *) ping,icmplen,0,(struct sockaddr *)&sock,
 		       sizeof(struct sockaddr))) != icmplen && 
-		       socket_errno() != EHOSTUNREACH 
+                       (sock_err = socket_errno()) != EHOSTUNREACH
 #ifdef WIN32
         // Windows (correctly) returns this if we scan an address that is
         // known to be nonsensical (e.g. myip & mysubnetmask)
-	&& socket_errno() != WSAEADDRNOTAVAIL
+	&& sock_err != WSAEADDRNOTAVAIL
 #endif 
 		       ) {
        fprintf(stderr, "sendto in sendpingquery returned %d (should be 8)!\n", res);
-       perror("sendto");
+       fprintf(stderr, "sendto: %s\n", strerror(sock_err));
      }
    } else {
      send_ip_raw( rawsd, &o.decoys[decoy], target->v4hostip(), o.ttl, IPPROTO_ICMP, ping, icmplen);
@@ -934,13 +937,14 @@ while(pt->block_unaccounted) {
 	      foundsomething = 0;
 	      res2 = recv(tqi->sockets[p][seq], buf, sizeof(buf) - 1, 0);
 	      if (res2 == -1) {
-	        switch(socket_errno()) {
+  	        int sock_err = socket_errno();
+	        switch(sock_err) {
 	        case ECONNREFUSED:
 	        case EAGAIN:
 #ifdef WIN32
 //		  case WSAENOTCONN:	//	needed?  this fails around here on my system
 #endif
-		  if (socket_errno() == EAGAIN && o.verbose) {
+		  if (sock_err == EAGAIN && o.verbose) {
 		    log_write(LOG_STDOUT, "Machine %s MIGHT actually be listening on probe port %d\n", hostbatch[hostindex]->targetipstr(), o.ping_synprobes[p]);
 		  }
 		  foundsomething = 1;
@@ -958,7 +962,7 @@ while(pt->block_unaccounted) {
 		  break;
 	        default:
 		  snprintf (buf, sizeof(buf), "Strange read error from %s", hostbatch[hostindex]->targetipstr());
-		  perror(buf);
+		  fprintf(stderr, "%s: %s\n", buf, strerror(sock_err));
 		  break;
 	        }
 	      } else { 

@@ -118,9 +118,6 @@ void enforce_scan_delay(struct timeval *tv);
 
 class ScanProgressMeter {
  public:
-  /* Timing variables for deciding when to print the ETC */
-  static const int first_print_time = 30000000;
-  static const int subseq_print_time = 30000000;
   /* A COPY of stypestr is made and saved for when stats are printed */
   ScanProgressMeter(char *stypestr);
   ~ScanProgressMeter();

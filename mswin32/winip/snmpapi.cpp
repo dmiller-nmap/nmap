@@ -26,6 +26,7 @@
 #include "..\tcpip.h"
 #include "winip.h"
 #include <snmp.h>
+#include <string.h>
 
 SNMPAPI
 SNMP_FUNC_TYPE

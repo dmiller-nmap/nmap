@@ -1548,7 +1548,8 @@ static UltraProbe *sendConnectScanProbe(UltraScanInfo *USI, HostScanStats *hss,
       ultrascan_port_update(USI, hss, probeI, PORT_OPEN, &USI->now);
     probe = NULL;
   } else {
-    switch(socket_errno()) {
+    int err = socket_errno();
+    switch(err) {
     case EINPROGRESS:
     case EAGAIN:
       USI->gstats->CSI->watchSD(CP->sd);
@@ -1556,7 +1557,7 @@ static UltraProbe *sendConnectScanProbe(UltraScanInfo *USI, HostScanStats *hss,
     default:
       if (!connecterror) {	
 	connecterror = true;
-	fprintf(stderr, "Strange error from connect (%d):", socket_errno());
+	fprintf(stderr, "Strange error from connect (%d):", err);
 	fflush(stdout);
 	perror(""); /*falling through intentionally*/
       }
@@ -2217,15 +2218,15 @@ static bool get_pcap_result(UltraScanInfo *USI, struct timeval *stime) {
 	}
       }
     } else if (ip->ip_p == IPPROTO_ICMP) {
+
+      if ((unsigned) ip->ip_hl * 4 + 28 > bytes)
+	continue;
+
+      icmp = (struct icmp *) ((char *)ip + 4 * ip->ip_hl);
+
       if (icmp->icmp_type != 3)
 	continue;
 
-      if ((unsigned) ip->ip_hl * 4 + 28 > bytes) {
-	if (o.debugging) 
-	  error("Received short ICMP packet (%d bytes)", bytes);
-	continue;
-      }
-      icmp = (struct icmp *) ((char *)ip + 4 * ip->ip_hl);
       ip2 = (struct ip *) (((char *) ip) + 4 * ip->ip_hl + 8);
       requiredbytes = /* IPlen*/ 4 * ip->ip_hl + 
                       /* ICMPLen */ 8 + 
