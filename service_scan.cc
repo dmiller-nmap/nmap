@@ -1151,7 +1151,7 @@ void ServiceNFO::addToServiceFingerprint(const char *probeName, const u8 *resp,
 					 int resplen) {
   int spaceleft = servicefpalloc - servicefplen;
   int servicewrap=74; // Wrap after 74 chars / line
-  int respused = MIN(resplen, (o.debugging)? 1000 : 600); // truncate to reasonable size
+  int respused = MIN(resplen, (o.debugging)? 1300 : 900); // truncate to reasonable size
   // every char could require \xHH escape, plus there is the matter of 
   // "\nSF:" for each line, plus "%r(probename,probelen,"") Oh, and 
   // the SF-PortXXXX-TCP stuff, etc
@@ -1165,7 +1165,7 @@ void ServiceNFO::addToServiceFingerprint(const char *probeName, const u8 *resp,
   assert(resplen);
   assert(probeName);
 
-  if (servicefplen > (o.debugging? 10000 : 1700))
+  if (servicefplen > (o.debugging? 10000 : 2200))
     return; // it is large enough.
 
   if (spaceneeded >= spaceleft) {
@@ -1180,7 +1180,7 @@ void ServiceNFO::addToServiceFingerprint(const char *probeName, const u8 *resp,
   if (servicefplen == 0) {
     timep = time(NULL);
     ltime = localtime(&timep);
-    servicefplen = snprintf(servicefp, spaceleft, "SF-Port%hu-%s:V=%s%s%%D=%d/%d%%Time=%X", portno, proto2ascii(proto, true), NMAP_VERSION, (tunnel == SERVICE_TUNNEL_SSL)? "%T=SSL" : "", ltime->tm_mon + 1, ltime->tm_mday, (int) timep);
+    servicefplen = snprintf(servicefp, spaceleft, "SF-Port%hu-%s:V=%s%s%%D=%d/%d%%Time=%X%%P=%s", portno, proto2ascii(proto, true), NMAP_VERSION, (tunnel == SERVICE_TUNNEL_SSL)? "%T=SSL" : "", ltime->tm_mon + 1, ltime->tm_mday, (int) timep, NMAP_PLATFORM);
   }
 
   // Note that we give the total length of the response, even though we 

@@ -35,7 +35,12 @@ o Made Ident-scan (-I) limits on the length and type of responses
   characters.  The new length limit is 32.  Thanks to Tom Rune Flo
   (tom(a)x86.no) for the suggestion and a patch.
 
-o Service scan now chops commas and whitespace from the end of
+o Fingerprints for unrecognized services can now be a bit longer to
+  avoid truncating as much useful response information.  While the
+  fingerprints can be longer now, I hope they will be less frequent
+  because of all the newly recognized services in this version.
+
+o Version scan now chops commas and whitespace from the end of
   vendorproductname, version, and info fields.  This makes it easier to
   write templates incorporating lists.  For example, the tcpmux service
   (TCP port 1) gives a list of supported services separated by CRLF.
