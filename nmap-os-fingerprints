@@ -2227,6 +2227,18 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=15C%RID=E%RIPCK=0%UCK=E%ULEN=134%DAT=E)
 
+# Contributed by David Weekly
+Fingerprint EMC IP4700 Filer
+TSeq(Class=RI%gcd=<6%SI=<506F4&>961%IPID=I%TS=2HZ)
+T1(DF=N%W=2017%ACK=S++%Flags=AS%Ops=MNWNNT)
+T2(Resp=N)
+T3(Resp=Y%DF=N%W=2017%ACK=O%Flags=A%Ops=NNT)
+T4(DF=N%W=2000%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=15C%RID=F%RIPCK=F%UCK=0%ULEN=134%DAT=E)
+
 # Thanks to anarch <anarch@exo.com>
 Fingerprint Epson Stylus 800n/EPSON Ethernet Ver. 4.20
 T1(DF=N%W=200%ACK=S++%Flags=AS%Ops=M)
@@ -2695,7 +2707,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N|Y%TOS=0%IPLEN=38%RIPTL=15C%RID=F%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
 # Contributed by Brett (yebo@inetz.com)
-Fingerprint HP j4813A ProCurve Switch 2524
+Fingerprint HP j4813A ProCurve Switch 2524 or Copper Mountain Networks DSL Concentrator
 TSeq(Class=64K%IPID=I%TS=U)
 T1(DF=N%W=2000%ACK=S++%Flags=AS%Ops=MNW)
 T2(Resp=N)
@@ -4132,7 +4144,7 @@ T7(DF=N%W=400%ACK=S%Flags=AR%Ops=)
 PU(Resp=N)
 
 # Contributed by Lynda L. True <shrdlu@hazel.sdd.TRW.COM>
-Fingerprint Apple MacOS 9.04 (Powermac or G4)
+Fingerprint HP-UX 11 or Apple MacOS 9.04 or HP-UX B.11.00
 TSeq(Class=RI%gcd=<9%SI=>3FFF)
 T1(DF=Y%W=8000%ACK=S++%Flags=AS%Ops=MEWNNNT)
 T2(Resp=Y%DF=Y%W=0%ACK=S%Flags=AR%Ops=)
@@ -4156,7 +4168,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=Y%TOS=0%IPLEN=38%RIPTL=15C%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
 # Contributed by Brian Vancil <bvancil@leland.stanford.edu>
-Fingerprint FreeBSD 4.4 or MacOS X 10.0.4 (Darwin V. 1.3-1.3.7 or 4P13)
+Fingerprint FreeBSD 4.4-5 or MacOS X 10.0.4 (Darwin V. 1.3-1.3.7 or 4P13)
 TSeq(Class=RI%gcd=<6%SI=<6E99C&>2A1%IPID=I%TS=2HZ)
 T1(DF=Y%W=807A|C0B7%ACK=S++%Flags=AS%Ops=MNWNNT)
 T2(Resp=N)
@@ -4444,6 +4456,19 @@ T5(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(Resp=Y%DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(Resp=Y%TOS=0%IPLEN=38%RIPTL=148%RIPCK=0%UCK=0%ULEN=134%DAT=E)
+
+# Contributed by David Weekly
+Fingerprint NetApp F360 or 760 Filer
+TSeq(Class=RI%gcd=<6%SI=<7CA10&>CA2%IPID=BI%TS=2HZ)
+T1(DF=Y%W=2017%ACK=S++%Flags=AS%Ops=MNWNNT)
+T2(Resp=N)
+T3(Resp=Y%DF=Y%W=2017%ACK=O%Flags=A%Ops=NNT)
+T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=3415%RID=E%RIPCK=F%UCK=E%ULEN=134%DAT=E)
+
 
 # Contributed by alfapiep@hotmail.com
 Fingerprint NetApp NetCache C760 os 4.x
@@ -6223,6 +6248,18 @@ T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
+
+# Contributed by David Weekly
+Fingerprint Windows 2000 SP2 
+TSeq(Class=TD|RI%gcd=<14%SI=<302%IPID=BI%TS=U)
+T1(DF=N%W=2017%ACK=S++%Flags=AS%Ops=M)
+T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
+T3(Resp=Y%DF=N%W=2017%ACK=S++%Flags=AS%Ops=M)
+T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+PU(Resp=N)
 
 # Contributed by Wes Mills <wesmills@wyvern.org>
 Fingerprint Windows 2000 Professional, Build 2183 (RC3)

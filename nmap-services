@@ -1906,9 +1906,12 @@ prosharerequest   5716/tcp   # proshare conf request
 prosharerequest   5716/udp   # proshare conf request
 prosharenotify    5717/tcp   # proshare conf notify
 prosharenotify    5717/udp   # proshare conf notify
-vnc               5800/tcp
-vnc               5801/tcp
-vnc               5900/tcp   # Virtual Network Computer
+vnc               5800/tcp   # Virtual Network Computer display 0
+vnc-1             5801/tcp   # Virtual Network Computer display 1
+vnc-2             5802/tcp   # Virtual Network Computer display 2
+vnc-http          5900/tcp   # Virtual Network Computer HTTP Access, display 0
+vnc-http-1        5901/tcp   # Virtual Network Computer HTTP Access, display 1
+vnc-http-2        5902/tcp   # Virtual Network Computer HTTP Access, display 2
 vnc-1             5901/tcp   # Virtual Network Computer Display :1
 vnc-2             5902/tcp   # Virtual Network Computer Display :2
 ncd-pref-tcp      5977/tcp   # NCD preferences tcp port
@@ -1951,6 +1954,7 @@ montage-lm        6147/tcp   # Montage License Manager
 montage-lm        6147/udp   # Montage License Manager
 ricardo-lm        6148/tcp   # Ricardo North America License Manager
 ricardo-lm        6148/udp   # Ricardo North America License Manager
+gnutella          6346/tcp   # Gnutella file sharing protocol
 netop-rc          6502/tcp   # NetOp Remote Control (by Danware Data A/S)
 netop-rc          6502/udp   # NetOp Remote Control (by Danware Data A/S)
 xdsxdm            6558/tcp   # 
@@ -2020,6 +2024,7 @@ pksd              11371/tcp  # PGP Public Key Server
 cce4x             12000/tcp  # ClearCommerce Engine 4.x (www.clearcommerce.com)
 NetBus            12345/tcp  # NetBus backdoor trojan
 NetBus            12346/tcp  # NetBus backdoor trojan
+subseven          16959/tcp  # Subseven trojan
 isode-dua         17007/tcp  # 
 isode-dua         17007/udp  # 
 biimenu           18000/tcp  # Beckman Instruments, Inc.
@@ -2031,10 +2036,18 @@ wnn6_Kr           22305/tcp  # Wnn6 (Korean input)
 wnn6_Tw           22321/tcp  # Wnn6 (Taiwanse input)
 hpnpd             22370/tcp  # Hewlett-Packard Network Printer daemon
 hpnpd             22370/udp  # Hewlett-Packard Network Printer daemon
+quake             26000/udp  # Quake game server
 wnn6_DS           26208/tcp  # Wnn6 (Dserver)
-Trinoo_Bcast      27444/udp  # Trinoo distributed attack tool Master -> Bcast Daemon communication
+hexen2            26900/udp  # Hexen 2 game server
+halflife          27015/udp  # Half-life game server
+subseven          27374/tcp  # Subseven Windows trojan
+Trinoo_Bcast      27444/udp  # Trinoo distributed attack tool Master
+# -> Bcast Daemon communication
+quakeworld        27500/udp  # Quake world
 Trinoo_Master     27665/tcp  # Trinoo distributed attack tool Master server control port
-Quake3Server      27960/udp  # Quake 3 Arena Server
+quake2            27910/udp  # Quake 2 game server
+quake3            27960/udp  # Quake 3 Arena Server
+heretic2          28910/udp  # Heretic 2 game server
 Trinoo_Register   31335/udp  # Trinoo distributed attack tool Bcast Daemon registration port
 BackOrifice       31337/udp  # cDc Back Orifice remote admin tool
 Elite             31337/tcp  # Sometimes interesting stuff can be found here

@@ -1,5 +1,9 @@
 # Nmap Changelog ($Id$)
 
+o Added check for strings.h before including it in portlist.c .  This
+  fixes a compilation problem on some versions of Windows.  Problem
+  first noted by "Michael Vorin" <mvorin@hotmail.com>
+
 o Applied patch from Andy Lutomirski (Luto@myrealbox.com) which fixes
   a crash on some Windows platforms when timeouts occur.
 
@@ -16,6 +20,13 @@ o Fix bug noted by Chris V (iselldrugstokidsonline@yahoo.com) in which
   Nmap could segmentation fault with the (bogus) command: './nmap -sO
   -p 1-65535 hostname' (protocol only can go up to 255).  That being
   said, Nmap should never segfault just because of bogus options.
+
+o Fixed problem noted by Maximiliano (emax25@arnet.com.ar) where Nmap
+  would get stuck in a (nearly) infinate loop when you try to "resume"
+  an random host (-iR) scan.
+
+o Included a number of fingerprint updates, but I still have many more
+  web submissions to go through.
 
 Nmap 2.54BETA30
 

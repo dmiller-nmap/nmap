@@ -983,6 +983,9 @@ int nmap_main(int argc, char *argv[]) {
     fatal("WARNING:  OS Scan is unreliable with a ping scan.  You need to use a scan type along with it, such as -sS, -sT, -sF, etc instead of -sP");
   }
 
+  if (o.resume_ip.s_addr && o.generate_random_ips)
+    o.resume_ip.s_addr = 0;
+
   if (o.magic_port_set && o.connectscan) {
     error("WARNING:  -g is incompatible with the default connect() scan (-sT).  Use a raw scan such as -sS if you want to set the source port.");
   }
