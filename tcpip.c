@@ -209,7 +209,7 @@ return res;
 }
 
 
-/* A simple program I wrote to help in debugging, shows the important fields
+/* A simple function I wrote to help in debugging, shows the important fields
    of a TCP packet*/
 int readtcppacket(char *packet, int readdata) {
 
@@ -266,7 +266,48 @@ printf("\n");
 return 0;
 }
 
+/* A simple function I wrote to help in debugging, shows the important fields
+   of a TCP packet*/
+int readudppacket(char *packet, int readdata) {
 
+struct ip *ip = (struct ip *) packet;
+struct udphdr_bsd *udp = (struct udphdr_bsd *) (packet + sizeof(struct ip));
+char *data = packet +  sizeof(struct ip) + sizeof(struct udphdr_bsd);
+int tot_len;
+struct in_addr bullshit, bullshit2;
+char sourcehost[16];
+int i;
+int realfrag = 0;
+
+if (!packet) {
+  fprintf(stderr, "readudppacket: packet is NULL!\n");
+  return -1;
+    }
+
+bullshit.s_addr = ip->ip_src.s_addr; bullshit2.s_addr = ip->ip_dst.s_addr;
+/* this is gay */
+realfrag = BSDFIX(ntohs(ip->ip_off) & 8191 /* 2^13 - 1 */);
+tot_len = BSDFIX(ip->ip_len);
+strncpy(sourcehost, inet_ntoa(bullshit), 16);
+i =  4 * (ntohs(ip->ip_hl)) + 8;
+if (ip->ip_p== IPPROTO_UDP) {
+  if (realfrag) 
+    printf("Packet is fragmented, offset field: %u\n", realfrag);
+  else {
+    printf("UDP packet: %s:%d -> %s:%d (total: %d bytes)\n", sourcehost, 
+	   ntohs(udp->uh_sport), inet_ntoa(bullshit2), 
+	   ntohs(udp->uh_dport), tot_len);
+
+    printf("ttl: %hi ", ip->ip_ttl);
+  }
+}
+ if (readdata && i < tot_len) {
+   printf("Data portion:\n");
+   while(i < tot_len)  printf("%2X%c", data[i], (++i%16)? ' ' : '\n');
+   printf("\n");
+ }
+ return 0;
+}
 
 int send_udp_raw( int sd, struct in_addr *source, 
 		  struct in_addr *victim, unsigned short sport, 
@@ -286,7 +327,7 @@ int source_malloced = 0;
 
 /* check that required fields are there and not too silly */
 if ( !victim || !sport || !dport || sd < 0) {
-  fprintf(stderr, "send_tcp_raw: One or more of your parameters suck!\n");
+  fprintf(stderr, "send_udp_raw: One or more of your parameters suck!\n");
   return -1;
 }
 
@@ -346,8 +387,8 @@ if (data)
   memcpy(packet + sizeof(struct ip) + sizeof(struct udphdr_bsd), data, datalen);
 
 if (TCPIP_DEBUGGING > 1) {
-printf("Raw UDP packet creation completed!  Here it is:\n");
-/*readudppacket(packet,BSDUFIX(ip->ip_len));*/
+  printf("Raw UDP packet creation completed!  Here it is:\n");
+  readudppacket(packet,BSDUFIX(ip->ip_len));
 }
 if (TCPIP_DEBUGGING > 1) 
 
