@@ -52,6 +52,7 @@
 #include "nmap.h"
 #include "tcpip.h"
 #include "global_structures.h"
+#include "FingerPrintResults.h"
 
 #define OSSCAN_SUCCESS 0
 #define OSSCAN_NOMATCHES -1
@@ -93,14 +94,12 @@ double compare_fingerprints(FingerPrint *referenceFP, FingerPrint *observedFP,
 			    int verbose);
 
 /* Takes a fingerprint and looks for matches inside reference_FPs[].
-   The results are stored in in FPR (which must point to an allocated
-   FingerPrintResults structure) -- results will be reverse-sorted by
+   The results are stored in in FPR (which must point to an instantiated
+   FingerPrintResults class) -- results will be reverse-sorted by
    accuracy.  No results below accuracy_threshhold will be included.
    The max matches returned is the maximum that fits in a
-   FingerPrintResults structure.  The allocated FingerPrintResults
-   does not have to be initialized -- that will be done in this
-   function.  */
-void match_fingerprint(FingerPrint *FP, struct FingerPrintResults *FPR, 
+   FingerPrintResults class.  */
+void match_fingerprint(FingerPrint *FP, FingerPrintResults *FPR, 
 		       FingerPrint **reference_FPs, double accuracy_threshold);
 struct AVal *str2AVal(char *p);
 struct AVal *gettestbyname(FingerPrint *FP, const char *name);

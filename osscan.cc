@@ -816,14 +816,12 @@ double compare_fingerprints(FingerPrint *referenceFP, FingerPrint *observedFP,
 }
 
 /* Takes a fingerprint and looks for matches inside reference_FPs[].
-   The results are stored in in FPR (which must point to an allocated
-   FingerPrintResults structure) -- results will be reverse-sorted by
+   The results are stored in in FPR (which must point to an instantiated
+   FingerPrintResults class) -- results will be reverse-sorted by
    accuracy.  No results below accuracy_threshhold will be included.
    The max matches returned is the maximum that fits in a
-   FingerPrintResults structure.  The allocated FingerPrintResults
-   does not have to be initialized -- that will be done in this
-   function.  */
-void match_fingerprint(FingerPrint *FP, struct FingerPrintResults *FPR, 
+   FingerPrintResults class.  */
+void match_fingerprint(FingerPrint *FP, FingerPrintResults *FPR, 
 		      FingerPrint **reference_FPs, double accuracy_threshold) {
 
   int i;
@@ -844,7 +842,6 @@ void match_fingerprint(FingerPrint *FP, struct FingerPrintResults *FPR,
   assert(FPR);
   assert(accuracy_threshold >= 0 && accuracy_threshold <= 1);
 
-  bzero(FPR, sizeof(*FPR));
   FPR->overall_results = OSSCAN_SUCCESS;
   
   for(i = 0; reference_FPs[i]; i++) {
@@ -1047,7 +1044,8 @@ return;
 
 
 int os_scan(Target *target) {
-struct FingerPrintResults FP_matches[3];
+
+FingerPrintResults FP_matches[3];
 struct seq_info si[3];
 int itry;
 int i;
@@ -1058,7 +1056,8 @@ int bestaccidx;
  if (target->timedout)
    return 1;
  
- bzero(FP_matches, sizeof(FP_matches));
+ if (target->FPR == NULL)
+   target->FPR = new FingerPrintResults;
 
  bzero(si, sizeof(si));
  if (target->ports.state_counts_tcp[PORT_OPEN] == 0 ||
@@ -1111,7 +1110,7 @@ int bestaccidx;
    }
  }
 
- memcpy(&(target->FPR), FP_matches + bestaccidx, sizeof(target->FPR));
+ *(target->FPR) = FP_matches[bestaccidx];
 
  for(i=0; i < target->numFPs; i++) {
    if (i == bestaccidx)
@@ -1121,8 +1120,8 @@ int bestaccidx;
    }
  }
 
- if (target->numFPs > 1 && target->FPR.overall_results == OSSCAN_SUCCESS &&
-     target->FPR.accuracy[0] == 1.0) {
+ if (target->numFPs > 1 && target->FPR->overall_results == OSSCAN_SUCCESS &&
+     target->FPR->accuracy[0] == 1.0) {
 if (o.verbose) error("WARNING:  OS didn't match until the try #%d", target->numFPs);
  } 
 
@@ -1250,6 +1249,109 @@ for(current = FP; current ; current = current->next) {
 return str;
 }
 
+/* Parse a 'Class' line found in the fingerprint file into the current
+   FP.  Classno is the number of 'class' lines found so far in the
+   current fingerprint.  The function quits if there is a parse error */
+
+void parse_classline(FingerPrint *FP, char *thisline, int lineno, int *classno) {
+  char *p, *q;
+
+  fflush(stdout);
+
+  if (!thisline || strncmp(thisline, "Class ", 6) == 1) {
+    fatal("Bogus line #%d (%s) passed to parse_classline()", lineno, thisline);
+  }
+
+  if (*classno >= MAX_OS_CLASSIFICATIONS_PER_FP)
+    fatal("Too many Class lines in fingerprint (line %d: %s), remove some or increase MAX_OS_CLASSIFICATIONS_PER_FP", lineno, thisline);
+  
+  p = thisline + 6;
+  
+  /* First lets get the vendor name */
+  while(*p && isspace(*p)) p++;
+  
+  q = strchr(p, '|');
+  if (!q) {
+    fatal("Parse error on line %d of fingerprint: %s\n", lineno, thisline);
+  }
+  
+  // Trim any trailing whitespace
+  q--;
+  while(isspace(*q)) q--;
+  q++;
+  if (q < p) { fatal("Parse error on line %d of fingerprint: %s\n", lineno, thisline); }
+  FP->OS_class[*classno].OS_Vendor = (char *) cp_alloc(q - p + 1);
+  memcpy(FP->OS_class[*classno].OS_Vendor, p, q - p);
+  FP->OS_class[*classno].OS_Vendor[q - p] = '\0';
+  
+  /* Next comes the OS Family */
+  p = q;
+  while(*p && !isalnum(*p)) p++;
+
+  q = strchr(p, '|');
+  if (!q) {
+    fatal("Parse error on line %d of fingerprint: %s\n", lineno, thisline);
+  }
+  // Trim any trailing whitespace
+  q--;
+  while(isspace(*q)) q--;
+  q++;
+  if (q < p) { fatal("Parse error on line %d of fingerprint: %s\n", lineno, thisline); }
+  FP->OS_class[*classno].OS_Family = (char *) cp_alloc(q - p + 1);
+  memcpy(FP->OS_class[*classno].OS_Family, p, q - p);
+  FP->OS_class[*classno].OS_Family[q - p] = '\0';
+  
+  /* And now the the OS generation, if available */
+  p = q;
+  while(*p && *p != '|') p++;
+  if (*p) p++;
+  while(*p && isspace(*p) && *p != '|') p++;
+  if (*p == '|') {
+    FP->OS_class[*classno].OS_Generation = NULL;
+    q = p;
+  }
+  else {
+    q = strpbrk(p, " |");
+    if (!q) {
+      fatal("Parse error on line %d of fingerprint: %s\n", lineno, thisline);
+    }
+    // Trim any trailing whitespace
+    q--;
+    while(isspace(*q)) q--;
+    q++;
+    if (q < p) { fatal("Parse error on line %d of fingerprint: %s\n", lineno, thisline); }
+    FP->OS_class[*classno].OS_Generation = (char *) cp_alloc(q - p + 1);
+    memcpy(FP->OS_class[*classno].OS_Generation, p, q - p);
+    FP->OS_class[*classno].OS_Generation[q - p] = '\0';
+  }
+  
+  /* And finally the device type */
+  p = q;
+  while(*p && !isalnum(*p)) p++;
+  
+  q = strchr(p, '|');
+  if (!q) {
+    q = p;
+    while(*q) q++;
+  }
+  
+  // Trim any trailing whitespace
+  q--;
+  while(isspace(*q)) q--;
+  q++;
+  if (q < p) { fatal("Parse error on line %d of fingerprint: %s\n", lineno, thisline); }
+  FP->OS_class[*classno].Device_Type = (char *) cp_alloc(q - p + 1);
+  memcpy(FP->OS_class[*classno].Device_Type, p, q - p);
+  FP->OS_class[*classno].Device_Type[q - p] = '\0';
+  
+
+  //  printf("Got classification #%d for the OS %s: VFGT: %s * %s * %s * %s\n", *classno, FP->OS_name, FP->OS_class[*classno].OS_Vendor, FP->OS_class[*classno].OS_Family, FP->OS_class[*classno].OS_Generation? FP->OS_class[*classno].OS_Generation : "(null)", FP->OS_class[*classno].Device_Type);
+
+  (*classno)++;
+  FP->num_OS_Classifications++;
+
+}
+
 /* Parses a single fingerprint from the memory region given.  If a
  non-null fingerprint is returned, the user is in charge of freeing it
  when done.  This function does not require the fingerprint to be 100%
@@ -1257,6 +1359,7 @@ return str;
  which some partial fingerpritns are OK. */
 FingerPrint *parse_single_fingerprint(char *fprint_orig) {
   int lineno = 0;
+  int classno = 0; /* Number of Class lines dealt with so far */
   char *p, *q;
   char *thisline, *nextline;
   char *fprint = strdup(fprint_orig); /* Make a copy we can futz with */
@@ -1278,25 +1381,24 @@ FingerPrint *parse_single_fingerprint(char *fprint_orig) {
       fatal("Parse error on line %d of fingerprint: %s", lineno, nextline);    
     }
 
-    if (strncasecmp(thisline, "FingerPrint", 11) == 0) {
+    if (strncmp(thisline, "Fingerprint ", 12) == 0) {
       p = thisline + 12;
-      q = FP->OS_name;
+      while(*p && isspace((int) *p)) p++;
+
+      q = strpbrk(p, "\n#");
+      if (!p) fatal("Parse error on line %d of fingerprint: %s", lineno, nextline);
+      while(isspace(*(--q)))
+	;
+
+      if (q < p) fatal("Parse error on line %d of fingerprint: %s", lineno, nextline);
+
+      FP->OS_name = (char *) cp_alloc(q - p + 2);
+      memcpy(FP->OS_name, p, q - p + 1);
+      FP->OS_name[q - p + 1] = '\0';
       
-      while(*p && *p != '\n' && *p != '#') {
-	if (q - FP->OS_name >= (int) (sizeof(FP->OS_name) - 2))
-	  fatal("Ack!  0v3rf0w r3ad|ng fIng3rpRint FiLE!");
-	*q++ = *p++;
-      }
-      
-      q--;
-      
-      /* Now let us back up through any ending spaces */
-      while(isspace((int)*q)) 
-	q--;
-      
-      /* Terminate the sucker */
-      q++; 
-      *q = '\0';
+    } else if (strncmp(thisline, "Class ", 6) == 0) {
+
+      parse_classline(FP, thisline, lineno, &classno);
 
     } else if ((q = strchr(thisline, '('))) {
       *q = '\0';
@@ -1331,6 +1433,7 @@ int max_records = 4096;
 char line[512];
 int numrecords = 0;
 int lineno = 0;
+int classno = 0; /* Number of Class lines dealt with so far */
 char *p, *q; /* OH YEAH!!!! */
 
  FPs = (FingerPrint **) safe_zalloc(sizeof(FingerPrint *) * max_records); 
@@ -1350,32 +1453,28 @@ while(fgets(line, sizeof(line), fp)) {
     fprintf(stderr, "Parse error on line %d of nmap-os-fingerprints file: %s\n", lineno, line);
     continue;
   }
+
   p = line + 12;
   while(*p && isspace((int) *p)) p++;
-  if (!*p) {
-    fprintf(stderr, "Parse error on line %d of nmap-os-fingerprints file: %s\n", lineno, line);    
-    continue;
-  }
+
+  q = strpbrk(p, "\n#");
+  if (!p) fatal("Parse error on line %d of fingerprint: %s", lineno, line);
+
+  while(isspace(*(--q)))
+    ;
+
+  if (q < p) fatal("Parse error on line %d of fingerprint: %s", lineno, line);
+
   FPs[numrecords] = (FingerPrint *) safe_zalloc(sizeof(FingerPrint));
-  q = FPs[numrecords]->OS_name;
-  while(*p && *p != '\n' && *p != '#') {
-    if (q - FPs[numrecords]->OS_name >= (int) (sizeof(FPs[numrecords]->OS_name) -2))
-      fatal("Ack!  0v3rf0w r3ad|ng fIng3rpRint FiLE!");
-    *q++ = *p++;
-  }
 
-  q--;
-
-  /* Now let us back up through any ending spaces */
-  while(isspace((int)*q)) 
-    q--;
-
-  /* Terminate the sucker */
-  q++; 
-  *q = '\0';
-
+  FPs[numrecords]->OS_name = (char *) cp_alloc(q - p + 2);
+  memcpy(FPs[numrecords]->OS_name, p, q - p + 1);
+  FPs[numrecords]->OS_name[q - p + 1] = '\0';
+      
   current = FPs[numrecords];
   current->line = lineno;
+  classno = 0;
+
   /* Now we read the fingerprint itself */
   while(fgets(line, sizeof(line), fp)) {
     lineno++;
@@ -1383,30 +1482,33 @@ while(fgets(line, sizeof(line), fp)) {
       continue;
     if (*line == '\n')
       break;
-    if (!strncmp(line, "FingerPrint",11)) {
+    if (!strncmp(line, "FingerPrint ",12)) {
       goto fparse;
+    } else if (strncmp(line, "Class ", 6) == 0) {
+      parse_classline(current, line, lineno, &classno);
+    } else {
+      p = line;
+      q = strchr(line, '(');
+      if (!q) {
+	fprintf(stderr, "Parse error on line %d of nmap-os-fingerprints file: %s\n", lineno, line);
+	goto top;
+      }
+      *q = '\0';
+      if(current->name) {
+	current->next = (FingerPrint *) safe_zalloc(sizeof(FingerPrint));
+	current = current->next;
+      }
+      current->name = strdup(p);
+      p = q+1;
+      *q = '(';
+      q = strchr(p, ')');
+      if (!q) {
+	fprintf(stderr, "Parse error on line %d of nmap-os-fingerprints file: %s\n", lineno, line);
+	goto top;
+      }
+      *q = '\0';
+      current->results = str2AVal(p);
     }
-    p = line;
-    q = strchr(line, '(');
-    if (!q) {
-      fprintf(stderr, "Parse error on line %d of nmap-os-fingerprints file: %s\n", lineno, line);
-      goto top;
-    }
-    *q = '\0';
-    if(current->name) {
-      current->next = (FingerPrint *) safe_zalloc(sizeof(FingerPrint));
-      current = current->next;
-    }
-    current->name = strdup(p);
-    p = q+1;
-    *q = '(';
-    q = strchr(p, ')');
-    if (!q) {
-      fprintf(stderr, "Parse error on line %d of nmap-os-fingerprints file: %s\n", lineno, line);
-      goto top;
-    }
-    *q = '\0';
-    current->results = str2AVal(p);
   }
   /* printf("Read in fingerprint:\n%s\n", fp2ascii(FPs[numrecords])); */
   numrecords++;

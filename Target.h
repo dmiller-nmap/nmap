@@ -49,6 +49,7 @@
 #define TARGET_H
 
 #include "nmap.h"
+#include "FingerPrintResults.h"
 
 class Target {
  public: /* For now ... a lot of the data members should be made private */
@@ -97,7 +98,7 @@ class Target {
   /* This next version returns a STATIC buffer -- so no concurrency */
   const char *NameIP();
   struct seq_info seq;
-  struct FingerPrintResults FPR;
+  FingerPrintResults *FPR;
   FingerPrint *FPs[10]; /* Fingerprint data obtained from host */
   int osscan_performed; /* nonzero if an osscan was performed */
   int osscan_openport; /* Open port used for scannig (if one found -- 

@@ -30,7 +30,7 @@
 # PU is a UDP packet to a closed port
 
 Fingerprint 2Wire Home Portal 100 residential gateway, v.3.1.0
-Class 2Wire | embedded-misc || WAP
+Class 2Wire | embedded || WAP
 TSeq(Class=RI%gcd=<6%SI=<7A8FA&>50%IPID=I%TS=100HZ)
 T1(DF=Y%W=8000%ACK=S++%Flags=AS%Ops=MEWNNNT)
 T2(Resp=N)
@@ -42,7 +42,7 @@ T7(Resp=N)
 PU(DF=Y%TOS=0%IPLEN=70%RIPTL=148%RID=E|F%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint 3Com Access Builder 4000 Switch
-Class 3Com | embedded-misc || switch
+Class 3Com | embedded || switch
 T1(DF=N%W=0|800%ACK=S++%Flags=AR|AS%Ops=|M)
 T2(Resp=Y%DF=N%W=0%ACK=O%Flags=AR%Ops=)
 T3(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
@@ -53,7 +53,7 @@ T7(DF=N%W=0%ACK=O%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=0%ULEN=134%DAT=E)
 
 Fingerprint 3Com terminal server ESPL CS2100
-Class 3Com | embedded-misc || terminal server
+Class 3Com | embedded || terminal server
 TSeq(Class=TD%gcd=<68%SI=<1E%IPID=I%TS=U)
 T1(DF=N%W=1000%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
@@ -67,7 +67,7 @@ PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 # 3Com NBX Superstack 3 IP PBX running firmware 4_1_11
 # 3com NBX-100 (version R4_1_4) Phone System Processor
 Fingerprint 3Com NBX PBX
-Class 3Com | embedded-misc || PBX
+Class 3Com | embedded || PBX
 TSeq(Class=64K%IPID=I%TS=2HZ)
 T1(DF=N%W=2000%ACK=S++%Flags=AS%Ops=MNWNNT)
 T2(Resp=N)
@@ -79,7 +79,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=F%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
 Fingerprint 3com Office Connect Router 810
-Class 3Com | embedded-misc || router
+Class 3Com | embedded || router
 TSeq(Class=TD%gcd=<186A4%SI=<14)
 T1(DF=N%W=400%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -90,7 +90,7 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 
 Fingerprint 3Com OfficeConnect Remote 812 ADSL Router
-Class 3Com | embedded-misc || broadband router
+Class 3Com | embedded || broadband router
 TSeq(Class=TD%gcd=<C354%SI=<1E)
 T1(DF=N%W=200%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -103,7 +103,7 @@ PU(Resp=N)
 
 # Switch 1100, 3300
 Fingerprint 3Com SuperStack II switch (OS v 2.0)
-Class 3Com | embedded-misc || switch
+Class 3Com | embedded || switch
 TSeq(Class=C)
 T1(DF=N%W=400%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=APR%Ops=)
@@ -115,7 +115,7 @@ T7(DF=N%W=0%ACK=S%Flags=APR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint 3Com SuperStack II switch SW/NBSI-CF,11.1.0.00S38
-Class 3Com | embedded-misc || switch
+Class 3Com | embedded || switch
 TSeq(Class=TD%gcd=<68%SI=<3C)
 T1(DF=N%W=800%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=O%Flags=AR%Ops=)
@@ -127,7 +127,7 @@ T7(DF=N%W=0%ACK=O%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=164%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint 3Com NetBuilder & NetBuilder II router OS v8.1
-Class 3Com | embedded-misc || router
+Class 3Com | embedded || router
 TSeq(Class=TD%gcd=32|64|96%SI=<FF)
 T1(Resp=Y%DF=N%W=800%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=O%Flags=AR%Ops=)
@@ -139,7 +139,7 @@ T7(Resp=N)
 PU(Resp=N)
 
 Fingerprint 3Com Netbuilder II Router Ver 11.4.0.51
-Class 3Com | embedded-misc || router
+Class 3Com | embedded || router
 TSeq(Class=TD%gcd=<68%SI=<1E%IPID=I%TS=U)
 T1(DF=N%W=800%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=O%Flags=AR%Ops=)
@@ -151,7 +151,7 @@ T7(DF=N%W=0%ACK=O%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=164%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint 3Com NetBuilder-II, OS version SW/NB2M-BR-5.1.0.27
-Class 3Com | embedded-misc || router
+Class 3Com | embedded || router
 TSeq(Class=TD%gcd=32|64|96%SI=<F)
 T1(Resp=Y%DF=N%W=800%ACK=S++%Flags=AS|AP%Ops=|M)
 T2(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
@@ -163,7 +163,7 @@ T7(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(Resp=Y%DF=N%TOS=0%IPLEN=54%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=F)
 
 Fingerprint 3Com NetBuilder & NetBuilder II OS v 9.3
-Class 3Com | embedded-misc || router
+Class 3Com | embedded || router
 TSeq(Class=TD%gcd=3C%SI=<FF)
 T1(Resp=Y%DF=Y%W=2017%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=O%Flags=AR%Ops=)
@@ -175,7 +175,7 @@ T7(Resp=N)
 PU(Resp=N)
 
 Fingerprint US Robotics Total Control NETServer Card
-Class US Robotics | embedded-misc || terminal server
+Class US Robotics | embedded || terminal server
 TSeq(Class=C%Val=7F)
 T1(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T2(Resp=Y%DF=N%W=0%ACK=O%Flags=R%Ops=WNMETL)
@@ -187,7 +187,7 @@ T7(Resp=Y%DF=N%W=0%ACK=O%Flags=R%Ops=WNMETL)
 PU(Resp=Y%DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=F%UCK=0%ULEN=134%DAT=E)
 
 Fingerprint 3Com / USR TotalSwitch Firmware: 02.02.00R
-Class 3Com | embedded-misc || switch
+Class 3Com | embedded || switch
 TSeq(Class=C|TD%gcd=3D090%SI=0)
 T1(Resp=Y%DF=N%W=200%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -212,7 +212,7 @@ PU(DF=N%TOS=1C|0%IPLEN=38%RIPTL=148%RID=F%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
 # Tested ACC Amazon 9.2.29, ACC Congo 9.2.35
 Fingerprint ACC Amazon 9.2.29 or Congo 9.2.35 WAN concentrator
-Class ACC | embedded-misc || router
+Class ACC | embedded || router
 TSeq(Class=64K)
 T1(DF=N%W=F87%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -224,7 +224,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Alteon Networks ACEswitch 180e Software Version 8.0.62.7
-Class Alteon | embedded-misc || load balancer
+Class Alteon | embedded || load balancer
 TSeq(Class=RI%gcd=<14%SI=<D45BC&>85A%IPID=I%TS=U)
 T1(DF=N%W=200%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -237,7 +237,7 @@ PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E|F%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 # Actiontec 1520 DSL gateway with GlobespanVirata chipset hardware version RD6700 BSP v1.1 (ISOS 8.2) / He100/2xx CSP v2.3, firmware version 8.2.0.16
 Fingerprint Actiontec 1520 DSL gateway firmware 8.2.0.16
-Class Actiontec | embedded-misc || broadband router
+Class Actiontec | embedded || broadband router
 TSeq(Class=RI%gcd=<6%SI=<F776&>8E%IPID=I%TS=U)
 T1(DF=N%W=1194%ACK=S++%Flags=AS%Ops=ME)
 T2(Resp=Y%DF=N%W=1194%ACK=O%Flags=R%Ops=)
@@ -249,7 +249,7 @@ T7(DF=N%W=0%ACK=O%Flags=R%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Avaya G3 PBX version 8.3
-Class Avaya | embedded-misc || PBX
+Class Avaya | embedded || PBX
 TSeq(Class=RI%gcd=<6%SI=<652372&>89CC%IPID=I%TS=U)
 T1(DF=N%W=1000%ACK=S++%Flags=AS%Ops=ME)
 T2(Resp=N)
@@ -262,7 +262,7 @@ PU(DF=Y%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=0%UCK=E%ULEN=134%DAT=E)
 
 # Avaya TN2302 Prowler/Medpro H.323 gateway HW03/FW022
 Fingerprint Avaya TN2302 Prowler/Medpro H.323 gateway
-Class Avaya | embedded-misc || telecom-misc
+Class Avaya | embedded || telecom-misc
 TSeq(Class=TD%gcd=<6%SI=<14%IPID=I)
 T1(DF=N%W=16D0%ACK=S++%Flags=AS%Ops=MTNN)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -276,7 +276,7 @@ PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E|F%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 # SMC Barricade Wireless Broadband Router (firmware R1.93e)
 # D-LINK DL-707 Cable/DSL Router
 Fingerprint SMC Barricade or D-Link DL-707 Wireless Broadband Router
-Class D-Link | embedded-misc || WAP
+Class D-Link | embedded || WAP
 TSeq(Class=TD%gcd=<130%SI=<1E%IPID=RD|I%TS=U)
 T1(DF=N%W=400%ACK=S++%Flags=AR%Ops=)
 T2(Resp=Y%DF=N%W=400%ACK=S%Flags=AR%Ops=)
@@ -288,7 +288,7 @@ T7(DF=N%W=400%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint SMC Barricade Wireless Broadband Router (firmware R1.93e)
-Class SMC | embedded-misc || WAP
+Class SMC | embedded || WAP
 TSeq(Class=TD%gcd=<68%SI=<1E%IPID=I%TS=U)
 T1(DF=N%W=400%ACK=S++%Flags=AR%Ops=)
 T2(Resp=Y%DF=N%W=400%ACK=S%Flags=AR%Ops=)
@@ -303,7 +303,7 @@ PU(Resp=N)
 # SMC 7004VBR broadband router - firmware v1.2
 # SMC Wireless AP 7004WFW
 Fingerprint SMC Barricade DSL Router/Modem/Wireless AP
-Class SMC | embedded-misc || WAP
+Class SMC | embedded || WAP
 TSeq(Class=TD%gcd=<FF%SI=<1E%IPID=I%TS=U)
 T1(DF=Y%W=1770%ACK=S++%Flags=AS%Ops=ME)
 T2(Resp=N)
@@ -315,7 +315,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint SMC Barricade Router, firmware 1.94a
-Class SMC | embedded-misc || WAP
+Class SMC | embedded || WAP
 TSeq(Class=TD%gcd=<68%SI=<32%IPID=I%TS=U)
 T1(DF=N%W=C00%ACK=S++%Flags=AR%Ops=)
 T2(Resp=Y%DF=N%W=C00%ACK=S%Flags=AR%Ops=)
@@ -329,9 +329,9 @@ PU(Resp=N)
 # Cisco 350 Access Point, software rev 12.02T1
 # Accelerated Networks VoDSL - But what sort of device?
 Fingerprint SonicWall SOHO firewall, Enterasys Matrix E1, or Accelerated Networks VoDSL, or Cisco 360 Access Point
-Class SonicWall | embedded-misc || firewall
-Class Enterasys | embedded-misc || switch
-Class Cisco | embedded-misc || WAP
+Class SonicWall | embedded || firewall
+Class Enterasys | embedded || switch
+Class Cisco | embedded || WAP
 TSeq(Class=64K)
 T1(DF=N%W=2000%ACK=S++%Flags=AS%Ops=MNW)
 T2(Resp=N)
@@ -368,7 +368,7 @@ PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=F%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
 # AGE Logic, Inc. IBM X-Station
 Fingerprint AGE Logic, Inc. IBM XStation
-Class IBM | embedded-misc || X terminal
+Class IBM | embedded || X terminal
 TSeq(Class=64K)
 T1(DF=N%W=2000%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -380,7 +380,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=F%RIPCK=0%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Aironet 630-2400 V3.3P Wireless LAN bridge
-Class Aironet | embedded-misc || bridge
+Class Aironet | embedded || bridge
 TSeq(Class=C%Val=0)
 T1(DF=Y%W=400%ACK=S++%Flags=AS%Ops=)
 T2(Resp=Y%DF=Y%W=1F4%ACK=S%Flags=AR%Ops=)
@@ -392,7 +392,7 @@ T7(DF=Y%W=1F4%ACK=S++%Flags=AR%Ops=)
 PU(Resp=N)
 
 Fingerprint Aironet AP4800E v8.07 - Aironet (Cisco?) 11 Mbps wireless access point
-Class Aironet | embedded-misc || WAP
+Class Aironet | embedded || WAP
 TSeq(Class=TR%gcd=<6)
 T1(DF=N%W=1000%ACK=S++%Flags=AS%Ops=)
 T2(Resp=Y%DF=N%W=1F4%ACK=S%Flags=AR%Ops=)
@@ -404,7 +404,7 @@ T7(DF=N%W=1F4%ACK=S++%Flags=AR%Ops=)
 PU(Resp=N)
 
 Fingerprint Aironet Wireless Bridge running firmware V5.0J
-Class Aironet | embedded-misc || bridge
+Class Aironet | embedded || bridge
 TSeq(Class=C|TR)
 T1(Resp=Y%DF=N%W=400%ACK=S++%Flags=AS%Ops=)
 T2(Resp=Y%DF=N%W=1F4%ACK=S%Flags=AR%Ops=)
@@ -599,7 +599,7 @@ T7(Resp=N)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=15C%RID=E%RIPCK=0|F%UCK=0%ULEN=134%DAT=E)
 
 Fingerprint IBM 8239 Token-Ring Stackable Hub
-Class IBM | embedded-misc || hub
+Class IBM | embedded || hub
 TSeq(Class=64K%IPID=I%TS=U)
 T1(DF=N%W=F87%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -734,7 +734,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=15C%RID=E%RIPCK=F%UCK=0%ULEN=134%DAT=E)
 
 Fingerprint Alcatel 1000 ADSL (modem)
-Class Alcatel | embedded-misc || broadband router
+Class Alcatel | embedded || broadband router
 TSeq(Class=64K)
 T1(DF=N%W=1000%ACK=S++%Flags=AS%Ops=MNWNNT)
 T2(Resp=N)
@@ -746,7 +746,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=60%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Alcatel 1000 DSL Router
-Class Alcatel | embedded-misc || broadband router
+Class Alcatel | embedded || broadband router
 TSeq(Class=RI%gcd=<5%SI=>AAA&<AAAAA)
 T1(Resp=Y%DF=N%W=2000%ACK=S++%Flags=AS%Ops=MNW)
 T2(Resp=N)
@@ -758,7 +758,7 @@ T7(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(Resp=N)
 
 Fingerprint Alcatel Advanced Reflexes IP Phone, Version: E/AT400/46.8
-Class Alcatel | embedded-misc || VoIP phone
+Class Alcatel | embedded || VoIP phone
 TSeq(Class=TR%gcd=<6%IPID=I%TS=U)
 T1(DF=N%W=3E80%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=ARF%Ops=)
@@ -770,7 +770,7 @@ T7(DF=N%W=0%ACK=S%Flags=ARF%Ops=)
 PU(Resp=N)
 
 Fingerprint Alcatel OmniStack switch version 4.3.3 GA
-Class Alcatel | embedded-misc || switch
+Class Alcatel | embedded || switch
 TSeq(Class=TR%gcd=<6%IPID=I%TS=U)
 T1(DF=N%W=1000%ACK=S++%Flags=AS%Ops=)
 T2(Resp=N)
@@ -785,7 +785,7 @@ PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 # Alcatel SpeedTouch Pro ADSL Router running NZ OS 3.281
 #  Alcatel Speed Touch Home ADSL Modem (POTS), Ver 3.2
 Fingerprint Alcatel Speed Touch *DSL modem/router
-Class Alcatel | embedded-misc || broadband router
+Class Alcatel | embedded || broadband router
 TSeq(Class=64K%IPID=I%TS=2HZ)
 T1(DF=N%W=1000%ACK=S++%Flags=AS%Ops=MNWNNT)
 T2(Resp=N)
@@ -798,7 +798,7 @@ PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=0%UCK=E%ULEN=134%DAT=E)
 
 # Alcaltel Speed Touch 510 *DSL router (uses THOMSON Unix embeded Version 4.0.0.9.0)
 Fingerprint Alcatel Speed Touch 510 *DSL modem/router
-Class Alcatel | embedded-misc || broadband router
+Class Alcatel | embedded || broadband router
 TSeq(Class=64K%IPID=I%TS=2HZ)
 T1(DF=N%W=1000%ACK=S++%Flags=AS%Ops=MNWNNT)
 T2(Resp=N)
@@ -810,7 +810,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Allied Telesyn AT-S10 version 3.0 on an AT-TS24TR hub
-Class Allied Telesyn | embedded-misc || hub
+Class Allied Telesyn | embedded || hub
 TSeq(Class=C)
 T1(Resp=Y%DF=N%W=100%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=APR%Ops=)
@@ -822,7 +822,7 @@ T7(Resp=Y%DF=N%W=0%ACK=S%Flags=APR%Ops=)
 PU(Resp=Y%DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Allied Telesyn AT-3726 Ethernet Switch: 2.1cycleA
-Class Allied Telesyn | embedded-misc || switch
+Class Allied Telesyn | embedded || switch
 TSeq(Class=TD%gcd=FA|1F4%SI=<FFF)
 T1(DF=N%W=400%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -836,7 +836,7 @@ PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 # Allied Telesyn AT-RP24i Rapier 24i version 2.3.1-04
 # Ericsson Home internet Solution ver. 2.0
 Fingerprint Allied Telesyn AT-RP24i switch or Ericcson HiS V2.0
-Class Allied Telesyn | embedded-misc || switch
+Class Allied Telesyn | embedded || switch
 TSeq(Class=TR%gcd=<6%IPID=I%TS=U)
 T1(DF=N%W=400%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -850,8 +850,8 @@ PU(Resp=N)
 # Alteon AceSwitch 110 (software 4.0.37)
 # Centillion C100 ATM Switch OS Version 2.0.2.
 Fingerprint Alteon AceSwitch 110 or Cantillion C100 ATM Switch
-Class Alteon | embedded-misc || switch
-Class Cantillion | embedded-misc || switch
+Class Alteon | embedded || switch
+Class Cantillion | embedded || switch
 TSeq(Class=TD%gcd=<9C8%SI=<1E)
 T1(DF=N%W=200%ACK=S++|O%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -864,7 +864,7 @@ PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 # Alteon ACEswitch 184 Software Version 8.0.49
 Fingerprint Alteon ACEswitch 184 V. 8.0.49
-Class Alteon | embedded-misc || switch
+Class Alteon | embedded || switch
 TSeq(Class=RI%gcd=<34%SI=<C698A&>215%IPID=I%TS=U)
 T1(DF=N%W=1000%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -1020,7 +1020,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=0%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint APC MasterSwitch Network Power Controller
-Class APC | embedded-misc || power-device
+Class APC | embedded || power-device
 TSeq(Class=TR)
 T1(DF=N%W=640%ACK=S++%Flags=AS%Ops=ME)
 T2(Resp=N)
@@ -1032,7 +1032,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=F%ULEN=134%DAT=E)
 
 Fingerprint APC Web/SNMP UPS management card
-Class APC | embedded-misc || power-device
+Class APC | embedded || power-device
 TSeq(Class=RI%gcd=<6%SI=<52FB700&>D46DF)
 T1(DF=N%W=640%ACK=S++%Flags=AS%Ops=ME)
 T2(Resp=N)
@@ -1045,7 +1045,7 @@ PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=F%ULEN=134%DAT=E)
 
 # Smart-UPS 3000RM Firmware: 92.14.I
 Fingerprint APC Smart-UPS 3000RM
-Class APC | embedded-misc || power-device
+Class APC | embedded || power-device
 TSeq(Class=TD%gcd=<138C%SI=<DC%IPID=I)
 T1(DF=N%W=10CD%ACK=S++%Flags=AS%Ops=MENWNNT)
 T2(Resp=N)
@@ -1057,7 +1057,7 @@ T7(Resp=N)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint ARLAN BR2000E V5.0E Radio Bridge
-Class Arlan | embedded-misc || bridge
+Class Arlan | embedded || bridge
 TSeq(Class=TR%gcd=<6)
 T1(DF=N%W=400%ACK=S++%Flags=AS%Ops=)
 T2(Resp=Y%DF=N%W=1F4%ACK=S%Flags=AR%Ops=)
@@ -1069,7 +1069,7 @@ T7(DF=N%W=1F4%ACK=S++%Flags=AR%Ops=)
 PU(Resp=N)
 
 Fingerprint Ascend P130 Router
-Class Ascend | embedded-misc || router
+Class Ascend | embedded || router
 TSeq(Class=RI%gcd=<6%SI=>BBB&<BBBB)
 T1(Resp=Y%DF=N%W=200%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -1081,7 +1081,7 @@ T7(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(Resp=N)
 
 Fingerprint Ascend Max 1800 50Ap8+ or 2024 router
-Class Ascend | embedded-misc || router
+Class Ascend | embedded || router
 TSeq(Class=TD%gcd=388|710|A98%SI=<F)
 T1(Resp=Y%DF=N%W=800%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -1118,7 +1118,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Ascend Pipeline 50 running 5.1A Firmware
-Class Ascend | embedded-misc || router
+Class Ascend | embedded || router
 TSeq(Class=64K)
 T1(DF=N%W=200%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -1130,7 +1130,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Ascend Pipeline 50
-Class Ascend | embedded-misc || router
+Class Ascend | embedded || router
 TSeq(Class=TD%gcd=<714%SI=<14)
 T1(DF=N%W=200%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -1142,7 +1142,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Ascend Pipeline 50 rev 4.6C
-Class Ascend | embedded-misc || router
+Class Ascend | embedded || router
 TSeq(Class=TD%gcd=388|710%SI=<5)
 T1(DF=N%W=200%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -1166,7 +1166,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=15C%RID=F%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
 Fingerprint Ascend P75 router
-Class Ascend | embedded-misc || router
+Class Ascend | embedded || router
 TSeq(Class=RI%gcd=<6%SI=>500&<FFFF)
 T1(DF=N%W=200%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -1178,7 +1178,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Ascend Pipeline P130 or 50
-Class Ascend | embedded-misc || router
+Class Ascend | embedded || router
 TSeq(Class=TD%gcd=388|710|A98%SI=<BB)
 T1(Resp=Y%DF=N%W=200%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -1190,7 +1190,7 @@ T7(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(Resp=Y%DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Ascend Pipeline 400/T1 (Software V 4.5B)
-Class Ascend | embedded-misc || router
+Class Ascend | embedded || router
 TSeq(Class=TD%gcd=388|710|A98%SI=<FF)
 T1(Resp=Y%DF=N%W=800%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -1354,7 +1354,7 @@ PU(DF=N|Y%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=0%ULEN=134%DAT=E)
 # Actually it is not constant seq class -- it just seems that way
 # because it takes so long to increment
 Fingerprint Apple Color LaserWriter 600 Printer
-Class Apple | embedded-misc || printer
+Class Apple | embedded || printer
 TSeq(Class=C)
 T1(DF=N%W=A28%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -1366,7 +1366,7 @@ T7(DF=N%W=800%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Apple Color LaserWriter 600 Printer
-Class Apple | embedded-misc || printer
+Class Apple | embedded || printer
 TSeq(Class=C)
 T1(DF=N%W=A28%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=1000%ACK=S%Flags=AR%Ops=)
@@ -1378,7 +1378,7 @@ T7(DF=N%W=1000%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Apple Color LaserWriter 12/660 PS (Model No. M3036)
-Class Apple | embedded-misc || printer
+Class Apple | embedded || printer
 T1(DF=N%W=A28%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=C00%ACK=S%Flags=AR%Ops=)
 T3(Resp=Y%DF=N%W=C00%ACK=O%Flags=AR%Ops=)
@@ -1389,7 +1389,7 @@ T7(DF=N%W=C00%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Apple LaserWriter 16/600 PS, HP 6P, or HP 5 Printer
-Class Apple | embedded-misc || printer
+Class Apple | embedded || printer
 TSeq(Class=C)
 T1(Resp=Y%DF=Y%W=111C%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=O%Flags=R%Ops=)
@@ -1404,7 +1404,7 @@ PU(Resp=N)
 # has two unique "tracks" which make it look random to nmap.  Here is a
 # real example:  Sequence numbers: 5576001 25D001 5576001 25D001
 Fingerprint Apple LaserWriter 8500 (PostScript version 3010.103)
-Class Apple | embedded-misc || printer
+Class Apple | embedded || printer
 TSeq(Class=TR|C)
 T1(Resp=Y%DF=Y%W=111C%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=O%Flags=R%Ops=)
@@ -1416,7 +1416,7 @@ T7(Resp=Y%DF=N%W=0%ACK=O%Flags=R%Ops=)
 PU(Resp=N)
 
 Fingerprint Asante 6524-2G GigE switch
-Class Asante | embedded-misc || switch
+Class Asante | embedded || switch
 TSeq(Class=TD%gcd=<1378%SI=<46%IPID=I%TS=U)
 T1(DF=N%W=400%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=APR%Ops=)
@@ -1428,7 +1428,7 @@ T7(DF=N%W=0%ACK=S%Flags=APR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Asante IntraStack Ethernet Switch (6014 DSB Versions: BP(2.06 ), FW(1.03 ))
-Class Asante | embedded-misc || switch
+Class Asante | embedded || switch
 TSeq(Class=C%Val=4090000)
 T1(DF=N%W=400%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=APR%Ops=)
@@ -1440,7 +1440,7 @@ T7(DF=N%W=0%ACK=S%Flags=APR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Asante IntraSwitch 5324
-Class Asante | embedded-misc || switch
+Class Asante | embedded || switch
 TSeq(Class=C%Val=80000)
 T1(Resp=Y%DF=N%W=400%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=APR%Ops=)
@@ -1452,7 +1452,7 @@ T7(Resp=Y%DF=N%W=0%ACK=S%Flags=APR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint AsanteHub 2072 Ethernet Hu
-Class Asante | embedded-misc || hub
+Class Asante | embedded || hub
 TSeq(Class=C)
 T1(DF=N%W=400%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=APR%Ops=)
@@ -1464,7 +1464,7 @@ T7(DF=N%W=0%ACK=S%Flags=APR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Asante FriendlyNet FR3004 Series Internet Hub
-Class Asante | embedded-misc || hub
+Class Asante | embedded || hub
 TSeq(Class=TD%gcd=<68%SI=<32%IPID=RD%TS=U)
 T1(DF=N%W=800%ACK=S++%Flags=AR%Ops=)
 T2(Resp=Y%DF=N%W=800%ACK=S%Flags=AR%Ops=)
@@ -1561,7 +1561,7 @@ PU(Resp=N)
 
 # Meridian Data Network CD-ROM Server (V4.20 Nov 26 1997)
 Fingerprint AXIS or Meridian Data Network CD-ROM server
-Class AXIS | embedded-misc || fileserver
+Class AXIS | embedded || fileserver
 TSeq(Class=C)
 T1(DF=N%W=200%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -1574,7 +1574,7 @@ PU(Resp=N)
 
 # AXIS 540/542Print ServerV5.30 Jan 24 1997
 Fingerprint AXIS 540/542Print ServerV5.30
-Class AXIS | embedded-misc || print server
+Class AXIS | embedded || print server
 TSeq(Class=C)
 T1(Resp=Y%DF=N%W=1000%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -1586,7 +1586,7 @@ T7(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(Resp=N)
 
 Fingerprint Axis 540 e'net print server ver 5.48
-Class AXIS | embedded-misc || print server
+Class AXIS | embedded || print server
 TSeq(Class=TD%gcd=<80004%SI=<1E%IPID=I%TS=U)
 T1(DF=N%W=1000%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -1598,7 +1598,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(Resp=N)
 
 Fingerprint Axis 540 print server
-Class AXIS | embedded-misc || print server
+Class AXIS | embedded || print server
 T1(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
 T3(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
@@ -1609,7 +1609,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(Resp=N)
 
 Fingerprint AXIS NetEye Camera Server V1.20
-Class AXIS | embedded-misc || webcam
+Class AXIS | embedded || webcam
 TSeq(Class=C)
 T1(Resp=Y%DF=N%W=100%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -1625,9 +1625,9 @@ PU(Resp=N)
 # AXIS StorPoint CD-Rom server V 4.20
 # AXIS Camera 200pV1.41
 Fingerprint AXIS Stack -- CD-ROM Server or Print Server or Camera Server
-Class AXIS | embedded-misc || fileserver
-Class AXIS | embedded-misc || print server
-Class AXIS | embedded-misc || webcam
+Class AXIS | embedded || fileserver
+Class AXIS | embedded || print server
+Class AXIS | embedded || webcam
 TSeq(Class=C|TD%gcd=20000|40000|60000|80000%SI=<5)
 T1(Resp=Y%DF=N%W=100%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -1639,7 +1639,7 @@ T7(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(Resp=N)
 
 Fingerprint Axis 200+ Web Camera running OS v1.42
-Class AXIS | embedded-misc || webcam
+Class AXIS | embedded || webcam
 T1(DF=N%W=100%ACK=S++%Flags=AS%Ops=ME)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
 T3(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
@@ -1675,7 +1675,7 @@ PU(Resp=N)
 # Bay Networks BLN-2 Network Router (latest Bay OS as of Feb16'99)
 # Bay Networks ASN Processor revision 9, SE100NM and SFNM modules
 Fingerprint Bay Networks BLN-2 Network Router or ASN Processor revision 9
-Class Bay Networks | embedded-misc || router
+Class Bay Networks | embedded || router
 T1(Resp=Y%DF=N%W=200|400%ACK=S++%Flags=AS%Ops=MNNTNW)
 T2(Resp=N)
 T3(Resp=N)
@@ -1686,7 +1686,7 @@ T7(Resp=N)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Bay Networks BayStack 310T switch
-Class Bay Networks | embedded-misc || switch
+Class Bay Networks | embedded || switch
 TSeq(Class=TD%gcd=36524|33E14|320C8|31704%SI=<F)
 T1(Resp=Y%DF=N%W=400%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -1698,7 +1698,7 @@ T7(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint BayStack 28115/ADV Fast Ethernet Switch
-Class Bay Networks | embedded-misc || switch
+Class Bay Networks | embedded || switch
 TSeq(Class=TD%gcd=<6%SI=<FF)
 T1(DF=N%W=200%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -1710,7 +1710,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Baystack Instant Internet 400 SoHo Router
-Class Bay Networks | embedded-misc || router
+Class Bay Networks | embedded || router
 TSeq(Class=RI%gcd=<24%SI=<4D33C&>C46)
 T1(Resp=N)
 T2(Resp=N)
@@ -1772,7 +1772,7 @@ PU(Resp=N)
 
 # F5 labs BigIp Load balancer.  BIG-IP 4.1.1PTF-03 BIG-IP Kernel 4.1.1PTF-03 Build3 i386
 Fingerprint F5 Labs BigIp Load balancer Kernel 4.1.1PTF-03 (X86)
-Class F5 Labs | embedded-misc || load balancer
+Class F5 Labs | embedded || load balancer
 TSeq(Class=TR%gcd=<6)
 T1(DF=Y%W=402E%ACK=S++%Flags=AS%Ops=MNWNNT)
 T2(Resp=N)
@@ -1786,7 +1786,7 @@ PU(DF=N|Y%TOS=0%IPLEN=38%RIPTL=148%RIPCK=F%UCK=E%ULEN=134%DAT=E)
 # XS SW Release 4.9.1 ISDN access router
 # Bintec BIANCA XM OS-Version 4.93
 Fingerprint Bintec XS/XM ISDN access router V. 4.9.1-4.9.3
-Class Bintec | embedded-misc || broadband router
+Class Bintec | embedded || broadband router
 TSeq(Class=RI%gcd=<6%SI=>FF&<FFF)
 T1(DF=N%W=1000%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -1798,7 +1798,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=0%RIPCK=F%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Borderware 5.0 Firewall
-Class Borderware | embedded-misc || firewall
+Class Borderware | embedded || firewall
 TSeq(Class=TR|RI%gcd=<204%SI=<14)
 T1(DF=N%W=3F25%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -1810,7 +1810,7 @@ T7(Resp=N)
 PU(Resp=N)
 
 Fingerprint Borderware 5.2 firewall
-Class Borderware | embedded-misc || firewall
+Class Borderware | embedded || firewall
 TSeq(Class=TR%gcd=<6)
 T1(DF=N%W=C00%ACK=S++%Flags=BAR%Ops=WNMETL)
 T2(Resp=Y%DF=N%W=C00%ACK=S%Flags=AR%Ops=WNMETL)
@@ -1822,7 +1822,7 @@ T7(DF=N%W=C00%ACK=S++%Flags=UAPR%Ops=WNMETL)
 PU(Resp=N)
 
 Fingerprint Borderware 6.0.2 firewall
-Class Borderware | embedded-misc || firewall
+Class Borderware | embedded || firewall
 TSeq(Class=RI%gcd=<6%SI=<1016FC&>291C)
 T1(DF=Y%W=403D%ACK=S++%Flags=AS%Ops=MNWNNT)
 T2(Resp=N)
@@ -1835,7 +1835,7 @@ PU(Resp=N)
 
 # http://www.brixnetworks.com/products/brix1000.html
 Fingerprint Brix 1000 Verifier
-Class Brix Networks | embedded-misc || specialized
+Class Brix Networks | embedded || specialized
 TSeq(Class=TD%gcd=<5C494%SI=<262%IPID=I%TS=U)
 T1(DF=N%W=2000%ACK=S++%Flags=AS%Ops=ME)
 T2(Resp=N)
@@ -1920,7 +1920,7 @@ T7(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=F%RIPCK=F%UCK=0%ULEN=134%DAT=E)
 
 Fingerprint Canon IR6000 printer
-Class Cannon | embedded-misc || printer
+Class Cannon | embedded || printer
 TSeq(Class=64K%IPID=I%TS=U)
 T1(DF=N%W=4000%ACK=S++%Flags=AS%Ops=MNW)
 T2(Resp=N)
@@ -1932,7 +1932,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E|F%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
 Fingerprint Canon photocopier/fax/scanner/printer GP30F
-Class Cannon | embedded-misc || printer
+Class Cannon | embedded || printer
 TSeq(Class=TD%gcd=600%SI=0)
 T1(Resp=Y%DF=N%W=C00%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -1944,7 +1944,7 @@ T7(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(Resp=N)
 
 Fingerprint Capellix 3000 Modular SAN Switch
-Fingerprint Capellix | embedded-misc || storage-misc
+Class Capellix | embedded || storage-misc
 TSeq(Class=64K%IPID=I%TS=U)
 T1(DF=N%W=1000%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=1000%ACK=S%Flags=AR%Ops=)
@@ -1956,7 +1956,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(Resp=N)
 
 Fingerprint Chase IOLan Terminal Server
-Fingerprint Chase | embedded-misc | terminal server
+Class Chase | embedded | terminal server
 T1(Resp=Y%DF=N%W=860%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
 T3(Resp=N)
@@ -1967,7 +1967,7 @@ T7(Resp=Y%DF=N%W=0%ACK=S|O%Flags=AR%Ops=)
 PU(Resp=N)
 
 Fingerprint Check Point FireWall-1 4.0 SP-5 (IPSO build)
-Fingerprint Checkpoint | Windows | NT/2K/XP | firewall
+Class Checkpoint | Windows | NT/2K/XP | firewall
 TSeq(Class=RI%gcd=<6%SI=<18358&>3CB)
 T1(DF=N%W=4000%ACK=O|S++%Flags=A|AS%Ops=NNT|MNWNNT)
 T2(Resp=N)
@@ -1979,7 +1979,7 @@ T7(Resp=N)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Checkpoint Firewall-1 on NT Server 4.0 SP4-SP5
-Fingerprint Checkpoint | Windows | NT/2K/XP | firewall
+Class Checkpoint | Windows | NT/2K/XP | firewall
 TSeq(Class=TD%gcd=<8%SI=<154)
 T1(DF=Y%W=2017%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -2004,7 +2004,7 @@ T7(Resp=N)
 PU(DF=N%TOS=C0%IPLEN=164%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Okidata 7200 Printer
-Class Okidata | embedded-misc || printer
+Class Okidata | embedded || printer
 T1(DF=N%W=B68%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
 T3(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
@@ -2028,7 +2028,7 @@ PU(DF=N%TOS=0%IPLEN=38%RIPTL=134%RID=E%RIPCK=E%UCK=F%ULEN=134%DAT=E)
 
 # Cisco AIR-WGB340 V8.38 Workgroup Bridge 340
 Fingerprint Cisco AIR-WGB340 V8.38 wireless workgroup bridge 340
-Class Cisco | embedded-misc || bridge
+Class Cisco | embedded || bridge
 TSeq(Class=TR%gcd=<6%IPID=I%TS=U)
 T1(DF=N%W=1F4|1000%ACK=S++%Flags=AR|AS%Ops=)
 T2(Resp=Y%DF=N%W=C00%ACK=S%Flags=AR%Ops=WNMETL)
@@ -2040,7 +2040,7 @@ T7(DF=N%W=C00%ACK=S++%Flags=AR%Ops=WNMETL)
 PU(Resp=N)
 
 Fingerprint Cisco 761 running c760-in.r.NET3 4.3(1)
-Class Cisco | embedded-misc || broadband router
+Class Cisco | embedded || broadband router
 TSeq(Class=TD%gcd=<348004%SI=<14%IPID=I%TS=U)
 T1(DF=N%W=800%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -2052,7 +2052,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Cisco 762 Non-IOS Software release 4.1(2) or 766 ISDN router
-Class Cisco | embedded-misc || broadband router
+Class Cisco | embedded || broadband router
 TSeq(Class=TD%gcd=A000|3C000|14000|14A000|348000|26C000%SI=<F)
 T1(DF=N%W=800%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -2064,7 +2064,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Cisco 766 non-IOS software 4.2(3.5)
-Class Cisco | embedded-misc || broadband router
+Class Cisco | embedded || broadband router
 TSeq(Class=TD%gcd=82000%SI=<F)
 T1(DF=N%W=800%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -2076,8 +2076,8 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Cisco 1538M HUB running Cisco 1538M EES (1.00.00) or Assured Access Technology ISAS Switch Release-2.3.0 or Thomson Multimedia RCA DCM245 Cable Modem
-Class RCA | embedded-misc || broadband router
-Class Cisco | embedded-misc || hub
+Class RCA | embedded || broadband router
+Class Cisco | embedded || hub
 TSeq(Class=64K)
 T1(Resp=Y%DF=N%W=1000%ACK=S++%Flags=AS%Ops=)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -2163,7 +2163,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=C0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Cisco Cache Engine Web Proxy
-Class Cisco | embedded-misc || web proxy
+Class Cisco | embedded || web proxy
 TSeq(Class=RI%gcd=<6%SI=>FF&<FFFF)
 T1(DF=N%W=2017%ACK=S++%Flags=AS%Ops=MNW)
 T2(Resp=N)
@@ -2190,8 +2190,8 @@ PU(Resp=N)
 # Cisco Catalyst 5500 with OS Version 6.3(5)
 # Alcatel Omni Switch/Router! Version 4.3.1 GA
 Fingerprint Cisco Catalyst 5500/6500 or Alcatel Omni Switch/Router
-Class Cisco | embedded-misc || switch
-Class Alcatel | embedded-misc || switch
+Class Cisco | embedded || switch
+Class Alcatel | embedded || switch
 TSeq(Class=TR%gcd=<6%IPID=I%TS=U)
 T1(DF=N%W=1000%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -2203,7 +2203,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N|Y%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
 Fingerprint Cisco AS5200 terminal server
-Class Cisco | embedded-misc || terminal server
+Class Cisco | embedded || terminal server
 TSeq(Class=RI%gcd=<6%SI=>FFF)
 T1(DF=N%W=1020%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -2230,7 +2230,7 @@ PU(Resp=Y%DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 # The "True Random" is bogus, it is because of sequences
 # from servers behind the LB like: 4B028A43 E016F844 4B05F5D2 4DB8B4C E402869
 Fingerprint Cisco Localdirector 430, running OS 2.1
-Class Cisco | embedded-misc || load balancer
+Class Cisco | embedded || load balancer
 TSeq(Class=TR|C)
 T1(DF=N%W=C00|400|1000%ACK=S++%Flags=AR%Ops=WNMETL)
 T2(Resp=Y%DF=N%W=C00|400|1000%ACK=S%Flags=AR%Ops=WNMETL)
@@ -2405,7 +2405,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Cisco IP Phone 7910 or 7940 Firmware 3.1
-Class Cisco | embedded-misc || VoIP phone
+Class Cisco | embedded || VoIP phone
 TSeq(Class=TD%gcd=<1E004%SI=<1E%IPID=I%TS=U)
 T1(DF=N%W=578%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -2453,9 +2453,9 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=C0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Cisco Catalyst 1900 switch, Bay networks 350-450 switch,  or Netopia DSL/ISDN router
-Class Cisco | embedded-misc || switch
-Class Bay Networks | embedded-misc || switch
-Class Netopia | embedded-misc || broadband router
+Class Cisco | embedded || switch
+Class Bay Networks | embedded || switch
+Class Netopia | embedded || broadband router
 TSeq(Class=TD%gcd=<6000%SI=<1E)
 T1(DF=N%W=400%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -2467,7 +2467,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Cisco Catalyst 2820 switch Management Console
-Class Cisco | embedded-misc || switch
+Class Cisco | embedded || switch
 TSeq(Class=TD%gcd=<6%SI=<1B8%IPID=I%TS=U)
 T1(DF=N%W=400%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -2579,7 +2579,7 @@ T7(DF=N%W=0%ACK=S|O%Flags=AR%Ops=)
 PU(DF=N%TOS=C0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Cisco Local Director 420 version 2.1.1
-Class Cisco | embedded-misc || load balancer
+Class Cisco | embedded || load balancer
 TSeq(Class=C)
 T1(DF=N%W=1000%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=1000%ACK=S%Flags=R%Ops=WNMETL)
@@ -2633,7 +2633,7 @@ PU(Resp=N)
 # variation, the ATA 188 that has a pass-through port, much like the
 # Cisco 7960 phone.
 Fingerprint Cisco ATA 186 POTS<->VOIP phone gateway device
-Class Cisco | embedded-misc || telecom-misc
+Class Cisco | embedded || telecom-misc
 TSeq(Class=TD%gcd=<A0000%SI=<1E%IPID=I%TS=U)
 T1(DF=N%W=3E80%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=O%Flags=ARF%Ops=)
@@ -2656,8 +2656,8 @@ T7(Resp=Y%DF=Y%W=100%ACK=S%Flags=AR%Ops=)
 PU(Resp=N)
 
 Fingerprint Cisco 760 Series ISDN router (non IOS) or IBM Stackable Hub
-Class Cisco | embedded-misc || broadband router
-Class IBM | embedded-misc || hub
+Class Cisco | embedded || broadband router
+Class IBM | embedded || hub
 TSeq(Class=TD|i800%gcd=<14004%SI=<14)
 T1(DF=N%W=800%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -2669,7 +2669,7 @@ T7(DF=N%W=0%ACK=S|S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Cisco 7905 IP Phone
-Class Cisco | embedded-misc || VoIP phone
+Class Cisco | embedded || VoIP phone
 TSeq(Class=TD%gcd=<2004%SI=<1E%IPID=I%TS=U)
 T1(DF=N%W=3E80%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
@@ -2719,7 +2719,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=C0%IPLEN=164%RIPTL=148%RID=E|F%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Cisco uBR 7223 router
-Class Cisco | embedded-misc || router
+Class Cisco | embedded || router
 TSeq(Class=TR%gcd=<6%IPID=C%TS=U)
 T1(DF=N%W=1020%ACK=S++%Flags=AS%Ops=ME)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -2733,8 +2733,8 @@ PU(Resp=N)
 # 3COM 4924 gigabit switch ver 2.04
 # Cisco VPN 3000 3.5
 Fingerprint Cisco VPN 3000 or 3Com 4924 GigE Switch
-Class Cisco | embedded-misc || encryption accelerator
-Class 3Com | embedded-misc || switch
+Class Cisco | embedded || encryption accelerator
+Class 3Com | embedded || switch
 TSeq(Class=RI%gcd=<6%SI=<59088&>B4F%IPID=I%TS=2HZ)
 T1(DF=N%W=2000%ACK=S++%Flags=AS%Ops=MNWNNT)
 T2(Resp=N)
@@ -2746,7 +2746,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Cisco X.25/TCP/LAT Protocol Translator ver 8.2(4)
-Class Cisco | embedded-misc || router
+Class Cisco | embedded || router
 T1(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
 T3(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
@@ -2769,7 +2769,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=F%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Cnet CNIG904B Internet Broadband Gateway firmware version 1.11
-Class Cnet | embedded-misc || broadband router
+Class Cnet | embedded || broadband router
 TSeq(Class=TD%gcd=<F4%SI=<1D6%IPID=Z%TS=U)
 T1(DF=N%W=C00|800|1000|400%ACK=S++%Flags=AR%Ops=)
 T2(Resp=Y%DF=N%W=C00|800|1000|400%ACK=S%Flags=AR%Ops=)
@@ -2782,7 +2782,7 @@ PU(Resp=N)
 
 # CNT UltraNet EDGE (SAN Router) softwareversion 1.4.1.2
 Fingerprint CNT UltraNet EDGE (SAN Router) V. 1.4.1.2
-Class CNT | embedded-misc || storage-misc
+Class CNT | embedded || storage-misc
 TSeq(Class=TD%gcd=<61AC%SI=<1E%IPID=I%TS=U)
 T1(DF=N%W=3E80%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -2807,7 +2807,7 @@ PU(DF=N%TOS=C0%IPLEN=164%RIPTL=148%RID=E%RIPCK=E%UCK=F%ULEN=134%DAT=E)
 
 # corega BAR SW-4P  [Part number:CG-BARSW4P]
 Fingerprint Corega BAR SW-4P Broadband Access Router
-Class Corega | embedded-misc || broadband router
+Class Corega | embedded || broadband router
 T1(DF=N%W=800%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T3(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
@@ -2818,7 +2818,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(Resp=N)
 
 Fingerprint Commodore 64 with TFE Ethernet Card (uIP TCP/IP stack)
-Fingerprint Commodore | embedded-misc || game console
+Class Commodore | embedded || game console
 TSeq(Class=C%Val=FFFFFFFF%IPID=RD%TS=U)
 T1(DF=N%W=5B4%ACK=S++%Flags=AS%Ops=)
 T2(Resp=Y%DF=N%W=5B4|16D0%ACK=O%Flags=APF%Ops=)
@@ -2833,7 +2833,7 @@ PU(Resp=N)
 # firmware 4.5 and two IntraPorts running 4.4.02.  I'm told this also
 # applies to firmare 4.2 on RISC routers, but I have not checked.
 Fingerprint Compatible Systems (RISC Router, IntraPort)
-Class Compatible Systems | embedded-misc || router
+Class Compatible Systems | embedded || router
 TSeq(Class=TD%gcd=388|710|A98%SI=<6)
 T1(Resp=Y%DF=N%W=4000%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -2845,7 +2845,7 @@ T7(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(Resp=Y%DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=F%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Computone Power Rack IntelliServer terminal server Release 1.5.4d
-Class Computone | embedded-misc || terminal server
+Class Computone | embedded || terminal server
 TSeq(Class=TD%gcd=40%SI=0)
 T1(DF=N%W=400%ACK=S++%Flags=AS%Ops=)
 T2(Resp=N)
@@ -2940,7 +2940,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
 Fingerprint Cyberguard 4.0 firewall
-Class Cyberguard | embedded-misc || firewall
+Class Cyberguard | embedded || firewall
 TSeq(Class=RI%gcd=<6%SI=>FFFF)
 T1(DF=N%W=1000%ACK=S++%Flags=AS%Ops=)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -2952,7 +2952,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=15C%RID=F%RIPCK=0%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Cyclades PathRouter V 1.2.4
-Class Cyclades | embedded-misc || router
+Class Cyclades | Cyros || router
 TSeq(Class=RI%gcd=<6%SI=>BBBBB)
 T1(DF=N%W=96%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -2964,7 +2964,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(Resp=N)
 
 Fingerprint Cyclades PathRAS Remote Access Server v1.1.8 - 1.3.12
-Class Cyclades | embedded-misc || terminal server
+Class Cyclades | Cyros || terminal server
 TSeq(Class=TD%gcd=30C382%SI=<BB)
 T1(Resp=Y%DF=N%W=6C2%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -2976,7 +2976,7 @@ T7(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(Resp=N)
 
 Fingerprint Cyclades PathRAS Remote Access Server v1.1.7
-Class Cyclades | embedded-misc || terminal server
+Class Cyclades | Cyras || terminal server
 TSeq(Class=RI%gcd=<6%SI=>BBBBB)
 T1(DF=N%W=6C2%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -2988,7 +2988,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(Resp=N)
 
 Fingerprint Cyclades PathRouter
-Class Cyclades | embedded-misc || router
+Class Cyclades | Cyras || router
 TSeq(Class=TD|RI%gcd=<618708%SI=<EEE47C)
 T1(DF=N%W=46%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -3000,7 +3000,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(Resp=N)
 
 Fingerprint Cyclades PathRouter/PC
-Class Cyclades | embedded-misc || router
+Class Cyclades | Cyras || router
 TSeq(Class=RI|TD%gcd=<618708%SI=<1F343)
 T1(DF=N%W=244%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -3012,7 +3012,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=F%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Datavoice TxPORT PRISM 3000 T1 CSU/DSU 6.22/2.06
-Class Datavoice | embedded-misc || CSUDSU
+Class Datavoice | embedded || CSUDSU
 TSeq(Class=RI%gcd=<6%SI=>18000)
 T1(DF=N%W=1000%ACK=S++%Flags=AS%Ops=ME)
 T2(Resp=N)
@@ -3117,7 +3117,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(Resp=N)
 
 Fingerprint DECNIS 600 V4.1.3B multiprotocol bridge/router
-Class DEC | embedded-misc || router
+Class DEC | embedded || router
 TSeq(Class=TD%gcd=30D4|C35%SI=<F)
 T1(DF=N%W=8000%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -3130,7 +3130,7 @@ PU(Resp=N)
 
 # DECserver 700-16, Network Access SW V2.2
 Fingerprint DECserver 700-16 terminal server, Network Access SW V2.2
-Class DEC | embedded-misc || terminal server
+Class DEC | embedded || terminal server
 TSeq(Class=64K)
 T1(DF=N%W=600%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -3432,7 +3432,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=164%RIPTL=148%RID=E%RIPCK=F%UCK=F%ULEN=134%DAT=E)
 
 Fingerprint Digital Networks VNswitch 900
-Class Digital Networks | embedded-misc || switch
+Class Digital Networks | embedded || switch
 TSeq(Class=TD%gcd=<4%SI=<4)
 T1(Resp=Y%DF=N%W=800%ACK=S++%Flags=AS%Ops=MEL)
 T2(Resp=N)
@@ -3444,7 +3444,7 @@ T7(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(Resp=Y%DF=N%TOS=0%IPLEN=38%RIPTL=148%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Digitel NetRouter NR3000
-Class Digitel | embedded-misc || router
+Class Digitel | embedded || router
 TSeq(Class=RI%gcd=<2004%SI=<10CC&>16)
 T1(DF=N%W=200%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -3456,7 +3456,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=F%ULEN=134%DAT=E)
 
 Fingerprint Digitel NetRouter NR3100
-Class Digitel | embedded-misc || router
+Class Digitel | embedded || router
 TSeq(Class=TD%gcd=<2004%SI=<78%IPID=I%TS=U)
 T1(DF=N%W=200%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -3517,7 +3517,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=F%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
 Fingerprint Digital Link DL2001 CSU/DSU Management Access Processor
-Class Digital Link | embedded-misc || CSUDSU
+Class Digital Link | embedded || CSUDSU
 TSeq(Class=TD%gcd=<2780%SI=<14)
 T1(DF=N%W=1000%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -3553,7 +3553,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(TOS=0%IPLEN=38%RIPTL=148%RID=E|F%RIPCK=E%UCK=0%ULEN=134%DAT=E)
 
 Fingerprint Draytek Vigor 2000 ISDN router
-Class Draytek | embedded-misc || broadband router
+Class Draytek | embedded || broadband router
 T1(DF=N%W=834%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T3(Resp=Y%DF=N%W=834%ACK=S++%Flags=AS%Ops=M)
@@ -3564,7 +3564,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(Resp=N)
 
 Fingerprint Draytek Vigor 2200e Router V2.1a
-Class Draytek | embedded-misc || broadband router
+Class Draytek | embedded || broadband router
 TSeq(Class=TR%gcd=<6%IPID=I%TS=U)
 T1(DF=N%W=834%ACK=S++%Flags=AS%Ops=ME)
 T2(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
@@ -3576,7 +3576,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=C0%IPLEN=38%RIPTL=148%RID=E|F%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Compaq Integrated Lights Out remote configuration Board
-Class Compaq | embedded-misc || specialized
+Class Compaq | embedded || specialized
 TSeq(Class=TD%gcd=<6%SI=<1E%IPID=I%TS=U)
 T1(DF=N%W=800%ACK=O%Flags=R%Ops=)
 T2(Resp=Y%DF=N%W=800%ACK=O%Flags=R%Ops=)
@@ -3589,7 +3589,7 @@ PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E|F%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 # Proliant DL580 Integrated Lights-Out remote configuration board V1.06 14.5.2002
 Fingerprint Compaq Proliant DL580 Integrated Lights-Out remote configuration board V1.06
-Class Compaq | embedded-misc || specialized
+Class Compaq | embedded || specialized
 TSeq(Class=TD%gcd=<6%SI=<28%IPID=I%TS=U)
 T1(DF=N%W=400%ACK=O%Flags=R%Ops=)
 T2(Resp=Y%DF=N%W=400%ACK=O%Flags=R%Ops=)
@@ -3600,8 +3600,11 @@ T6(DF=N%W=400%ACK=S%Flags=AR%Ops=)
 T7(DF=N%W=400%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E|F%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
-Fingerprint Compaq iPAQ Connection Point (WAP) model CP-2W Rev1.00
-Class Compaq | embedded-misc || WAP
+# Compaq iPAQ Connection Point (WAP) model CP-2W Rev1.00
+# NetGear MR814 WAP
+Fingerprint WAP: Compaq iPAQ Connection Point or Netgear MR814
+Class Compaq | embedded || WAP
+Class Netgear | embedded || WAP
 T1(DF=N%W=800%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T3(Resp=Y%DF=N%W=800%ACK=S++%Flags=AS%Ops=M)
@@ -3782,7 +3785,7 @@ PU(DF=N%TOS=0%IPLEN=38%RIPTL=15C%RID=E%RIPCK=0%UCK=E%ULEN=134%DAT=E)
 
 # Software version VIK-1.35.020320j -- www.easytel.fi
 Fingerprint Easytel TeleWell EA-701B ADSL Modem/Router
-Class Easytel | embedded-misc || broadband router
+Class Easytel | embedded || broadband router
 TSeq(Class=TR%gcd=<6%IPID=I%TS=U)
 T1(DF=N%W=3E80%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -3794,7 +3797,7 @@ T7(Resp=N)
 PU(DF=N%TOS=C%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Edimax BR-6004 broadband router
-Class Edimax | embedded-misc || broadband router
+Class Edimax | embedded || broadband router
 TSeq(Class=i800%IPID=I%TS=2HZ)
 T1(DF=N%W=402E%ACK=S++%Flags=AS%Ops=MNWNNT)
 T2(Resp=N)
@@ -3805,7 +3808,7 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 
 Fingerprint Edimax PS-901 Print Server model 1P/13E-9.5.12
-Class Edimax | embedded-misc || print server
+Class Edimax | embedded || print server
 TSeq(Class=RI%gcd=<2004%SI=<12D4&>1C%IPID=I%TS=U)
 T1(DF=N%W=400%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -3817,7 +3820,7 @@ T7(DF=N%W=0%ACK=O%Flags=R%Ops=)
 PU(Resp=N)
 
 Fingerprint Eicon Diva1830 ISDN router running 1.5 firmware
-Class Eicon | embedded-misc || broadband router
+Class Eicon | embedded || broadband router
 TSeq(Class=TD%gcd=<20004%SI=<14%IPID=I%TS=U)
 T1(DF=N%W=2000%ACK=S++%Flags=ASF%Ops=M)
 T2(Resp=Y%DF=N%W=1%ACK=S%Flags=AR%Ops=)
@@ -3830,7 +3833,7 @@ PU(DF=N%TOS=0%IPLEN=164%RIPTL=148%RID=E|F%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 # ELSA LANCOM DSL/10 Office 2.62.0002
 Fingerprint ELSA LANCOM DSL/10 Office router v2.62.0002
-Class Elsa | embedded-misc || broadband router
+Class Elsa | embedded || broadband router
 TSeq(Class=TR%gcd=<6%IPID=I%TS=U)
 T1(DF=N%W=578%ACK=S++%Flags=BAS%Ops=M)
 T2(Resp=N)
@@ -3844,7 +3847,7 @@ PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=F%UCK=E%ULEN=134%DAT=E)
 # ELSA LANCOM DSL/I-1611 Office 2.70.0025 / 06.08.2002 http://www.lancom-systems.de/
 # ELSA LANCOM DSL/I-1611 Office 2.50.0005 / 15.11.2001
 Fingerprint ELSA LANCOM DSL/I-1611 Office router
-Class Elsa | embedded-misc || broadband router
+Class Elsa | embedded || broadband router
 TSeq(Class=TR%gcd=<6%IPID=I%TS=U)
 T1(DF=N%W=578%ACK=S++%Flags=BAS%Ops=)
 T2(Resp=N)
@@ -3880,7 +3883,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=15C%RID=F%RIPCK=F%UCK=0%ULEN=134%DAT=E)
 
 Fingerprint Epson Stylus 800n/EPSON Ethernet Ver. 4.20
-Class Epson | embedded-misc || printer
+Class Epson | embedded || printer
 T1(DF=N%W=200%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=200%ACK=S++%Flags=AR%Ops=)
 T3(DF=N%W=200%ACK=S++%Flags=AF|AR%Ops=)
@@ -3891,7 +3894,7 @@ T7(DF=N%W=200%ACK=S++%Flags=AR%Ops=)
 PU(Resp=N)
 
 Fingerprint EPSON Ethernet Ver. 4.20 6.04, 13395E-98
-Class Epson | embedded-misc || printer
+Class Epson | embedded || printer
 TSeq(Class=TR)
 T1(Resp=Y%DF=N%W=200%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=200%ACK=S++%Flags=AR%Ops=)
@@ -3903,7 +3906,7 @@ T7(Resp=Y%DF=N%W=200%ACK=S++%Flags=AR%Ops=)
 PU(Resp=N)
 
 Fingerprint Ericsson HM220dp ADSL modem/router
-Class Ericsson | embedded-misc || broadband router
+Class Ericsson | embedded || broadband router
 TSeq(Class=TD%gcd=<EA64%SI=<1E%IPID=I%TS=U)
 T1(DF=N%W=1FB0%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -3927,7 +3930,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=C0%IPLEN=38%RIPTL=134%RID=E%RIPCK=F%UCK=0%ULEN=134%DAT=E)
 
 Fingerprint Extreme Networks Black Diamond switch
-Class Extreme Networks | embedded-misc || switch
+Class Extreme Networks | embedded || switch
 TSeq(Class=64K%gcd=<6%SI=<14)
 T1(DF=N%W=1000%ACK=S++%Flags=AS%Ops=)
 T2(Resp=N)
@@ -3939,7 +3942,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=C0%IPLEN=38%RIPTL=134%RID=E%RIPCK=F%UCK=0%ULEN=134%DAT=E)
 
 Fingerprint Extreme Gigabit switch (unknown version)
-Class Extreme Networks | embedded-misc || switch
+Class Extreme Networks | embedded || switch
 TSeq(Class=64K)
 T1(DF=N%W=1000%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -3951,7 +3954,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=C0%IPLEN=38%RIPTL=134%RID=E%RIPCK=F%UCK=0%ULEN=134%DAT=E)
 
 Fingerprint NAT LANB/290 router Console Program V4.00
-Class NAT | embedded-misc || router
+Class NAT | embedded || router
 TSeq(Class=TD%gcd=<80004%SI=<14)
 T1(DF=N%W=800%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -3999,8 +4002,8 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(Resp=N)
 
 Fingerprint Broadband Router (Farralon Netopia or Compatible Systems 900i)
-Class Netopia | embedded-misc || broadband router
-Class Compatible Systems | embedded-misc || router
+Class Netopia | embedded || broadband router
+Class Compatible Systems | embedded || router
 TSeq(Class=TD%gcd=388|710|A98%SI=<F)
 T1(DF=N%W=400%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -4012,7 +4015,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(Resp=N)
 
 Fingerprint FastComm FRAD (Frame Relay Access Device) F9200-DS-DNI -- Ver. 4.2.3A
-Class FastComm | embedded-misc || specialized
+Class FastComm | embedded || specialized
 TSeq(Class=TD|RI%gcd=<8%SI=<1E)
 T1(DF=N%W=648%ACK=S++%Flags=AS%Ops=)
 T2(Resp=N)
@@ -4024,7 +4027,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(Resp=N)
 
 Fingerprint Foundry 1500 Load Balancer OS Ver 7.2.06T51
-Class Foundry | embedded-misc || load balancer
+Class Foundry | embedded || load balancer
 TSeq(Class=RI%gcd=<6%SI=<1366E&>AE%IPID=I%TS=U)
 T1(DF=N%W=4000%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=Y%W=0%ACK=S%Flags=AR%Ops=)
@@ -4108,7 +4111,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=F%ULEN=134%DAT=E)
 
 Fingerprint Gandalf LanLine Router
-Class Gandalf | embedded-misc || router
+Class Gandalf | embedded || router
 TSeq(Class=TD%gcd=<714%SI=<14)
 T1(DF=N%W=5DC%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -4120,7 +4123,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(Resp=N)
 
 Fingerprint Genius print server
-Class Genius | embedded-misc || print server
+Class Genius | embedded || print server
 T1(DF=N%W=400%ACK=S++%Flags=APS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
 T3(Resp=Y%DF=N%W=0%ACK=O%Flags=AR%Ops=)
@@ -4131,7 +4134,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(Resp=N)
 
 Fingerprint Gnat Box Light firewall v3.0.3 (from the inside interface)
-Class Global Technology Associates | embedded-misc || firewall
+Class Global Technology Associates | embedded || firewall
 TSeq(Class=RI%gcd=<6%SI=<F708&>264)
 T1(DF=Y%W=403D%ACK=S++%Flags=AS%Ops=MNWNNT)
 T2(Resp=N)
@@ -4155,7 +4158,7 @@ T7(Resp=N)
 PU(Resp=N)
 
 Fingerprint Compatible Systems ISDN/leased-line/dialup MicroRouter 900i v3.0.9
-Class Compatible Systems | embedded-misc || broadband router
+Class Compatible Systems | embedded || broadband router
 TSeq(Class=TD%gcd=388|710|A98%SI=<F)
 T1(DF=N%W=400%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -4167,7 +4170,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=F%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Compatible Systems ISDN/leased-line/dialup Microrouter 2220R w/ firmware v4.5
-Class Compatible Systems | embedded-misc || broadband router
+Class Compatible Systems | embedded || broadband router
 TSeq(Class=TD%gcd=388|710|A98%SI=<14)
 T1(DF=N%W=4000%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -4179,8 +4182,8 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=F%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint FlowPoint/2000 - 2200 SDSL Router (v1.2.3 - 3.0.4) or ASCOM Timeplex Access Router
-Class FlowPoint | embedded-misc || broadband router
-Class ASCOM | embedded-misc || broadband router
+Class FlowPoint | embedded || broadband router
+Class ASCOM | embedded || broadband router
 TSeq(Class=TD%gcd=<6%SI=<FF)
 T1(DF=N%W=1000%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -4194,8 +4197,8 @@ PU(DF=N%TOS=0%IPLEN=38%RIPTL=15C%RID=E%RIPCK=F%UCK=0%ULEN=134%DAT=E)
 # Flowpoint 144 or 22XX DSL Router v3.0.8
 # SpeedStream 5851 SDSL [ATM] Router (120-5851-012) v4.0.5.1 Ready
 Fingerprint DSL Router: Flowpoint 144/22XX v3.0.8 or SpeedStream 5851 v4.0.5.1
-Class FlowPoint | embedded-misc || broadband router
-Class SpeedStream | embedded-misc || broadband router
+Class FlowPoint | embedded || broadband router
+Class SpeedStream | embedded || broadband router
 TSeq(Class=TR%gcd=<6)
 T1(DF=N%W=1000%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -4569,8 +4572,8 @@ PU(TOS=0%IPLEN=38%RIPTL=15C%RIPCK=F%UCK=0%ULEN=134%DAT=E)
 # HP Router 210 with OS 9.72
 # Netgear RP114 DSL-Router with 4-Port Switch
 Fingerprint HP Advancestack Etherswitch 224T or 210 or Netgear RP114 DSL-Router w/Switch
-Class HP | embedded-misc || switch
-Class Netgear | embedded-misc || broadband router
+Class HP | embedded || switch
+Class Netgear | embedded || broadband router
 TSeq(Class=TD%SI=<20)
 T1(DF=N%W=400%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -4614,10 +4617,10 @@ PU(DF=N|Y%TOS=0%IPLEN=38%RIPTL=15C%RID=F%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 # TrueTime NTS-200 GPS Network Time Server
 # Compaq Lights Out Edition firmware v2.41
 Fingerprint Embedded device: HP Switch, Copper Mountain DSL Concentrator, Compaq Remote Insight Lights-Out remote console card, 3Com Home Wireless Gateway, or TrueTime NTP clock
-Class Copper Mountain | embedded-misc || terminal server
-Class 3Com | embedded-misc || WAP
-Class TrueTime | embedded-misc || specialized
-Class Compaq | embedded-misc || specialized
+Class Copper Mountain | embedded || terminal server
+Class 3Com | embedded || WAP
+Class TrueTime | embedded || specialized
+Class Compaq | embedded || specialized
 TSeq(Class=64K%IPID=I%TS=U)
 T1(DF=N%W=2000%ACK=S++%Flags=AS%Ops=MNW)
 T2(Resp=N)
@@ -4630,7 +4633,7 @@ PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=F%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
 # HP JetDirect Print Server
 Fingerprint HP printer w/JetDirect card
-Class HP | embedded-misc || printer
+Class HP | embedded || printer
 TSeq(Class=TD%gcd=<6%SI=<1E)
 T1(DF=N%W=16D0|C90%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -4642,7 +4645,7 @@ T7(Resp=N)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=0%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint HP printer w/JetDirect card
-Class HP | embedded-misc || printer
+Class HP | embedded || printer
 TSeq(Class=TD%gcd=<10%SI=<14%IPID=I%TS=U)
 T1(DF=N%W=2238%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -4654,7 +4657,7 @@ T7(Resp=N)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=0%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint HP printer w/JetDirect card
-Class HP | embedded-misc || printer
+Class HP | embedded || printer
 TSeq(Class=TD%gcd=<6%SI=<F)
 T1(DF=N%W=2238%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -4667,7 +4670,7 @@ PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=0%UCK=E%ULEN=134%DAT=E)
 
 # HP printer w/JetDirect card (Firmware Rev. H.06.00)
 Fingerprint HP printer w/JetDirect card
-Class HP | embedded-misc || printer
+Class HP | embedded || printer
 TSeq(Class=TD%gcd=<8%SI=<14)
 T1(DF=N%W=860|16D0%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -4681,7 +4684,7 @@ PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 # JetDirect J6057A, firmware R.24.06, connected to an HP 2200 printer
 # JetDirect 610n (Model J4169A) firmware L.24.06
 Fingerprint HP printer w/JetDirect card
-Class HP | embedded-misc || printer
+Class HP | embedded || printer
 TSeq(Class=RI%gcd=<6%SI=<AF762&>9E9%IPID=I%TS=2HZ)
 T1(DF=N%W=5B4%ACK=S++%Flags=AS%Ops=MNWNNT)
 T2(Resp=N)
@@ -4693,7 +4696,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=F%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
 Fingerprint HP JetDirect J6057A Firmware Version R.22.09 in 4100mpf printer
-Class HP | embedded-misc || printer
+Class HP | embedded || printer
 TSeq(Class=64K%IPID=I%TS=U)
 T1(DF=N%W=16D0%ACK=S++%Flags=AS%Ops=MNW)
 T2(Resp=N)
@@ -4707,7 +4710,7 @@ PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=F%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 # HP JetDirect Card (J4169A) in an HP LaserJet 8150/8550
 # HP LaserJet 2200 with JetDirect (J6057A)
 Fingerprint HP JetDirect Card in a LaserJet printer
-Class HP | embedded-misc || printer
+Class HP | embedded || printer
 TSeq(Class=64K%IPID=I%TS=U)
 T1(DF=N%W=5B4%ACK=S++%Flags=AS%Ops=MNW)
 T2(Resp=N)
@@ -4720,7 +4723,7 @@ PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=F%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
 # 2100 Series, 4000 TN, 4000 PS, 8000 DN
 Fingerprint HP LaserJet Printer
-Class HP | embedded-misc || printer
+Class HP | embedded || printer
 TSeq(Class=TD%gcd=<6%SI=<100)
 T1(DF=N%W=16D0%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -4732,7 +4735,7 @@ T7(Resp=N)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint HP LaserJet 4000N Printer
-Class HP | embedded-misc || printer
+Class HP | embedded || printer
 TSeq(Class=TD%gcd=<6%SI=<1E)
 T1(DF=N%W=860%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -4744,7 +4747,7 @@ T7(Resp=N)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=0%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint HP pritner w/JetDirect J2556b card Firmware A.05.32
-Class HP | embedded-misc || printer
+Class HP | embedded || printer
 T1(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T2(Resp=N)
 T3(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
@@ -4756,7 +4759,7 @@ PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=0%UCK=E%ULEN=134%DAT=E)
 
 # This is a HP 5si printer with a Jetdirect Ethernet card model# J2556b Firmware A.05.32
 Fingerprint HP printer w/JetDirect J2556b card (firmware A.05.32)
-Class HP | embedded-misc || printer
+Class HP | embedded || printer
 T1(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T2(Resp=N)
 T3(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
@@ -4769,7 +4772,7 @@ PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=0%UCK=E%ULEN=134%DAT=E)
 # Jet Direct Model J3113A, Firmware Rev G.07.20
 # HP Color LaserJet 4500N, Jet Direct J3113A/2100
 Fingerprint HP Printer w/Jet Direct J3113A/2100 card
-Class HP | embedded-misc || printer
+Class HP | embedded || printer
 T1(DF=N%W=16D0|0%ACK=S++%Flags=AS|AR%Ops=M|)
 T2(Resp=N)
 T3(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
@@ -4780,7 +4783,7 @@ T7(Resp=N)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint HP LaserJet 5
-Class HP | embedded-misc || printer
+Class HP | embedded || printer
 TSeq(Class=TD%gcd=<6%SI=<FF)
 T1(DF=N%W=860%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -4792,7 +4795,7 @@ T7(Resp=N)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=0%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint HP Procurve Routing Switch 9304M
-Class HP | embedded-misc || load balancer
+Class HP | embedded || load balancer
 TSeq(Class=C)
 T1(DF=Y%W=800%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=Y%W=1%ACK=S%Flags=AR%Ops=)
@@ -4991,7 +4994,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=15C%RID=E%RIPCK=F%UCK=0%ULEN=134%DAT=E)
 
 Fingerprint Hydra HydraWEB 5000
-Class Hydra | embedded-misc || load balancer
+Class Hydra | embedded || load balancer
 TSeq(Class=RI%gcd=1|2|3|4%SI=<FFFF&>1111)
 T1(Resp=Y%DF=N%W=2017%ACK=S++%Flags=AS%Ops=MNWNNT)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -5003,7 +5006,7 @@ T7(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(Resp=Y%DF=N%TOS=0%IPLEN=38%RIPTL=15C%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
 Fingerprint IBM 2210 router
-Class IBM | embedded-misc || router
+Class IBM | embedded || router
 TSeq(Class=TD%gcd=<6%SI=<F)
 T1(DF=N%W=200%ACK=S++%Flags=AS%Ops=ML)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -5016,7 +5019,7 @@ PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 # IBM 8210 Multiprotocol Switching Server for ATM networks, Model 3 (p/n 31L3  340),
 Fingerprint IBM 8210 Multiprotocol Switching Server/router for ATM networks
-Class IBM | embedded-misc || router
+Class IBM | embedded || router
 TSeq(Class=TD%gcd=<56%SI=<14%IPID=I%TS=U)
 T1(DF=N%W=200%ACK=S++%Flags=AS%Ops=ML)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -5028,7 +5031,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint IBM 2210 Router MRS 2.x on Token Ring interface
-Class IBM | embedded-misc || router
+Class IBM | embedded || router
 TSeq(Class=TR%gcd=<6)
 T1(DF=N%W=7FE0%ACK=S++%Flags=AS%Ops=ME)
 T2(Resp=N)
@@ -5040,7 +5043,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint IBM 3494 Magnetic Tape Library
-Class IBM | embedded-misc || storage-misc
+Class IBM | embedded || storage-misc
 TSeq(Class=RI%gcd=<6%SI=<A5B22&>1A6E%IPID=I%TS=U)
 T1(DF=Y%W=805C%ACK=O|S++%Flags=A|AS%Ops=|MNW)
 T2(Resp=N)
@@ -5116,7 +5119,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=15C%RID=E%RIPCK=F%UCK=0%ULEN=134%DAT=E)
 
 Fingerprint IBM Infoprint 12 Net-Printer
-Class IBM | embedded-misc || printer
+Class IBM | embedded || printer
 TSeq(Class=64K%IPID=I%TS=U)
 T1(DF=N%W=4000%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -5128,8 +5131,8 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(Resp=N)
 
 Fingerprint IBM LAN RouteSwitch/Xylan OmniSwitch Version 3.2.5/NeXT
-Class IBM | embedded-misc || switch
-Class Xylan | embedded-misc || switch
+Class IBM | embedded || switch
+Class Xylan | embedded || switch
 TSeq(Class=64K)
 T1(DF=N%W=1000%ACK=S++%Flags=AS%Ops=)
 T2(Resp=N)
@@ -5263,7 +5266,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=0%ULEN=134%DAT=E)
 
 Fingerprint D-Link 704P Ethernet Broadband Gateway
-Class D-Link | embedded-misc || broadband router
+Class D-Link | embedded || broadband router
 TSeq(Class=RI|TD%gcd=<68%SI=<3A2%IPID=I|BI%TS=U)
 T1(DF=N%W=800|C00%ACK=S++%Flags=AR%Ops=)
 T2(Resp=Y%DF=N%W=800|C00%ACK=S%Flags=AR%Ops=)
@@ -5275,7 +5278,7 @@ T7(DF=N%W=800|C00%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint DLink DI-604 ethernet router using firmware 1.62 build 2
-Class D-Link | embedded-misc || broadband router
+Class D-Link | embedded || broadband router
 TSeq(Class=TD%gcd=<68%SI=<1E%IPID=BI%TS=U)
 T1(DF=N%W=1000%ACK=S++%Flags=AR%Ops=)
 T2(Resp=Y%DF=N%W=1000%ACK=S%Flags=AR%Ops=)
@@ -5287,7 +5290,7 @@ T7(DF=N%W=1000%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint D-Link DI-704 cable/DSL residential gateway, firmware 2.50 build 9
-Class D-Link | embedded-misc || broadband router
+Class D-Link | embedded || broadband router
 TSeq(Class=RI%gcd=<6%SI=<3A2%IPID=I%TS=U)
 T1(DF=N%W=C00%ACK=S++%Flags=AR%Ops=)
 T2(Resp=Y%DF=N%W=C00%ACK=S%Flags=AR%Ops=)
@@ -5302,7 +5305,7 @@ PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 # Date: Oct 14 1997, Time: 09:35:04  (claims software version 2.04B3,
 # boot PROM version 2.21)
 Fingerprint D-Link Corp. DE-1800 Stackable Hub SNMP/Telnet Agent Software version 2.04B3 boot PROM 2.21
-Class D-Link | embedded-misc || hub
+Class D-Link | embedded || hub
 TSeq(Class=TD%gcd=1388%SI=0)
 T1(DF=N%W=400%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -5314,7 +5317,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint D-Link DI-701, Version 2.22
-Class D-Link | embedded-misc || broadband router
+Class D-Link | embedded || broadband router
 TSeq(Class=RI%gcd=<6%SI=<12E1C&>2F1)
 T1(DF=Y%W=402E%ACK=S++%Flags=AS%Ops=MNWNNT)
 T2(Resp=N)
@@ -5326,7 +5329,7 @@ T7(DF=N%W=400%ACK=S++%Flags=AR%Ops=WNMETL)
 PU(Resp=N)
 
 Fingerprint D-Link DI-713P Wireless Gateway (2.57 build 3a)
-Class D-Link | embedded-misc || WAP
+Class D-Link | embedded || WAP
 TSeq(Class=TR%gcd=<6%IPID=I%TS=U)
 T1(DF=N%W=FAF0%ACK=S++%Flags=APS%Ops=M)
 T2(Resp=N)
@@ -5339,7 +5342,7 @@ PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 # DLink DI-804 Cable/DSL Residential Gateway (with firmware v2.00B7)
 Fingerprint DLink DI-804 Cable/DSL Residential Gateway (firmware v2.00B7)
-Class D-Link | embedded-misc || broadband router
+Class D-Link | embedded || broadband router
 TSeq(Class=TD%gcd=<10%SI=<3C%IPID=I%TS=U)
 T1(DF=N%W=834%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
@@ -5351,7 +5354,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=C0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint D-Link DCS-1000 webcam with firmware 1.06
-Class D-Link | embedded-misc || webcam
+Class D-Link | embedded || webcam
 TSeq(Class=TD%gcd=<E0%SI=<14%IPID=I%TS=U)
 T1(DF=N%W=16D0%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -5363,7 +5366,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(Resp=N)
 
 Fingerprint D-Link Print Server
-Class D-Link | embedded-misc || print server
+Class D-Link | embedded || print server
 TSeq(Class=TD%gcd=<72%SI=<1E)
 T1(DF=N%W=B68%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -5376,7 +5379,7 @@ PU(Resp=N)
 
 # DI-701 Residential Gateway ( http://www.dlink.com/products/broadband/di701/ ) or KA9Q NOS - KO4KS-TNOS v. 2.30
 Fingerprint DI-701 Residential Gateway or KA9Q NOS - KO4KS-TNOS v. 2.30
-Class D-Link | embedded-misc || broadband router
+Class D-Link | embedded || broadband router
 TSeq(Class=RI%gcd=<6%SI=<17DC20&>3D00)
 T1(DF=Y%W=2017%ACK=S++%Flags=AS%Ops=MNWNNT)
 T2(Resp=N)
@@ -5388,7 +5391,7 @@ T7(DF=N%W=800|1000%ACK=S++%Flags=AR%Ops=WNMETL)
 PU(Resp=N)
 
 Fingerprint D-Link DWL-5000AP WAP/BSP 1.3
-Class D-Link | embedded-misc || WAP
+Class D-Link | embedded || WAP
 TSeq(Class=64K%IPID=I%TS=U)
 T1(DF=N%W=1000%ACK=S++%Flags=AS%Ops=MNW)
 T2(Resp=N)
@@ -5400,7 +5403,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
 Fingerprint D-Link Wireless Access Point (WAP) DRC-1000AP - v3.2.28
-Class D-Link | embedded-misc || WAP
+Class D-Link | embedded || WAP
 TSeq(Class=TR%gcd=<6%IPID=I%TS=U)
 T1(DF=N%W=1000%ACK=S++%Flags=AS%Ops=ME)
 T2(Resp=N)
@@ -5412,9 +5415,9 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=F%ULEN=134%DAT=E)
 
 # Intel Corporation, ER9100 Express Router 9100
-# FingerPrint by Ron van Daal (ronvdaal@syntonic.net)
+# Fingerprint by Ron van Daal (ronvdaal@syntonic.net)
 Fingerprint Intel Corporation, ER9100 Express Router 9100
-Class Intel | embedded-misc || router
+Class Intel | embedded || router
 TSeq(Class=TD%gcd=10|20|30%SI=1)
 T1(DF=N%W=400%ACK=S++%Flags=AS%Ops=ME)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -5426,7 +5429,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Intel Express 510T switch
-Class Intel | embedded-misc || switch
+Class Intel | embedded || switch
 TSeq(Class=TD%gcd=10|20|30%SI=<BB)
 T1(DF=N%W=400%ACK=S++%Flags=AS%Ops=ME)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -5438,7 +5441,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Intel InBusiness Print Station
-Class Intel | embedded-misc || print server
+Class Intel | embedded || print server
 TSeq(Class=64K)
 T1(DF=N%W=424%ACK=S++%Flags=AS%Ops=ME)
 T2(Resp=N)
@@ -5450,7 +5453,7 @@ T7(DF=N%W=0%ACK=S%Flags=R%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
 Fingerprint Intel NetportExpress 10 3-port print server
-Class Intel | embedded-misc || print server
+Class Intel | embedded || print server
 TSeq(Class=64K%IPID=I%TS=U)
 T1(DF=N%W=848%ACK=S++%Flags=AS%Ops=ME)
 T2(Resp=N)
@@ -5462,7 +5465,7 @@ T7(DF=N%W=0%ACK=S%Flags=R%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
 Fingerprint Intel Netport Express PRO print server V04.33a
-Class Intel | embedded-misc || print server
+Class Intel | embedded || print server
 TSeq(Class=TD%gcd=1%SI=0)
 T1(Resp=Y%DF=N%W=400|800|C00|1000%ACK=S++%Flags=AR%Ops=)
 T2(Resp=Y%DF=N%W=400|800|C00|1000%ACK=S%Flags=AR%Ops=)
@@ -5475,7 +5478,7 @@ PU(Resp=N)
 
 # Intel NetportExpress(tm) 10/100 3-port ROM: V05.10a
 Fingerprint Intel NetportExpress(tm) 10/100 3-port print server
-Class Intel | embedded-misc || print server
+Class Intel | embedded || print server
 TSeq(Class=64K)
 T1(Resp=Y%DF=N%W=424%ACK=S++%Flags=AS%Ops=ME)
 T2(Resp=N)
@@ -5487,7 +5490,7 @@ T7(Resp=Y%DF=N%W=0%ACK=S%Flags=R%Ops=)
 PU(Resp=Y%DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=0%ULEN=134%DAT=E)
 
 Fingerprint Intel(R) NetStructure(TM) 470T Switch
-Class Intel | embedded-misc || switch
+Class Intel | embedded || switch
 TSeq(Class=TD%gcd=<7534%SI=<64%IPID=I%TS=U)
 T1(DF=N%W=400%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -5499,7 +5502,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Labtam MT300, X-Terminal Kernel
-Class Labtam | embedded-misc || X terminal
+Class Labtam | embedded || X terminal
 TSeq(Class=64K)
 T1(DF=N%W=1000%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -5511,7 +5514,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=15C%RID=F%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
 Fingerprint Lantronix ETS16 terminal server Version V3.4/5(961028)
-Class Lantronix | embedded-misc || terminal server
+Class Lantronix | embedded || terminal server
 TSeq(Class=RI%gcd=<6%SI=<9D1C&>91%IPID=BI%TS=U)
 T1(DF=N%W=2000%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
@@ -5523,7 +5526,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=D%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=0%ULEN=134%DAT=E)
 
 Fingerprint Lantronix ETS16P terminal server Version V3.5/2(970721)
-Class Lantronix | embedded-misc || terminal server
+Class Lantronix | embedded || terminal server
 TSeq(Class=RI%gcd=<6%SI=<404C&>90)
 T1(DF=N%W=700|2000%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
@@ -5535,7 +5538,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(Resp=Y%DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=0%ULEN=134%DAT=E)
 
 Fingerprint Lantronix EPS1 print server version V3.5/1(970325)
-Class Lantronix | embedded-misc || print server
+Class Lantronix | embedded || print server
 TSeq(Class=RI%gcd=<6%SI=>FF&<FFFF)
 T1(DF=N%W=E00%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
@@ -5547,7 +5550,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=D%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=0%ULEN=134%DAT=E)
 
 Fingerprint Lantronix EPS2 print server Version V3.5/2(970721)
-Class Lantronix | embedded-misc || print server
+Class Lantronix | embedded || print server
 TSeq(Class=RI|TD%gcd=<6)
 T1(Resp=Y%DF=N%W=E00%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
@@ -5559,7 +5562,7 @@ T7(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(Resp=Y%DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=0%ULEN=134%DAT=E)
 
 Fingerprint Lantronix SCS1600 secure console server version V1.0/2(010620)
-Class Lantronix | embedded-misc || specialized
+Class Lantronix | embedded || specialized
 TSeq(Class=RI%gcd=<6%SI=<9318E&>1688%IPID=BI%TS=U)
 T1(DF=N%W=2000%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
@@ -5571,7 +5574,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=0%ULEN=134%DAT=E)
 
 Fingerprint LG Goldstream LR3100p router, software version 1.0-1.5
-Class LG GoldStream | embedded-misc || router
+Class LG GoldStream | embedded || router
 TSeq(Class=TD%gcd=<8004%SI=<1E%IPID=I%TS=U)
 T1(DF=Y%W=EA60%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=Y%W=1%ACK=S%Flags=AR%Ops=)
@@ -5583,7 +5586,7 @@ T7(DF=Y%W=1%ACK=S%Flags=AR%Ops=)
 PU(Resp=N)
 
 Fingerprint LG Goldstream LR3001f router, software version 4.0
-Class LG GoldStream | embedded-misc || router
+Class LG GoldStream | embedded || router
 TSeq(Class=TD%gcd=<8004%SI=<1E%IPID=I%TS=U)
 T1(DF=Y%W=EA60%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=Y%W=1%ACK=S%Flags=AR%Ops=)
@@ -5619,7 +5622,7 @@ T7(DF=Y%W=0%ACK=S++%Flags=AR%Ops=)
 PU(Resp=N)
 
 Fingerprint MultiTech CommPlete Controller (terminal server)
-Class MultiTech | embedded-misc || terminal server
+Class MultiTech | embedded || terminal server
 TSeq(Class=TR|RI%gcd=<6%SI=>FFFF)
 T1(Resp=Y%DF=N%W=3000%ACK=S++%Flags=AS%Ops=ME)
 T2(Resp=N)
@@ -5631,7 +5634,7 @@ T7(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(Resp=Y%DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=F%ULEN=134%DAT=E)
 
 Fingerprint MultiTech MultiVOIP Version 2.01A Firmware
-Class MultiTech | embedded-misc || telecom-misc
+Class MultiTech | embedded || telecom-misc
 TSeq(Class=TD%gcd=<714%SI=<14)
 T1(DF=N%W=600%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=O%Flags=R%Ops=)
@@ -5643,7 +5646,7 @@ T7(DF=N%W=0%ACK=O%Flags=R%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint MultiTech standalone firewall box, version 3
-Class MultiTech | embedded-misc || firewall
+Class MultiTech | embedded || firewall
 TSeq(Class=TD%gcd=<714%SI=<14)
 T1(DF=N%W=600%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=O%Flags=R%Ops=)
@@ -5703,7 +5706,7 @@ PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=F%UCK=E%ULEN=134%DAT=E)
 # Innovaphone 200 V4.00 sr4 IP200[02-4283], Bootcode[205], HW[202] 2048/8192
 # Innovaphone IP400 V4.00 hotfix IP400[02-4253], Bootcode[315], HW[102] 2048/4096
 Fingerprint Innovaphone IP200/IP400 VOIP phone/gateway
-Class Innovaphone | embedded-misc || telecom-misc
+Class Innovaphone | embedded || telecom-misc
 TSeq(Class=TD%gcd=<714%SI=<14%IPID=I%TS=U)
 T1(DF=N%W=2800%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -5715,7 +5718,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(Resp=N)
 
 Fingerprint Bay Networks Instant Internet router
-Class Bay Networks | embedded-misc || router
+Class Bay Networks | embedded || router
 TSeq(Class=TD%gcd=1000|2000|3000%SI=<BB)
 T1(Resp=Y%DF=N%W=1C84%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -5741,7 +5744,7 @@ PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=F%UCK=E%ULEN=134%DAT=E)
 # IPAD Model 5000 (see www.ipad-canada.com)
 # esoft IPAD, v.1.52 -- 64 line option on i86 hardware
 Fingerprint IPAD (Internet Protocol Adapter) Model 5000 or V.1.52 
-Class NetMatrix | embedded-misc || general purpose
+Class NetMatrix | embedded || general purpose
 TSeq(Class=TD|RI%gcd=1000|2000|3000%SI=<444)
 T1(Resp=Y%DF=N%W=1800%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -5901,7 +5904,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(Resp=N)
 
 Fingerprint Isolation Systems Infocrypt Enterprise
-Class Isolation | embedded-misc || encryption accelerator
+Class Isolation | embedded || encryption accelerator
 TSeq(Class=C)
 T1(Resp=N)
 T2(Resp=N)
@@ -5913,7 +5916,7 @@ T7(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=WNMETL)
 PU(Resp=N)
 
 Fingerprint Ixia 1600 -- Ixia Socket/Serial TCL traffic generation and analysis server
-Class Ixia | embedded-misc || specialized
+Class Ixia | embedded || specialized
 TSeq(Class=TD%gcd=<34C%SI=<14%IPID=BI)
 T1(DF=Y%W=2017%ACK=S++%Flags=AS%Ops=MNWNNT)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -5991,9 +5994,9 @@ PU(Resp=N)
 # 3com OfficeConnect 812 ADSL router firmware 2.0.0
 # Kentrox Datasmart 656 CSU/DSU or USR Netserver/16
 Fingerprint Kentrox Datasmart 656 CSU/DSU, USR Netserver/16, or 3Com OfficeConnect ADSL router
-Class Kentrox | embedded-misc || CSUDSU
-Class US Robotics | embedded-misc || switch
-Class 3Com | embedded-misc || broadband router
+Class Kentrox | embedded || CSUDSU
+Class US Robotics | embedded || switch
+Class 3Com | embedded || broadband router
 TSeq(Class=TD%gcd=61A8|C350|124F8|186A0%SI=<A)
 T1(DF=N%W=400%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -6005,7 +6008,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Kronos Time clock
-Class Kronos | embedded-misc || specialized
+Class Kronos | embedded || specialized
 TSeq(Class=TD%gcd=<7C%SI=<32%IPID=I%TS=U)
 T1(DF=N%W=1000%ACK=S++%Flags=AR%Ops=)
 T2(Resp=Y%DF=N%W=1000%ACK=S%Flags=AR%Ops=)
@@ -6017,7 +6020,7 @@ T7(DF=N%W=1000%ACK=S++%Flags=AR%Ops=)
 PU(Resp=N)
 
 Fingerprint Kyocera IB-21 Printer NIC
-Class Kyocera | embedded-misc || printer
+Class Kyocera | embedded || printer
 TSeq(Class=TD%gcd=<20006%SI=<14%IPID=I%TS=U)
 T1(DF=N%W=100%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=100%ACK=S%Flags=AR%Ops=)
@@ -6029,7 +6032,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(Resp=N)
 
 Fingerprint Lantronix LSB4 Ethernet Switch
-Class Lantronix | embedded-misc || switch
+Class Lantronix | embedded || switch
 TSeq(Class=RI%gcd=<6%SI=>CCC&<FFFF)
 T1(DF=N%W=200%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
@@ -6041,7 +6044,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=D%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=0%ULEN=134%DAT=E)
 
 Fingerprint RoadLanner broadband router BRL-04FW 6.15.02r Build 0091 L:01
-Class RoadLanner | embedded-misc || broadband router
+Class RoadLanner | embedded || broadband router
 TSeq(Class=TD%gcd=<6E004%SI=<14%IPID=I%TS=1000HZ)
 T1(DF=N%W=400%ACK=S++%Flags=AS%Ops=MTWL)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -6053,7 +6056,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(Resp=N)
 
 Fingerprint Rockwell Spectrum 100 POTS switcher release 7.2
-Class Rockwell | embedded-misc || telecom-misc
+Class Rockwell | embedded || telecom-misc
 TSeq(Class=i800%IPID=I%TS=U)
 T1(DF=N%W=4000%ACK=S++%Flags=AS%Ops=)
 T2(Resp=N)
@@ -6070,11 +6073,11 @@ PU(Resp=N)
 # CISCO 6509 WS-C6509 Software, Version NmpSW: 5.3(3)CSX
 # SonicWall firewall appliance 10meg firmware 3.3.1
 Fingerprint Router/Switch/Printer/Firewall (LanPlex 2500/Cisco Catalyst 5505/CISCO 6509/Trancell Webramp/Xylan Omni Switch)/Epson Stylus (100BTX-NIC HP Secure Web Console, SonicWall firewall appliance 3.3.1)
-Class Cisco | embedded-misc || switch
-Class Xylan | embedded-misc || switch
-Class Epson | embedded-misc || printer
-Class SonicWall | embedded-misc || firewall
-Class Trancell | embedded-misc || router
+Class Cisco | embedded || switch
+Class Xylan | embedded || switch
+Class Epson | embedded || printer
+Class SonicWall | embedded || firewall
+Class Trancell | embedded || router
 TSeq(Class=64K)
 T1(DF=N%W=1000%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -6086,7 +6089,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
 Fingerprint Leunig ePower Switch b723 v5.2
-Class Leunig | embedded-misc || power-device
+Class Leunig | embedded || power-device
 TSeq(Class=TR)
 T1(Resp=Y%DF=Y%W=578%ACK=S++%Flags=AS%Ops=)
 T2(Resp=Y%DF=Y%W=578%ACK=S++%Flags=AS%Ops=)
@@ -6098,7 +6101,7 @@ T7(Resp=N)
 PU(Resp=N)
 
 Fingerprint Lexmark M412n network printer
-Class Lexmark | embedded-misc || printer
+Class Lexmark | embedded || printer
 TSeq(Class=RI%gcd=<6%SI=<4ADB2&>9B2%IPID=I%TS=2HZ)
 T1(DF=Y%W=8E5%ACK=S++%Flags=AS%Ops=MNWNNT)
 T2(Resp=N)
@@ -6112,7 +6115,7 @@ PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 #  Lexmark Optra S 1659 (MarkNetS)
 #  Lexmark Optra S 2455 and SC 1275
 Fingerprint Lexmark Optra S Printer
-Class Lexmark | embedded-misc || printer
+Class Lexmark | embedded || printer
 TSeq(Class=TD%gcd=1393|2726|3AB9|4E4C|61DF%SI=<30)
 T1(DF=N%W=3F2|3F6%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -6124,7 +6127,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(Resp=N|Y)
 
 Fingerprint Lexmark Optra T612 (printer) running firmware 3.11.17
-Class Lexmark | embedded-misc || printer
+Class Lexmark | embedded || printer
 TSeq(Class=TD%gcd=<EAE8%SI=<14%IPID=I%TS=U)
 T1(DF=N%W=3F2%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -6136,7 +6139,7 @@ T7(Resp=N)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=F%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Lexmark Marknet X2031e printer
-Class Lexmark | embedded-misc || printer
+Class Lexmark | embedded || printer
 TSeq(Class=RI%gcd=<6%SI=<AFDAC&>16E0%IPID=I%TS=2HZ)
 T1(DF=Y%W=8E5%ACK=S++%Flags=AS%Ops=MNWNNT)
 T2(Resp=N)
@@ -6149,7 +6152,7 @@ PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 # Lexmark MarkNet XL Internal Printer Network Adapter on a Lexmark Optra LaserPrinter
 Fingerprint Lexmark Optra printer w/MarkNet XL Network Adapter
-Class Lexmark | embedded-misc || printer
+Class Lexmark | embedded || printer
 TSeq(Class=TD%gcd=<272A%SI=<1E%IPID=I%TS=U)
 T1(DF=N%W=400%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -6161,7 +6164,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(Resp=N)
 
 Fingerprint Lexmark Optra R+ (4049-RA0) w. MarkNet XL card (firmware rev. 79.133.1
-Class Lexmark | embedded-misc || printer
+Class Lexmark | embedded || printer
 TSeq(Class=TD%gcd=1393|3AB9|4E4C|61DF|7572|8905|C3BE%SI=<20)
 T1(Resp=Y%DF=N%W=400%ACK=S++%Flags=AS%Ops=ME)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -6175,8 +6178,8 @@ PU(Resp=N)
 # Linksys BEFW11S4 802.11B WAP
 # Linksys BEFSR41 firmware ver. 1.40.2
 Fingerprint Linksys BEFW11S4 WAP or BEFSR41 router
-Class Linksys | embedded-misc || WAP
-Class Linksys | embedded-misc || broadband router
+Class Linksys | embedded || WAP
+Class Linksys | embedded || broadband router
 TSeq(Class=TD%gcd=<F4%SI=<500%IPID=Z%TS=U)
 T1(DF=N%W=1000|C00|400|800%ACK=S++%Flags=AR%Ops=)
 T2(Resp=Y%DF=N%W=1000|C00|400|800%ACK=S%Flags=AR%Ops=)
@@ -6189,7 +6192,7 @@ PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 # Linksys WAP11 v2.6 v1.06 firmware
 Fingerprint Linksys WAP11 Wireless AP
-Class Linksys | embedded-misc || WAP
+Class Linksys | embedded || WAP
 TSeq(Class=TD%gcd=<1F502%SI=<14%IPID=I%TS=U)
 T1(DF=N%W=1200%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -6201,7 +6204,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Linksys WAP11 wireless AP firmware v2.2
-Class Linksys | embedded-misc || WAP
+Class Linksys | embedded || WAP
 TSeq(Class=TD%gcd=<1F502%SI=<1E%IPID=I%TS=U)
 T1(DF=N%W=2000%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -6214,7 +6217,7 @@ PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 # Linksys WET-11 wireless ethernet bridge running firmware rev. 1.43
 Fingerprint Linksys WET-11 wireless ethernet bridge
-Class Linksys | embedded-misc || bridge
+Class Linksys | embedded || bridge
 TSeq(Class=RI%gcd=<6%SI=<2C30D0&>52F7%IPID=I%TS=U)
 T1(DF=N%W=800%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -6953,7 +6956,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=Y%TOS=0%IPLEN=38%RIPTL=15C%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
 Fingerprint Magna SG10 intranet router
-Class Magna | embedded-misc || router
+Class Magna | embedded || router
 TSeq(Class=RI%gcd=<6%SI=<31AD68E&>5F62F%TS=100HZ)
 T1(DF=Y%W=7F53%ACK=S++%Flags=AS%Ops=MENNTNW)
 T2(Resp=N)
@@ -6978,7 +6981,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=0%ULEN=134%DAT=E)
 
 Fingerprint MegaBit Gear TE4111C modem
-Class Megabit | embedded-misc || terminal server
+Class Megabit | embedded || terminal server
 TSeq(Class=64K%IPID=I%TS=U)
 T1(DF=N%W=2000%ACK=S++%Flags=AS%Ops=MNW)
 T2(Resp=N)
@@ -6990,7 +6993,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=0%ULEN=134%DAT=E)
 
 Fingerprint Meridian Data Network CD-ROM Server (V4.20 Nov 26 1997)
-Class Meridian | embedded-misc || storage-misc
+Class Meridian | embedded || storage-misc
 TSeq(Class=TD%gcd=40000%SI=<A)
 T1(DF=N%W=200%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -7002,7 +7005,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(Resp=N)
 
 Fingerprint Xylogics Micro Annex ELS terminal server x7.1.8
-Class Xylogics | embedded-misc || terminal server
+Class Xylogics | embedded || terminal server
 TSeq(Class=64K)
 T1(DF=N%W=800%ACK=S++%Flags=AS%Ops=)
 T2(Resp=N)
@@ -7014,7 +7017,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=F%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
 Fingerprint Microplex Print Server
-Class Microplex | embedded-misc || print server
+Class Microplex | embedded || print server
 TSeq(Class=C)
 T1(DF=N%W=0%ACK=S++%Flags=AS%Ops=ME)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -7061,7 +7064,7 @@ T7(DF=N%W=2000%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint MiraPoint messaging server v3.1
-Class MiraPoint | embedded-misc || general purpose
+Class MiraPoint | embedded || general purpose
 TSeq(Class=RI%gcd=<6%SI=<DCCC6&>C2B%IPID=I%TS=100HZ)
 T1(DF=Y%W=403D%ACK=S++%Flags=AS%Ops=MNWNNT)
 T2(Resp=N)
@@ -7073,7 +7076,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=Y%TOS=0%IPLEN=38%RIPTL=148%RID=E|F%RIPCK=F%UCK=0%ULEN=134%DAT=E)
 
 Fingerprint Mirapoint messaging server M1000 (OS v 1.0.0)
-Class MiraPoint | embedded-misc || general purpose
+Class MiraPoint | embedded || general purpose
 TSeq(Class=RI%gcd=<6)
 T1(DF=Y%W=403D%ACK=S++%Flags=AS%Ops=MNWNNT)
 T2(Resp=N)
@@ -7086,7 +7089,7 @@ PU(DF=Y%TOS=0%IPLEN=38%RIPTL=148%RIPCK=F%UCK=0%ULEN=134%DAT=E)
 
 # VxWorks Version: 5.3; Software Version: SB4100E-4.1.11-SCM05-NOSHELL; Hardware Version: 3
 Fingerprint Motorola SurfBoard SB4100E Cable Modem
-Class Motorola | embedded-misc || broadband router
+Class Motorola | embedded || broadband router
 TSeq(Class=64K%IPID=I%TS=U)
 T1(DF=N%W=1000%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -7099,7 +7102,7 @@ PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E|F%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
 # Motorola SurfBoard 4401 provided by adelphia
 Fingerprint Motorola SurfBoard 4401 cable modem
-Class Motorola | embedded-misc || broadband router
+Class Motorola | embedded || broadband router
 TSeq(Class=64K%IPID=I%TS=U)
 T1(DF=N%W=1000%ACK=S++%Flags=AS%Ops=)
 T2(Resp=N)
@@ -7123,7 +7126,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(Resp=N)
 
 Fingerprint MOTOROLA VANGUARD 320 IP router running OS version 5.4
-Class Vanguard | embedded-misc || router
+Class Vanguard | embedded || router
 TSeq(Class=TD%gcd=<6%SI=<1E)
 T1(DF=N%W=800%ACK=S++%Flags=AS%Ops=MEL)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -7135,7 +7138,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(Resp=N)
 
 Fingerprint Motorola Vanguard 320 multi-protocol network access device V5.5 - 5.6
-Class Vanguard | embedded-misc || router
+Class Vanguard | embedded || router
 TSeq(Class=TD%gcd=<6%SI=<1E%IPID=I%TS=U)
 T1(DF=N%W=800%ACK=S++%Flags=AS%Ops=MEL)
 T2(Resp=N)
@@ -7147,7 +7150,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(Resp=N)
 
 Fingerprint MultiTech CommPlete (modem server) RAScard
-Class MultiTech | embedded-misc || terminal server
+Class MultiTech | embedded || terminal server
 TSeq(Class=TD%gcd=388|710|A98%SI=<44)
 T1(DF=N%W=FA0%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=O%Flags=R%Ops=)
@@ -7172,7 +7175,7 @@ PU(Resp=Y%DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=0%UCK=E%ULEN=134%DAT=E)
 
 # NCD X server (SNMP says: NCD16 server 2.3.0 03/12/91 downloaded)
 Fingerprint NCD X server (NCD16 server 2.3.0 03/12/91)
-Class NCD | embedded-misc || X terminal
+Class NCD | embedded || X terminal
 TSeq(Class=64K)
 T1(DF=N%W=800%ACK=S++%Flags=AS%Ops=)
 T2(Resp=N)
@@ -7239,8 +7242,8 @@ PU(Resp=N)
 # Cisco 11151/Arrowpoint 150 Load Balancer
 Fingerprint Cisco 11151/Arrowpoint 150 load balancer, Neoware (was HDS) NetOS V. 2.0.1 or HP ENTRIA C3230A
 Class Neoware | NetOS || X terminal
-Class HP | embedded-misc || X terminal
-Class Cisco | embedded-misc || load balancer
+Class HP | embedded || X terminal
+Class Cisco | embedded || load balancer
 TSeq(Class=64K)
 T1(Resp=Y%DF=N%W=2000%ACK=S++%Flags=AS%Ops=|M)
 T2(Resp=N)
@@ -7289,7 +7292,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=3415%RID=E%RIPCK=F%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint NetApp NetCache C760 os 4.x
-Class NetApp | embedded-misc || web proxy
+Class NetApp | embedded || web proxy
 TSeq(Class=RI%gcd=<6%SI=<4E51740&>FAA%IPID=I%TS=2HZ)
 T1(DF=Y%W=2017%ACK=S++%Flags=AS%Ops=MNWNNT)
 T2(Resp=N)
@@ -7326,7 +7329,7 @@ PU(TOS=0%IPLEN=38%RIPTL=148%RIPCK=E|F|0%UCK=0%ULEN=134%DAT=E)
 
 # NetCache 5.1D4 on a NetApp C1100 Box
 Fingerprint Network Appliance NetCache 5.1D4
-Class NetApp | embedded-misc || web proxy
+Class NetApp | embedded || web proxy
 TSeq(Class=RI%gcd=<6%SI=<ABC02&>1371%IPID=BI%TS=2HZ)
 T1(DF=Y%W=5B4%ACK=S++%Flags=AS%Ops=MNNT)
 T2(Resp=N)
@@ -7531,7 +7534,7 @@ PU(DF=N%TOS=0%IPLEN=38%RIPTL=4801%RID=E%RIPCK=F%UCK=E%ULEN=134%DAT=E)
 # Netgear FM144P ProSafe Wireless Firewall with Print Server
 # Repotec IP515H Cable Router / Print Server
 Fingerprint Netgear FM144P/Repotec IP515H Router & Print Server
-Class Netgear | embedded-misc || broadband router
+Class Netgear | embedded || broadband router
 TSeq(Class=TD%gcd=<104%SI=<1E%IPID=I%TS=U)
 T1(DF=N%W=C00%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -7543,7 +7546,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(Resp=N)
 
 Fingerprint Netopia 4541 ADSL router v5.3.4
-Class Netopia | embedded-misc || broadband router
+Class Netopia | embedded || broadband router
 TSeq(Class=TR%gcd=<6%IPID=I%TS=U)
 T1(DF=N%W=400%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -7555,7 +7558,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Netopia DSL router
-Class Netopia | embedded-misc || broadband router
+Class Netopia | embedded || broadband router
 TSeq(Class=TR)
 T1(Resp=Y%DF=N%W=7FE0%ACK=S++%Flags=AS%Ops=ME)
 T2(Resp=N)
@@ -7567,7 +7570,7 @@ T7(Resp=N)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint NetScreen-100
-Class NetScreen | embedded-misc || firewall
+Class NetScreen | embedded || firewall
 TSeq(Class=RI%gcd=<6%SI=<276A&>50)
 T1(DF=N%W=400%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -7622,7 +7625,7 @@ PU(DF=Y|N%TOS=E0|0%IPLEN=164|38%RIPTL=134|148%RID=E%RIPCK=E%UCK=0|E%ULEN=134%DAT
 
 # Nokia M1122 DSL Router (Nokia Mrouter rel-Gx1x2220.R08)
 Fingerprint Nokia M1122 DSL Router
-Class Nokia | embedded-misc || broadband router
+Class Nokia | embedded || broadband router
 TSeq(Class=RI%gcd=<6%SI=<1AF18&>43B%IPID=I)
 T1(DF=Y%W=FAF0%ACK=S++%Flags=AS%Ops=MNWNNT)
 T2(Resp=N)
@@ -7634,7 +7637,7 @@ T7(DF=Y%W=0%ACK=S++%Flags=AR%Ops=)
 PU(Resp=N)
 
 Fingerprint Netopia R3100-I DSL Router Firmware version v4.7.2
-Class Netopia | embedded-misc || broadband router
+Class Netopia | embedded || broadband router
 TSeq(Class=TD%gcd=<EA64%SI=<10E%IPID=I%TS=U)
 T1(DF=N%W=400%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -7646,7 +7649,7 @@ T7(Resp=N)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint NetJet Version 3.0 - 4.0 Printer
-Class NetJet | embedded-misc || printer
+Class NetJet | embedded || printer
 TSeq(Class=TD%gcd=<4%SI=<4)
 T1(Resp=Y%DF=N%W=800%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -7658,7 +7661,7 @@ T7(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(Resp=N)
 
 Fingerprint Netscreen 5XP (OS 3.0.1r2)
-Class Netscreen | embedded-misc || firewall
+Class Netscreen | embedded || firewall
 TSeq(Class=TD%gcd=1000%SI=<FF)
 T1(Resp=Y%DF=N%W=1000%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -7670,7 +7673,7 @@ T7(Resp=N)
 PU(Resp=N)
 
 Fingerprint Network Systems router NS6614 (NSC 6600 series)
-Class Network Systems | embedded-misc || router
+Class Network Systems | embedded || router
 TSeq(Class=64K)
 T1(Resp=Y%DF=N%W=1000%ACK=S++%Flags=AS%Ops=)
 T2(Resp=N)
@@ -7683,7 +7686,7 @@ PU(Resp=Y%DF=N%TOS=0%IPLEN=38%RIPTL=134%RIPCK=F%UCK=0%ULEN=134%DAT=E)
 
 # Nexland ISB Pro800 Turbo, Firmware version: V1 Rel 5U
 Fingerprint Nexland ISB Pro800 Turbo Cable/DSL router
-Class Nexland | embedded-misc || broadband router
+Class Nexland | embedded || broadband router
 TSeq(Class=TD%gcd=<2004%SI=<1E%IPID=I)
 T1(DF=N%W=16D0%ACK=S++%Flags=AS%Ops=MTNN)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -7721,7 +7724,7 @@ PU(DF=Y%TOS=E0%IPLEN=164%RIPTL=134%RID=E%RIPCK=F%UCK=0%ULEN=134%DAT=E)
 
 # Nortel/Alteon ACE Director 3 Hardware Revision: B Software Version 6.0.42
 Fingerprint Nortel/Alteon ACE Director 3 Version 6.0.42-B
-Class Alteon | embedded-misc || load balancer
+Class Alteon | embedded || load balancer
 TSeq(Class=TR%gcd=<6%IPID=RD)
 T1(DF=N%W=C00%ACK=S++%Flags=AR%Ops=WNMETL)
 T2(Resp=Y%DF=N%W=C00%ACK=S%Flags=AR%Ops=WNMETL)
@@ -7734,7 +7737,7 @@ PU(Resp=N)
 
 # Nortel Networks BayStack 450-24T Versions: HW:RevL  FW:V1.48 SW:v4.2.0.16 ISVN:2
 Fingerprint Nortel Networks BayStack switch
-Class Nortel | embedded-misc || switch
+Class Nortel | embedded || switch
 TSeq(Class=RI%gcd=<6%SI=<762A&>C8%IPID=I%TS=U)
 T1(DF=N%W=400%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -7748,8 +7751,8 @@ PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E|F%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 # Nortel CallPilot 100 voicemail system
 # 3com superstack 3 4300 (3c17100) Hardware Version: V4.0 Software Version:  V1.12
 Fingerprint Nortel CallPilot 100 voicemail system or 3Com Superstack 3 switch
-Class Nortel | embedded-misc || telecom-misc
-Class 3Com | embedded-misc || switch
+Class Nortel | embedded || telecom-misc
+Class 3Com | embedded || switch
 TSeq(Class=64K%IPID=I%TS=U)
 T1(DF=N%W=1000%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -7760,7 +7763,7 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 
 Fingerprint Nortel Networks CVX1800 RAS. Software version 2.02
-Class Nortel | embedded-misc || terminal server
+Class Nortel | embedded || terminal server
 TSeq(Class=64K%gcd=<6%SI=<14)
 T1(DF=N%W=8000%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -7772,7 +7775,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Nortel Networks Passport 8600 routing switch sw 3.3.0.0
-Class Nortel | embedded-misc || switch
+Class Nortel | embedded || switch
 TSeq(Class=RI%gcd=<6%SI=<E1C8A&>113A%IPID=I%TS=U)
 T1(DF=N%W=1000%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -7958,7 +7961,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint NSG 500 router. OS version 7.6.1 (http://www.nsg.ru)
-Class NSG | embedded-misc || router
+Class NSG | embedded || router
 TSeq(Class=TD%gcd=<14004%SI=<28%IPID=I%TS=U)
 T1(DF=N%W=1000%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -8213,7 +8216,7 @@ T7(DF=Y%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=134%RID=E%RIPCK=F%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Savin 9927 Copier
-Class Savin | embedded-misc || printer
+Class Savin | embedded || printer
 TSeq(Class=i800%IPID=I%TS=U)
 T1(DF=N%W=2000%ACK=S++%Flags=AS%Ops=ME)
 T2(Resp=N)
@@ -8225,7 +8228,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=1C%RID=E%RIPCK=0%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Sequent DYNIX/ptx(R) V4.2.1
-Class Sequent | embedded-misc || general purpose
+Class Sequent | embedded || general purpose
 TSeq(Class=RI%gcd=<F%SI=>FF&<FFFFF)
 T1(Resp=Y%DF=N%W=1000%ACK=S++%Flags=AS%Ops=)
 T2(Resp=N)
@@ -8237,7 +8240,7 @@ T7(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(Resp=Y%DF=N%TOS=0%IPLEN=38%RIPTL=15C%RID=E%RIPCK=F%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Sequent DYNIX/ptx(R) V4.4.6
-Class Sequent | embedded-misc || general purpose
+Class Sequent | embedded || general purpose
 TSeq(Class=RI|TD%gcd=<6%SI=<3FC)
 T1(DF=Y%W=6000%ACK=S++%Flags=AS%Ops=MNW)
 T2(Resp=N)
@@ -8249,7 +8252,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=15C%RID=E%RIPCK=F%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Siemens 300E business phone system Release 6.5
-Class Siemens | embedded-misc || telecom-misc
+Class Siemens | embedded || telecom-misc
 TSeq(Class=RI%gcd=<6%SI=<5D131C&>4A3C%IPID=I%TS=U)
 T1(DF=N%W=1000%ACK=S++%Flags=AS%Ops=ME)
 T2(Resp=N)
@@ -8261,7 +8264,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=Y%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=0%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Siemens HICOM 300 Phone switch (WAML LAN card)
-Class Siemens | embedded-misc || telecom-misc
+Class Siemens | embedded || telecom-misc
 TSeq(Class=64K)
 T1(DF=N%W=808%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -8345,7 +8348,7 @@ T7(Resp=N)
 PU(DF=N%TOS=C0%IPLEN=164%RIPTL=148%RID=E|F%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint SonicWall/10 firewall
-Class SonicWall | embedded-misc || firewall
+Class SonicWall | embedded || firewall
 TSeq(Class=TR)
 T1(Resp=Y%DF=N%W=7FE0%ACK=S++%Flags=AS%Ops=ME)
 T2(Resp=Y%DF=N%W=1000%ACK=S++%Flags=AR%Ops=)
@@ -8357,7 +8360,7 @@ T7(Resp=Y%DF=N%W=1000%ACK=S++%Flags=AR%Ops=)
 PU(Resp=N)
 
 Fingerprint SonicWall SOHO-3 firewall
-Class SonicWall | embedded-misc || firewall
+Class SonicWall | embedded || firewall
 T1(DF=N%W=1000%ACK=S++%Flags=AR%Ops=)
 T2(Resp=Y%DF=N%W=1000%ACK=S++%Flags=AR%Ops=)
 T3(Resp=Y%DF=N%W=1000%ACK=S++%Flags=AR%Ops=)
@@ -8368,7 +8371,7 @@ T7(DF=N%W=1000%ACK=S++%Flags=AR%Ops=)
 PU(Resp=N)
 
 Fingerprint SonicWall/10 Firewall
-Class SonicWall | embedded-misc || firewall
+Class SonicWall | embedded || firewall
 TSeq(Class=TR)
 T1(Resp=Y%DF=Y%W=2017%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=400%ACK=S++%Flags=AR%Ops=)
@@ -8392,7 +8395,7 @@ T7(DF=Y%W=0%ACK=S%Flags=AR%Ops=)
 PU(Resp=N)
 
 Fingerprint Sega Dreamcast game console
-Class Sega | embedded-misc || game console
+Class Sega | embedded || game console
 TSeq(Class=TD%gcd=<780%SI=<14)
 T1(DF=N%W=1D4C%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -8417,7 +8420,7 @@ PU(DF=N%TOS=A8%IPLEN=38%RIPTL=148%RID=E|F%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 # Proxim Stratum MP FW: 7_8_18;  managed via HTTP and only relevant data is (I guess) the firmware version: FW: 7_8_18
 Fingerprint Proxim Stratum MP wireless bridge
-Class Proxim | embedded-misc || bridge
+Class Proxim | embedded || bridge
 TSeq(Class=TD%gcd=<61AC%SI=<46%IPID=I%TS=1000HZ)
 T1(DF=N%W=209D%ACK=S++%Flags=AS%Ops=MENWNNT)
 T2(Resp=N)
@@ -8454,7 +8457,7 @@ PU(Resp=N)
 # http://www.systech.com/catalog/RCS3000Entry.html
 # RCS/3182 - Firmware rev. 06D (Apr 26 2001 15:15:33) - OS ver. RCS_3000_BDNL Version 06F (May 18 2001 16:15:18)
 Fingerprint Systech RCS/3182 ethernet serial port server (firmware 06D)
-Class Systech | embedded-misc || specialized
+Class Systech | embedded || specialized
 TSeq(Class=64K%IPID=I%TS=U)
 T1(DF=N%W=8000%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -8490,7 +8493,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Packet Engines PowerRail 5200 router version 2.6.0r10 - 16 Sep, 1999
-Class Packet Engines | embedded-misc || router
+Class Packet Engines | embedded || router
 TSeq(Class=64K)
 T1(DF=N%W=0%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -8502,7 +8505,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Panasonic KX-HCM10 network camera
-Class Panasonic | embedded-misc || webcam
+Class Panasonic | embedded || webcam
 TSeq(Class=TD%gcd=<F4%SI=<1E%TS=U)
 T1(Resp=N)
 T2(Resp=N)
@@ -8539,7 +8542,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=0%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Panasonic IP Technology Broadband Networking Gateway, KX-HGW200
-Class Panasonic | embedded-misc || broadband router
+Class Panasonic | embedded || broadband router
 TSeq(Class=RI%gcd=<6%SI=<27BE484&>16928%IPID=Z%TS=100HZ)
 T1(DF=Y%W=16A0%ACK=S++%Flags=AS%Ops=MNNTNW)
 T2(Resp=N)
@@ -8551,7 +8554,7 @@ T7(Resp=N)
 PU(Resp=N)
 
 Fingerprint Panasonic panafax DX2000 SuperG3 fax machine
-Class Panasonic | embedded-misc || printer
+Class Panasonic | embedded || printer
 TSeq(Class=TD|RI%gcd=<18%SI=<177A&>27)
 T1(Resp=N)
 T2(Resp=N)
@@ -8587,7 +8590,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Planet WAP 1950 Wireless Access Point
-Class Planet | embedded-misc || WAP
+Class Planet | embedded || WAP
 TSeq(Class=TD%gcd=<1C%SI=<14%IPID=I%TS=U)
 T1(DF=Y%W=800%ACK=S++%Flags=AS%Ops=ME)
 T2(Resp=N)
@@ -8599,7 +8602,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Polycom ViewStation 512K videoconferencing system
-Class Polycom | embedded-misc || specialized
+Class Polycom | embedded || specialized
 TSeq(Class=C)
 T1(DF=N%W=5B40%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -8611,7 +8614,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=70%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Proteon OpenRoute 2.1 on a RBX200 Router or IBM 2210 Router
-Class IBM | embedded-misc || router
+Class IBM | embedded || router
 Class Proteon | OpenRoute || router
 TSeq(Class=TD%gcd=<6%SI=<BB)
 T1(DF=N%W=200%ACK=S++%Flags=AS%Ops=ML)
@@ -8636,7 +8639,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint QMS Magicolor 2200 DeskLaser printer
-Class QMS | embedded-misc || printer
+Class QMS | embedded || printer
 T1(DF=N%W=0|800%ACK=O|S++%Flags=R|AS%Ops=|M)
 T2(Resp=Y%DF=N%W=0%ACK=O%Flags=R%Ops=)
 T3(Resp=Y%DF=N%W=0|800%ACK=O|S++%Flags=R|AS%Ops=|M)
@@ -8671,7 +8674,7 @@ T7(DF=N%W=C00%ACK=S++%Flags=AR%Ops=WNMETL)
 PU(Resp=N)
 
 Fingerprint Racal 7100 Host Security Module 1.05 / 5.05
-Class Racal | embedded-misc || encryption accelerator
+Class Racal | embedded || encryption accelerator
 TSeq(Class=TR%gcd=<6%IPID=I%TS=U)
 T1(DF=N%W=800%ACK=S++%Flags=AS%Ops=ME)
 T2(Resp=N)
@@ -8685,8 +8688,8 @@ PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=F%ULEN=134%DAT=E)
 # Radionics Ram IV Alarm System
 # Lantronix CoBox DR1-IAP serial device server
 Fingerprint Lantronix CoBox serial device server or Radionics Ram IV Alarm
-Class Lantronix | embedded-misc || terminal server
-Class Radionics | embedded-misc || specialized
+Class Lantronix | embedded || terminal server
+Class Radionics | embedded || specialized
 TSeq(Class=TD%gcd=<404%SI=<6E%IPID=I%TS=U)
 T1(DF=Y%W=1FF%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=Y%W=0%ACK=S++%Flags=AR%Ops=)
@@ -8698,7 +8701,7 @@ T7(DF=Y%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=Y%TOS=0%IPLEN=38%RIPTL=148%RID=E|F%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Raptor firewall 5.03 on NT 4
-Class Raptor | embedded-misc || firewall
+Class Raptor | embedded || firewall
 TSeq(Class=TR)
 T1(Resp=Y%DF=Y%W=2017%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -8722,7 +8725,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint RCA/Thomson cable modem DCM-235/245
-Class RCA | embedded-misc || broadband router
+Class RCA | embedded || broadband router
 TSeq(Class=64K%IPID=I%TS=U)
 T1(DF=N%W=1000%ACK=S++%Flags=AS%Ops=)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -8734,7 +8737,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=0%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Redback SMS 1000-2000 DSL Router
-Class Redback | embedded-misc || broadband router
+Class Redback | embedded || broadband router
 TSeq(Class=RI%gcd=<4%SI=>1000&<FFFF)
 T1(DF=N%W=2000%ACK=S++%Flags=AS%Ops=MNW)
 T2(Resp=N)
@@ -8795,7 +8798,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=0%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Ricoh Aficio AP4500 Network Laser Printer
-Class Ricoh | embedded-misc || printer
+Class Ricoh | embedded || printer
 TSeq(Class=C%Val=0)
 T1(DF=N%W=800%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -8807,7 +8810,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=164%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Ringdale RP21 Print server
-Class Ringdale | embedded-misc || print server
+Class Ringdale | embedded || print server
 TSeq(Class=TR%gcd=<6)
 T1(DF=N%W=200%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=200%ACK=S++%Flags=AR%Ops=)
@@ -8965,7 +8968,7 @@ T7(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(Resp=Y%DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=F%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
 Fingerprint Secure Computing Sidewinder firewall 3.2 update 4
-Class Secure Computing | embedded-misc || firewall
+Class Secure Computing | embedded || firewall
 TSeq(Class=RI%gcd=<5%SI=>FFF&<FFFFF)
 T1(DF=N%W=805C%ACK=S++%Flags=AS%Ops=MNWNNT)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -8977,7 +8980,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=F%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
 Fingerprint Secure Computing Sidewinder firewall 5.2.1.06
-Class Secure Computing | embedded-misc || firewall
+Class Secure Computing | embedded || firewall
 TSeq(Class=TR%gcd=<6%IPID=I%TS=2HZ)
 T1(DF=Y%W=402E%ACK=S++%Flags=AS%Ops=MNWNNT)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -8989,7 +8992,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E|F%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Secure Computing SECUREZone Firewall Version 2.0
-Class Secure Computing | embedded-misc || firewall
+Class Secure Computing | embedded || firewall
 TSeq(Class=TR%gcd=<6)
 T1(DF=Y%W=2017%ACK=S++%Flags=AS%Ops=MNWNNT)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -9001,7 +9004,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(Resp=N)
 
 Fingerprint Sharp Digital Imager (copier) AR-507
-Class Sharp | embedded-misc || printer
+Class Sharp | embedded || printer
 T1(DF=N%W=2000%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
 T3(Resp=N)
@@ -9014,8 +9017,8 @@ PU(DF=N%TOS=0%IPLEN=164%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 #  Shiva AccessPort Bridge/Router Software V 2.1.0
 #  3Com HiPer Access Router Card hardware 1.0.0 software 4.1.59
 Fingerprint Shiva AccessPort Bridge/Router Software V 2.1.0 or 3Com HiPer Access Router Card hardware V1.0.0 software V4.1.59
-Class Shiva | embedded-misc || router
-Class 3Com | embedded-misc || router
+Class Shiva | embedded || router
+Class 3Com | embedded || router
 TSeq(Class=TD%gcd=<6%SI=<F)
 T1(DF=N%W=244%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -9027,7 +9030,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=164%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Shiva LanRover/8E Version 3.5
-Class Shiva | embedded-misc || terminal server
+Class Shiva | embedded || terminal server
 TSeq(Class=64K)
 T1(DF=N%W=F87%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -9039,7 +9042,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RIPCK=0%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Quantum Snap Server Network Storage Box
-Class Quantum | embedded-misc || storage-misc
+Class Quantum | embedded || storage-misc
 TSeq(Class=i800)
 T1(Resp=Y%DF=N%W=4470%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -9051,7 +9054,7 @@ T7(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(Resp=Y%DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=F%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
 Fingerprint Quantum Snap server 4100
-Class Quantum | embedded-misc || storage-misc
+Class Quantum | embedded || storage-misc
 TSeq(Class=i800%IPID=I%TS=U)
 T1(DF=N%W=2238%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -9065,8 +9068,8 @@ PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=F%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 # Sun Remote System Console version 1.12
 # Brocade Fibre Switch, Firmware 2.6.0
 Fingerprint Brocade Fibre Switch or Sun Remote System Console
-Class Brocade | embedded-misc || switch
-Class Sun | embedded-misc || specialized
+Class Brocade | embedded || switch
+Class Sun | embedded || specialized
 TSeq(Class=64K%IPID=I%TS=U)
 T1(DF=N%W=2000%ACK=S++%Flags=AS%Ops=MNW)
 T2(Resp=N)
@@ -9300,7 +9303,7 @@ PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 # Ericsson Tigris Access Server V. 12.1.15 with 10.2 ISDN code
 # Integrated Access Platform, Software Version  = 12.1.1.22 (ISDN Software Version 10.1)
 Fingerprint Ericsson Tigris Access Server Software V. 12.1.*
-Class Ericsson | embedded-misc || terminal server
+Class Ericsson | embedded || terminal server
 TSeq(Class=TR%gcd=<6%IPID=I%TS=U)
 T1(DF=N%W=F87%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -9324,7 +9327,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=164%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Tandberg X-terminal
-Class Tandberg | embedded-misc || X terminal
+Class Tandberg | embedded || X terminal
 TSeq(Class=64K)
 T1(DF=N%W=400%ACK=S++%Flags=AS%Ops=)
 T2(Resp=N)
@@ -9360,7 +9363,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
 Fingerprint Tektronix Phaser 350 firmware 3.3 (printer)
-Class Tektonix | embedded-misc || printer
+Class Tektonix | embedded || printer
 T1(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
 T3(Resp=Y%DF=N%W=0%ACK=O%Flags=AR%Ops=)
@@ -9372,7 +9375,7 @@ PU(Resp=N)
 
 # Tektronix Phaser 360 Extended
 Fingerprint Tektronix Phaser 360 printer
-Class Tektonix | embedded-misc || printer
+Class Tektonix | embedded || printer
 TSeq(Class=i800)
 T1(DF=N%W=F87%ACK=S++%Flags=AS%Ops=ME)
 T2(Resp=N)
@@ -9385,7 +9388,7 @@ PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 # From a Tektronix Phaser 350
 Fingerprint Tektronix Phaser(TM) printer with share ethernet card, firmware version 3.01
-Class Tektonix | embedded-misc || printer
+Class Tektonix | embedded || printer
 TSeq(Class=RI%gcd=<F%SI=>888&<4444)
 T1(DF=N%W=1000%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -9397,7 +9400,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Tektronix Phaser 560 printer
-Class Tektonix | embedded-misc || printer
+Class Tektonix | embedded || printer
 TSeq(Class=RI%gcd=<6%SI=<8C8C0&>B05%IPID=I%TS=U)
 T1(DF=N%W=1%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -9409,7 +9412,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Telebit's NetBlazer 3.0 router
-Class Telebit | embedded-misc || router
+Class Telebit | embedded || router
 TSeq(Class=TD%gcd=<100004%SI=<3C)
 T1(DF=N%W=800%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -9421,7 +9424,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Telebit NetBlazer router Version 3.05
-Class Telebit | embedded-misc || router
+Class Telebit | embedded || router
 TSeq(Class=TD%gcd=40000|80000|C0000%SI=<BB)
 T1(Resp=Y%DF=N%W=800%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -9434,7 +9437,7 @@ PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 # (Telebit router - 18 async/1 ether)
 Fingerprint Telebit NetBlazer Version 3.1, patch level 13
-Class Telebit | embedded-misc || router
+Class Telebit | embedded || router
 TSeq(Class=TD|TR%gcd=40000|80000|C0000|100000|200000%SI=<FF)
 T1(DF=N%W=800%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -9446,7 +9449,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Telindus 11xx ADSL Router
-Class Telindus | embedded-misc || broadband router
+Class Telindus | embedded || broadband router
 TSeq(Class=TD%gcd=<30004%SI=<14%IPID=I%TS=U)
 T1(DF=N%W=3E80%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=ARF%Ops=)
@@ -9458,7 +9461,7 @@ T7(DF=N%W=0%ACK=S%Flags=ARF%Ops=)
 PU(Resp=N)
 
 Fingerprint Telocity (DirectTVDSL) Gateway x2 Model
-Class Telocity | embedded-misc || broadband router
+Class Telocity | embedded || broadband router
 TSeq(Class=64K%IPID=I%TS=U)
 T1(DF=N%W=3000%ACK=S++%Flags=AS%Ops=MNW)
 T2(Resp=N)
@@ -9470,7 +9473,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=0%ULEN=134%DAT=E)
 
 Fingerprint Teltrend (aka Securicor 3net) Router
-Class Teltrend | embedded-misc || router
+Class Teltrend | embedded || router
 TSeq(Class=TD%gcd=388|710%SI=<F)
 T1(Resp=Y%DF=N%W=400%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -9506,7 +9509,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Toshiba TR650 ISDN Router
-Class Toshiba | embedded-misc || broadband router
+Class Toshiba | embedded || broadband router
 TSeq(Class=TD%gcd=<9%SI=<14)
 T1(Resp=Y%DF=N%W=1000%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -9542,7 +9545,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=F%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
 Fingerprint VersaNet ISP-Accelerator(TM) Remote Access Server
-Class VersaNet | embedded-misc || terminal server
+Class VersaNet | embedded || terminal server
 TSeq(Class=TD%gcd=<2004%SI=<14)
 T1(DF=Y%W=3E80%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=Y%W=0%ACK=S%Flags=ARF%Ops=)
@@ -9554,7 +9557,7 @@ T7(DF=Y%W=0%ACK=S%Flags=ARF%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Virtual Access LinXpeed Pro 120 router running Software 7.4.33CM
-Class Virtual Access | embedded-misc || router
+Class Virtual Access | embedded || router
 TSeq(Class=C|TD%gcd=<10004%SI=<1E%IPID=I%TS=U)
 T1(DF=Y%W=1000%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=Y%W=100%ACK=S%Flags=AR%Ops=)
@@ -9569,7 +9572,7 @@ PU(Resp=N)
 # Bay Networks MicroAnnex XL running firmware 10.0B
 Fingerprint VxWorks 5.3.x bases system (usually an ethernet hub or switch such as HP ProCurve) or Bay Networks MicroAnnex XL terminal server
 Class HP | VxWorks || switch
-Class Bay Networks | embedded-misc || terminal server
+Class Bay Networks | embedded || terminal server
 TSeq(Class=64K)
 T1(DF=N%W=1000%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -9581,7 +9584,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=F%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
 Fingerprint WatchGuard Firebox SOHO V5.x firewall
-Class WatchGuard | embedded-misc || firewall
+Class WatchGuard | embedded || firewall
 TSeq(Class=TR%gcd=<6%IPID=RD%TS=U)
 T1(DF=N%W=16D0%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=C00%ACK=S%Flags=AR%Ops=)
@@ -10265,7 +10268,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Microsoft Xbox (modified) running evolutionX
-Class Microsoft | embedded-misc || game console
+Class Microsoft | embedded || game console
 TSeq(Class=TD%gcd=<6%SI=<2E4%IPID=I%TS=U)
 T1(DF=N%W=41A0%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -10289,7 +10292,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint WTI Network Power Switch v3.02
-Class WTI | embedded-misc || power-device
+Class WTI | embedded || power-device
 TSeq(Class=TD%gcd=<2A%SI=<1E%IPID=I%TS=U)
 T1(DF=N%W=800%ACK=S++%Flags=AS%Ops=)
 T2(Resp=Y%DF=N%W=800%ACK=S%Flags=AR%Ops=)
@@ -10301,7 +10304,7 @@ T7(DF=N%W=800%ACK=S%Flags=AR%Ops=)
 PU(Resp=N)
 
 Fingerprint XCD Xconnect print server, firmware version CC8S-3.58 (98.09.21)
-Class XCD | embedded-misc || print server
+Class XCD | embedded || print server
 TSeq(Class=TD%gcd=<272A%SI=<1E)
 T1(DF=N%W=3F6%ACK=S++%Flags=AS%Ops=ME)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -10313,7 +10316,7 @@ T7(Resp=N)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=F%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Xerox 8830 Plotter
-Class Xerox | embedded-misc || printer
+Class Xerox | embedded || printer
 TSeq(Class=TD%gcd=1000%SI=1)
 T1(DF=N%W=200%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=O%Flags=R%Ops=)
@@ -10325,7 +10328,7 @@ T7(DF=N%W=0%ACK=O%Flags=R%Ops=)
 PU(Resp=N)
 
 Fingerprint Xerox Document Centre ColorSeries 50
-Class Xerox | embedded-misc || printer
+Class Xerox | embedded || printer
 TSeq(Class=i800%IPID=I%TS=U)
 T1(DF=N%W=1F0E%ACK=S++%Flags=AS%Ops=ME)
 T2(Resp=N)
@@ -10337,7 +10340,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Xerox Document Centre 440 w/ CentreWare Internet Services
-Class Xerox | embedded-misc || printer
+Class Xerox | embedded || printer
 TSeq(Class=64K%IPID=I%TS=U)
 T1(DF=N%W=402E%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -10349,7 +10352,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=15C%RID=F%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
 Fingerprint Xerox DocuPrint C55
-Class Xerox | embedded-misc || printer
+Class Xerox | embedded || printer
 TSeq(Class=TD%gcd=1000|2000|3000|4000%SI=<A)
 T1(Resp=Y%DF=N%W=100%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=O%Flags=R%Ops=)
@@ -10361,7 +10364,7 @@ T7(Resp=Y%DF=N%W=0%ACK=O%Flags=R%Ops=)
 PU(Resp=N)
 
 Fingerprint Xerox DocuPrint N24/N32/N40 Network Laser Printer
-Class Xerox | embedded-misc || printer
+Class Xerox | embedded || printer
 TSeq(Class=TD%gcd=<2004%SI=<1E%IPID=I%TS=U)
 T1(DF=N%W=400%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=O%Flags=R%Ops=)
@@ -10373,7 +10376,7 @@ T7(DF=N%W=0%ACK=O%Flags=R%Ops=)
 PU(Resp=N)
 
 Fingerprint Xerox DocuPrint N40
-Class Xerox | embedded-misc || printer
+Class Xerox | embedded || printer
 TSeq(Class=TD%gcd=<2004%SI=<8C)
 T1(DF=N%W=400%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=O%Flags=R%Ops=)
@@ -10385,7 +10388,7 @@ T7(DF=N%W=0%ACK=O%Flags=R%Ops=)
 PU(Resp=N)
 
 Fingerprint Xerox Docuprint N2125 network printer
-Class Xerox | embedded-misc || printer
+Class Xerox | embedded || printer
 TSeq(Class=64K%IPID=I%TS=U)
 T1(DF=N%W=2000%ACK=S++%Flags=AS%Ops=MNW)
 T2(Resp=N)
@@ -10409,8 +10412,8 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=15C%RID=F%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
 Fingerprint Xylan OmniSwitch 5x/9x ethernet switch, Xylogics Annex-III Comm server R10.0, or Hitachi HI-UX/WE2
-Class Xylan | embedded-misc || switch
-Class Xylogics | embedded-misc || terminal server
+Class Xylan | embedded || switch
+Class Xylogics | embedded || terminal server
 Class Hitachi | HI-UX || general purpose
 TSeq(Class=64K)
 T1(DF=N%W=1000%ACK=S++%Flags=AS%Ops=M)
@@ -10447,7 +10450,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=F%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
 Fingerprint Cabletron Systems SSR 8000 smart switch router System Software, Version 3.1.B.16
-Class Cabletron | embedded-misc || router
+Class Cabletron | embedded || router
 TSeq(Class=RI%gcd=<6%SI=<90C5E&>1715)
 T1(DF=Y%W=403D%ACK=S++%Flags=AS%Ops=MNWNNT)
 T2(Resp=N)
@@ -10509,7 +10512,7 @@ PU(DF=N%TOS=0%IPLEN=44%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=F)
 
 # http://www.cayman.com/
 Fingerprint Cayman 2E DSL/CABLE router
-Class Cayman | embedded-misc || broadband router
+Class Cayman | embedded || broadband router
 TSeq(Class=TR%gcd=<6)
 T1(DF=N%W=3F25%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -10521,7 +10524,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Chase IOLAN Terminal Server v3.5.02 CDi
-Class Chase | embedded-misc || terminal server
+Class Chase | embedded || terminal server
 TSeq(Class=TD%gcd=<84%SI=<1E)
 T1(DF=N%W=600%ACK=S++%Flags=AS%Ops=)
 T2(Resp=N)
@@ -10533,7 +10536,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(Resp=N)
 
 Fingerprint Chase IOLAN terminal server
-Class Chase | embedded-misc || terminal server
+Class Chase | embedded || terminal server
 TSeq(Class=TD%gcd=<84%SI=<1E%IPID=I%TS=U)
 T1(DF=N%W=600%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -10545,7 +10548,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=3549%RID=F%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
 Fingerprint Xyplex Network 9000 terminal server
-Class Xyplex | embedded-misc || terminal server
+Class Xyplex | embedded || terminal server
 TSeq(Class=TD%gcd=<6%SI=<6)
 T1(Resp=Y%DF=Y%W=100%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=Y%W=0%ACK=S++%Flags=AR%Ops=)
@@ -10557,7 +10560,7 @@ T7(Resp=Y%DF=Y%W=0%ACK=S++%Flags=UAPRF%Ops=)
 PU(DF=Y%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Xyplex Terminal Server v6.0.2S5
-Class Xyplex | embedded-misc || terminal server
+Class Xyplex | embedded || terminal server
 TSeq(Class=TD%gcd=1388%SI=<F)
 T1(DF=N%W=100%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
@@ -10571,8 +10574,8 @@ PU(Resp=N)
 # Zero One Tech. Print Server 3000
 # Hawking Print Server PN7117
 Fingerprint Print Server: Zero One Tech 3000 or Hawking PN7117 print server
-Class Hawking | embedded-misc || print server
-Class Zero One | embedded-misc || print server
+Class Hawking | embedded || print server
+Class Zero One | embedded || print server
 TSeq(Class=TD%gcd=<C004%SI=<1E%IPID=I%TS=U)
 T1(DF=N%W=B68%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -10584,7 +10587,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint ZoomAir IG-4165 wireless gateway (WAP)
-Class ZoomAir | embedded-misc || WAP
+Class ZoomAir | embedded || WAP
 TSeq(Class=TD%gcd=<68%SI=<1E%IPID=I%TS=U)
 T1(DF=N%W=1000%ACK=S++%Flags=AR%Ops=)
 T2(Resp=Y%DF=N%W=1000%ACK=S%Flags=AR%Ops=)

@@ -564,6 +564,86 @@ void write_host_status(Target *currenths, int resolve_all) {
   }
 }
 
+/* Returns -1 if adding the entry is not possible because it would
+   overflow.  Otherwise it returns the new number of entries.  Note
+   that only unique entries are added.  Also note that *numentries is
+   incremented if the candidate is added.  arrsize is the number of
+   char * members that fit into arr */
+static int addtochararrayifnew(char *arr[], int *numentries, int arrsize, char *candidate) {
+  int i;
+
+  // First lets see if the member already exists
+  for(i=0; i < *numentries; i++) {
+    if (strcmp(arr[i], candidate) == 0)
+      return *numentries;
+  }
+
+  // Not already there... do we have room for a new one?
+  if (*numentries >= arrsize )
+    return -1;
+
+  // OK, not already there and we have room, so we'll add it.
+  arr[*numentries] = candidate;
+  (*numentries)++;
+  return *numentries;
+}
+
+#define MAX_OS_CLASSMEMBERS 8
+static void printosclassificationoutput(const struct OS_Classification_Results *OSR) {
+  int classno;
+  int overflow = 0; /* Whether we have too many devices to list */
+  char *types[MAX_OS_CLASSMEMBERS], *vendors[MAX_OS_CLASSMEMBERS], 
+       *osfamilies[MAX_OS_CLASSMEMBERS], *osgenerations[MAX_OS_CLASSMEMBERS];
+  int numtypes = 0, numvendors=0, numosfamilies = 0, numosgenerations = 0;
+  char tmpbuf[1024];
+
+  if (OSR->overall_results == OSSCAN_SUCCESS) {
+
+    /* Print the OS Classification results to XML output */
+    for (classno=0; classno < OSR->OSC_num_matches; classno++) {
+      // Because the OS_Generation filed is optional
+      if (OSR->OSC[classno]->OS_Generation) {
+	snprintf(tmpbuf, sizeof(tmpbuf), " osgen=\"%s\"", OSR->OSC[classno]->OS_Generation);
+      } else tmpbuf[0] = '\0';
+      log_write(LOG_XML, "<osclass type=\"%s\" vendor=\"%s\" osfamily=\"%s\"%s accuracy=\"%d\"/>\n", OSR->OSC[classno]->Device_Type, OSR->OSC[classno]->OS_Vendor, OSR->OSC[classno]->OS_Family, tmpbuf, (int) (OSR->OSC_Accuracy[classno] * 100));
+      
+      if (addtochararrayifnew(types, &numtypes, MAX_OS_CLASSMEMBERS, OSR->OSC[classno]->Device_Type) == -1)
+	overflow = 1;
+      if (addtochararrayifnew(vendors, &numvendors, MAX_OS_CLASSMEMBERS, OSR->OSC[classno]->OS_Vendor) == -1)
+	overflow = 1;
+      if (addtochararrayifnew(osfamilies, &numosfamilies, MAX_OS_CLASSMEMBERS,  OSR->OSC[classno]->OS_Family) == -1)
+	overflow = 1;
+      if (OSR->OSC[classno]->OS_Generation)
+	addtochararrayifnew(osgenerations, &numosgenerations, MAX_OS_CLASSMEMBERS, OSR->OSC[classno]->OS_Generation);
+    }
+
+    /* If there is only one vendor and OS family, and they are the
+       same, kill the redundant vendor */
+    if (numvendors == 1 && numosfamilies == 1 && strcmp(vendors[0], osfamilies[0]) == 0)
+      numvendors = 0;
+
+    if (!overflow && numtypes >= 1) {
+      log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT, "Device type: ");
+      for(classno=0; classno < numtypes; classno++)
+	log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT, "%s%s", types[classno], (classno < numtypes - 1)? "|" : "");
+      log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT, "\n    Running: ");
+      for(classno=0; classno < numvendors; classno++)
+	log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT, "%s%s", vendors[classno], (classno < numvendors - 1)? "|" : "");
+      log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT, " ");
+     for(classno=0; classno < numosfamilies; classno++)
+	log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT, "%s%s", osfamilies[classno], (classno < numosfamilies - 1)? "|" : "");
+     if (numosfamilies == 1 && numosgenerations > 0) {
+       log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT, " ");
+       for(classno=0; classno < numosgenerations; classno++)
+	 log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT, "%s%s", osgenerations[classno], (classno < numosgenerations - 1)? "|" : "");
+     }
+     log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT, "\n");
+    }
+  }
+  return;
+}
+
+
 
 /* Prints the formatted OS Scan output to stdout, logfiles, etc (but only
    if an OS Scan was performed */
@@ -572,7 +652,7 @@ void printosscanoutput(Target *currenths) {
   char numlst[512]; /* For creating lists of numbers */
   char *p; /* Used in manipulating numlst above */
 
-  if (currenths->osscan_performed) {
+  if (currenths->osscan_performed && currenths->FPR != NULL) {
     log_write(LOG_XML, "<os>");
     if (currenths->osscan_openport > 0) {
       log_write(LOG_XML, 
@@ -585,50 +665,50 @@ void printosscanoutput(Target *currenths) {
 		currenths->osscan_closedport);
     }
     
-    if (currenths->FPR.overall_results == OSSCAN_SUCCESS) {
-      if (currenths->FPR.num_perfect_matches > 0) {
+    if (currenths->FPR->overall_results == OSSCAN_SUCCESS && currenths->FPR->num_perfect_matches <= 8) {
+      if (currenths->FPR->num_perfect_matches > 0) {
         char *p;
-	log_write(LOG_MACHINE,"\tOS: %s",  currenths->FPR.prints[0]->OS_name);
+	log_write(LOG_MACHINE,"\tOS: %s",  currenths->FPR->prints[0]->OS_name);
 	log_write(LOG_XML, "<osmatch name=\"%s\" accuracy=\"100\" />\n", 
-		  p = xml_convert(currenths->FPR.prints[0]->OS_name));
+		  p = xml_convert(currenths->FPR->prints[0]->OS_name));
         free(p);
 	i = 1;
-	while(currenths->FPR.accuracy[i] == 1 ) {
-	  log_write(LOG_MACHINE,"|%s", currenths->FPR.prints[i]->OS_name);
+	while(currenths->FPR->accuracy[i] == 1 ) {
+	  log_write(LOG_MACHINE,"|%s", currenths->FPR->prints[i]->OS_name);
 	  log_write(LOG_XML, "<osmatch name=\"%s\" accuracy=\"100\" />\n", 
-		    p = xml_convert(currenths->FPR.prints[i]->OS_name));
+		    p = xml_convert(currenths->FPR->prints[i]->OS_name));
           free(p);
 	  i++;
 	}
 	
-	if (currenths->FPR.num_perfect_matches == 1)
+	if (currenths->FPR->num_perfect_matches == 1)
 	  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,
-		    "Remote operating system guess: %s", 
-		    currenths->FPR.prints[0]->OS_name);
+		    "Remote OS guess: %s", 
+		    currenths->FPR->prints[0]->OS_name);
 	
 	else {
 	  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,
 		    "Remote OS guesses: %s", 
-		    currenths->FPR.prints[0]->OS_name);
+		    currenths->FPR->prints[0]->OS_name);
 	  i = 1;
-	  while(currenths->FPR.accuracy[i] == 1) {
+	  while(currenths->FPR->accuracy[i] == 1) {
 	    log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,", %s", 
-		      currenths->FPR.prints[i]->OS_name);
+		      currenths->FPR->prints[i]->OS_name);
 	    i++;
 	  }
 	}
       } else {
-	if (o.osscan_guess && currenths->FPR.num_matches > 0) {
+	if (o.osscan_guess && currenths->FPR->num_matches > 0) {
 	  /* Print the best guesses available */
-	  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Aggressive OS guesses: %s (%d%%)", currenths->FPR.prints[0]->OS_name, (int) (currenths->FPR.accuracy[0] * 100));
-	  for(i=1; i < 10 && currenths->FPR.num_matches > i &&
-		currenths->FPR.accuracy[i] > 
-		currenths->FPR.accuracy[0] - 0.10; i++) {
+	  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Aggressive OS guesses: %s (%d%%)", currenths->FPR->prints[0]->OS_name, (int) (currenths->FPR->accuracy[0] * 100));
+	  for(i=1; i < 10 && currenths->FPR->num_matches > i &&
+		currenths->FPR->accuracy[i] > 
+		currenths->FPR->accuracy[0] - 0.10; i++) {
             char *p;
-	    log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,", %s (%d%%)", currenths->FPR.prints[i]->OS_name, (int) (currenths->FPR.accuracy[i] * 100));
+	    log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,", %s (%d%%)", currenths->FPR->prints[i]->OS_name, (int) (currenths->FPR->accuracy[i] * 100));
 	    log_write(LOG_XML, "<osmatch name=\"%s\" accuracy=\"%d\" />\n", 
-		      p = xml_convert(currenths->FPR.prints[i]->OS_name),  
-		      (int) (currenths->FPR.accuracy[i] * 100));
+		      p = xml_convert(currenths->FPR->prints[i]->OS_name),  
+		      (int) (currenths->FPR->accuracy[i] * 100));
             free(p);
 	  }
 	  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT, "\n");
@@ -637,29 +717,35 @@ void printosscanoutput(Target *currenths) {
 	    currenths->osscan_closedport > 0 ) {
 	  log_write(LOG_NORMAL|LOG_SKID_NOXLT|LOG_STDOUT,"No exact OS matches for host (If you know what OS is running on it, see http://www.insecure.org/cgi-bin/nmap-submit.cgi).\nTCP/IP fingerprint:\n%s\n", mergeFPs(currenths->FPs, currenths->numFPs, currenths->osscan_openport, currenths->osscan_closedport));
 	} else {
-	  log_write(LOG_NORMAL|LOG_SKID_NOXLT|LOG_STDOUT,"No exact OS matches for host (test conditions non-ideal).\nTCP/IP fingerprint:\n%s\n", mergeFPs(currenths->FPs, currenths->numFPs, currenths->osscan_openport, currenths->osscan_closedport));
+	  log_write(LOG_NORMAL|LOG_SKID_NOXLT|LOG_STDOUT,"No exact OS matches for host (test conditions non-ideal).");
+	  if (o.verbose > 1)
+	    log_write(LOG_NORMAL|LOG_SKID_NOXLT|LOG_STDOUT, "\nTCP/IP fingerprint:\n%s", mergeFPs(currenths->FPs, currenths->numFPs, currenths->osscan_openport, currenths->osscan_closedport));
 	}
       }
       
       log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"\n");	  
-      if (currenths->goodFP >= 0 && (o.debugging || o.verbose > 1) && currenths->FPR.num_perfect_matches > 0 ) {
+      if (currenths->goodFP >= 0 && (o.debugging || o.verbose > 1) && currenths->FPR->num_perfect_matches > 0 ) {
 	log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"OS Fingerprint:\n%s\n", fp2ascii(currenths->FPs[currenths->goodFP]));
       }
-    } else if (currenths->FPR.overall_results == OSSCAN_NOMATCHES) {
+    } else if (currenths->FPR->overall_results == OSSCAN_NOMATCHES) {
       if (o.scan_delay < 500  && currenths->osscan_openport > 0 &&
 	  currenths->osscan_closedport > 0 ) {
 	log_write(LOG_NORMAL|LOG_SKID_NOXLT|LOG_STDOUT,"No OS matches for host (If you know what OS is running on it, see http://www.insecure.org/cgi-bin/nmap-submit.cgi).\nTCP/IP fingerprint:\n%s\n", mergeFPs(currenths->FPs, currenths->numFPs, currenths->osscan_openport, currenths->osscan_closedport));
       } else {
 	log_write(LOG_NORMAL|LOG_SKID_NOXLT|LOG_STDOUT,"No OS matches for host (test conditions non-ideal).\nTCP/IP fingerprint:\n%s\n", mergeFPs(currenths->FPs, currenths->numFPs, currenths->osscan_openport, currenths->osscan_closedport));
       }
-    } else if (currenths->FPR.overall_results == OSSCAN_TOOMANYMATCHES)
+    } else if (currenths->FPR->overall_results == OSSCAN_TOOMANYMATCHES || currenths->FPR->num_perfect_matches > 8)
       {
 	log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Too many fingerprints match this host for me to give an accurate OS guess\n");
 	if (o.debugging || o.verbose) {
 	  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"TCP/IP fingerprint:\n%s\n\n",  mergeFPs(currenths->FPs, currenths->numFPs, currenths->osscan_openport, currenths->osscan_closedport));
 	}
       } else { assert(0); }
-     log_write(LOG_XML, "</os>\n");
+    printosclassificationoutput(currenths->FPR->getOSClassification());
+  
+    
+    
+    log_write(LOG_XML, "</os>\n");
 
      if (currenths->seq.lastboot) {
        char tmbuf[128];

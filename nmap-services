@@ -1183,6 +1183,7 @@ hotline           1234/tcp   #
 msg               1241/tcp   # remote message server
 hermes            1248/tcp   # 
 hermes            1248/udp   # 
+waste             1337/tcp   # Nullsoft WASTE encrypted P2P app
 alta-ana-lm       1346/tcp   # Alta Analytics License Manager
 alta-ana-lm       1346/udp   # Alta Analytics License Manager
 bbn-mmc           1347/tcp   # multi media conferencing

@@ -56,7 +56,7 @@ Target::Target() {
 void Target::Initialize() {
   hostname = NULL;
   bzero(&seq, sizeof(seq));
-  bzero(&FPR, sizeof(FPR));
+  FPR = NULL;
   bzero(FPs, sizeof(FPs));
   osscan_performed = 0;
   osscan_openport = osscan_closedport = -1;
@@ -102,6 +102,8 @@ void Target::FreeInternal() {
     free(nameIPBuf);
     nameIPBuf = NULL;
   }
+
+  if (FPR) delete FPR;
 
   /* Free the port lists */
   resetportlist(&ports);

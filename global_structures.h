@@ -130,26 +130,23 @@ struct AVal {
   struct AVal *next;
 };
 
+struct OS_Classification {
+  char *OS_Vendor;
+  char *OS_Family;
+  char *OS_Generation; /* Can be NULL if unclassified */
+  char *Device_Type;
+};
+
+#define MAX_OS_CLASSIFICATIONS_PER_FP 5
 typedef struct FingerTest {
-  char OS_name[256];
+  char *OS_name;
+  struct OS_Classification OS_class[MAX_OS_CLASSIFICATIONS_PER_FP];
+  int num_OS_Classifications;
   int line; /* For reference prints, the line # in nmap-os-fingerprints */
   const char *name;
   struct AVal *results;
   struct FingerTest *next;
  } FingerPrint;
-
-/* Maximum number of results allowed in one of these things ... */
-#define MAX_FP_RESULTS 8
-struct FingerPrintResults {
-  double accuracy[MAX_FP_RESULTS]; /* Percentage of match (1.0 == perfect 
-				      match) in same order as pritns[] below */
-  FingerPrint *prints[MAX_FP_RESULTS]; /* ptrs to matching references -- 
-					      highest accuracy matches first */
-  int num_perfect_matches; /* Number of 1.0 accuracy matches in prints[] */
-  int num_matches; /* Total number of matches in prints */
-  int overall_results; /* OSSCAN_TOOMANYMATCHES, OSSCAN_NOMATCHES, 
-			  OSSCAN_SUCCESS, etc */
-};
 
 struct timeout_info {
   int srtt; /* Smoothed rtt estimate (microseconds) */
