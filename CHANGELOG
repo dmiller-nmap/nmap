@@ -1,5 +1,11 @@
 # Nmap Changelog
 
+-- Applied patch by Jay Freeman (saurik) <saurik@saurik.com> to make
+   Nmap C++-clean (this was lot of tedious work!  Thanks!).  Note that
+   Nmap still uses a normal C compiler by default, but Nmap
+   derivatives may appreciate C++ compatability.  Note that this only
+   applies to "Nmap proper", not libpcap.
+
 -- Fixed a SYN scan problem that could cause a major slowdown on some
    busy networks.
 

@@ -13,10 +13,10 @@ if (jumpok)
 return;
 }
 
-inline void sethdrinclude(int sd) {
+void sethdrinclude(int sd) {
 #ifdef IP_HDRINCL
 int one = 1;
-setsockopt(sd, IPPROTO_IP, IP_HDRINCL, (void *) &one, sizeof(one));
+setsockopt(sd, IPPROTO_IP, IP_HDRINCL, (const char *) &one, sizeof(one));
 #endif
 }
 
@@ -59,7 +59,7 @@ pcap_t *my_pcap_open_live(char *device, int snaplen, int promisc, int to_ms)
 }
 
 /* Standard swiped internet checksum routine */
-inline unsigned short in_cksum(unsigned short *ptr,int nbytes) {
+unsigned short in_cksum(unsigned short *ptr,int nbytes) {
 
 register int            sum;            /* XXX assumes long == 32 bits */
 u_short                 oddbyte;
@@ -148,7 +148,7 @@ struct pseudo_header {
   unsigned char protocol;
   unsigned short length;
 };
-char *packet = safe_malloc(sizeof(struct ip) + sizeof(struct tcphdr) + optlen + datalen);
+unsigned char *packet = (unsigned char *) safe_malloc(sizeof(struct ip) + sizeof(struct tcphdr) + optlen + datalen);
 struct ip *ip = (struct ip *) packet;
 struct tcphdr *tcp = (struct tcphdr *) (packet + sizeof(struct ip));
 struct pseudo_header *pseudo =  (struct pseudo_header *) (packet + sizeof(struct ip) - sizeof(struct pseudo_header)); 
@@ -185,7 +185,7 @@ sethdrinclude(sd);
 /* if they didn't give a source address, fill in our first address */
 if (!source) {
   source_malloced = 1;
-  source = safe_malloc(sizeof(struct in_addr));
+  source = (struct in_addr *) safe_malloc(sizeof(struct in_addr));
   if (gethostname(myname, MAXHOSTNAMELEN) || 
       !(myhostent = gethostbyname(myname)))
        fatal("Cannot get hostname!  Try using -S <my_IP_address> or -e <interface to scan through>\n");
@@ -274,7 +274,7 @@ free(packet);
 return res;
 }
 
-inline int Sendto(char *functionname, int sd, char *packet, int len, 
+inline int Sendto(char *functionname, int sd, unsigned char *packet, int len, 
 	   unsigned int flags, struct sockaddr *to, int tolen) {
 
 struct sockaddr_in *sin = (struct sockaddr_in *) to;
@@ -287,7 +287,7 @@ do {
     log_write(LOG_STDOUT, "trying sendto(%d, packet, %d, 0, %s, %d)",
 	   sd, len, inet_ntoa(sin->sin_addr), tolen);
   }
-  if ((res = sendto(sd, packet, len, flags, to, tolen)) == -1) {
+  if ((res = sendto(sd, (const char *) packet, len, flags, to, tolen)) == -1) {
     error("sendto in %s: sendto(%d, packet, %d, 0, %s, %d) => %s",
 	  functionname, sd, len, inet_ntoa(sin->sin_addr), tolen,
 	  strerror(errno));
@@ -309,11 +309,11 @@ return res;
 
 /* A simple function I wrote to help in debugging, shows the important fields
    of a TCP packet*/
-int readtcppacket(char *packet, int readdata) {
+int readtcppacket(unsigned char *packet, int readdata) {
 
 struct ip *ip = (struct ip *) packet;
 struct tcphdr *tcp = (struct tcphdr *) (packet + sizeof(struct ip));
-char *data = packet +  sizeof(struct ip) + sizeof(struct tcphdr);
+unsigned char *data = packet +  sizeof(struct ip) + sizeof(struct tcphdr);
 int tot_len;
 struct in_addr bullshit, bullshit2;
 char sourcehost[16];
@@ -366,11 +366,11 @@ return 0;
 
 /* A simple function I wrote to help in debugging, shows the important fields
    of a UDP packet*/
-int readudppacket(char *packet, int readdata) {
+int readudppacket(unsigned char *packet, int readdata) {
 
 struct ip *ip = (struct ip *) packet;
 udphdr_bsd *udp = (udphdr_bsd *) (packet + sizeof(struct ip));
-char *data = packet +  sizeof(struct ip) + sizeof(udphdr_bsd);
+unsigned char *data = packet +  sizeof(struct ip) + sizeof(udphdr_bsd);
 int tot_len;
 struct in_addr bullshit, bullshit2;
 char sourcehost[16];
@@ -426,7 +426,7 @@ int send_udp_raw( int sd, struct in_addr *source,
 		  unsigned short dport, char *data, unsigned short datalen) 
 {
 
-char *packet = safe_malloc(sizeof(struct ip) + sizeof(udphdr_bsd) + datalen);
+unsigned char *packet = (unsigned char *) safe_malloc(sizeof(struct ip) + sizeof(udphdr_bsd) + datalen);
 struct ip *ip = (struct ip *) packet;
 udphdr_bsd *udp = (udphdr_bsd *) (packet + sizeof(struct ip));
 static int myttl = 0;
@@ -462,7 +462,7 @@ sethdrinclude(sd);
 /* if they didn't give a source address, fill in our first address */
 if (!source) {
   source_malloced = 1;
-  source = safe_malloc(sizeof(struct in_addr));
+  source = (struct in_addr *) safe_malloc(sizeof(struct in_addr));
   if (gethostname(myname, MAXHOSTNAMELEN) || 
       !(myhostent = gethostbyname(myname)))
     fatal("Cannot get hostname!  Try using -S <my_IP_address> or -e <interface to scan through>\n");
@@ -563,11 +563,11 @@ struct pseudo_header {
 /*In this placement we get data and some field alignment so we aren't wasting
   too much to compute the TCP checksum.*/
 
-char packet[sizeof(struct ip) + sizeof(struct tcphdr) + 100];
+unsigned char packet[sizeof(struct ip) + sizeof(struct tcphdr) + 100];
 struct ip *ip = (struct ip *) packet;
 struct tcphdr *tcp = (struct tcphdr *) (packet + sizeof(struct ip));
 struct pseudo_header *pseudo = (struct pseudo_header *) (packet + sizeof(struct ip) - sizeof(struct pseudo_header)); 
-char *frag2 = packet + sizeof(struct ip) + 16;
+unsigned char *frag2 = packet + sizeof(struct ip) + 16;
 struct ip *ip2 = (struct ip *) (frag2 - sizeof(struct ip));
 static int myttl = 0;
 int res;
@@ -636,7 +636,7 @@ if (o.debugging > 1)
 /* Lets save this and send it AFTER we send the second one, just to be
    cute ;) */
 
-if ((res = sendto(sd, packet,sizeof(struct ip) + 16 , 0, 
+if ((res = sendto(sd, (const char *) packet,sizeof(struct ip) + 16 , 0, 
 		  (struct sockaddr *)&sock, sizeof(struct sockaddr_in))) == -1)
   {
     perror("sendto in send_syn_fragz");
@@ -668,7 +668,7 @@ if (o.debugging > 1)
 
   log_write(LOG_STDOUT, "\nTrying sendto(%d , ip2, %d, 0 , %s , %d)\n", sd, 
 	 ntohs(ip2->ip_len), inet_ntoa(*victim), (int) sizeof(struct sockaddr_in));
-if ((res = sendto(sd, (void *)ip2,sizeof(struct ip) + 4 , 0, 
+if ((res = sendto(sd, (const char *)ip2,sizeof(struct ip) + 4 , 0, 
 		  (struct sockaddr *)&sock, (int) sizeof(struct sockaddr_in))) == -1)
   {
     perror("sendto in send_tcp_raw frag #2");
@@ -698,7 +698,7 @@ int send_ip_raw( int sd, struct in_addr *source,
 		  char *data, unsigned short datalen) 
 {
 
-char *packet = safe_malloc(sizeof(struct ip) + datalen);
+unsigned char *packet = (unsigned char *) safe_malloc(sizeof(struct ip) + datalen);
 struct ip *ip = (struct ip *) packet;
 static int myttl = 0;
 
@@ -725,7 +725,7 @@ sethdrinclude(sd);
 /* if they didn't give a source address, fill in our first address */
 if (!source) {
   source_malloced = 1;
-  source = safe_malloc(sizeof(struct in_addr));
+  source = (struct in_addr *) safe_malloc(sizeof(struct in_addr));
   if (gethostname(myname, MAXHOSTNAMELEN) || 
       !(myhostent = gethostbyname(myname)))
     fatal("Cannot get hostname!  Try using -S <my_IP_address> or -e <interface to scan through>\n");
@@ -778,7 +778,7 @@ free(packet);
 return res;
 }
 
-inline int unblock_socket(int sd) {
+int unblock_socket(int sd) {
 int options;
 /*Unblock our socket to prevent recvfrom from blocking forever
   on certain target ports. */
@@ -880,7 +880,7 @@ return NULL;
 int getsourceip(struct in_addr *src, struct in_addr *dst) {
   int sd;
   struct sockaddr_in sock;
-  int socklen = sizeof(struct sockaddr_in);
+  NET_SIZE_T socklen = sizeof(struct sockaddr_in);
   unsigned short p1;
 
   get_random_bytes(&p1, 2);

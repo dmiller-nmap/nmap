@@ -57,7 +57,7 @@ struct rpc_info {
 struct rpcscaninfo {
   struct port *rpc_current_port;
   unsigned long *rpc_progs;
-  int rpc_number;
+  unsigned long rpc_number;
   int valid_responses_this_port; /* Number of valid (RPC wise) responses we
 				    have received on this particular port */
 #define RPC_STATUS_UNTESTED 0
@@ -73,7 +73,7 @@ struct rpcscaninfo {
 };
 
 
-int get_rpc_procs(unsigned long **programs, int *num_programs);
+int get_rpc_procs(unsigned long **programs, unsigned long *num_programs);
 char *nmap_getrpcnamebynum(unsigned long num);
 int send_rpc_query(struct in_addr *target_host, unsigned short portno,
 		   int ipproto, unsigned long program, int scan_offset, 

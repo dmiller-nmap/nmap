@@ -14,7 +14,7 @@ void *safe_malloc(int size)
 
 
 /* Hex dump */
-void hdump(unsigned char *packet, int len) {
+void hdump(unsigned char *packet, unsigned int len) {
 unsigned int i=0, j=0;
 
 printf("Here it is:\n");
@@ -32,7 +32,7 @@ printf("\n");
 
 /* A better version of hdump, from Lamont Granquist.  Modified slightly
    by Fyodor (fyodor@DHP.com) */
-void lamont_hdump(unsigned char *bp, int length) {
+void lamont_hdump(unsigned char *bp, unsigned int length) {
 
   /* stolen from tcpdump, then kludged extensively */
 
@@ -274,8 +274,8 @@ else if (num_elem < 65536)
   bpe = sizeof(unsigned short);
 else bpe = sizeof(unsigned int);
 
-bytes = malloc(bpe * num_elem);
-tmp = malloc(elem_sz);
+bytes = (unsigned char *) malloc(bpe * num_elem);
+tmp = (unsigned char *) malloc(elem_sz);
 
 get_random_bytes(bytes, bpe * num_elem);
 cptr = bytes;
@@ -406,20 +406,20 @@ int arg_parse(const char *command, char ***argv) {
   char **myargv = NULL;
   int argc = 0;
   char mycommand[4096];
-  unsigned char *start, *end;
+  char *start, *end;
   char oldend;
 
   *argv = NULL;
   if (Strncpy(mycommand, command, 4096) == -1) {      
     return -1;
   }
-  myargv = malloc((MAX_PARSE_ARGS + 2) * sizeof(char *));
+  myargv = (char **) malloc((MAX_PARSE_ARGS + 2) * sizeof(char *));
   bzero(myargv, (MAX_PARSE_ARGS+2) * sizeof(char *));
   myargv[0] = (char *) 0x123456; /* Integrity checker */
   myargv++;
   start = mycommand;
   while(start && *start) {
-    while(*start && isspace(*start))
+    while(*start && isspace((int) *start))
       start++;
     if (*start == '"') {
       start++;
@@ -431,7 +431,7 @@ int arg_parse(const char *command, char ***argv) {
       continue;
     } else {
       end = start+1;
-      while(*end && !isspace(*end)) {      
+      while(*end && !isspace((int) *end)) {      
 	end++;
       }
     }

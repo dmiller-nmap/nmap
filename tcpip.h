@@ -105,11 +105,19 @@ void *realloc();
 #endif
 
 #include <sys/ioctl.h>
-#include <pcap.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+  #include <pcap.h>
+#ifdef __cplusplus
+}
+#endif
+
 #include <setjmp.h>
 #include <errno.h>
 #include <signal.h>
-#include <pcap.h>
+
 #if HAVE_SYS_SOCKIO_H
 #include <sys/sockio.h>  /* SIOCGIFCONF for Solaris */
 #endif
@@ -331,15 +339,15 @@ pcap_t *my_pcap_open_live(char *device, int snaplen, int promisc, int to_ms);
 
 /* A simple function I wrote to help in debugging, shows the important fields
    of a TCP packet*/
-int readtcppacket(char *packet, int readdata);
-int readudppacket(char *packet, int readdata);
+int readtcppacket(unsigned char *packet, int readdata);
+int readudppacket(unsigned char *packet, int readdata);
 /* Convert an IP address to the device (IE ppp0 eth0) using that address */
 int ipaddr2devname( char *dev, struct in_addr *addr );
 /* And vice versa */
 int devname2ipaddr(char *dev, struct in_addr *addr);
 /* Where the above 2 functions get their info */
 struct interface_info *getinterfaces(int *howmany);
-inline void sethdrinclude(int sd);
+void sethdrinclude(int sd);
 int getsourceip(struct in_addr *src, struct in_addr *dst);
 /* Get the source IP and interface name that a packet
    to dst should be sent to.  Interface name is dynamically
@@ -347,7 +355,7 @@ int getsourceip(struct in_addr *src, struct in_addr *dst);
 char *getsourceif(struct in_addr *src, struct in_addr *dst);
 int islocalhost(struct in_addr *addr);
 int unblock_socket(int sd);
-inline int Sendto(char *functionname, int sd, char *packet, int len, 
+inline int Sendto(char *functionname, int sd, unsigned char *packet, int len, 
 	   unsigned int flags, struct sockaddr *to, int tolen);
 /* Standard swiped internet checksum routine */
 unsigned short in_cksum(unsigned short *ptr,int nbytes);

@@ -12,9 +12,7 @@
  * cannot distinguish between failure and a local broadcast address.
  */
 int
-inet_aton(cp, addr)
-	register const char *cp;
-	struct in_addr *addr;
+inet_aton(register const char *cp, struct in_addr *addr)
 {
 	register unsigned int val;	/* changed from u_long --david */
 	register int base, n;

@@ -39,7 +39,7 @@ FingerPrint **parse_fingerprint_reference_file();
 void match_fingerprint(FingerPrint *FP, struct FingerPrintResults *FPR, 
 		       double accuracy_threshold);
 struct AVal *str2AVal(char *p);
-struct AVal *gettestbyname(FingerPrint *FP, char *name);
+struct AVal *gettestbyname(FingerPrint *FP, const char *name);
 
 /* Returns true if perfect match -- if num_subtests & num_subtests_succeeded are non_null it updates them.  if shortcircuit is zero, it does all the tests, otherwise it returns when the first one fails */
 

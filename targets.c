@@ -13,7 +13,7 @@ int hostgroup_state_init(struct hostgroup_state *hs, int lookahead,
 			 int num_expressions) {
   bzero(hs, sizeof(struct hostgroup_state));
   assert(lookahead > 0);
-  hs->hostbatch = safe_malloc(lookahead * sizeof(struct hostgroup_state));
+  hs->hostbatch = (struct hoststruct *) safe_malloc(lookahead * sizeof(struct hostgroup_state));
   hs->max_batch_sz = lookahead;
   hs->current_batch_sz = 0;
   hs->next_batch_no = 0;
@@ -361,7 +361,7 @@ struct ppkt {
   unsigned short id;
   unsigned short seq;
 };
-unsigned int elapsed_time;
+int elapsed_time;
 int blockinc;
 int sd_blocking = 1;
 struct sockaddr_in sock;
@@ -406,7 +406,7 @@ if (o.pingtype & PINGTYPE_TCP) {
   else ptech.connecttcpscan = 1;
 }
 
-time = safe_malloc(sizeof(struct timeval) * ((pt.max_tries) * num_hosts));
+time = (struct timeval *) safe_malloc(sizeof(struct timeval) * ((pt.max_tries) * num_hosts));
 bzero(time, sizeof(struct timeval) * pt.max_tries * num_hosts);
 id = (unsigned short) get_random_uint();
 
@@ -418,7 +418,7 @@ if (ptech.connecttcpscan)  {
 
 bzero((char *)&tqi, sizeof(tqi));
 if (ptech.connecttcpscan) {
-  tqi.sockets = safe_malloc(sizeof(int) * (pt.max_tries) * num_hosts);
+  tqi.sockets = (int *) safe_malloc(sizeof(int) * (pt.max_tries) * num_hosts);
   memset(tqi.sockets, 255, sizeof(int) * (pt.max_tries) * num_hosts);
   FD_ZERO(&(tqi.fds_r));
   FD_ZERO(&(tqi.fds_w));
@@ -737,7 +737,8 @@ int get_connecttcpscan_results(struct tcpqueryinfo *tqi,
 			       struct timeval *time, struct pingtune *pt, 
 			       struct timeout_info *to) {
 
-int res, res2, tm;
+int res, res2;
+int tm;
 struct timeval myto, start, end;
 int hostindex;
 int trynum, newstate = HOST_DOWN;
@@ -860,7 +861,8 @@ return 0;
 int get_ping_results(int sd, pcap_t *pd, struct hoststruct *hostbatch, struct timeval *time,  struct pingtune *pt, struct timeout_info *to, int id, struct pingtech *ptech, unsigned short *ports) {
 fd_set fd_r, fd_x;
 struct timeval myto, tmpto, start, end;
-int bytes, res;
+unsigned int bytes;
+int res;
 struct ppkt {
   unsigned char type;
   unsigned char code;
@@ -911,7 +913,7 @@ while(pt->block_unaccounted > 0 && !timeout) {
   tmpto = myto;
 
   if (pd) {
-    ip = (struct ip*) readip_pcap(pd, &bytes, to->timeout);
+    ip = (struct ip *) readip_pcap(pd, &bytes, to->timeout);
   } else {    
     FD_SET(sd, &fd_r);
     FD_SET(sd, &fd_x);
@@ -943,7 +945,7 @@ while(pt->block_unaccounted > 0 && !timeout) {
   if (ip->ip_p == IPPROTO_ICMP) {    
     /* if it is our response */
     ping = (struct ppkt *) ((ip->ip_hl * 4) + (char *) ip);
-    if (bytes < ip->ip_hl * 4 + 8) {
+    if (bytes < ip->ip_hl * 4 + 8U) {
       error("Supposed ping packet is only %d bytes long!", bytes);
       continue;
     }
@@ -972,14 +974,14 @@ while(pt->block_unaccounted > 0 && !timeout) {
     }
     else if (ping->type == 3 || ping->type == 11 || ping->type == 4 || 
 	     o.debugging) {
-      if (bytes <  ip->ip_hl * 4 + 28) {
+      if (bytes <  ip->ip_hl * 4 + 28U) {
 	if (o.debugging)
 	  error("ICMP type %d code %d packet is only %d bytes\n", ping->type, ping->code, bytes);
 	continue;
       }
 
       ip2 = (struct ip *) ((char *)ip + ip->ip_hl * 4 + 8);
-      if (bytes < ip->ip_hl * 4 + 8 + ip2->ip_hl * 4 + 8) {
+      if (bytes < ip->ip_hl * 4 + 8U + ip2->ip_hl * 4 + 8U) {
 	if (o.debugging)
 	  error("ICMP type %d code %d packet is only %d bytes\n", ping->type, ping->code, bytes);
 	continue;
@@ -997,7 +999,7 @@ while(pt->block_unaccounted > 0 && !timeout) {
 	  if (o.debugging) {	
 	    error("Illegal id %d found, should be %d (icmp type/code %d/%d)", ping2->id, id, ping->type, ping->code);
 	    if (o.debugging > 1)
-	      lamont_hdump((char *)ip, bytes);
+	      lamont_hdump((unsigned char *)ip, bytes);
 	  }
 	  continue;
 	}
@@ -1212,7 +1214,7 @@ if (trynum > 0 && !(pt->dropthistry)) {
   pt->dropthistry = 1;
   if (o.debugging) 
     log_write(LOG_STDOUT, "Decreasing massping group size from %d to ", pt->group_size);
-  pt->group_size = MAX(pt->group_size * 0.75, 10);
+  pt->group_size = MAX((int) (pt->group_size * 0.75), 10);
   if (o.debugging) 
     log_write(LOG_STDOUT, "%d\n", pt->group_size);
 }

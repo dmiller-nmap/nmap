@@ -77,7 +77,7 @@ struct AVal {
 
 typedef struct FingerTest {
   char OS_name[256];
-  char *name;
+  const char *name;
   struct AVal *results;
   struct FingerTest *next;
  } FingerPrint;
@@ -102,7 +102,7 @@ struct timeout_info {
 };
 
 struct seq_info {
-    int class;
+    int seqclass;
     int responses;
     unsigned int seqs[NUM_SEQ_SAMPLES];
     int index;

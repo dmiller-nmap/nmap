@@ -212,7 +212,7 @@ int main(int argc, char *argv[], char *envp[]) {
 	  }
 	} else {
 	  fakeargc = 1;
-	  fakeargv = malloc(sizeof(char *) * 2);
+	  fakeargv = (char **) malloc(sizeof(char *) * 2);
 	  fakeargv[0] = nmappath;
 	  fakeargv[1] = NULL;
 	}
@@ -252,7 +252,8 @@ int main(int argc, char *argv[], char *envp[]) {
 
 int nmap_main(int argc, char *argv[]) {
   char *p, *q;
-  int i, j, arg, argvlen;
+  int i, arg;
+  size_t j, argvlen;
   FILE *inputfd = NULL;
   char *host_spec;
   short fastscan=0, randomize=1, resolve_all=0;
@@ -541,7 +542,7 @@ int nmap_main(int argc, char *argv[]) {
     case 'S': 
       if (o.spoofsource)
 	fatal("You can only use the source option once!  Use -D <decoy1> -D <decoy2> etc. for decoys\n");
-      o.source = safe_malloc(sizeof(struct in_addr));
+      o.source = (struct in_addr *) safe_malloc(sizeof(struct in_addr));
       o.spoofsource = 1;
       if (!resolve(optarg, o.source))
 	fatal("Failed to resolve source address, try dotted decimal IP address\n");
@@ -780,7 +781,7 @@ int nmap_main(int argc, char *argv[]) {
   }
 
   if (*o.device && !o.source) {
-    o.source = safe_malloc(sizeof(struct in_addr)); 
+    o.source = (struct in_addr *) safe_malloc(sizeof(struct in_addr)); 
     if (devname2ipaddr(o.device, o.source) == -1) {
       fatal("I cannot figure out what source address to use for device %s, does it even exist?", o.device);
     }
@@ -824,7 +825,7 @@ int nmap_main(int argc, char *argv[]) {
     if (argvlen < strlen(FAKE_ARGV))
       fatal("If you want me to fake your argv, you need to call the program with a longer name.  Try the full pathname, or rename it fyodorssuperdedouperportscanner");
     strncpy(argv[0], FAKE_ARGV, strlen(FAKE_ARGV));
-    for(i = strlen(FAKE_ARGV); i < argvlen; i++) argv[0][i] = '\0';
+    for(j = strlen(FAKE_ARGV); j < argvlen; j++) argv[0][j] = '\0';
     for(i=1; i < argc; i++) {
       argvlen = strlen(argv[i]);
       for(j=0; j <= argvlen; j++)
@@ -849,7 +850,7 @@ int nmap_main(int argc, char *argv[]) {
 
   /* Time to create a hostgroup state object filled with all the requested
      machines */
-  host_exp_group = safe_malloc(o.host_group_sz * sizeof(char *));
+  host_exp_group = (char **) safe_malloc(o.host_group_sz * sizeof(char *));
 
   while(1) {
     while(num_host_exp_groups < o.host_group_sz &&
@@ -1114,7 +1115,7 @@ int gather_logfile_resumption_state(char *fname, int *myargc, char ***myargv) {
   int filelen;
   char nmap_arg_buffer[1024];
   struct in_addr lastip;
-  unsigned char *p, *q, *found; /* I love C! */
+  char *p, *q, *found; /* I love C! */
   /* We mmap it read/write since we will change the last char to a newline if it is not already */
   filestr = mmapfile(fname, &filelen, O_RDWR);
   if (!filestr) {
@@ -1132,14 +1133,14 @@ int gather_logfile_resumption_state(char *fname, int *myargc, char ***myargv) {
   /* First goal is to find the nmap args */
   p = strstr(filestr, " as: ");
   p += 5;
-  while(*p && !isspace(*p))
+  while(*p && !isspace((int) *p))
     p++;
   if (!*p) fatal("Unable to parse supposed log file %s.  Sorry", fname);
   p++; /* Skip the space between program name and first arg */
   if (*p == '\n' || !*p) fatal("Unable to parse supposed log file %s.  Sorry", fname);
 
   q = strchr(p, '\n');
-  if (!q || (q - p >= sizeof(nmap_arg_buffer) - 32))
+  if (!q || ((unsigned int) (q - p) >= sizeof(nmap_arg_buffer) - 32))
     fatal("Unable to parse supposed log file %s.  Sorry", fname);
 
   strcpy(nmap_arg_buffer, "nmap --append_output ");
@@ -1215,13 +1216,14 @@ void options_init() {
 
 }
 
-inline void max_rcvbuf(int sd) {
-  int optval = 524288 /*2^19*/, optlen = sizeof(int);
+void max_rcvbuf(int sd) {
+  int optval = 524288 /*2^19*/;
+  NET_SIZE_T optlen = sizeof(int);
 
-  if (setsockopt(sd, SOL_SOCKET, SO_RCVBUF, (void *) &optval, optlen))
+  if (setsockopt(sd, SOL_SOCKET, SO_RCVBUF, (const char *) &optval, optlen))
     if (o.debugging) perror("Problem setting large socket recieve buffer");
   if (o.debugging) {
-    getsockopt(sd, SOL_SOCKET, SO_RCVBUF,(void *) &optval, &optlen);
+    getsockopt(sd, SOL_SOCKET, SO_RCVBUF,(char *) &optval, &optlen);
     log_write(LOG_STDOUT, "Our buffer size is now %d\n", optval);
   }
 }
@@ -1264,16 +1266,16 @@ int max_sd() {
   return 0;
 }
 
-inline int block_socket(int sd) {
+int block_socket(int sd) {
   int options;
   options = (~O_NONBLOCK) & fcntl(sd, F_GETFL);
   fcntl(sd, F_SETFL, options);
   return 1;
 }
 
-inline void broadcast_socket(int sd) {
+void broadcast_socket(int sd) {
   int one = 1;
-  if (setsockopt(sd, SOL_SOCKET, SO_BROADCAST, (void *)&one, sizeof(int)) != 0) {
+  if (setsockopt(sd, SOL_SOCKET, SO_BROADCAST, (const char *)&one, sizeof(int)) != 0) {
     fprintf(stderr, "Failed to secure socket broadcasting permission\n");
     perror("setsockopt");
   }
@@ -1281,7 +1283,7 @@ inline void broadcast_socket(int sd) {
 
 /* We set the socket lingering so we will RST connection instead of wasting
    bandwidth with the four step close  */
-inline void init_socket(int sd) {
+void init_socket(int sd) {
   struct linger l;
   int res;
   static int bind_failed=0;
@@ -1290,7 +1292,7 @@ inline void init_socket(int sd) {
   l.l_onoff = 1;
   l.l_linger = 0;
 
-  if (setsockopt(sd, SOL_SOCKET, SO_LINGER,  (void *) &l, sizeof(struct linger)))
+  if (setsockopt(sd, SOL_SOCKET, SO_LINGER,  (const char *) &l, sizeof(struct linger)))
     {
       fprintf(stderr, "Problem setting socket SO_LINGER, errno: %d\n", errno);
       perror("setsockopt");
@@ -1317,7 +1319,7 @@ unsigned short *getpts(char *origexpr) {
   unsigned char porttbl[65536];
   int portwarning = 0; /* have we warned idiot about dup ports yet? */
   long rangestart = -2343242, rangeend = -9324423;
-  unsigned char *current_range;
+  char *current_range;
   char *endptr;
   int i;
   unsigned short *ports;
@@ -1327,18 +1329,18 @@ unsigned short *getpts(char *origexpr) {
 
   current_range = origexpr;
   do {
-    while(isspace(*current_range))
+    while(isspace((int) *current_range))
       current_range++; /* I don't know why I should allow spaces here, but I will */
     if (*current_range == '-') {
       rangestart = 1;
     }
-    else if (isdigit(*current_range)) {
+    else if (isdigit((int) *current_range)) {
       rangestart = strtol(current_range, &endptr, 10);
       if (rangestart <= 0 || rangestart > 65535) {
 	fatal("Ports to be scanned must be between 1 and 65535 inclusive");
       }
       current_range = endptr;
-      while(isspace(*current_range)) current_range++;
+      while(isspace((int) *current_range)) current_range++;
     } else {
       fatal("Your port specifications are illegal.  Example of proper form: \"-100,200-1024,3000-4000,60000-\"");
     }
@@ -1351,7 +1353,7 @@ unsigned short *getpts(char *origexpr) {
       if (!*current_range || *current_range == ',') {
 	/* Ended with a -, meaning up until the last possible port */
 	rangeend = 65535;
-      } else if (isdigit(*current_range)) {
+      } else if (isdigit((int) *current_range)) {
 	rangeend = strtol(current_range, &endptr, 10);
 	if (rangeend <= 0 || rangeend > 65535) {
 	  fatal("Ports to be scanned must be between 1 and 65535 inclusive");
@@ -1375,7 +1377,7 @@ unsigned short *getpts(char *origexpr) {
     }
     
     /* Find the next range */
-    while(isspace(*current_range)) current_range++;
+    while(isspace((int) *current_range)) current_range++;
     if (*current_range && *current_range != ',') {
       fatal("Your port specifications are illegal.  Example of proper form: \"-100,200-1024,3000-4000,60000-\"");
     }
@@ -1386,8 +1388,8 @@ unsigned short *getpts(char *origexpr) {
   if (o.numports == 0)
     fatal("No ports specified -- If you really don't want to scan any ports use ping scan...");
 
-  ports = safe_malloc(sizeof(unsigned short ) * (o.numports + 1));
-  bzero(ports, sizeof(unsigned short ) * (o.numports + 1));
+  ports = (unsigned short *) safe_malloc(sizeof(unsigned short) * (o.numports + 1));
+  bzero(ports, sizeof(unsigned short) * (o.numports + 1));
 
   /* I is the next index into which we should add good ports */
   for(i=0, rangestart = 1; i < o.numports ; rangestart++) {
@@ -1458,7 +1460,7 @@ char *seqreport(struct seq_info *seq) {
   char *p;
   int i;
 
-  snprintf(report, sizeof(report), "TCP Sequence Prediction: Class=%s\n                         Difficulty=%d (%s)\n", seqclass2ascii(seq->class), seq->index, (seq->index < 10)? "Trivial joke" : (seq->index < 80)? "Easy" : (seq->index < 3000)? "Medium" : (seq->index < 5000)? "Formidable" : (seq->index < 100000)? "Worthy challenge" : "Good luck!");
+  snprintf(report, sizeof(report), "TCP Sequence Prediction: Class=%s\n                         Difficulty=%d (%s)\n", seqclass2ascii(seq->seqclass), seq->index, (seq->index < 10)? "Trivial joke" : (seq->index < 80)? "Easy" : (seq->index < 3000)? "Medium" : (seq->index < 5000)? "Formidable" : (seq->index < 100000)? "Worthy challenge" : "Good luck!");
   if (o.verbose) {
     tmp[0] = '\n';
     tmp[1] = '\0'; 
@@ -1474,8 +1476,8 @@ char *seqreport(struct seq_info *seq) {
   return report;
 }
 
-char *seqclass2ascii(int class) {
-  switch(class) {
+char *seqclass2ascii(int seqclass) {
+  switch(seqclass) {
   case SEQ_CONSTANT:
     return "constant sequence number (!)";
   case SEQ_64K:
@@ -1736,7 +1738,7 @@ int check_ident_port(struct in_addr target) {
   struct sockaddr_in sock;
   int res;
   struct sockaddr_in stranger;
-  int sockaddr_in_len = sizeof(struct sockaddr_in);
+  NET_SIZE_T sockaddr_in_len = sizeof(struct sockaddr_in);
   fd_set fds_read, fds_write;
   struct timeval tv;
   tv.tv_sec = o.initial_rtt_timeout / 1000;
@@ -1868,7 +1870,7 @@ void super_scan(struct hoststruct *target, unsigned short *portarray, stype scan
   int freshportstried = 0;
   int senddelay = 0;
   pcap_t *pd;
-  int bytes;
+  unsigned int bytes;
   struct ip *ip, *ip2;
   struct tcphdr *tcp;
   struct bpf_program fcode;
@@ -1909,7 +1911,7 @@ void super_scan(struct hoststruct *target, unsigned short *portarray, stype scan
   numqueries_ideal = initial_packet_width = MIN(max_width, 10);
 
   memset(portlookup, 255, 65536 * sizeof(int)); /* 0xffffffff better always be (int) -1 */
-  scan = safe_malloc(o.numports * sizeof(struct portinfo));
+  scan = (struct portinfo *) safe_malloc(o.numports * sizeof(struct portinfo));
 
   /* Initialize timeout info */
   /*
@@ -2108,7 +2110,7 @@ void super_scan(struct hoststruct *target, unsigned short *portarray, stype scan
 	      if (TIMEVAL_SUBTRACT(end, now) > 8000000)
 		timedout = 1;
 	    }
-	    if (bytes < (4 * ip->ip_hl) + 4)
+	    if (bytes < (4 * ip->ip_hl) + 4U)
 	      continue;	
 	    current = NULL;
 	    if (ip->ip_p == IPPROTO_ICMP ||
@@ -2121,7 +2123,7 @@ void super_scan(struct hoststruct *target, unsigned short *portarray, stype scan
 		  if (portlookup[newport] < 0) {
 		    if (o.debugging) {
 		      log_write(LOG_STDOUT, "Strange packet from port %d:\n", ntohs(tcp->th_sport));
-		      readtcppacket((char *)ip, bytes);
+		      readtcppacket((unsigned char *)ip, bytes);
 		    }
 		    current = NULL;
 		    continue;
@@ -2165,7 +2167,7 @@ void super_scan(struct hoststruct *target, unsigned short *portarray, stype scan
 		  if (portlookup[newport] < 0) {
 		    if (o.debugging) {
 		      log_write(LOG_STDOUT, "Strange ICMP packet type 3 code %d related to port %d:\n", icmp->icmp_code, newport);
-		      readtcppacket((char *)ip, bytes);		
+		      readtcppacket((unsigned char *)ip, bytes);		
 		    }
 		    continue;		
 		  }
@@ -2225,7 +2227,7 @@ void super_scan(struct hoststruct *target, unsigned short *portarray, stype scan
 	    
 	      if (current) {	  
 		if (current->state == PORT_CLOSED && (packet_trynum < 0)) {
-		  target->to.rttvar *= 1.2;
+		  target->to.rttvar = (int) (target->to.rttvar * 1.2);
 		  if (o.debugging) { log_write(LOG_STDOUT, "Late packet, couldn't figure out sendno so we do varianceincrease to %d\n", target->to.rttvar); 
 		  }
 		} 
@@ -2441,6 +2443,7 @@ void pos_scan(struct hoststruct *target, unsigned short *portarray, stype scanty
 				 ones rather than simply incrementing from
 				 a base */
   int i;
+  unsigned long j;
 
   if (target->timedout)
     return;
@@ -2497,7 +2500,7 @@ void pos_scan(struct hoststruct *target, unsigned short *portarray, stype scanty
 
   if (scantype != RPC_SCAN) {
     /* Initialize our portlist (scan) */
-    scan = safe_malloc(o.numports * sizeof(struct portinfo));
+    scan = (struct portinfo *) safe_malloc(o.numports * sizeof(struct portinfo));
     for(i = 0; i < o.numports; i++) {
       scan[i].state = PORT_FRESH;
       scan[i].portno = portarray[i];
@@ -2575,15 +2578,15 @@ void pos_scan(struct hoststruct *target, unsigned short *portarray, stype scanty
   } else {
     /* RPC Scan */
     get_rpc_procs(&(rsi.rpc_progs), &(rsi.rpc_number));
-    scan = safe_malloc(rsi.rpc_number * sizeof(struct portinfo));
-    for(i = 0; i < rsi.rpc_number; i++) {
-      scan[i].state = PORT_FRESH;
-      scan[i].portno = rsi.rpc_progs[i];
-      scan[i].trynum = 0;
-      scan[i].prev = i-1;
-      scan[i].sd[0] = scan[i].sd[1] = scan[i].sd[2] = -1;
-      if (i < rsi.rpc_number -1 ) scan[i].next = i+1;
-      else scan[i].next = -1;
+    scan = (struct portinfo *) safe_malloc(rsi.rpc_number * sizeof(struct portinfo));
+    for(j = 0; j < rsi.rpc_number; j++) {
+      scan[j].state = PORT_FRESH;
+      scan[j].portno = rsi.rpc_progs[j];
+      scan[j].trynum = 0;
+      scan[j].prev = j-1;
+      scan[j].sd[0] = scan[j].sd[1] = scan[j].sd[2] = -1;
+      if (j < rsi.rpc_number -1 ) scan[j].next = j+1;
+      else scan[j].next = -1;
     }
     current = pil.testinglist = &scan[0]; 
     rawsd = -1;
@@ -2664,7 +2667,7 @@ void pos_scan(struct hoststruct *target, unsigned short *portarray, stype scanty
 		  }
 		  else {
 		    /* I think I am going to slow down a little */
-		    target->to.rttvar = MIN(2000000, target->to.rttvar * 1.2);
+		    target->to.rttvar = MIN(2000000, (int) (target->to.rttvar * 1.2));
 		  }	      
 		}
 		if (o.debugging) { log_write(LOG_STDOUT, "Moving port or prog %lu to the potentially firewalled list\n", current->portno); }
@@ -2896,12 +2899,12 @@ void pos_scan(struct hoststruct *target, unsigned short *portarray, stype scanty
       break; */
       /* Time to put our RPC program scan list back together for the
 	 next port ... */
-      for(i = 0; i < rsi.rpc_number; i++) {
-	scan[i].state = PORT_FRESH;
-	scan[i].trynum = 0;
-	scan[i].prev = i-1;
-	if (i < rsi.rpc_number -1 ) scan[i].next = i+1;
-	else scan[i].next = -1;
+      for(j = 0; j < rsi.rpc_number; j++) {
+	scan[j].state = PORT_FRESH;
+	scan[j].trynum = 0;
+	scan[j].prev = j-1;
+	if (j < rsi.rpc_number -1 ) scan[j].next = j+1;
+	else scan[j].next = -1;
       }
       current = pil.testinglist = &scan[0]; 
       pil.firewalled = NULL;
@@ -2976,7 +2979,7 @@ void posportupdate(struct hoststruct *target, struct portinfo *current,
   static int tryident = -1;
   static unsigned int lasttarget = 0;
   struct sockaddr_in mysock;
-  int sockaddr_in_len = sizeof(SA);
+  NET_SIZE_T sockaddr_in_len = sizeof(SA);
   int i;
   char owner[1024];
 
@@ -3198,7 +3201,8 @@ int get_connect_results(struct hoststruct *target, struct portinfo *scan,
   fd_set fds_rtmp, fds_wtmp, fds_xtmp;
   int selectres;
   int selectedfound;
-  int optval, optlen = sizeof(int);
+  int optval;
+  NET_SIZE_T optlen = sizeof(int);
   struct timeval timeout;
   int i, sd;
   int trynum;
@@ -3208,8 +3212,8 @@ int get_connect_results(struct hoststruct *target, struct portinfo *scan,
   int res;
 #ifdef LINUX
   struct sockaddr_in sin,sout;
-  int sinlen = sizeof(sin);
-  int soutlen = sizeof(sout);
+  NET_SIZE_T sinlen = sizeof(sin);
+  NET_SIZE_T soutlen = sizeof(sout);
 #endif
 
   res = 0;  /* to prevent compiler warning */
@@ -3345,7 +3349,7 @@ void get_syn_results(struct hoststruct *target, struct portinfo *scan,
 		     stype scantype) {
 
   struct ip *ip;
-  int bytes;
+  unsigned int bytes;
   struct tcphdr *tcp;
   int trynum;
   int newstate = -1;
@@ -3363,7 +3367,7 @@ void get_syn_results(struct hoststruct *target, struct portinfo *scan,
 
   while (!quit && ss->numqueries_outstanding > 0 && 
 	 ( ip = (struct ip*) readip_pcap(pd, &bytes, target->to.timeout))) {
-    if (bytes < (4 * ip->ip_hl) + 4)
+    if (bytes < (4 * ip->ip_hl) + 4U)
       continue;
     current = NULL;
     trynum = newport = -1;
@@ -3404,7 +3408,7 @@ void get_syn_results(struct hoststruct *target, struct portinfo *scan,
       if (portlookup[newport] < 0) {
 	if (o.debugging) {
 	  log_write(LOG_STDOUT, "Strange packet from port %d:\n", ntohs(tcp->th_sport));
-	  readtcppacket((char *)ip, bytes);
+	  readtcppacket((unsigned char *)ip, bytes);
 	}
 	current = NULL;
 	continue;
@@ -3464,9 +3468,9 @@ void get_syn_results(struct hoststruct *target, struct portinfo *scan,
     } else if (ip->ip_p == IPPROTO_ICMP) {
       icmp = (struct icmp *) ((char *)ip + 4 * ip->ip_hl);
       ip2 = (struct ip *) (((char *) ip) + 4 * ip->ip_hl + 8);
-      if (bytes <= 4 * ip->ip_hl + 28 ||
+      if (bytes <= 4 * ip->ip_hl + 28U ||
 	  bytes <= /* IP1len */ 4 * ip->ip_hl + /*ICMPlen */ 8 + 
-	  /* IP2len */ 4 * ip2->ip_hl + 4 /* TCP ports */)
+	  /* IP2len */ 4 * ip2->ip_hl + 4U /* TCP ports */)
 	{
 	  if (o.debugging) {
 	    error("Icmp message too short (%d bytes)", bytes);
@@ -3820,7 +3824,7 @@ int log_open(int logt, int append, char *filename)
   return 1;
 }
 
-void skid_output(unsigned char *s)
+void skid_output(char *s)
 {
   int i;
   for (i=0;s[i];i++)
@@ -3843,7 +3847,7 @@ void skid_output(unsigned char *s)
 	case 'O': s[i]='0'; break;
 	case 's':
 	case 'S': 
-	  if (s[i+1] && !isalnum(s[i+1])) 
+	  if (s[i+1] && !isalnum((int) s[i+1])) 
 	    s[i] = 'z';
 	  else s[i] = '$';
 	  break;
@@ -3857,7 +3861,7 @@ void skid_output(unsigned char *s)
       }
 }
 
-void log_write(int logt, char *fmt, ...)
+void log_write(int logt, const char *fmt, ...)
 {
   va_list  ap;
   int i,l=logt,skid=1;

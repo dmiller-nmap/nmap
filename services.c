@@ -32,7 +32,7 @@ static int nmap_services_init() {
   while(fgets(line, sizeof(line), fp)) {
     lineno++;
     p = line;
-    while(*p && isspace(*p))
+    while(*p && isspace((int) *p))
       p++;
     if (*p == '#')
       continue;

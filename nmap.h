@@ -245,6 +245,40 @@ void *realloc();
 #endif
 #endif /* BSDFIX */
 
+/* Funny story about this one in /usr/include/apache/ap_config.h */
+#if defined(AIX)
+  #if AIX >= 42
+  #define NET_SIZE_T size_t
+  #endif
+#elif defined(LINUX)
+  #if defined(__GLIBC__) && (__GLIBC__ > 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ > 0))
+  #define NET_SIZE_T socklen_t
+  #endif
+#elif defined(SEQUENT)
+  #if SEQUENT < 44
+    #define NO_KILLPG 1
+    #define NET_SIZE_T int
+  #endif
+  #if SEQUENT >= 44
+    #undef NO_KILLPG
+    #define NET_SIZE_T size_t
+  #endif
+#elif defined(SVR4)
+  #define NET_SIZE_T size_t
+#elif defined(UW)
+  #define NET_SIZE_T size_t
+#elif defined(__FreeBSD__)
+  /* XXX: Apache didn't have this one,
+          so watch it be wrong :)... */
+  #define NET_SIZE_T socklen_t
+#elif defined(OS390)
+  #define NET_SIZE_T size_t
+#endif
+
+#ifndef NET_SIZE_T
+  #define NET_SIZE_T int
+#endif
+
 #define LOG_TYPES 4
 #define LOG_MASK 15
 #define LOG_NORMAL 1
@@ -314,7 +348,6 @@ void printportoutput(struct hoststruct *currenths, portlist *plist);
 
 /* socket manipulation functions */
 void init_socket(int sd);
-int unblock_socket(int sd);
 int block_socket(int sd);
 void broadcast_socket(int sd);
 int recvtime(int sd, char *buf, int len, int seconds);
@@ -331,7 +364,6 @@ int listen_icmp(int icmpsock, unsigned short outports[],
 int nmap_main(int argc, char *argv[]);
 
 /* general helper functions */
-void hdump(unsigned char *packet, int len);
 void *safe_malloc(int size);
 char *grab_next_host_spec(FILE *inputfd, int argc, char **fakeargv);
 int parse_targets(struct targets *targets, char *h);
@@ -363,11 +395,11 @@ void output_ports_to_machine_parseable_output(unsigned short *ports,
 void output_prots_to_machine_parseable_output(unsigned short *ports, 
 					      int numports);
 
-void log_write(int logt, char *fmt, ...);
+void log_write(int logt, const char *fmt, ...);
 void log_close(int logt);
 void log_flush(int logt);
 void log_flush_all();
-void skid_output(unsigned char *s);
+void skid_output(char *s);
 
 /* From glibc 2.0.6 because Solaris doesn't seem to have this function */
 #ifndef HAVE_INET_ATON

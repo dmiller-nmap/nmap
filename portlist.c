@@ -4,7 +4,7 @@
 
 #include <strings.h>
 
-struct ops o;  /* option structure */
+extern struct ops o;  /* option structure */
 static struct port *freeportlist = NULL;
 
 /* gawd, my next project will be in c++ so I don't have to deal with
@@ -26,19 +26,19 @@ int addport(portlist *plist, unsigned short portno, unsigned short protocol,
 
   if (protocol == IPPROTO_TCP) {
     if (!plist->tcp_ports) {
-      plist->tcp_ports = safe_malloc(65536 * sizeof(struct port *));
+      plist->tcp_ports = (struct port **) safe_malloc(65536 * sizeof(struct port *));
       bzero(plist->tcp_ports, 65536 * sizeof(struct port *));
     }
     portarray = plist->tcp_ports;
   } else if (protocol == IPPROTO_UDP) {
     if (!plist->udp_ports) {
-      plist->udp_ports = safe_malloc(65536 * sizeof(struct port *));
+      plist->udp_ports = (struct port **) safe_malloc(65536 * sizeof(struct port *));
       bzero(plist->udp_ports, 65536 * sizeof(struct port *));
     }
     portarray = plist->udp_ports;
   } else if (protocol == IPPROTO_IP) {
     if (!plist->ip_prots) {
-      plist->ip_prots = safe_malloc(256 * sizeof(struct port *));
+      plist->ip_prots = (struct port **) safe_malloc(256 * sizeof(struct port *));
       bzero(plist->ip_prots, 256 * sizeof(struct port *));
     }
     portarray = plist->ip_prots;
@@ -143,7 +143,7 @@ int i;
 struct port *newpt;
 
  if (!freeportlist) {
-   freeportlist = safe_malloc(sizeof(struct port) * 1024);
+   freeportlist = (struct port *) safe_malloc(sizeof(struct port) * 1024);
    for(i=0; i < 1023; i++)
      freeportlist[i].next = &freeportlist[i+1];
    freeportlist[1023].next = NULL;

@@ -5,25 +5,26 @@ static int services_initialized = 0;
 static struct rpc_info ri;
 static int udp_rpc_socket = -1;
 static int tcp_rpc_socket = -1;
-static unsigned long rpc_xid_base = -1; /* The XID we send in queries is 
+static unsigned long rpc_xid_base = (unsigned long) -1;
+					   /* The XID we send in queries is 
 					   this random base number + the 
 					   RPC prog number we are scanning
 					   for */
-static int tcp_readlen=0; /* used in get_rpc_results but can be reset in 
+static size_t tcp_readlen=0; /* used in get_rpc_results but can be reset in 
 			    send_rpc_query */
 
 static void rpc_services_init() {
   char filename[512];
   FILE *fp;
-  unsigned char *tmpptr, *p;
+  char *tmpptr, *p;
   char line[1024];
   int lineno = 0;
 
   services_initialized = 1;
   ri.num_alloc = 256;
   ri.num_used = 0;
-  ri.names = cp_alloc(ri.num_alloc * sizeof(char *));
-  ri.numbers = cp_alloc(ri.num_alloc * sizeof(unsigned long));
+  ri.names = (char **) cp_alloc(ri.num_alloc * sizeof(char *));
+  ri.numbers = (unsigned long *) cp_alloc(ri.num_alloc * sizeof(unsigned long));
 
   if (nmap_fetchfile(filename, sizeof(filename), "nmap-rpc") == -1) {
     error("Unable to find nmap-rpc!  Resorting to /etc/rpc");
@@ -40,16 +41,16 @@ static void rpc_services_init() {
     p = line;
 
     if (ri.num_used == ri.num_alloc) {
-      tmpptr = cp_alloc(ri.num_alloc * 3 * sizeof(char *));
+      tmpptr = (char *) cp_alloc(ri.num_alloc * 3 * sizeof(char *));
       memcpy(tmpptr, ri.names, ri.num_alloc * sizeof(char *));
       ri.names = (char **) tmpptr;
-      tmpptr = cp_alloc(ri.num_alloc * 3 * sizeof(unsigned long));
+      tmpptr = (char *) cp_alloc(ri.num_alloc * 3 * sizeof(unsigned long));
       memcpy(tmpptr, ri.numbers, ri.num_alloc * sizeof(char *));
       ri.numbers = (unsigned long *) tmpptr;
       ri.num_alloc *= 3;
     }
 
-    while(*p && *p != '#' && !isalnum(*p)) p++;
+    while(*p && *p != '#' && !isalnum((int) *p)) p++;
 
     if (!*p || *p == '#') continue;
 
@@ -61,7 +62,7 @@ static void rpc_services_init() {
     ri.names[ri.num_used] = cp_strdup(p);
     p = tmpptr + 1;
 
-    while(*p && !isdigit(*p)) p++;
+    while(*p && !isdigit((int) *p)) p++;
 
     if (!*p)
       continue;
@@ -87,7 +88,7 @@ char *nmap_getrpcnamebynum(unsigned long num) {
   return NULL;
 }
 
-int get_rpc_procs(unsigned long **programs, int *num_programs) {
+int get_rpc_procs(unsigned long **programs, unsigned long *num_programs) {
   if (!services_initialized) {
     rpc_services_init();
   }
@@ -120,7 +121,7 @@ int send_rpc_query(struct in_addr *target_host, unsigned short portno,
   bzero(rpch, sizeof(struct rpc_hdr));
 
 
-  while(rpc_xid_base == -1)
+  while(rpc_xid_base == (unsigned long) -1)
     rpc_xid_base = (unsigned long) get_random_uint();
   
   if (o.debugging > 1) {
@@ -193,7 +194,7 @@ int send_rpc_query(struct in_addr *target_host, unsigned short portno,
     /* Simply send this sucker we have created ... */
     do {  
       if (o.debugging > 1)
-	hdump((char *) rpch, sizeof(struct rpc_hdr));
+	hdump((unsigned char *) rpch, sizeof(struct rpc_hdr));
       res = sendto(udp_rpc_socket, (char *)rpch, sizeof(struct rpc_hdr), 0,
 		   (struct sockaddr *) &sock, sizeof(struct sockaddr_in));
     } while(res == -1 && (errno == EINTR || errno == ENOBUFS));
@@ -246,7 +247,7 @@ int rpc_are_we_done(char *msg, int msg_len, struct hoststruct *target,
   /* Now it is time to decode the scan offset */
   scan_offset = ntohl(rpc_pack->xid);
   scan_offset -= rpc_xid_base;
-  if (((scan_offset >> 16) & 0x3FFF) != (rsi->rpc_current_port->portno & 0x3FFF)) {
+  if (((scan_offset >> 16) & 0x3FFF) != (unsigned long) (rsi->rpc_current_port->portno & 0x3FFF)) {
     /* Doh -- this doesn't seem right */
     if (o.debugging > 1) {
       printf("Port %hi/%s labelled NON_RPC because ((scan_offset >> 16) & 0x3FFF) is %li\n", rsi->rpc_current_port->portno, (rsi->rpc_current_port->proto == IPPROTO_TCP)? "TPC" : "UDP", ((scan_offset >> 16) & 0x3FFF));
@@ -369,7 +370,7 @@ struct timeval tv;
 int res;
 static char readbuf[512];
 struct sockaddr_in from;
-int fromlen = sizeof(struct sockaddr_in);
+NET_SIZE_T fromlen = sizeof(struct sockaddr_in);
 char *current_msg;
 unsigned long current_msg_len;
  
@@ -484,11 +485,11 @@ unsigned long current_msg_len;
 	 return;
 
        current_msg += current_msg_len;
-       if ((current_msg - readbuf) + 4 < tcp_readlen) {       
+       if ((current_msg - readbuf) + 4UL < tcp_readlen) {       
 	 current_msg_len = ntohl(*(unsigned long *) current_msg) & 0x7FFFFFFF;
 	 current_msg += 4;
        } else {
-	 if ((current_msg - readbuf) < tcp_readlen) {
+	 if ((unsigned long) (current_msg - readbuf) < tcp_readlen) {
 	   tcp_readlen -= current_msg - readbuf;
 	   memmove(readbuf, current_msg, tcp_readlen);
 	 } else tcp_readlen = 0;

@@ -25,8 +25,8 @@ int testsleft;
 int testno;
 int  timeout;
 unsigned int sequence_base;
-unsigned int openport;
-int bytes;
+unsigned long openport;
+unsigned int bytes;
 unsigned int closedport = 31337;
 struct port *tport = NULL;
 char *p;
@@ -96,7 +96,7 @@ snprintf(filter, sizeof(filter), "(icmp and dst host %s) or (tcp and src host %s
  target->osscan_performed = 1; /* Let Nmap know that we did try an OS scan */
 
  /* Lets find an open port to used */
- openport = -1;
+ openport = (unsigned long) -1;
  tport = NULL;
  if (target->ports.state_counts_tcp[PORT_OPEN] > 0) { 
    tport = nextport(&target->ports, NULL, IPPROTO_TCP, PORT_OPEN);
@@ -118,19 +118,19 @@ snprintf(filter, sizeof(filter), "(icmp and dst host %s) or (tcp and src host %s
    closedport = (get_random_uint() % 14781) + 30000;
  }
 
-if (o.verbose && openport != -1)
+if (o.verbose && openport != (unsigned long) -1)
   log_write(LOG_STDOUT, "For OSScan assuming that port %d is open and port %d is closed and neither are firewalled\n", openport, closedport);
 
  current_port = o.magic_port + NUM_SEQ_SAMPLES +1;
  
  /* Now lets do the NULL packet technique */
- testsleft = (openport == -1)? 4 : 7;
+ testsleft = (openport == (unsigned long) -1)? 4 : 7;
  FPtmp = NULL;
  /* bzero(FPtests, sizeof(FPtests));*/
  tries = 0;
  do { 
    newcatches = 0;
-   if (openport != -1) {   
+   if (openport != (unsigned long) -1) {   
      /* Test 1 */
      if (!FPtests[1]) {     
        if (o.scan_delay) enforce_scan_delay(NULL);
@@ -205,7 +205,7 @@ if (o.verbose && openport != -1)
 	 goto osscan_timedout;
        }
 
-     if (bytes < (4 * ip->ip_hl) + 4)
+     if (bytes < (4 * ip->ip_hl) + 4U)
        continue;
      if (ip->ip_p == IPPROTO_TCP) {
        tcp = ((struct tcphdr *) (((char *) ip) + 4 * ip->ip_hl));
@@ -217,7 +217,7 @@ if (o.verbose && openport != -1)
        if (FPtests[testno]) continue;
        testsleft--;
        newcatches++;
-       FPtests[testno] = safe_malloc(sizeof(FingerPrint));
+       FPtests[testno] = (FingerPrint *) safe_malloc(sizeof(FingerPrint));
        bzero(FPtests[testno], sizeof(FingerPrint));
        FPtests[testno]->results = fingerprint_iptcppacket(ip, 265, sequence_base);
        FPtests[testno]->name = (testno == 1)? "T1" : (testno == 2)? "T2" : (testno == 3)? "T3" : (testno == 4)? "T4" : (testno == 5)? "T5" : (testno == 6)? "T6" : (testno == 7)? "T7" : "PU";
@@ -228,12 +228,12 @@ if (o.verbose && openport != -1)
 	 /* This ain't no stinking port unreachable! */
 	 continue;
        }
-       if (bytes < ntohs(ip->ip_len)) {
+       if (bytes < (unsigned int) ntohs(ip->ip_len)) {
 	 error("We only got %d bytes out of %d on our ICMP port unreachable packet, skipping", bytes, ntohs(ip->ip_len));
 	 continue;
        }
        if (FPtests[8]) continue;
-       FPtests[8] = safe_malloc(sizeof(FingerPrint));
+       FPtests[8] = (FingerPrint *) safe_malloc(sizeof(FingerPrint));
        bzero(FPtests[8], sizeof(FingerPrint));
        FPtests[8]->results = fingerprint_portunreach(ip, upi);
        if (FPtests[8]->results) {       
@@ -254,7 +254,7 @@ if (o.verbose && openport != -1)
  timeout = 0; 
  gettimeofday(&t1,NULL);
  /* First we send our initial NUM_SEQ_SAMPLES SYN packets  */
- if (openport != -1) {
+ if (openport != (unsigned long) -1) {
    seq_packets_sent = 0;
    while (seq_packets_sent < NUM_SEQ_SAMPLES) {
      if (o.scan_delay) enforce_scan_delay(NULL);
@@ -292,7 +292,7 @@ if (o.verbose && openport != -1)
        } else if (TIMEVAL_SUBTRACT(t2,t1) > oshardtimeout) {
 	 timeout = 1;
        }		  
-       if (bytes < (4 * ip->ip_hl) + 4)
+       if (bytes < (4 * ip->ip_hl) + 4U)
 	 continue;
        if (ip->ip_p == IPPROTO_TCP) {
 	 /*       readtcppacket((char *) ip, ntohs(ip->ip_len));  */
@@ -303,7 +303,7 @@ if (o.verbose && openport != -1)
 	 if ((tcp->th_flags & TH_RST)) {
 	   /*	 readtcppacket((char *) ip, ntohs(ip->ip_len));*/	 
 	   if (si->responses == 0) {	 
-	     fprintf(stderr, "WARNING:  RST from port %d -- is this port really open?\n", openport);
+	     fprintf(stderr, "WARNING:  RST from port %li -- is this port really open?\n", openport);
 	     /* We used to quit in this case, but left-overs from a SYN
 		scan or lame-ass TCP wrappers can cause this! */
 	   } 
@@ -328,7 +328,7 @@ if (o.verbose && openport != -1)
 	 seq_diffs[i] /= seq_gcd;
        for(i=0; i < si->responses - 1; i++) {     
 	 if (MOD_DIFF(si->seqs[i+1],si->seqs[i]) > 50000000) {
-	   si->class = SEQ_TR;
+	   si->seqclass = SEQ_TR;
 	   si->index = 9999999;
 	   /*	 printf("Target is a TR box\n");*/
 	   break;
@@ -337,18 +337,18 @@ if (o.verbose && openport != -1)
        }
      }
      if (seq_gcd == 0) {
-       si->class = SEQ_CONSTANT;
+       si->seqclass = SEQ_CONSTANT;
        si->index = 0;
      } else if (seq_gcd % 64000 == 0) {
-       si->class = SEQ_64K;
+       si->seqclass = SEQ_64K;
        /*       printf("Target is a 64K box\n");*/
        si->index = 1;
      } else if (seq_gcd % 800 == 0) {
-       si->class = SEQ_i800;
+       si->seqclass = SEQ_i800;
        /*       printf("Target is a i800 box\n");*/
        si->index = 10;
-     } else if (si->class == SEQ_UNKNOWN) {
-       seq_avg_inc = (0.5) + seq_avg_inc / (si->responses - 1);
+     } else if (si->seqclass == SEQ_UNKNOWN) {
+       seq_avg_inc = (unsigned int) ((0.5) + seq_avg_inc / (si->responses - 1));
        /*       printf("seq_avg_inc=%u\n", seq_avg_inc);*/
        for(i=0; i < si->responses -1; i++)       {     
 
@@ -376,22 +376,22 @@ if (o.verbose && openport != -1)
 
        /*       printf("The sequence index is %d\n", si->index);*/
        if (si->index < 75) {
-	 si->class = SEQ_TD;
+	 si->seqclass = SEQ_TD;
 	 /*	 printf("Target is a Micro$oft style time dependant box\n");*/
        }
        else {
-	 si->class = SEQ_RI;
+	 si->seqclass = SEQ_RI;
 	 /*	 printf("Target is a random incremental box\n");*/
        }
      }
-     FPtests[0] = safe_malloc(sizeof(FingerPrint));
+     FPtests[0] = (FingerPrint *) safe_malloc(sizeof(FingerPrint));
      bzero(FPtests[0], sizeof(FingerPrint));
      FPtests[0]->name = "TSeq";
-     seq_AVs = safe_malloc(sizeof(struct AVal) * 3);
+     seq_AVs = (struct AVal *) safe_malloc(sizeof(struct AVal) * 3);
      bzero(seq_AVs, sizeof(struct AVal) * 3);
      FPtests[0]->results = seq_AVs;
      seq_AVs[0].attribute = "Class";
-     switch(si->class) {
+     switch(si->seqclass) {
      case SEQ_CONSTANT:
        strcpy(seq_AVs[0].value, "C");
        seq_AVs[0].next = &seq_AVs[1];
@@ -434,13 +434,13 @@ if (o.verbose && openport != -1)
  }
 
 for(i=0; i < 9; i++) {
-  if (i > 0 && !FPtests[i] && ((openport != -1) || i > 4)) {
+  if (i > 0 && !FPtests[i] && ((openport != (unsigned long) -1) || i > 4)) {
     /* We create a Resp (response) attribute with value of N (no) because
        it is important here to note whether responses were or were not 
        received */
-    FPtests[i] = safe_malloc(sizeof(FingerPrint));
+    FPtests[i] = (FingerPrint *) safe_malloc(sizeof(FingerPrint));
     bzero(FPtests[i], sizeof(FingerPrint));
-    seq_AVs = safe_malloc(sizeof(struct AVal));
+    seq_AVs = (struct AVal *) safe_malloc(sizeof(struct AVal));
     seq_AVs->attribute = "Resp";
     strcpy(seq_AVs->value, "N");
     seq_AVs->next = NULL;
@@ -477,7 +477,7 @@ struct AVal *fingerprint_iptcppacket(struct ip *ip, int mss, unsigned int syn) {
   char *p,*q;
   struct tcphdr *tcp = ((struct tcphdr *) (((char *) ip) + 4 * ip->ip_hl));
 
-  AVs = malloc(6 * sizeof(struct AVal));
+  AVs = (struct AVal *) malloc(6 * sizeof(struct AVal));
 
   /* Link them together */
   AVs[0].next = &AVs[1];
@@ -697,7 +697,7 @@ void match_fingerprint(FingerPrint *FP, struct FingerPrintResults *FPR,
   return;
 }
 
-struct AVal *gettestbyname(FingerPrint *FP, char *name) {
+struct AVal *gettestbyname(FingerPrint *FP, const char *name) {
 
   if (!FP) return NULL;
   do {
@@ -708,7 +708,7 @@ struct AVal *gettestbyname(FingerPrint *FP, char *name) {
   return NULL;
 }
 
-struct AVal *getattrbyname(struct AVal *AV, char *name) {
+struct AVal *getattrbyname(struct AVal *AV, const char *name) {
 
   if (!AV) return NULL;
   do {
@@ -819,7 +819,7 @@ return;
 int os_scan(struct hoststruct *target, unsigned short *portarray) {
 struct FingerPrintResults FP_matches[3];
 struct seq_info si[3];
-int try;
+int itry;
 int i;
 struct timeval now;
 double bestacc;
@@ -843,7 +843,7 @@ int bestaccidx;
    }
  }
 
- for(try=0; try < 3; try++) {
+ for(itry=0; itry < 3; itry++) {
    if (o.host_timeout) {   
      gettimeofday(&now, NULL);
      if (target->timedout || TIMEVAL_MSEC_SUBTRACT(now, target->host_timeout) >= 0)
@@ -852,31 +852,31 @@ int bestaccidx;
 	 return 1;
        }
    }
-   target->FPs[try] = get_fingerprint(target, &si[try], portarray); 
+   target->FPs[itry] = get_fingerprint(target, &si[itry], portarray); 
    if (target->timedout)
      return 1;
-   match_fingerprint(target->FPs[try], &FP_matches[try], 
+   match_fingerprint(target->FPs[itry], &FP_matches[itry], 
 		     OSSCAN_GUESS_THRESHOLD);
-   if (FP_matches[try].overall_results == OSSCAN_SUCCESS && 
-       FP_matches[try].num_perfect_matches > 0)
+   if (FP_matches[itry].overall_results == OSSCAN_SUCCESS && 
+       FP_matches[itry].num_perfect_matches > 0)
      break;
-   if (try < 2)
+   if (itry < 2)
      sleep(2);
  }
 
- target->numFPs = (try == 3)? 3 : try + 1;
+ target->numFPs = (itry == 3)? 3 : itry + 1;
  memcpy(&(target->seq), &si[target->numFPs - 1], sizeof(struct seq_info));
 
  /* Now lets find the best match */
  bestacc = 0;
  bestaccidx = 0;
- for(try=0; try < target->numFPs; try++) {
-   if (FP_matches[try].overall_results == OSSCAN_SUCCESS &&
-       FP_matches[try].num_matches > 0 &&
-       FP_matches[try].accuracy[0] > bestacc) {
-     bestacc = FP_matches[try].accuracy[0];
-     bestaccidx = try;
-     if (FP_matches[try].num_perfect_matches)
+ for(itry=0; itry < target->numFPs; itry++) {
+   if (FP_matches[itry].overall_results == OSSCAN_SUCCESS &&
+       FP_matches[itry].num_matches > 0 &&
+       FP_matches[itry].accuracy[0] > bestacc) {
+     bestacc = FP_matches[itry].accuracy[0];
+     bestaccidx = itry;
+     if (FP_matches[itry].num_perfect_matches)
        break;
    }
  }
@@ -1007,7 +1007,7 @@ int lineno = 0;
 char *p, *q; /* OH YEAH!!!! */
 
 /* If you need more than 2048 fingerprints, tough */
- FPs = safe_malloc(sizeof(FingerPrint *) * 2048); 
+ FPs = (FingerPrint **) safe_malloc(sizeof(FingerPrint *) * 2048); 
  bzero(FPs, sizeof(FingerPrint *) * 2048);
 
 if (nmap_fetchfile(filename, sizeof(filename), "nmap-os-fingerprints") == -1){
@@ -1035,7 +1035,7 @@ while(fgets(line, sizeof(line), fp)) {
     fprintf(stderr, "Parse error on line %d of nmap-os-fingerprints file: %s\n", lineno, line);    
     continue;
   }
-  FPs[numrecords] = safe_malloc(sizeof(FingerPrint));
+  FPs[numrecords] = (FingerPrint *) safe_malloc(sizeof(FingerPrint));
   bzero(FPs[numrecords], sizeof(FingerPrint));
   q = FPs[numrecords]->OS_name;
   while(*p && *p != '\n' && *p != '#') {
@@ -1071,7 +1071,7 @@ while(fgets(line, sizeof(line), fp)) {
     }
     *q = '\0';
     if(current->name) {
-      current->next = safe_malloc(sizeof(FingerPrint));
+      current->next = (FingerPrint *) safe_malloc(sizeof(FingerPrint));
       current = current->next;
       bzero(current, sizeof(FingerPrint));
     }
@@ -1107,7 +1107,7 @@ while((q = strchr(q, '%'))) {
   q++;
 }
 
-AVs = safe_malloc(count * sizeof(struct AVal));
+AVs = (struct AVal *) safe_malloc(count * sizeof(struct AVal));
 bzero(AVs, sizeof(struct AVal) * count);
 for(i=0; i < count; i++) {
   q = strchr(p, '=');
@@ -1139,12 +1139,12 @@ static struct udpprobeinfo upi;
 static int myttl = 0;
 static unsigned char patternbyte = 0;
 static unsigned short id = 0; 
-char packet[328]; /* 20 IP hdr + 8 UDP hdr + 300 data */
+unsigned char packet[328]; /* 20 IP hdr + 8 UDP hdr + 300 data */
 struct ip *ip = (struct ip *) packet;
 udphdr_bsd *udp = (udphdr_bsd *) (packet + sizeof(struct ip));
 struct in_addr *source;
 int datalen = 300;
-char *data = packet + 28;
+unsigned char *data = packet + 28;
 unsigned short realcheck; /* the REAL checksum */
 int res;
 struct sockaddr_in sock;
@@ -1244,7 +1244,7 @@ udp->uh_sum = realcheck;
 	    sd, BSDUFIX(ip->ip_len), inet_ntoa(*victim),
 	    (int) sizeof(struct sockaddr_in));
 
-   if ((res = sendto(sd, packet, BSDUFIX(ip->ip_len), 0,
+   if ((res = sendto(sd, (const char *) packet, BSDUFIX(ip->ip_len), 0,
 		     (struct sockaddr *)&sock, (int) sizeof(struct sockaddr_in))) == -1)
      {
        perror("sendto in send_udp_raw_decoys");
@@ -1293,7 +1293,7 @@ if (ntohs(udp->uh_sport) != upi->sport || ntohs(udp->uh_dport) != upi->dport) {
 }
 
 /* Create the Avals */
-AVs = safe_malloc(numtests * sizeof(struct AVal));
+AVs = (struct AVal *) safe_malloc(numtests * sizeof(struct AVal));
 bzero(AVs, numtests * sizeof(struct AVal));
 
 /* Link them together */
