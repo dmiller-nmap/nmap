@@ -181,8 +181,8 @@ int nmap_main(int argc, char *argv[]) {
   int i, arg;
   unsigned int targetno;
   size_t j, argvlen;
-  FILE *inputfd = NULL;
-  char *host_spec;
+  FILE *inputfd = NULL, *excludefd = NULL;
+  char *host_spec = NULL, *exclude_spec = NULL;
   short fastscan=0, randomize=1, resolve_all=0;
   short quashargv = 0;
   int numhosts_scanned = 0;
@@ -195,6 +195,7 @@ int nmap_main(int argc, char *argv[]) {
   int numhosts_up = 0;
   int starttime;
   struct scan_lists *ports = NULL;
+  TargetGroup *exclude_group = NULL;
   char myname[MAXHOSTNAMELEN + 1];
 #if (defined(IN_ADDR_DEEPSTRUCT) || defined( SOLARIS))
   /* Note that struct in_addr in solaris is 3 levels deep just to store an
@@ -231,6 +232,8 @@ int nmap_main(int argc, char *argv[]) {
       {"max_rtt_timeout", required_argument, 0, 0},
       {"min_rtt_timeout", required_argument, 0, 0},
       {"initial_rtt_timeout", required_argument, 0, 0},
+      {"excludefile", required_argument, 0, 0},
+      {"exclude", required_argument, 0, 0},
       {"max_hostgroup", required_argument, 0, 0},
       {"min_hostgroup", required_argument, 0, 0},
       {"scanflags", required_argument, 0, 0},
@@ -307,6 +310,15 @@ int nmap_main(int argc, char *argv[]) {
 	if (o.initialRttTimeout() <= 0) {
 	  fatal("initial_rtt_timeout must be greater than 0");
 	}
+      } else if (strcmp(long_options[option_index].name, "excludefile") == 0) {
+        excludefd = fopen(optarg, "r");
+        if (!excludefd) {
+          fatal("Failed to open exclude file %s for reading", optarg);
+        }
+      } else if (strcmp(long_options[option_index].name, "exclude") == 0) {
+	if (excludefd)
+	  fatal("--excludefile and --exclude options are mutually exclusive.");
+	exclude_spec = strdup(optarg);
       } else if (strcmp(long_options[option_index].name, "max_hostgroup") == 0) {
 	o.setMaxHostGroupSz(atoi(optarg));
       } else if (strcmp(long_options[option_index].name, "min_hostgroup") == 0) {
@@ -895,6 +907,19 @@ int nmap_main(int argc, char *argv[]) {
      machines */
   host_exp_group = (char **) safe_malloc(o.ping_group_sz * sizeof(char *));
 
+  /* lets load our exclude list */
+  if ((NULL != excludefd) || (NULL != exclude_spec)) {
+    exclude_group = load_exclude(excludefd, exclude_spec);
+
+    if (o.debugging > 3)
+      dumpExclude(exclude_group);
+
+    if ((FILE *)NULL != excludefd)
+      fclose(excludefd);
+    if ((char *)NULL != exclude_spec)
+      free(exclude_spec);
+  }
+
   while(num_host_exp_groups < o.ping_group_sz &&
 	(host_spec = grab_next_host_spec(inputfd, argc, fakeargv))) {
     host_exp_group[num_host_exp_groups++] = strdup(host_spec);
@@ -911,7 +936,7 @@ int nmap_main(int argc, char *argv[]) {
   do {
     ideal_scan_group_sz = determineScanGroupSize(numhosts_scanned, ports);
     while(Targets.size() < ideal_scan_group_sz) {
-      currenths = nexthost(hstate, ports, &(o.pingtype));
+      currenths = nexthost(hstate, exclude_group, ports, &(o.pingtype));
       if (!currenths) {
 	/* Try to refill with any remaining expressions */
 	/* First free the old ones */
@@ -932,7 +957,7 @@ int nmap_main(int argc, char *argv[]) {
 				    host_exp_group, num_host_exp_groups);
       
 	/* Try one last time -- with new expressions */
-	currenths = nexthost(hstate, ports, &(o.pingtype));
+	currenths = nexthost(hstate, exclude_group, ports, &(o.pingtype));
 	if (!currenths)
 	  break;
       }
@@ -1108,6 +1133,9 @@ int nmap_main(int argc, char *argv[]) {
   } while(!o.max_ips_to_scan || o.max_ips_to_scan > numhosts_scanned);
   
   delete hstate;
+  if (exclude_group)
+    delete[] exclude_group;
+
   hstate = NULL;
 
   /* Free host expressions */

@@ -44,6 +44,9 @@ Lastly, a question for Fyodor:  is WSAEHOSTUNREACH a good
 error return for a failed ARP query?  (It should convince
 nmap not to try the host again, while not confusing nmap.)
 
+Update 12/08/04: Dana Epp (dana_at_vulscan.com) sdded SendARP stuff
+for XP firewall (on by default w/SP2)
+
 */
 
 #include "..\tcpip.h"
@@ -106,6 +109,10 @@ static int SearchARP(DWORD ip, int ifi, BYTE *phys, int *physlen);
 static CRITICAL_SECTION csAdapter, csQueue, csFailCache, csArpCache, csArpTable;
 static HANDLE hEvWakeup, hThread, hSemQueue;
 static killthread = 0;
+
+//	For rawsock fallback
+extern SOCKET global_raw_socket;
+extern int rawsock_avail;
 
 extern NmapOps o;
 
@@ -515,44 +522,29 @@ begin:
 //	this needs to change for non-Ethernet
 static void send_arp(DWORD ifi, DWORD ip)
 {
-	struct arp_hdr	arp_h;
-	LPADAPTER pAdap;
-	BYTE mymac[6];
-	int len;
-	unsigned long mytype;
-	struct in_addr myip;
-	BYTE bcastmac[6];	//	more Ethernet code !
-	memset(bcastmac, 0xFF, 6);
+  /* Used to send raw ARP packet on the wire, and then read the result
+     out of the system cache.  Kinda ugly, but anyway ... Windows
+     Firewall (default-on with XP SP2) started ignoring the responses
+     because it didn't send them (reasonable), thus breaking the
+     technique.  Now the SendARP iphlpapi function is used.  A
+     downside is that I believe it blocks, so it may cause
+     local-network ping scans to take much longer on Windows.  I
+     suppose we should send raw and then read results from pcap.  But
+     for now, we have this */
+  HRESULT ret;
+  ULONG uMACAddr[2];
+  ULONG uSize = 6;
+  PBYTE pBuffer;
+  struct in_addr myip;
 
-	if(0 != ifi2ipaddr(ifi, &myip))
-		fatal("sendarp: failed to find my ip ?!?\n");
+  ret = SendARP( ip, 0, uMACAddr, &uSize );
 
-	//	get the MAC et al
-	len = 6;
-	pAdap = if2adapter(ifi, mymac, &len, &mytype);
-	if(!pAdap)
-	{
-		//	do nothing for localhost scan
-		if(myip.s_addr == 0x0100007f) return;
-		else fatal("send_arp: can't send on this interface\n");
-	}
-
-	arp_h.ar_hrd=0x0100;
-
-	arp_h.ar_pro=0x0008;                    /* format of protocol address */
-	arp_h.ar_hln=6;                         /* length of hardware address */
-    arp_h.ar_pln=4;                         /* length of protocol addres */
-    arp_h.ar_op=0x0100 ;
-	memcpy(arp_h.ar_sha,mymac,6);
-	memcpy(arp_h.ar_spa,&myip.s_addr,4);
-	memset(arp_h.ar_tha,0,6);
-	memcpy(arp_h.ar_tpa,&ip,4);
-
-	realsend(pAdap, (char*)&arp_h, sizeof(arp_h),
-		bcastmac, mymac, len, mytype, ETH_ARP);
-
-	releaseadapter();
-}
+  if( NO_ERROR == ret )
+    {
+      pBuffer = (PBYTE)uMACAddr;
+      AddToARPCache( ip, ifi, pBuffer, (int)uSize );
+    } 
+} 
 
 //	resolves an ip addr into a nexthop and index
 static int ip2route(const struct in_addr *dest, DWORD *nexthop, DWORD *ifi)
@@ -711,6 +703,17 @@ static void releaseadapter()
 	LeaveCriticalSection(&csAdapter);
 }
 
+static int fallback_raw_send(const char *packet, int len, 
+	   struct sockaddr *to, int tolen) 
+{
+	if(!rawsock_avail) {
+		fatal("fallback_raw_send: no raw sockets\n"
+			"This means that you tried to send to an unsupported interface.\n");
+	}
+
+	return sendto(global_raw_socket, packet, len, 0, to, tolen);
+}
+
 //	The almighty pcapsendraw
 //	This is the whole point of this file :)
 int pcapsendraw(const char *packet, int len, 
@@ -725,15 +728,20 @@ int pcapsendraw(const char *packet, int len,
 	BYTE myphys[MAXLEN_PHYSADDR], tphys[MAXLEN_PHYSADDR];
 	int physlen = MAXLEN_PHYSADDR;
 	DWORD type;
+	const WINIP_IF *target_ifentry;
 
 	if(!pcapsend_inited)
-		fatal("pcapsendraw: pcapsend not initialized\n");
+		return fallback_raw_send(packet, len, to, tolen);
 
 	if(-1 == ip2route(&sin->sin_addr, &nextip, &ifi))
 	{
 		WSASetLastError(WSAENETUNREACH);
 		return -1;	//	no route to host
 	}
+
+	target_ifentry = ifi2ifentry(ifi);
+	if(!target_ifentry || !target_ifentry->pcapname)
+		return fallback_raw_send(packet, len, to, tolen);
 
 	//	check the failcache
 	EnterCriticalSection(&csFailCache);

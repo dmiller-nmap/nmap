@@ -518,6 +518,16 @@
               same as the aborted scan).  Nmap will start on the machine after
               the last one successfully scanned in the log file.
 
+       <B>--exclude</B> <B>&lt;host1</B> <B>[,host2][,host3],..."&gt;</B>
+              Specifies  a  list  of  targets  (hosts, ranges, netblocks) that
+              should be excluded from a scan. Useful  to  keep  from  scanning
+              yourself, your ISP, particularly sensitive hosts, etc.
+
+       <B>--excludefile</B> <B>&lt;exclude_file&gt;</B>
+              Same  functionality  as  the --exclude option, only the excluded
+              targets are provided in an newline-delimited exclude_file rather
+              than on the command line.
+
        <B>--append_output</B>
               Tells  Nmap  to append scan results to any output files you have
               specified rather than overwriting those files.
@@ -688,8 +698,8 @@
 
        <B>--packet_trace</B>
               Tells Nmap to show all the packets it sends and  receives  in  a
-              tcpdump-like  format.   This  can  be  tremendously  useful  for
-              debugging, and is also a good learning tool.
+              tcpdump-like format.  This can be tremendously useful for debug-
+              ging, and is also a good learning tool.
 
        <B>--datadir</B> <B>[directoryname]</B>
               Nmap obtains some special data at runtime in files  named  nmap-

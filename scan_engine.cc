@@ -1972,7 +1972,7 @@ static bool do_one_select_round(UltraScanInfo *USI, struct timeval *stime) {
   int sd;
   list<HostScanStats *>::iterator hostI;
   HostScanStats *host;
-  list<UltraProbe *>::iterator probeI;
+  list<UltraProbe *>::iterator probeI, nextProbeI;
   UltraProbe *probe = NULL;
   unsigned int listsz;
   unsigned int probenum;
@@ -1999,8 +1999,14 @@ static bool do_one_select_round(UltraScanInfo *USI, struct timeval *stime) {
     timeout.tv_sec = timeleft / 1000;
     timeout.tv_usec = (timeleft % 1000) * 1000;
 
-    selectres = select(CSI->maxValidSD + 1, &fds_rtmp, &fds_wtmp, 
-		       &fds_xtmp, &timeout);
+    if (CSI->numSDs)
+      selectres = select(CSI->maxValidSD + 1, &fds_rtmp, &fds_wtmp, 
+			 &fds_xtmp, &timeout);
+    else {
+      /* Apparently Windows returns an WSAEINVAL if you select without watching any SDs.  Lame.  We'll usleep instead in that case */
+      usleep(timeleft * 1000);
+      selectres = 0;
+    }
   } while (selectres == -1 && socket_errno() == EINTR);
 
   gettimeofday(&USI->now, NULL);
@@ -2018,10 +2024,13 @@ static bool do_one_select_round(UltraScanInfo *USI, struct timeval *stime) {
     host = *hostI;
     if (host->num_probes_active == 0) continue;
     
-    probeI = host->probes_outstanding.end();
+    nextProbeI = probeI = host->probes_outstanding.end();
     listsz = host->num_probes_outstanding();
+    if (listsz) nextProbeI--;
     for(probenum = 0; probenum < listsz && numGoodSD < selectres; probenum++) {
-      probeI--;
+      probeI = nextProbeI;
+      if (probeI != host->probes_outstanding.begin()) 
+	nextProbeI--;
       probe = *probeI;
       assert(probe->type == UltraProbe::UP_CONNECT);
       sd = probe->CP->sd;

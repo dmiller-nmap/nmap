@@ -209,7 +209,7 @@ void PacketTrace::traceConnect(u8 proto, const struct sockaddr *sock,
 
   assert(proto == IPPROTO_TCP || proto == IPPROTO_UDP);
 
-  if (connectrc > 0)
+  if (connectrc == 0)
     Strncpy(errbuf, "Connected", sizeof(errbuf));
   else {
     snprintf(errbuf, sizeof(errbuf), "%s", strerror(connect_errno));

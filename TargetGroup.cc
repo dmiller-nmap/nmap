@@ -106,6 +106,42 @@ void TargetGroup::Initialize() {
   ipsleft = 0;
 }
 
+/* take the object back to the begining without  (mdmcl)
+ * reinitalizing the data structures */  
+int  TargetGroup::rewind() {
+
+  /* For netmasks we must set the current address to the
+   * starting address and calculate the ips by distance */
+  if (targets_type == IPV4_NETMASK) {
+      currentaddr = startaddr;
+      if (startaddr.s_addr <= endaddr.s_addr) { 
+	ipsleft = endaddr.s_addr - startaddr.s_addr + 1;
+	return 0; 
+      }
+      else
+        assert(FALSE);
+  }
+  /* For ranges, we easily set current to zero and calculate
+   * the ips by the number of values in the columns */
+  else if (targets_type == IPV4_RANGES) {
+    memset((char *)current, 0, sizeof(current));
+    ipsleft = (last[0] + 1) * (last[1] + 1) *
+      (last[2] + 1) * (last[3] + 1);
+    return 0;
+  }
+#if HAVE_IPV6
+  /* For IPV6 there is only one address, this function doesn't
+   * make much sence for IPv6 does it? */
+  else if (targets_type == IPV6_ADDRESS) {
+    ipsleft = 1;
+    return 0;
+  }
+#endif 
+
+  /* If we got this far there must be an error, wrong type */
+  return -1;
+}
+
  /* Initializes (or reinitializes) the object with a new expression, such
     as 192.168.0.0/16 , 10.1.0-5.1-254 , or fe80::202:e3ff:fe14:1102 .  
     Returns 0 for success */  
@@ -235,7 +271,7 @@ int TargetGroup::parse_expr(const char * const target_expr, int af) {
 	
       }
     }
-  memset((char *)current, 0, 4);
+  memset((char *)current, 0, sizeof(current));
   ipsleft = (last[0] + 1) * (last[1] + 1) *
     (last[2] + 1) * (last[3] + 1);
   }
@@ -270,6 +306,60 @@ int TargetGroup::parse_expr(const char * const target_expr, int af) {
 
   free(hostexp);
   return 0;
+}
+
+/* For ranges, skip all hosts in an octet,                  (mdmcl)
+ * get_next_host should be used for skipping the last octet :-) 
+ * returns: number of hosts skipped */
+int TargetGroup::skip_range(_octet_nums octet) {
+  int hosts_skipped = 0, /* number of hosts skipped */
+      oct = 0,           /* octect number */
+      i;                 /* simple lcv */
+
+  /* This function is only supported for RANGES! */
+  if (targets_type != IPV4_RANGES)
+    return -1;
+
+  switch (octet) {
+    case FIRST_OCTET:
+      oct = 0;
+      hosts_skipped = (last[1] + 1) * (last[2] + 1) * (last[3] + 1);
+      break;
+    case SECOND_OCTET:
+      oct = 1;
+      hosts_skipped = (last[2] + 1) * (last[3] + 1);
+      break;
+    case THIRD_OCTET:
+      oct = 2;
+      hosts_skipped = (last[3] + 1);
+      break;
+    default:  /* Hmm, how'd you do that */
+      return -1;
+  }
+
+  /* catch if we try to take more than are left */
+  assert(ipsleft >= hosts_skipped - 1);
+
+  /* increment the next octect that we can above us */
+  for (i = oct; i >= 0; i--) {
+    if (current[i] < last[i]) {
+      current[i]++;
+      break;
+    }
+    else
+      current[i] = 0;
+  }
+
+  /* reset all the ones below us to zero */
+  for (i = oct+1; i <= 3; i++) {
+    current[i] = 0;
+  }
+
+  /* we actauly don't skip the current, it was accounted for 
+   * by get_next_host */
+  ipsleft -= hosts_skipped - 1;
+ 
+  return hosts_skipped;
 }
 
  /* Grab the next host from this expression (if any) and uptdates its internal

@@ -41,7 +41,7 @@ DWORD __declspec(dllimport) __stdcall GetIpAddrTable(PMIB_IPADDRTABLE, DWORD*, B
 DWORD __declspec(dllimport) __stdcall GetIpNetTable(PMIB_IPNETTABLE, DWORD*, BOOL);
 DWORD __declspec(dllimport) __stdcall GetIpForwardTable(PMIB_IPFORWARDTABLE, DWORD*, BOOL);
 DWORD __declspec(dllimport) __stdcall GetIfEntry(PMIB_IFROW);
-
+DWORD __declspec(dllimport) __stdcall SendARP( int, int, PULONG, PULONG );
 
 #ifdef __cplusplus
 }

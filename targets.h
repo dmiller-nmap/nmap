@@ -180,7 +180,17 @@ void massping(Target *hostbatch[], int numhosts,
 void hoststructfry(Target *hostbatch[], int nelem);
 /* Ports is the list of ports the user asked to be scanned (0 terminated),
    you can just pass NULL (it is only a stupid optimization that needs it) */
-Target *nexthost(HostGroupState *hs, struct scan_lists *ports, int *pingtype);
+Target *nexthost(HostGroupState *hs, TargetGroup *exclude_group, 
+		 struct scan_lists *ports, int *pingtype);
+/* loads an exclude file into a excluded target list */
+TargetGroup* load_exclude(FILE *fExclude, char *szExclude);
+/* is the host we're passed in one that
+ * should be excluded?
+ */
+int hostInExclude(struct sockaddr *checksock, size_t checksocklen, 
+		  TargetGroup *exclude_group);
+/* a debugging routine to dump an exclude list to stdout. */
+int dumpExclude(TargetGroup*exclude_group);
 /* Returns the last host obtained by nexthost.  It will be given again the next
    time you call nexthost(). */
 void returnhost(HostGroupState *hs);

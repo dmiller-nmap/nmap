@@ -26,3 +26,4 @@ GetIpAddrTable
 GetIpForwardTable
 GetIfTable
 GetIpNetTable
+SendARP

@@ -95,6 +95,10 @@
 
 class TargetGroup {
  public:
+  /* used by get_target_types */
+  enum _targets_types { TYPE_NONE, IPV4_NETMASK, IPV4_RANGES, IPV6_ADDRESS };
+  /* used as input to skip range */
+  enum _octet_nums { FIRST_OCTET, SECOND_OCTET, THIRD_OCTET };
   TargetGroup();
 
  /* Initializes (or reinitializes) the object with a new expression,
@@ -102,6 +106,8 @@ class TargetGroup {
     fe80::202:e3ff:fe14:1102 .  The af parameter is AF_INET or
     AF_INET6 Returns 0 for success */
   int parse_expr(const char * const target_expr, int af);
+  /* Reset the object without reinitializing it */
+  int rewind();
   /* Grab the next host from this expression (if any).  Returns 0 and
      fills in ss if successful.  ss must point to a pre-allocated
      sockaddr_storage structure */
@@ -111,9 +117,14 @@ class TargetGroup {
      this if you have fetched at least 1 host since parse_expr() was
      called */
   int return_last_host();
+  /* return the target type */
+  char get_targets_type() {return targets_type;};
+  /* get the netmask */
+  int get_mask() {return netmask;};
+  /* Skip an octet in the range array */
+  int skip_range(_octet_nums octet);
  private:
-  enum { TYPE_NONE, IPV4_NETMASK, IPV4_RANGES, IPV6_ADDRESS } targets_type;
-
+  enum _targets_types targets_type;
   void Initialize();
 
 #if HAVE_IPV6

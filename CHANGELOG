@@ -1,9 +1,44 @@
 # Nmap Changelog ($Id$)
 
+Nmap 3.59ALPHA6
+
+o Added --exclude option, which lets you specify a comma-separated
+  list of targets (hosts, ranges, netblocks) that should be excluded
+  from the scan.  This is useful to keep from scannig yourself, your
+  ISP, particularly sensitive hosts, etc.  The new --excludefile reads
+  the list (newline-delimited) from a given file.  All the work was
+  done by Mark-David McLaughlin (mdmcl(a)cisco.com> and William McVey
+  ( wam(a)cisco.com ), who sent me a well-designed and well-tested
+  patch.
+
 o Added support for --min_parallelism and --max_parallelism in the new
   ultra_scan() framework.  Thanks to Bill Petersen
   (bill.petersen(a)alcatel.com) for noting that they weren't affecting
   his scan times.
+
+o Portability changes so that Nmap again compiles on Windows with
+  Visual Studio. Performed some testing and built binaries for distribution.
+
+o Fixed some Windows portability issues discovered by Gisle Vanem
+  (giva(a)bgnett.no).
+
+o Workaround crippled raw sockets on Microsoft Windows XP SP2 scans.
+  I applied a patch by Andy Lutomirski (luto(a)stanford.edu) which
+  causes Nmap to default to winpcap sends instead.  The winpcap send
+  functionality was already there for versions of Windows such as NT and
+  Win98 that never supported Raw Sockets in the first place.
+
+o Changed how Nmap sends Arp requests on Windows to use the iphlpapi
+  SendARP() function rather than creating it raw and reading the
+  response from the Windows ARP cache.  This works around a
+  (reasonable) feature of Windows Firewall which ignored such
+  unsolicited responses.  The firewall is turned on by default as of
+  Windows XP SP2.  This change was implemented by Dana Epp
+  (dana(a)vulscan.com).
+
+o Fixed some warnings that crop up when compiling nbase C files with a
+  C++ compiler.  Thanks to Gisle Vanem (giva(a)bgnett.no) for sending
+  the patch.
 
 Nmap 3.59ALPHA5
 

@@ -564,6 +564,16 @@ can be given (they will be the same as the aborted scan).
 Nmap will start on the machine after the last one
 successfully scanned in the log file.
 .TP
+.B \--exclude <host1 [,host2][,host3],...">
+Specifies a list of targets (hosts, ranges, netblocks) that should be 
+excluded from a scan. Useful to keep from scanning yourself, your ISP, 
+particularly sensitive hosts, etc.
+.TP
+.B \--excludefile <exclude_file>
+Same functionality as the --exclude option, only the excluded targets
+are provided in an newline-delimited exclude_file rather than on the
+command line.
+.TP
 .B \--append_output
 Tells Nmap to append scan results to any output files you have specified
 rather than overwriting those files.

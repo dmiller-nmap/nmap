@@ -27,3 +27,4 @@ void __declspec(dllexport) __stdcall GetIpAddrTable(int p1, int p2, int p3) {}
 void __declspec(dllexport) __stdcall GetIpForwardTable(int p1, int p2, int p3) {}
 void __declspec(dllexport) __stdcall GetIfTable(int p1, int p2, int p3) {}
 void __declspec(dllexport) __stdcall GetIpNetTable(int p1, int p2, int p3) {}
+void __declspec(dllexport) __stdcall SendARP( int p1, int p2, int p3, int p4) {} 

@@ -110,6 +110,9 @@ struct winops wo;
 //   Free this on cleanup
 static IPNODE *ipblock;
 
+//   For XP-friendly raw sends
+SOCKET global_raw_socket;
+
 //   Fix for MinGW
 //   MinGW support
 #ifndef _MSC_VER
@@ -353,6 +356,9 @@ void winip_postopt_init()
   && !bind(s, (struct sockaddr*)&sin, sizeof(sin)))
  {
    rawsock_avail = 1;
+   global_raw_socket = socket(AF_INET, SOCK_RAW, IPPROTO_RAW);
+   sethdrinclude((int)global_raw_socket);
+   unblock_socket(global_raw_socket);
    closesocket(s);
    if(o.debugging > 1 || wo.trace)
      printf("***WinIP***  rawsock is available\n");
@@ -612,7 +618,7 @@ static void winip_list_interfaces()
 
   //      0000000000111111111122222222223333333333
   //      0123456789012345678901234567890123456789
-  printf("Name        Raw send  Raw recieve  IP\n");
+  printf("Name        Raw mode  IP\n");
 
   for(i = 0; i < numifs; i++)
     {
@@ -631,8 +637,7 @@ static void winip_list_interfaces()
 
       IPNODE *ip = iftable[i].firstip;
 
-      printf("%-12s%-10s%-13s", iftable[i].name,
-      (rawsock_avail ? "SOCK_RAW" : (iftable[i].pcapname ? "winpcap" : "none")),
+      printf("%-12s%-10s", iftable[i].name,
       (iftable[i].pcapname ? "winpcap" : (rawsock_avail ? "SOCK_RAW" : "none")));
       if(!ip) printf("[none]\n");
       else while(ip)
@@ -790,15 +795,12 @@ int win32_socket(int af, int type, int proto)
   SOCKET s;
   winip_test(0);
 
-  if(type == SOCK_RAW && proto == IPPROTO_RAW && !rawsock_avail)
+  if(type == SOCK_RAW && proto == IPPROTO_RAW)
     {
       winip_test(1);
       pcapsend_init();
       return 501;
     }
-
-  if(o.debugging > 1 && type == SOCK_RAW && proto == IPPROTO_RAW)
-    printf("Opening a real raw socket\n");
 
   s = socket(af, type, proto);
 
