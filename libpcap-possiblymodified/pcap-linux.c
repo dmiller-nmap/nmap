@@ -1003,6 +1003,13 @@ static void map_arphrd_to_dlt(pcap_t *handle, int arptype)
 		handle->linktype = DLT_LINUX_SLL;
 		break;
 
+#ifndef ARPHRD_CISCO /* Cisco HDLC - From Linux 2.4.17 include/linux/if_arp.h */
+#define ARPHRD_CISCO 513
+#endif
+#ifndef ARPHRD_HDLC /* From Linux 2.4.17 */
+#define ARPHRD_HDLC ARPHRD_CISCO
+#endif
+
 	case ARPHRD_HDLC:
 		handle->linktype = DLT_C_HDLC;
 		break;

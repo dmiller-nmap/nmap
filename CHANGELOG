@@ -1,5 +1,9 @@
 # Nmap Changelog ($Id$)
 
+o Fixed a libpcap compilation issue noted by Josef 'Jupp' Schugt
+  (deusxmachina@webmail.co.za) which relates to the definition (or
+  lack thereof) of ARPHRD_HDLC (used for Cisco HDLC frames).
+
 Nmap 3.10ALPHA7
 
 o Upgraded libpcap from version 0.6.2 to 0.7.1.  Updated the
@@ -22,13 +26,16 @@ o Fixed (I hope) a few compilation problems on
   non-IPv6-enabled machines which were noted by Josef 'Jupp'
   Schugt (jupp@gmx.de)
 
+o Included some man page translations which were inadvertently
+  missed in previous tarballs.
+
 o Applied patch from Matthieu Verbert (mve@zurich.ibm.com) which
   places the Nmap man pages under ${prefix}/share/man rather than
   ${prefix}/man when installed via RPM.  Maybe the tarball
   install should do this too?  Opinions?
 
 o Applied patch from R Anderson (listbox@pole-position.org) which
-  improves the way ICMP port unreadhables from intermediate hosts
+  improves the way ICMP port unreachables from intermediate hosts
   are handled during UDP scans.
 
 o Added note to man page related to Nmap US export control.  I
@@ -39,10 +46,6 @@ o Added note to man page related to Nmap US export control.  I
 o Added a warning that some hosts may be skipped and/or repeated
   when someone tries to --resume a --randomize_hosts scan.  This
   was suggested by Crayden Mantelium (crayden@sensewave.com)
-
-o Removed disparaging comments about distributed.net from the
-  nmap-services file (see
-  http://lists.distributed.net/hypermail/rc5.Dec2002/0162.html )
 
 o Fixed a minor memory leak noted by Michael Davis
   (mike@datanerds.net).

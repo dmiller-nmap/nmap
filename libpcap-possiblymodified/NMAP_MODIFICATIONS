@@ -168,3 +168,23 @@ of libpcap version 0.7.1 (released November 16, 2002).  My
  #define LBL_ALIGN
  #endif
  #endif
+
+-- Modify pcap-linux.c to deal with the case where ARPHRD_HDLC (Cisco HDLC)
+   is not defined:
+--- pcap-linux-orig.c   Sun Dec 22 11:49:51 2002
++++ pcap-linux.c        Sun Dec 22 11:56:15 2002
+@@ -1003,6 +1003,13 @@
+                handle->linktype = DLT_LINUX_SLL;
+                break;
+ 
++#ifndef ARPHRD_CISCO /* Cisco HDLC - From Linux 2.4.17 include/linux/if_arp.h */
++#define ARPHRD_CISCO 513
++#endif
++#ifndef ARPHRD_HDLC /* From Linux 2.4.17 */
++#define ARPHRD_HDLC ARPHRD_CISCO
++#endif
++
+        case ARPHRD_HDLC:
+                handle->linktype = DLT_C_HDLC;
+                break;
+
