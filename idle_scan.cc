@@ -265,7 +265,7 @@ void initialize_idleproxy(struct idle_proxy_info *proxy, char *proxyName,
     if (*q==0 || !endptr || *endptr != '\0' || !proxy->probe_port) {
       fatal("Invalid port number given in IPID zombie specification: %s", proxyName);
     }
-  } else proxy->probe_port = o.tcp_probe_port;
+  } else proxy->probe_port = o.tcp_probe_ports[0];
 
   proxy->host.setHostName(name);
   if (resolve(name, &ss, &sslen, o.pf()) == 0) {

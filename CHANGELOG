@@ -1,8 +1,19 @@
 # Nmap Changelog ($Id$)
 
+o Reworked the "ping scan" algorithm (used for any scan except -P0 or
+  -sL) to be more robust in the face of low-bandwidth and congested
+  connections.  This also improves reliability in the multi-port ping
+  case described below.
+
+o Applied patch (with modest changes) by Gabriel L. Somlo
+  (somlo@acns.colostate.edu), which allows multiple TCP probe ports in
+  raw (root) mode.  
+
 o Fixed a libpcap compilation issue noted by Josef 'Jupp' Schugt
   (deusxmachina@webmail.co.za) which relates to the definition (or
   lack thereof) of ARPHRD_HDLC (used for Cisco HDLC frames).
+
+o Tweaked the version number (-V) output slightly.
 
 Nmap 3.10ALPHA7
 

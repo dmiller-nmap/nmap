@@ -126,7 +126,8 @@ void NmapOps::Initialize() {
   reference_FPs = NULL;
   magic_port = 33000 + (get_random_uint() % 31000);
   magic_port_set = 0;
-  tcp_probe_port = DEFAULT_TCP_PROBE_PORT;
+  num_probe_ports = 1;
+  tcp_probe_ports[0] = DEFAULT_TCP_PROBE_PORT;
   max_parallelism = 0;
   min_parallelism = 0;
   max_rtt_timeout = MAX_RTT_TIMEOUT;
@@ -195,6 +196,9 @@ void NmapOps::ValidateOptions() {
  if (connectscan && spoofsource) {
     error("WARNING:  -S will only affect the source address used in a connect() scan if you specify one of your own addresses.  Use -sS or another raw scan if you want to completely spoof your source address, but then you need to know what you're doing to obtain meaningful results.");
   }
+
+ if ((pingtype & PINGTYPE_TCP) && (!o.isr00t || o.af() != AF_INET) && num_probe_ports > 1)
+   error("WARNING:  Multiple probe ports were given, but only the first one will be used for your connect()-style TCP ping.");
 
  if (ipprotscan + (TCPScan() || UDPScan()) + listscan + pingscan > 1) {
    fatal("Sorry, the IPProtoscan, Listscan, and Pingscan (-sO, -sL, -sP) must currently be used alone rathre than combined with other scan types.");

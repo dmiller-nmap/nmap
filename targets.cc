@@ -121,7 +121,6 @@ static int hostupdate(Target *hostbatch[], Target *target,
     }
   }
   
-  
   target->to = *to;
   
   if (target->flags & HOST_UP) {
@@ -133,10 +132,10 @@ static int hostupdate(Target *hostbatch[], Target *target,
   if (trynum > 0 && !(pt->dropthistry)) {
     pt->dropthistry = 1;
     if (o.debugging) 
-      log_write(LOG_STDOUT, "Decreasing massping group size from %d to ", pt->group_size);
-    pt->group_size = MAX((int) (pt->group_size * 0.75), 10);
+      log_write(LOG_STDOUT, "Decreasing massping group size from %f to ", pt->group_size);
+    pt->group_size = MAX(pt->group_size * 0.75, pt->min_group_size);
     if (o.debugging) 
-      log_write(LOG_STDOUT, "%d\n", pt->group_size);
+      log_write(LOG_STDOUT, "%f\n", pt->group_size);
   }
   
   if (newstate == HOST_DOWN && (target->flags & HOST_DOWN)) {
@@ -282,14 +281,14 @@ if (hs->randomize) {
 void massping(Target *hostbatch[], int num_hosts, 
               struct scan_lists *ports, int pingtype) {
 static struct timeout_info to = {0,0,0};
-static int gsize = LOOKAHEAD;
+static double gsize = (double) LOOKAHEAD;
 int hostnum;
 struct pingtune pt;
 struct scanstats ss;
 struct timeval begin_select;
 struct pingtech ptech;
 struct tcpqueryinfo tqi;
-int max_block_size = 40;
+int max_block_size = 70;
 struct ppkt {
   unsigned char type;
   unsigned char code;
@@ -299,6 +298,8 @@ struct ppkt {
 };
 int elapsed_time;
 int blockinc;
+int probes_per_host = 0; /* Number of probes done for each host (eg
+                            ping packet plus two TCP ports would be 3) */
 int sd_blocking = 1;
 struct sockaddr_in sock;
 short seq = 0;
@@ -310,7 +311,8 @@ pcap_t *pd = NULL;
 char filter[512];
 unsigned short sportbase;
 int max_width = 0;
-
+int group_start, group_end, direction; /* For going forward or backward through
+					       grouplen */
 bzero((char *)&ptech, sizeof(ptech));
 
 bzero((char *) &pt, sizeof(pt)); 
@@ -321,7 +323,6 @@ pt.discardtimesbefore = 0;
 pt.down_this_block = 0;
 pt.num_responses = 0;
 pt.max_tries = 5; /* Maximum number of tries for a block */
-pt.group_size = (o.max_parallelism)? MIN(o.max_parallelism, gsize) : gsize;
 pt.group_start = 0;
 pt.block_tries = 0; /* How many tries this block has gone through */
 
@@ -340,6 +341,19 @@ if (pingtype & PINGTYPE_TCP) {
     ptech.rawtcpscan = 1;
   else ptech.connecttcpscan = 1;
 }
+
+ if (ptech.connecttcpscan)
+   probes_per_host = 1; /* Only the first probe port is used in this case */
+ else probes_per_host = ptech.icmpscan + ptech.rawicmpscan + (ptech.rawtcpscan? o.num_probe_ports : 0);
+
+pt.min_group_size = MAX(3, MAX(o.min_parallelism, 16) / probes_per_host);
+
+pt.group_size = (o.max_parallelism)? MIN(o.max_parallelism, gsize) : gsize;
+/* Make sure we have at least the minimum parallelism level */
+pt.group_size = MAX(pt.group_size, o.min_parallelism);
+/* Reduce the group size proportionally to number of probes sent per host */
+pt.group_size = MAX(pt.min_group_size, 0.9999 + pt.group_size / probes_per_host);
+max_block_size /= probes_per_host;
 
 time = (struct timeval *) safe_zalloc(sizeof(struct timeval) * ((pt.max_tries) * num_hosts));
 id = (unsigned short) get_random_uint();
@@ -416,15 +430,12 @@ if (ptech.rawicmpscan || ptech.rawtcpscan) {
   set_pcap_filter(hostbatch[0], pd, flt_icmptcp_5port, filter); 
 }
 
- if (ptech.rawicmpscan + ptech.icmpscan + ptech.connecttcpscan +
-     ptech.rawtcpscan == 1)
-   blockinc = 8;
- else blockinc = 5;
+ blockinc = (int) (0.9999 + 8.0 / probes_per_host);
 
 bzero((char *)&sock,sizeof(sock));
 gettimeofday(&start, NULL);
 
- pt.group_end = MIN(pt.group_start + pt.group_size -1, num_hosts -1);
+ pt.group_end = (int) MIN(pt.group_start + pt.group_size -1, num_hosts -1);
  
  while(pt.group_start < num_hosts) { /* while we have hosts left to scan */
    do { /* one block */
@@ -432,10 +443,20 @@ gettimeofday(&start, NULL);
      pt.up_this_block = 0;
      pt.down_this_block = 0;
      pt.block_unaccounted = 0;
-     for(hostnum=pt.group_start; hostnum <= pt.group_end; hostnum++) {      
+
+     /* Sometimes a group gets too big for the network path and a
+        router (especially things like cable/DSL modems) will drop our
+        packets after a certain number have been sent.  If we just
+        retry the exact same group, we are likely to get exactly the
+        same behavior (missing later hosts).  So we reverse the order
+        for each try */
+     direction = (pt.block_tries % 2 == 0)? 1 : -1;
+     if (direction == 1) { group_start = pt.group_start; group_end = pt.group_end; }
+     else { group_start = pt.group_end; group_end = pt.group_start; }
+     for(hostnum= group_start; hostnum != group_end + direction; hostnum += direction) {      
        /* If (we don't know whether the host is up yet) ... */
        if (!(hostbatch[hostnum]->flags & HOST_UP) && !hostbatch[hostnum]->wierd_responses && !(hostbatch[hostnum]->flags & HOST_DOWN)) {  
-	 /* Send a ping packet to it */
+	 /* Send a ping queries to it */
 	 seq = hostnum * pt.max_tries + pt.block_tries;
 	 if (ptech.icmpscan && !sd_blocking) { 
 	   block_socket(sd); sd_blocking = 1; 
@@ -446,11 +467,15 @@ gettimeofday(&start, NULL);
 			 seq, id, &ss, time, pingtype, ptech);
        
 	 if (ptech.rawtcpscan) {
-	   sendrawtcppingquery(rawsd, hostbatch[hostnum],  pingtype, seq, 
-			       time, &pt);
+	   /* multiple ports probed when doing raw tcp ping */
+	   for( int i=0; i<o.num_probe_ports; i++ ) {
+	     if (i > 0 && o.scan_delay) enforce_scan_delay(NULL);
+	     sendrawtcppingquery(rawsd, hostbatch[hostnum],  pingtype, o.tcp_probe_ports[i], seq, time, &pt);
+	   }
 	 }
 	 else if (ptech.connecttcpscan) {
-	   sendconnecttcpquery(hostbatch, &tqi, hostbatch[hostnum], seq, time, &pt, &to, max_width);
+	   /* still only one port probed for connect tcp */
+	   sendconnecttcpquery(hostbatch, &tqi, hostbatch[hostnum], o.tcp_probe_ports[0], seq, time, &pt, &to, max_width);
 	 }
 	 pt.block_unaccounted++;
 	 gettimeofday(&t2, NULL);
@@ -478,24 +503,23 @@ gettimeofday(&start, NULL);
        elapsed_time = TIMEVAL_SUBTRACT(end, begin_select);
      } while( elapsed_time < to.timeout);
      /* try again if a new box was found but some are still unaccounted for and
-	we haven't run out of retries.  Also retry if the block is extremely
-        small.
+	we haven't run out of retries.  Always retry at least once.
      */
      pt.dropthistry = 0;
      pt.block_tries++;
-   } while ((pt.up_this_block > 0 || pt.group_end - pt.group_start <= 3) && pt.block_unaccounted > 0 && pt.block_tries < pt.max_tries);
+   } while ((pt.up_this_block > 0 || pt.block_tries == 1) && pt.block_unaccounted > 0 && pt.block_tries < pt.max_tries);
 
    if (o.debugging)
      log_write(LOG_STDOUT, "Finished block: srtt: %d rttvar: %d timeout: %d block_tries: %d up_this_block: %d down_this_block: %d group_sz: %d\n", to.srtt, to.rttvar, to.timeout, pt.block_tries, pt.up_this_block, pt.down_this_block, pt.group_end - pt.group_start + 1);
 
-   if ((pt.block_tries == 1) || (pt.block_tries == 2 && pt.up_this_block == 0 && pt.down_this_block == 0)) 
+   if (pt.block_tries == 2 && pt.up_this_block == 0 && pt.down_this_block == 0)
      /* Then it did not miss any hosts (that we know of)*/
        pt.group_size = MIN(pt.group_size + blockinc, max_block_size);
    
    /* Move to next block */
    pt.block_tries = 0;
    pt.group_start = pt.group_end +1;
-   pt.group_end = MIN(pt.group_start + pt.group_size -1, num_hosts -1);
+   pt.group_end = (int) MIN(pt.group_start + pt.group_size -1, num_hosts -1);
    /*   pt.block_unaccounted = pt.group_end - pt.group_start + 1;   */
  }
 
@@ -513,7 +537,7 @@ gettimeofday(&start, NULL);
 }
 
 int sendconnecttcpquery(Target *hostbatch[], struct tcpqueryinfo *tqi,
-			Target *target, int seq, 
+			Target *target, u16 probe_port, int seq, 
 			struct timeval *time, struct pingtune *pt, 
 			struct timeout_info *to, int max_width) {
 
@@ -560,9 +584,9 @@ int sendconnecttcpquery(Target *hostbatch[], struct tcpqueryinfo *tqi,
     fatal("Unable to get target sock in sendconnecttcpquery");
 
   if (sin->sin_family == AF_INET)
-    sin->sin_port = htons(o.tcp_probe_port);
+    sin->sin_port = htons(probe_port);
 #if HAVE_IPV6
-  else sin6->sin6_port = htons(o.tcp_probe_port);
+  else sin6->sin6_port = htons(probe_port);
 #endif //HAVE_IPV6
   
   res = connect(tqi->sockets[seq],(struct sockaddr *)&sock, socklen);
@@ -590,7 +614,7 @@ int sendconnecttcpquery(Target *hostbatch[], struct tcpqueryinfo *tqi,
 return 0;
 }
 
-int sendrawtcppingquery(int rawsd, Target *target, int pingtype, 
+int sendrawtcppingquery(int rawsd, Target *target, int pingtype, u16 probe_port,
 			int seq, struct timeval *time, struct pingtune *pt) {
 int trynum;
 int myseq;
@@ -604,10 +628,10 @@ trynum = seq % pt->max_tries;
  myseq = (get_random_uint() << 19) + (seq << 3) + 3; /* Response better end in 011 or 100 */
  o.decoys[o.decoyturn].s_addr = target->v4source().s_addr;
  if (pingtype & PINGTYPE_TCP_USE_SYN) {   
-   send_tcp_raw_decoys( rawsd, target->v4hostip(), sportbase + trynum, o.tcp_probe_port, myseq, myack, TH_SYN, 0, NULL, 0, o.extra_payload, 
+   send_tcp_raw_decoys( rawsd, target->v4hostip(), sportbase + trynum, probe_port, myseq, myack, TH_SYN, 0, NULL, 0, o.extra_payload, 
 			o.extra_payload_length);
  } else {
-   send_tcp_raw_decoys( rawsd, target->v4hostip(), sportbase + trynum, o.tcp_probe_port, myseq, myack, TH_ACK, 0, NULL, 0, o.extra_payload, 
+   send_tcp_raw_decoys( rawsd, target->v4hostip(), sportbase + trynum, probe_port, myseq, myack, TH_ACK, 0, NULL, 0, o.extra_payload, 
 			o.extra_payload_length);
  }
 
@@ -753,7 +777,7 @@ while(pt->block_unaccounted) {
 //		  case WSAENOTCONN:	//	needed?  this fails around here on my system
 #endif
 		if (errno == EAGAIN && o.verbose) {
-		  log_write(LOG_STDOUT, "Machine %s MIGHT actually be listening on probe port %d\n", hostbatch[hostindex]->targetipstr(), o.tcp_probe_port);
+		  log_write(LOG_STDOUT, "Machine %s MIGHT actually be listening on probe port %d\n", hostbatch[hostindex]->targetipstr(), o.tcp_probe_ports[0]);
 		}
 		foundsomething = 1;
 		newstate = HOST_UP;	
@@ -781,11 +805,11 @@ while(pt->block_unaccounted) {
 		if (res2 == 0)
 		  log_write(LOG_STDOUT, "Machine %s is actually LISTENING on probe port %d\n",
 			 hostbatch[hostindex]->targetipstr(), 
-			 o.tcp_probe_port);
+			 o.tcp_probe_ports[0]);
 		else 
 		  log_write(LOG_STDOUT, "Machine %s is actually LISTENING on probe port %d, banner: %s\n",
 			 hostbatch[hostindex]->targetipstr(), 
-			 o.tcp_probe_port, buf);
+			 o.tcp_probe_ports[0], buf);
 	      }
 	    }
 	    if (foundsomething) {
@@ -1108,7 +1132,7 @@ while(pt->block_unaccounted > 0 && !timeout) {
 	continue;
       }
       if (o.debugging) 
-	log_write(LOG_STDOUT, "We got a TCP ping packet back from %s (hostnum = %d trynum = %d\n", inet_ntoa(ip->ip_src), hostnum, trynum);
+	log_write(LOG_STDOUT, "We got a TCP ping packet back from %s port %hi (hostnum = %d trynum = %d\n", inet_ntoa(ip->ip_src), htons(tcp->th_sport), hostnum, trynum);
       pingstyle = pingstyle_rawtcp;
       foundsomething = 1;
       if (pt->discardtimesbefore < sequence)

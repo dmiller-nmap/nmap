@@ -236,7 +236,6 @@ const char *ippackethdrinfo(const u8 *packet, u32 len) {
       unsigned short seq;
     } *ping;
     ping = (struct ppkt *) ((ip->ip_hl * 4) + (char *) ip);
-    snprintf(protoinfo, sizeof(protoinfo), "ICMP not handled yet");
     switch(ping->type) {
     case 0:
       strcpy(icmptype, "Echo reply"); break;
@@ -316,8 +315,8 @@ const char *ippackethdrinfo(const u8 *packet, u32 len) {
       strcpy(icmptype, "Unknown type"); break;
       break;
     }
-    snprintf(protoinfo, sizeof(protoinfo), "ICMP %s (type=%d/code=%d) %s",
-	     icmptype, ping->type, ping->code, ipinfo);
+    snprintf(protoinfo, sizeof(protoinfo), "ICMP %s > %s %s (type=%d/code=%d) %s",
+	     srchost, dsthost, icmptype, ping->type, ping->code, ipinfo);
   } else {
     snprintf(protoinfo, sizeof(protoinfo), "Unknown protocol: %s", ipinfo);
   }    

@@ -208,11 +208,13 @@ void *realloc();
 #ifndef DEBUGGING
 #define DEBUGGING 0
 #endif
+#define MAX_PROBE_PORTS 8     /* How many TCP probe ports are allowed ? */
 /* Default number of ports in parallel.  Doesn't always involve actual 
    sockets.  Can also adjust with the -M command line option.  */
 #define MAX_SOCKETS 36 
-/* How many hosts do we ping in parallel to see if they are up? */
-#define LOOKAHEAD 25
+/* How many hosts do we ping in parallel to see if they are up? Note that this is
+   divided by the num probes per host */
+#define LOOKAHEAD 30
 /* If reads of a UDP port keep returning EAGAIN (errno 13), do we want to 
    count the port as valid? */
 #define RISKY_UDP_SCAN 0
@@ -393,6 +395,7 @@ int check_ident_port(struct in_addr target);
 int ftp_anon_connect(struct ftpinfo *ftp);
 
 /* port manipulators */
+void getprobepts(char *expr);
 struct scan_lists *getpts(char *expr); /* someone stole the name getports()! */
 int getidentinfoz(struct in_addr target, u16 localport, u16 remoteport,
 		  char *owner, int ownersz);

@@ -83,7 +83,8 @@ struct pingtune {
   int max_tries;
   int num_responses;
   int dropthistry;
-  int group_size;
+  double group_size;
+  int min_group_size; /* The group size must never go below this value */
   int group_start;
   int group_end;
   int discardtimesbefore;
@@ -113,9 +114,9 @@ int get_ping_results(int sd, pcap_t *pd, Target *hostbatch[],
 int sendpingquery(int sd, int rawsd, Target *target,  
 		  int seq, unsigned short id, struct scanstats *ss, 
 		  struct timeval *time, int pingtype, struct pingtech ptech);
-int sendrawtcppingquery(int rawsd, Target *target, int pingtype,
+int sendrawtcppingquery(int rawsd, Target *target, int pingtype, u16 probe_port,
 			int seq, struct timeval *time, struct pingtune *pt);
-int sendconnecttcpquery(Target *hostbatch[], struct tcpqueryinfo *tqi, Target *target, 
+int sendconnecttcpquery(Target *hostbatch[], struct tcpqueryinfo *tqi, Target *target, u16 probe_port,
 			int seq, struct timeval *time, struct pingtune *pt, struct timeout_info *to, int max_width);
 int get_connecttcpscan_results(struct tcpqueryinfo *tqi, 
 			       Target *hostbatch[], 

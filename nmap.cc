@@ -472,23 +472,27 @@ int nmap_main(int argc, char *argv[]) {
       else if (*optarg == 'S') {
 	o.pingtype |= (PINGTYPE_TCP|PINGTYPE_TCP_USE_SYN);
 	if (isdigit((int) *(optarg+1)))
-	  o.tcp_probe_port = atoi(optarg+1);
+	  getprobepts(optarg+1);
       }
       else if (*optarg == 'T' || *optarg == 'A') {
 	o.pingtype |= (PINGTYPE_TCP|PINGTYPE_TCP_USE_ACK);
 	if (isdigit((int) *(optarg+1)))
-	  o.tcp_probe_port = atoi(optarg+1);
+	  getprobepts(optarg+1);
       }
       else if (*optarg == 'B') {
 	o.pingtype = (PINGTYPE_TCP|PINGTYPE_TCP_USE_ACK|PINGTYPE_ICMP_PING);
 	if (isdigit((int) *(optarg+1)))
-	  o.tcp_probe_port = atoi(optarg+1);
+	  getprobepts(optarg+1);
       }
       else { 
 	fatal("Illegal Argument to -P, use -P0, -PI, -PB, -PM, -PP, -PT, or -PT80 (or whatever number you want for the TCP probe destination port)"); 
       }
-      if ((o.pingtype & PINGTYPE_TCP) && o.tcp_probe_port != DEFAULT_TCP_PROBE_PORT)
-	log_write(LOG_STDOUT, "TCP probe port is %hu\n", o.tcp_probe_port);	
+      if ((o.pingtype & PINGTYPE_TCP) && (o.num_probe_ports != 1 || o.tcp_probe_ports[0] != DEFAULT_TCP_PROBE_PORT)) {
+	log_write(LOG_STDOUT, "TCP probe port(s):");
+	for( int i=0; i<o.num_probe_ports; ++i )
+	  log_write(LOG_STDOUT, " %hu", o.tcp_probe_ports[i]);
+	log_write(LOG_STDOUT, "\n");
+      }
       break;
     case 'p': 
       if (ports)
@@ -567,7 +571,7 @@ int nmap_main(int argc, char *argv[]) {
       }
       break;
     case 'V': 
-      printf("\nnmap V. %s\n", NMAP_VERSION); 
+      printf("\n%s version %s ( %s )\n", NMAP_NAME, NMAP_VERSION, NMAP_URL); 
       exit(0);
       break;
     case 'v': o.verbose++; break;
@@ -1060,6 +1064,33 @@ void init_socket(int sd) {
 	  bind_failed=1;
 	}
     }
+}
+
+/* Convert a comma-separated list of ports into an array, and store it
+   in o.tcp_probe_ports[]; This is a simplified version of getpts() below */
+void getprobepts(char *expr) {
+  char *current_range;
+  char *endptr;
+  long port;
+
+  o.num_probe_ports = 0;
+  current_range = expr;
+  do {
+    if( !isdigit((int) *current_range) ) {
+      fatal("Error #486: Your port specifications are illegal.  Example of proper form: \"20,80,65532\"");
+    }
+    port = strtol(current_range, &endptr, 10);
+    if( port <= 0 || port > 65535 ) {
+      fatal("Probe ports must be between 1 and 65535 inclusive");
+    }
+    if( o.num_probe_ports >= MAX_PROBE_PORTS ) {
+      fatal("Limit on number of probe ports (%d) exceeded", MAX_PROBE_PORTS);
+    }
+    o.tcp_probe_ports[o.num_probe_ports++] = port;
+    current_range = endptr;
+    if( *current_range ==',' )
+      current_range++;
+  } while( current_range && *current_range);
 }
 
 /* Convert a string like "-100,200-1024,3000-4000,60000-" into an array 
