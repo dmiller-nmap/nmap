@@ -700,6 +700,9 @@ int idlescan_countopen(struct idle_proxy_info *proxy,
     if (tries == 5)
       sleep(45); /* We're gonna give up if this fails, so we will be a bit
 		    patient */
+    /* Since the host may have received packets while we were sleeping,
+       lets update our proxy IPID counter */
+    proxy->latestid = ipid_proxy_probe(proxy, NULL, NULL);
   } while(1);
 
   if (openports < 0 || openports > numports ) {

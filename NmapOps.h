@@ -75,7 +75,7 @@ class NmapOps {
 		             user). */
   int isr00t;
   int debugging;
-  bool packetTrace() { return (debugging > 3)? true : pTrace;  }
+  bool packetTrace() { return (debugging >= 3)? true : pTrace;  }
   // Note that packetTrace may turn on at high debug levels even if
   // setPacketTrace(false) has been called
   void setPacketTrace(bool pt) { pTrace = pt;  }
