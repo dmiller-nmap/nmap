@@ -30,7 +30,7 @@ DEPS = nmap.h error.h targets.h osscan.h tcpip.h utils.h global_structures.h
 
 all: $(TARGET)
 
-$(TARGET): $(OBJS) $(DEPS) @PCAP_DEPENDS@
+$(TARGET): $(DEPS) @PCAP_DEPENDS@ $(OBJS)
 	@echo Compiling nmap
 	rm -f $@
 	$(CC) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)

@@ -1444,6 +1444,7 @@ sprintf(filter, "(icmp and dst host %s) or (tcp and src host %s and dst host %s 
  /* Due to apparent bug in libpcap */
  if (target->source_ip.s_addr == htonl(0x7F000001))
    filter[0] = '\0';
+
  if (o.debugging)
    printf("Packet capture filter: %s\n", filter);
  if (pcap_compile(pd, &fcode, filter, 0, netmask) < 0)
@@ -1455,7 +1456,7 @@ if (scantype == XMAS_SCAN) scanflags = TH_FIN|TH_URG|TH_PUSH;
 else if (scantype == NULL_SCAN) scanflags = 0;
 else if (scantype == FIN_SCAN) scanflags = TH_FIN;
 else if (scantype == MAIMON_SCAN) scanflags = TH_FIN|TH_ACK;
-else if (scantype != UDP_SCAN) { fatal("Unknown scna type for super_scan"); }
+else if (scantype != UDP_SCAN) { fatal("Unknown scan type for super_scan"); }
 
 starttime = time(NULL);
 
@@ -1465,8 +1466,8 @@ if (o.debugging || o.verbose)
 
   do {
     changed = 0;
-    if (tries > 3 && senddelay == 0) senddelay = 10000; /* Currently only 
-							   affects UDP */
+    if (tries > 3 && senddelay == 0) senddelay = 10000; 
+							   
     while(testinglist != NULL)  /* While we have live queries or more ports to scan */
     {
       /* Check the possible retransmissions first */
@@ -1513,7 +1514,7 @@ if (o.debugging || o.verbose)
 			       0, 0);
 		else send_udp_raw(rawsd, &o.decoys[decoy], &target->host, i,
 				  current->portno, NULL ,0);	      
-		if (scantype == UDP_SCAN && senddelay) usleep(senddelay);
+		if (senddelay) usleep(senddelay);
 	      }
 	    }
 	  }
@@ -1524,7 +1525,7 @@ if (o.debugging || o.verbose)
 	  if (numqueries_outstanding > (int) numqueries_ideal) break;
 	  if (o.debugging > 1) printf("Sending initial query to port %hu\n", current->portno);
 	  freshportstried++;
-	  /* Otherwise lets send a packet! */
+	  /* lets send a packet! */
 	  current->state = PORT_TESTING;
 	  /*	if (!testinglist) testinglist = current; */
 	  numqueries_outstanding++;
@@ -1564,24 +1565,26 @@ if (o.debugging || o.verbose)
 	      }	      
 	      /* We figure out the scan number (and put it in i) */
 	      current = &scan[portlookup[newport]];
-	      if (current->state != PORT_TESTING) {
-	        if (o.debugging) {
-		  error("TCP packet detected from port %d which is in state %d (should be PORT_TESTING", newport, current->state); 
-		}
-		continue;
-	      }
-	      if (ntohs(tcp->th_dport) != o.magic_port && ntohs(tcp->th_dport) != o.magic_port + 1) {
+	      if (ntohs(tcp->th_dport) != o.magic_port && 
+		  ntohs(tcp->th_dport) != o.magic_port + 1) {
 		if (o.debugging)  {		
 		  error("BAD TCP packet detected to port %d from port %d", ntohs(tcp->th_dport), newport);
 		}
 		continue;		
 	      }
+
+	      if (current->state != PORT_TESTING && o.debugging) {
+		error("TCP packet detected from port %d which is in state %d (should usually be PORT_TESTING (but not always)", 
+		      newport, current->state); 
+	      }
+	    
 	      if (!o.magic_port_set) {
 		packet_trynum = ntohs(tcp->th_dport) - o.magic_port;
 		if ((packet_trynum|1) != 1) packet_trynum = -1;
-	      } else if (current->trynum == 0) packet_trynum = 0;
-	      else packet_trynum = -1;
-	    } else { continue; }
+	      }  else packet_trynum = -1;
+	      if (current->trynum == 0) packet_trynum = 0;
+	    } else { continue; } /* Wrong TCP flags */
+	    
 	  } else if (ip->ip_p == IPPROTO_ICMP) {
 	    icmp = (struct icmp *) ((char *)ip + sizeof(struct ip));
 	    ip2 = (struct ip *) (((char *) ip) + 4 * ip->ip_hl + 8);
@@ -1590,7 +1593,7 @@ if (o.debugging || o.verbose)
 		    hdump(icmp, ntohs(ip->ip_len) - sizeof(struct ip)); */
 	    if (icmp->icmp_type == 3) {
 	      switch(icmp->icmp_code) {
-
+		
 	      case 2: /* pr0t0c0l unreachable */
 		newport = ntohs(data[1]);
 		if (portlookup[newport] >= 0) {
@@ -1625,7 +1628,7 @@ if (o.debugging || o.verbose)
 		    printf("Illegal ICMP port unreachable packet:\n");
 		    hdump((unsigned char *)icmp, ntohs(ip->ip_len) -sizeof(struct ip));
 		  }
-		    continue; 
+		  continue; 
 		}		  		
 		break;
 	      }    
@@ -1638,11 +1641,23 @@ if (o.debugging || o.verbose)
 	    continue;
 	  }
 
-	  if (current->state == PORT_CLOSED && (packet_trynum < 0)) {
+	  if (current->state == PORT_OPEN) {
+	    /* 0oPs! we gave up on this port two early, now we must
+	       pay */
+	    /* Let us first strop this fucer from the open list ... */
+	    if (current->next > -1) 
+	      scan[current->next].prev = current->prev;
+	    if (current->prev > -1) 
+	      scan[current->prev].next = current->next;
+	    if (openlist == current) 
+	      openlist = (current->next >= 0)? &scan[current->next]:NULL;
+	  }
+	  else if (current->state == PORT_CLOSED && (packet_trynum < 0)) {
 	    target->to.rttvar *= 1.2;
 	    if (o.debugging) { printf("Late packet, couldn't figure out sendno so we do varianceincrease to %d\n", target->to.rttvar); 
 	    }
-	  } else if (packet_trynum > -1) {		
+	  } 
+	  if (packet_trynum > -1) {		
 	    /* Update our records */
 	    adjust_timeouts(current->sent[packet_trynum], &(target->to));
 	    numqueries_ideal = MIN(numqueries_ideal + (packet_incr/numqueries_ideal), max_width);
@@ -1664,21 +1679,26 @@ if (o.debugging || o.verbose)
 		windowdecrease++;
 		if (scantype == UDP_SCAN) usleep(250000);
 		}
-	      } else if (o.debugging > 1) { printf("Lost a packet, but not decreasing\n");
+	      } else if (o.debugging > 1) { 
+		printf("Lost a packet, but not decreasing\n");
 	      }
 	    }
-	  }  	      
+	  }	      
 	  if (current->state != PORT_CLOSED) {
 	    changed++;
-	    numqueries_outstanding--;
-	    current->state = PORT_CLOSED;
-	    if (current == testinglist)
+	    if (current->state != PORT_OPEN) {	    
+	      numqueries_outstanding--;
+	    }
+	    if (current->state == PORT_TESTING && current == testinglist)
 	      testinglist = (current->next >= 0)?  &scan[current->next] : NULL;
+	    else if (current->state == PORT_OPEN && current == openlist)
+	      openlist = (current->next >= 0)? &scan[current->next] : NULL;
 	    if (current->next >= 0) scan[current->next].prev = current->prev;
 	    if (current->prev >= 0) scan[current->prev].next = current->next;
+	    current->state = PORT_CLOSED;
 	  }
 	}
-      } 
+      }
     }
     /* Prepare for retry */
     testinglist = openlist;
