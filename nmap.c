@@ -1904,6 +1904,7 @@ if (o.debugging || o.verbose)
 	  /*usleep(10000);*/ /* *WE* normally do not need this, but the target 
 	    lamer often does */
 	}
+	fresh = (current->next > 0)? &scan[current->next] : NULL;
       }
       /* Now that we have sent the packets we wait for responses */
       while (( ip = (struct ip*) readip_pcap(pd, &bytes))) {
