@@ -817,7 +817,7 @@ while(pt->block_unaccounted) {
   gettimeofday(&end, NULL);
   tm = TIMEVAL_SUBTRACT(end,start);  
   if (tm > (30 * to->timeout)) {
-    error("WARNING: getconnecttcpscanresults is taking way to long, skipping");
+    error("WARNING: getconnecttcpscanresults is taking way too long, skipping");
     break;
   }
   if (res == 0 &&  tm > to->timeout) break; 

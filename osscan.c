@@ -459,6 +459,7 @@ struct AVal *fingerprint_iptcppacket(struct ip *ip, int mss, unsigned int syn) {
   struct AVal *AVs;
   int length;
   int opcode;
+  unsigned short tmpshort;
   char *p,*q;
   struct tcphdr *tcp = ((struct tcphdr *) (((char *) ip) + 4 * ip->ip_hl));
 
@@ -538,7 +539,8 @@ struct AVal *fingerprint_iptcppacket(struct ip *ip, int mss, unsigned int syn) {
     } else if (opcode == 2) {
       *p++ = 'M'; /* MSS */
       q++;
-      if(ntohs(*((unsigned short *) q)) == mss)
+      memcpy(&tmpshort, q, sizeof(unsigned short));
+      if(ntohs(tmpshort) == mss)
 	*p++ = 'E'; /* Echoed */
       q += 2;
       length -= 3;

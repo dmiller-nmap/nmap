@@ -506,9 +506,11 @@ char *mmapfile(char *fname, int *length, int openflags) {
 
   close(fd);
 
-  if (fileptr == MAP_FAILED) {
-    return NULL;
-  }
+#ifdef MAP_FAILED
+  if (fileptr == MAP_FAILED) return NULL;
+#else
+  if (fileptr == (char *) -1) return NULL;
+#endif
 
   *length = st.st_size;
   return fileptr;

@@ -1578,6 +1578,7 @@ void printportoutput(struct hoststruct *currenths, portlist *plist) {
     }
   }
   log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"\n");
+  log_write(LOG_MACHINE, "\tIgnored State: %s", statenum2str(plist->ignored_port_state));
 }
 
 /* This attempts to calculate the round trip time (rtt) to a host by timing a

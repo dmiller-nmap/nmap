@@ -1003,6 +1003,7 @@ qmqp              628/tcp    # Qmail Quick Mail Queueing
 ginad             634/tcp    # 
 ginad             634/udp    # 
 mount             635/udp    # NFS Mount Service
+ldapssl           636/tcp    # LDAP over SSL
 pcnfs             640/udp    # PC-NFS DOS Authentication
 bwnfs             650/udp    # BW-NFS DOS Authentication
 doom              666/tcp    # doom Id Software
@@ -1777,6 +1778,7 @@ deslogin          3005/tcp   # encrypted symmetric telnet/login
 deslogind         3006/tcp   # 
 cfs               3049/tcp   # cryptographic file system (nfs) (proposed)
 cfs               3049/udp   # cryptographic file system (nfs)
+distrib-net-proxy 3064/tcp   # Stupid closed source distributed.net project proxy port
 sj3               3086/tcp   # SJ3 (kanji input)
 squid-http        3128/tcp   #
 squid-ipc         3130/udp   #

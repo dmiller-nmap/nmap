@@ -1,5 +1,17 @@
 # Nmap Changelog
 
+** Version 2.3BETA20
+
+-- Applied patch sent in by s.rapp@hrz.uni-dortmund.de which fixes a
+   memory alignment bug in osscan.c which could cause core dumps on
+   machines which require aligned access (like SPARC).
+
+-- Fixed a compilation problem on machines that do not have MAP_FAILED
+   defined (as a return value to mmap).  Problem noted by Phil
+   Stracchino <alaric@babcom.com>.
+
+** Version 2.3BETA19
+
 -- Tweaked the output so that it now tells how many ports are not
    shown and what state the ignored ports are in.  This info could be
    inferred before by people who had studied the manpage, but now the
@@ -14,6 +26,12 @@
    function.  So I have made autoconf look for this and use the native
    version if supported. (problem noted by Sami Farin
    (sfarin (at) ratol.fi)).
+
+-- Added a new attribute "Ignored State: xxx" to the machine parseable
+   logs, where xxx is the state (closed, filtered, or UNfiltered) that
+   is being ignored.  Ports in that state are not listed (they weren't
+   listed in earlier versions either).  Perhaps I should list ALL
+   ports for machine parseable output.  Opinions?
 
 -- Merged in a patch sent in by Mipam (reinoud (at) ibbnet.org) which is
    apparently part of the OpenBSD Nmap "port".  Although Nmap seems to
