@@ -402,7 +402,7 @@ if (ip->ip_p== IPPROTO_TCP) {
     if (tcp->th_flags & TH_URG) printf("URG ");
     printf("\n");
 
-    printf("ttl: %hu ", ip->ip_ttl);
+    printf("ipid: %hi ttl: %hu ", ntohs(ip->ip_id), ip->ip_ttl);
 
     if (tcp->th_flags & (TH_SYN | TH_ACK)) printf("Seq: %u\tAck: %u\n", 
 						  (unsigned int) ntohl(tcp->th_seq), (unsigned int) ntohl(tcp->th_ack));
