@@ -328,11 +328,27 @@ if (o.verbose && openport != -1)
    }     
  } while ( testsleft > 0 && (tries++ < 5 && (newcatches || tries == 1)));
  
+for(i=2; i < 8; i++)
+  if (!FPtests[i]) {
+    /* We create a Resp (response) attribute with value of N (no) because
+       it is important here to note whether responses were or were not 
+       received */
+    FPtests[i] = safe_malloc(sizeof(FingerPrint));
+    bzero(FPtests[i], sizeof(FingerPrint));
+    seq_AVs = safe_malloc(sizeof(struct AVal));
+    seq_AVs->attribute = "Resp";
+    strcpy(seq_AVs->value, "N");
+    seq_AVs->next = NULL;
+    FPtests[i]->results = seq_AVs;
+    FPtests[i]->name =  (testno == 2)? "T2" : (testno == 3)? "T3" : (testno == 4)? "T4" : (testno == 5)? "T5" : (testno == 6)? "T6" : (testno == 7)? "T7" : "T8";
+  }
+
+
 
  last = 0;
  FPtmp = NULL;
  for(i=2; i < 8 ; i++) {
-   if (!FPtests[i]) continue;
+   if (!FPtests[i]) continue; 
    if (!FPtmp) FPtmp = FPtests[i];
    if (last) {
      FPtests[last]->next = FPtests[i];    
