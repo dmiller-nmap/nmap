@@ -187,7 +187,7 @@ if (o.verbose && openport != -1)
        seq_inc_sum /= (target->seq.responses - 1);
        target->seq.index = (unsigned long) (0.5 + pow(seq_inc_sum, 0.5));
        /*       printf("The sequence index is %d\n", target->seq.index);*/
-       if (target->seq.index < 50) {
+       if (target->seq.index < 75) {
 	 target->seq.class = SEQ_TD;
 	 /*	 printf("Target is a Micro$oft style time dependant box\n");*/
        }
@@ -578,9 +578,37 @@ return;
 
 
 int os_scan(struct hoststruct *target) {
+FingerPrint *FPs[3];
+FingerPrint **FP_matches[3];
+int try;
+int i;
+ for(try=0; try < 3; try++) {
+  FPs[try] = get_fingerprint(target); 
+  FP_matches[try] = match_fingerprint(FPs[try]);
+  if (FP_matches[try][0]) break;
+  usleep(target->to.timeout);
+ }
+ if (try == 0) {
+   /* Everything is hunky-dory so we do nothing */
+ } else if (try == 3) {
+   /* Uh-oh, we were NEVER able to match, lets take
+      the first fingerprint */
+   for(try=1; try < 3; try++)
+     if (FPs[try]) freeFingerPrint(FPs[try]);
+   try = 0;
+ } else {
+   error("WARNING: OS didn't match until the %d try", try + 1);
+   for(i=0; i < try; i++) {
+     if (FPs[i]) {
+       if (o.debugging)
+	 error("Failed match #%d (0-based): %s\n", i, fp2ascii(FPs[i]));
+       freeFingerPrint(FPs[i]);
+     }
+   }
+ }
 
-target->FP = get_fingerprint(target);
-target->FP_matches = match_fingerprint(target->FP);
+target->FP = FPs[try];
+target->FP_matches = FP_matches[try];
 
 return 1;
 }
