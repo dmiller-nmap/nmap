@@ -425,7 +425,7 @@ struct hostent *myhostent = NULL;
 int source_malloced = 0;
 
 /* check that required fields are there and not too silly */
-if ( !victim || !sport || !dport || sd < 0) {
+if ( !victim || sd < 0) {
   fprintf(stderr, "send_udp_raw: One or more of your parameters suck!\n");
   return -1;
 }
