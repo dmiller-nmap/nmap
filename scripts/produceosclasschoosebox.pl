@@ -41,7 +41,7 @@ while(<>) {
     }
 }
 
-@optionar = sort { $a->{fullname} cmp $b->{fullname} } @optionar;
+@optionar = sort { lc($a->{fullname}) cmp lc($b->{fullname}) } @optionar;
 
 foreach $opt (@optionar) {
     print qq|<option value="| . $opt->{opval} . qq|">| . $opt->{fullname} . "\n";

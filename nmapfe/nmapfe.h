@@ -65,73 +65,209 @@
 
 /* #define DEBUG(str) { fprintf(stderr, str); fflush(stderr); } */
 
-struct MyWidgets {
-  GtkWidget *start_scan;
-  GtkWidget *output;
-  GtkWidget *host_text;
-  GtkWidget *Verbose;
-  GtkWidget *Append;
-  GtkWidget *output_label;
-  GtkWidget *browse;
-  GtkWidget *file_entry;
-  GtkWidget *done;
-  GtkWidget *cancel;
-  char *machine_file;
-  GtkWidget *rpc;
-  /* scan types */
-  GtkWidget *connect_scan;
-  GtkWidget *syn_scan;
-  GtkWidget *ping_scan;
-  GtkWidget *udp_scan;
-  GtkWidget *fin_scan;
-  GtkWidget *xmas_scan;
-  GtkWidget *maimon_scan;
-  GtkWidget *null_scan;
-  GtkWidget *ack_scan;
-  GtkWidget *win_scan;
-  GtkWidget *rpc_scan;
-  GtkWidget *prot_scan;
-  GtkWidget *list_scan;
-  GtkWidget *idle_scan;
-  GtkWidget *idle_text;
-  GtkWidget *bounce_scan;
-  GtkWidget *bounce_text;
-  /* ping types */
-  GtkWidget *ping_check;
-  GtkWidget *icmpecho_ping;
-  GtkWidget *icmptime_ping;
-  GtkWidget *icmpmask_ping;
-  GtkWidget *tcp_ping;
-  GtkWidget *tcp_pingports;
-  GtkWidget *syn_ping;
-  GtkWidget *syn_pingports;
-  GtkWidget *udp_ping;
-  GtkWidget *udp_pingports;
-  /* options */
-  GtkWidget *fast_check;
-  GtkWidget *resolve_check;
-  GtkWidget *range_check;
-  GtkWidget *range_text;
-  GtkWidget *decoy_check;
-  GtkWidget *decoy_text;
-  GtkWidget *fingerprinting_check;
-  GtkWidget *input_check;
-  GtkWidget *input_text;
-  GtkWidget *fragment_check;
-  GtkWidget *identd_check;
-  GtkWidget *resolveall_check;
-  GtkWidget *device_check;
-  GtkWidget *device_text;
+
+/* main menu entries */
+enum {
+  NO_MENU,
+  SEP_MENU,
+  FILE_MENU	= 100,
+  FILEOPEN_MENU,
+  FILESAVE_MENU,
+  FILEQUIT_MENU,
+  VIEW_MENU	= 300,
+  VIEWMONO_MENU,
+  VIEWCOLOR_MENU,
+  VIEWAPPEND_MENU,
+  HELP_MENU	= 400,
+  HELPHELP_MENU,
+  HELPVERSION_MENU,
+  HELPABOUT_MENU,
 };
 
-GtkWidget* get_widget(GtkWidget *widget, gchar *widget_name);
 
-void set_notebook_tab(GtkWidget *notebook, gint page_num, GtkWidget *widget);
+/* define this > 0 to be able to use the comfortable callback */
+#define SCAN_OFFSET  1
+
+/* scan types: used as actions in a factory-generated menu */
+enum {
+  NO_SCAN,
+  CONNECT_SCAN = SCAN_OFFSET,
+  SYN_SCAN,
+  PING_SCAN,
+  UDP_SCAN,
+  FIN_SCAN,
+  XMAS_SCAN,
+  MAIMON_SCAN,
+  NULL_SCAN,
+  ACK_SCAN,
+  WIN_SCAN,
+  PROT_SCAN,
+  LIST_SCAN,
+  IDLE_SCAN,
+  BOUNCE_SCAN
+};
+
+
+/* define this > 0 to be able to use the comfortable callback */
+#define THROTTLE_OFFSET  1
+
+/* throttle types: used as actions in a factory-generated menu */
+enum {
+  NO_THROTTLE,
+  PARANOID_THROTTLE = THROTTLE_OFFSET,
+  SNEAKY_THROTTLE,
+  POLITE_THROTTLE,
+  NORMAL_THROTTLE,
+  AGRESSIVE_THROTTLE,
+  INSANE_THROTTLE
+};
+
+
+/* define this > 0 to be able to use the comfortable callback */
+#define RESOLVE_OFFSET 1
+
+/* reverse resolving options */
+enum {
+  NO_RESOLVE,
+  ALWAYS_RESOLVE = RESOLVE_OFFSET,
+  DEFAULT_RESOLVE,
+  NEVER_RESOLVE
+};
+
+
+/* define this > 0 to be able to use the comfortable callback */
+#define PROTPORT_OFFSET 1
+
+/* scanning mode (which ports/protocols) options */
+enum {
+  NO_PROTPORT,
+  DEFAULT_PROTPORT = PROTPORT_OFFSET,
+  ALL_PROTPORT,
+  FAST_PROTPORT,
+  GIVEN_PROTPORT
+};
+
+
+/* define this > 0 to be able to use the comfortable callback */
+#define VERBOSE_OFFSET 1
+
+/* verbosity options */
+enum {
+  NO_VERBOSE,
+  QUIET_VERBOSE = VERBOSE_OFFSET,
+  V1_VERBOSE,
+  V2_VERBOSE,
+  D1_VERBOSE,
+  D2_VERBOSE
+};
+
+
+/* define this > 0 to be able to use the comfortable callback */
+#define OUTPUT_OFFSET 1
+
+/* output format options */
+enum {
+  NO_OUTPUT,
+  NORMAL_OUTPUT = OUTPUT_OFFSET,
+  GREP_OUTPUT,
+  XML_OUTPUT,
+  ALL_OUTPUT,
+  SKIDS_OUTPUT
+};
+
+
+struct NmapFEoptions {
+  GtkWidget *scanButton;
+  GtkWidget *output;
+  GtkWidget *targetHost;
+  GtkWidget *commandEntry;
+  gboolean appendLog;
+  guint viewValue;
+  guint uid;
+  /* scan types */
+  GtkWidget *scanType;
+  guint scanValue;
+  GtkWidget *scanRelayLabel;
+  GtkWidget *scanRelay;
+  /* Port/Protocol options */
+  GtkWidget *protportFrame;
+  GtkWidget *protportLabel;
+  GtkWidget *protportRange;
+  GtkWidget *protportType;
+  guint protportValue;
+  /* optional scan extensions */
+  GtkWidget *RPCInfo;
+  GtkWidget *IdentdInfo;
+  GtkWidget *OSInfo;
+  /* ping types */
+  GtkWidget *dontPing;
+  GtkWidget *icmpechoPing;
+  GtkWidget *icmptimePing;
+  GtkWidget *icmpmaskPing;
+  GtkWidget *tcpPing;
+  GtkWidget *tcpPingLabel;
+  GtkWidget *tcpPingPorts;
+  GtkWidget *synPing;
+  GtkWidget *synPingLabel;
+  GtkWidget *synPingPorts;
+  GtkWidget *udpPing;
+  GtkWidget *udpPingLabel;
+  GtkWidget *udpPingPorts;
+  /* timing_options */
+  GtkWidget *throttleType;
+  guint throttleValue;
+  GtkWidget *startRtt;
+  GtkWidget *startRttTime;
+  GtkWidget *minRtt;
+  GtkWidget *minRttTime;
+  GtkWidget *maxRtt;
+  GtkWidget *maxRttTime;
+  GtkWidget *hostTimeout;
+  GtkWidget *hostTimeoutTime;
+  GtkWidget *scanDelay;
+  GtkWidget *scanDelayTime;
+  GtkWidget *ipv4Ttl;
+  GtkWidget *ipv4TtlValue;
+  GtkWidget *minPar;
+  GtkWidget *minParSocks;
+  GtkWidget *maxPar;
+  GtkWidget *maxParSocks;
+  /* file options */
+  GtkWidget *useInputFile;
+  GtkWidget *inputFilename;
+  GtkWidget *inputBrowse;
+  GtkWidget *useOutputFile;
+  GtkWidget *outputFilename;
+  GtkWidget *outputBrowse;
+  GtkWidget *outputFormatLabel;
+  GtkWidget *outputFormatType;
+  GtkWidget *outputAppend;
+  guint outputFormatValue;
+  /* DNS options */
+  GtkWidget *resolveType;
+  guint resolveValue;
+  /* verbosity options */
+  GtkWidget *verboseType;
+  guint verboseValue;
+  /* source options */
+  GtkWidget *useSourceDevice;
+  GtkWidget *SourceDevice;
+  GtkWidget *useSourcePort;
+  GtkWidget *SourcePort;
+  GtkWidget *useSourceIP;
+  GtkWidget *SourceIP;
+  GtkWidget *useDecoy;
+  GtkWidget *Decoy;
+  /* misc. options */
+  GtkWidget *useFragments;
+  GtkWidget *useIPv6;
+  GtkWidget *useOrderedPorts;
+};
 
 GtkWidget* create_main_win (void);
-GtkWidget* create_about_window (void);
-GtkWidget* create_fileselection1 (void);
-GtkWidget* create_help_window (void);
+GtkWidget* create_aboutDialog(void);
+GtkWidget* create_fileSelection(const char *title, char *filename, void (*action)(), GtkEntry *entry);
+GtkWidget* create_helpDialog(void);
 GtkWidget* create_machine_parse_selection (void);
 
 #endif /* NMAP_H */

@@ -25,8 +25,17 @@ o Classification system described above is now used to print out a
 o Nmap will now sometimes guess in the "no exact matches" case, even
   if you don't use the secret --osscan_guess or -fuzzy options.
 
+o Applied another huge NmapFE patch from Peter Marschall
+  (peter(a)adpm.de).  This revamps the interface to use a tabbed
+  format that allows for many more Nmap options to be used.  It also
+  cleans up some crufty parts of the code.  Let me and Peter know what
+  you think (and if you encounter any problems).
+
 o Windows and Amiga ports now use packet receive times from libpcap.
   Let me know if you get any "time computation problem" errors.
+
+o Updated version of the Russian man page translation from Alex Volkov
+  (alex(a)cherepovets-city.ru).
 
 Nmap 3.28
 

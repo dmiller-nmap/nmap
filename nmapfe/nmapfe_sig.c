@@ -94,15 +94,13 @@
 #include "nmapfe.h"
 #include "nmapfe_sig.h"
 
-/*This is for our timeout function. */
-guint32 time_out = 125; /* 1/8 a second */
-gint tag; /*tag for the gdk* funcs */
-gpointer *data;
-int save_open;
-extern struct MyWidgets *MW;
-extern int our_uid;
-extern int view_type;
-int machine_yn = 0;
+#ifndef BUFSIZ
+#define BUFSIZ  8192
+#endif
+
+
+extern struct NmapFEoptions opt;
+
 /* Variables for piping */
 /* FIXME: All this should be redone in a much more elegant manner <sigh> */
 int nmap_pid = 0;
@@ -110,24 +108,14 @@ int nmap_pid = 0;
 HANDLE NmapHandle;
 #endif
 int pid;
-int pid2;
 #ifdef WIN32
 HANDLE pipes[2]; /* 0 == read; 1 == write */
 #else
 int pipes[2] = {-1,-1};
 #endif
-int count = 0;
-char buf[9024] = "hello";
-char buf2[9024] = "hello";
 int verb = 0;
-int append = 0;
-int rpc_var = 0;
-int ping_h = 0;
-int which_scan = 1;
 extern char **environ;
-#ifndef BUFSIZ
-#define BUFSIZ  8192
-#endif
+
 
 
 int main (int argc, char *argv[])
@@ -137,32 +125,27 @@ GtkWidget *main_win;
   gtk_set_locale();
   gtk_init(&argc, &argv);
 
-  MW = (struct MyWidgets *) calloc(1, sizeof(struct MyWidgets));
-
 #ifndef WIN32
   signal(SIGPIPE, SIG_IGN);
-  our_uid = getuid();
+  opt.uid = getuid();
 #else
-  our_uid = 0; /* With Windows (in general), ever user is a Super User! */
+  opt.uid = 0; /* With Windows (in general), every user is a Super User! */
 #endif
 
   main_win = create_main_win();
   gtk_widget_show(main_win);
 
-  gtk_text_insert(GTK_TEXT(MW->output), NULL, NULL, NULL,
-		  ((our_uid == 0)
+  gtk_text_insert(GTK_TEXT(opt.output), NULL, NULL, NULL,
+		  (opt.uid == 0)
 		   ? "You are root - All options granted."
-		   : "You are *NOT* root - Some options aren't available."),
-		  -1);
-
-  which_scan = (our_uid == 0) ? 2 : 1;
+		   : "You are *NOT* root - Some options aren't available.", -1);
 
   gtk_main();
   return 0;
 }
 
 
-void on_exit_me_clicked(GtkButton *button, gpointer user_data)
+void exitNmapFE_cb(GtkButton *button, void *ignored)
 {
   /* First we want to kill the Nmap process that is running */
   stop_scan();
@@ -170,160 +153,115 @@ void on_exit_me_clicked(GtkButton *button, gpointer user_data)
 }
 
 
-void on_start_scan_clicked(GtkButton *button, GtkWidget *entry)
+void scanButton_toggled_cb(GtkButton *button, void *ignored)
 {
-  func_start_scan();
-}
+  if(GTK_TOGGLE_BUTTON(button)->active) {
+  char *command = build_command();
 
-void on_Close_activate(GtkMenuItem *menuitem, gpointer user_data)
-{
-  gtk_main_quit();
-}
-
-void on_Start_Scan_activate(GtkMenuItem *menuitem, gpointer user_data)
-{
-  gtk_main_quit();
-}
-
-void on_about_ok_clicked(GtkButton *button, GtkWidget *about)
-{
-  gtk_widget_hide(about);
-}
-
-void on_Save_Log_activate(GtkMenuItem *menuitem, gpointer user_data)
-{
-GtkWidget *save_file = create_fileselection1();
-
-  gtk_widget_show(save_file);
-  save_open = 0;
-}
-
-
-void on_Open_Log_activate(GtkMenuItem *menuitem, gpointer user_data)
-{
-GtkWidget *open_file = create_fileselection1();
-
-  gtk_widget_show(open_file);
-  save_open = 1;
-}
-
-
-void on_Help_Main_activate(GtkMenuItem *menuitem, gpointer user_data)
-{
-}
-
-void on_View_Main_activate(GtkMenuItem *menuitem, gpointer user_data)
-{
-}
-
-void on_Help_activate(GtkMenuItem *menuitem, GtkWidget *help)
-{
-GtkWidget *help_win = create_help_window();
-
-  gtk_widget_show(help_win);
-}
-
-
-void on_Get_Nmap_Version_activate(GtkMenuItem *menuitem, gpointer user_data)
-{
-  execute("nmap -V");
-}
-
-
-void on_About_activate(GtkMenuItem *menuitem, GtkWidget *about)
-{
-GtkWidget *about_win = create_about_window();
-
-  gtk_widget_show(about_win);
-}
-
-void on_ok_button1_clicked(GtkButton *button, GtkWidget *window)
-{
-char *filename = gtk_file_selection_get_filename(GTK_FILE_SELECTION (window));
-
-  if(save_open == 0) {
-  char *text_contents = gtk_editable_get_chars(GTK_EDITABLE(MW->output), 0, -1);
-  FILE *file;
-
-    if((file = fopen(filename, "w"))) {
-      fputs(text_contents, file);
-      fclose(file);
-    }
-
-    free(text_contents);
-  } else {
-  FILE *file;
-     
-    if(!append)
-      kill_output(NULL);
-	
-    gtk_text_freeze(GTK_TEXT(MW->output));
-    if((file = fopen(filename, "r"))) {
-    char buf[BUFSIZ+1];
-
-      while(fgets(buf, BUFSIZ, file) != NULL) {
-	print_line(GTK_TEXT(MW->output), buf);
-      }
-      fclose(file);
-    }
-    gtk_text_thaw(GTK_TEXT(MW->output));
-  }
-  gtk_widget_hide(window);
-}
-
-
-void on_cancel_button1_clicked(GtkButton *button, GtkWidget *window)
-{
-  gtk_widget_hide(window);
-}
-
-void func_start_scan()
-{
-char *command;
-
-  /*  fprintf(stderr, "start_scan called\n"); */
-  if(GTK_TOGGLE_BUTTON(MW->start_scan)->active) {
-    command = build_command(NULL);
-	
-    /*printf("%s\n", command);*/
-    if(!(append))
+    if(!(opt.appendLog))
       kill_output(NULL);
 
     nmap_pid = execute(command);
-  } else {
-    stop_scan();
+}
+  else {
+    if (stop_scan()) {
+    static char string[256];
+
+      strcpy(string, "CANCELLED!\n\n");
+      print_line(GTK_TEXT(opt.output), string);
+}
+}
+}
+
+
+void saveLog(char *filename)
+{
+  if (filename && *filename) {
+  FILE *file;
+
+    if ((file = fopen(filename, "w"))) {
+    char *text = gtk_editable_get_chars(GTK_EDITABLE(opt.output), 0, -1);
+
+      fputs(text, file);
+      fclose(file);
+
+      free(text);
+}
+}
+}
+
+
+void openLog(char *filename)
+{
+  if (filename && *filename) {
+  FILE *file;
+     
+    if (!opt.appendLog)
+      kill_output(NULL);
+	
+    if((file = fopen(filename, "r"))) {
+    char buf[BUFSIZ+1];
+
+      gtk_text_freeze(GTK_TEXT(opt.output));
+
+      while(fgets(buf, BUFSIZ, file) != NULL)
+        print_line(GTK_TEXT(opt.output), buf);
+
+      gtk_text_thaw(GTK_TEXT(opt.output));
+
+      fclose(file);
+    }
   }
 }
 
+
+void okButton_clicked_cb(GtkWidget *window, GtkButton *button)
+{
+char *selected = gtk_file_selection_get_filename(GTK_FILE_SELECTION(window));
+void (*action)() = gtk_object_get_data(GTK_OBJECT(window), "NmapFE_action");
+GtkEntry *entry = gtk_object_get_data(GTK_OBJECT(window), "NmapFE_entry");
+char *filename = gtk_object_get_data(GTK_OBJECT(window), "NmapFE_filename");
+
+  if (filename && selected) {
+    strncpy(filename, selected, FILENAME_MAX);
+    filename[FILENAME_MAX-1] = '\0';
+    if (action)
+      (*action)(filename);
+    if (entry)
+      gtk_entry_set_text(GTK_ENTRY(entry), filename);
+  }
+}
+
+
 void kill_output()
 {
-guint length = gtk_text_get_length(GTK_TEXT(MW->output));
-
-  gtk_text_backward_delete (GTK_TEXT(MW->output), length);
+  gtk_text_backward_delete(GTK_TEXT(opt.output),
+                           gtk_text_get_length(GTK_TEXT(opt.output)));
 }
+
 
 /* The idea of execute() is to create an Nmap process running in the background with its stdout
     connected to a pipe we can poll many times per second to collect any new output.  Admittedly 
 	there are much more elegant ways to do this, but this is how it works now.  The functions
 	return the process ID of nmap.  This process is
 	different enough between windows & UNIX that I have two functions for doing it: */
-int execute_unix(char *command);
-int execute_win(char *command);
+static int execute_unix(char *command);
+static int execute_win(char *command);
+
 int execute(char *command)
 {
-int pid;
-
 #ifdef WIN32
-  pid = execute_win(command);
+int pid = execute_win(command);
 #else
-  pid = execute_unix(command);
+int pid = execute_unix(command);
 #endif /* WIN32 */
 
-  /* Add a timer for calling our read function to poll for new data */
-  tag = gtk_timeout_add(time_out, read_data, data);
+/* timer for calling our read function to poll for new data 8 times per second */
+ gtk_timeout_add(125, read_data, NULL);
 
   return(pid);
 }
+
 
 int execute_unix(char *command)
 {
@@ -368,6 +306,7 @@ int execute_unix(char *command)
 
 #endif
 }
+
 
 /* Parts cribbed from _Win32 System Programming Second Edition_ pp 304 */
 int execute_win(char *command)
@@ -416,273 +355,561 @@ STARTUPINFO Nmap_Start;
 
 char *build_command()
 {
-int size;
+int size = 2560; /* this should be long enough ;-) */
 static char *command = NULL;
 static int command_size = 0;
 
   /* Find how much to malloc() */
-  size = strlen(gtk_entry_get_text(GTK_ENTRY(MW->range_text))) +
-    strlen(gtk_entry_get_text(GTK_ENTRY(MW->decoy_text))) +
-    strlen(gtk_entry_get_text(GTK_ENTRY(MW->input_text))) +
-    strlen(gtk_entry_get_text(GTK_ENTRY(MW->device_text)))+
-    strlen(gtk_entry_get_text(GTK_ENTRY(MW->bounce_text)))+
-    strlen(gtk_entry_get_text(GTK_ENTRY(MW->host_text))) +
-    60;
+  // size = strlen(gtk_entry_get_text(GTK_ENTRY(opt.range_text))) +
+  //   strlen(gtk_entry_get_text(GTK_ENTRY(opt.Decoy))) +
+  //   strlen(gtk_entry_get_text(GTK_ENTRY(opt.inputFilename))) +
+  //   strlen(gtk_entry_get_text(GTK_ENTRY(opt.SourceDevice)))+
+  //   strlen(gtk_entry_get_text(GTK_ENTRY(opt.scanRelay)))+
+  //   strlen(gtk_entry_get_text(GTK_ENTRY(opt.targetHost))) +
+  //   2560;
   /* We get 60 from the chars required for each option */
 
   if (size > command_size)
     command = realloc(command, size);
 
   strcpy(command, "nmap ");
-  /* Uhm... yeah.. Spit out which scan to perform based
-    on the which_scan variable */
  
-  if (GTK_TOGGLE_BUTTON(MW->connect_scan)->active) {
-    strncat(command, "-sT ", 4);
-  } else if (GTK_TOGGLE_BUTTON(MW->ping_scan)->active) {
-    strncat(command, "-sP ", 4);
-  } else if (GTK_TOGGLE_BUTTON(MW->list_scan)->active) {
-    strncat(command, "-sL ", 4);
-  } else if (GTK_TOGGLE_BUTTON(MW->udp_scan)->active) {
-    strncat(command, "-sU ", 4);
-  } else if (GTK_TOGGLE_BUTTON(MW->fin_scan)->active) {
-    strncat(command, "-sF ", 4);
-  } else if (GTK_TOGGLE_BUTTON(MW->null_scan)->active) {
-    strncat(command, "-sN ", 4);
-  } else if (GTK_TOGGLE_BUTTON(MW->xmas_scan)->active) {
-    strncat(command, "-sX ", 4);
-  } else if (GTK_TOGGLE_BUTTON(MW->ack_scan)->active) {
-    strncat(command, "-sA ", 4);
-  } else if (GTK_TOGGLE_BUTTON(MW->win_scan)->active) {
-    strncat(command, "-sW ", 4);
-  } else if (GTK_TOGGLE_BUTTON(MW->prot_scan)->active) {
-    strncat(command, "-sO ", 4);
-  } else if (GTK_TOGGLE_BUTTON(MW->syn_scan)->active) {
-    strncat(command, "-sS ", 4);
+  /* select the scan type */
+  if (opt.scanValue == CONNECT_SCAN) {
+    strcat(command, "-sT ");
+  } else if (opt.scanValue == PING_SCAN) {
+    strcat(command, "-sP ");
+  } else if (opt.scanValue == LIST_SCAN) {
+    strcat(command, "-sL ");
+  } else if (opt.scanValue == UDP_SCAN) {
+    strcat(command, "-sU ");
+  } else if (opt.scanValue == FIN_SCAN) {
+    strcat(command, "-sF ");
+  } else if (opt.scanValue == NULL_SCAN) {
+    strcat(command, "-sN ");
+  } else if (opt.scanValue == XMAS_SCAN) {
+    strcat(command, "-sX ");
+  } else if (opt.scanValue == ACK_SCAN) {
+    strcat(command, "-sA ");
+  } else if (opt.scanValue == WIN_SCAN) {
+    strcat(command, "-sW ");
+  } else if (opt.scanValue == MAIMON_SCAN) {
+    strcat(command, "-sM ");
+  } else if (opt.scanValue == PROT_SCAN) {
+    strcat(command, "-sO ");
+  } else if (opt.scanValue == SYN_SCAN) {
+    strcat(command, "-sS ");
+  } else if ((opt.scanValue == BOUNCE_SCAN) || (opt.scanValue == IDLE_SCAN)) {
+  char *val = gtk_entry_get_text(GTK_ENTRY(opt.scanRelay));
+
+    if (val) {   
+      strcat(command, (opt.scanValue == IDLE_SCAN) ? "-sI " : "-b ");
+      strcat(command, (*val) ? val : "127.0.0.1");
+      strcat(command, " ");
+    }
   }
  
-  if (rpc_var)
-    strncat(command, " -sR ", 5);
+  if (GTK_WIDGET_SENSITIVE(opt.RPCInfo) &&
+      GTK_TOGGLE_BUTTON(opt.RPCInfo)->active)
+    strcat(command, "-sR ");
    
-  if (GTK_TOGGLE_BUTTON(MW->fast_check)->active)
-    strncat(command, " -F ", 4);
- 
-  if (GTK_TOGGLE_BUTTON(MW->range_check)->active) {
-  char *val = gtk_entry_get_text(GTK_ENTRY(MW->range_text));
+  if (GTK_WIDGET_SENSITIVE(opt.IdentdInfo) &&
+      GTK_TOGGLE_BUTTON(opt.IdentdInfo)->active)
+    strcat(command, "-I ");
+
+  if (GTK_WIDGET_SENSITIVE(opt.OSInfo) &&
+      GTK_TOGGLE_BUTTON(opt.OSInfo)->active)
+    strcat(command, "-O ");
+
+  if (GTK_WIDGET_SENSITIVE(opt.protportType)) {
+    if (opt.protportValue == FAST_PROTPORT)
+      strcat(command, "-F ");
+    else if (opt.protportValue == ALL_PROTPORT)
+      strcat(command, "-p- ");
+    else if (opt.protportValue == GIVEN_PROTPORT) {
+    char *val = gtk_entry_get_text(GTK_ENTRY(opt.protportRange));
 
     if (val && *val) {   
-      strncat(command, " -p ", 4);
+        strcat(command, "-p ");
       strcat(command, val);
-      strncat(command, " ", 1);
+        strcat(command, " ");
+      }
     }
   }
 
-  if(machine_yn) {
-  char *val = MW->machine_file;
+  if (GTK_TOGGLE_BUTTON(opt.dontPing)->active)
+    strcat(command, "-P0 ");
+  else {
+    if (GTK_WIDGET_SENSITIVE(opt.icmpechoPing) && 
+        GTK_TOGGLE_BUTTON(opt.icmpechoPing)->active)
+      strcat(command, "-PI ");
+    if (GTK_WIDGET_SENSITIVE(opt.icmptimePing) &&
+        GTK_TOGGLE_BUTTON(opt.icmptimePing)->active)
+      strcat(command, "-PP ");
+    if (GTK_WIDGET_SENSITIVE(opt.icmpmaskPing) &&
+        GTK_TOGGLE_BUTTON(opt.icmpmaskPing)->active)
+      strcat(command, "-PM ");
+    if (GTK_WIDGET_SENSITIVE(opt.tcpPing) &&
+        GTK_TOGGLE_BUTTON(opt.tcpPing)->active) {
+    char *val = gtk_entry_get_text(GTK_ENTRY(opt.tcpPingPorts));
 
-    strncat(command, " -m ", 4);
+      strcat(command, "-PT");
+      if (val && *val)
     strcat(command, val);
-    strncat(command, " ", 1);
+      strcat(command, " ");
   }
+    if (GTK_WIDGET_SENSITIVE(opt.synPing) &&
+        GTK_TOGGLE_BUTTON(opt.synPing)->active) {
+    char *val = gtk_entry_get_text(GTK_ENTRY(opt.synPingPorts));
 
-  if (GTK_TOGGLE_BUTTON(MW->bounce_scan)->active) {
-  char *val = gtk_entry_get_text(GTK_ENTRY(MW->bounce_text));
-
-    if (val && *val) {   
-      strncat(command, " -b ", 4);
-      strcat(command, val);
-      strncat(command, " ", 1);
+      strcat(command, "-PS");
+      if (val && *val)
+        strcat(command, val);
+      strcat(command, " ");
     }
-  }
+    if (GTK_WIDGET_SENSITIVE(opt.udpPing) &&
+        GTK_TOGGLE_BUTTON(opt.udpPing)->active) {
+    char *val = gtk_entry_get_text(GTK_ENTRY(opt.udpPingPorts));
 
-  if (GTK_TOGGLE_BUTTON(MW->ping_check)->active)
-    strncat(command, "-P0 ", 4);
-
-  if (GTK_TOGGLE_BUTTON(MW->icmpecho_ping)->active)
-    strncat(command, "-PI ", 4);
-
-  if (GTK_TOGGLE_BUTTON(MW->icmptime_ping)->active)
-    strncat(command, "-PP ", 4);
-
-  if (GTK_TOGGLE_BUTTON(MW->icmpmask_ping)->active)
-    strncat(command, "-PM ", 4);
-
-  if (GTK_TOGGLE_BUTTON(MW->tcp_ping)->active) {
-  char *val = gtk_entry_get_text(GTK_ENTRY(MW->tcp_pingports));
-
-    strncat(command, "-PT ", 4);
-    if (val && *val) {   
+      strcat(command, "-PU");
+      if (val && *val)   
       strcat(command, val);
-      strncat(command, " ", 1);
-    }
-  }
-
-  if (GTK_TOGGLE_BUTTON(MW->syn_ping)->active) {
-  char *val = gtk_entry_get_text(GTK_ENTRY(MW->syn_pingports));
-
-    strncat(command, "-PS ", 4);
-    if (val && *val) {   
-      strcat(command, val);
-      strncat(command, " ", 1);
-    }
-  }
-
-  if (GTK_TOGGLE_BUTTON(MW->udp_ping)->active) {
-  char *val = gtk_entry_get_text(GTK_ENTRY(MW->udp_pingports));
-
-    strncat(command, "-PU ", 4);
-    if (val && *val) {   
-      strcat(command, val);
-      strncat(command, " ", 1);
+      strcat(command, " ");
     }
   }
 
 
-  if (GTK_TOGGLE_BUTTON(MW->fingerprinting_check)->active)
-    strncat(command, "-O ", 4);
+  if ((opt.throttleValue != NO_THROTTLE) && (opt.throttleValue != NORMAL_THROTTLE))
+    sprintf(command+strlen(command), "-T%u ", opt.throttleValue-THROTTLE_OFFSET);
 
-  if (GTK_TOGGLE_BUTTON(MW->fragment_check)->active)
-    strncat(command, "-f ", 3);
+  if (GTK_TOGGLE_BUTTON(opt.startRtt)->active) {
+  int val = gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(opt.startRttTime));
 
-  if (GTK_TOGGLE_BUTTON(MW->identd_check)->active)
-    strncat(command, "-I ", 3);
+    sprintf(command+strlen(command), "--initial_rtt_timeout %d ", val);
+  }
 
-  if (GTK_TOGGLE_BUTTON(MW->resolveall_check)->active)
-    strncat(command, "-R ", 3);
+  if (GTK_TOGGLE_BUTTON(opt.minRtt)->active) {
+  int val = gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(opt.minRttTime));
 
-  if (GTK_TOGGLE_BUTTON(MW->resolve_check)->active)
-    strncat(command, "-n ", 3);		
+    sprintf(command+strlen(command), "--min_rtt_timeout %d ", val);
+    }
 
-  if (GTK_TOGGLE_BUTTON(MW->decoy_check)->active) {
-  char *val = gtk_entry_get_text(GTK_ENTRY(MW->decoy_text));
+  if (GTK_TOGGLE_BUTTON(opt.maxRtt)->active) {
+  int val = gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(opt.maxRttTime));
+
+    sprintf(command+strlen(command), "--max_rtt_timeout %d ", val);
+  }
+
+  if (GTK_TOGGLE_BUTTON(opt.hostTimeout)->active) {
+  int val = gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(opt.hostTimeoutTime));
+
+    sprintf(command+strlen(command), "--host_timeout %d ", val);
+    }
+
+  if (GTK_TOGGLE_BUTTON(opt.scanDelay)->active) {
+  int val = gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(opt.scanDelayTime));
+
+    sprintf(command+strlen(command), "--scan_delay %d ", val);
+  }
+
+  if (GTK_TOGGLE_BUTTON(opt.ipv4Ttl)->active) {
+  int val = gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(opt.ipv4TtlValue));
+
+    sprintf(command+strlen(command), "--ttl %d ", val);
+  }
+
+  if (GTK_TOGGLE_BUTTON(opt.minPar)->active) {
+  int val = gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(opt.minParSocks));
+
+    sprintf(command+strlen(command), "--min_parallelism %d ", val);
+    }
+
+  if (GTK_TOGGLE_BUTTON(opt.maxPar)->active) {
+  int val = gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(opt.maxParSocks));
+
+    sprintf(command+strlen(command), "-M %d ", val);
+  }
+
+
+  if (opt.resolveValue == ALWAYS_RESOLVE)
+    strcat(command, "-R ");		
+  else if (opt.resolveValue == NEVER_RESOLVE)
+    strcat(command, "-n ");		
+
+  if (GTK_WIDGET_SENSITIVE(opt.useDecoy) &&
+      GTK_TOGGLE_BUTTON(opt.useDecoy)->active) {
+  char *val = gtk_entry_get_text(GTK_ENTRY(opt.Decoy));
 
     if (val && *val) {   
-      strncat(command, "-D", 2);
+      strcat(command, "-D ");
       strcat(command, val);
-      strncat(command, " ", 1);
+      strcat(command, " ");
     }
   }
 
-  if (GTK_TOGGLE_BUTTON(MW->input_check)->active) {
-  char *val = gtk_entry_get_text(GTK_ENTRY(MW->input_text));
+  if (GTK_WIDGET_SENSITIVE(opt.useSourceDevice) &&
+      GTK_TOGGLE_BUTTON(opt.useSourceDevice)->active) {
+  char *val = gtk_entry_get_text(GTK_ENTRY(opt.SourceDevice));
 
     if (val && *val) {   
-      strncat(command, "-i ", 3);
+      strcat(command, "-e ");
       strcat(command, val);
-      strncat(command, " ", 1);
+      strcat(command, " ");
     }
   }
 
-  if (GTK_TOGGLE_BUTTON(MW->device_check)->active) {
-  char *val = gtk_entry_get_text(GTK_ENTRY(MW->device_text));
+  if (GTK_WIDGET_SENSITIVE(opt.useSourceIP) &&
+      GTK_TOGGLE_BUTTON(opt.useSourceIP)->active) {
+  char *val = gtk_entry_get_text(GTK_ENTRY(opt.SourceIP));
 
     if (val && *val) {   
-      strncat(command, "-e ", 3);
+      strcat(command, "-S ");
       strcat(command, val);
-      strncat(command, " ", 1);
+      strcat(command, " ");
+    }
+  }
+
+  if (GTK_WIDGET_SENSITIVE(opt.useSourcePort) &&
+      GTK_TOGGLE_BUTTON(opt.useSourcePort)->active) {
+  char *val = gtk_entry_get_text(GTK_ENTRY(opt.SourcePort));
+
+    if (val && *val) {   
+      strcat(command, "-g ");
+      strcat(command, val);
+      strcat(command, " ");
+    }
+  }
+
+  if (GTK_WIDGET_SENSITIVE(opt.useFragments) &&
+      GTK_TOGGLE_BUTTON(opt.useFragments)->active)
+    strcat(command, "-f ");
+
+  if (GTK_WIDGET_SENSITIVE(opt.useIPv6) &&
+      GTK_TOGGLE_BUTTON(opt.useIPv6)->active)
+    strcat(command, "-6 ");
+
+  if (GTK_WIDGET_SENSITIVE(opt.useOrderedPorts) &&
+      GTK_TOGGLE_BUTTON(opt.useOrderedPorts)->active)
+    strcat(command, "-r ");
+
+  if (GTK_WIDGET_SENSITIVE(opt.useInputFile) &&
+      GTK_TOGGLE_BUTTON(opt.useInputFile)->active) {
+  char *val = gtk_entry_get_text(GTK_ENTRY(opt.inputFilename));
+
+    if (val && *val) {   
+      strcat(command, "-iL ");
+      strcat(command, val);
+      strcat(command, " ");
+    }
+  }
+
+  if (GTK_WIDGET_SENSITIVE(opt.useOutputFile) &&
+      GTK_TOGGLE_BUTTON(opt.useOutputFile)->active) {
+  char *val = gtk_entry_get_text(GTK_ENTRY(opt.outputFilename));
+
+    if (val && *val) {   
+      if (opt.outputFormatValue == NORMAL_OUTPUT)
+        strcat(command, "-oN ");
+      else if (opt.outputFormatValue == GREP_OUTPUT)
+        strcat(command, "-oG ");
+      else if (opt.outputFormatValue == XML_OUTPUT)
+        strcat(command, "-oX ");
+      else if (opt.outputFormatValue == ALL_OUTPUT)
+        strcat(command, "-oA ");
+      else if (opt.outputFormatValue == SKIDS_OUTPUT)
+        strcat(command, "-oS ");
+      strcat(command, val);
+      strcat(command, " ");
+
+      if (GTK_TOGGLE_BUTTON(opt.outputAppend)->active)
+        strcat(command, "--append_output ");
     }
   }
  
-  if (verb)
+  if (opt.verboseValue == V1_VERBOSE)
     strcat(command, "-v ");
+  else if (opt.verboseValue == V2_VERBOSE)
+    strcat(command, "-vv ");
+  else if (opt.verboseValue == D1_VERBOSE)
+    strcat(command, "-d ");
+  else if (opt.verboseValue == D2_VERBOSE)
+    strcat(command, "-d2 ");
 
-  strcat(command, gtk_entry_get_text(GTK_ENTRY(MW->host_text)));
+  strcat(command, gtk_entry_get_text(GTK_ENTRY(opt.targetHost)));
 
   return(command);
 }
 
 void display_nmap_command()
 {
-char buf[80];
-char *p;
+char *command = build_command();
 
-  /* Need to use the snprintf which comes with nmap ... */
-  strcpy(buf, "Output from: ");
-  p = build_command();
-  if (strlen(p) < (sizeof(buf) - strlen(buf) - 2))
-    strcat(buf, p);
-  else {
-    strcpy(buf, "Output from Nmap");
+  gtk_entry_set_text(GTK_ENTRY(opt.commandEntry), command);
+}
+
+
+void display_nmap_command_cb(GtkWidget *target_option, void *ignored)
+{
+  display_nmap_command();
+}
+
+
+void browseButton_pressed_cb(GtkWidget *widget, GtkWidget *text)
+{
+static char filename[FILENAME_MAX+1] = "";
+char *name = gtk_entry_get_text(GTK_ENTRY(text));
+
+  if (name && *name) {
+    strncpy(filename, name, FILENAME_MAX);
+    filename[FILENAME_MAX] = '\0';
   }
 
-  gtk_label_set( GTK_LABEL(MW->output_label), buf);
+  gtk_widget_show(create_fileSelection("Select File", filename, NULL, GTK_ENTRY(text)));
 }
 
-void entry_toggle_checkbox (GtkWidget *entry, GtkWidget *checkbox)
+
+void mainMenu_fcb(int *variable, guint action, GtkWidget *w)
 {
-  char *txt = gtk_entry_get_text(GTK_ENTRY(entry));
-  if (!txt || !*txt)
-    return;
-  gtk_toggle_button_set_state (GTK_TOGGLE_BUTTON (checkbox), TRUE);
-  display_nmap_command();
+static char filename[FILENAME_MAX+1] = "";
+
+  switch (action) {
+    case FILEOPEN_MENU:
+      gtk_widget_show(create_fileSelection("Open Log", filename, openLog, NULL));
+      break;
+    case FILESAVE_MENU:
+      gtk_widget_show(create_fileSelection("Save Log", filename, saveLog, NULL));
+      break;
+    case FILEQUIT_MENU:
+      stop_scan();
+      gtk_main_quit();
+      break;
+    case VIEWMONO_MENU:
+      opt.viewValue = 0;
+      break;
+    case VIEWCOLOR_MENU:
+      opt.viewValue = 1;
+      break;
+    case VIEWAPPEND_MENU:
+      opt.appendLog = (GTK_CHECK_MENU_ITEM(w)->active) ? TRUE : FALSE;
+      break;
+    case HELPHELP_MENU:
+      gtk_widget_show(create_helpDialog());
+      break;
+    case HELPVERSION_MENU:
+      execute("nmap -V");
+      break;
+    case HELPABOUT_MENU:
+      gtk_widget_show(create_aboutDialog());
+      break;
+    default:
+      break;
+  }
 }
 
-void display_nmap_command_callback(GtkWidget *target_option, char *ignored)
-{
-  display_nmap_command();
-  return;
-}
 
-
-void validate_option_change(GtkWidget *target_option, char *ignored)
+void scanType_changed_fcb(int *variable, guint action, GtkWidget *w)
 {	
-  if (GTK_TOGGLE_BUTTON(target_option)->active) {
-    if (target_option == MW->connect_scan) {
-      gtk_entry_set_text( GTK_ENTRY(MW->decoy_text), "");
-      gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(MW->decoy_check), FALSE);
-      gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(MW->fragment_check), FALSE);
-      gtk_entry_set_text( GTK_ENTRY(MW->device_text), "");
-      gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(MW->device_check), FALSE);
-    } else if (target_option == MW->syn_scan || target_option == MW->fin_scan) {
-      gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(MW->identd_check), FALSE);
-    } else if (target_option == MW->udp_scan) {
-      gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(MW->identd_check), FALSE);
-      gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(MW->fragment_check), FALSE);
-    } else if (target_option == MW->bounce_scan) {
-      gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(MW->identd_check), FALSE);
-      gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(MW->fragment_check), FALSE);
-      gtk_entry_set_text( GTK_ENTRY(MW->device_text), "");
-      gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(MW->device_check), FALSE);
-      gtk_entry_set_text( GTK_ENTRY(MW->decoy_text), "");
-      gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(MW->decoy_check), FALSE);
-    } else if (target_option == MW->ping_scan) {
-      gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(MW->identd_check), FALSE);
-      gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(MW->fragment_check), FALSE);
-      gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(MW->fast_check), FALSE);
-      gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(MW->range_check), FALSE);
-      gtk_entry_set_text( GTK_ENTRY(MW->range_text), "");
-      gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(MW->fingerprinting_check), FALSE);
-    } else if (target_option == MW->fast_check) {
-      gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(MW->range_check), FALSE);
-      gtk_entry_set_text( GTK_ENTRY(MW->range_text), "");
-    } else if (target_option == MW->range_check) {
-      gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(MW->fast_check), FALSE);
-    } else if (target_option == MW->identd_check) {
-      gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(MW->connect_scan), TRUE);
-      validate_option_change(MW->connect_scan, NULL);
-    } else if (target_option == MW->decoy_check ||
-	       target_option == MW->device_check ||
-	       target_option == MW->fragment_check ) {
-      if (GTK_TOGGLE_BUTTON(MW->connect_scan)->active) {
-	gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(MW->syn_scan), TRUE);      
-	validate_option_change(MW->syn_scan, NULL); 
-      } else if (GTK_TOGGLE_BUTTON(MW->bounce_scan)->active) {
-	gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(MW->syn_scan), TRUE);
-	gtk_entry_set_text( GTK_ENTRY(MW->bounce_text), "");
-	validate_option_change(MW->syn_scan, NULL);
-      } 
-    } else if (target_option == MW->input_check) {
-      gtk_entry_set_text( GTK_ENTRY(MW->host_text), "");
+  if ((variable != NULL) && (w != NULL)) {
+    *variable = action;
+
+    if ((action == PING_SCAN) || (action == LIST_SCAN)) {
+      // gtk_widget_set_sensitive(GTK_WIDGET(opt.protportFrame), FALSE);
+      gtk_widget_set_sensitive(GTK_WIDGET(opt.protportType), FALSE);
+      gtk_widget_set_sensitive(GTK_WIDGET(opt.protportLabel), FALSE);
+      gtk_widget_set_sensitive(GTK_WIDGET(opt.protportRange), FALSE);
+      gtk_widget_set_sensitive(GTK_WIDGET(opt.OSInfo), FALSE);
+    } else {
+      // gtk_widget_set_sensitive(GTK_WIDGET(opt.protportFrame), TRUE);
+      gtk_widget_set_sensitive(GTK_WIDGET(opt.protportType), TRUE);
+      gtk_widget_set_sensitive(GTK_WIDGET(opt.protportLabel),
+                               (opt.protportValue == GIVEN_PROTPORT));
+      gtk_widget_set_sensitive(GTK_WIDGET(opt.protportRange),
+                               (opt.protportValue == GIVEN_PROTPORT));
+      gtk_widget_set_sensitive(GTK_WIDGET(opt.OSInfo), TRUE);
+    }
+
+    if ((action == PING_SCAN) || (action == LIST_SCAN) || (action == PROT_SCAN))
+      gtk_widget_set_sensitive(GTK_WIDGET(opt.RPCInfo), FALSE);
+    else
+      gtk_widget_set_sensitive(GTK_WIDGET(opt.RPCInfo), TRUE);
+
+    if ((action == CONNECT_SCAN) || (action == BOUNCE_SCAN)) {
+      gtk_widget_set_sensitive(GTK_WIDGET(opt.useDecoy), FALSE);
+      gtk_widget_set_sensitive(GTK_WIDGET(opt.Decoy), FALSE);
+    } else if (opt.uid == 0) {
+      gtk_widget_set_sensitive(GTK_WIDGET(opt.useDecoy), TRUE);
+      gtk_widget_set_sensitive(GTK_WIDGET(opt.Decoy), TRUE);
+    }
+    if (action != CONNECT_SCAN)
+      gtk_widget_set_sensitive(GTK_WIDGET(opt.IdentdInfo), FALSE);
+    else
+      gtk_widget_set_sensitive(GTK_WIDGET(opt.IdentdInfo), TRUE);
+
+    if ((action != ACK_SCAN) && (action != MAIMON_SCAN) && (action != FIN_SCAN) &&
+        (action != SYN_SCAN) && (action != NULL_SCAN) && (action != XMAS_SCAN) &&
+        (action != WIN_SCAN))
+      gtk_widget_set_sensitive(GTK_WIDGET(opt.useFragments), FALSE);
+    else if (opt.uid == 0)
+      gtk_widget_set_sensitive(GTK_WIDGET(opt.useFragments), TRUE);
+
+    if ((action == BOUNCE_SCAN) || (action == IDLE_SCAN)) {
+      gtk_label_set_text(GTK_LABEL(opt.scanRelayLabel), 
+                         (action == BOUNCE_SCAN) ? "Bounce Host:" : "Zombie Host:");
+      gtk_widget_set_sensitive(GTK_WIDGET(opt.scanRelayLabel), TRUE);
+      gtk_widget_set_sensitive(GTK_WIDGET(opt.scanRelay), TRUE);
+    } else {
+      gtk_widget_set_sensitive(GTK_WIDGET(opt.scanRelayLabel), FALSE);
+      gtk_label_set_text(GTK_LABEL(opt.scanRelayLabel), "Relay Host:");
+      gtk_widget_set_sensitive(GTK_WIDGET(opt.scanRelay), FALSE);
+    }
+
+    gtk_object_set(GTK_OBJECT(opt.protportFrame), "label",
+                   (action == PROT_SCAN) ? "Scanned Protocols" : "Scanned Ports", NULL);
+  }
+
+  display_nmap_command();
+}
+
+
+void pingButton_toggled_cb(GtkWidget *ping_button, void *ignored)
+{
+gboolean status = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ping_button));
+
+  if (ping_button == opt.dontPing) {
+  gboolean localstatus = (GTK_TOGGLE_BUTTON(opt.tcpPing)->active) && (!status);
+
+    gtk_widget_set_sensitive(GTK_WIDGET(opt.tcpPing), !status);
+    gtk_widget_set_sensitive(GTK_WIDGET(opt.tcpPingLabel), localstatus);
+    gtk_widget_set_sensitive(GTK_WIDGET(opt.tcpPingPorts), localstatus);
+    if (opt.uid == 0) {
+      gtk_widget_set_sensitive(GTK_WIDGET(opt.icmpechoPing), !status);
+      gtk_widget_set_sensitive(GTK_WIDGET(opt.icmpmaskPing), !status);
+      gtk_widget_set_sensitive(GTK_WIDGET(opt.icmptimePing), !status);
+
+      localstatus = (GTK_TOGGLE_BUTTON(opt.synPing)->active) && (!status);
+      gtk_widget_set_sensitive(GTK_WIDGET(opt.synPing), !status);
+      gtk_widget_set_sensitive(GTK_WIDGET(opt.synPingLabel), localstatus);
+      gtk_widget_set_sensitive(GTK_WIDGET(opt.synPingPorts), localstatus);
+
+      localstatus = (GTK_TOGGLE_BUTTON(opt.udpPing)->active) && (!status);
+      gtk_widget_set_sensitive(GTK_WIDGET(opt.udpPing), !status);
+      gtk_widget_set_sensitive(GTK_WIDGET(opt.udpPingLabel), localstatus);
+      gtk_widget_set_sensitive(GTK_WIDGET(opt.udpPingPorts), localstatus);
     }
   }
+  else if (ping_button == opt.tcpPing) {
+    gtk_widget_set_sensitive(GTK_WIDGET(opt.tcpPingLabel), status);
+    gtk_widget_set_sensitive(GTK_WIDGET(opt.tcpPingPorts), status);
+  }
+  else if ((ping_button == opt.synPing) && (opt.uid == 0)) {
+    gtk_widget_set_sensitive(GTK_WIDGET(opt.synPingLabel), status);
+    gtk_widget_set_sensitive(GTK_WIDGET(opt.synPingPorts), status);
+  }
+  else if ((ping_button == opt.udpPing) && (opt.uid == 0)) {
+    gtk_widget_set_sensitive(GTK_WIDGET(opt.udpPingLabel), status);
+    gtk_widget_set_sensitive(GTK_WIDGET(opt.udpPingPorts), status);
+  }
+  
   display_nmap_command();
 }
 
 
+/* callback for factory generated menu items: set variable to action */
+void throttleType_changed_fcb(int *variable, guint action, GtkWidget *w)
+{	
+  if ((variable != NULL) && (w != NULL)) {
+    *variable = action;
 
-void scan_options(GtkWidget *widget, int *the_option)
+    display_nmap_command();
+  }
+}
+
+
+/* callback for factory generated menu items: set variable to action */
+void resolveType_changed_fcb(int *variable, guint action, GtkWidget *w)
 {
-  which_scan = (int)the_option;
+  if ((variable != NULL) && (w != NULL)) {
+    *variable = action;
+
+    display_nmap_command();
+      } 
+    }
+
+
+/* callback for factory generated menu items: set variable to action */
+void protportType_changed_fcb(int *variable, guint action, GtkWidget *w)
+{
+  if ((variable != NULL) && (w != NULL)) {
+    *variable = action;
+
+    gtk_widget_set_sensitive(GTK_WIDGET(opt.protportLabel), (action == GIVEN_PROTPORT));
+    gtk_widget_set_sensitive(GTK_WIDGET(opt.protportRange), (action == GIVEN_PROTPORT));
+
+    display_nmap_command();
+  }
+}
+
+
+/* callback for factory generated menu items: set variable to action */
+void verboseType_changed_fcb(int *variable, guint action, GtkWidget *w)
+{
+  if ((variable != NULL) && (w != NULL)) {
+    *variable = action;
+
+  display_nmap_command();
+}
+}
+
+
+/* callback for factory generated menu items: set variable to action */
+void outputFormatType_changed_fcb(int *variable, guint action, GtkWidget *w)
+{
+  if ((variable != NULL) && (w != NULL)) {
+    *variable = action;
+
+    display_nmap_command();
+  }
+}
+
+
+/* callback for toggle buttons: control other objects seneistivity */
+void toggle_button_set_sensitive_cb(GtkWidget *master, GtkWidget *slave)
+{
+  if ((master != NULL) && (slave != NULL) && GTK_IS_TOGGLE_BUTTON(master))
+    gtk_widget_set_sensitive(GTK_WIDGET(slave), GTK_TOGGLE_BUTTON(master)->active);
+
+  display_nmap_command();
+}
+
+
+void validate_file_change(GtkWidget *button, void *ignored)
+{	
+gboolean status = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button));
+
+  if (button == opt.useInputFile) {
+    gtk_widget_set_sensitive(GTK_WIDGET(opt.targetHost), !status);
+    gtk_widget_set_sensitive(GTK_WIDGET(opt.inputFilename), status);
+    gtk_widget_set_sensitive(GTK_WIDGET(opt.inputBrowse), status);
+  } else if (button == opt.useOutputFile) {
+    gtk_widget_set_sensitive(GTK_WIDGET(opt.outputFilename), status);
+    gtk_widget_set_sensitive(GTK_WIDGET(opt.outputBrowse), status);
+    gtk_widget_set_sensitive(GTK_WIDGET(opt.outputFormatLabel), status);
+    gtk_widget_set_sensitive(GTK_WIDGET(opt.outputFormatType), status);
+    gtk_widget_set_sensitive(GTK_WIDGET(opt.outputAppend), status);
+  }
+
+  display_nmap_command();
+}
+
+
+void validate_option_change(GtkWidget *target_option, void *ignored)
+{	
+gboolean status = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(target_option));
+
+  if ((target_option == opt.useInputFile) && (status))
+    gtk_entry_set_text(GTK_ENTRY(opt.targetHost), "");
+
+  display_nmap_command();
 }
 
 
@@ -735,13 +962,12 @@ int count;
  */
 char *next_line(char *buf, int bufsz, char *line)
 {
-  int linelen;
   if ((buf != NULL) && (line != NULL)) {
   char *eol = strchr(buf, '\n');
 
     if (eol != NULL) {
       char *bol = buf;
-      linelen = MIN(bufsz - 1, eol - buf + 1); // we can't exceed buffer size
+    int linelen = MIN(bufsz - 1, eol - buf + 1); // we can't exceed buffer size
 
       /* copy line including \n to line */
       memcpy(line, buf, linelen);
@@ -772,18 +998,18 @@ char *next_token(char *buf, char *token, int tokensz)
 
     if (count > 0) {
       char *bol = buf;
-      char *eoline;
+    char *eol;
 
       count = MIN(count, tokensz - 1);
-      eoline = buf+count;
+      eol = buf+count;
 
       /* copy token  */
       memcpy(token, buf, count);
       token[count] = '\0';
 
       /* remove token from str */
-      while (*eoline != '\0')
-        *bol++ = *eoline++;
+      while (*eol != '\0')
+        *bol++ = *eol++;
       *bol = '\0';
 
       return(token);
@@ -821,7 +1047,7 @@ GdkColor red, blue, green;
   if (!gdk_color_alloc(cmap, &green))
     g_error("couldn't allocate green");
   
-  if (view_type == 1) {
+  if (opt.viewValue == 1) {
   char token[BUFSIZ+1];
   char *str;
 
@@ -829,8 +1055,11 @@ GdkColor red, blue, green;
       /********* CATCH STUFF ****************************/
       if (strstr(str, "http://") ||
           strstr(str, "Port") ||
+          strstr(str, "Protocol") ||
           strstr(str, "State") ||
           strstr(str, "Service") ||
+          strstr(str, "(RPC)") ||
+          strstr(str, "Owner") ||
 	  strstr(str, "fingerprint")) {
 	gtk_text_insert(gtktext, bold, NULL, NULL, str, -1);
       /********* BEGIN PORT COLOR CODING ****************/
@@ -856,7 +1085,7 @@ GdkColor red, blue, green;
 	  	strstr(str, "smtps") ||
 	  	strstr(str, "smtp") ||
 	  	strstr(str, "pop-2")) {
-	gtk_text_insert(GTK_TEXT(MW->output), bold, &blue, NULL, str, -1);
+	gtk_text_insert(GTK_TEXT(opt.output), bold, &blue, NULL, str, -1);
       }else if (strstr(str, "systat") ||
 	  	strstr(str, "netstat") ||
 	  	strstr(str, "cfingerd") ||
@@ -884,20 +1113,17 @@ GdkColor red, blue, green;
     }
   } /* END VIEW_TYPE == 1 IF */
 		
-  else if (view_type == 0) {
+  else
     gtk_text_insert(gtktext, fixed, NULL, NULL, line, -1);
-  } /* END VIEW_TYPE == 0 IF */
-		 
-  else if (view_type == 2) {
-    build_tree(buf);
-  }
 }
+
 
 gint read_data(gpointer data)
 {
   static char buf[BUFSIZ+1] = "";
   static int buflen = 0;
   char line[BUFSIZ+1];
+int count;
 
 #ifdef WIN32
   int rc;
@@ -919,9 +1145,10 @@ gint read_data(gpointer data)
 #endif /* WIN32 */
 
     for (str = next_line(buf, sizeof(buf) / sizeof(*buf), line); 
-	 (str != buf) && (str != NULL); str = next_line(buf, sizeof(buf) / sizeof(*buf), line)) {
+         (str != buf) && (str != NULL);
+         str = next_line(buf, sizeof(buf) / sizeof(*buf), line)) {
       buflen = strlen(buf);
-      print_line(GTK_TEXT(MW->output), str);
+      print_line(GTK_TEXT(opt.output), str);
     }  
   } 
 
@@ -932,7 +1159,7 @@ gint read_data(gpointer data)
 
     while ((str = next_line(buf, sizeof(buf) / sizeof(*buf), line)) != NULL) {
       buflen = strlen(buf);
-      print_line(GTK_TEXT(MW->output), str);
+      print_line(GTK_TEXT(opt.output), str);
         if (str == buf)
           break;
     }
@@ -951,7 +1178,7 @@ gint read_data(gpointer data)
     nmap_pid = 0;
     buflen = 0;
     buf[buflen] = '\0';
-    gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(MW->start_scan), 0);
+    gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(opt.scanButton), 0);
     return 0;
   }
 #else
@@ -964,7 +1191,7 @@ gint read_data(gpointer data)
     }
     buflen = 0;
     buf[buflen] = '\0';
-    gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(MW->start_scan), 0);
+    gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(opt.scanButton), 0);
     return 0;
   }
 #endif /* waitpid unix/windoze selector */
@@ -972,7 +1199,7 @@ gint read_data(gpointer data)
   return(1);	
 }
 
-void stop_scan()
+gboolean stop_scan()
 {
   /*  fprintf(stderr, "stop scan called -- pid == %d\n", nmap_pid); */
   if (nmap_pid) {
@@ -990,7 +1217,10 @@ void stop_scan()
 #endif /* Win32/UNIX Selector for killing Nmap */
 
     nmap_pid = 0;
+
+    return(TRUE);
   }
+  return(FALSE);
 }
 
 void on_verb_activate(GtkMenuItem *menuitem, gpointer user_data)
@@ -1000,97 +1230,6 @@ void on_verb_activate(GtkMenuItem *menuitem, gpointer user_data)
 
   display_nmap_command();
 }
-
-void on_Append_activate(GtkMenuItem *menuitem, gpointer	user_data)
-{
-  /* toggle append */
-  append = (append) ? 0 : 1;
-}
-
-void on_rpc_activate(GtkMenuItem *menuitem, gpointer user_data)
-{
-  /* toggle rpc_var */
-  rpc_var = (rpc_var) ? 0 : 1;
-
-  display_nmap_command();
-}
-
-void on_Trad_activate(GtkMenuItem *menuitem, GtkWidget *trad)
-{
-  view_type = 0;
-}
-
-void on_CTrad_activate(GtkMenuItem *menuitem, GtkWidget *ctrad)
-{
-  view_type = 1;
-}
-
-void on_Tree_activate(GtkMenuItem *menuitem, GtkWidget *tree)
-{
-  view_type = 2;
-}
-
-void build_tree(char *buf)
-{
-  /******************************* THIS IS BROKE RIGHT NOW :) *************************
-  char *str, *token;
-  GdkFont *fixed = gdk_fontset_load ("-misc-fixed-medium-r-*-*-*-120-*-*-*-*-*-*");
-
-  str = buf;
-  token = strtok(str, " ");
-
-  do {
-    token = strtok(NULL, " ");
-
-    if (strstr(token, "Service")) {
-      printf("Wh00p!");
-      token = strtok(NULL, " \t");
-      printf("%s", token);		
-      token = strtok(NULL, " \t");
-      printf("%s", token);
-      printf("That's three\n");
-    }
-    gtk_text_freeze(GTK_TEXT(MW->output));
-    gtk_text_insert(GTK_TEXT(MW->output), fixed, NULL, NULL, "hello", -1);
-  } while(token);
-	
-  gtk_text_thaw(GTK_TEXT(MW->output));
-  *****************************************************************************************/
-}
-
-void on_done_clicked(GtkButton *button, GtkWidget *widget)
-{
-  MW->machine_file = gtk_entry_get_text(GTK_ENTRY(MW->file_entry));
-  machine_yn = 1;
-  gtk_widget_hide(widget);
-  display_nmap_command();
-}
-
-void on_cancel_clicked(GtkButton *button, GtkWidget *widget)
-{
-  machine_yn = 0;
-  gtk_widget_hide(widget);
-}
-
-void on_machine_activate()
-{     
-  GtkWidget *save_file;
-  save_file = create_machine_parse_selection();
-  gtk_widget_show(save_file);
-}
-
-void on_help_ok_clicked(GtkButton *button, GtkWidget *help)
-{
-  gtk_widget_destroy(help);
-}
-
-void on_delete_event(GtkWidget *widget, GdkEvent *event, gpointer data)
-{
-  /* First we want to kill the Nmap process that is running */
-  stop_scan();
-  gtk_main_quit ();
-}
-
 
 /***************************************************************/
 
