@@ -637,7 +637,7 @@ return 0;
 
 int sendrawtcppingquery(int rawsd, struct hoststruct *target, int seq,
 			struct timeval *time, struct pingtune *pt) {
-int decoy, trynum;
+int trynum;
 int myseq;
 unsigned short sportbase;
 unsigned long myack = get_random_uint();
@@ -648,12 +648,10 @@ trynum = seq % pt->max_tries;
 
  myseq = (get_random_uint() << 19) + (seq << 3) + 3; /* Response better end in 011 or 100 */
  memcpy((char *)&(o.decoys[o.decoyturn]), (char *)&target->source_ip, sizeof(struct in_addr));
- for (decoy = 0; decoy < o.numdecoys; decoy++) {
-   if (o.pingtype & PINGTYPE_TCP_USE_SYN) {   
-   send_tcp_raw( rawsd, &o.decoys[decoy], &(target->host), sportbase + trynum, o.tcp_probe_port, myseq, myack, TH_SYN, 0, NULL, 0, NULL, 0);
-   } else {
-     send_tcp_raw( rawsd, &o.decoys[decoy], &(target->host), sportbase + trynum, o.tcp_probe_port, myseq, myack, TH_ACK, 0, NULL, 0, NULL, 0);
-   }
+ if (o.pingtype & PINGTYPE_TCP_USE_SYN) {   
+   send_tcp_raw_decoys( rawsd, &(target->host), sportbase + trynum, o.tcp_probe_port, myseq, myack, TH_SYN, 0, NULL, 0, NULL, 0);
+ } else {
+   send_tcp_raw_decoys( rawsd, &(target->host), sportbase + trynum, o.tcp_probe_port, myseq, myack, TH_ACK, 0, NULL, 0, NULL, 0);
  }
 
  gettimeofday(&time[seq], NULL);
@@ -694,22 +692,22 @@ if (ptech.icmpscan) {
   if (sizeof(struct ppkt) != 8) 
     fatal("Your native data type sizes are too screwed up for this to work.");
 } else {
-  memcpy((char *) &(o.decoys[o.decoyturn]), (char *)&target->source_ip, sizeof(struct in_addr));
+    memcpy((char *) &(o.decoys[o.decoyturn]), (char *)&target->source_ip, sizeof(struct in_addr));
 }
 
-for (decoy = 0; decoy < o.numdecoys; decoy++) {
-  if (ptech.icmpscan && decoy == o.decoyturn) {
-    if ((res = sendto(sd,(char *) ping,8,0,(struct sockaddr *)&sock,
-		      sizeof(struct sockaddr))) != 8) {
-      fprintf(stderr, "sendto in sendpingquery returned %d (should be 8)!\n", res);
-      perror("sendto");
-    }
-  } else {
-    send_ip_raw( rawsd, &o.decoys[decoy], &(target->host), IPPROTO_ICMP, ping, 8);
-  }
-}
-gettimeofday(&time[seq], NULL);
-return 0;
+ for (decoy = 0; decoy < o.numdecoys; decoy++) {
+   if (ptech.icmpscan && decoy == o.decoyturn) {
+     if ((res = sendto(sd,(char *) ping,8,0,(struct sockaddr *)&sock,
+		       sizeof(struct sockaddr))) != 8) {
+       fprintf(stderr, "sendto in sendpingquery returned %d (should be 8)!\n", res);
+       perror("sendto");
+     }
+   } else {
+     send_ip_raw( rawsd, &o.decoys[decoy], &(target->host), IPPROTO_ICMP, ping, 8);
+   }
+ }
+ gettimeofday(&time[seq], NULL);
+ return 0;
 }
 
 int get_connecttcpscan_results(struct tcpqueryinfo *tqi, 

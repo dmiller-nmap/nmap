@@ -1,9 +1,10 @@
 #include "tcpip.h"
 
-
 /* Globals */
 int jumpok = 0;
 static jmp_buf jmp_env;
+
+extern struct ops o;
 
 /* Sig_ALRM handler */
 void sig_alarm(int signo) {
@@ -99,6 +100,23 @@ int resolve(char *hostname, struct in_addr *ip) {
   }
   return 0;
 }
+
+int send_tcp_raw_decoys( int sd, struct in_addr *victim, unsigned short sport, 
+			 unsigned short dport, unsigned int seq,
+			 unsigned int ack, unsigned char flags,
+			 unsigned short window, char *options, int optlen,
+			 char *data, unsigned short datalen) 
+{
+  int decoy;
+
+  for(decoy = 0; decoy < o.numdecoys; decoy++) 
+    if (send_tcp_raw(sd, &o.decoys[decoy], victim, sport, dport, seq, ack,
+		     flags, window, options, optlen, data, datalen) == -1)
+      return -1;
+
+  return 0;
+}
+
 
 int send_tcp_raw( int sd, struct in_addr *source, 
 		  struct in_addr *victim, unsigned short sport, 
@@ -375,6 +393,19 @@ if (ip->ip_p== IPPROTO_UDP) {
  return 0;
 }
 
+int send_udp_raw_decoys( int sd, struct in_addr *victim, unsigned short sport, 
+		  unsigned short dport, char *data, unsigned short datalen) {
+  int decoy;
+  
+  for(decoy = 0; decoy < o.numdecoys; decoy++) 
+    if (send_udp_raw(sd, &o.decoys[decoy], victim, sport, dport, data, 
+		     datalen) == -1)
+      return -1;
+
+  return 0;
+}
+
+
 
 int send_udp_raw( int sd, struct in_addr *source, 
 		  struct in_addr *victim, unsigned short sport, 
@@ -488,6 +519,165 @@ free(packet);
 return res;
 }
 
+int send_small_fragz_decoys(int sd, struct in_addr *victim, unsigned long seq, 
+			    int sport, int dport, int flags) {
+  int decoy;
+
+  for(decoy = 0; decoy < o.numdecoys; decoy++) 
+    if (send_small_fragz(sd, &o.decoys[decoy], victim, seq, sport, 
+				dport, 
+				flags) == -1)
+      return -1;
+
+  return 0;
+}
+
+/* Much of this is swiped from my send_tcp_raw function above, which 
+   doesn't support fragmentation */
+int send_small_fragz(int sd, struct in_addr *source, struct in_addr *victim,
+		     unsigned long seq, int sport, int dport, int flags)
+ {
+
+struct pseudo_header { 
+/*for computing TCP checksum, see TCP/IP Illustrated p. 145 */
+  unsigned long s_addy;
+  unsigned long d_addr;
+  char zer0;
+  unsigned char protocol;
+  unsigned short length;
+};
+/*In this placement we get data and some field alignment so we aren't wasting
+  too much to compute the TCP checksum.*/
+
+char packet[sizeof(struct ip) + sizeof(struct tcphdr) + 100];
+struct ip *ip = (struct ip *) packet;
+struct tcphdr *tcp = (struct tcphdr *) (packet + sizeof(struct ip));
+struct pseudo_header *pseudo = (struct pseudo_header *) (packet + sizeof(struct ip) - sizeof(struct pseudo_header)); 
+char *frag2 = packet + sizeof(struct ip) + 16;
+struct ip *ip2 = (struct ip *) (frag2 - sizeof(struct ip));
+static int myttl = 0;
+int res;
+struct sockaddr_in sock;
+int id;
+
+if (!myttl)  myttl = (time(NULL) % 14) + 51;
+
+/* It was a tough decision whether to do this here for every packet
+   or let the calling function deal with it.  In the end I grudgingly decided
+   to do it here and potentially waste a couple microseconds... */
+sethdrinclude(sd);
+
+
+/*Why do we have to fill out this damn thing? This is a raw packet, after all */
+sock.sin_family = AF_INET;
+sock.sin_port = htons(dport);
+
+sock.sin_addr.s_addr = victim->s_addr;
+
+bzero((char *)packet, sizeof(struct ip) + sizeof(struct tcphdr));
+
+pseudo->s_addy = source->s_addr;
+pseudo->d_addr = victim->s_addr;
+pseudo->protocol = IPPROTO_TCP;
+pseudo->length = htons(sizeof(struct tcphdr));
+
+tcp->th_sport = htons(sport);
+tcp->th_dport = htons(dport);
+tcp->th_seq = (seq)? htonl(seq) : get_random_uint();
+
+tcp->th_off = 5 /*words*/;
+tcp->th_flags = flags;
+
+tcp->th_win = htons(2048); /* Who cares */
+
+tcp->th_sum = in_cksum((unsigned short *)pseudo, 
+		       sizeof(struct tcphdr) + sizeof(struct pseudo_header));
+
+/* Now for the ip header of frag1 */
+
+bzero((char *) packet, sizeof(struct ip)); 
+ip->ip_v = 4;
+ip->ip_hl = 5;
+/*RFC 791 allows 8 octet frags, but I get "operation not permitted" (EPERM)
+  when I try that.  */
+ip->ip_len = BSDFIX(sizeof(struct ip) + 16);
+id = ip->ip_id = get_random_uint();
+ip->ip_off = BSDFIX(MORE_FRAGMENTS);
+ip->ip_ttl = myttl;
+ip->ip_p = IPPROTO_TCP;
+ip->ip_src.s_addr = source->s_addr;
+ip->ip_dst.s_addr = victim->s_addr;
+
+#if HAVE_IP_IP_SUM
+ip->ip_sum= in_cksum((unsigned short *)ip, sizeof(struct ip));
+#endif
+if (o.debugging > 1) {
+  fprintf(o.nmap_stdout, "Raw TCP packet fragment #1 creation completed!  Here it is:\n");
+  hdump(packet,20);
+}
+if (o.debugging > 1) 
+  fprintf(o.nmap_stdout, "\nTrying sendto(%d , packet, %d, 0 , %s , %d)\n",
+	 sd, ntohs(ip->ip_len), inet_ntoa(*victim),
+	 (int) sizeof(struct sockaddr_in));
+/* Lets save this and send it AFTER we send the second one, just to be
+   cute ;) */
+
+if ((res = sendto(sd, packet,sizeof(struct ip) + 16 , 0, 
+		  (struct sockaddr *)&sock, sizeof(struct sockaddr_in))) == -1)
+  {
+    perror("sendto in send_syn_fragz");
+    return -1;
+  }
+if (o.debugging > 1) fprintf(o.nmap_stdout, "successfully sent %d bytes of raw_tcp!\n", res);
+
+/* Create the second fragment */
+
+bzero((char *) ip2, sizeof(struct ip));
+ip2->ip_v= 4;
+ip2->ip_hl = 5;
+ip2->ip_len = BSDFIX(sizeof(struct ip) + 4); /* the rest of our TCP packet */
+ip2->ip_id = id;
+ip2->ip_off = BSDFIX(2);
+ip2->ip_ttl = myttl;
+ip2->ip_p = IPPROTO_TCP;
+ip2->ip_src.s_addr = source->s_addr;
+ip2->ip_dst.s_addr = victim->s_addr;
+
+#if HAVE_IP_IP_SUM
+ip2->ip_sum = in_cksum((unsigned short *)ip2, sizeof(struct ip));
+#endif
+if (o.debugging > 1) {
+  fprintf(o.nmap_stdout, "Raw TCP packet fragment creation completed!  Here it is:\n");
+  hdump(packet,20);
+}
+if (o.debugging > 1) 
+
+  fprintf(o.nmap_stdout, "\nTrying sendto(%d , ip2, %d, 0 , %s , %d)\n", sd, 
+	 ntohs(ip2->ip_len), inet_ntoa(*victim), (int) sizeof(struct sockaddr_in));
+if ((res = sendto(sd, (void *)ip2,sizeof(struct ip) + 4 , 0, 
+		  (struct sockaddr *)&sock, (int) sizeof(struct sockaddr_in))) == -1)
+  {
+    perror("sendto in send_tcp_raw frag #2");
+    return -1;
+  }
+
+return 1;
+}
+
+int send_ip_raw_decoys( int sd, struct in_addr *victim, unsigned char proto,
+			char *data, unsigned short datalen) {
+
+  int decoy;
+
+  for(decoy = 0; decoy < o.numdecoys; decoy++) 
+    if (send_ip_raw(sd, &o.decoys[decoy], victim, proto, data, 
+			   datalen) == -1)
+      return -1;
+
+  return 0;
+
+
+}
 
 int send_ip_raw( int sd, struct in_addr *source, 
 		  struct in_addr *victim, unsigned char proto,

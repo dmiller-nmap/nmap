@@ -136,65 +136,51 @@ if (o.verbose && openport != -1)
      /* Test 1 */
      if (!FPtests[1]) {     
        if (o.scan_delay) enforce_scan_delay(NULL);
-       for(decoy=0; decoy < o.numdecoys; decoy++) {
-	 send_tcp_raw(rawsd, &o.decoys[decoy], &target->host, current_port, 
-		      openport, sequence_base, 0,TH_BOGUS|TH_SYN, 0,"\003\003\012\001\002\004\001\011\010\012\077\077\077\077\000\000\000\000\000\000" , 20, NULL, 0);
-       }
+       send_tcp_raw_decoys(rawsd, &target->host, current_port, 
+			   openport, sequence_base, 0,TH_BOGUS|TH_SYN, 0,"\003\003\012\001\002\004\001\011\010\012\077\077\077\077\000\000\000\000\000\000" , 20, NULL, 0);
      }
      
      /* Test 2 */
      if (!FPtests[2]) {     
        if (o.scan_delay) enforce_scan_delay(NULL);
-       for(decoy=0; decoy < o.numdecoys; decoy++) {
-	 send_tcp_raw(rawsd, &o.decoys[decoy], &target->host, current_port +1, 
-		      openport, sequence_base, 0,0, 0,"\003\003\012\001\002\004\001\011\010\012\077\077\077\077\000\000\000\000\000\000" , 20, NULL, 0);
-       }
+       send_tcp_raw_decoys(rawsd, &target->host, current_port +1, 
+			   openport, sequence_base, 0,0, 0,"\003\003\012\001\002\004\001\011\010\012\077\077\077\077\000\000\000\000\000\000" , 20, NULL, 0);
      }
 
      /* Test 3 */
      if (!FPtests[3]) {     
        if (o.scan_delay) enforce_scan_delay(NULL);
-       for(decoy=0; decoy < o.numdecoys; decoy++) {
-	 send_tcp_raw(rawsd, &o.decoys[decoy], &target->host, current_port +2, 
-		      openport, sequence_base, 0,TH_SYN|TH_FIN|TH_URG|TH_PUSH, 0,"\003\003\012\001\002\004\001\011\010\012\077\077\077\077\000\000\000\000\000\000" , 20, NULL, 0);
-       }
+       send_tcp_raw_decoys(rawsd, &target->host, current_port +2, 
+			   openport, sequence_base, 0,TH_SYN|TH_FIN|TH_URG|TH_PUSH, 0,"\003\003\012\001\002\004\001\011\010\012\077\077\077\077\000\000\000\000\000\000" , 20, NULL, 0);
      }
 
      /* Test 4 */
      if (!FPtests[4]) {     
        if (o.scan_delay) enforce_scan_delay(NULL);
-       for(decoy=0; decoy < o.numdecoys; decoy++) {
-	 send_tcp_raw(rawsd, &o.decoys[decoy], &target->host, current_port +3, 
-		      openport, sequence_base, 0,TH_ACK, 0,"\003\003\012\001\002\004\001\011\010\012\077\077\077\077\000\000\000\000\000\000" , 20, NULL, 0);
-       }
+       send_tcp_raw_decoys(rawsd, &target->host, current_port +3, 
+			   openport, sequence_base, 0,TH_ACK, 0,"\003\003\012\001\002\004\001\011\010\012\077\077\077\077\000\000\000\000\000\000" , 20, NULL, 0);
      }
    }
    
    /* Test 5 */
    if (!FPtests[5]) {   
      if (o.scan_delay) enforce_scan_delay(NULL);
-     for(decoy=0; decoy < o.numdecoys; decoy++) {
-       send_tcp_raw(rawsd, &o.decoys[decoy], &target->host, current_port +4,
-		    closedport, sequence_base, 0,TH_SYN, 0,"\003\003\012\001\002\004\001\011\010\012\077\077\077\077\000\000\000\000\000\000" , 20, NULL, 0);
-     }
+     send_tcp_raw_decoys(rawsd, &target->host, current_port +4,
+			 closedport, sequence_base, 0,TH_SYN, 0,"\003\003\012\001\002\004\001\011\010\012\077\077\077\077\000\000\000\000\000\000" , 20, NULL, 0);
    }
 
      /* Test 6 */
    if (!FPtests[6]) {   
      if (o.scan_delay) enforce_scan_delay(NULL);
-     for(decoy=0; decoy < o.numdecoys; decoy++) {
-       send_tcp_raw(rawsd, &o.decoys[decoy], &target->host, current_port +5, 
-		    closedport, sequence_base, 0,TH_ACK, 0,"\003\003\012\001\002\004\001\011\010\012\077\077\077\077\000\000\000\000\000\000" , 20, NULL, 0);
-     }
+     send_tcp_raw_decoys(rawsd, &target->host, current_port +5, 
+			 closedport, sequence_base, 0,TH_ACK, 0,"\003\003\012\001\002\004\001\011\010\012\077\077\077\077\000\000\000\000\000\000" , 20, NULL, 0);
    }
 
      /* Test 7 */
    if (!FPtests[7]) {
      if (o.scan_delay) enforce_scan_delay(NULL);   
-     for(decoy=0; decoy < o.numdecoys; decoy++) {
-       send_tcp_raw(rawsd, &o.decoys[decoy], &target->host, current_port +6, 
-		    closedport, sequence_base, 0,TH_FIN|TH_PUSH|TH_URG, 0,"\003\003\012\001\002\004\001\011\010\012\077\077\077\077\000\000\000\000\000\000" , 20, NULL, 0);
-     }
+     send_tcp_raw_decoys(rawsd, &target->host, current_port +6, 
+			 closedport, sequence_base, 0,TH_FIN|TH_PUSH|TH_URG, 0,"\003\003\012\001\002\004\001\011\010\012\077\077\077\077\000\000\000\000\000\000" , 20, NULL, 0);
    }
 
    if (!FPtests[8]) {
@@ -205,7 +191,7 @@ if (o.verbose && openport != -1)
    timeout = 0;
 
    /* Insure we haven't overrun our allotted time ... */
-   if (o.host_timeout && (TIMEVAL_SUBTRACT(t1, target->host_timeout) >= 0))
+   if (o.host_timeout && (TIMEVAL_MSEC_SUBTRACT(t1, target->host_timeout) >= 0))
      {
        target->timedout = 1;
        goto osscan_timedout;
@@ -215,7 +201,7 @@ if (o.verbose && openport != -1)
      if (TIMEVAL_SUBTRACT(t2,t1) > oshardtimeout) {
        timeout = 1;
      }
-     if (o.host_timeout && (TIMEVAL_SUBTRACT(t2, target->host_timeout) >= 0))
+     if (o.host_timeout && (TIMEVAL_MSEC_SUBTRACT(t2, target->host_timeout) >= 0))
        {
 	 target->timedout = 1;
 	 goto osscan_timedout;
@@ -272,7 +258,7 @@ if (o.verbose && openport != -1)
    for(i=1; i <= NUM_SEQ_SAMPLES; i++) {
      if (o.scan_delay) enforce_scan_delay(NULL);
      for(decoy=0; decoy < o.numdecoys; decoy++) {
-       send_tcp_raw(rawsd, &o.decoys[decoy], &target->host, o.magic_port+i, 
+       send_tcp_raw_decoys(rawsd, &target->host, o.magic_port+i, 
 		    openport, sequence_base + i, 0, TH_SYN, 0 , NULL, 0, NULL, 0);
        if (!o.scan_delay)
 	 usleep( 5000 + target->to.srtt);
@@ -287,7 +273,7 @@ if (o.verbose && openport != -1)
      ip = (struct ip*) readip_pcap(pd, &bytes, oshardtimeout);
      gettimeofday(&t2, NULL);
      /* Insure we haven't overrun our allotted time ... */
-     if (o.host_timeout && (TIMEVAL_SUBTRACT(t2, target->host_timeout) >= 0))
+     if (o.host_timeout && (TIMEVAL_MSEC_SUBTRACT(t2, target->host_timeout) >= 0))
        {
 	 target->timedout = 1;
 	 goto osscan_timedout;
@@ -738,7 +724,7 @@ bzero(si, sizeof(si));
  for(try=0; try < 3; try++) {
    if (o.host_timeout) {   
      gettimeofday(&now, NULL);
-     if (target->timedout || TIMEVAL_SUBTRACT(now, target->host_timeout) >= 0)
+     if (target->timedout || TIMEVAL_MSEC_SUBTRACT(now, target->host_timeout) >= 0)
        {
 	 target->timedout = 1;
 	 return 1;
@@ -1135,7 +1121,7 @@ udp->uh_sum = realcheck;
    if ((res = sendto(sd, packet, BSDUFIX(ip->ip_len), 0,
 		     (struct sockaddr *)&sock, (int) sizeof(struct sockaddr_in))) == -1)
      {
-       perror("sendto in send_udp_raw");
+       perror("sendto in send_udp_raw_decoys");
        return NULL;
      }
 

@@ -51,7 +51,7 @@ nmapfe/nmapfe:
 	@echo "FAILURES HERE ARE OK -- THEY JUST MEAN YOU CANNOT USE nmapfe"
 	-rm -f nmapfe/Makefile
 	-cd nmapfe; ./configure;
-	-cd nmapfe; test -f Makefile && $(MAKE) STATIC=$(STATIC);
+	-cd nmapfe; test -f Makefile && $(MAKE) VERSION=$(VERSION) STATIC=$(STATIC);
 	@echo "END OF SECTION WHERE FAILURES ARE OK"
 
 ci: checkin

@@ -193,7 +193,6 @@ void *realloc();
 
 /* DO NOT change stuff after this point */
 #define UC(b)   (((int)b)&0xff)
-#define MORE_FRAGMENTS 8192 /*NOT a user serviceable parameter*/
 #define SA    struct sockaddr  /*Ubertechnique from R. Stevens */
 /*#define fatal(x) { fprintf(stderr, "%s\n", x); exit(-1); }
   #define error(x) fprintf(stderr, "%s\n", x);*/
@@ -318,8 +317,6 @@ int max_sd();
 
 /* RAW packet building/dissasembling stuff */
 int isup(struct in_addr target);
-int send_small_fragz(int sd, struct in_addr *source, struct in_addr *victim,
-		     unsigned long seq, int sport, int dport, int flags);
 int listen_icmp(int icmpsock, unsigned short outports[],
 		unsigned short numtries[], int *num_out,
 		struct in_addr target, portlist *ports);

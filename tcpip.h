@@ -115,6 +115,8 @@ void *realloc();
 #endif
 #include "error.h"
 #include "utils.h"
+#include "nmap.h"
+#include "global_structures.h"
 
 #ifndef DEBUGGING
 #define DEBUGGING 0
@@ -137,6 +139,8 @@ void *realloc();
 /* Bogus TCP flag!!!  Krad! */
 #define TH_BOGUS 64
 #define TH_BOG 64
+
+#define MORE_FRAGMENTS 8192 /*NOT a user serviceable parameter*/
 
 struct interface_info {
     char name[64];
@@ -297,9 +301,31 @@ int send_tcp_raw( int sd, struct in_addr *source,
 int send_udp_raw( int sd, struct in_addr *source, 
 		  struct in_addr *victim, unsigned short sport, 
 		  unsigned short dport, char *data, unsigned short datalen);
+int send_small_fragz(int sd, struct in_addr *source, struct in_addr *victim,
+                     unsigned long seq, int sport, int dport, int flags);
 int send_ip_raw( int sd, struct in_addr *source, 
 		  struct in_addr *victim, unsigned char proto,
 		  char *data, unsigned short datalen);
+
+/* Decoy versions of the raw packet sending functions ... */
+int send_tcp_raw_decoys( int sd, struct in_addr *victim, unsigned short sport, 
+                         unsigned short dport, unsigned int seq,
+                         unsigned int ack, unsigned char flags,
+                         unsigned short window, char *options, int optlen,
+                         char *data, unsigned short datalen);
+
+int send_udp_raw_decoys( int sd, struct in_addr *victim, unsigned short sport, 
+			 unsigned short dport, char *data, 
+			 unsigned short datalen);
+
+int send_small_fragz_decoys(int sd, struct in_addr *victim, unsigned long seq, 
+                            int sport, int dport, int flags);
+
+
+int send_ip_raw_decoys( int sd, struct in_addr *victim, unsigned char proto,
+                        char *data, unsigned short datalen);
+
+
 /* A simple function I wrote to help in debugging, shows the important fields
    of a TCP packet*/
 int readtcppacket(char *packet, int readdata);
@@ -328,6 +354,7 @@ char *readip_pcap(pcap_t *pd, unsigned int *len, long to_usec);
 #ifndef HAVE_INET_ATON
 int inet_aton(register const char *, struct in_addr *);
 #endif
+
 
 #endif /*TCPIP_H*/
 

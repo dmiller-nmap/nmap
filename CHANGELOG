@@ -1,7 +1,18 @@
 # Nmap Changelog
 
+-- Ensured that Nmap always gives up on ident scan after the first port attempt finds it to be closed (problem noticed by Matt FIXME:lastname)
+
+-- Changed strsep's in nmapfe to more portable strtok's
+
 -- Changed permutation algorithm to make port order and host order
    shuffling more random.
+
+-- Various minor changes and internal code cleanup.
+
+-- Fixed integer overflow that was limiting the max --host_timeout value 
+   to about 2,000,000 milliseconds (~1/2 hour).  The limit is now
+   about 4,000,000,000 milliseconds (~125 years).  I really hope you don't 
+   need more than that :).
 
 ** Version 2.3BETA13
 -- I made Nmap smarter about detecting filtering during UDP, Xmas,
