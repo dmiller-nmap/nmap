@@ -173,12 +173,12 @@ distro:
                         *.c *.h CHANGELOG /usr/tmp/nmap-$(NMAP_VERSION)/nbase
 
 	$(SHTOOL) mkdir /usr/tmp/nmap-$(NMAP_VERSION)/libpcre
-	cd $(NBASEDIR); cp -ra AUTHORS config.guess config.in config.sub \
+	cd libpcre; cp -ra AUTHORS config.guess config.in config.sub \
                         configure configure.ac COPYING dftables.c get.c \
                         INSTALL install-sh internal.h LICENCE ltmain.sh \
                         Makefile.in maketables.c makevp.bat mkinstalldirs \
                         NEWS NMAP_MODIFICATIONS NON-UNIX-USE pcre.c \
-                        pcre-config.in pcre.def pcre.in pcreposix.c \
+                        pcre-config.in pcre.def pcre.h pcre.in pcreposix.c \
                         pcreposix.h perltest printint.c README RunTest \
                         RunTest.in study.c \
                         /usr/tmp/nmap-$(NMAP_VERSION)/libpcre
@@ -186,8 +186,8 @@ distro:
 	$(SHTOOL) mkdir /usr/tmp/nmap-$(NMAP_VERSION)/nsock
 	$(SHTOOL) mkdir /usr/tmp/nmap-$(NMAP_VERSION)/nsock/include
 	$(SHTOOL) mkdir /usr/tmp/nmap-$(NMAP_VERSION)/nsock/src
-	cd $(NBASEDIR)/include; cp -ra nsock.h /usr/tmp/nmap-$(NMAP_VERSION)/nsock/include/
-	cd $(NBASEDIR)/src; cp -ra  aclocal.m4 config.guess config.sub \
+	cd nsock/include; cp -ra nsock.h /usr/tmp/nmap-$(NMAP_VERSION)/nsock/include/
+	cd nsock/src; cp -ra  aclocal.m4 config.guess config.sub \
                             configure configure.ac error.c error.h \
                             filespace.c filespace.h gh_list.c gh_list.h \
                             install-sh Makefile.in netutils.c netutils.h \
@@ -204,10 +204,10 @@ distro:
 	cd /usr/tmp; tar cjf nmap-$(NMAP_VERSION).tar.bz2 nmap-$(NMAP_VERSION)
 	cd /usr/tmp; tar czf nmap-$(NMAP_VERSION).tgz nmap-$(NMAP_VERSION)
 # Make the actual RPM
-	rpm -ta /usr/tmp/nmap-$(NMAP_VERSION).tgz
-	cp -f $(RPMTDIR)/RPMS/i386/nmap-$(NMAP_VERSION)-1.i386.rpm /usr/tmp
-	cp -f $(RPMTDIR)/RPMS/i386/nmap-frontend-$(NMAP_VERSION)-1.i386.rpm /usr/tmp
-	cp -f $(RPMTDIR)/SRPMS/nmap-$(NMAP_VERSION)-1.src.rpm /usr/tmp
+#	rpm -ta /usr/tmp/nmap-$(NMAP_VERSION).tgz
+#	cp -f $(RPMTDIR)/RPMS/i386/nmap-$(NMAP_VERSION)-1.i386.rpm /usr/tmp
+#	cp -f $(RPMTDIR)/RPMS/i386/nmap-frontend-$(NMAP_VERSION)-1.i386.rpm /usr/tmp
+#	cp -f $(RPMTDIR)/SRPMS/nmap-$(NMAP_VERSION)-1.src.rpm /usr/tmp
 	rm -rf /usr/tmp/nmap-$(NMAP_VERSION)
 
 # Update the web site
