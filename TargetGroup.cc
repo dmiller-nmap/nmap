@@ -305,10 +305,11 @@ int TargetGroup::get_next_host(struct sockaddr_storage *ss, size_t *sslen) {
     assert(targets_type == IPV6_ADDRESS);
     assert(ipsleft == 1);
 #if HAVE_IPV6
-    bzero(sin6, sizeof(struct sockaddr_in6));
+    *sslen = sizeof(struct sockaddr_in6);
+    bzero(sin6, *sslen);
     sin6->sin6_family = AF_INET6;
 #ifdef SIN_LEN
-    sin6->sin6_len = sizeof(struct sockaddr_in6);
+    sin6->sin6_len = *sslen;
 #endif /* SIN_LEN */
     memcpy(sin6->sin6_addr.s6_addr, ip6.s6_addr, 16);
 #else

@@ -347,6 +347,8 @@ void *realloc();
 #  define NET_SIZE_T size_t
 #elif defined(OS390)
 #  define NET_SIZE_T size_t
+#elif defined(SOLARIS)
+#  define NET_SIZE_T socklen_t
 #endif
 
 #ifndef NET_SIZE_T

@@ -1,5 +1,10 @@
 # Nmap Changelog ($Id$)
 
+o Fixed compilation and IPv6 support on Solaris 9 (haven't tested
+  earlier versions).
+
+Nmap 3.10ALPHA1
+
 o IPv6 is now supported for TCP scan (-sT), connect()-style ping
   scan (-sP), and list scan (-sL)!  Just specify the -6 option and the
   IPv6 numbers or DNS names.  Netmask notation is not currently

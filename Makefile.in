@@ -45,7 +45,7 @@ all: $(TARGET) $(TARGETNMAPFE)
 $(TARGET): $(DEPS) @PCAP_DEPENDS@ $(NBASEDIR)/libnbase.a $(OBJS)
 	@echo Compiling nmap
 	rm -f $@
-	$(CC) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
+	$(CXX) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
 
 $(LIBPCAPDIR)/libpcap.a: $(LIBPCAPDIR)/Makefile
 	@echo Compiling libpcap; cd $(LIBPCAPDIR); $(MAKE)

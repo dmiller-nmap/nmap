@@ -1247,7 +1247,7 @@ int flt_icmptcp_2port(const char *packet, unsigned int len)
   if(ip->ip_p == IPPROTO_TCP)
     {
       struct tcphdr* tcp = (struct tcphdr *) (((char *) ip) + 4 * ip->ip_hl);
-      if(len < 4 * ip->ip_hl + 4) return 0;
+      if(len < (unsigned int) 4 * ip->ip_hl + 4) return 0;
 	  dport = ntohs(tcp->th_dport);
       if(dport == flt_baseport || dport == flt_baseport + 1)
 	return 1;
@@ -1265,7 +1265,7 @@ int flt_icmptcp_5port(const char *packet, unsigned int len)
   if(ip->ip_p == IPPROTO_TCP)
     {
       struct tcphdr* tcp = (struct tcphdr *) (((char *) ip) + 4 * ip->ip_hl);
-      if(len < 4 * ip->ip_hl + 4) return 0;
+      if(len < (unsigned int) 4 * ip->ip_hl + 4) return 0;
       dport = ntohs(tcp->th_dport);
       if(dport >= flt_baseport && dport <= flt_baseport + 4) return 1;
     }
