@@ -35,6 +35,13 @@ for(i=0; i < argc; i++) {
   strncpy(fakeargv[i], argv[i], strlen(argv[i]) + 1);
 }
 fakeargv[argc] = NULL;
+
+/* Seed our random generator */
+gettimeofday(&tv, NULL);
+if (tv.tv_usec) srand(tv.tv_usec);
+else if (tv.tv_sec) srand(tv.tv_sec);
+else srand(time(NULL));
+
 /* initialize our options */
 options_init();
 
@@ -245,12 +252,6 @@ if ((i = max_sd()) && i < o.max_sockets) {
 }
 if (o.debugging > 1) printf("The max # of sockets on your system is: %d\n", i);
 
-/* Seed our random generator */
-gettimeofday(&tv, NULL);
-if (tv.tv_usec) srand(tv.tv_usec);
-else if (tv.tv_sec) srand(tv.tv_sec);
-else srand(time(NULL));
-
 if (randomize)
   shortfry(ports); 
 while(optind < argc) {
@@ -354,6 +355,7 @@ o.isr00t = !(geteuid());
 o.debugging = DEBUGGING;
 o.verbose = DEBUGGING;
 o.max_sockets = MAX_SOCKETS;
+o.magic_port = 33000 + (rand() % 31000);
 #ifdef IGNORE_ZERO_AND_255_HOSTS
 o.allowall = !(IGNORE_ZERO_AND_255_HOSTS);
 #endif
@@ -1730,6 +1732,187 @@ if ((res = sendto(sd, (void *)ip2,sizeof(struct ip) + 4 , 0,
 return 1;
 }
 
+
+portlist super_scan(struct hoststruct *target, unsigned short *portarray, stype scantype) {
+  int initial_packet_width = 10;  /* How many scan packets in parallel (to start with) */
+  int packet_incr = 4; /* How much we increase the parallel packets by each round */
+  double fallback_percent = 0.5;
+  int rawsd;
+  char myname[513];
+  int scanflags;
+  pcap_t *pd;
+  struct bpf_program fcode;
+  char err0r[PCAP_ERRBUF_SIZE];
+  char filter[512];
+  char *p;
+  int changed = 0;  /* Have we found new ports (or rejected earlier "found" ones) this round? */
+  int numqueries_outstanding = 0; /* How many unexpired queries are on the 'net right now? */
+  double numqueries_ideal = initial_packet_width; /* How many do we WANT to be on the 'net right now? */
+  int tries = 0;
+  unsigned int localnet, netmask;
+  int starttime;
+  struct hostent *myhostent;
+  struct timeout_info {
+    int srtt; /* Smoothed rtt estimate (microseconds) */
+    int rttvar; /* Rout trip time variance */
+    int timeout; /* Current timeout threshold (microseconds) */
+  } to;
+
+  struct f00 {
+    unsigned short portno;
+    short trynum;
+    struct timeval sent; 
+    enum { port_open, port_closed, port_testing, port_fresh } state;
+    short next;
+    short prev;
+  } *scan, *open, *current, *fresh, *testing;
+  short portlookup[65536]; /* Indexes port number -> scan[] index */
+  int next_unused_port = 0;
+  int decoy;
+  struct timeval now;
+  int i,j;
+
+  memset(portlookup, 255, 65536); /* 0xffff better always be (short) -1 */
+  scan = safe_malloc(o.numports * sizeof(struct f00));
+
+  /* Initialize timeout info */
+  to.srtt = (target->rtt > 0)? 4 * target->rtt : 1e6;
+  to.rttvar = (target->rtt > 0)? target->rtt / 2 : 1e5;
+  to.timeout = to.srtt + 4 * to.rttvar;
+
+  /* Initialize our portlist (scan) */
+  for(i = 0; i < o.numports; i++) {
+    scan[i].state = port_fresh;
+    scan[i].portno = portarray[i];
+    scan[i].trynum = 0;
+    scan[i].prev = i-1;
+    if (i < o.numports -1 ) scan[i].next = i+1;
+    else scan[i].next = -1;
+    portlookup[portarray[i]] = i;
+  }
+  current = testing = fresh = &scan[0]; /* fresh == unscanned ports, testing is a list of all ports that haven't been determined to be closed yet */
+  open = NULL; /* we haven't shown any ports to be open yet... */
+
+    
+  /* Init our raw socket */
+  if ((rawsd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) < 0 )
+    pfatal("socket trobles in super_scan");
+  unblock_socket(rawsd);
+
+  /* Do we have a correct source address? */
+  if (!target->source_ip.s_addr) {
+    if (gethostname(myname, MAXHOSTNAMELEN) || 
+	!(myhostent = gethostbyname(myname)))
+      fatal("Your system is messed up.\n"); 
+    memcpy(&target->source_ip, myhostent->h_addr_list[0], sizeof(struct in_addr));
+    if (o.debugging || o.verbose) 
+      printf("We skillfully deduced that your address is %s\n",
+	     inet_ntoa(target->source_ip));
+  }
+
+/* Now for the pcap opening nonsense ... */
+/* Note that the snaplen is 92 = 64 byte max IPhdr + 24 byte max link_layer
+ * header + 4 bytes of TCP port info.
+ */
+
+if (!(pd = pcap_open_live(target->device, 92,  (o.spoofsource)? 1 : 0, 1500, err0r)))
+  fatal("pcap_open_live: %s", err0r);
+
+if (pcap_lookupnet(target->device, &localnet, &netmask, err0r) < 0)
+  fatal("Failed to lookup device subnet/netmask: %s", err0r);
+p = strdup(inet_ntoa(target->host));
+#ifdef HAVE_SNPRINTF
+snprintf(filter, sizeof(filter), "tcp and src host %s and dst host %s and dst port %d", p, inet_ntoa(target->source_ip), o.magic_port );
+#else
+sprintf(filter, "tcp and src host %s and dst host %s and dst port %d", p, inet_ntoa(target->source_ip), o.magic_port );
+#endif
+free(p);
+if (o.debugging)
+  printf("Packet capture filter: %s\n", filter);
+if (pcap_compile(pd, &fcode, filter, 0, netmask) < 0)
+  fatal("Error compiling our pcap filter: %s\n", pcap_geterr(pd));
+if (pcap_setfilter(pd, &fcode) < 0 )
+  fatal("Failed to set the pcap filter: %s\n", pcap_geterr(pd));
+
+if (scantype == XMAS_SCAN) scanflags = TH_FIN|TH_URG|TH_PUSH;
+else if (scantype == NULL_SCAN) scanflags = 0;
+else if (scantype == FIN_SCAN) scanflags = TH_FIN;
+
+starttime = time(NULL);
+
+if (o.debugging || o.verbose)
+  printf("Initiating FIN,NULL,or Xmas stealth scan against %s (%s)\n", target->name, inet_ntoa(target->host));
+  
+
+  do {    
+    while((numqueries_outstanding > 0) || (fresh != NULL))  /* While we have live queries or more ports to scan */
+    {
+      /* Check the possible retransmissions first */
+      gettimeofday(&now, NULL);
+      for( current = testing; current && (current != fresh); 
+	   current = (current->next >= 0)? &scan[current->next] : NULL) {
+	if ( TIMEVAL_SUBTRACT(now, current->sent) > to.timeout) {
+	  if (current->trynum > 0) {
+	    /* We consider this port valid, move it to open list */
+	    current->state = port_open;
+	    /* First delete from old list */
+	    if (current->next > -1) scan[current->next].prev = current->prev;
+	    if (current->prev > -1) scan[current->prev].next = current->next;
+	    current->next = -1;
+	    current->prev = -1;
+	    /* Now move into new list */
+	    if (!open) open = current;
+	    else {
+	      current->next = open - scan;
+	      open = current;
+	      scan[current->next].prev = current - scan;	      
+	    }
+
+	    numqueries_outstanding -= 1;
+	    changed = 1;
+	  } else {
+	    /* Initial timeout ... we've got to resend */
+	    current->trynum++;
+	    current->sent = now;
+	    for(decoy=0; decoy < o.numdecoys; decoy++) {
+	      if (o.fragscan)
+		send_small_fragz(rawsd, &o.decoys[decoy], &target->host, o.magic_port, current->portno, scanflags);
+	      else send_tcp_raw(rawsd, &o.decoys[decoy], &target->host, o.magic_port, 
+				current->portno, 0, 0, scanflags, 0, 0, 0);
+	      /*usleep(10000);*/ /* *WE* normally do not need this, but the target 
+				lamer often does */
+	    }	    
+	  }
+	}
+      }
+      /* OK, now we have gone through our list of in-transit queries, so now
+	 we try to send off new queries if we can ... */
+      for(current = fresh; current;  current = (current->next >= 0)? &scan[current->next] : NULL) {
+	if (numqueries_outstanding > (int) numqueries_ideal) break;
+	/* Otherwise lets send a packet! */
+	current->state = port_testing;
+	current->sent = now;
+	numqueries_outstanding++;
+	for(decoy=0; decoy < o.numdecoys; decoy++) {
+	  if (o.fragscan)
+	    send_small_fragz(rawsd, &o.decoys[decoy], &target->host, o.magic_port, current->portno, scanflags);
+	  else send_tcp_raw(rawsd, &o.decoys[decoy], &target->host, o.magic_port, 
+			    current->portno, 0, 0, scanflags, 0, 0, 0);
+	  /*usleep(10000);*/ /* *WE* normally do not need this, but the target 
+	    lamer often does */
+	}
+      }
+      /* Now that we have sent the packets we wait for responses */
+      while(/* need to do readip but need a working libpcap first <grr!> */1) {
+	  
+	  
+      }
+
+    }
+  } while(changed && tries < 8);
+return NULL;
+}
+
 portlist fin_scan(struct hoststruct *target, unsigned short *portarray) {
 
 int rawsd;
@@ -1771,7 +1954,7 @@ if (o.debugging || o.verbose)
 if (!target->source_ip.s_addr) {
   if (gethostname(myname, MAXHOSTNAMELEN) || 
       !(myhostent = gethostbyname(myname)))
-    fatal("Your system is fucked up.\n"); 
+    fatal("Your system is messed up.\n"); 
   memcpy(&target->source_ip, myhostent->h_addr_list[0], sizeof(struct in_addr));
   if (o.debugging || o.verbose) 
     printf("We skillfully deduced that your address is %s\n",
@@ -1781,9 +1964,6 @@ if (!target->source_ip.s_addr) {
 /* Now for the pcap opening nonsense ... */
 /* Note that the snaplen is 92 = 64 byte max IPhdr + 24 byte max link_layer
  * header + 4 bytes of TCP port info.
- * Also note that we are going into promiscuous mode because Solaris
- * apparently requires that for some unknown reason(!).  I'd like to
- * get out of promisc. if we can figure out the problem.
  */
 
 if (!(pd = pcap_open_live(target->device, 92,  (o.spoofsource)? 1 : 0, 1500, err0r)))

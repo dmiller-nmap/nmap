@@ -236,6 +236,7 @@ struct ops /* someone took struct options, <grrr> */ {
   int spoofsource; /* -S used */
   char device[64];
   int number_of_ports;
+  unsigned short magic_port;
   int max_sockets;
   int isr00t;
   struct in_addr decoys[MAX_DECOYS];
@@ -262,6 +263,7 @@ struct ops /* someone took struct options, <grrr> */ {
 };
   
 typedef port *portlist;
+typedef enum { SYN_SCAN, FIN_SCAN, XMAS_SCAN, UDP_SCAN, CONNECT_SCAN, NULL_SCAN } stype;
 
 /***********************PROTOTYPES**********************************/
 
@@ -272,6 +274,7 @@ void printusage(char *name);
 portlist tcp_scan(struct hoststruct *target, unsigned short *portarray,                  int timeout);
 portlist syn_scan(struct hoststruct *target, unsigned short *portarray);
 portlist fin_scan(struct hoststruct *target, unsigned short *portarray);
+portlist super_scan(struct hoststruct *target, unsigned short *portarray, stype scantype);
 portlist udp_scan(struct hoststruct *target, unsigned short *portarray);
 portlist lamer_udp_scan(struct hoststruct *target,unsigned short *portarray);
 portlist bounce_scan(struct hoststruct *target, unsigned short *portarray,

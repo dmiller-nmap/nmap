@@ -94,7 +94,7 @@ char *packet = safe_malloc(sizeof(struct ip) + sizeof(struct tcphdr) + datalen);
 struct ip *ip = (struct ip *) packet;
 struct tcphdr *tcp = (struct tcphdr *) (packet + sizeof(struct ip));
 struct pseudo_header *pseudo =  (struct pseudo_header *) (packet + sizeof(struct ip) - sizeof(struct pseudo_header)); 
-static int myttl = (time(NULL) % 14) + 51;
+static int myttl = 0;
 
  /*With these placement we get data and some field alignment so we aren't
    wasting too much in computing the checksum */
@@ -109,6 +109,8 @@ if ( !victim || !sport || !dport || sd < 0) {
   fprintf(stderr, "send_tcp_raw: One or more of your parameters suck!\n");
   return -1;
 }
+
+if (!myttl)  myttl = (time(NULL) % 14) + 51;
 
 /* It was a tough decision whether to do this here for every packet
    or let the calling function deal with it.  In the end I grudgingly decided
@@ -172,7 +174,7 @@ ip->ip_v = 4;
 ip->ip_hl = 5;
 ip->ip_len = BSDFIX(sizeof(struct ip) + sizeof(struct tcphdr) + datalen);
 ip->ip_id = rand();
-ip->ip_ttl = ttl;
+ip->ip_ttl = myttl;
 ip->ip_p = IPPROTO_TCP;
 ip->ip_src.s_addr = source->s_addr;
 ip->ip_dst.s_addr= victim->s_addr;
@@ -658,7 +660,7 @@ if (!lastpcap || pd != lastpcap) {
 lastpcap = pd;
 signal(SIGALRM, sig_alarm);
 if (setjmp(jmp_env)) {
-  /* We've time out */
+  /* We've timed out */
   *len = 0;
   return NULL;
 }
