@@ -221,7 +221,6 @@ void printportoutput(struct hoststruct *currenths, portlist *plist) {
 }
 
 char* xml_convert (const char* str) {
-  unsigned int i;
   char *temp, ch=0, prevch = 0, *p;
   temp = malloc(strlen(str)*6+1);
   for (p = temp;(prevch = ch, ch = *str);str++) {
@@ -624,9 +623,9 @@ void printosscanoutput(struct hoststruct *currenths) {
 	}
 	if (o.scan_delay < 500 && currenths->osscan_openport > 0 &&
 	    currenths->osscan_closedport > 0 ) {
-	  log_write(LOG_NORMAL|LOG_SKID_NOXLT|LOG_STDOUT,"No exact OS matches for host (If you know what OS is running on it, see http://www.insecure.org/cgi-bin/nmap-submit.cgi).\nTCP/IP fingerprint:\n%s\n\n", mergeFPs(currenths->FPs, currenths->numFPs, currenths->osscan_openport, currenths->osscan_closedport));
+	  log_write(LOG_NORMAL|LOG_SKID_NOXLT|LOG_STDOUT,"No exact OS matches for host (If you know what OS is running on it, see http://www.insecure.org/cgi-bin/nmap-submit.cgi).\nTCP/IP fingerprint:\n%s\n", mergeFPs(currenths->FPs, currenths->numFPs, currenths->osscan_openport, currenths->osscan_closedport));
 	} else {
-	  log_write(LOG_NORMAL|LOG_SKID_NOXLT|LOG_STDOUT,"No exact OS matches for host (test conditions non-ideal).\nTCP/IP fingerprint:\n%s\n\n", mergeFPs(currenths->FPs, currenths->numFPs, currenths->osscan_openport, currenths->osscan_closedport));
+	  log_write(LOG_NORMAL|LOG_SKID_NOXLT|LOG_STDOUT,"No exact OS matches for host (test conditions non-ideal).\nTCP/IP fingerprint:\n%s\n", mergeFPs(currenths->FPs, currenths->numFPs, currenths->osscan_openport, currenths->osscan_closedport));
 	}
       }
       
@@ -637,9 +636,9 @@ void printosscanoutput(struct hoststruct *currenths) {
     } else if (currenths->FPR.overall_results == OSSCAN_NOMATCHES) {
       if (o.scan_delay < 500  && currenths->osscan_openport > 0 &&
 	  currenths->osscan_closedport > 0 ) {
-	log_write(LOG_NORMAL|LOG_SKID_NOXLT|LOG_STDOUT,"No OS matches for host (If you know what OS is running on it, see http://www.insecure.org/cgi-bin/nmap-submit.cgi).\nTCP/IP fingerprint:\n%s\n\n", mergeFPs(currenths->FPs, currenths->numFPs, currenths->osscan_openport, currenths->osscan_closedport));
+	log_write(LOG_NORMAL|LOG_SKID_NOXLT|LOG_STDOUT,"No OS matches for host (If you know what OS is running on it, see http://www.insecure.org/cgi-bin/nmap-submit.cgi).\nTCP/IP fingerprint:\n%s\n", mergeFPs(currenths->FPs, currenths->numFPs, currenths->osscan_openport, currenths->osscan_closedport));
       } else {
-	log_write(LOG_NORMAL|LOG_SKID_NOXLT|LOG_STDOUT,"No OS matches for host (test conditions non-ideal).\nTCP/IP fingerprint:\n%s\n\n", mergeFPs(currenths->FPs, currenths->numFPs, currenths->osscan_openport, currenths->osscan_closedport));
+	log_write(LOG_NORMAL|LOG_SKID_NOXLT|LOG_STDOUT,"No OS matches for host (test conditions non-ideal).\nTCP/IP fingerprint:\n%s\n", mergeFPs(currenths->FPs, currenths->numFPs, currenths->osscan_openport, currenths->osscan_closedport));
       }
     } else if (currenths->FPR.overall_results == OSSCAN_TOOMANYMATCHES)
       {
@@ -688,7 +687,7 @@ void printosscanoutput(struct hoststruct *currenths) {
        log_write(LOG_XML, "<ipidsequence class=\"%s\" values=\"%s\"/>\n", ipidclass2ascii(currenths->seq.ipid_seqclass), numlst);
        if (o.verbose)
 	 log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"IPID Sequence Generation: %s\n", ipidclass2ascii(currenths->seq.ipid_seqclass));
-       log_write(LOG_MACHINE,"\tSeq Index: %d", currenths->seq.index);
+       log_write(LOG_MACHINE,"\tIPID Seq: %s", ipidclass2ascii(currenths->seq.ipid_seqclass));
 
        p=numlst;
        for(i=0; i < currenths->seq.responses; i++) {
