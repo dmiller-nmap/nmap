@@ -11,6 +11,9 @@ AC_CONFIG_HEADER(config.h)
 
 dnl Checks for programs.
 AC_PROG_CC
+ if test -n "$GCC"; then
+      CFLAGS="$CFLAGS -Wall "
+ fi
 AC_PROG_INSTALL
 AC_PATH_PROG(MAKEDEPEND, makedepend)
 
@@ -34,6 +37,8 @@ case "$host" in
     ;;
   *-linux*)
     AC_DEFINE(LINUX)
+    AC_DEFINE(PCAP_TIMEOUT_IGNORED)  # libpcap doesn't even LOOK at
+                                     # the timeout you give it under Linux
     ;;
 esac
 
@@ -129,6 +134,8 @@ if test $ac_cv_sockaddr_has_sa_len = yes ; then
         AC_DEFINE(HAVE_SOCKADDR_SA_LEN)
 fi
 
+dnl check endedness
+AC_C_BIGENDIAN
 
 AC_MSG_CHECKING([if struct in_addr is a wacky huge structure (some Solaris boxes)])
 
@@ -153,6 +160,23 @@ AC_CACHE_CHECK(if struct icmp exists, ac_cv_struct_icmp_exists,
         ac_cv_struct_icmp_exists=no))
 if test $ac_cv_struct_icmp_exists = yes ; then
         AC_DEFINE(HAVE_STRUCT_ICMP)
+fi
+
+AC_CACHE_CHECK(if struct ip exists, ac_cv_struct_ip_exists,
+        AC_TRY_COMPILE([
+#               include <sys/types.h>
+#               include <sys/param.h>
+#               include <netinet/in_systm.h>
+#               include <netinet/in.h>               
+#               define __USE_BSD
+#               define __FAVOR_BSD
+#               define __BSD_SOURCE
+#               include <netinet/ip.h>],
+                [unsigned int i = sizeof(struct ip)],
+        ac_cv_struct_ip_exists=yes,
+        ac_cv_struct_ip_exists=no))
+if test $ac_cv_struct_ip_exists = yes ; then
+        AC_DEFINE(HAVE_STRUCT_IP)
 fi
 
 AC_CACHE_CHECK(if struct ip has ip_sum member, ac_cv_ip_has_ip_sum,

@@ -190,7 +190,7 @@ else {
     }
     if (o.debugging)
       printf("The first host is %d, and the last one is %d\n", start, end);
-    if (start < 0 || start > end) fatal("Your port specifications are illegal!");
+    if (start < 0 || start > end) fatal("Your host specifications are illegal!");
     if (j + (end - start) > 255) fatal("Your host specifications are illegal!");
     for(k=start; k <= end; k++) 
       targets->addresses[i][j++] = k;

@@ -586,10 +586,12 @@ if (ifc.ifc_len == 0)
 }
 
 /* Read an IP packet using libpcap .  We return the packet and take
-   a pcap descripter, a pointer to the packet length (which we set
-   in the function, and a timeout (in seconds) for a packet to be received */
+   a pcap descripter and a pointer to the packet length (which we set
+   in the function.  If you want a read timeout, specify on in 
+   pcap_open_live(). If you want a maximum length returned, you also
+   should specify that in pcap_open_live() */
 
-char *readip_pcap(pcap_t *pd, unsigned int *len, unsigned long timeout /*seconds */) {
+char *readip_pcap(pcap_t *pd, unsigned int *len) {
 static int offset = -1;
 static pcap_t *lastpcap = NULL;
 struct pcap_pkthdr head;
@@ -605,6 +607,46 @@ if (!lastpcap || pd != lastpcap) {
   case DLT_EN10MB: offset = 14; break;
   case DLT_NULL: offset = 4; break;
   case DLT_SLIP: 
+  case DLT_PPP: offset = 24; break;
+  case DLT_RAW: offset = 0; break;
+  default: fatal("Unknown datalink type (%d)", datalink);
+  }
+}
+lastpcap = pd;
+do {
+  p = (char *) pcap_next(pd, &head);
+  if (p)
+    p += offset;
+  else {
+    /* timed out */ 
+    *len=0;
+    return NULL;
+  }
+} while(!p || (*p & 0x40) != 0x40); /* Go until we get IPv4 packet */
+*len = head.caplen - offset;
+return p;
+}
+
+/* Like readip_pcap except we use our own timeout value.  This is needed
+   due to a "bug" in libpcap.  The Linux pcap_open_live takes a timeout
+   but DOES NOT EVEN LOOK AT IT! */
+char *readip_pcap_timed(pcap_t *pd, unsigned int *len, unsigned long timeout /*seconds
+ */) {
+static int offset = -1;
+static pcap_t *lastpcap = NULL;
+struct pcap_pkthdr head;
+char *p;
+int datalink;
+
+if (!pd) fatal("NULL packet device passed to readip_pcap");
+if (!lastpcap || pd != lastpcap) {
+  /* New packet capture device, need to recompute offset */
+  if ( (datalink = pcap_datalink(pd)) < 0)
+    fatal("Cannot obtain datalink information: %s", pcap_geterr(pd));
+  switch(datalink) {
+  case DLT_EN10MB: offset = 14; break;
+  case DLT_NULL: offset = 4; break;
+  case DLT_SLIP:
   case DLT_PPP: offset = 24; break;
   case DLT_RAW: offset = 0; break;
   default: fatal("Unknown datalink type (%d)", datalink);
@@ -630,3 +672,4 @@ signal(SIGALRM, SIG_DFL);
 *len = head.caplen - offset;
 return p;
 }
+

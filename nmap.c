@@ -80,8 +80,8 @@ while((arg = getopt(argc,fakeargv,"Ab:DdFfhiL:lM:NnPp:qrRS:sT:tUuw:Vv")) != EOF)
     if (source)
       fatal("You can only use the source option once!\n");
     source = safe_malloc(sizeof(struct in_addr));
-    if (!inet_aton(optarg, source))
-      fatal("You must give the source address in dotted decimal, currently.\n");
+    if (!resolve(optarg, source))
+      fatal("Failed to resolve source address, try dotted decimal of check for type\n");
     break;
   case 'T': o.ptime = atoi(optarg); break;
   case 't': tcpscan++; break;
@@ -121,9 +121,11 @@ if (o.max_sockets > MAX_SOCKETS_ALLOWED) {
    printf("Warning: You are limited to MAX_SOCKETS_ALLOWD (%d) paralell sockets.  If you really need more, change the #define and recompile.\n", MAX_SOCKETS_ALLOWED);
    o.max_sockets = MAX_SOCKETS_ALLOWED;
 }
-if (pingscan && o.dontping)
-/* If he wants to bounce of an ftp site, that site better damn well be reachable! */
+if (pingscan && o.dontping) {
+  fatal("Ummm ...\"pingscan\" and don't-ping (-D) are INCOMPATIBLE options.  Sorry.\n");
+}
 
+/* If he wants to bounce off of an ftp site, that site better damn well be reachable! */
 if (bouncescan) {
   if (!inet_aton(ftp.server_name, &ftp.server)) {
     if ((target = gethostbyname(ftp.server_name)))
@@ -135,7 +137,7 @@ if (bouncescan) {
     } 
   }  else if (o.verbose)
     printf("Resolved ftp bounce attack proxy to %s (%s).\n", 
-	   target->h_name, inet_ntoa(ftp.server)); 
+	   ftp.server_name, inet_ntoa(ftp.server)); 
 }
 printf("\nStarting nmap V. %s by Fyodor (fyodor@dhp.com, www.dhp.com/~fyodor/nmap/)\n", VERSION);
 /* I seriously doubt anyone likes this "feature"
@@ -212,7 +214,7 @@ if (currenths->flags & HOST_UP && !currenths->source_ip.s_addr && ( o.synscan ||
   }
 }
 
-if ((o.finscan || o.synscan) && !ipaddr2devname( currenths->device, &currenths->source_ip))
+if (currenths->flags & HOST_UP && (o.finscan || o.synscan) && !ipaddr2devname( currenths->device, &currenths->source_ip))
   fatal("Could not figure out what device to send the packet out on!  You might possibly want to try -S (but this is probably a bigger problem)\n");
 
     /* Time for some actual scanning! */    
@@ -427,7 +429,7 @@ options (none are required, most can be combined):\n\
    -U Uriel Maimon (P49-15) style FIN stealth scan.\n\
    -l Do the lamer UDP scan even if root.  Less accurate.\n\
    -P ping \"scan\". Find which hosts on specified network(s) are up.\n\
-   -D Don't ping hosts (needed to scan scan www.microsoft.com and others)\n\
+   -D Don't ping hosts (needed to scan www.microsoft.com and others)\n\
    -b <ftp_relay_host> ftp \"bounce attack\" port scan\n\
    -f use tiny fragmented packets for SYN or FIN scan.\n\
    -i Get identd (rfc 1413) info on listening TCP processes.\n\
@@ -454,7 +456,7 @@ exit(0);
 }
 
 portlist tcp_scan(struct hoststruct *target, unsigned short *portarray, int timeout) {
-
+int connecterror = 0; /* Have we given the "strange connect error" message yet? */
 int starttime, current_out = 0, res , deadindex = 0, i=0, j=0, k=0, max=0; 
 struct sockaddr_in sock, stranger, mysock;
 int sockaddr_in_len = sizeof(struct sockaddr_in);
@@ -521,7 +523,7 @@ while(portarray[j] || retryindex >= 0 || current_out != 0) {
     if ((res = connect(sockets[current_socket],(struct sockaddr *)&sock,sizeof(struct sockaddr)))!=-1) {
 	/* This can happen on localhost, successful connection immediately
            in non-blocking mode */
-      if (o.debugging || o.verbose)
+      if (o.debugging || o.verbose) 
 	printf("Adding TCP port %hi due to successful connection.\n", 
 	       portno[current_socket]);
       if (tryident) {
@@ -554,8 +556,12 @@ while(portarray[j] || retryindex >= 0 || current_out != 0) {
 	FD_SET(sockets[current_socket], &fds_read);
 	break;
       default:
+	if (!connecterror) {	
 	printf("Strange error from connect (%d):", errno);
+	fflush(stdout);
 	perror(""); /*falling through intentionally*/
+	connecterror++;
+	}
       case ECONNREFUSED:
 	if (max == sockets[current_socket]) max--;
 	deadstack[++deadindex] = current_socket;
@@ -567,9 +573,13 @@ while(portarray[j] || retryindex >= 0 || current_out != 0) {
       }
     }
   }
-  /*  if (!portarray[j] && retryindex < 0) sleep(2); *//*If we are done, wait a second for any last packets*/
+  /*  if (!portarray[j] && retryindex < 0) sleep(2); *//*If we are done, 
+      wait a second for any last packets*/
+  /*  Use nowait if we have more to send, but if we already have max_sockets
+      out or if we are out of ports & retries, might as well wait awhile */
   while((res = select(max + 1, &fds_read, &fds_write, NULL, 
-		      (current_out < o.max_sockets)?
+		      ((current_out < o.max_sockets) &&  
+		       (current_out == 0 || portarray[j] || retryindex >= 0) )?
 		      &nowait : &longwait)) > 0) {
     fflush(stdout);
     for(k=0; k < o.max_sockets; k++)
@@ -707,7 +717,11 @@ while(portarray[j] || retryindex >= 0 || current_out != 0) {
 	    printf("Port %d timed out\n", portno[z]);
 	  timeouts++;	      
 	  if (timeouts > MAX_TIMEOUTS && !target->ports && !o.force) {
-	    printf("MAX_TIMEOUT threshold (%d) reached, giving up on host %s (%s).  Use -N to skip this check.\n", MAX_TIMEOUTS, target->name, inet_ntoa(target->host));		
+	    if (!o.verbose && !o.debugging  && !threshold_warning)
+	      printf("MAX_TIMEOUT threshold (%d) reached, giving up on host %s (%s).  Use -N to skip this check.  This warning won't be repeated during this session\n", MAX_TIMEOUTS, target->name, inet_ntoa(target->host));
+	    else if (o.verbose || o.debugging)
+	      printf("MAX_TIMEOUT threshold (%d) reached, giving up on host %s (%s).  Use -N to skip this check.\n", MAX_TIMEOUTS, target->name, inet_ntoa(target->host));
+	    threshold_warning++;
 	    for(k=0; k < o.max_sockets; k++) 
 	      if (portno[k]) 
 		close(sockets[k]);
@@ -1203,23 +1217,59 @@ return (end.tv_sec - begin.tv_sec) * 1000000 + (end.tv_usec - begin.tv_usec);
 
 /* Checks whether the identd port (113) is open on the target machine.  No
    sense wasting time trying it for each good port if it is down! */
+
 int check_ident_port(struct in_addr target) {
 int sd;
+char buf[4096];
 struct sockaddr_in sock;
 int res;
-
+struct sockaddr_in stranger;
+int sockaddr_in_len = sizeof(struct sockaddr_in);
+fd_set fds_read, fds_write;
+struct timeval tv;
+tv.tv_sec = o.ptime;
+tv.tv_usec = 0;
 if ((sd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) == -1)
   {perror("Socket troubles"); exit(1);}
-
+unblock_socket(sd);
 sock.sin_family = AF_INET;
 sock.sin_addr.s_addr = target.s_addr;
 sock.sin_port = htons(113); /*should use getservbyname(3), yeah, yeah */
+FD_SET(sd, &fds_read);
+FD_SET(sd, &fds_write);
 res = connect(sd, (struct sockaddr *) &sock, sizeof(struct sockaddr_in));
-close(sd);
-if (res < 0 ) {
-  if (o.debugging || o.verbose) printf("identd port not active\n");
-  return 0;
+if (res != -1) /* must be scanning localhost, this socket is non-blocking */ 
+  goto success;
+if (errno == ECONNREFUSED) /* Unlikely in non-blocking, but could happen  */ 
+  goto failure;
+if ((res = select(sd+1, &fds_read, &fds_write, NULL, &tv)) > 0) {
+  /* Yay, it may be up ... */
+  if (FD_ISSET(sd, &fds_read) && FD_ISSET(sd, &fds_write)) {
+    res = recvfrom(sd, buf,4096, 0, (struct sockaddr *) & stranger, &sockaddr_in_len);
+    if (res >= 0) goto success;
+    goto failure;
+  }
+  else if (FD_ISSET(sd, &fds_write)) {
+    res = send(sd, buf, 0, 0);
+    if (res < 0) goto failure;
+    goto success;
+  } else if (FD_ISSET(sd, &fds_read)) {
+    printf("I have never seen this type of socket selectable for read only.  Please let me know how you did it and what OS you are running (fyodor@dhp.com).\n");
+    goto success;
+  }
+  else {
+    printf("Wow, select blatantly lied to us!  Please let fyodor know what OS you are running (fyodor@dhp.com).\n");
+    goto failure;
+  } 
 }
+
+failure:
+close(sd);
+if (o.debugging || o.verbose) printf("identd port not active\n");
+return 0;
+
+success:
+close(sd);
 if (o.debugging || o.verbose) printf("identd port is active\n");
 return 1;
 }
@@ -1296,7 +1346,8 @@ return 1;
 /* SYN scan, we now use libpcap instead of the non-portable Linux technique
    of using recvfrom() to read TCP packets from a RAW socket */
 portlist syn_scan(struct hoststruct *target, unsigned short *portarray) {
-int i=0, j=0, bytes, starttime;
+int i=0, j=0, starttime;
+unsigned int bytes;
 int sockets[MAX_SOCKETS_ALLOWED];
 struct timeval tv,start,end;
 unsigned int elapsed_time;
@@ -1306,7 +1357,7 @@ struct tcphdr *tcp = NULL; /*(struct tcphdr *) (packet + sizeof(struct ip));*/
 fd_set fd_read, fd_write;
 struct hostent *myhostent = NULL;
 char myname[MAXHOSTNAMELEN + 1];
-short magic_port_NBO;
+unsigned short magic_port_NBO;
 int packets_out;
 pcap_t *pd;
 struct bpf_program fcode;
@@ -1340,7 +1391,13 @@ if (!target->source_ip.s_addr) {
 }
 
 /* Now for the pcap opening nonsense ... */
-if (!(pd = pcap_open_live(target->device, 40, 0, 0, err0r)))
+/* Note that the snaplen is 92 = 64 byte max IPhdr + 24 byte max link_layer
+ * header + 4 bytes of TCP port info.
+ * Also note that we are going into promiscuous mode because Solaris
+ * apparently requires that for some unknown reason(!).  I'd like to
+ * get out of promisc. if we can figure out the problem.
+ */
+if (!(pd = pcap_open_live(target->device, 92, 0, 1500, err0r)))
   fatal("pcap_open_live: %s", err0r);
 if (pcap_lookupnet(target->device, &localnet, &netmask, err0r) < 0)
   fatal("Failed to lookup device subnet/netmask: %s", err0r);
@@ -1386,39 +1443,46 @@ do {
             while  ((bytes = recvfrom(received, packet, 65535, 0, 
 				(struct sockaddr *)&from, &fromsize)) > 0 ) {
       */
-      while (( ip = (struct ip*) readip_pcap(pd, &bytes, 1))) {
-	tcp = (struct tcphdr *) (((char *)ip) + (4 * ip->ip_hl));
-	if (ip->ip_src.s_addr == target->host.s_addr && tcp->th_sport != magic_port_NBO
-	    && tcp->th_dport == magic_port_NBO) {
-	  
-	  packets_out--;
-	  if (tcp->th_flags & TH_RST) {
-	    if (o.debugging > 1) printf("Nothing open on port %d\n",
-					ntohs(tcp->th_sport));
-	  }
-	  else /*if (tcp->th_flags & TH_SYN && tcp->th_flags & TH_ACK)*/ {
-	    if (o.debugging || o.verbose) {	  
-	      printf("Possible catch on port %d!  Here it is:\n", 
-		     ntohs(tcp->th_sport));
-	      readtcppacket((char *)ip,1);
+#ifndef PCAP_TIMEOUT_IGNORED
+      while (( ip = (struct ip*) readip_pcap(pd, &bytes))) 
+#else
+      while(( ip = (struct ip*) readip_pcap_timed(pd, &bytes, 1)))
+#endif
+	{
+	  if (bytes < (4 * ip->ip_hl) + 4)
+	    continue;
+	  tcp = (struct tcphdr *) (((char *)ip) + (4 * ip->ip_hl));
+	  if (ip->ip_src.s_addr == target->host.s_addr && tcp->th_sport != magic_port_NBO
+	      && tcp->th_dport == magic_port_NBO) {
+	    
+	    packets_out--;
+	    if (tcp->th_flags & TH_RST) {
+	      if (o.debugging > 1) printf("Nothing open on port %d\n",
+					  ntohs(tcp->th_sport));
 	    }
-	    addport(&target->ports, ntohs(tcp->th_sport), IPPROTO_TCP, NULL); 	    
+	    else /*if (tcp->th_flags & TH_SYN && tcp->th_flags & TH_ACK)*/ {
+	      if (o.debugging || o.verbose) {	  
+		printf("Possible catch on port %d!  Here it is:\n", 
+		       ntohs(tcp->th_sport));
+		readtcppacket((char *)ip,1);
+	      }
+	      addport(&target->ports, ntohs(tcp->th_sport), IPPROTO_TCP, NULL); 	    
+	    }
 	  }
 	}
-      }
-  gettimeofday(&end, NULL);
-  elapsed_time = (end.tv_sec - start.tv_sec) * 1e6 + end.tv_usec - start.tv_usec;
+      gettimeofday(&end, NULL);
+      elapsed_time = (end.tv_sec - start.tv_sec) * 1e6 + end.tv_usec - start.tv_usec;
   } while ( packets_out && elapsed_time < 1e6 * (double) o.ptime / 3 );
   /*for(i=0; i < o.max_sockets && portarray[j]; i++) close(sockets[i]);*/
-    for(; i >= 0; i--) close(sockets[i]);
+  for(; i >= 0; i--) close(sockets[i]);
   
 } while (portarray[j]);
-if (o.debugging || o.verbose)
-  printf("The TCP SYN scan took %ld seconds to scan %d ports.\n",
-	 (long) time(NULL) - starttime, o.numports);
-/*close(received);*/
-pcap_close(pd);
-return target->ports;
+ if (o.debugging || o.verbose)
+   printf("The TCP SYN scan took %ld seconds to scan %d ports.\n",
+	  (long) time(NULL) - starttime, o.numports);
+ /*close(received);*/
+ pcap_close(pd);
+ return target->ports;
 }
 
 /* We don't exactly need real crypto here (thank god!)\n"*/
@@ -1568,7 +1632,8 @@ portlist fin_scan(struct hoststruct *target, unsigned short *portarray) {
 int rawsd;
 int done = 0, badport, starttime, someleft, i, j=0, retries=2;
 int waiting_period = retries, sockaddr_in_size = sizeof(struct sockaddr_in);
-int bytes, dupesinarow = 0;
+int dupesinarow = 0;
+unsigned bytes;
 unsigned long timeout;
 struct hostent *myhostent = NULL;
 char response[65535], myname[513];
@@ -1607,8 +1672,16 @@ if (!target->source_ip.s_addr) {
 }
 
 /* Now for the pcap opening nonsense ... */
-if (!(pd = pcap_open_live(target->device, 40, 0, 0, err0r)))
+/* Note that the snaplen is 92 = 64 byte max IPhdr + 24 byte max link_layer
+ * header + 4 bytes of TCP port info.
+ * Also note that we are going into promiscuous mode because Solaris
+ * apparently requires that for some unknown reason(!).  I'd like to
+ * get out of promisc. if we can figure out the problem.
+ */
+
+if (!(pd = pcap_open_live(target->device, 92, 0, 1500, err0r)))
   fatal("pcap_open_live: %s", err0r);
+
 if (pcap_lookupnet(target->device, &localnet, &netmask, err0r) < 0)
   fatal("Failed to lookup device subnet/netmask: %s", err0r);
 p = strdup(inet_ntoa(target->host));
@@ -1653,36 +1726,44 @@ while(!done) {
   /* NOT PORTABLE, USING libpcap INSTEAD */
   /*while ((bytes = recvfrom(tcpsd, response, 65535, 0, (struct sockaddr *)
     &stranger, &sockaddr_in_size)) > 0) */
-  while(( ip = (struct ip*) readip_pcap(pd, &bytes,1)))
-    if (ip->ip_src.s_addr == target->host.s_addr) {
-      tcp = (struct tcphdr *) (((char *) ip) + 4 * ip->ip_hl);
-      if (tcp->th_flags & TH_RST) {
-	badport = ntohs(tcp->th_sport);
-	if (o.debugging > 1) printf("Nothing open on port %d\n", badport);
-	/* delete the port from active scanning */
-	for(i=0; i < o.max_sockets; i++) 
-	  if (portno[i] == badport) {
-	    if (o.debugging && trynum[i] > 0)
-	      printf("Bad port %d caught on fin scan, try number %d\n",
-		     badport, trynum[i] + 1);
-	    trynum[i] = 0;
-	    portno[i] = 0;
-	    break;
+#ifndef PCAP_TIMEOUT_IGNORED
+  while(( ip = (struct ip*) readip_pcap(pd, &bytes))) 
+#else
+  while(( ip = (struct ip*) readip_pcap_timed(pd, &bytes, 1))) 
+#endif
+    {    
+      if (bytes < (4 * ip->ip_hl) + 4)
+	continue;
+      if (ip->ip_src.s_addr == target->host.s_addr) {
+	tcp = (struct tcphdr *) (((char *) ip) + 4 * ip->ip_hl);
+	if (tcp->th_flags & TH_RST) {
+	  badport = ntohs(tcp->th_sport);
+	  if (o.debugging > 1) printf("Nothing open on port %d\n", badport);
+	  /* delete the port from active scanning */
+	  for(i=0; i < o.max_sockets; i++) 
+	    if (portno[i] == badport) {
+	      if (o.debugging && trynum[i] > 0)
+		printf("Bad port %d caught on fin scan, try number %d\n",
+		       badport, trynum[i] + 1);
+	      trynum[i] = 0;
+	      portno[i] = 0;
+	      break;
+	    }
+	  if (i == o.max_sockets) {
+	    if (o.debugging)
+	      printf("Late packet or dupe, deleting port %d.\n", badport);
+	    dupesinarow++;
+	    if (target->ports) deleteport(&target->ports, badport, IPPROTO_TCP);
 	  }
-	if (i == o.max_sockets) {
-	  if (o.debugging)
-	    printf("Late packet or dupe, deleting port %d.\n", badport);
-	  dupesinarow++;
-	  if (target->ports) deleteport(&target->ports, badport, IPPROTO_TCP);
 	}
+	else 
+	  if (o.debugging > 1) {	  
+	    printf("Strange packet from target%d!  Here it is:\n", 
+		   ntohs(tcp->th_sport));
+	    if (bytes >= 40) readtcppacket(response,1);
+	    else hdump(response,bytes);
+	  }
       }
-      else 
-	if (o.debugging > 1) {	  
-	  printf("Strange packet from target%d!  Here it is:\n", 
-		 ntohs(tcp->th_sport));
-	  if (bytes >= 40) readtcppacket(response,1);
-	  else hdump(response,bytes);
-	}
     }
   
   /* adjust waiting time if neccessary */
@@ -1695,8 +1776,7 @@ while(!done) {
       return target->ports;
     }
   }
-
-
+  
   /* Ok, collect good ports (those that we haven't received responses too 
      after all our retries */
   someleft = 0;
@@ -1706,17 +1786,17 @@ while(!done) {
 	if (o.verbose || o.debugging)
 	  printf("Good port %d detected by fin_scan!\n", portno[i]);
 	addport(&target->ports, portno[i], IPPROTO_TCP, NULL);
-    send_tcp_raw( rawsd, &target->source_ip, &target->host, MAGIC_PORT, portno[i], 0, 0, 
-		  TH_FIN, 0, 0, 0);
-    portno[i] = trynum[i] = 0;
+	send_tcp_raw( rawsd, &target->source_ip, &target->host, MAGIC_PORT, portno[i], 0, 0, 
+		      TH_FIN, 0, 0, 0);
+	portno[i] = trynum[i] = 0;
       }
       else someleft = 1;
     }  
-
+  
   if (!portarray[j] && (!someleft || --waiting_period <= 0)) done++;
 }
-
-if (o.debugging || o.verbose)
+ 
+ if (o.debugging || o.verbose)
   printf("The TCP stealth FIN scan took %ld seconds to scan %d ports.\n", 
 	 (long) time(NULL) - starttime, o.numports);
 /*close(tcpsd);*/
@@ -1928,7 +2008,15 @@ for(i=0; portarray[i]; i++) {
 	    if (recvbuf[0] == '1') {
 	    res = recvtime(sd, recvbuf, 2048,5);
 	    recvbuf[res] = '\0';
-	    if ((res > 0) && o.debugging) printf("nxt line: %s", recvbuf);
+	    if (res > 0) {
+	      if (o.debugging) printf("nxt line: %s", recvbuf);
+	      if (recvbuf[0] == '4' && recvbuf[1] == '2' && 
+		  recvbuf[2] == '6') {	      	
+		deleteport(&target->ports, portarray[i], IPPROTO_TCP);
+		if (o.debugging || o.verbose)
+		  printf("Changed my mind about port %i\n", portarray[i]);
+	      }
+	    }
 	    }
 	  }
 	}

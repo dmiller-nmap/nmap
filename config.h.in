@@ -1,4 +1,12 @@
 
+#undef PCAP_TIMEOUT_IGNORED
+
+#undef HAVE_STRUCT_IP
+
+#undef HAVE_STRUCT_ICMP
+
+#undef HAVE_IP_IP_SUM
+
 #undef HAVE_INLINE
 
 #undef STDC_HEADERS
@@ -6,6 +14,8 @@
 #undef HAVE_STRING_H
 
 #undef HAVE_STRINGS_H
+
+#undef WORDS_BIGENDIAN
 
 #undef HAVE_MEMORY_H
 
@@ -28,10 +38,6 @@
 #undef HAVE_SOCKADDR_SA_LEN
 
 #undef HAVE_NETINET_IF_ETHER_H
-
-#undef HAVE_STRUCT_ICMP
-
-#undef HAVE_IP_IP_SUM
 
 #undef LINUX
 

@@ -110,6 +110,40 @@ void *realloc();
 #define TCPIP_DEBUGGING 0
 #endif
 
+#ifndef HAVE_STRUCT_IP
+#define HAVE_STRUCT_IP
+
+/* From Linux glibc, which apparently borrowed it from
+   BSD code.  Slightly modified for portability --fyodor@dhp.com */
+/*
+ * Structure of an internet header, naked of options.
+ */
+struct ip
+  {
+#if WORDS_BIGENDIAN
+    u_int8_t ip_v:4;                    /* version */
+    u_int8_t ip_hl:4;                   /* header length */
+#else
+    u_int8_t ip_hl:4;                   /* header length */
+    u_int8_t ip_v:4;                    /* version */ 
+#endif
+    u_int8_t ip_tos;                    /* type of service */
+    u_short ip_len;                     /* total length */
+    u_short ip_id;                      /* identification */
+    u_short ip_off;                     /* fragment offset field */
+#define IP_RF 0x8000                    /* reserved fragment flag */
+#define IP_DF 0x4000                    /* dont fragment flag */
+#define IP_MF 0x2000                    /* more fragments flag */
+#define IP_OFFMASK 0x1fff               /* mask for fragmenting bits */
+    u_int8_t ip_ttl;                    /* time to live */
+    u_int8_t ip_p;                      /* protocol */
+    u_short ip_sum;                     /* checksum */
+    struct in_addr ip_src, ip_dst;      /* source and dest address */
+  };
+
+#endif /* HAVE_STRUCT_IP */
+
+
 #ifndef HAVE_STRUCT_ICMP
 #define HAVE_STRUCT_ICMP
 /* From Linux /usr/include/netinet/ip_icmp.h GLIBC */
@@ -224,7 +258,9 @@ int unblock_socket(int sd);
 unsigned short in_cksum(unsigned short *ptr,int nbytes);
 /* Hex dump */
 int get_link_offset(char *device);
-char *readip_pcap(pcap_t *pd, unsigned int *len, unsigned long timeout /*seconds */);
+char *readip_pcap(pcap_t *pd, unsigned int *len);
+char *readip_pcap_timed(pcap_t *pd, unsigned int *len, unsigned long timeout /*seconds
+ */);
 #ifndef HAVE_INET_ATON
 int inet_aton(register const char *, struct in_addr *);
 #endif

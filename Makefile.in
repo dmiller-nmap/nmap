@@ -2,6 +2,7 @@
 prefix = @prefix@
 exec_prefix = @exec_prefix@
 bindir = @bindir@
+sbindir = @sbindir@
 mandir = @mandir@
 srcdir = @srcdir@
 
@@ -10,10 +11,10 @@ CCOPT =
 LIBPCAPDIR = @libpcapdir@
 INCLS = -I. -I$(LIBPCAPDIR)
 DEFS = @DEFS@
-CFLAGS = @CFLAGS@ -Wall $(CCOPT) $(DEFS) $(INCLS)
+CFLAGS = @CFLAGS@ $(CCOPT) $(DEFS) $(INCLS)
 LDFLAGS = @LDFLAGS@
 LIBS = -L./$(LIBPCAPDIR) @LIBS@ -lpcap
-VERSION = 1.49-UNRELEASED
+VERSION = 1.49
 INSTALL = @INSTALL@
 MAKEDEPEND = @MAKEDEPEND@
 
@@ -27,17 +28,11 @@ all: $(TARGET)
 
 $(TARGET): $(OBJS)
 	@echo Compiling libpcap 
-#	$(MAKE) -C $(LIBPCAPDIR) #not all hosts have this :( ...
+#	$(MAKE) -C $(LIBPCAPDIR) #not all make's have this :( ...
 	cd $(LIBPCAPDIR);  $(MAKE)
 	@echo Compiling nmap
 	rm -f $@
 	$(CC) -o $@ $(OBJS) $(LIBS)
-
-debug: nmap_debug.o targets.c nmap.h 
-	$(CC) $(CFLAGS) $(LDFLAGS) -g -DDEBUGGING=1 -o nmap nmap_debug.o targets.c $(LIBS)
-
-nmap_debug.o: nmap.c nmap.h
-	$(CC) $(CFLAGS) -g -DDEBUGGING=1 -c -o nmap_debug.o nmap.c
 
 ci: checkin
 
