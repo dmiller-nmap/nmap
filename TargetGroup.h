@@ -74,7 +74,7 @@ class TargetGroup {
 
   void Initialize();
 
-#if IPV6_SUPPORTED
+#if HAVE_IPV6
   struct in6_addr ip6;
 #endif
 

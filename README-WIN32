@@ -38,10 +38,12 @@ Nmap only exists for Win32 because of their hard work.
 
 *** Using the Binary Distribution ***
 
-At some point this will be an easy install-shield app and may install
-an icon and such for the graphical version of Nmap ( nmapfe ).  But
-for now, here is how to use the command line binaries available in
-nmap-VERSION-win32.zip :
+There are a couple binary distributions of Windows Nmap.  One is
+Winmap, which is packaged in an install-shield installation wizard and
+includes a graphical GUI as well as command-line Nmap.  The other
+distribution is the command-line zipfile, called
+nmap-VERSION-win32.zip .  Here are the instructions for installing
+this zip archive:
 
 1) Make sure you have installed Winpcap Version 2.1-beta or later.  This
    is available at http://netgroup-serv.polito.it/winpcap/ .  It is
@@ -59,13 +61,23 @@ nmap-VERSION-win32.zip :
 1) Decompress the archive ( nmap-VERSION.tgz ).  This is the same
    tarball that is used for UNIX installations.
 
-2) Open Visual C++ 6 and then open the nmap workspace (
+2) Make sure your Visual C++ compiler recognizes the .cc extension as
+   C++ files.  This is done via the following registry modificuations
+   (use regedt32 or whatever):
+
+HKEY_CURRENT_USER\Software\Microsoft\DevStudio\6.0\Text Editor\Tabs/Language Settings\C/C++ FileExtensions=cpp;cxx;c;h;hxx;hpp;inl;tlh;tli;rc;rc2;cc;cp 
+HKEY_USERS\S-1-5-21-1219703950-274334628-1532313055-1335\Software\Microsoft\DevStudio\6.0\Build System\Components\Platforms\Win32 (x86)\Tools\32-bit C/C++ Compiler for 80x86 Input_Spec=*.c;*.cpp;*.cxx,*.cc,*.cp 
+HKEY_USERS\S-1-5-21-1219703950-274334628-1532313055-1335\Software\Microsoft\DevStudio\6.0\Build System\Components\Tools\<Component 0x3> Input_Spec=*.c;*.cpp;*.cxx;*.cc;*.cp 
+
+Note:  The numbers in the "S-1-5-21-*" keys above may vary.
+
+3) Open Visual C++ 6 and then open the nmap workspace (
    nmap-VERSION/mswin32/nmap.dsw )
 
-3) Project Menu -> Set Active Project -> Nmap
+4) Project Menu -> Set Active Project -> Nmap
    Build Menu -> Set Active Configuration -> Nmap - Win32 Release
 
-4) Press [F7] to build nmap.exe .
+5) Press [F7] to build nmap.exe .
 
 5) The executable can be found in
    nmap-VERSION/mswin32/Release/nmap.exe .  Remember that you must

@@ -361,7 +361,11 @@ int nmap_main(int argc, char *argv[]) {
       }
       break;
     case '6':
+#if !HAVE_IPV6
+      fatal("I am afraid IPv6 is not available because your host doesn't support it or you chose to compile Nmap w/o IPv6 support.");
+#else
       o.setaf(AF_INET6);
+#endif /* !HAVE_IPV6 */
       break;
     case 'b': 
       o.bouncescan++;
