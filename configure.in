@@ -9,7 +9,7 @@ fi
 dnl Process this file with autoconf to produce a configure script.
 AC_INIT(nmap.c)
 
-libpcapdir=libpcap-0.4a6
+libpcapdir=libpcap-possiblymodified
 AC_SUBST(libpcapdir)
 
 dnl use config.h instad of -D macros

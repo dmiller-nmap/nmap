@@ -37,6 +37,9 @@ unsigned long  seq_avg_inc = 0;
 unsigned long seq_gcd = 1;
 unsigned long seq_diffs[NUM_SEQ_SAMPLES];
 
+/* Init our fingerprint tests to each be NULL */
+bzero(FPtests, sizeof(FPtests)); 
+
 /* Init our raw socket */
  if ((rawsd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) < 0 )
    pfatal("socket trobles in super_scan");
@@ -69,6 +72,9 @@ if (pcap_lookupnet(target->device, &localnet, &netmask, err0r) < 0)
 
 sprintf(filter, "(icmp and dst host %s) or (tcp and src host %s and dst host %s)", inet_ntoa(target->source_ip), p, inet_ntoa(target->source_ip));
  free(p);
+ /* Due to apparent bug in libpcap */
+ if (target->source_ip.s_addr == htonl(0x7F000001))
+   filter[0] = '\0';
  if (o.debugging)
    printf("Packet capture filter: %s\n", filter);
  if (pcap_compile(pd, &fcode, filter, 0, netmask) < 0)
@@ -139,12 +145,12 @@ if (o.verbose && openport != -1)
 	  if (si->responses > 1) {
 	    seq_diffs[si->responses-2] = MOD_DIFF(ntohl(tcp->th_seq), si->seqs[si->responses-2]);
 	  }
-	if (!FP) {
-	  FP = safe_malloc(sizeof(FingerPrint));
-	  bzero(FP, sizeof(FingerPrint));
-	  FP->name = "T1";
-	  FP->results = fingerprint_iptcppacket(ip ,265, ntohl(tcp->th_ack) -1);
-	  FP->next = NULL;
+	if (!FPtests[1]) {
+	  FPtests[1] = safe_malloc(sizeof(FingerPrint));
+	  bzero(FPtests[1], sizeof(FingerPrint));
+	  FPtests[1]->name = "T1";
+	  FPtests[1]->results = fingerprint_iptcppacket(ip ,265, ntohl(tcp->th_ack) -1);
+	  FPtests[1]->next = NULL;
 	}
       }
      }
@@ -198,16 +204,12 @@ if (o.verbose && openport != -1)
 	 /*	 printf("Target is a random incremental box\n");*/
        }
      }
-     FPtmp = safe_malloc(sizeof(FingerPrint));
-     bzero(FPtmp, sizeof(FingerPrint));
-     if (!FP)
-       FPtmp->next = NULL;
-     else FPtmp->next = FP;
-     FP = FPtmp;
-     FP->name = "TSeq";
+     FPtests[0] = safe_malloc(sizeof(FingerPrint));
+     bzero(FPtests[0], sizeof(FingerPrint));
+     FPtests[0]->name = "TSeq";
      seq_AVs = safe_malloc(sizeof(struct AVal) * 3);
      bzero(seq_AVs, sizeof(struct AVal) * 3);
-     FP->results = seq_AVs;
+     FPtests[0]->results = seq_AVs;
      seq_AVs[0].attribute = "Class";
      switch(si->class) {
      case SEQ_CONSTANT:
@@ -256,7 +258,7 @@ if (o.verbose && openport != -1)
  /* Now lets do the NULL packet technique */
  testsleft = (openport == -1)? 3 : 6;
  FPtmp = NULL;
- bzero(FPtests, sizeof(FPtests));
+ /* bzero(FPtests, sizeof(FPtests));*/
  tries = 0;
  do { 
    newcatches = 0;
@@ -327,8 +329,8 @@ if (o.verbose && openport != -1)
    if (o.debugging > 1) printf("TMP3\n");
  } while ( testsleft > 0 && (tries++ < 5 && (newcatches || tries == 1)));
  
-for(i=2; i < 8; i++)
-  if (!FPtests[i] && ((openport != -1) || i > 4)) {
+for(i=0; i < 8; i++) {
+  if (i > 1 && !FPtests[i] && ((openport != -1) || i > 4)) {
     /* We create a Resp (response) attribute with value of N (no) because
        it is important here to note whether responses were or were not 
        received */
@@ -341,25 +343,18 @@ for(i=2; i < 8; i++)
     FPtests[i]->results = seq_AVs;
     FPtests[i]->name =  (i == 2)? "T2" : (i == 3)? "T3" : (i == 4)? "T4" : (i == 5)? "T5" : (i == 6)? "T6" : (i == 7)? "T7" : "T8";
   }
-
- last = 0;
- FPtmp = NULL;
- for(i=2; i < 8 ; i++) {
+}
+ last = -1;
+ FP = NULL;
+ for(i=0; i < 8 ; i++) {
    if (!FPtests[i]) continue; 
-   if (!FPtmp) FPtmp = FPtests[i];
-   if (last) {
+   if (!FP) FP = FPtests[i];
+   if (last > -1) {
      FPtests[last]->next = FPtests[i];    
    }
    last = i;
  }
  if (last) FPtests[last]->next = NULL;
- 
- if (!FP) FP = FPtmp;
- else {
-   for(FPtests[0] = FP; FPtests[0]->next; FPtests[0] = FPtests[0]->next)
-     ;
-   FPtests[0]->next = FPtmp;	
- }
 
  close(rawsd);
  pcap_close(pd);

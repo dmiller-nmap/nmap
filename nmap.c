@@ -388,9 +388,9 @@ while((host_spec = grab_next_host_spec(inputfd, argc, fakeargv))) {
     if (o.wait && currenths->rtt) currenths->rtt += o.wait;
     if (o.source) memcpy(&currenths->source_ip, o.source, sizeof(struct in_addr));
 if (!o.pingscan) {
-  if (o.pingtype && (currenths->flags & HOST_UP) && (o.verbose || o.debugging)) 
+  if (o.pingtype != PINGTYPE_NONE && (currenths->flags & HOST_UP) && (o.verbose || o.debugging)) 
     printf("Host %s (%s) appears to be up ... good.\n", currenths->name, inet_ntoa(currenths->host));    
-  else if (o.verbose && o.pingtype && !(currenths->flags & HOST_UP)) {  
+  else if (o.verbose && o.pingtype != PINGTYPE_NONE && !(currenths->flags & HOST_UP)) {  
     if (resolve_all)
       nmap_log("Host %s (%s) appears to be down, skipping it.\n", currenths->name, inet_ntoa(currenths->host));
     else printf("Host %s (%s) appears to be down, skipping it.\n", currenths->name, inet_ntoa(currenths->host));
@@ -1313,7 +1313,7 @@ portlist super_scan(struct hoststruct *target, unsigned short *portarray, stype 
   struct timeval now;
   int i;
   unsigned short *data;
-  int packet_trynum =0;
+  int packet_trynum = 0;
   int windowdecrease = 0; /* Has the window been decreased this round yet? */
   struct icmp *icmp;
 
@@ -1445,8 +1445,6 @@ if (o.debugging || o.verbose)
 		else send_udp_raw(rawsd, &o.decoys[decoy], &target->host, i,
 				  current->portno, NULL ,0);	      
 		if (scantype == UDP_SCAN && senddelay) usleep(senddelay);
-		/*usleep(10000);*/ /* *WE* normally do not need this, but the target 
-		  lamer often does */
 	      }
 	    }
 	  }
@@ -1471,8 +1469,6 @@ if (o.debugging || o.verbose)
 	    else send_udp_raw(rawsd, &o.decoys[decoy], &target->host, o.magic_port,
 			      current->portno, NULL, 0);
 	    	    if (scantype == UDP_SCAN && senddelay) usleep(senddelay);
-	    /*usleep(10000);*/ /* *WE* normally do not need this, but the target 
-	      lamer often does */
 	  }
 	}
       }
@@ -1499,7 +1495,18 @@ if (o.debugging || o.verbose)
 	      }	      
 	      /* We figure out the scan number (and put it in i) */
 	      current = &scan[portlookup[newport]];
-
+	      if (current->state != PORT_TESTING) {
+	        if (o.debugging) {
+		  error("TCP packet detected from port %d which is in state %d (should be PORT_TESTING", newport, current->state); 
+		}
+		continue;
+	      }
+	      if (ntohs(tcp->th_dport) != o.magic_port && ntohs(tcp->th_dport) != o.magic_port + 1) {
+		if (o.debugging)  {		
+		  error("BAD TCP packet detected to port %d from port %d", ntohs(tcp->th_dport), newport);
+		}
+		continue;		
+	      }
 	      if (!o.magic_port_set) {
 		packet_trynum = ntohs(tcp->th_dport) - o.magic_port;
 		if ((packet_trynum|1) != 1) packet_trynum = -1;
@@ -2148,6 +2155,9 @@ __inline__ void adjust_timeouts(struct timeval sent, struct timeout_info *to) {
   }
   if (o.debugging > 1) {
     printf("delta %d ==> srtt: %d rttvar: %d to: %d\n", delta, to->srtt, to->rttvar, to->timeout);
+  }
+  if (to->srtt < 0 || to->rttvar < 0 || to->timeout < 0 || delta < -50000000) {
+    fatal("Serious time computation problem in adjust_timeout ... end = (%d, %d) sent=(%d,%d) delta = %d srtt = %d rttvar = %d to = %d", end.tv_sec, end.tv_usec, sent.tv_sec, sent.tv_usec, delta, to->srtt, to->rttvar, to->timeout);
   }
 }
 

@@ -519,7 +519,7 @@ fi
 
 
 
-libpcapdir=libpcap-0.4a6
+libpcapdir=libpcap-possiblymodified
 
 
 

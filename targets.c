@@ -101,9 +101,9 @@ do {
     /* If we still do not have a source IP, we create one IFF
        1) We are r00t AND
        2) We are doing tcp pingscan OR
-       3) We are doing NO scan AND we are doing a raw-mode portscan */
+       3) We are doing NO scan AND we are doing a raw-mode portscan or osscan*/
     else {
-      if (o.isr00t && ((o.pingtype & PINGTYPE_TCP) || (o.pingtype == PINGTYPE_NONE && (o.synscan || o.finscan || o.xmasscan || o.nullscan || o.maimonscan || o.udpscan)))) {
+      if (o.isr00t && ((o.pingtype & PINGTYPE_TCP) || (o.pingtype == PINGTYPE_NONE && (o.synscan || o.finscan || o.xmasscan || o.nullscan || o.maimonscan || o.udpscan || o.osscan )))) {
 	device = routethrough(&(hostbatch[i].host), &(hostbatch[i].source_ip));
 	if (!device) {
 	  if (o.pingtype == PINGTYPE_NONE) {

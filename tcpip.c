@@ -897,7 +897,7 @@ char *routethrough(struct in_addr *dest, struct in_addr *source) {
   int i;
   int res;
   struct in_addr addy;
-  enum { procroutetechnique, connectsockettechnique, guesstechnique } technique = procroutetechnique;
+  static enum { procroutetechnique, connectsockettechnique, guesstechnique } technique = procroutetechnique;
   char buf[10240];
   struct interface_info *mydevs;
   static struct myroute {
