@@ -653,7 +653,7 @@ LIBNSOCK_LIBS="-lnsock"
 AC_SUBST(NSOCKDIR)
 AC_SUBST(LIBNSOCK_LIBS)
 
-subdirs="$subdirs $NSOCKDIR/src"
+nmap_cfg_subdirs="$nmap_cfg_subdirs $NSOCKDIR/src"
 
 dnl I need to configure nmapfe and libpcap here since the user might
 dnl have specified special options (such as --prefix )
@@ -661,9 +661,9 @@ dnl
 dnl But I only have to configure libpcap if I am going to use it
 
 if test $have_libpcap = yes ; then
-        subdirs="$NBASEDIR $subdirs"
+        nmap_cfg_subdirs="$NBASEDIR $nmap_cfg_subdirs"
 else
-        subdirs="$NBASEDIR $libpcapdir $subdirs"
+        nmap_cfg_subdirs="$NBASEDIR $libpcapdir $nmap_cfg_subdirs"
 fi
 
 
@@ -692,7 +692,7 @@ else
                  You need at least version $GTK_MINVERSION.\n Subdir X-windows \
                  will not be made])
   else
-    subdirs="$subdirs nmapfe"
+    nmap_cfg_subdirs="$nmap_cfg_subdirs nmapfe"
     dnl Maybe also define the flags to compile and link GTK+
     dnl GTK_CXXFLAGS=`gtk-config --cflags`
     dnl GTK_LIBS=`gtk-config --libs`
@@ -702,7 +702,8 @@ else
 fi
 fi
 
-AC_CONFIG_SUBDIRS( $subdirs )
+dnl all hell broke loose when the variable was named $subdirs
+AC_CONFIG_SUBDIRS( $nmap_cfg_subdirs )
 
 dnl Configure libpcap if we need to since a lot of lamers don't
 dnl already have it installed ...
