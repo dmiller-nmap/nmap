@@ -604,11 +604,14 @@ char *build_command() {
 
 void display_nmap_command() {
   char buf[80];
-  int len;
+  char *p;
 
   /* Need to use the snprintf which comes with nmap ... */
-  len = sprintf(buf, "Output from:  %s", build_command());
-  if (len < 0 || len >= sizeof(buf)) {
+  strcpy(buf, "Output from: ");
+  p = build_command();
+  if (strlen(p) < (sizeof(buf) - strlen(buf) - 2))
+    strcat(buf, p);
+  else {
     strcpy(buf, "Output from Nmap");
   }
   gtk_label_set( GTK_LABEL(MW->output_label), buf);
