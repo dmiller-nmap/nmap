@@ -946,9 +946,11 @@ void UltraScanInfo::Init(vector<Target *> &Targets, struct scan_lists *pts, styp
 
   /* Consults with the group stats, and the hstats for every
      incomplete hosts to determine whether any probes may be sent.
-     Returns true if they can be sent immediately.  If when is non-NULL,
-     it is filled with the next possible time that probes can be sent
-     (which will be now, if the function returns true */
+     Returns true if they can be sent immediately.  If when is
+     non-NULL, it is filled with the next possible time that probes
+     can be sent, assuming no probe responses are received (call it
+     again if they are).  when will be now, if the function returns
+     true */
 bool UltraScanInfo::sendOK(struct timeval *when) {
   struct timeval lowhtime, tmptv;
   list<HostScanStats *>::iterator host;
