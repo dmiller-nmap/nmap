@@ -1001,42 +1001,68 @@ int nmap_main(int argc, char *argv[]) {
 	      log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"%s", seqreport(&(currenths->seq)));
 	      log_write(LOG_MACHINE,"\tSeq Index: %d", currenths->seq.index);
 	    }
-	    if (currenths->FP_matches[0]) {
-	      log_write(LOG_MACHINE,"\tOS: %s",  currenths->FP_matches[0]->OS_name);
-	      i = 1;
-	      while(currenths->FP_matches[i]) {
-		log_write(LOG_MACHINE,"|%s", currenths->FP_matches[i]->OS_name);
-		i++;
-	      }
-	      if (!currenths->FP_matches[1])
-		log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Remote operating system guess: %s", 
-			 currenths->FP_matches[0]->OS_name);
-	      else  {
-		log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Remote OS guesses: %s", 
-			 currenths->FP_matches[0]->OS_name);
+	    if (currenths->FPR.overall_results == OSSCAN_SUCCESS) {
+	      if (currenths->FPR.num_perfect_matches > 0) {
+		log_write(LOG_MACHINE,"\tOS: %s",  currenths->FPR.prints[0]->OS_name);
 		i = 1;
-		while(currenths->FP_matches[i]) {
-		  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,", %s", currenths->FP_matches[i]->OS_name);
+		while(currenths->FPR.accuracy[i] == 1 ) {
+		  log_write(LOG_MACHINE,"|%s", currenths->FPR.prints[i]->OS_name);
 		  i++;
 		}
+
+		if (currenths->FPR.num_perfect_matches == 1)
+		  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,
+			    "Remote operating system guess: %s", 
+			    currenths->FPR.prints[0]->OS_name);
+		else {
+		  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,
+			    "Remote OS guesses: %s", 
+			    currenths->FPR.prints[0]->OS_name);
+		  i = 1;
+		  while(currenths->FPR.accuracy[i] == 1) {
+		    log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,", %s", 
+			      currenths->FPR.prints[i]->OS_name);
+		    i++;
+		  }
+		}
+	      } else {
+		if (o.osscan_guess && currenths->FPR.num_matches > 0) {
+		  /* Print the best guesses available */
+		  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Aggressive OS guesses: %s (%d%%)", currenths->FPR.prints[0]->OS_name, (int) (currenths->FPR.accuracy[0] * 100));
+		  for(i=1; i < 10 && currenths->FPR.num_matches > i &&
+			currenths->FPR.accuracy[i] > 
+			currenths->FPR.accuracy[0] - 0.15; i++) {
+		    log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,", %s (%d%%)", currenths->FPR.prints[i]->OS_name, (int) (currenths->FPR.accuracy[i] * 100));
+		  }
+		} else {
+		    if (o.scan_delay < 500) {
+		      log_write(LOG_NORMAL|LOG_SKID_NOXLT|LOG_STDOUT,"No OS matches for host (If you know what OS is running on it, see http://www.insecure.org/cgi-bin/nmap-submit.cgi).\nTCP/IP fingerprint:\n%s\n\n", mergeFPs(currenths->FPs, currenths->numFPs));
+		    }
+		}
 	      }
+	      
 	      log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"\n");	  
 	      if (currenths->goodFP >= 0 && (o.debugging || o.verbose > 1)) {
 		log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"OS Fingerprint:\n%s\n", fp2ascii(currenths->FPs[currenths->goodFP]));
 	      }
 	      log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"\n");
-	    } else {
-	      if (currenths->goodFP == ENOMATCHESATALL && o.scan_delay < 500) {
+	    } else if (currenths->FPR.overall_results == OSSCAN_NOMATCHES) {
+	      if (o.scan_delay < 500) {
 		log_write(LOG_NORMAL|LOG_SKID_NOXLT|LOG_STDOUT,"No OS matches for host (If you know what OS is running on it, see http://www.insecure.org/cgi-bin/nmap-submit.cgi).\nTCP/IP fingerprint:\n%s\n\n", mergeFPs(currenths->FPs, currenths->numFPs));
-	      } else if (currenths->goodFP == ETOOMANYMATCHES) {
+	      }
+	    } else if (currenths->FPR.overall_results == OSSCAN_TOOMANYMATCHES)
+	      {
 		log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Too many fingerprints match this host for me to give an accurate OS guess\n");
 		if (o.debugging || o.verbose) {
 		  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"TCP/IP fingerprint:\n%s\n\n",  mergeFPs(currenths->FPs, currenths->numFPs));
 		}
-	      }
-	    }
-	    for(i=0; i < currenths->numFPs; i++)
+	      } else { assert(0); }
+	      
+	    for(i=0; i < currenths->numFPs; i++) {
 	      freeFingerPrint(currenths->FPs[i]);
+	      currenths->FPs[i] = NULL;
+	    }
+	    currenths->numFPs = 0;
 	  }
 	}
 

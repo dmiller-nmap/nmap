@@ -6,9 +6,11 @@
 #include "global_structures.h"
 
 #define OSSCAN_SUCCESS 0
-#define OSSCAN_NOMATCHESATALL -1
+#define OSSCAN_NOMATCHES -1
 #define OSSCAN_TOOMANYMATCHES -2
 
+/* We won't even consider matches with a lower accuracy than this */
+#define OSSCAN_GUESS_THRESHOLD 0.9
 /**********************  STRUCTURES  ***********************************/
 
 /* moved to global_structures.h */
@@ -40,6 +42,13 @@ struct AVal *str2AVal(char *p);
 struct AVal *gettestbyname(FingerPrint *FP, char *name);
 
 /* Returns true if perfect match -- if num_subtests & num_subtests_succeeded are non_null it updates them.  if shortcircuit is zero, it does all the tests, otherwise it returns when the first one fails */
+
+/* Returns true if perfect match -- if num_subtests &
+   num_subtests_succeeded are non_null it ADDS THE NEW VALUES to what
+   is already there.  So initialize them to zero first if you only
+   want to see the results from this match.  if shortcircuit is zero,
+   it does all the tests, otherwise it returns when the first one
+   fails */
 int AVal_match(struct AVal *reference, struct AVal *fprint, unsigned long *num_subtests, unsigned long *num_subtests_succeeded, int shortcut);
 
 void freeFingerPrint(FingerPrint *FP);

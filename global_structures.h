@@ -87,7 +87,7 @@ typedef struct FingerTest {
 struct FingerPrintResults {
   double accuracy[MAX_FP_RESULTS]; /* Percentage of match (1.0 == perfect 
 				      match) in same order as pritns[] below */
-  FingerPrint *prints[MAX_FPRINT_RESULTS]; /* ptrs to matching references -- 
+  FingerPrint *prints[MAX_FP_RESULTS]; /* ptrs to matching references -- 
 					      highest accuracy matches first */
   int num_perfect_matches; /* Number of 1.0 accuracy matches in prints[] */
   int num_matches; /* Total number of matches in prints */
@@ -129,7 +129,7 @@ struct hoststruct {
   struct in_addr source_ip;
   char *name;
   struct seq_info seq;
-  FingerPrint **FP_matches; /* Pointers to reference fingerprints matched */
+  struct FingerPrintResults FPR;
   FingerPrint *FPs[10]; /* Fingerprint data obtained from host */
   int osscan_performed; /* nonzero if an osscan was performed */
   int numFPs;

@@ -575,17 +575,18 @@ void match_fingerprint(FingerPrint *FP, struct FingerPrintResults *FPR,
 							   at least this big 
 							   to be added to the 
 							   list */
+  struct AVal *tst;
   FingerPrint *current_os;
   FingerPrint *current_test;
-  unsigned long num_subtests;
-  unsigned long num_subtests_succeeded;
+  unsigned long num_subtests=0;
+  unsigned long num_subtests_succeeded=0;
   double acc;
   int state;
   int skipfp;
   int max_prints = sizeof(FPR->prints) / sizeof(FingerPrint *);
-
-  double tmp_acc, tmp_acc2; /* These are temp buffers for list swaps */
-  FingerPrint *tmp_FP, *tmp_FP2;
+  int idx;
+  double tmp_acc=0.0, tmp_acc2; /* These are temp buffers for list swaps */
+  FingerPrint *tmp_FP=NULL, *tmp_FP2;
 
   assert(FP);
   assert(FPR);
@@ -603,15 +604,14 @@ void match_fingerprint(FingerPrint *FP, struct FingerPrintResults *FPR,
       {
 	tst = gettestbyname(FP, current_test->name);
 	if (tst) {
-	  AVal_match(current_tst->results, tst, &num_subtests, &num_subtests_succeeded, 0);
+	  AVal_match(current_test->results, tst, &num_subtests, &num_subtests_succeeded, 0);
 	}
       }
     assert(num_subtests_succeeded <= num_subtests);
     acc = num_subtests_succeeded / (double) num_subtests;
-    if (acc >= FPR_entrance_requirement) {
+    error("Comp to %s: %li/%li=%f", o.reference_FPs[i]->OS_name, num_subtests_succeeded, num_subtests, acc);
+    if (acc >= FPR_entrance_requirement || acc == 1.0) {
 
-      /* FIXME:  Insure an FP with the exact same name is not already in the
-	 list -- if it is we must delete it */
       state = 0;
       for(idx=0; idx < FPR->num_matches; idx++) {	
 	if (strcmp(FPR->prints[idx]->OS_name, current_os->OS_name) == 0) {
@@ -632,9 +632,10 @@ void match_fingerprint(FingerPrint *FP, struct FingerPrintResults *FPR,
       if (!skipfp) {      
 	/* First we check whether we have overflowed with perfect matches */
 	if (acc == 1) {
+	  error("DEBUG: Perfect match #%d/%d", FPR->num_perfect_matches + 1, max_prints);
 	  if (FPR->num_perfect_matches == max_prints) {
 	    FPR->overall_results = OSSCAN_TOOMANYMATCHES;
-	    return 0;
+	    return;
 	  }
 	  FPR->num_perfect_matches++;
 	}
@@ -702,7 +703,13 @@ struct AVal *getattrbyname(struct AVal *AV, char *name) {
 }
 
 
-/* Returns true if perfect match -- if num_subtests & num_subtests_succeeded are non_null it updates them.  if shortcircuit is zero, it does all the tests, otherwise it returns when the first one fails */
+/* Returns true if perfect match -- if num_subtests &
+   num_subtests_succeeded are non_null it ADDS THE NEW VALUES to what
+   is already there.  So initialize them to zero first if you only
+   want to see the results from this match.  if shortcircuit is zero,
+   it does all the tests, otherwise it returns when the first one
+   fails */
+
 int AVal_match(struct AVal *reference, struct AVal *fprint, unsigned long *num_subtests, unsigned long *num_subtests_succeeded, int shortcut) {
   struct AVal *current_ref;
   struct AVal *current_fp;
@@ -718,7 +725,7 @@ int AVal_match(struct AVal *reference, struct AVal *fprint, unsigned long *num_s
   for(current_ref = reference; current_ref; current_ref = current_ref->next) {
     current_fp = getattrbyname(fprint, current_ref->attribute);    
     if (!current_fp) continue;
-    /* OK, we compare an attribute value in  cinrrent_fp->value to a 
+    /* OK, we compare an attribute value in  current_fp->value to a 
      potentially large expression in current_ref->value.  The syntax uses
     < (less than), > (greather than), + (non-zero), | (or), and & (and) 
     No parenthesis are allowed and an expression cannot have | AND & */
@@ -764,14 +771,14 @@ int AVal_match(struct AVal *reference, struct AVal *fprint, unsigned long *num_s
       subtests++;
       if (testfailed) {
 	if (shortcut) {
-	  if (num_subtests) *num_subtests = subtests;
+	  if (num_subtests) *num_subtests += subtests;
 	  return 0;
 	}
       } else subtests_succeeded++;
       /* Whew, we made it past one Attribute alive , on to the next! */
   }
-  if (num_subtests) *num_subtests = subtests;
-  if (num_subtests_succeeded) *num_subtests_succeeded = subtests_succeeded;
+  if (num_subtests) *num_subtests += subtests;
+  if (num_subtests_succeeded) *num_subtests_succeeded += subtests_succeeded;
   return (subtests == subtests_succeeded)? 1 : 0;
 }
 
@@ -793,12 +800,13 @@ return;
 
 
 int os_scan(struct hoststruct *target, unsigned short *portarray) {
-FingerPrint **FP_matches[3];
-int FP_nummatches[3];
+struct FingerPrintResults FP_matches[3];
 struct seq_info si[3];
 int try;
 int i;
 struct timeval now;
+double bestacc;
+int bestaccidx;
 
  if (target->timedout)
    return 1;
@@ -828,46 +836,49 @@ struct timeval now;
    target->FPs[try] = get_fingerprint(target, &si[try], portarray); 
    if (target->timedout)
      return 1;
-   FP_matches[try] = match_fingerprint(target->FPs[try], &(FP_nummatches[try]));
-   if (FP_matches[try][0]) 
+   match_fingerprint(target->FPs[try], &FP_matches[try], 
+		     OSSCAN_GUESS_THRESHOLD);
+   if (FP_matches[try].overall_results == OSSCAN_SUCCESS && 
+       FP_matches[try].num_perfect_matches > 0)
      break;
    if (try < 2)
      sleep(2);
  }
+
  target->numFPs = (try == 3)? 3 : try + 1;
  memcpy(&(target->seq), &si[target->numFPs - 1], sizeof(struct seq_info));
- if (try != 3) {
-   if (try > 0) {
-     error("WARNING: OS didn't match until the %d try", try + 1);
-     for(i=0; i < try; i++) {
-       if (target->FPs[i]) {
-	 if (o.debugging)
-	   error("Failed match #%d (0-based):\n%s", i, fp2ascii(target->FPs[i]));
-	 freeFingerPrint(target->FPs[i]);
-	 target->FPs[i] = NULL;
-       }
-     }
-     target->FPs[0] = target->FPs[try];
-     target->FPs[try] = NULL;
-     try = 0;
-     target->numFPs = 1;
-   }
-   target->goodFP = 0;
- } else  {
-   /* Uh-oh, we were NEVER able to match, lets take
-      the first fingerprint */
-   for(try=0; try < 3; try++) {   
-     if (FP_nummatches[try] == 0) {   
-       target->goodFP = ENOMATCHESATALL;
+
+ /* Now lets find the best match */
+ bestacc = 0;
+ bestaccidx = 0;
+ for(try=0; try < target->numFPs; try++) {
+   if (FP_matches[try].overall_results == OSSCAN_SUCCESS &&
+       FP_matches[try].num_matches > 0 &&
+       FP_matches[try].accuracy[0] > bestacc) {
+     bestacc = FP_matches[try].accuracy[0];
+     bestaccidx = try;
+     if (FP_matches[try].num_perfect_matches)
        break;
-     }
    }
-   if (try == 3) target->goodFP = ETOOMANYMATCHES;
  }
 
- if (target->goodFP > 0)
-   target->FP_matches = FP_matches[target->goodFP];
- else target->FP_matches = FP_matches[0];
+ memcpy(&(target->FPR), FP_matches + bestaccidx, sizeof(target->FPR));
+
+ for(i=0; i < target->numFPs; i++) {
+   if (i == bestaccidx)
+     continue;
+   if (o.debugging) {
+     error("Failed exact match #%d (0-based):\n%s", i, fp2ascii(target->FPs[i]));
+   }
+ }
+
+ if (target->numFPs > 0 && target->FPR.overall_results == OSSCAN_SUCCESS &&
+     target->FPR.accuracy[0] == 1.0) {
+   if (o.verbose) error("WARNING:  OS didn't match until the %d try", target->numFPs);
+ } 
+
+ target->goodFP = bestaccidx;
+ 
  return 1;
 }
 
@@ -898,7 +909,8 @@ do {
 	 one is the same */
       if (i == numFPs - 1 || !currentFPs[i+1] ||
 	  strcmp(currentFPs[i]->name, currentFPs[i+1]->name) != 0 ||
-	  AVal_match(currentFPs[i]->results,currentFPs[i+1]->results) ==0)
+	  AVal_match(currentFPs[i]->results,currentFPs[i+1]->results, NULL,
+		     NULL, 1) ==0)
 	{
 	  changed = 1;
 	  strcpy(p, currentFPs[i]->name);
