@@ -1,4 +1,4 @@
-NMAP_VERSION = 2.52
+NMAP_VERSION = 2.53
 NMAP_NAME= nmap
 NMAP_URL= www.insecure.org/nmap/
 prefix = @prefix@
