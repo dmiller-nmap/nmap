@@ -1,6 +1,6 @@
 .\" Á Lietuviø kalbà iðvertë
-.\" Aurimas Mikalauskas <inner@dammit.lt>
-.\" 2000 04 30
+.\" Aurimas Mikalauskas <inner@crazy.lt>
+.\" 2001 03 17
 .de Sp
 .if n .sp
 .if t .sp 0.4
@@ -10,7 +10,7 @@
 nmap \- tinklo tyrinëjimo árankis bei saugumo skeneris
 .SH SINTAKSË
 .B nmap
-[skanavimo tipas(ai)] [opcijos] <hostas #1 ... #n>
+[skanavimo tipas(ai)] [opcijos] <hostas/tinklas #1 ... #n>
 .SH APIBÛDINIMAS
 
 .I nmap'as
@@ -125,6 +125,15 @@ pat yra cDc Back Orifice trojanas, kuris atsidaro UDP portà ant
 window'sø. Gaila tik, kad UDP skanavimas kartais gali trukti
 labai ilgai.
 .TP
+.B \-SO
+IP protokolo skanavimas. Ðis metodas yra naudojamas tam, kad
+nustatyti kokius protokolus naudoja jûsø taikinys. Technika
+labai paprasta: siunèiami IP paketai be jokio protokolo header'io
+á visus nurodytus protokolus. Jeigu pvz gauname "ICMP protocol
+unreachible" (ICMP protoklolas nepasiekiamas) atsakymà, vadinasi
+protokolas nenaudojamas, prieðingu atveju skaitoma, kad jis
+atviras.
+.TP
 .B \-sA
 ACK skanavimas: ðitas metodas paprastai yra naudojamas tam,
 kad iðsiaiðkinti firewall'ø (ugnies sinø) taisykles. Jis gali
@@ -205,17 +214,21 @@ pagrindines komandas, ði opcija - jums.
 .B \-oN <logas>
 Viskas, kas vyksta ekrane bus loginama á "logas" failà.
 .TP
-.B \-oM <logas>
-Viskas, kas vyksta ekrane bus loginama á failà "logas" "ðiek tiek"
-kitokiu formatu.
+.B \-oX <logas>
+Skanavimo rezultatai iðsaugomi XML formatu á failà, kurá nurodote
+kaip argumentà ðiai opcijai.
+.TP
+.B \-oG <logas>
+Ði opcija iðsaugo skanavimo rezultatus taip, kad jûs juos galetumëte
+lengvai grepinti. Ðis gan primityvus formatas iðsaugo viskà vienoje
+eilutëje.
 .TP
 .B \-oS <logas>
-Logina á failà "logas" kaþkokiu nauju s|<ipT kiDd|3 (skipt kiddie)
-formatu.
+Loginama á failà "logas" "skipt kiddie" formatu.
 .TP
 .B \--resume <logas>
 Skanavimas, kuris buvo nutrauktas su ^C, gali bûti pratæstas,
-su sàlyga, kad viskas buvo loginama su -oN arba -oM opcija.
+su sàlyga, kad viskas buvo loginama su -oN opcija.
 Daugiau jokie parametrai negali bûti pateikti (jie bus tokie,
 kokie buvo naudojami loginant). nmap'as pradës skanuoti nuo
 sekanèios maðinos, po tos, kuri paskutinë buvo sëkmingai
@@ -284,10 +297,23 @@ Nurodo nmap'ui kokiu interfeisu siøsti paketus.
 Nurodo ið kokio porto skanuoti. Daugelis firewall'ø bei filtrø
 padaro iðimtis DNS (53) bei FTP-DATA (20) paketams.
 .TP
+.B \-n
+Liepia nmap'ui net nemëginti rezolvinti ip adresø i jø vardus,
+nes daþnai tai bûna labai lëtas procesas ir stabdo nmap'o darbà.
+.TP
+.B \-R
+Prieðingai nei -n opcija, -R liepia nmap'ui visada pamëginti
+iðrezolvinti ip adresà.
+.TP
 .B \-r
 Nurodo nmap'ui portus skanuoti
 .B NE
 atsitiktine tvarka.
+.TP
+.B --randomize_hosts
+Nmap'as atsitiktine tvarka iðmaiðo kiekvienà grupæ ið daugiau nei
+2048 hostø prieð pradedant juos skanuoti. Tai ðiek tiek suklaidina
+ávairius tinklo stebejimo árankius.
 .TP
 .B \-M <maximalus susijungimu skaicius>
 Nustato naksimalø susijungimu skaièiø, kuris bus naudojamas
@@ -374,7 +400,7 @@ Fyodor
 .SH IÐVERTË
 .Sp
 Aurimas Mikalauskas
-.I <inner@dammit.lt>
+.I <inner@crazy.lt>
 .Sp
 .SH PLATINIMAS
 .Sp
@@ -407,4 +433,4 @@ pateiktu sekcijoje
 bet paèià naujausià nmap-lt-HOWTO visada galite
 rasti mano puslapyje:
 .Sp
-.I http://ice.dammit.lt/~inner/
+.I http://crazy.lt/~inner
