@@ -58,9 +58,9 @@ TargetGroup::TargetGroup() {
 // Bring back (or start with) original state
 void TargetGroup::Initialize() {
   targets_type = TYPE_NONE;
-  bzero(addresses, sizeof(addresses));
-  bzero(current, sizeof(current));
-  bzero(last, sizeof(last));
+  memset(addresses, 0, sizeof(addresses));
+  memset(current, 0, sizeof(current));
+  memset(last, 0, sizeof(last));
   ipsleft = 0;
 }
 
@@ -77,7 +77,6 @@ int TargetGroup::parse_expr(const char * const target_expr, int af) {
   struct hostent *target;
   unsigned long longtmp;
   int namedhost = 0;
-  int rc = 0;
 
   if (targets_type != TYPE_NONE)
     Initialize();
@@ -194,12 +193,13 @@ int TargetGroup::parse_expr(const char * const target_expr, int af) {
 	
       }
     }
-  bzero((char *)current, 4);
+  memset((char *)current, 0, 4);
   ipsleft = (last[0] + 1) * (last[1] + 1) *
     (last[2] + 1) * (last[3] + 1);
   }
   else {
 #if HAVE_IPV6
+    int rc = 0;
     assert(af == AF_INET6);
     if (strchr(hostexp, '/')) {
       fatal("Invalid host expression: %s -- slash not allowed.  IPv6 addresses can currently only be specified individually", hostexp);
@@ -207,7 +207,7 @@ int TargetGroup::parse_expr(const char * const target_expr, int af) {
     targets_type = IPV6_ADDRESS;
     struct addrinfo hints;
     struct addrinfo *result = NULL;
-    bzero(&hints, sizeof(hints));
+    memset(&hints, 0, sizeof(hints));
     hints.ai_family = PF_INET6;
     rc = getaddrinfo(hostexp, NULL, &hints, &result);
     if (rc != 0) {
@@ -249,7 +249,7 @@ int TargetGroup::get_next_host(struct sockaddr_storage *ss, size_t *sslen) {
     return -1;
   
   if (targets_type == IPV4_NETMASK) {
-    bzero(sin, sizeof(struct sockaddr_in));
+    memset(sin, 0, sizeof(struct sockaddr_in));
     sin->sin_family = AF_INET;
     *sslen = sizeof(struct sockaddr_in);
 #if HAVE_SOCKADDR_SA_LEN
@@ -265,7 +265,7 @@ int TargetGroup::get_next_host(struct sockaddr_storage *ss, size_t *sslen) {
     }
   }
   else if (targets_type == IPV4_RANGES) {
-    bzero(sin, sizeof(struct sockaddr_in));
+    memset(sin, 0, sizeof(struct sockaddr_in));
     sin->sin_family = AF_INET;
     *sslen = sizeof(struct sockaddr_in);
 #if HAVE_SOCKADDR_SA_LEN
@@ -306,7 +306,7 @@ int TargetGroup::get_next_host(struct sockaddr_storage *ss, size_t *sslen) {
     assert(ipsleft == 1);
 #if HAVE_IPV6
     *sslen = sizeof(struct sockaddr_in6);
-    bzero(sin6, *sslen);
+    memset(sin6, 0, *sslen);
     sin6->sin6_family = AF_INET6;
 #ifdef SIN_LEN
     sin6->sin6_len = *sslen;

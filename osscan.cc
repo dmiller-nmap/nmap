@@ -111,13 +111,13 @@ if (target->timedout)
   return NULL;
 
 /* The seqs must start out as zero for the si struct */
-bzero(si->seqs, sizeof(si->seqs));
+memset(si->seqs, 0, sizeof(si->seqs));
 si->ipid_seqclass = IPID_SEQ_UNKNOWN;
 si->ts_seqclass = TS_SEQ_UNKNOWN;
 si->lastboot = 0;
 
 /* Init our fingerprint tests to each be NULL */
-bzero(FPtests, sizeof(FPtests)); 
+memset(FPtests, 0, sizeof(FPtests)); 
 get_random_bytes(&sequence_base, sizeof(unsigned int));
 /* Init our raw socket */
  if ((rawsd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) < 0 )
@@ -1091,7 +1091,7 @@ int bestaccidx;
  if (target->FPR == NULL)
    target->FPR = new FingerPrintResults;
 
- bzero(si, sizeof(si));
+ memset(si, 0, sizeof(si));
  if (target->ports.state_counts_tcp[PORT_OPEN] == 0 ||
      (target->ports.state_counts_tcp[PORT_CLOSED] == 0 &&
       target->ports.state_counts_tcp[PORT_UNFIREWALLED] == 0)) {
@@ -1196,7 +1196,7 @@ char *end = str + sizeof(str) - 1; /* Last byte allowed to write into */
 if (numFPs <=0) return "(None)";
 if (numFPs > 32) return "(Too many)";
   
-bzero(str, sizeof(str));
+memset(str, 0, sizeof(str));
 for(i=0; i < numFPs; i++) {
   if (FPs[i] == NULL) {
     fatal("mergeFPs was handed a pointer to null fingerprint");
@@ -1254,7 +1254,7 @@ FingerPrint *current;
 struct AVal *AV;
 char *p = str;
 int len;
-bzero(str, sizeof(str));
+memset(str, 0, sizeof(str));
 
 if (!FP) return "(None)";
 
@@ -1658,7 +1658,7 @@ sethdrinclude(sd);
    sock.sin_addr.s_addr = victim->s_addr;
 
 
-   bzero((char *) packet, sizeof(struct ip) + sizeof(udphdr_bsd));
+   memset((char *) packet, 0, sizeof(struct ip) + sizeof(udphdr_bsd));
 
    udp->uh_sport = htons(sport);
    udp->uh_dport = htons(dport);
@@ -1680,7 +1680,7 @@ udp->uh_sum = realcheck;
 #endif
 
    /* Goodbye, pseudo header! */
-   bzero(pseudo, sizeof(*pseudo));
+   memset(pseudo, 0, sizeof(*pseudo));
 
    /* Now for the ip header */
    ip->ip_v = 4;

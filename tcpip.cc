@@ -157,7 +157,7 @@ int resolve(char *hostname, struct sockaddr_storage *ss, size_t *sslen,
 
   assert(ss);
   assert(sslen);
-  bzero(&hints, sizeof(hints));
+  memset(&hints, 0, sizeof(hints));
   hints.ai_family = pf;
   rc = getaddrinfo(hostname, NULL, &hints, &result);
   if (rc != 0)
@@ -562,7 +562,7 @@ sock.sin_port = htons(dport);
 sock.sin_addr.s_addr = victim->s_addr;
 
 
-bzero((char *) packet, sizeof(struct ip) + sizeof(struct tcphdr));
+memset((char *) packet, 0, sizeof(struct ip) + sizeof(struct tcphdr));
 
 pseudo->s_addy = source->s_addr;
 pseudo->d_addr = victim->s_addr;
@@ -606,7 +606,7 @@ tcp->th_sum = in_cksum((unsigned short *)pseudo, sizeof(struct tcphdr) +
 #endif
 /* Now for the ip header */
 
-bzero(packet, sizeof(struct ip)); 
+memset(packet, 0, sizeof(struct ip)); 
 ip->ip_v = 4;
 ip->ip_hl = 5;
 ip->ip_len = BSDFIX(sizeof(struct ip) + sizeof(struct tcphdr) + optlen + datalen);
@@ -820,7 +820,7 @@ sock.sin_port = htons(dport);
 sock.sin_addr.s_addr = victim->s_addr;
 
 
-bzero((char *) packet, sizeof(struct ip) + sizeof(udphdr_bsd));
+memset((char *) packet, 0, sizeof(struct ip) + sizeof(udphdr_bsd));
 
 udp->uh_sport = htons(sport);
 udp->uh_dport = htons(dport);
@@ -844,7 +844,7 @@ udp->uh_sum = in_cksum((unsigned short *)pseudo, 20 /* pseudo + UDP headers */ +
 #endif
 
 /* Goodbye, pseudo header! */
-bzero(pseudo, sizeof(*pseudo));
+memset(pseudo, 0, sizeof(*pseudo));
 
 /* Now for the ip header */
 ip->ip_v = 4;
@@ -938,7 +938,7 @@ sock.sin_port = htons(dport);
 
 sock.sin_addr.s_addr = victim->s_addr;
 
-bzero((char *)packet, sizeof(struct ip) + sizeof(struct tcphdr));
+memset((char *)packet, 0, sizeof(struct ip) + sizeof(struct tcphdr));
 
 pseudo->s_addy = source->s_addr;
 pseudo->d_addr = victim->s_addr;
@@ -959,7 +959,7 @@ tcp->th_sum = in_cksum((unsigned short *)pseudo,
 
 /* Now for the ip header of frag1 */
 
-bzero((char *) packet, sizeof(struct ip)); 
+memset((char *) packet, 0, sizeof(struct ip)); 
 ip->ip_v = 4;
 ip->ip_hl = 5;
 /*RFC 791 allows 8 octet frags, but I get "operation not permitted" (EPERM)
@@ -993,7 +993,7 @@ if (o.debugging > 1) log_write(LOG_STDOUT, "successfully sent %d bytes of raw_tc
 
 /* Create the second fragment */
 
-bzero((char *) ip2, sizeof(struct ip));
+memset((char *) ip2, 0, sizeof(struct ip));
 ip2->ip_v= 4;
 ip2->ip_hl = 5;
 ip2->ip_len = BSDFIX(sizeof(struct ip) + 4); /* the rest of our TCP packet */
@@ -1084,7 +1084,7 @@ sock.sin_port = 0;
 sock.sin_addr.s_addr = victim->s_addr;
 
 
-bzero((char *) packet, sizeof(struct ip));
+memset((char *) packet, 0, sizeof(struct ip));
 
 /* Now for the ip header */
 
@@ -1144,7 +1144,7 @@ u16 p1;
 struct sockaddr_in sock;
 int socklen = sizeof(struct sockaddr_in);
 struct sockaddr sa;
-int sasize = sizeof(struct sockaddr);
+recvfrom6_t sasize = sizeof(struct sockaddr);
 int ports, res;
 u8 buf[65536];
 struct timeval tv;
@@ -1229,7 +1229,7 @@ return NULL;
 int getsourceip(struct in_addr *src, const struct in_addr * const dst) {
   int sd;
   struct sockaddr_in sock;
-  NET_SIZE_T socklen = sizeof(struct sockaddr_in);
+  recvfrom6_t socklen = sizeof(struct sockaddr_in);
   u16 p1;
 
   get_random_bytes(&p1, sizeof(p1));
@@ -1245,7 +1245,7 @@ int getsourceip(struct in_addr *src, const struct in_addr * const dst) {
     close(sd);
     return 0;
     }
-  bzero(&sock, sizeof(sock));
+  memset(&sock, 0, sizeof(sock));
   if (getsockname(sd, (SA *)&sock, &socklen) == -1) {
     perror("getsockname");
     close(sd);
@@ -1626,6 +1626,7 @@ struct interface_info *getinterfaces(int *howmany) {
     /* Dummy socket for ioctl */
     sd = socket(AF_INET, SOCK_DGRAM, 0);
     if (sd < 0) pfatal("socket in getinterfaces");
+    memset(buf, 0, sizeof(buf));
     ifc.ifc_len = sizeof(buf);
     ifc.ifc_buf = buf;
     if (ioctl(sd, SIOCGIFCONF, &ifc) < 0) {
@@ -1857,7 +1858,7 @@ char *routethrough(const struct in_addr * const dest, struct in_addr *source) {
 /* Maximize the receive buffer of a socket descriptor (up to 500K) */
 void max_rcvbuf(int sd) {
   int optval = 524288 /*2^19*/;
-  NET_SIZE_T optlen = sizeof(int);
+  recvfrom6_t optlen = sizeof(int);
 
 #ifndef WIN32
   if (setsockopt(sd, SOL_SOCKET, SO_RCVBUF, (const char *) &optval, optlen))

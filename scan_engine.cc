@@ -72,7 +72,7 @@ static void posportupdate(Target *target, struct portinfo *current,
   static int tryident = -1;
   static u32 lasttarget = 0;
   struct sockaddr_in mysock;
-  NET_SIZE_T sockaddr_in_len = sizeof(SA);
+  recvfrom6_t sockaddr_in_len = sizeof(SA);
   int i;
   char owner[1024];
   struct timeval tv;
@@ -217,7 +217,7 @@ static int get_connect_results(Target *target,
   int selectres;
   int selectedfound;
   int optval;
-  NET_SIZE_T optlen = sizeof(int);
+  recvfrom6_t optlen = sizeof(int);
   struct timeval timeout;
   int i, sd;
   int trynum;
@@ -229,8 +229,8 @@ static int get_connect_results(Target *target,
   struct sockaddr_storage sin,sout;
   struct sockaddr_in *s_in;
   struct sockaddr_in6 *s_in6;
-  NET_SIZE_T sinlen = sizeof(sin);
-  NET_SIZE_T soutlen = sizeof(sout);
+  recvfrom6_t sinlen = sizeof(sin);
+  recvfrom6_t soutlen = sizeof(sout);
 #endif
 
   res = 0;  /* to prevent compiler warning */
@@ -602,6 +602,8 @@ void pos_scan(Target *target, u16 *portarray, int numports, stype scantype) {
   int scanflags = 0;
   int victim;
   int senddelay = 0;
+  int rpcportsscanned = 0;
+  bool printedinitialmsg = false;
   pcap_t *pd = NULL;
   char filter[512];
   u32 ack_number = 0;
@@ -657,7 +659,7 @@ void pos_scan(Target *target, u16 *portarray, int numports, stype scantype) {
   ss.ports_left = numports;
   ss.alreadydecreasedqueries = 0;
 
-  bzero(&pil, sizeof(pil));
+  memset(&pil, 0, sizeof(pil));
 
   FD_ZERO(&csi.fds_read);
   FD_ZERO(&csi.fds_write);
@@ -687,7 +689,7 @@ void pos_scan(Target *target, u16 *portarray, int numports, stype scantype) {
   ss.numqueries_ideal = ss.initial_packet_width;
 
   memset(portlookup, 255, sizeof(portlookup)); /* 0xffffffff better always be (int) -1 */
-  bzero(csi.socklookup, sizeof(csi.socklookup));
+  memset(csi.socklookup, 0, sizeof(csi.socklookup));
 
   if (scantype != RPC_SCAN) {
     /* Initialize our portlist (scan) */
@@ -772,12 +774,6 @@ void pos_scan(Target *target, u16 *portarray, int numports, stype scantype) {
     ack_number = get_random_uint();
   else ack_number = 0;
 
-  if (o.debugging || o.verbose) {
-    struct tm *tm = localtime(&starttime);
-    assert(tm);
-    log_write(LOG_STDOUT, "Initiating %s against %s at %02d:%02d\n", scantype2str(scantype), target->NameIP(hostname, sizeof(hostname)), tm->tm_hour, tm->tm_min);
-  }
-
   do {
     ss.changed = 0;
     if (tries > 3 && tries < 10) {
@@ -820,7 +816,18 @@ void pos_scan(Target *target, u16 *portarray, int numports, stype scantype) {
       pil.testinglist = &scan[0];
       rsi.valid_responses_this_port = 0;
       rsi.rpc_status = RPC_STATUS_UNKNOWN;
+      rpcportsscanned++;
     }
+
+    // This initial message is way down here because we don't want to print it if
+    // no RPC ports need scanning.
+    if (o.verbose && !printedinitialmsg) {
+      struct tm *tm = localtime(&starttime);
+      assert(tm);
+      log_write(LOG_STDOUT, "Initiating %s against %s at %02d:%02d\n", scantype2str(scantype), target->NameIP(hostname, sizeof(hostname)), tm->tm_hour, tm->tm_min);
+      printedinitialmsg = true;
+    }
+
 
     while(pil.testinglist != NULL)  /* While we have live queries or more ports to scan */
       {
@@ -1160,8 +1167,8 @@ void pos_scan(Target *target, u16 *portarray, int numports, stype scantype) {
     error("WARNING: GAVE UP ON SCAN AFTER 20 RETRIES");
   }
 
-  
-  if (o.verbose)
+  if (scantype == RPC_SCAN) numports = rpcportsscanned;
+  if (o.verbose && numports > 0)
     log_write(LOG_STDOUT, "The %s took %ld %s to scan %d ports.\n", scantype2str(scantype),  (long) time(NULL) - starttime, (((long) time(NULL) - starttime) == 1)? "second" : "seconds", numports);
   
 

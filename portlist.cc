@@ -88,7 +88,7 @@ int Port::getServiceDeductions(struct serviceDeductions *sd) {
   struct servent *service;
 
   assert(sd);
-  bzero(sd, sizeof(struct serviceDeductions));
+  memset(sd, 0, sizeof(struct serviceDeductions));
   sd->service_fp = serviceprobe_fp;
 
   sd->rpc_status = rpc_status;
@@ -199,10 +199,10 @@ void Port::setRPCProbeResults(int rpcs, unsigned long rpcp,
 
 PortList::PortList() {
   udp_ports = tcp_ports = ip_prots = NULL;
-  bzero(state_counts, sizeof(state_counts));
-  bzero(state_counts_udp, sizeof(state_counts_udp));
-  bzero(state_counts_tcp, sizeof(state_counts_tcp));
-  bzero(state_counts_ip, sizeof(state_counts_ip));
+  memset(state_counts, 0, sizeof(state_counts));
+  memset(state_counts_udp, 0, sizeof(state_counts_udp));
+  memset(state_counts_tcp, 0, sizeof(state_counts_tcp));
+  memset(state_counts_ip, 0, sizeof(state_counts_ip));
   numports = 0;
 }
 

@@ -755,6 +755,7 @@ void scanType_changed_fcb(int *variable, guint action, GtkWidget *w)
                          (action == BOUNCE_SCAN) ? "Bounce Host:" : "Zombie Host:");
       gtk_widget_set_sensitive(GTK_WIDGET(opt.scanRelayLabel), TRUE);
       gtk_widget_set_sensitive(GTK_WIDGET(opt.scanRelay), TRUE);
+      gtk_widget_grab_focus(GTK_WIDGET(opt.scanRelay));
     } else {
       gtk_widget_set_sensitive(GTK_WIDGET(opt.scanRelayLabel), FALSE);
       gtk_label_set_text(GTK_LABEL(opt.scanRelayLabel), "Relay Host:");
@@ -831,7 +832,7 @@ void resolveType_changed_fcb(int *variable, guint action, GtkWidget *w)
 
     display_nmap_command();
       } 
-    }
+}
 
 
 /* callback for factory generated menu items: set variable to action */
@@ -842,6 +843,8 @@ void protportType_changed_fcb(int *variable, guint action, GtkWidget *w)
 
     gtk_widget_set_sensitive(GTK_WIDGET(opt.protportLabel), (action == GIVEN_PROTPORT));
     gtk_widget_set_sensitive(GTK_WIDGET(opt.protportRange), (action == GIVEN_PROTPORT));
+    if (action == GIVEN_PROTPORT)
+      gtk_widget_grab_focus(GTK_WIDGET(opt.protportRange));
 
     display_nmap_command();
   }

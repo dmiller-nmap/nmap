@@ -393,7 +393,8 @@ int nmap_main(int argc, char *argv[]) {
 #endif /* !HAVE_IPV6 */
       break;
     case 'A':
-      o.servicescan = false;
+      o.servicescan = true;
+      o.osscan++; 
       break;
     case 'b': 
       o.bouncescan++;
@@ -473,7 +474,6 @@ int nmap_main(int argc, char *argv[]) {
     case 'n': o.noresolve++; break;
     case 'O': 
       o.osscan++; 
-      o.reference_FPs = parse_fingerprint_reference_file();
       break;
     case 'o':
       normalfilename = optarg;
@@ -586,6 +586,7 @@ int nmap_main(int argc, char *argv[]) {
 	case 'S':  o.synscan = 1; break;	  
 	case 'W':  o.windowscan = 1; break;
 	case 'T':  o.connectscan = 1; break;
+	case 'V':  o.servicescan = 1; break;
 	case 'U':  
 	  o.udpscan++;
 	  break;
@@ -640,6 +641,9 @@ int nmap_main(int argc, char *argv[]) {
   if (!o.debugging)
     signal(SIGSEGV, sigdie); 
 #endif
+
+  if (o.osscan)
+    o.reference_FPs = parse_fingerprint_reference_file();
 
   o.ValidateOptions();
 
@@ -722,7 +726,7 @@ int nmap_main(int argc, char *argv[]) {
 
   if (o.af() == AF_INET && *o.device && !o.v4sourceip()) {
     struct sockaddr_in tmpsock;
-    bzero(&tmpsock, sizeof(tmpsock));
+    memset(&tmpsock, 0, sizeof(tmpsock));
     if (devname2ipaddr(o.device, &(tmpsock.sin_addr)) == -1) {
       fatal("I cannot figure out what source address to use for device %s, does it even exist?", o.device);
     }
@@ -1156,7 +1160,7 @@ struct scan_lists *getpts(char *origexpr) {
   struct scan_lists *ports;
   int range_type = SCAN_TCP_PORT|SCAN_UDP_PORT|SCAN_PROTOCOLS;
 
-  bzero(porttbl, sizeof(porttbl));
+  memset(porttbl, 0, sizeof(porttbl));
 
   current_range = origexpr;
   do {
@@ -1599,7 +1603,7 @@ int check_ident_port(struct in_addr target) {
   struct sockaddr_in sock;
   int res;
   struct sockaddr_in stranger;
-  NET_SIZE_T sockaddr_in_len = sizeof(struct sockaddr_in);
+  recvfrom6_t sockaddr_in_len = sizeof(struct sockaddr_in);
   fd_set fds_read, fds_write;
   struct timeval tv;
   tv.tv_sec = o.initialRttTimeout() / 1000;

@@ -1,4 +1,4 @@
-NMAP_VERSION = 3.40PVT4
+NMAP_VERSION = 3.40PVT8
 NMAP_NAME= nmap
 NMAP_URL= http://www.insecure.org/nmap/
 NMAP_PLATFORM=@host@
@@ -221,7 +221,7 @@ web:
 # For distributing the binary
 static: 	
 	cd $(LIBPCAPDIR); $(MAKE)
-	$(CC) $(CXXFLAGS) -static $(LDFLAGS) -o nmap.linux.bin  $(SRCS) $(LIBS)
+	$(CC) $(CXXFLAGS) $(LDFLAGS) -o nmap.linux.bin  $(SRCS) $(LIBS)
 	strip nmap.linux.bin
 
 clean: @PCAP_CLEAN@ @PCRE_CLEAN@ nmapfe_clean nsock_clean nbase_clean my_clean

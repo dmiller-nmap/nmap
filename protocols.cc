@@ -73,7 +73,7 @@ static int nmap_protocols_init() {
     fatal("Unable to open %s for reading protocol information", filename);
   }
 
-  bzero(protocol_table, sizeof(protocol_table));
+  memset(protocol_table, 0, sizeof(protocol_table));
   
   while(fgets(line, sizeof(line), fp)) {
     lineno++;
@@ -173,7 +173,7 @@ struct scan_lists *getfastprots(void) {
     if (nmap_protocols_init() == -1)
       fatal("Getfastprots: Couldn't get protocol numbers");
   
-  bzero(usedprots, sizeof(usedprots));
+  memset(usedprots, 0, sizeof(usedprots));
 
   for(bucket = 0; bucket < PROTOCOL_TABLE_SIZE; bucket++) {  
     for(current = protocol_table[bucket % PROTOCOL_TABLE_SIZE];

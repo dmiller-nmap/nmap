@@ -181,11 +181,25 @@ class ServiceProbe {
   vector<ServiceProbeMatch *> matches; // first-ever use of STL in Nmap!
 };
 
+class AllProbes {
+public:
+  AllProbes();
+  ~AllProbes();
+  // Tries to find the probe in this AllProbes class which have the
+  // given name and protocol.  It can return the NULL probe.
+  ServiceProbe *getProbeByName(const char *name, int proto);
+  vector<ServiceProbe *> probes; // All the probes except nullProbe
+  ServiceProbe *nullProbe; // No probe text - just waiting for banner
+};
+
 /**********************  PROTOTYPES  ***********************************/
 
 /* Execute a service fingerprinting scan against all open ports of the
    targets[] specified. */
 int service_scan(Target *targets[], int num_targets);
+
+// Parses the given nmap-service-probes file into the AP class
+void parse_nmap_service_probe_file(AllProbes *AP, char *filename);
 
 #endif /* SERVICE_SCAN_H */
 

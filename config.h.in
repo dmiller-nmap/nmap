@@ -44,10 +44,6 @@
 
 #undef BSD_NETWORKING
 
-#undef HAVE_SNPRINTF
-
-#undef HAVE_VSNPRINTF
-
 #undef HAVE_INET_ATON
 
 #undef HAVE_STRCASESTR
@@ -69,6 +65,23 @@
 #undef TIME_WITH_SYS_TIME
 #undef HAVE_SYS_TIME_H
 
+#undef recvfrom6_t
+
+#undef NEED_USLEEP_PROTO
+#undef NEED_GETHOSTNAME_PROTO
+
+#ifdef NEED_USLEEP_PROTO
+#ifdef __cplusplus
+extern "C" int usleep (unsigned int);
+#endif
+#endif
+
+#ifdef NEED_GETHOSTNAME_PROTO
+#ifdef __cplusplus
+extern "C" int gethostname (char *, unsigned int);
+#endif
+#endif
+
 #undef DEC
 #undef LINUX
 #undef FREEBSD
@@ -81,6 +94,3 @@
 #undef MACOSX
 
 #endif /* CONFIG_H */
-
-
-

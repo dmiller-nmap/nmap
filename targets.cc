@@ -338,9 +338,9 @@ int max_sockets = 0;
 int p;
 int group_start, group_end, direction; /* For going forward or backward through
 					       grouplen */
-bzero((char *)&ptech, sizeof(ptech));
+memset((char *)&ptech, 0, sizeof(ptech));
 
-bzero((char *) &pt, sizeof(pt)); 
+memset((char *) &pt, 0, sizeof(pt)); 
 
 pt.up_this_block = 0;
 pt.block_unaccounted = LOOKAHEAD;
@@ -400,7 +400,7 @@ if (ptech.connecttcpscan)  {
   }
   max_block_size = MAX(1, max_block_size);
   pt.group_size = MIN(pt.group_size, max_block_size);
-  bzero((char *)&tqi, sizeof(tqi));
+  memset((char *)&tqi, 0, sizeof(tqi));
 
   for(p=0; p < o.num_ping_synprobes; p++) {
     tqi.sockets[p] = (int *) safe_malloc(sizeof(int) * (pt.max_tries) * num_hosts);
@@ -469,7 +469,7 @@ if (ptech.rawicmpscan || ptech.rawtcpscan || ptech.rawudpscan) {
 
  blockinc = (int) (0.9999 + 8.0 / probes_per_host);
 
-bzero((char *)&sock,sizeof(sock));
+memset((char *)&sock,0,sizeof(sock));
 gettimeofday(&start, NULL);
 
  pt.group_end = (int) MIN(pt.group_start + pt.group_size -1, num_hosts -1);
@@ -782,7 +782,7 @@ char *ping = (char *) &pingpkt;
  }
  else if (pingtype & PINGTYPE_ICMP_TS) {   
    icmplen = 20;
-   bzero(datastart, 12);
+   memset(datastart, 0, 12);
    datastart += 12;
    datalen -= 12;
    pingpkt.type = 13;
@@ -791,7 +791,7 @@ char *ping = (char *) &pingpkt;
 
  if (o.extra_payload_length > 0) {
    icmplen += MIN(datalen, o.extra_payload_length);
-   bzero(datastart, MIN(datalen, o.extra_payload_length));
+   memset(datastart, 0, MIN(datalen, o.extra_payload_length));
  }
 /* Fill out the ping packet */
 
@@ -803,7 +803,7 @@ pingpkt.checksum = in_cksum((unsigned short *)ping, icmplen);
 
 /* Now for our sock */
 if (ptech.icmpscan) {
-  bzero((char *)&sock, sizeof(sock));
+  memset((char *)&sock, 0, sizeof(sock));
   sock.sin_family= AF_INET;
   sock.sin_addr = target->v4host();
   
@@ -1092,7 +1092,7 @@ int get_ping_results(int sd, pcap_t *pd, Target *hostbatch[], int pingtype,
 
 	  if (!hostbatch[hostnum]->v4sourceip()) {      	
 	    struct sockaddr_in sin;
-	    bzero(&sin, sizeof(sin));
+	    memset(&sin, 0, sizeof(sin));
 	    sin.sin_family = AF_INET;
 	    sin.sin_addr.s_addr = ip->ip_dst.s_addr;
 #if HAVE_SOCKADDR_SA_LEN

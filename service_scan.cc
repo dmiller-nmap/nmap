@@ -71,14 +71,6 @@
 
 extern NmapOps o;
 
-class AllProbes {
-public:
-  AllProbes();
-  ~AllProbes();
-  vector<ServiceProbe *> probes; // All the probes except nullProbe
-  ServiceProbe *nullProbe; // No probe text - just waiting for banner
-};
-
 // Details on a particular service (open port) we are trying to match
 class ServiceNFO {
 public:
@@ -93,11 +85,10 @@ public:
   // as if there was a match before any other probes were finished (or
   // if no probes gave back data).  Note that this is plain
   // NUL-terminated ASCII data, although the length is optionally
-  // available anyway.
-  const char *getServiceFingerprint(int *flen) {
-    if (flen) *flen = servicefplen;
-    return servicefp;
-  }
+  // available anyway.  This function terminates the service fingerprint
+  // with a semi-colon
+  const char *getServiceFingerprint(int *flen);
+
   // Note that the next 2 members are for convenience and are not destroyed w/the ServiceNFO
   Target *target; // the port belongs to this target host
   Port *port; // The Port that this service represents (this copy is taken from inside Target)
@@ -109,8 +100,10 @@ public:
   // (probe_matched != NULL), this will be the corresponding ServiceProbe.
   ServiceProbe *currentProbe();
   // computes the next probe to test, and ALSO CHANGES currentProbe() to
-  // that!
-  ServiceProbe *nextProbe(); 
+  // that!  If newresp is true, the old response info will be lost and
+  // invalidated.  Otherwise it remains as if it had been received by
+  // the current probe (useful after a NULL probe).
+  ServiceProbe *nextProbe(bool newresp); 
   // Number of milliseconds left to complete the present probe, or 0 if
   // the probe is already expired.  Timeval can omitted, it is just there 
   // as an optimization in case you have it handy.
@@ -127,6 +120,10 @@ public:
   // Get the full current response string.  Note that this pointer is 
   // INVALIDATED if you call appendtocurrentproberesponse() or nextProbe()
   u8 *getcurrentproberesponse(int *respstrlen);
+  // If there is a write in progress, this is the ID (so we can cancel it if
+  // neccessary).  Otherwise, this is -1.
+  nsock_event_id current_write; 
+          
 private:
   // Adds a character to servicefp.  Takes care of word wrapping if
   // neccessary at the given (wrapat) column.  Chars will only be
@@ -159,7 +156,7 @@ public:
 void servicescan_read_handler(nsock_pool nsp, nsock_event nse, void *mydata);
 void servicescan_write_handler(nsock_pool nsp, nsock_event nse, void *mydata);
 void servicescan_connect_handler(nsock_pool nsp, nsock_event nse, void *mydata);
-void end_svcprobe(enum serviceprobestate probe_state, ServiceGroup *SG, ServiceNFO *svc, nsock_iod nsi);
+void end_svcprobe(nsock_pool nsp, enum serviceprobestate probe_state, ServiceGroup *SG, ServiceNFO *svc, nsock_iod nsi);
 int launchSomeServiceProbes(nsock_pool nsp, ServiceGroup *SG);
 
 ServiceProbeMatch::ServiceProbeMatch() {
@@ -612,21 +609,17 @@ void ServiceProbe::addMatch(const char *match, int lineno) {
   matches.push_back(newmatch);
 }
 
-// Parses the nmap-service-probes file, and adds each probe to
-// the already-created 'probes' vector.
-void parse_nmap_service_probes(AllProbes *AP) {
-  char filename[256];
+// Parses the given nmap-service-probes file into the AP class
+void parse_nmap_service_probe_file(AllProbes *AP, char *filename) {
   ServiceProbe *newProbe;
   char line[512];
   int lineno = 0;
   FILE *fp;
 
-  if (nmap_fetchfile(filename, sizeof(filename), "nmap-service-probes") == -1){
-    fatal("Service scan requested but I cannot find nmap-service-probes file.  It should be in %s, ~/.nmap/ or .", NMAPDATADIR);
-  }
-
-  // We found the file, so let us read it.
+  // We better start by opening the file
   fp = fopen(filename, "r");
+  if (!fp) 
+    fatal("Failed to open nmap-service-probes file %s for reading", filename);
 
   while(fgets(line, sizeof(line), fp)) {
     lineno++;
@@ -680,6 +673,18 @@ void parse_nmap_service_probes(AllProbes *AP) {
   fclose(fp);
 }
 
+// Parses the nmap-service-probes file, and adds each probe to
+// the already-created 'probes' vector.
+void parse_nmap_service_probes(AllProbes *AP) {
+  char filename[256];
+
+  if (nmap_fetchfile(filename, sizeof(filename), "nmap-service-probes") == -1){
+    fatal("Service scan requested but I cannot find nmap-service-probes file.  It should be in %s, ~/.nmap/ or .", NMAPDATADIR);
+  }
+
+  parse_nmap_service_probe_file(AP, filename);
+}
+
 // Returns a service name if the givven buffer and length match one.
 // Otherwise returns NULL.  If there is a match and the version is
 // also able to be determined, and 'version' is not NULL, and
@@ -710,6 +715,23 @@ AllProbes::~AllProbes() {
     delete *vi;
 }
 
+  // Tries to find the probe in this AllProbes class which have the
+  // given name and protocol.  It can return the NULL probe.
+ServiceProbe *AllProbes::getProbeByName(const char *name, int proto) {
+  vector<ServiceProbe *>::iterator vi;
+
+  if (proto== IPPROTO_TCP && nullProbe && strcmp(nullProbe->getName(), name) == 0)
+    return nullProbe;
+
+  for(vi = probes.begin(); vi != probes.end(); vi++) {
+    if ((*vi)->getProbeProtocol() == proto &&
+	strcmp(name, (*vi)->getName()) == 0)
+      return *vi;
+  }
+
+  return NULL;
+}
+
 ServiceNFO::ServiceNFO(AllProbes *newAP) {
   target = NULL;
   probe_matched = NULL;
@@ -723,6 +745,7 @@ ServiceNFO::ServiceNFO(AllProbes *newAP) {
   version_matched[0] = '\0';
   servicefplen = servicefpalloc = 0;
   servicefp = NULL;
+  current_write = (nsock_event_id) -1;
 }
 
 ServiceNFO::~ServiceNFO() {
@@ -740,7 +763,7 @@ void ServiceNFO::addServiceChar(char c, int wrapat) {
 
   if (servicefplen % (wrapat+1) == wrapat) {
     // we need to start a new line
-    memcpy(servicefp + servicefplen, "\n   ", 4);
+    memcpy(servicefp + servicefplen, "\nSF:", 4);
     servicefplen += 4;
   }
 
@@ -760,8 +783,8 @@ void ServiceNFO::addServiceString(char *s, int wrapat) {
 void ServiceNFO::addToServiceFingerprint(const char *probeName, const u8 *resp, 
 					 int resplen) {
   int spaceleft = servicefpalloc - servicefplen;
-  int servicewrap=67; // Wrap after 67 chars / line
-  int respused = MIN(resplen, 400); // truncate to reasonable size
+  int servicewrap=74; // Wrap after 74 chars / line
+  int respused = MIN(resplen, (o.debugging)? 1000 : 400); // truncate to reasonable size
   int spaceneeded = respused * 6 + 20;  // every char could require \xHH escape,
                                       // plus there is the matter of \n and spaces.
                                       // Oh, and the SF-PortXXXXX-TCP stuff, etc
@@ -774,8 +797,7 @@ void ServiceNFO::addToServiceFingerprint(const char *probeName, const u8 *resp,
   assert(resplen);
   assert(probeName);
 
-
-  if (servicefplen > 1024)
+  if (servicefplen > (o.debugging? 10000 : 1500))
     return; // it is large enough.
 
   if (spaceneeded >= spaceleft) {
@@ -806,13 +828,18 @@ void ServiceNFO::addToServiceFingerprint(const char *probeName, const u8 *resp,
    if (isalnum((int)resp[srcidx]))
       addServiceChar((char) resp[srcidx], servicewrap);
     else if (resp[srcidx] == '\0') {
-      addServiceChar('\\', servicewrap);
-      addServiceChar('0', servicewrap);
+      addServiceString("\\0", servicewrap);
     } else if (resp[srcidx] == '\\' || resp[srcidx] == '"') {
       addServiceChar('\\', servicewrap);
       addServiceChar(resp[srcidx], servicewrap);
     } else if (ispunct((int)resp[srcidx])) {
       addServiceChar((char) resp[srcidx], servicewrap);
+    } else if (resp[srcidx] == '\r') {
+      addServiceString("\\r", servicewrap);
+    } else if (resp[srcidx] == '\n') {
+      addServiceString("\\n", servicewrap);
+    } else if (resp[srcidx] == '\t') {
+      addServiceString("\\t", servicewrap);
     } else {
       addServiceChar('\\', servicewrap);
       addServiceChar('x', servicewrap);
@@ -828,9 +855,35 @@ void ServiceNFO::addToServiceFingerprint(const char *probeName, const u8 *resp,
   servicefp[servicefplen] = '\0';
 }
 
+// Get the service fingerprint.  It is NULL if there is none, such
+// as if there was a match before any other probes were finished (or
+// if no probes gave back data).  Note that this is plain
+// NUL-terminated ASCII data, although the length is optionally
+// available anyway.  This function terminates the service fingerprint
+// with a semi-colon
+const char *ServiceNFO::getServiceFingerprint(int *flen) {
+
+  if (servicefplen == 0) {
+    if (flen) *flen = 0;
+    return NULL;
+  }
+
+  // Ensure we have enough space for the terminating semi-colon and \0
+  if (servicefplen + 2 > servicefpalloc) {
+    servicefpalloc = servicefplen + 20;
+    servicefp = (char *) safe_realloc(servicefp, servicefpalloc);
+  }
+
+  if (flen) *flen = servicefplen + 1;
+  // We terminate with a semi-colon, which is never wrapped.
+  servicefp[servicefplen] = ';';
+  servicefp[servicefplen + 1] = '\0';
+  return servicefp;
+}
+
 ServiceProbe *ServiceNFO::currentProbe() {
   if (probe_state == PROBESTATE_INITIAL) {
-    return nextProbe();
+    return nextProbe(true);
   } else if (probe_state == PROBESTATE_NULLPROBE) {
     assert(AP->nullProbe);
     return AP->nullProbe;
@@ -842,13 +895,17 @@ ServiceProbe *ServiceNFO::currentProbe() {
 }
 
 // computes the next probe to test, and ALSO CHANGES currentProbe() to
-// that!
-ServiceProbe *ServiceNFO::nextProbe() {
+// that!  If newresp is true, the old response info will be lost and
+// invalidated.  Otherwise it remains as if it had been received by
+// the current probe (useful after a NULL probe).
+ServiceProbe *ServiceNFO::nextProbe(bool newresp) {
 bool dropdown = false;
 
 // This invalidates the probe response string if any
- if (currentresp) free(currentresp);
- currentresp = NULL; currentresplen = 0;
+ if (newresp) { 
+   if (currentresp) free(currentresp);
+   currentresp = NULL; currentresplen = 0;
+ }
 
  if (probe_state == PROBESTATE_INITIAL) {
    probe_state = PROBESTATE_NULLPROBE;
@@ -988,7 +1045,7 @@ ServiceGroup::~ServiceGroup() {
     probestring = probe->getProbeString(&probestringlen);
     assert(probestringlen > 0);
     // Now we write the string to the IOD
-    nsock_write(nsp, nsi, servicescan_write_handler, svc->currentprobe_timemsleft(), svc,
+    svc->current_write = nsock_write(nsp, nsi, servicescan_write_handler, svc->currentprobe_timemsleft(), svc,
 		(const char *) probestring, probestringlen);
     return 0;
   }
@@ -998,7 +1055,7 @@ ServiceGroup::~ServiceGroup() {
 // up if neccessary) .  Otherwise, the service is listed as finished
 // and moved to the finished list.  If you pass 'true' for alwaysrestart, a
 // new connection will be made even if the previous probe was the NULL probe.
-// You would do this, for example, if the other side has closed the connection
+// You would do this, for example, if the other side has closed the connection.
 static void startNextProbe(nsock_pool nsp, nsock_iod nsi, ServiceGroup *SG, 
 			   struct ServiceNFO *svc, bool alwaysrestart) {
   ServiceProbe *probe = svc->currentProbe();
@@ -1006,7 +1063,7 @@ static void startNextProbe(nsock_pool nsp, nsock_iod nsi, ServiceGroup *SG,
   if (!alwaysrestart && probe->isNullProbe()) {
     // The difference here is that we can reuse the same (TCP) connection
     // if the last probe was the NULL probe.
-    probe = svc->nextProbe();
+    probe = svc->nextProbe(false);
     if (probe) {
       svc->currentprobe_exec_time = *nsock_gettimeofday();
       send_probe_text(nsp, nsi, svc, probe);
@@ -1015,16 +1072,20 @@ static void startNextProbe(nsock_pool nsp, nsock_iod nsi, ServiceGroup *SG,
     } else {
       // Should only happen if someone has a highly perverse nmap-service-probes
       // file.  Null scan should generally never be the only probe.
-      end_svcprobe(PROBESTATE_FINISHED_NOMATCH, SG, svc, NULL);
+      end_svcprobe(nsp, PROBESTATE_FINISHED_NOMATCH, SG, svc, NULL);
     }
   } else {
     // The finisehd probe was not a NULL probe.  So we close the
     // connection, and if further probes are available, we launch the
     // next one.
-    probe = svc->nextProbe();
+    probe = svc->nextProbe(true);
     if (probe) {
       // For a TCP probe, we start by requesting a new connection to the target
       if (svc->proto == IPPROTO_TCP) {
+	if (svc->current_write != (nsock_event_id) -1) {
+	  nsock_event_cancel(nsp, svc->current_write, 0);
+	  svc->current_write = (nsock_event_id) -1;
+	}
 	nsi_delete(nsi);
 	if ((svc->niod = nsi_new(nsp, svc)) == NULL) {
 	  fatal("Failed to allocate Nsock I/O descriptor in startNextProbe()");
@@ -1044,8 +1105,12 @@ static void startNextProbe(nsock_pool nsp, nsock_iod nsi, ServiceGroup *SG,
       }
     } else {
       // No more probes remaining!  Failed to match
+      if (svc->current_write != (nsock_event_id) -1) {
+	nsock_event_cancel(nsp, svc->current_write, 0);
+	svc->current_write = (nsock_event_id) -1;
+      }
       nsi_delete(nsi);
-      end_svcprobe(PROBESTATE_FINISHED_NOMATCH, SG, svc, NULL);
+      end_svcprobe(nsp, PROBESTATE_FINISHED_NOMATCH, SG, svc, NULL);
     }
   }
   return;
@@ -1053,7 +1118,7 @@ static void startNextProbe(nsock_pool nsp, nsock_iod nsi, ServiceGroup *SG,
 
 // A simple helper function to cancel further work on a service and set it to the given probe_state
 // pass NULL for nsi if you don't want it to be deleted (for example, if you already have done so).
-void end_svcprobe(enum serviceprobestate probe_state, ServiceGroup *SG, ServiceNFO *svc, nsock_iod nsi) {
+void end_svcprobe(nsock_pool nsp, enum serviceprobestate probe_state, ServiceGroup *SG, ServiceNFO *svc, nsock_iod nsi) {
   list<ServiceNFO *>::iterator member;
 
   svc->probe_state = probe_state;
@@ -1063,8 +1128,13 @@ void end_svcprobe(enum serviceprobestate probe_state, ServiceGroup *SG, ServiceN
   SG->services_in_progress.erase(member);
   SG->services_finished.push_back(svc);
 
-  if (nsi)
+  if (nsi) {
+    if (svc->current_write != (nsock_event_id) -1) {
+      nsock_event_cancel(nsp, svc->current_write, 0);
+      svc->current_write = (nsock_event_id) -1;
+    }
     nsi_delete(nsi);
+  }
 
   return;
 }
@@ -1092,11 +1162,11 @@ void servicescan_connect_handler(nsock_pool nsp, nsock_event nse, void *mydata) 
       // and move it to the finished bin.
     if (o.debugging)
       error("Got nsock CONNECT response with status %s - aborting this service", nse_status2str(status));
-    end_svcprobe(PROBESTATE_INCOMPLETE, SG, svc, nsi);
+    end_svcprobe(nsp, PROBESTATE_INCOMPLETE, SG, svc, nsi);
   } else if (status == NSE_STATUS_KILL) {
     /* User probablby specified host_timeout and so the service scan is
        shutting down */
-    end_svcprobe(PROBESTATE_INCOMPLETE, SG, svc, nsi);
+    end_svcprobe(nsp, PROBESTATE_INCOMPLETE, SG, svc, nsi);
     return;
   } else fatal("Unexpected nsock status (%d) returned for connection attempt", (int) status);
 
@@ -1112,29 +1182,31 @@ void servicescan_write_handler(nsock_pool nsp, nsock_event nse, void *mydata) {
   struct ServiceNFO *svc = (struct ServiceNFO *)mydata;
   ServiceGroup *SG;
 
- if (status == NSE_STATUS_SUCCESS)
-   return;
+  svc->current_write = (nsock_event_id) -1;
 
- SG = (ServiceGroup *) nsp_getud(nsp);
- nsi = nse_iod(nse);
+  if (status == NSE_STATUS_SUCCESS)
+    return;
 
- if (status == NSE_STATUS_KILL) {
-   /* User probablby specified host_timeout and so the service scan is
-      shutting down */
-   end_svcprobe(PROBESTATE_INCOMPLETE, SG, svc, nsi);
-   return;
- }
+  SG = (ServiceGroup *) nsp_getud(nsp);
+  nsi = nse_iod(nse);
 
- // Uh-oh.  Some sort of write failure ... maybe the connection closed
- // on us unexpectedly?
- if (o.debugging) 
-   error("Got nsock WRITE response with status %s - aborting this service", nse_status2str(status));
- end_svcprobe(PROBESTATE_INCOMPLETE, SG, svc, nsi);
+  if (status == NSE_STATUS_KILL) {
+    /* User probablby specified host_timeout and so the service scan is
+       shutting down */
+    end_svcprobe(nsp, PROBESTATE_INCOMPLETE, SG, svc, nsi);
+    return;
+  }
 
- // We may have room for more pr0bes!
- launchSomeServiceProbes(nsp, SG);
- 
- return;
+  // Uh-oh.  Some sort of write failure ... maybe the connection closed
+  // on us unexpectedly?
+  if (o.debugging) 
+    error("Got nsock WRITE response with status %s - aborting this service", nse_status2str(status));
+  end_svcprobe(nsp, PROBESTATE_INCOMPLETE, SG, svc, nsi);
+  
+  // We may have room for more pr0bes!
+  launchSomeServiceProbes(nsp, SG);
+  
+  return;
 }
 
 void servicescan_read_handler(nsock_pool nsp, nsock_event nse, void *mydata) {
@@ -1167,19 +1239,27 @@ void servicescan_read_handler(nsock_pool nsp, nsock_event nse, void *mydata) {
 	else
 	  printf("Service scan match: %s:%hi is %s\n", svc->target->NameIP(), svc->portno, matchname);
       svc->probe_matched = matchname;
-      end_svcprobe(PROBESTATE_FINISHED_MATCHED, SG, svc, nsi);
+      end_svcprobe(nsp, PROBESTATE_FINISHED_MATCHED, SG, svc, nsi);
 
     } else {
       // Didn't match... maybe reading more until timeout will help
       // TODO: For efficiency I should be able to test if enough data has been
-      // received rather than always waiting for the reading to timeout
-      nsock_read(nsp, nsi, servicescan_read_handler, svc->currentprobe_timemsleft(), svc);
+      // received rather than always waiting for the reading to timeout.  For now I'll limit it
+      // to 4096 bytes just to avoid reading megs from services like chargen.  But better approach is needed.
+      if (svc->currentprobe_timemsleft() > 0 && readstrlen < 4096) { 
+	nsock_read(nsp, nsi, servicescan_read_handler, svc->currentprobe_timemsleft(), svc);
+      } else {
+	// Failed -- lets go to the next probe.
+	if (readstrlen > 0)
+	  svc->addToServiceFingerprint(svc->currentProbe()->getName(), readstr, 
+				       readstrlen);
+	startNextProbe(nsp, nsi, SG, svc, false);
+      }
     }
-
   } else if (status == NSE_STATUS_TIMEOUT) {
     // Failed to read enough to make a match in the given amount of time.  So we
     // move on to the next probe.  If this was a NULL probe, we can simply
-    // send the new probe text immediately.  Oterwise we make a new connection.
+    // send the new probe text immediately.  Otherwise we make a new connection.
 
     readstr = svc->getcurrentproberesponse(&readstrlen);
     if (readstrlen > 0)
@@ -1197,7 +1277,7 @@ void servicescan_read_handler(nsock_pool nsp, nsock_event nse, void *mydata) {
 				   readstrlen);
     if (probe->isNullProbe() && readstrlen == 0) {
       // TODO:  Perhaps should do further verification before making this assumption
-      end_svcprobe(PROBESTATE_FINISHED_TCPWRAPPED, SG, svc, nsi);
+      end_svcprobe(nsp, PROBESTATE_FINISHED_TCPWRAPPED, SG, svc, nsi);
     } else {
 
       // Perhaps this service didn't like the particular probe text.
@@ -1212,12 +1292,17 @@ void servicescan_read_handler(nsock_pool nsp, nsock_event nse, void *mydata) {
       // Jerk hung up on us.  Probably didn't like our probe.  We treat it as with EOF above.
       if (probe->isNullProbe()) {
 	// TODO:  Perhaps should do further verification before making this assumption
-	end_svcprobe(PROBESTATE_FINISHED_TCPWRAPPED, SG, svc, nsi);
+	end_svcprobe(nsp, PROBESTATE_FINISHED_TCPWRAPPED, SG, svc, nsi);
       } else {
 	// Perhaps this service didn't like the particular probe text.  We'll try the 
 	// next one
 	startNextProbe(nsp, nsi, SG, svc, true);
       }
+      break;
+    case EHOSTUNREACH:
+      // That is funny.  The port scanner listed the port as open.  Maybe it got unplugged, or firewalled us, or did
+      // something else nasty during the scan.  Shrug.  I'll give up on this port
+      end_svcprobe(nsp, PROBESTATE_INCOMPLETE, SG, svc, nsi);
       break;
     default:
       fatal("Unexpected error in NSE_TYPE_READ callback.  Error code: %d (%s)", err,
@@ -1226,7 +1311,7 @@ void servicescan_read_handler(nsock_pool nsp, nsock_event nse, void *mydata) {
   } else if (status == NSE_STATUS_KILL) {
     /* User probablby specified host_timeout and so the service scan is 
        shutting down */
-    end_svcprobe(PROBESTATE_INCOMPLETE, SG, svc, nsi);
+    end_svcprobe(nsp, PROBESTATE_INCOMPLETE, SG, svc, nsi);
     return;
   } else {
     fatal("Unexpected status (%d) in NSE_TYPE_READ callback.", (int) status);
@@ -1272,7 +1357,7 @@ int launchSomeServiceProbes(nsock_pool nsp, ServiceGroup *SG) {
 	 !SG->services_remaining.empty()) {
     // Start executing a probe from the new list and move it to in_progress
     svc = SG->services_remaining.front();
-    nextprobe = svc->nextProbe();
+    nextprobe = svc->nextProbe(true);
     // We start by requesting a connection to the target
     if ((svc->niod = nsi_new(nsp, svc)) == NULL) {
       fatal("Failed to allocate Nsock I/O descriptor in launchSomeServiceProbes()");

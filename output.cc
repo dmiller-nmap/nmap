@@ -198,7 +198,7 @@ void printportoutput(Target *currenths, PortList *plist) {
 	state = statenum2str(current->state);
 	current->getServiceDeductions(&sd);
 
-	if (sd.service_fp && saved_servicefps.size() <= 10)
+	if (sd.service_fp && saved_servicefps.size() <= 8)
 	  saved_servicefps.push_back(sd.service_fp);
 
 	if (o.rpcscan) {
@@ -234,7 +234,7 @@ void printportoutput(Target *currenths, PortList *plist) {
 	  snprintf(serviceinfo, sizeof(serviceinfo), "%s%s%s", (sd.name)? sd.name : ((*rpcinfo)? "" : "unknown"), (sd.name)? " " : "",  rpcinfo);
 	} else {
 	  snprintf(serviceinfo, sizeof(serviceinfo), "%s%s", (sd.name)? sd.name : "unknown",
-		   (sd.name && sd.name_confidence <= 5)? "?" : "");
+		   (o.servicescan && sd.name && current->state == PORT_OPEN && sd.name_confidence <= 5)? "?" : "");
 	  strcpy(rpcmachineinfo, "");
 	}
 	// HACK: I hate the trailing whitespace so I'll just skip it unless
@@ -284,6 +284,8 @@ void printportoutput(Target *currenths, PortList *plist) {
     int numfps = saved_servicefps.size();
 log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT, "%d service%s unrecognized despite returning data. If you know the service/version, please submit the following fingerprint%s at http://www.insecure.org/cgi-bin/servicefp-submit.cgi :\n", numfps, (numfps > 1)? "s" : "", (numfps > 1)? "s" : "");
     for(i=0; i < numfps; i++) {
+      if (numfps > 1)
+	log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT, "==========NEXT SERVICE FINGERPRINT (SUBMIT INDIVIDUALLY)===========\n");
       log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT, "%s\n", saved_servicefps[i]);
     }
   }

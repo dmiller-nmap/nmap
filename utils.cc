@@ -690,7 +690,7 @@ char *mmapfile(char *fname, int *length, int openflags) {
   close(fd);
 
 #ifdef MAP_FAILED
-  if (fileptr == MAP_FAILED) return NULL;
+  if (fileptr == (void *)MAP_FAILED) return NULL;
 #else
   if (fileptr == (char *) -1) return NULL;
 #endif

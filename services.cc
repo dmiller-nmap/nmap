@@ -93,7 +93,7 @@ static int nmap_services_init() {
     fatal("Unable to open %s for reading service information", filename);
   }
 
-  bzero(service_table, sizeof(service_table));
+  memset(service_table, 0, sizeof(service_table));
   
   while(fgets(line, sizeof(line), fp)) {
     lineno++;
@@ -193,7 +193,7 @@ struct scan_lists *getdefaultports(int tcpscan, int udpscan) {
     if (nmap_services_init() == -1)
       fatal("Getfastports: Couldn't get port numbers");
   
-  bzero(usedports, sizeof(usedports));
+  memset(usedports, 0, sizeof(usedports));
   for(bucket = 1; bucket < 1025; bucket++) {  
     if (tcpscan) {
       usedports[bucket] |= SCAN_TCP_PORT;
@@ -255,7 +255,7 @@ struct scan_lists *getfastports(int tcpscan, int udpscan) {
     if (nmap_services_init() == -1)
       fatal("Getfastports: Coudn't get port numbers");
   
-  bzero(usedports, sizeof(usedports));
+  memset(usedports, 0, sizeof(usedports));
 
   for(bucket = 0; bucket < SERVICE_TABLE_SIZE; bucket++) {  
     for(current = service_table[bucket % SERVICE_TABLE_SIZE];

@@ -53,10 +53,10 @@ extern NmapOps o;
 FingerPrintResults::FingerPrintResults() {
   num_perfect_matches = num_matches = 0;
   overall_results = OSSCAN_NOMATCHES;
-  bzero(accuracy, sizeof(accuracy));
+  memset(accuracy, 0, sizeof(accuracy));
   isClassified = false;
   osscan_opentcpport = osscan_closedtcpport = -1;
-  bzero(FPs, sizeof(FPs));
+  memset(FPs, 0, sizeof(FPs));
   numFPs = goodFP = 0;
 }
 

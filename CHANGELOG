@@ -1,5 +1,66 @@
 # Nmap Changelog ($Id$)
 
+o Service scan is now OFF by default.  You can activate it with -sV.
+  Or use the snazzy new -A (for "All recommended features" or "Aggressive") option which
+  turns on both OS detection and service detection.
+
+o Fixed compilation on my ancient OpenBSD 2.3 machine (a Pentium 60 :)
+
+o Added/fixed numerous service fingerprints thanks to submissions from
+  Brian Hatch, HD Moore, Anand R., and some of my own testing.  The
+  number of match lines in this version grows from 137 to 164!  Please
+  keep 'em coming!
+
+o Various important and not-so-important fixes for bugs I encountered
+  while test scanning.
+
+o The RPC grinder no longer prints a startup message if it has no
+  RPC-detected ports to scan.
+
+o Soem of the service fingerprint length limitations are relaxed a bit
+  if you enable debugging (-d).
+
+Nmap 3.40PVT7
+
+o Added a whole bunch of services submitted by Brian Hatch
+  (bri(@)ifokr.org).  I also added a few Windows-related probes.
+  Nmap-service-probes has gone from 101 match strings to 137.  Please
+  keep the submissions coming.
+
+o The question mark now only appears for ports in the OPEN state and
+  when service detection was requested.
+
+o I now print a separator bar between service fingerprints when Nmap
+  prints more than one for a given host so that users unerstand to
+  submit them individually (suggested by Brian Hatch (bri(@)ifokr.org))
+
+o Fixed a bug that would cause Nmap to print "empty" service
+  fingerprints consisting of just a semi-colon.  Thanks to Brian Hatch
+  (bri(@)ifokr.org) for reporting this.
+
+Nmap 3.40PVT6
+
+o Banner-scanned hundreds of thousands of machines for ports
+  21,23,25,110,3306 to collect default banners.  Where the banner made
+  the service name/version obvious, I integrated them into
+  nmap-service-probes.  This increased the number of 'match' lines from
+  27 to more than 100.
+
+o Created the service fingerprint submission page at
+  http://www.insecure.org/cgi-bin/servicefp-submit.cgi
+
+o Changed the service fingerprint format slightly for easier
+  processing by scripts.
+
+o Applied a large portability patch from Albert Chin-A-Young
+  (china(at)thewrittenword.com).  This cleans up a number of things,
+  particularly for IRIX, Tru64, and Solaris.
+
+o Applied NmapFE patch from Peter Marschall (peter@adpm.de) which
+  "makes sure changes in the relay host and scanned port entry fields
+  are displayed immediately, and also keeps the fields editable after
+  de- and reactivating them."
+
 Nmap 3.40PVT4
 
 o Limited the size of service fingerprints to roughly 1024 bytes.

@@ -55,17 +55,17 @@ Target::Target() {
 
 void Target::Initialize() {
   hostname = NULL;
-  bzero(&seq, sizeof(seq));
+  memset(&seq, 0, sizeof(seq));
   FPR = NULL;
   osscan_performed = 0;
   wierd_responses = flags = 0;
-  bzero(&to, sizeof(to));
-  bzero(&host_timeout, sizeof(host_timeout));
-  bzero(&firewallmode, sizeof(struct firewallmodeinfo));
+  memset(&to, 0, sizeof(to));
+  memset(&host_timeout, 0, sizeof(host_timeout));
+  memset(&firewallmode, 0, sizeof(struct firewallmodeinfo));
   timedout = 0;
   device[0] = '\0';
-  bzero(&targetsock, sizeof(targetsock));
-  bzero(&sourcesock, sizeof(sourcesock));
+  memset(&targetsock, 0, sizeof(targetsock));
+  memset(&sourcesock, 0, sizeof(sourcesock));
   targetsocklen = sourcesocklen = 0;
   targetipstring[0] = '\0';
   nameIPBuf = NULL;

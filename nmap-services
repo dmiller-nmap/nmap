@@ -1148,6 +1148,7 @@ iad2              1031/udp   # BBN IAD
 iad3              1032/tcp   # BBN IAD
 iad3              1032/udp   # BBN IAD
 netinfo           1033/tcp   # Netinfo is apparently on many OS X boxes.
+netsaint          1040/tcp   # Netsaint status daemon
 java-or-OTGfileshare 1050/tcp # J2EE nameserver, also OTG, also called Disk/Application extender. Could also be MiniCommand backdoor OTGlicenseserv
 nim               1058/tcp   # 
 nim               1058/udp   # 
@@ -1176,12 +1177,14 @@ nfa               1155/udp   # Network File Access
 phone             1167/udp   # conference calling
 skkserv           1178/tcp   # SKK (kanji input)
 lupa              1212/tcp   # 
-lupa              1212/udp   # 
+lupa              1212/udp   #
+fasttrack         1214/tcp   # Kazaa File Sharing
+fasttrack         1214/udp   # Kazaa File Sharing
 quicktime         1220/tcp   # Apple Darwin and QuickTime Streaming Administration Servers
 nerv              1222/tcp   # SNI R&D network
 nerv              1222/udp   # SNI R&D network
 hotline           1234/tcp   # 
-msg               1241/tcp   # remote message server
+nessus            1241/tcp   # Nessus or remote message server
 hermes            1248/tcp   # 
 hermes            1248/udp   # 
 waste             1337/tcp   # Nullsoft WASTE encrypted P2P app
@@ -1848,6 +1851,8 @@ IISrpc-or-vat     3456/udp   # also VAT default data
 vat-control       3457/tcp   # VAT default control
 vat-control       3457/udp   # VAT default control
 track             3462/tcp   # software distribution
+peerenabler       3531/tcp   # P2PNetworking/PeerEnabler protocol
+peerenabler       3531/udp   # P2PNetworking/PeerEnabler protocol
 rendezvous        3689/tcp   # Rendezvous Zeroconf (used by Apple)
 udt_os            3900/tcp   # Unidata UDT OS
 udt_os            3900/udp   # Unidata UDT OS

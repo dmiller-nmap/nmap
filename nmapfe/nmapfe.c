@@ -353,6 +353,8 @@ GtkAdjustment *adjust;
   opt.scanRelay = gtk_entry_new();
   gtk_entry_set_max_length(GTK_ENTRY(opt.scanRelay), 256);
   gtk_object_set(GTK_OBJECT(opt.scanRelay), "width", 150, NULL);
+  gtk_signal_connect(GTK_OBJECT(opt.scanRelay), "changed",
+                     GTK_SIGNAL_FUNC(display_nmap_command_cb), NULL);
   if ((opt.scanValue != BOUNCE_SCAN) && (opt.scanValue != IDLE_SCAN))
     gtk_widget_set_sensitive(GTK_WIDGET(opt.scanRelay), FALSE);
   gtk_table_attach_defaults(GTK_TABLE(table), opt.scanRelay, 1, 4, 1, 2);
@@ -390,6 +392,8 @@ GtkAdjustment *adjust;
   opt.protportRange = gtk_entry_new();
   gtk_entry_set_max_length(GTK_ENTRY(opt.protportRange), 256);
   gtk_object_set(GTK_OBJECT(opt.protportRange), "width", 100, NULL);
+  gtk_signal_connect(GTK_OBJECT(opt.protportRange), "changed",
+                     GTK_SIGNAL_FUNC(display_nmap_command_cb), NULL);
   if (opt.protportValue != GIVEN_PROTPORT)
     gtk_widget_set_sensitive(GTK_WIDGET(opt.protportRange), FALSE);
   gtk_table_attach_defaults(GTK_TABLE(table), opt.protportRange, 1, 2, 1, 2);
@@ -958,7 +962,7 @@ GtkAdjustment *adjust;
   gtk_container_add(GTK_CONTAINER(frame), table);
 
   opt.useSourceDevice = gtk_check_button_new_with_label("Device");
-  gtk_signal_connect(GTK_OBJECT(opt.useSourceDevice), "released",
+  gtk_signal_connect(GTK_OBJECT(opt.useSourceDevice), "toggled",
 			GTK_SIGNAL_FUNC(validate_option_change), NULL);
   if (opt.uid != 0)
     gtk_widget_set_sensitive(GTK_WIDGET(opt.useSourceDevice), FALSE);
@@ -968,7 +972,7 @@ GtkAdjustment *adjust;
   opt.SourceDevice = gtk_entry_new();
   gtk_entry_set_max_length(GTK_ENTRY(opt.SourceDevice), 64);
   gtk_object_set(GTK_OBJECT(opt.SourceDevice), "width", 110, NULL);
-  gtk_signal_connect(GTK_OBJECT(opt.useSourceDevice), "released",
+  gtk_signal_connect(GTK_OBJECT(opt.useSourceDevice), "toggled",
 		     GTK_SIGNAL_FUNC(toggle_button_set_sensitive_cb), opt.SourceDevice);
   gtk_signal_connect(GTK_OBJECT(opt.SourceDevice), "changed",
 		     GTK_SIGNAL_FUNC(display_nmap_command_cb), NULL);
@@ -989,7 +993,7 @@ GtkAdjustment *adjust;
   opt.SourcePort = gtk_entry_new();
   gtk_entry_set_max_length(GTK_ENTRY(opt.SourcePort), 64);
   gtk_object_set(GTK_OBJECT(opt.SourcePort), "width", 110, NULL);
-  gtk_signal_connect(GTK_OBJECT(opt.useSourcePort), "released",
+  gtk_signal_connect(GTK_OBJECT(opt.useSourcePort), "toggled",
 		     GTK_SIGNAL_FUNC(toggle_button_set_sensitive_cb), opt.SourcePort);
   gtk_signal_connect(GTK_OBJECT(opt.SourcePort), "changed",
 		     GTK_SIGNAL_FUNC(display_nmap_command_cb), NULL);
@@ -1010,7 +1014,7 @@ GtkAdjustment *adjust;
   opt.SourceIP = gtk_entry_new();
   gtk_entry_set_max_length(GTK_ENTRY(opt.SourceIP), 64);
   gtk_object_set(GTK_OBJECT(opt.SourceIP), "width", 110, NULL);
-  gtk_signal_connect(GTK_OBJECT(opt.useSourceIP), "released",
+  gtk_signal_connect(GTK_OBJECT(opt.useSourceIP), "toggled",
 		     GTK_SIGNAL_FUNC(toggle_button_set_sensitive_cb), opt.SourceIP);
   gtk_signal_connect(GTK_OBJECT(opt.SourceIP), "changed",
 		     GTK_SIGNAL_FUNC(display_nmap_command_cb), NULL);
@@ -1031,7 +1035,7 @@ GtkAdjustment *adjust;
   opt.Decoy = gtk_entry_new();
   gtk_entry_set_max_length(GTK_ENTRY(opt.Decoy), 256);
   gtk_object_set(GTK_OBJECT(opt.Decoy), "width", 110, NULL);
-  gtk_signal_connect(GTK_OBJECT(opt.useDecoy), "released",
+  gtk_signal_connect(GTK_OBJECT(opt.useDecoy), "toggled",
 		     GTK_SIGNAL_FUNC(toggle_button_set_sensitive_cb), opt.Decoy);
   gtk_signal_connect(GTK_OBJECT(opt.Decoy), "changed",
 		     GTK_SIGNAL_FUNC(display_nmap_command_cb), NULL);

@@ -4414,7 +4414,9 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=F%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
-Fingerprint Foundry 1500 Load Balancer OS Ver 7.2.06T51
+# Foundry 1500 OS Ver 7.2.06T51
+# Foundry ServerIron XL 16 Port 7.3.06T12
+Fingerprint Foundry Load Balancer OS Ver 7.2.X - 7.3.X
 Class Foundry | embedded || load balancer
 TSeq(Class=RI%gcd=<6%SI=<1366E&>AE%IPID=I%TS=U)
 T1(DF=N%W=4000%ACK=S++%Flags=AS%Ops=M)
@@ -9592,7 +9594,7 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
-Fingerprint IBY OS/390 V2R10
+Fingerprint IBM OS/390 V2R10
 Class IBM | OS/390 | V2 | general purpose
 TSeq(Class=RI%gcd=<6%SI=<17C1E&>128%IPID=I%TS=1000HZ)
 T1(DF=N%W=8000%ACK=S++%Flags=AS%Ops=MNWNNT)

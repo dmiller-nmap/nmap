@@ -155,13 +155,13 @@ void NmapOps::Initialize() {
   decoyturn = -1;
   identscan = 0;
   osscan = 0;
-  servicescan = 1;
+  servicescan = 0;
   pingtype = PINGTYPE_UNKNOWN;
   listscan = pingscan = allowall = ackscan = bouncescan = connectscan = 0;
   rpcscan = nullscan = xmasscan = fragscan = synscan = windowscan = 0;
   maimonscan = idlescan = finscan = udpscan = ipprotscan = noresolve = 0;
   force = append_output = 0;
-  bzero(logfd, sizeof(FILE *) * LOG_TYPES);
+  memset(logfd, 0, sizeof(FILE *) * LOG_TYPES);
   ttl = -1;
   nmap_stdout = stdout;
   gettimeofday(&start_time, NULL);
@@ -193,7 +193,7 @@ void NmapOps::ValidateOptions() {
     if (isr00t && af() == AF_INET)
       synscan++;
     else connectscan++;
-    if (verbose) error("No tcp, udp, or ICMP scantype specified, assuming %s scan. Use -sP if you really don't want to portscan (and just want to see what hosts are up).", synscan? "SYN Stealth" : "vanilla tcp connect()");
+    //    if (verbose) error("No tcp, udp, or ICMP scantype specified, assuming %s scan. Use -sP if you really don't want to portscan (and just want to see what hosts are up).", synscan? "SYN Stealth" : "vanilla tcp connect()");
   }
 
   if (pingtype != PINGTYPE_NONE && spoofsource) {

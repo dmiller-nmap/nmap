@@ -249,7 +249,7 @@ void initialize_idleproxy(struct idle_proxy_info *proxy, char *proxyName,
 
   for(i=0; i < NUM_IPID_PROBES; i++) probe_returned[i] = 0;
 
-  bzero(proxy, sizeof(*proxy));
+  memset(proxy, 0, sizeof(*proxy));
   proxy->host.to.srtt = -1;
   proxy->host.to.rttvar = -1;
   proxy->host.to.timeout = o.initialRttTimeout() * 1000;
@@ -287,7 +287,7 @@ void initialize_idleproxy(struct idle_proxy_info *proxy, char *proxyName,
   } else {
     struct sockaddr_in *sin = (struct sockaddr_in *)&ss;
     sslen = sizeof(*sin);
-    bzero(sin, sslen);
+    memset(sin, 0, sslen);
     dev = routethrough(proxy->host.v4hostip(), &(sin->sin_addr));  
     if (!dev) fatal("Unable to find appropriate source address and device interface to use when sending packets to %s", proxyName);
     Strncpy(proxy->host.device, dev, sizeof(proxy->host.device));
@@ -582,11 +582,11 @@ int idlescan_countopen2(struct idle_proxy_info *proxy,
 
   if (seq == 0) seq = get_random_u32();
 
-  bzero(&end, sizeof(end));
-  bzero(&latestchange, sizeof(latestchange));
+  memset(&end, 0, sizeof(end));
+  memset(&latestchange, 0, sizeof(latestchange));
   gettimeofday(&start, NULL);
-  if (sent_time) bzero(sent_time, sizeof(*sent_time));
-  if (rcv_time) bzero(rcv_time, sizeof(*rcv_time));
+  if (sent_time) memset(sent_time, 0, sizeof(*sent_time));
+  if (rcv_time) memset(rcv_time, 0, sizeof(*rcv_time));
 
   /* I start by sending out the SYN pr0bez */
   for(pr0be = 0; pr0be < numports; pr0be++) {

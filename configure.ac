@@ -139,11 +139,11 @@ if test $macosx = no; then
 fi
 
 dnl If any socket libraries needed
-AC_CHECK_FUNC(gethostent, , AC_CHECK_LIB(nsl, gethostent))
-AC_CHECK_FUNC(setsockopt, , AC_CHECK_LIB(socket, setsockopt))
+AC_SEARCH_LIBS(gethostent, nsl)
+AC_SEARCH_LIBS(setsockopt, socket)
 
 dnl need posix4/nanosleep for solaris 2.4
-AC_CHECK_FUNC(nanosleep, , AC_CHECK_LIB(posix4, nanosleep))
+AC_SEARCH_LIBS(nanosleep, posix4)
 
 # By default, try to build nmapfe if possible
 test "${with_nmapfe+set}" != "set" && with_nmapfe=yes
@@ -490,7 +490,44 @@ fi
 
 dnl Checks for library functions.
 dnl AC_TYPE_SIGNAL
-AC_CHECK_FUNCS( bzero snprintf vsnprintf memcpy usleep nanosleep strerror strcasestr inet_aton getopt_long_only )
+AC_CHECK_FUNCS(bzero memcpy nanosleep strerror \
+strcasestr inet_aton getopt_long_only)
+
+AC_LANG_PUSH(C++)
+AC_MSG_CHECKING([for usleep])
+AC_TRY_LINK([#include <unistd.h>],[usleep (200);],[
+  AC_MSG_RESULT(yes)],[
+  AC_MSG_RESULT(no)
+  AC_MSG_CHECKING([if usleep needs custom prototype])
+  AC_TRY_LINK([
+#include <unistd.h>
+
+extern "C" int usleep (unsigned int);],[
+usleep (200);],[
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(NEED_USLEEP_PROTO)],
+  AC_MSG_RESULT(not found))])
+AC_LANG_POP(C++)
+
+AC_LANG_PUSH(C++)
+AC_TRY_LINK([#include <stdlib.h>
+#include <unistd.h>],[
+char buffer[200];
+gethostname (buffer, 200);], ,[
+  AC_MSG_CHECKING([if gethostname needs custom prototype])
+  AC_TRY_LINK([
+#include <stdlib.h>
+#include <unistd.h>
+
+extern "C" int gethostname (char *, unsigned int);],[
+char buffer[200];
+gethostname (buffer, 200);],[
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(NEED_GETHOSTNAME_PROTO)],
+  AC_MSG_RESULT(not found))])
+AC_LANG_POP(C++)
+
+RECVFROM_ARG6_TYPE
 
 dnl AC_CHECK_FUNCS(gethostname gettimeofday select socket strdup strstr )
 
@@ -589,7 +626,3 @@ dnl    AC_CONFIG_SUBDIRS( $libpcapdir )
 dnl fi
 
 AC_OUTPUT(Makefile)
-
-
-
-

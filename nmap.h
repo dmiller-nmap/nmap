@@ -328,49 +328,8 @@ void *realloc();
 #endif
 #endif /* BSDFIX */
 
-/* Funny story about this one in /usr/include/apache/ap_config.h */
-#if defined(AIX)
-#  if AIX >= 42
-#    define NET_SIZE_T size_t
-#  endif
-#elif defined(LINUX)
-#  if defined(__GLIBC__) && (__GLIBC__ > 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ > 0))
-#  define NET_SIZE_T socklen_t
-#  endif
-#elif defined(SEQUENT)
-#  if SEQUENT < 44
-#    define NO_KILLPG 1
-#    define NET_SIZE_T int
-#  endif
-#  if SEQUENT >= 44
-#    undef NO_KILLPG
-#    define NET_SIZE_T size_t
-#  endif
-#elif defined(SVR4)
-#  define NET_SIZE_T size_t
-#elif defined(UW)
-#  define NET_SIZE_T size_t
-#elif defined(__FreeBSD__)
-#  if __FreeBSD__ >= 2
-#    include <osreldate.h>
-#    if __FreeBSD_version >= 400000
-#      define NET_SIZE_T socklen_t
-#    endif
-#  endif
-#elif defined(OPENBSD)
-#  define NET_SIZE_T socklen_t
-#elif defined(NETBSD)
-#  define NET_SIZE_T socklen_t
-#elif defined(OS390)
-#  define NET_SIZE_T size_t
-#elif defined(SOLARIS)
-#  define NET_SIZE_T size_t
-#elif defined(WIN32)
-#  define NET_SIZE_T int
-#endif
-
-#ifndef NET_SIZE_T
-#  define NET_SIZE_T int
+#ifndef recvfrom6_t
+#  define recvfrom6_t int
 #endif
 
 /********************** LOCAL INCLUDES *****************************/

@@ -168,7 +168,7 @@ int send_rpc_query(const struct in_addr *target_host, unsigned short portno,
      fatal("Done");  */
 
   rpch = (struct rpc_hdr *) ((char *)rpch_buf + sizeof(unsigned long));
-  bzero(rpch, sizeof(struct rpc_hdr));
+  memset(rpch, 0, sizeof(struct rpc_hdr));
 
 
   while(rpc_xid_base == (unsigned long) -1)
@@ -195,7 +195,7 @@ int send_rpc_query(const struct in_addr *target_host, unsigned short portno,
   last_target_host.s_addr = target_host->s_addr;
   last_portno = portno;
   
-  bzero(&sock, sizeof(sock));
+  memset(&sock, 0, sizeof(sock));
   sock.sin_family = AF_INET;
   sock.sin_addr.s_addr = target_host->s_addr;
   sock.sin_port = htons(portno);
@@ -420,7 +420,7 @@ struct timeval tv;
 int res;
 static char readbuf[512];
 struct sockaddr_in from;
-NET_SIZE_T fromlen = sizeof(struct sockaddr_in);
+recvfrom6_t fromlen = sizeof(struct sockaddr_in);
 char *current_msg;
 unsigned long current_msg_len;
  
