@@ -2,6 +2,9 @@
 
 UNRELEASED:
 
+o Applied several Nmap service detection database updates sent in by
+  Martin Maèok (martin.macok@underground.cz).
+
 o The XML nmaprun element now has a startstr attribute which gives the
   human readable calendar time format that a scan started.  Similarly
   the finished element now has a timestr attribute describing when the

@@ -1202,6 +1202,8 @@ match http m|^HTTP/1\.[01] \d\d\d .*\r\nServer: JRun Web Server\r\n| v/JRun Web 
 
 match http m|^401 Access denied\r\nWWW-Authenticate: Negotiate \r\nContent-length: 0\r\n\r\n| v/Microsoft IIS 5.0 WebDAV//access denied/
 
+match http m|^HTTP/1\.[01] \d\d\d .*\r\nServer: RomPager/([-.\w/ ]+)\r\n|s v/Embedded Allegro RomPager webserver/$1/ZyXEL ZyWALL 2/
+
 match http m|^HTTP/1\.1 \d\d\d .*\r\nServer: IDSL MailGate (\d[-.\w]+)\r\n| v/MailGate web proxy/$1//
 # While this response looks like a web admin port, I think the same port is used for the primary
 # proxy functionality.  This is version 3.0 final on Linux.
@@ -1339,6 +1341,8 @@ match http m|^HTTP/1\.0\x20250\x20Ok\r\n.*\r\n\r\n.*<title>PowerMTA monitoring</
 # Kerio MailServer 5.7.9, 5.7.10
 match http m|^HTTP/1\.1 302 Redirected\r\nConnection: close\r\nContent-Length: 0\r\nLocation: /login\r\n\r\n$| v/Kerio MailServer Webmail///
 
+match http m|^HTTP/1\.0\x20250\x20Ok\r\n.*\r\n\r\n.*<title>PowerMTA monitoring</title>|s v/Port25 PowerMTA web monitor///
+
 ##############################NEXT PROBE##############################
 Probe TCP HTTPOptions q|OPTIONS / HTTP/1.0\r\n\r\n|
 ports 80,5232,6000
@@ -1352,6 +1356,9 @@ match http m|^HTTP/1\.1 \d\d\d .*\r\nServer: WebSphere Application Server/(.+)\r
 match http m|^HTTP/1\.1 \d\d\d .*\r\nServer: Oracle HTTP Server Powered by Apache\r\n|s v/Oracle HTTP Server Powered by Apache///
 match http m|^HTTP/1\.1 \d\d\d .*\r\nServer: webfs/(\d[-.\w]+)\r\n| v/WebFS httpd/$1//
 
+# HP OpenView ITO agent (probably version 7.25) on Windows, port 381
+match http m|^HTTP/1\.1 \d\d\d .*\r\nserver: BBC \d[-.\w]+; com\.hp\.openview\.Coda \d[-.\w]+\r\n\r\n| v/HP OpenView ITO agent - Coda///
+
 ##############################NEXT PROBE##############################
 Probe TCP RTSPRequest q|OPTIONS / RTSP/1.0\r\n\r\n|
 match rtsp m|^RTSP/1\.0 200 OK\r\nCSeq: 0\r\nDate: .*\r\nServer: RealServer Version (\d[-.\w]+) \(win32\)\r\n| v/Realserver RTSP/$1/win32/
@@ -1360,6 +1367,9 @@ match rtsp m|^RTSP/1\.0 200 OK\r\n.*Server: RealServer Version (\d[-.\w]+) \(([-
 # APC PowerChute Business Edition Agent 6.1.0.0 on Windows 2000 Server
 match powerchute m|^RTSP/1\.0 400 Bad request\r\nContent-type: text/html\r\n\r\n| v/APC PowerChute Agent///
 match msdtc m|^ERROR\n$|s v/Microsoft Distributed Transaction Coordinator//error/
+
+# HP OpenView ITO agent (probably version 7.25) on Windows, port 383
+match http m|^HTTP/1\.1 \d\d\d .*\r\nserver: BBC \d[-.\w]+; com\.hp\.openview\.bbc\.LLBserver \d[-.\w]+\r\n\r\n|s v/HP OpenView ITO agent - LLB server///
 
 # This probe sends an RPC "Null command" to the port for service
 # 100000 (portmapper).
@@ -1408,6 +1418,8 @@ match domain m|^\0\x06\x81\x04\0\0\0\0\0\0\0\0$| v/MyDNS///
 
 # Symantec Antivirus (rtvscan.exe)
 match symantec-av m|^\0\x06\x01\x01\0\x10.\x01\xe0\nI\0\xe0\nI\0$| v/Symantec rtvscan antivirus///
+# Symantec Antivirus (rtvscan.exe) 8.1.0.825 scan eng. 4.2.0.7
+match symantec-av m|^\0\x06\x01\x01\0\x10L\0\xb4\xffG\x01\xf4\x0e\x96\0$| v/Symantec rtvscan antivirus///
 
 # pdnsd 1.1.8b1
 match domain m|^\0\x06\x81\x84\0\x01\0\0\0\0\0\0\x07version\x04bind\0\0\x10\0\x03$| v/pdnsd///
