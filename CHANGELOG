@@ -1,5 +1,8 @@
 # Nmap Changelog ($Id$)
 
+o Applied fix for an important RPC scanning bug sent in by Pasi Eronen
+  (pasi.eronen@nixu.com)
+
 Nmap 2.54BETA32
 
 o Applied Windows pinging fix and from Andy Lutomirski

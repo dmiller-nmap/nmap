@@ -645,14 +645,6 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=0%UCK=E%ULEN=134%DAT=E)
 
-# Contributed by masklin@debian.org
-# Contributed by Clinton Wong, clintdw@netcom.com
-Fingerprint Apple AirPort Wireless Hub Base Station v3.x
-T5(DF=N%W=C00|1000%ACK=S++%Flags=AR%Ops=L)
-T6(DF=N%W=C00|1000%ACK=S|S++%Flags=AR%Ops=|L)
-T7(DF=N%W=C00|1000%ACK=S|S++%Flags=AR%Ops=|L)
-PU(DF=N%TOS=A0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
-
 # Thanks to Mike Fidler <mike@concourse.com>
 Fingerprint Ascend P130 Router
 TSeq(Class=RI%gcd=<6%SI=>BBB&<BBBB)

@@ -509,9 +509,9 @@ char *mmapfile(char *fname, int *length, int openflags) {
     return NULL;
   }
 
-  fileptr = (char *) mmap(0, st.st_size, (openflags & O_RDONLY)? PROT_READ :
-                 (openflags & O_RDWR)? (PROT_READ|PROT_WRITE) : PROT_WRITE,
-                 MAP_SHARED, fd, 0);
+  fileptr = (char *)mmap(0, st.st_size, (openflags == O_RDONLY)? PROT_READ :
+			 (openflags == O_RDWR)? (PROT_READ|PROT_WRITE) 
+			 : PROT_WRITE, MAP_SHARED, fd, 0);
 
   close(fd);
 

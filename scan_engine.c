@@ -554,7 +554,7 @@ void pos_scan(struct hoststruct *target, u16 *portarray, int numports, stype sca
   if (target->timedout)
     return;
 
-  if (! numports) return;		 /* nothing to scan for */
+  if (! numports && scantype != RPC_SCAN) return; /* nothing to scan for */
 
   /* If it is a SYN scan and we have already figured out the states
      of all the TCP ports, might as well skip the scan (this can happen
