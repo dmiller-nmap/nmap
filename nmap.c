@@ -342,9 +342,10 @@ else {
 	nmap_log("Host %s (%s) appears to be down.\n", currenths->name, inet_ntoa(currenths->host));
       else printf("Host %s (%s) appears to be down.\n", currenths->name, inet_ntoa(currenths->host));
     }
+}
   if (currenths->wierd_responses)
     nmap_log("Host  %s (%s) seems to be a subnet broadcast address (returned %d extra pings)\n",  currenths->name, inet_ntoa(currenths->host), currenths->wierd_responses);
-}
+
 if (currenths->flags & HOST_UP && !currenths->source_ip.s_addr && ( o.synscan || o.finscan || o.maimonscan || o.udpscan || o.nullscan || o.xmasscan)) {
   if (gethostname(myname, MAXHOSTNAMELEN) || 
       !(target = gethostbyname(myname)))
