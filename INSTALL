@@ -4,13 +4,9 @@ Ideally, you should be able to just type:
 make
 make install
 
-You may also need to install flex and bison (ftp://ftp.prep.ai.mit.edu/pub/gnu)
-prior to the compile on systems that have broken lex and yacc (Irix 5.3, 
-others?).
-
 If you have questions, comments or problems feel free to email
 me (with detailed information on the platform you are running on
 and all the output from ./configure and make as well as config.log if 
-one was generated)-- fyodor@insecure.org
+one was generated) --fyodor@insecure.org
 
 

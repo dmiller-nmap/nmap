@@ -210,6 +210,23 @@ public:
   private:
 };
 
+#define SUBSTARGS_MAX_ARGS 5
+#define SUBSTARGS_STRLEN 128
+#define SUBSTARGS_ARGTYPE_NONE 0
+#define SUBSTARGS_ARGTYPE_STRING 1
+#define SUBSTARGS_ARGTYPE_INT 2
+struct substargs {
+  int num_args; // Total number of arguments found
+  char str_args[SUBSTARGS_MAX_ARGS][SUBSTARGS_STRLEN];
+  // This is the length of each string arg, since they can contain zeros.
+  // The str_args[] are zero-terminated for convenience in the cases where
+  // you know they won't contain zero.
+  int str_args_len[SUBSTARGS_MAX_ARGS]; 
+  int int_args[SUBSTARGS_MAX_ARGS];
+  // The type of each argument -- see #define's above.
+  int arg_types[SUBSTARGS_MAX_ARGS];
+};
+
 /********************   PROTOTYPES *******************/
 void servicescan_read_handler(nsock_pool nsp, nsock_event nse, void *mydata);
 void servicescan_write_handler(nsock_pool nsp, nsock_event nse, void *mydata);
@@ -446,6 +463,195 @@ const struct MatchDetails *ServiceProbeMatch::testMatch(const u8 *buf, int bufle
   return &MD_return;
 }
 
+// This simple function parses arguments out of a string.  The string
+// starts with the first argument.  Each argument can be a string or
+// an integer.  Strings must be enclosed in double quotes ("").  Most
+// standard C-style escapes are supported.  If this is successful, the
+// number of args found is returned, args is filled appropriately, and
+// args_end (if non-null) is set to the character after the closing
+// ')'.  Otherwise we return -1 and the values of args and args_end
+// are undefined.
+static int getsubstcommandargs(struct substargs *args, char *args_start, 
+			char **args_end) {
+  char *p;
+  unsigned int len;
+  if (!args || !args_start) return -1;
+
+  memset(args, 0, sizeof(*args));
+
+  while(*args_start && *args_start != ')') {
+    // Find the next argument.
+    while(isspace(*args_start)) args_start++;
+    if (*args_start == ')')
+      break;
+    else if (*args_start == '"') {
+      // OK - it is a string
+      // Do we have space for another arg?
+      if (args->num_args == SUBSTARGS_MAX_ARGS)
+	return -1;
+      do {
+	args_start++;
+	if (*args_start == '"' && (*(args_start - 1) != '\\' || *(args_start - 2) == '\\'))
+	  break;
+	len = args->str_args_len[args->num_args];
+	if (len >= SUBSTARGS_STRLEN - 1)
+	  return -1;
+	args->str_args[args->num_args][len] = *args_start;
+	args->str_args_len[args->num_args]++;
+      } while(*args_start);
+      len = args->str_args_len[args->num_args];
+      args->str_args[args->num_args][len] = '\0';
+      // Now handle escaped characters and such
+      if (!cstring_unescape(args->str_args[args->num_args], &len))
+	return -1;
+      args->str_args_len[args->num_args] = len;
+      args->arg_types[args->num_args] = SUBSTARGS_ARGTYPE_STRING;
+      args->num_args++;
+      args_start++;
+      args_start = strpbrk(args_start, ",)");
+      if (!args_start) return -1;
+      if (*args_start == ',') args_start++;
+    } else {
+      // Must be an integer argument
+      args->int_args[args->num_args] = (int) strtol(args_start, &p, 0);
+      if (p <= args_start) return -1;
+      args_start = p;
+      args->arg_types[args->num_args] = SUBSTARGS_ARGTYPE_INT;
+      args->num_args++;
+      args_start = strpbrk(args_start, ",)");
+      if (!args_start) return -1;
+      if (*args_start == ',') args_start++;
+    }
+  }
+
+  if (*args_start == ')') args_start++;
+  if (args_end) *args_end = args_start;
+  return args->num_args;
+}
+
+// This function does the actual substitution of a placeholder like $2
+// or $U(4) into the given buffer.  It returns the number of chars
+// written, or -1 if it fails.  tmplvar is a template variable, such
+// as "$U(2)".  We determine the appropriate string representing that,
+// and place it in newstr (as long as it doesn't exceed newstrlen).
+// We then set *tmplvarend to the character after the
+// variable. subject, subjectlen, ovector, and nummatches mean the
+// same as in dotmplsubst().
+static int substvar(char *tmplvar, char **tmplvarend, char *newstr, 
+	     int newstrlen, const u8 *subject, int subjectlen, int *ovector,
+	     int nummatches) {
+
+  char substcommand[16];
+  char *p = NULL;
+  char *p_end;
+  int len;
+  int subnum = 0;
+  int offstart, offend;
+  int byteswritten = 0; // for return val
+  int rc;
+  int i;
+  struct substargs command_args;
+  // skip the '$'
+  if (*tmplvar != '$') return -1;
+  tmplvar++;
+
+  if (!isdigit(*tmplvar)) {
+    p = strchr(tmplvar, '(');
+    if (!p) return -1;
+    len = p - tmplvar;
+    if (!len || len >= (int) sizeof(substcommand))
+      return -1;
+    memcpy(substcommand, tmplvar, len);
+    substcommand[len] = '\0';
+    tmplvar = p+1;
+    // Now we grab the arguments.
+    rc = getsubstcommandargs(&command_args, tmplvar, &p_end);
+    if (rc <= 0) return -1;
+    tmplvar = p_end;
+  } else {
+    substcommand[0] = '\0';
+    subnum = *tmplvar - '0';
+    tmplvar++;
+  }
+
+  if (tmplvarend) *tmplvarend = tmplvar;
+
+  if (!*substcommand) {
+    if (subnum > 9 || subnum <= 0) return -1;
+    if (subnum >= nummatches) return -1;
+    offstart = ovector[subnum * 2];
+    offend = ovector[subnum * 2 + 1];
+    assert(offstart >= 0 && offstart < subjectlen);
+    assert(offend >= 0 && offend <= subjectlen);
+    len = offend - offstart;
+    // A plain-jane copy
+    if (newstrlen <= len - 1)
+      return -1;
+    memcpy(newstr, subject + offstart, len);
+    byteswritten = len;
+  } else if (strcmp(substcommand, "P") == 0) {
+    if (command_args.arg_types[0] != SUBSTARGS_ARGTYPE_INT)
+      return -1;
+    subnum = command_args.int_args[0];
+    if (subnum > 9 || subnum <= 0) return -1;
+    if (subnum >= nummatches) return -1;
+    offstart = ovector[subnum * 2];
+    offend = ovector[subnum * 2 + 1];
+    assert(offstart >= 0 && offstart < subjectlen);
+    assert(offend >= 0 && offend <= subjectlen);
+    // This filter only includes printable characters.  It is particularly
+    // useful for collapsing unicode text that looks like 
+    // "W\0O\0R\0K\0G\0R\0O\0U\0P\0"
+    for(i=offstart; i < offend; i++)
+      if (isprint((int) subject[i])) {
+	if (byteswritten >= newstrlen - 1)
+	  return -1;
+	newstr[byteswritten++] = subject[i];
+      }
+  } else if (strcmp(substcommand, "SUBST") == 0) {
+    char *findstr, *replstr;
+    int findstrlen, replstrlen;
+   if (command_args.arg_types[0] != SUBSTARGS_ARGTYPE_INT)
+      return -1;
+    subnum = command_args.int_args[0];
+    if (subnum > 9 || subnum <= 0) return -1;
+    if (subnum >= nummatches) return -1;
+    offstart = ovector[subnum * 2];
+    offend = ovector[subnum * 2 + 1];
+    assert(offstart >= 0 && offstart < subjectlen);
+    assert(offend >= 0 && offend <= subjectlen);
+    if (command_args.arg_types[1] != SUBSTARGS_ARGTYPE_STRING ||
+	command_args.arg_types[2] != SUBSTARGS_ARGTYPE_STRING)
+      return -1;
+    findstr = command_args.str_args[1];
+    findstrlen = command_args.str_args_len[1];
+    replstr = command_args.str_args[2];
+    replstrlen = command_args.str_args_len[2];
+    for(i=offstart; i < offend; ) {
+      if (byteswritten >= newstrlen - 1)
+	return -1;
+      if (offend - i < findstrlen)
+	newstr[byteswritten++] = subject[i++]; // No room for match
+      else if (memcmp(subject + i, findstr, findstrlen) != 0)
+	newstr[byteswritten++] = subject[i++]; // no match
+      else {
+	// The find string was found, copy it to newstring
+	if (newstrlen - 1 - byteswritten < replstrlen)
+	  return -1;
+	memcpy(newstr + byteswritten, replstr, replstrlen);
+	byteswritten += replstrlen;
+	i += findstrlen;
+      }
+    }
+  } else return -1; // Unknown command
+
+  if (byteswritten >= newstrlen) return -1;
+  newstr[byteswritten] = '\0';
+  return byteswritten;
+}
+
+
+
 // This function takes a template string (tmpl) which can have
 // placeholders in it such as $1 for substring matches in a regexp
 // that was run against subject, and subjectlen, with the 'nummatches'
@@ -459,8 +665,6 @@ static int dotmplsubst(const u8 *subject, int subjectlen,
   char *srcstart=tmpl, *srcend;
   char *dst = newstr;
   char *newstrend = newstr + newstrlen; // Right after the final char
-  int subnum = 0;
-  int offstart, offend;
 
   if (!newstr || !tmpl) return -1;
   if (newstrlen < 3) return -1; // fuck this!
@@ -486,22 +690,12 @@ static int dotmplsubst(const u8 *subject, int subjectlen,
 	memcpy(dst, srcstart, newlen);
 	dst += newlen;
       }
-      // skip the '$'
-      srcstart = srcend + 1;
-      if (!isdigit(*srcstart)) return -1;
-      subnum = *srcstart - '0';
-      if (subnum > 9 || subnum <= 0) return -1;
-      if (subnum >= nummatches) return -1;
-      srcstart++; // skip passed the ref #
-      offstart = ovector[subnum * 2];
-      offend = ovector[subnum * 2 + 1];
-      assert(offstart >= 0 && offstart < subjectlen);
-      assert(offend >= 0 && offend <= subjectlen);
-      newlen = offend - offstart;
-      if (newstrend - dst <= newlen - 1)
-	return -1;
-      memcpy(dst, subject + offstart, newlen);
+      srcstart = srcend;
+      newlen = substvar(srcstart, &srcend, dst, newstrend - dst, subject, 
+		    subjectlen, ovector, nummatches);
+      if (newlen == -1) return -1;
       dst += newlen;
+      srcstart = srcend;
     }
   }
 
@@ -947,7 +1141,7 @@ void ServiceNFO::addToServiceFingerprint(const char *probeName, const u8 *resp,
 					 int resplen) {
   int spaceleft = servicefpalloc - servicefplen;
   int servicewrap=74; // Wrap after 74 chars / line
-  int respused = MIN(resplen, (o.debugging)? 1000 : 400); // truncate to reasonable size
+  int respused = MIN(resplen, (o.debugging)? 1000 : 600); // truncate to reasonable size
   // every char could require \xHH escape, plus there is the matter of 
   // "\nSF:" for each line, plus "%r(probename,probelen,"") Oh, and 
   // the SF-PortXXXX-TCP stuff, etc
@@ -961,7 +1155,7 @@ void ServiceNFO::addToServiceFingerprint(const char *probeName, const u8 *resp,
   assert(resplen);
   assert(probeName);
 
-  if (servicefplen > (o.debugging? 10000 : 1500))
+  if (servicefplen > (o.debugging? 10000 : 1700))
     return; // it is large enough.
 
   if (spaceneeded >= spaceleft) {
@@ -997,7 +1191,7 @@ void ServiceNFO::addToServiceFingerprint(const char *probeName, const u8 *resp,
       if (srcidx + 1 >= respused || !isdigit(resp[srcidx + 1]))
 	addServiceString("\\0", servicewrap);
       else addServiceString("\\x00", servicewrap);
-    } else if (strchr("\\?\"[]().*+$^", resp[srcidx])) {
+    } else if (strchr("\\?\"[]().*+$^|", resp[srcidx])) {
       addServiceChar('\\', servicewrap);
       addServiceChar(resp[srcidx], servicewrap);
     } else if (ispunct((int)resp[srcidx])) {
@@ -1486,7 +1680,7 @@ void servicescan_read_handler(nsock_pool nsp, nsock_event nse, void *mydata) {
     // end up tediously going through every probe without finding a
     // match.  So we test the NULL probe matches if the probe-specific
     // matches fail
-    if (!MD && !probe->isNullProbe() && svc->AP->nullProbe) {
+    if (!MD && !probe->isNullProbe() && probe->getProbeProtocol() == IPPROTO_TCP && svc->AP->nullProbe) {
       MD = svc->AP->nullProbe->testMatch(readstr, readstrlen);
       nullprobecheat = true;
     }

@@ -157,6 +157,9 @@ AC_CHECK_HEADERS([net/if.h],[],[],
 [#if HAVE_SYS_TYPES_H
 # include <sys/types.h>
 # endif
+#if HAVE_NETINET_IN_H
+# include <netinet/in.h>
+# endif
 #if HAVE_SYS_SOCKET_H
 # include <sys/socket.h>
 # endif
@@ -314,6 +317,9 @@ if test $have_libpcap = yes; then
     LDFLAGS="-L$LIBPCAP_LIB $LDFLAGS"
   fi
 
+  # link with -lpcap for the purposes of this test
+  LIBS_OLD="$LIBS"
+  LIBS="$LIBS -lpcap"
   AC_MSG_CHECKING(if libpcap version is recent enough)
   AC_TRY_RUN([
 #include <stdio.h>
@@ -342,9 +348,11 @@ int main() {
 [AC_MSG_RESULT(yes); have_libpcap=yes],
 [AC_MSG_RESULT(no); have_libpcap=no],
 [AC_MSG_RESULT(no); have_libpcap=no])
+LIBS="$LIBS_OLD"
 fi
 
-LIBS="$LIBS -lpcap"
+
+LIBPCAP_LIBS="-lpcap"
 if test $have_libpcap = yes; then
   PCAP_DEPENDS=""
   PCAP_CLEAN=""
@@ -366,6 +374,8 @@ fi
 AC_SUBST(PCAP_DEPENDS)
 AC_SUBST(PCAP_CLEAN)
 AC_SUBST(PCAP_DIST_CLEAN)
+AC_SUBST(LIBPCAP_LIBS)
+
 have_pcre=no
 LIBPCREDIR=libpcre
 

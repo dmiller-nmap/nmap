@@ -1811,7 +1811,9 @@ T6(DF=N%W=7FFF%ACK=O%Flags=R%Ops=)
 T7(Resp=N)
 PU(DF=N%TOS=0%IPLEN=164%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
-Fingerprint AXIS 540+/542+ Network Print Server
+# AXIS 540+/542+
+# AXIS 5400 print server
+Fingerprint AXIS Network Print Server
 Class AXIS | Linux || print server
 T1(DF=N%W=100%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)

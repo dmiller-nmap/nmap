@@ -177,7 +177,7 @@ int doMatch(AllProbes *AP, char *fprint, int fplen, char *ipaddystr) {
     } else {
       nullprobecheat = false;
       MD = SP->testMatch((u8 *) resptext, resptextlen);
-      if (!MD && !SP->isNullProbe() && AP->nullProbe) {
+      if (!MD && !SP->isNullProbe() && SP->getProbeProtocol() == IPPROTO_TCP && AP->nullProbe) {
 	MD = AP->nullProbe->testMatch((u8 *) resptext, resptextlen);
 	nullprobecheat = true;
       }
@@ -231,7 +231,7 @@ int cleanfp(char *fprint, int *fplen) {
 int main(int argc, char *argv[]) {
   AllProbes *AP = new AllProbes();
   char *probefile = NULL;
-  char fprint[4096];
+  char fprint[16384];
   int fplen = 0; // Amount of chars in the current fprint
   char line[512];
   unsigned int linelen;

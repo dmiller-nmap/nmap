@@ -1,14 +1,61 @@
 # Nmap Changelog ($Id$)
 
-o Fixed a problem related to building Nmap on systems that lack PCRE
-  libs (and thus have to use the ones included by Nmap).  Thanks to Remi
-  Denis-Courmont (deniscr6(a)cti.ecp.fr) for the repot and patch.
+o Integrated an enormous number of version detection service
+  submissions.  The database has almost doubled in size to 663
+  signatures representing the following 130 services: 
+    3dm-http afp apcnisd arkstats bittorent chargen citrix-ica
+    cvspserver cvsup dantzretrospect daytime dict directconnect domain
+    echo eggdrop exec finger flexlm font-service ftp ftp-proxy gnats
+    gnutella-http hddtemp hp-gsg http http-proxy hylafax icecast ident
+    imap imaps imsp ipp irc ircbot irc-proxy issrealsecure jabber
+    kazaa-http kerberos-sec landesk-rc ldap linuxconf lmtp lotusnotes
+    lpd lucent-fwadm meetingmaker melange microsoft-ds microsoft-rdp
+    mldonkey msactivesync msdtc msrpc ms-sql-m mstask mud mysql
+    napster ncacn_http ncp netbios-ns netbios-ssn netrek netsaint
+    netstat netwareip networkaudio nntp nsclient nsunicast ntop-http
+    omniback oracle-mts oracle-tns pcanywheredata pksd pmud pop2 pop3
+    pop3s poppass postgresql powerchute printer qotd redcarpet
+    rendezvous rlogind rpc rsync rtsp sdmsvc sftp shell shivahose
+    sieve slimp3 smtp smux snpp sourceoffice spamd ssc-agent ssh ssl
+    svrloc symantec-av symantec-esm systat telnet time tinyfw upnp
+    uucp veritasnetbackup vnc vnc-http vtun webster whois wins
+    winshell wms X11 xfce zebra
+
+o Added the ability to execute "helper functions" in version
+  templates, to help clean up/manipulate data captured from a server
+  response.  The first defined function is P() which includes only
+  printable characters in a captured string.  The main impetus for
+  this is to deal with unicode strings like
+  "W\0O\0R\0K\0G\0R\0O\0U\0P\0" that many MS protocols send.  Nmap can
+  now decode that into "WORKGROUP".
+
+o Added SUBST() helper function, which replaces strings in matched
+  appname/version/extrainfo strings with something else.  For example,
+  VanDyke Vshell gives a banner that includes
+  "SSH-2\.0-VShell_2_2_0_528".  A substring match is used to pick out
+  the string "2_2_0_528", and then SUBST(1,"_",".") is called on that
+  match to form the version number 2.2.0.528.
 
 o If responses to a probe fail to match any of the registered match
   strings for that probe, Nmap will now try against the registered "null
   probe" match strings.  This helps in the case that the NULL probe
   initially times out (perhaps because of initial DNS lookup) but the
   banner appears in later responses.
+
+o Applied some portability fixes (particularly for OpenBSD) from Chad
+  Loder (cloder(a)loder.us), who is also now the OpenBSD Nmap port
+  maintainer.
+
+o Applied some portability fixes from Marius Strobl
+  (marius(a)alchemy.franken.de).
+
+o The tarball distribution of Nmap now strips the binary at install
+  time thanks to a patch from Marius Strobl
+  (marius(a)alchemy.franken.de).
+
+o Fixed a problem related to building Nmap on systems that lack PCRE
+  libs (and thus have to use the ones included by Nmap).  Thanks to Remi
+  Denis-Courmont (deniscr6(a)cti.ecp.fr) for the repot and patch.
 
 o Alphebetized the service names in each Probe section in
   nmap-service-probes (makes them easier to find and add to).
