@@ -163,7 +163,7 @@ static int hostupdate(struct hoststruct *hostbatch, struct hoststruct *target,
 int hostgroup_state_init(struct hostgroup_state *hs, int lookahead,
 			 int randomize, char *target_expressions[],
 			 int num_expressions) {
-  bzero(hs, sizeof(struct hostgroup_state));
+  bzero(hs, sizeof(*hs));
   assert(lookahead > 0);
   hs->hostbatch = (struct hoststruct *) safe_malloc(lookahead * sizeof(struct hoststruct));
   hs->max_batch_sz = lookahead;
@@ -418,7 +418,7 @@ struct hostent *target;
 unsigned long longtmp;
 int namedhost = 0;
 
-bzero(targets, sizeof(struct targets));
+bzero(targets, sizeof(*targets));
 targets->nleft = 0;
 /*struct in_addr current_in;*/
 addy[0] = addy[1] = addy[2] = addy[3] = addy[4] = NULL;
@@ -565,9 +565,9 @@ char filter[512];
 unsigned short sportbase;
 int max_width = 0;
 
-bzero((char *)&ptech, sizeof(struct pingtech));
+bzero((char *)&ptech, sizeof(ptech));
 
-bzero((char *) &pt, sizeof(struct pingtune)); 
+bzero((char *) &pt, sizeof(pt)); 
 
 pt.up_this_block = 0;
 pt.block_unaccounted = LOOKAHEAD;
@@ -595,8 +595,7 @@ if (pingtype & PINGTYPE_TCP) {
   else ptech.connecttcpscan = 1;
 }
 
-time = (struct timeval *) safe_malloc(sizeof(struct timeval) * ((pt.max_tries) * num_hosts));
-bzero(time, sizeof(struct timeval) * pt.max_tries * num_hosts);
+time = (struct timeval *) safe_zalloc(sizeof(struct timeval) * ((pt.max_tries) * num_hosts));
 id = (unsigned short) get_random_uint();
 
 if (ptech.connecttcpscan)  {
@@ -675,7 +674,7 @@ if (ptech.rawicmpscan || ptech.rawtcpscan) {
    blockinc = 8;
  else blockinc = 5;
 
-bzero((char *)&sock,sizeof(struct sockaddr_in));
+bzero((char *)&sock,sizeof(sock));
 gettimeofday(&start, NULL);
 
  pt.group_end = MIN(pt.group_start + pt.group_size -1, num_hosts -1);
@@ -775,7 +774,6 @@ int sendconnecttcpquery(struct hoststruct *hostbatch, struct tcpqueryinfo *tqi,
   int tmpsd;
   int hostnum, trynum;
   struct sockaddr_in sock;
-  int sockaddr_in_len = sizeof(struct sockaddr_in);
   
   trynum = seq % pt->max_tries;
   hostnum = seq / pt->max_tries;
@@ -809,7 +807,7 @@ int sendconnecttcpquery(struct hoststruct *hostbatch, struct tcpqueryinfo *tqi,
   unblock_socket(tqi->sockets[seq]);
   init_socket(tqi->sockets[seq]);
 
-  bzero(&sock, sockaddr_in_len);
+  bzero(&sock, sizeof(sock));
   sock.sin_family = AF_INET;
   sock.sin_port = htons(o.tcp_probe_port);
   sock.sin_addr.s_addr = target->host.s_addr;
@@ -917,7 +915,7 @@ pingpkt.checksum = in_cksum((unsigned short *)ping, icmplen);
 
 /* Now for our sock */
 if (ptech.icmpscan) {
-  bzero((char *)&sock, sizeof(struct sockaddr_in));
+  bzero((char *)&sock, sizeof(sock));
   sock.sin_family= AF_INET;
   sock.sin_addr = target->host;
   

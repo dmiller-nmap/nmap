@@ -559,7 +559,7 @@ udp->uh_sum = in_cksum((unsigned short *)pseudo, 20 /* pseudo + UDP headers */ +
 #endif
 
 /* Goodbye, pseudo header! */
-bzero(pseudo, 12);
+bzero(pseudo, sizeof(*pseudo));
 
 /* Now for the ip header */
 ip->ip_v = 4;
@@ -951,7 +951,7 @@ int getsourceip(struct in_addr *src, struct in_addr *dst) {
     close(sd);
     return 0;
     }
-  bzero(&sock, sizeof(struct sockaddr_in));
+  bzero(&sock, sizeof(sock));
   if (getsockname(sd, (SA *)&sock, &socklen) == -1) {
     perror("getsockname");
     close(sd);

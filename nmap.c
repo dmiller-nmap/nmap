@@ -55,7 +55,6 @@
 extern char *optarg;
 extern int optind;
 struct ops o;  /* option structure */
-extern char **environ;
 
 /* parse the --scanflags argument.  It can be a number >=0 or a string consisting of TCP flag names like "URGPSHFIN".  Returns -1 if the argument is invalid. */
 static int parse_scanflags(char *arg) {
@@ -1316,19 +1315,16 @@ struct scan_lists *getpts(char *origexpr) {
   if ( 0 == (tcpportcount + udpportcount + protcount))
     fatal("No ports specified -- If you really don't want to scan any ports use ping scan...");
 
-  ports = (struct scan_lists *) safe_malloc(sizeof(struct scan_lists));
-  bzero(ports, sizeof(ports));
+  ports = (struct scan_lists *) safe_zalloc(sizeof(struct scan_lists));
+
   if (tcpportcount) {
-    ports->tcp_ports = (unsigned short *)safe_malloc((tcpportcount + 1) * sizeof(unsigned short));
-    bzero(ports->tcp_ports, (tcpportcount + 1) * sizeof(unsigned short));
+    ports->tcp_ports = (unsigned short *)safe_zalloc((tcpportcount + 1) * sizeof(unsigned short));
   }
   if (udpportcount) {
-    ports->udp_ports = (unsigned short *)safe_malloc((udpportcount + 1) * sizeof(unsigned short));
-    bzero(ports->udp_ports, (udpportcount + 1) * sizeof(unsigned short));
+    ports->udp_ports = (unsigned short *)safe_zalloc((udpportcount + 1) * sizeof(unsigned short));
   }
   if (protcount) {
-    ports->prots = (unsigned short *)safe_malloc((protcount + 1) * sizeof(unsigned short));
-    bzero(ports->prots, (protcount + 1) * sizeof(unsigned short));
+    ports->prots = (unsigned short *)safe_zalloc((protcount + 1) * sizeof(unsigned short));
   }
   ports->tcp_count = tcpportcount;
   ports->udp_count = udpportcount;

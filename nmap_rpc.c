@@ -194,7 +194,7 @@ int send_rpc_query(struct in_addr *target_host, unsigned short portno,
   last_target_host.s_addr = target_host->s_addr;
   last_portno = portno;
   
-  bzero(&sock, sizeof(&sock));
+  bzero(&sock, sizeof(sock));
   sock.sin_family = AF_INET;
   sock.sin_addr.s_addr = target_host->s_addr;
   sock.sin_port = htons(portno);

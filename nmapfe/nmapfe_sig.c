@@ -134,8 +134,7 @@ main (int argc, char *argv[])
   gtk_set_locale ();
   gtk_init (&argc, &argv);
 
-  MW = (struct MyWidgets *) malloc(sizeof(struct MyWidgets));
-  bzero(MW, sizeof(struct MyWidgets));
+  MW = (struct MyWidgets *) calloc(1, sizeof(struct MyWidgets));
 
 #ifndef WIN32
   signal(SIGPIPE, SIG_IGN);
@@ -1279,8 +1278,7 @@ int arg_parse(const char *command, char ***argv) {
   if (Strncpy(mycommand, command, 4096) == -1) {      
     return -1;
   }
-  myargv = malloc((MAX_PARSE_ARGS + 2) * sizeof(char *));
-  bzero(myargv, (MAX_PARSE_ARGS+2) * sizeof(char *));
+  myargv = calloc(MAX_PARSE_ARGS + 2, sizeof(char *));
   myargv[0] = (char *) 0x123456; /* Integrity checker */
   myargv++;
   start = mycommand;

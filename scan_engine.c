@@ -609,8 +609,7 @@ void pos_scan(struct hoststruct *target, u16 *portarray, int numports, stype sca
 
   if (scantype != RPC_SCAN) {
     /* Initialize our portlist (scan) */
-    scan = (struct portinfo *) safe_malloc(numports * sizeof(struct portinfo));
-    bzero(scan, sizeof(struct portinfo) * numports);
+    scan = (struct portinfo *) safe_zalloc(numports * sizeof(struct portinfo));
     for(i = 0; i < numports; i++) {
       scan[i].state = PORT_FRESH;
       scan[i].portno = portarray[i];
@@ -676,7 +675,7 @@ void pos_scan(struct hoststruct *target, u16 *portarray, int numports, stype sca
   } else if (scantype == CONNECT_SCAN) {
     rawsd = -1;
     /* Init our sock */
-    bzero((char *)&sock,sizeof(struct sockaddr_in));
+    bzero((char *)&sock,sizeof(sock));
     sock.sin_addr.s_addr = target->host.s_addr;
     sock.sin_family=AF_INET;
   } else if (scantype == RPC_SCAN) {

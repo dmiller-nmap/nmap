@@ -52,7 +52,7 @@
 #include "osscan.h"
 
 extern struct ops o;
-char *logtypes[LOG_TYPES]=LOG_NAMES;
+static char *logtypes[LOG_TYPES]=LOG_NAMES;
 
 /* Prints the familiar Nmap tabular output showing the "interesting"
    ports found on the machine.  It also handles the Machine/Greppable

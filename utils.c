@@ -59,6 +59,17 @@ void *safe_malloc(int size)
   return mymem;
 }
 
+/* Zero-initializing version of safe_malloc */
+void *safe_zalloc(int size)
+{
+  void *mymem;
+  if (size < 0)
+    fatal("Tried to malloc negative amount of memory!!!");
+  mymem = calloc(1, size);
+  if (mymem == NULL)
+    fatal("Malloc Failed! Probably out of space.");
+  return mymem;
+}
 
 /* Hex dump */
 void hdump(unsigned char *packet, unsigned int len) {

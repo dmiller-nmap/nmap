@@ -152,7 +152,7 @@ struct scan_lists *getdefaultprots(void) {
       fatal("getdefaultprots(): Couldn't get protocol numbers");
   
   scanlist = (struct scan_lists *) cp_alloc(sizeof(struct scan_lists));
-  bzero(scanlist, sizeof(scanlist));
+  bzero(scanlist, sizeof(*scanlist));
   scanlist->prots = (unsigned short *) cp_alloc((protsneeded +1) * sizeof(unsigned short));
   scanlist->prot_count = protsneeded;
 
@@ -187,7 +187,7 @@ struct scan_lists *getfastprots(void) {
   }
 
   scanlist = (struct scan_lists *) cp_alloc(sizeof(struct scan_lists));
-  bzero(scanlist, sizeof(scanlist));
+  bzero(scanlist, sizeof(*scanlist));
   scanlist->prots = (unsigned short *) cp_alloc((protsneeded +1) * sizeof(unsigned short));
   scanlist->prot_count = protsneeded;
 

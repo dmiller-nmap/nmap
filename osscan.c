@@ -196,7 +196,6 @@ if (o.verbose && openport != (unsigned long) -1)
  /* Now lets do the NULL packet technique */
  testsleft = (openport == (unsigned long) -1)? 4 : 8;
  FPtmp = NULL;
- /* bzero(FPtests, sizeof(FPtests));*/
  tries = 0;
  do { 
    newcatches = 0;
@@ -288,8 +287,7 @@ if (o.verbose && openport != (unsigned long) -1)
        if (FPtests[testno]) continue;
        testsleft--;
        newcatches++;
-       FPtests[testno] = (FingerPrint *) safe_malloc(sizeof(FingerPrint));
-       bzero(FPtests[testno], sizeof(FingerPrint));
+       FPtests[testno] = (FingerPrint *) safe_zalloc(sizeof(FingerPrint));
        FPtests[testno]->results = fingerprint_iptcppacket(ip, 265, sequence_base);
        FPtests[testno]->name = (testno == 1)? "T1" : (testno == 2)? "T2" : (testno == 3)? "T3" : (testno == 4)? "T4" : (testno == 5)? "T5" : (testno == 6)? "T6" : (testno == 7)? "T7" : "PU";
      } else if (ip->ip_p == IPPROTO_ICMP) {
@@ -304,8 +302,7 @@ if (o.verbose && openport != (unsigned long) -1)
 	 continue;
        }
        if (FPtests[8]) continue;
-       FPtests[8] = (FingerPrint *) safe_malloc(sizeof(FingerPrint));
-       bzero(FPtests[8], sizeof(FingerPrint));
+       FPtests[8] = (FingerPrint *) safe_zalloc(sizeof(FingerPrint));
        FPtests[8]->results = fingerprint_portunreach(ip, upi);
        if (FPtests[8]->results) {       
 	 FPtests[8]->name = "PU";
@@ -556,11 +553,9 @@ if (o.verbose && openport != (unsigned long) -1)
 	 /*	 printf("Target is a random incremental box\n");*/
        }
      }
-     FPtests[0] = (FingerPrint *) safe_malloc(sizeof(FingerPrint));
-     bzero(FPtests[0], sizeof(FingerPrint));
+     FPtests[0] = (FingerPrint *) safe_zalloc(sizeof(FingerPrint));
      FPtests[0]->name = "TSeq";
-     seq_AVs = (struct AVal *) safe_malloc(sizeof(struct AVal) * 5);
-     bzero(seq_AVs, sizeof(struct AVal) * 5);
+     seq_AVs = (struct AVal *) safe_zalloc(sizeof(struct AVal) * 5);
      FPtests[0]->results = seq_AVs;
      avnum = 0;
      seq_AVs[avnum].attribute = "Class";
@@ -674,9 +669,8 @@ for(i=0; i < 9; i++) {
     /* We create a Resp (response) attribute with value of N (no) because
        it is important here to note whether responses were or were not 
        received */
-    FPtests[i] = (FingerPrint *) safe_malloc(sizeof(FingerPrint));
-    bzero(FPtests[i], sizeof(FingerPrint));
-    seq_AVs = (struct AVal *) safe_malloc(sizeof(struct AVal));
+    FPtests[i] = (FingerPrint *) safe_zalloc(sizeof(FingerPrint));
+    seq_AVs = (struct AVal *) safe_zalloc(sizeof(struct AVal));
     seq_AVs->attribute = "Resp";
     strcpy(seq_AVs->value, "N");
     seq_AVs->next = NULL;
@@ -1181,7 +1175,7 @@ FingerPrint *currentFPs[32];
 char *p = str;
 int i;
 int changed;
-
+char *end = str + sizeof(str) - 1; /* Last byte allowed to write into */
 if (numFPs <=0) return "(None)";
 if (numFPs > 32) return "(Too many)";
   
@@ -1200,6 +1194,7 @@ for(i=0; i < numFPs; i++) {
 do {
   changed = 0;
   for(i = 0; i < numFPs; i++) {
+    assert (end - p > 100);
     if (currentFPs[i]) {
       /* This junk means do not print this one if the next
 	 one is the same */
@@ -1209,14 +1204,14 @@ do {
 		     NULL, 1) ==0)
 	{
 	  changed = 1;
-	  strcpy(p, currentFPs[i]->name);
+	  Strncpy(p, currentFPs[i]->name, end - p);
 	  p += strlen(currentFPs[i]->name);
 	  *p++='(';
 	  for(AV = currentFPs[i]->results; AV; AV = AV->next) {
-	    strcpy(p, AV->attribute);
+	    Strncpy(p, AV->attribute, end - p);
 	    p += strlen(AV->attribute);
 	    *p++='=';
-	    strcpy(p, AV->value);
+	    Strncpy(p, AV->value, end - p);
 	    p += strlen(AV->value);
 	    *p++ = '%';
 	  }
@@ -1290,8 +1285,7 @@ FingerPrint *parse_single_fingerprint(char *fprint_orig) {
   FingerPrint *current; /* Since a fingerprint is really a linked list of
 			   FingerPrint structures */
 
-  current = FP = safe_malloc(sizeof(FingerPrint));
-  bzero(FP, sizeof(FingerPrint));
+  current = FP = safe_zalloc(sizeof(FingerPrint));
 
   thisline = fprint;
   
@@ -1328,9 +1322,8 @@ FingerPrint *parse_single_fingerprint(char *fprint_orig) {
     } else if ((q = strchr(thisline, '('))) {
       *q = '\0';
       if(current->name) {
-	current->next = (FingerPrint *) safe_malloc(sizeof(FingerPrint));
+	current->next = (FingerPrint *) safe_zalloc(sizeof(FingerPrint));
 	current = current->next;
-	bzero(current, sizeof(FingerPrint));
       }
       current->name = strdup(thisline);
       p = q+1;
@@ -1361,8 +1354,7 @@ int numrecords = 0;
 int lineno = 0;
 char *p, *q; /* OH YEAH!!!! */
 
- FPs = (FingerPrint **) safe_malloc(sizeof(FingerPrint *) * max_records); 
- bzero(FPs, sizeof(FingerPrint *) * max_records);
+ FPs = (FingerPrint **) safe_zalloc(sizeof(FingerPrint *) * max_records); 
 
  fp = fopen(fname, "r");
 
@@ -1385,8 +1377,7 @@ while(fgets(line, sizeof(line), fp)) {
     fprintf(stderr, "Parse error on line %d of nmap-os-fingerprints file: %s\n", lineno, line);    
     continue;
   }
-  FPs[numrecords] = (FingerPrint *) safe_malloc(sizeof(FingerPrint));
-  bzero(FPs[numrecords], sizeof(FingerPrint));
+  FPs[numrecords] = (FingerPrint *) safe_zalloc(sizeof(FingerPrint));
   q = FPs[numrecords]->OS_name;
   while(*p && *p != '\n' && *p != '#') {
     if (q - FPs[numrecords]->OS_name >= (sizeof(FPs[numrecords]->OS_name) -2))
@@ -1424,9 +1415,8 @@ while(fgets(line, sizeof(line), fp)) {
     }
     *q = '\0';
     if(current->name) {
-      current->next = (FingerPrint *) safe_malloc(sizeof(FingerPrint));
+      current->next = (FingerPrint *) safe_zalloc(sizeof(FingerPrint));
       current = current->next;
-      bzero(current, sizeof(FingerPrint));
     }
     current->name = strdup(p);
     p = q+1;
@@ -1472,8 +1462,7 @@ while((q = strchr(q, '%'))) {
   q++;
 }
 
-AVs = (struct AVal *) safe_malloc(count * sizeof(struct AVal));
-bzero(AVs, sizeof(struct AVal) * count);
+AVs = (struct AVal *) safe_zalloc(count * sizeof(struct AVal));
 for(i=0; i < count; i++) {
   q = strchr(p, '=');
   if (!q) {
@@ -1571,7 +1560,7 @@ udp->uh_sum = realcheck;
 #endif
 
    /* Goodbye, pseudo header! */
-   bzero(pseudo, 12);
+   bzero(pseudo, sizeof(*pseudo));
 
    /* Now for the ip header */
    ip->ip_v = 4;
@@ -1658,8 +1647,7 @@ if (ntohs(udp->uh_sport) != upi->sport || ntohs(udp->uh_dport) != upi->dport) {
 }
 
 /* Create the Avals */
-AVs = (struct AVal *) safe_malloc(numtests * sizeof(struct AVal));
-bzero(AVs, numtests * sizeof(struct AVal));
+AVs = (struct AVal *) safe_zalloc(numtests * sizeof(struct AVal));
 
 /* Link them together */
 for(i=0; i < numtests - 1; i++)

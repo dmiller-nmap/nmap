@@ -224,7 +224,7 @@ struct scan_lists *getdefaultports(int tcpscan, int udpscan) {
   }
 
   ports = (struct scan_lists *) cp_alloc(sizeof(struct scan_lists));
-  bzero(ports, sizeof(ports));
+  bzero(ports, sizeof(*ports));
   if (tcpscan) 
     ports->tcp_ports = (unsigned short *) cp_alloc((tcpportsneeded+1) * sizeof(unsigned short));
   if (udpscan) 
@@ -280,7 +280,7 @@ struct scan_lists *getfastports(int tcpscan, int udpscan) {
   }
 
   ports = (struct scan_lists *) cp_alloc(sizeof(struct scan_lists));
-  bzero(ports, sizeof(ports));
+  bzero(ports, sizeof(*ports));
   if (tcpscan) 
     ports->tcp_ports = (unsigned short *) cp_alloc((tcpportsneeded+1) * sizeof(unsigned short));
   if (udpscan)

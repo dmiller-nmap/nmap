@@ -81,21 +81,18 @@ int addport(portlist *plist, u16 portno, u8 protocol, char *owner, int state) {
 
   if (protocol == IPPROTO_TCP) {
     if (!plist->tcp_ports) {
-      plist->tcp_ports = (struct port **) safe_malloc(65536 * sizeof(struct port *));
-      bzero(plist->tcp_ports, 65536 * sizeof(struct port *));
+      plist->tcp_ports = (struct port **) safe_zalloc(65536 * sizeof(struct port *));
     }
     portarray = plist->tcp_ports;
   } else if (protocol == IPPROTO_UDP) {
     if (!plist->udp_ports) {
-      plist->udp_ports = (struct port **) safe_malloc(65536 * sizeof(struct port *));
-      bzero(plist->udp_ports, 65536 * sizeof(struct port *));
+      plist->udp_ports = (struct port **) safe_zalloc(65536 * sizeof(struct port *));
     }
     portarray = plist->udp_ports;
   } else if (protocol == IPPROTO_IP) {
     assert(portno < 256);
     if (!plist->ip_prots) {
-      plist->ip_prots = (struct port **) safe_malloc(256 * sizeof(struct port *));
-      bzero(plist->ip_prots, 256 * sizeof(struct port *));
+      plist->ip_prots = (struct port **) safe_zalloc(256 * sizeof(struct port *));
     }
     portarray = plist->ip_prots;
   } else fatal("addport: attempted port insertion with invalid protocol");
@@ -245,7 +242,7 @@ void resetportlist(portlist *plist) {
     free(plist->ip_prots);
   }
 
-  bzero(plist, sizeof(portlist));
+  bzero(plist, sizeof(*plist));
 }
 
 
