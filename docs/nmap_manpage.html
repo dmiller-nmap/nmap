@@ -836,9 +836,9 @@
 
        Nmap also has a more  powerful  notation  which  lets  you
        specify an IP address using lists/ranges for each element.
-       Thus you can scan the whole class 'B' network  128.210.*.*
-       by  specifying  '128.210.*.*'  or '128.210.0-255.0-255' or
-       even use the mask notation: '128.210.0.0/16'.   These  are
+       Thus you can scan the whole class 'B' network  192.168.*.*
+       by  specifying  '192.168.*.*'  or '192.168.0-255.0-255' or
+       even use the mask notation: '192.168.0.0/16'.   These  are
        all equivalent.  If you use asterisks ('*'), remember that
        most shells require you to escape them with  back  slashes
        or protect them with quotes.
@@ -888,10 +888,10 @@
        and running.  This requires root privileges because of the
        SYN scan and the OS detection.
 
-       <B>nmap</B> <B>-sX</B> <B>-p</B> <B>22,53,110,143,4564</B> <B>128.210.*.1-127</B>
+       <B>nmap</B> <B>-sX</B> <B>-p</B> <B>22,53,110,143,4564</B> <B>198.116.*.1-127</B>
 
        Sends  an  Xmas tree scan to the first half of each of the
-       255 possible 8  bit  subnets  in  the  128.210  class  'B'
+       255 possible 8  bit  subnets  in  the  198.116  class  'B'
        address  space.   We  are  testing whether the systems run
        sshd, DNS, pop3d, imapd, or port  4564.   Note  that  Xmas
        scan  doesn't  work  on Microsoft boxes due to their defi-
@@ -971,44 +971,44 @@
        the  software  for security holes (none have been found so
        far).
 
-       Source code also allows you to port nmap to new platforms,
+       Source code also allows you to port Nmap to new platforms,
        fix bugs, and add new features.  You are highly encouraged
-       to send your changes to Fyodor for possible  incorporation
-       into the main Nmap distribution.  By sending these changes
-       to Fyodor or nmap-hackers, it  is  assumed  that  you  are
-       offering Fyodor the unlimited, non-exclusive, irrevocable,
-       world-wide, royalty-free right to reuse, modify, and reli-
-       cense  the  code.   If you wish to specify special license
-       conditions of your contributions,  please  state  them  up
-       front.
+       to send your changes to fyodor@insecure.org  for  possible
+       incorporation  into  the  main  distribution.   By sending
+       these changes to Fyodor or one the  insecure.org  develop-
+       ment  mailing  lists,  it is assumed that you are offering
+       Fyodor the unlimited, non-exclusive right to  reuse,  mod-
+       ify,  and  relicense  the code.  This is important because
+       the inability to relicense  code  has  caused  devastating
+       problems for other Free Software projects (such as KDE and
+       NASM).  Nmap will always be available Open Source.  If you
+       wish to specify special license conditions of your contri-
+       butions, just say so when you send them.
 
-       This  program  is  distributed in the hope that it will be
+       This program is distributed in the hope that  it  will  be
        useful, but <B>WITHOUT</B> <B>ANY</B> <B>WARRANTY;</B> without even the implied
-       warranty  of  <B>MERCHANTABILITY</B>  or <B>FITNESS</B> <B>FOR</B> <B>A</B> <B>PARTICULAR</B>
-       <B>PURPOSE.</B>  See the GNU  General  Public  License  for  more
-       details  (it  is in the COPYING file of the <I>nmap</I> distribu-
+       warranty of <B>MERCHANTABILITY</B> or <B>FITNESS</B>  <B>FOR</B>  <B>A</B>  <B>PARTICULAR</B>
+       <B>PURPOSE.</B>   See  the  GNU  General  Public License for more
+       details (it is in the COPYING file of the  <I>nmap</I>  distribu-
        tion).
 
-       It should also be noted that Nmap has been known to  crash
-       certain  poorly  written  applications, TCP/IP stacks, and
-       even operating systems.  <B>Nmap</B> <B>should</B> <B>never</B> <B>be</B> <B>run</B>  <B>against</B>
+       It  should also be noted that Nmap has been known to crash
+       certain poorly written applications,  TCP/IP  stacks,  and
+       even  operating systems.  <B>Nmap</B> <B>should</B> <B>never</B> <B>be</B> <B>run</B> <B>against</B>
        <B>mission</B> <B>critical</B> <B>systems</B> unless you are prepared to suffer
-       downtime.  We acknowledge here that Nmap  may  crash  your
-       systems  or networks and we disclaim all liability for any
+       downtime.   We  acknowledge  here that Nmap may crash your
+       systems or networks and we disclaim all liability for  any
        damage or problems Nmap could cause.
 
-       Because of the slight risk of crashes and  because  a  few
-       black  hats  like  to use Nmap for reconnaissance prior to
-       attacking systems, there  are  administrators  who  become
-       upset  and  may  complain  when  their  system is scanned.
-       Thus, it is often advisable to request  permission  before
+       Because  of  the  slight risk of crashes and because a few
+       black hats like to use Nmap for  reconnaissance  prior  to
+       attacking  systems,  there  are  administrators who become
+       upset and may  complain  when  their  system  is  scanned.
+       Thus,  it  is often advisable to request permission before
        doing even a light scan of a network.
 
-       Nmap  should  never  be run with privileges (eg suid root)
+       Nmap should never be run with privileges  (eg  suid  root)
        for security reasons.
-
-       All versions of Nmap equal to  or  greater  than  2.0  are
-       believed  to be Year 2000 (Y2K) compliant in all respects.
 
 
 
@@ -1021,10 +1021,10 @@
 <B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
 
 
-       There is no reason to believe versions  earlier  than  2.0
-       are  susceptible to problems, but we have not tested them.
-
-
+       All  versions  of  Nmap  equal  to or greater than 2.0 are
+       believed to be Year 2000 (Y2K) compliant in all  respects.
+       There  is  no  reason to believe versions earlier than 2.0
+       are susceptible to problems, but we have not tested  them.
 
 
 

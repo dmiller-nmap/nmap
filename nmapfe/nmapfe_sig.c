@@ -1095,14 +1095,6 @@ on_delete_event (GtkWidget *widget, GdkEvent *event, gpointer data)
 
 /***************************************************************/
 
-int Strncpy(char *dest, const char *src, size_t n) {
-  strncpy(dest, src, n);
-  if (dest[n-1] == '\0')
-    return 0;
-  dest[n-1] = '\0';
-  return -1;
-}
-
 /* This function takes a command and the address of an uninitialized
    char ** .  It parses the command (by seperating out whitespace)
    into an argv[] style char **, which it sets the argv parameter to.

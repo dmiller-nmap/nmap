@@ -1,4 +1,4 @@
-NMAP_VERSION = 2.54BETA4
+NMAP_VERSION = 2.54BETA5
 NMAP_NAME= nmap
 NMAP_URL= www.insecure.org/nmap/
 NMAP_PLATFORM=@host@
@@ -11,17 +11,17 @@ srcdir = @srcdir@
 nmapdatadir = @datadir@/nmap
 deskdir = $(prefix)/share/gnome/apps/Utilities
 
+NBASEDIR=@NBASEDIR@
 CC = @CC@
 CCOPT = 
 LIBPCAPDIR = @libpcapdir@
-NBASEDIR=nbase
-INCLS = -I$(LIBPCAPDIR) -I$(NBASEDIR)
+INCLS = -I$(LIBPCAPDIR) 
 DEFS = @DEFS@ -DNMAP_VERSION=\"$(NMAP_VERSION)\" -DNMAP_NAME=\"$(NMAP_NAME)\" -DNMAP_URL=\"$(NMAP_URL)\" -DNMAP_PLATFORM=\"$(NMAP_PLATFORM)\" -DNMAPDATADIR=\"$(nmapdatadir)\"
 CFLAGS = @CFLAGS@ $(CCOPT) $(DEFS) $(INCLS)
 # CFLAGS = -g -Wall $(DEFS) $(INCLS)
 STATIC = 
 LDFLAGS = @LDFLAGS@ $(STATIC)
-LIBS =  @LIBS@ -L$(NBASEDIR) -lnbase -lpcap -lm
+LIBS =  @LIBS@ -lpcap -lm
 # LIBS =  -lefence @LIBS@ -lpcap -lm
 # LIBS =  -lrmalloc @LIBS@ -lpcap -lm
 SHTOOL = ./shtool
@@ -62,11 +62,6 @@ nmapfe/nmapfe:
 	-cd nmapfe; test -f Makefile && $(MAKE) VERSION=0.$(NMAP_VERSION) STATIC=$(STATIC);
 	@echo "END OF SECTION WHERE FAILURES ARE OK"
 
-ci: checkin
-
-checkin: 
-	ci -u Makefile nmap.c targets.c nmap.h tcpip.c tcpip.h error.c error.h utils.c utils.h inet_aton.c configure.in config.h.in Makefile.in configure $(SHTOOL) config.guess config.sub
-
 # This target is just for me ... don't you get any ideas --Fyodor
 distro: 
 	autoconf
@@ -93,9 +88,8 @@ distro:
 	sed -e s/\@VERSION\@/$(NMAP_VERSION)/g nmap.spec.in > nmap-$(NMAP_VERSION)-1.spec
 	$(MAKE) clean
 	rm -f $(LIBPCAPDIR)/config.cache $(LIBPCAPDIR)/Makefile
-	cp -ra $(SRCS) $(DEPS) inet_aton.c snprintf.c nmap-os-fingerprints \
-	nmapfe.desktop getopt.h getopt.c getopt1.c nmap-services nmap-rpc \
-	nmap-protocols \
+	cp -ra $(SRCS) $(DEPS) nmap-os-fingerprints \
+	nmapfe.desktop nmap-services nmap-rpc nmap-protocols \
 	configure.in config.h.in Makefile.in configure $(SHTOOL) install-sh \
         config.guess nmap-$(NMAP_VERSION)-1.spec config.sub INSTALL \
 	COPYING CHANGELOG HACKING \
@@ -112,11 +106,11 @@ distro:
 	$(SHTOOL) mkdir /usr/tmp/nmap-$(NMAP_VERSION)/nmapfe
 	cd nmapfe; cp Makefile.in aclocal.m4 configure configure.in \
 	              nmapfe.c nmapfe.h nmapfe_sig.c nmapfe_sig.h \
-	              /usr/tmp/nmap-$(NMAP_VERSION)/nmapfe \
+	              /usr/tmp/nmap-$(NMAP_VERSION)/nmapfe
 	$(SHTOOL) mkdir /usr/tmp/nmap-$(NMAP_VERSION)/nbase
-	cd nbase; cp Makefile.in aclocal.m4 configure configure.in \
-	             install-sh config.guess config.sub config.h.in *.c *.h \
-	             CHANGELOG 	/usr/tmp/nmap-$(NMAP_VERSION)/nbase 
+	cd $(NBASEDIR); cp Makefile.in aclocal.m4 configure configure.in \
+	             install-sh config.guess config.sub nbase_config.h.in \
+                     *.c *.h CHANGELOG /usr/tmp/nmap-$(NMAP_VERSION)/nbase 
 # Kill the CVS crap
 	find /usr/tmp/nmap-$(NMAP_VERSION) -type d -name CVS | xargs rm -rf
 	cd /usr/tmp; \

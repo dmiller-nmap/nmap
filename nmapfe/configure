@@ -1052,7 +1052,9 @@ else
 
 fi
 
-
+LDFLAGS="$LDFLAGS -L$NBASEDIR"
+CFLAGS="$CFLAGS -I$NBASEDIR"
+LIBS="$LIBS -lnbase"
 
 
 trap '' 1 2 15

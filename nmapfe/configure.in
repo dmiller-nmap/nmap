@@ -32,7 +32,9 @@ AC_ARG_WITH(libnbase,
   esac],
 NBASEDIR="../nbase"
 )
-
+LDFLAGS="$LDFLAGS -L$NBASEDIR"
+CFLAGS="$CFLAGS -I$NBASEDIR"
+LIBS="$LIBS -lnbase"
 AC_SUBST(NBASEDIR)
 
 AC_OUTPUT(Makefile)

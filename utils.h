@@ -111,12 +111,8 @@
 
 
 void *safe_malloc(int size);
-#ifndef HAVE_STRCASESTR
-char *strcasestr(char *haystack, char *pneedle);
-#endif
 void hdump(unsigned char *packet, unsigned int len);
 void lamont_hdump(unsigned char *bp, unsigned int length);
-int Strncpy(char *dest, const char *src, size_t n);
 int get_random_bytes(void *buf, int numbytes);
 int get_random_int();
 unsigned short get_random_ushort();

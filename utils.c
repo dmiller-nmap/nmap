@@ -142,59 +142,6 @@ void lamont_hdump(unsigned char *bp, unsigned int length) {
   printf("\n");
 }
 
-#ifndef HAVE_STRCASESTR
-char *strcasestr(char *haystack, char *pneedle) {
-char buf[512];
-unsigned int needlelen;
-char *needle, *p, *q, *foundto;
-
-/* Should crash if !pneedle -- this is OK */
-if (!*pneedle) return haystack;
-if (!haystack) return NULL;
-
-needlelen = strlen(pneedle);
- if (needlelen >= sizeof(buf)) {
-   needle = (char *) malloc(needlelen + 1);
- } else needle = buf;
- p = pneedle; q = needle;
- while((*q++ = tolower(*p++)))
-   ;
- p = haystack - 1; foundto = needle;
- while(*++p) {
-   if(tolower(*p) == *foundto) {
-     if(!*++foundto) {
-       /* Yeah, we found it */
-       if (needlelen >= sizeof(buf))
-         free(needle);
-       return p - needlelen + 1;
-     }
-   } else foundto = needle;
- }
- if (needlelen >= sizeof(buf))
-   free(needle);
- return NULL;
-}
-#endif
-
-int Strncpy(char *dest, const char *src, size_t n) {
-  strncpy(dest, src, n);
-  if (dest[n-1] == '\0')
-    return 0;
-  dest[n-1] = '\0';
-  return -1;
-}
-
-#ifndef HAVE_USLEEP
-#ifdef HAVE_NANOSLEEP
-void usleep(unsigned long usec) {
-struct timespec ts; 
-ts.tv_sec = usec / 1000000; 
-ts.tv_nsec = (usec % 1000000) * 1000; 
-nanosleep(&ts, NULL);
-}
-#endif
-#endif
-
 #ifndef HAVE_STRERROR
 char *strerror(int errnum) {
   static char buf[1024];

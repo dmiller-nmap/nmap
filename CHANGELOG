@@ -1,5 +1,18 @@
 # Nmap Changelog
 
+-- Applied patch from Stefan Rapp <s.rapp@hrz.uni-dortmund.de> which fixes
+   a variable argument integer promotion problem in the new snprintf 
+   compatability file.
+
+** Version 2.54BETA5
+
+-- Revamped the 'compatability libraries' subsystem.  Moved all of
+   that to a new library called 'libnbase' and changed Nmap and NmapFE
+   to use that.  I included a better version of *snprintf and some
+   other compatability files.  Obviously I cannot test these changes
+   on every whacked OS that needs this compatability cruft, so please
+   let me know if you run into compilation problems.
+
 -- Fixed a problem found by Martyn Tovey <martyn@netcraft.com> when
    using Nmap on platforms that dislike division by zero.
 
