@@ -33,7 +33,8 @@ specification.
 Significant effort has been put into decent nmap performance
 for non-root users.  Unfortunately, many critical kernel
 interfaces (such as raw sockets) require root privileges.
-nmap should be run as root whenever possible.
+nmap should be run as root whenever possible (not setuid root,
+of course).
 .PP
 The result of running nmap is usually a list of interesting
 ports on the machine(s) being scanned (if any).  Nmap always

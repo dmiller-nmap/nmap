@@ -100,6 +100,7 @@ esac
 
 dnl Checks for libraries.
 dnl AC_CHECK_LIB(m, pow)
+AC_CHECK_LIB(m, main)
 
 dnl If any socket libraries needed
 AC_CHECK_FUNC(gethostent, , AC_CHECK_LIB(nsl, gethostent))

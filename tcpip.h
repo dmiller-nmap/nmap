@@ -54,6 +54,8 @@
 #include "config.h"
 #endif
 
+#include "nbase.h"
+
 #ifdef WIN32
 #include "mswin32\winclude.h"
 #else
@@ -143,6 +145,7 @@ void *realloc();
 #endif
 #include <fcntl.h>
 #ifndef NET_IF_H  /* why the HELL does OpenBSD not do this? */
+#include <sys/socket.h>
 #include <net/if.h>
 #define NET_IF_H
 #endif
@@ -183,7 +186,6 @@ extern "C" {
 #endif
 #endif /* WIN32 */
 
-#include "nbase.h"
 #include "nmap_error.h"
 #include "utils.h"
 #include "nmap.h"

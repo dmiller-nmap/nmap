@@ -1,5 +1,17 @@
 # Nmap Changelog
 
+-- Applied Darwin (Mac OS X) 1.2 portability patch from 
+   Rob Braun <bbraun@synack.net>
+
+-- Applied Solaris 8 compilation fixes from Germano Caronni 
+   ( caronni@batfax.olymp.org )
+
+-- Applied configure.in variable name typo fixes from Christian
+   Weisgerber (naddy@openbsd.org)
+
+-- Applied some more changes from Andy Lutomirski (Luto@mailandnews.com)
+   which provides better detection and reporting from some heinous errors.
+
 ** 2.54BETA19
 
 -- I ported NmapFE to Windows so that Win32 users can use the

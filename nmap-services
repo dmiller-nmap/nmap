@@ -1099,8 +1099,9 @@ supfilesrv        871/tcp    # SUP server
 accessbuilder     888/tcp    # or Audio CD Database
 accessbuilder     888/udp    # 
 ftps-data         989/tcp    # ftp protocol, data, over TLS/SSL
-samba-swat        901/tcp    # Samba SWAT tool
+samba-swat        901/tcp    # Samba SWAT tool.  Also used by ISS RealSecure.
 oftep-rpc         950/tcp    # Often RPC.statd (on Redhat Linux)
+rndc              953/tcp    # RNDC is used by BIND 9 (& probably other NS)
 ftps              990/tcp    # ftp protocol, control, over TLS/SSL
 telnets           992/tcp    # telnet protocol over TLS/SSL
 imaps             993/tcp    # imap4 protocol over TLS/SSL
@@ -1947,13 +1948,16 @@ montage-lm        6147/tcp   # Montage License Manager
 montage-lm        6147/udp   # Montage License Manager
 ricardo-lm        6148/tcp   # Ricardo North America License Manager
 ricardo-lm        6148/udp   # Ricardo North America License Manager
+netop-rc          6502/tcp   # NetOp Remote Control (by Danware Data A/S)
+netop-rc          6502/udp   # NetOp Remote Control (by Danware Data A/S)
 xdsxdm            6558/tcp   # 
 xdsxdm            6558/udp   # 
 irc-serv          6666/tcp   # internet relay chat server
 irc               6667/tcp   # Internet Relay Chat
 irc               6668/tcp   # Internet Relay Chat
-acmsoda           6969/tcp   # 
-acmsoda           6969/udp   # 
+acmsoda           6969/tcp   #
+acmsoda           6969/udp   #
+napster           6699/tcp   # Napster File (MP3) sharing  software
 afs3-fileserver   7000/tcp   # file server itself, msdos
 afs3-fileserver   7000/udp   # file server itself
 afs3-callback     7001/tcp   # callbacks to cache managers
@@ -2055,6 +2059,8 @@ sometimes-rpc26   32786/udp  # Sometimes an RPC port
 sometimes-rpc27   32787/tcp  # Sometimes an RPC port dmispd (DMI Service Provider)
 sometimes-rpc28   32787/udp  # Sometimes an RPC port
 reachout          43188/tcp
+coldfusion-auth   44442/tcp  # ColdFusion Advanced Security/Siteminder Authentication Port (by Allaire/Netegrity)
+coldfusion-auth   44443/tcp  # ColdFusion Advanced Security/Siteminder Authentication Port (by Allaire/Netegrity)
 ciscopop          45000/udp  # Cisco Postoffice Protocol for Cisco Secure IDS
 dbbrowse          47557/tcp  # Databeam Corporation
 dbbrowse          47557/udp  # Databeam Corporation

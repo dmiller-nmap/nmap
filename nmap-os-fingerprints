@@ -1279,6 +1279,18 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(Resp=N)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
+# Contributed by Dragos Ruiu <dr@kyx.net>
+Fingerprint NFR IDS Appliance ( 12/10/00 )
+TSeq(Class=RI%gcd=<6%SI=<8FC28&>16EC)
+T1(DF=N%W=403D%ACK=S++%Flags=AS%Ops=MNWNNT)
+T2(Resp=N)
+T3(Resp=Y%DF=N%W=403D%ACK=S++%Flags=AS%Ops=MNWNNT)
+T4(DF=N%W=4000%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=134%RID=E%RIPCK=E%UCK=F%ULEN=134%DAT=E)
+
 # Contributed by william.frogge@sus.com
 Fingerprint NT Server 4.0 SP4-SP5 running Checkpoint Firewall-1
 TSeq(Class=TD%gcd=<8%SI=<154)

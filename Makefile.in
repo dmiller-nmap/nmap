@@ -1,4 +1,4 @@
-NMAP_VERSION = 2.54BETA19
+NMAP_VERSION = 2.54BETA20
 NMAP_NAME= nmap
 NMAP_URL= www.insecure.org/nmap/
 NMAP_PLATFORM=@host@
@@ -21,14 +21,13 @@ CFLAGS = -g @CFLAGS@ $(CCOPT) $(DEFS) $(INCLS)
 # CFLAGS = -g -Wall $(DEFS) $(INCLS)
 STATIC = 
 LDFLAGS = @LDFLAGS@ $(STATIC)
-LIBS =  @LIBS@ -lpcap -lm
+LIBS =  @LIBS@ -lpcap
 # LIBS =  -lefence @LIBS@ -lpcap -lm
 # LIBS =  -lrmalloc @LIBS@ -lpcap -lm
 SHTOOL = ./shtool
 INSTALL = $(SHTOOL) install 
 MAKEDEPEND = @MAKEDEPEND@
 RPMTDIR=$(HOME)/rpmdir
-
 
 TARGET = nmap
 
@@ -89,6 +88,7 @@ distro:
 	sed -e s/\@VERSION\@/$(NMAP_VERSION)/g nmap.spec.in > nmap-$(NMAP_VERSION)-1.spec
 	$(MAKE) clean
 	rm -f $(LIBPCAPDIR)/config.cache $(LIBPCAPDIR)/Makefile
+	unix2dos README-WIN32
 	cp -ra $(SRCS) $(DEPS) nmap-os-fingerprints \
 	nmapfe.desktop nmap-services nmap-rpc nmap-protocols \
 	configure.in config.h.in nmap_winconfig.h Makefile.in configure \
@@ -108,7 +108,7 @@ distro:
 	$(SHTOOL) mkdir /usr/tmp/nmap-$(NMAP_VERSION)/nmapfe
 	cd nmapfe; cp Makefile.in aclocal.m4 configure configure.in \
 	              nmapfe.c nmapfe.h nmapfe_sig.c nmapfe_sig.h \
-	              nmapfe_error.c nmapfe_error.h \
+	              nmapfe_error.c nmapfe_error.h NmapFE.dsp nmapfe.dsw \
 	              /usr/tmp/nmap-$(NMAP_VERSION)/nmapfe
 	$(SHTOOL) mkdir /usr/tmp/nmap-$(NMAP_VERSION)/nbase
 	cd $(NBASEDIR); cp Makefile.in aclocal.m4 configure configure.in \

@@ -61,6 +61,7 @@ static void winip_test(int needraw);
 static void winip_list_interfaces();
 
 /*   delay-load hooks only for troubleshooting   */
+static int dli_done = 0;
 static FARPROC WINAPI winip_dli_fail_hook(unsigned code, PDelayLoadInfo info);
 
 //	The tables
@@ -137,7 +138,7 @@ void winip_postopt_init()
 		return;
 	inited = 2;
 
-	if(wo.trace) __pfnDliFailureHook = winip_dli_fail_hook;
+	__pfnDliFailureHook = winip_dli_fail_hook;
 
 	werd = MAKEWORD( 2, 2 );
 	if( (WSAStartup(werd, &data)) !=0 )
@@ -360,6 +361,9 @@ void winip_postopt_init()
 	//	Check for NT4 (grr...)
 	if(ver.dwPlatformId == VER_PLATFORM_WIN32_NT
 		&& ver.dwMajorVersion < 5) wo.nt4route = 1;
+
+	//	Mark load as complete so that dli errors are handled
+	dli_done = 1;
 }
 
 static void winip_test(int needraw)
@@ -825,24 +829,54 @@ void set_pcap_filter(struct hoststruct *target,
 
 static FARPROC WINAPI winip_dli_fail_hook(unsigned code, PDelayLoadInfo info)
 {
-	printf("***WinIP***  delay load error:\n");
-	switch(code)
+	if(wo.trace)
 	{
-	case dliFailLoadLib:
-		printf(" failed to load dll: %s\n", info->szDll);
-		break;
+		printf("***WinIP***  delay load error:\n");
+		switch(code)
+		{
+		case dliFailLoadLib:
+			printf(" failed to load dll: %s\n", info->szDll);
+			break;
 
-	case dliFailGetProc:
-		printf(" failed to load ");
-		if(info->dlp.fImportByName)
-			printf("function %s", info->dlp.szProcName + 2);
-		else printf("ordinal %d", info->dlp.dwOrdinal);
-		printf(" in dll %s\n", info->szDll);
-		break;
+		case dliFailGetProc:
+			printf(" failed to load ");
+			if(info->dlp.fImportByName)
+				printf("function %s", info->dlp.szProcName + 2);
+			else printf("ordinal %d", info->dlp.dwOrdinal);
+			printf(" in dll %s\n", info->szDll);
+			break;
 
-	default:
-		printf(" unknown error\n");
-		break;
+		default:
+			printf(" unknown error\n");
+			break;
+		}
+	}
+
+	if(dli_done)
+	{
+		printf("******* Unexpected delay-load failure *******\n");
+
+		switch(code)
+		{
+		case dliFailLoadLib:
+			printf(" failed to load dll: %s\n", info->szDll);
+			if(!stricmp(info->szDll, "wpcap.dll"))
+				printf(" this is most likely because you have"
+				" winpcap 2.0 (2.1 beta is required)\n");
+			break;
+
+		case dliFailGetProc:
+			printf(" failed to load ");
+			if(info->dlp.fImportByName)
+				printf("function %s", info->dlp.szProcName + 2);
+			else printf("ordinal %d", info->dlp.dwOrdinal);
+			printf(" in dll %s\n", info->szDll);
+			break;
+
+		default:
+			printf(" unknown error\n");
+			break;
+		}
 	}
 
 	return 0;
