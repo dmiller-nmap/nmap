@@ -1922,6 +1922,7 @@ if (o.debugging || o.verbose)
 			   current->portno, 0, 0, scanflags, 0, 0, 0);
 	    else send_udp_raw(rawsd, &o.decoys[decoy], &target->host, o.magic_port,
 			      current->portno, NULL, 0);
+	    if (scantype == UDP_SCAN) usleep(50000);
 	    /*usleep(10000);*/ /* *WE* normally do not need this, but the target 
 	      lamer often does */
 	  }
@@ -1969,7 +1970,7 @@ if (o.debugging || o.verbose)
 	      case 3: /* p0rt unreachable */		
 		newport = ntohs(data[1]);
 		printf("Got port unreachable newport %hi\n", newport);
-		if (portlookup[newport] > 0) {
+		if (portlookup[newport] >= 0) {
 		  current = &scan[portlookup[newport]];
 		  if (!o.magic_port_set) {
 		    packet_trynum = ntohs(data[0]) - o.magic_port;
