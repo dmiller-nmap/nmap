@@ -1,11 +1,16 @@
 # Nmap Changelog ($Id$)
 
+
 o Applied patch from Rob Foehl (rwf(a)loonybin.net) which fixes the
   --with_openssl=DIR configure argument.
 
 o Added configure option --with-libpcre=included which causes Nmap to
   build with its included version of libpcre even if an acceptable
   version is available on the system.
+
+o Applied patch from Przemek Galczewski (sako(a)avet.com.pl) which
+  adds spaces to the XML output in places tha apparently help certain
+  older XML parsers.
 
 Nmap 3.48
 

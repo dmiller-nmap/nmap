@@ -817,7 +817,7 @@ static void printosclassificationoutput(const struct OS_Classification_Results *
       if (OSR->OSC[classno]->OS_Generation) {
 	snprintf(tmpbuf, sizeof(tmpbuf), " osgen=\"%s\"", OSR->OSC[classno]->OS_Generation);
       } else tmpbuf[0] = '\0';
-      log_write(LOG_XML, "<osclass type=\"%s\" vendor=\"%s\" osfamily=\"%s\"%s accuracy=\"%d\"/>\n", OSR->OSC[classno]->Device_Type, OSR->OSC[classno]->OS_Vendor, OSR->OSC[classno]->OS_Family, tmpbuf, (int) (OSR->OSC_Accuracy[classno] * 100));
+      log_write(LOG_XML, "<osclass type=\"%s\" vendor=\"%s\" osfamily=\"%s\"%s accuracy=\"%d\" />\n", OSR->OSC[classno]->Device_Type, OSR->OSC[classno]->OS_Vendor, OSR->OSC[classno]->OS_Family, tmpbuf, (int) (OSR->OSC_Accuracy[classno] * 100));
     }
 
     // Now to create the fodder for normal output
@@ -1023,7 +1023,7 @@ void printosscanoutput(Target *currenths) {
 	 sprintf(p, "%hX", currenths->seq.ipids[i]);
 	 while(*p) p++;
        }
-       log_write(LOG_XML, "<ipidsequence class=\"%s\" values=\"%s\"/>\n", ipidclass2ascii(currenths->seq.ipid_seqclass), numlst);
+       log_write(LOG_XML, "<ipidsequence class=\"%s\" values=\"%s\" />\n", ipidclass2ascii(currenths->seq.ipid_seqclass), numlst);
        if (o.verbose)
 	 log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"IPID Sequence Generation: %s\n", ipidclass2ascii(currenths->seq.ipid_seqclass));
        log_write(LOG_MACHINE,"\tIPID Seq: %s", ipidclass2ascii(currenths->seq.ipid_seqclass));
@@ -1041,7 +1041,7 @@ void printosscanoutput(Target *currenths) {
        if (currenths->seq.ts_seqclass != TS_SEQ_UNSUPPORTED) {
 	 log_write(LOG_XML, " values=\"%s\"", numlst);
        }
-       log_write(LOG_XML, "/>\n");
+       log_write(LOG_XML, " />\n");
      }
   }
 }
