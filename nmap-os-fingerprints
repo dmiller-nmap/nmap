@@ -229,7 +229,7 @@ T6(DF=N%W=C00%ACK=S%Flags=AR%Ops=)
 T7(DF=N%W=C00%ACK=S++%Flags=AR%Ops=)
 PU(Resp=N)
 
-Fingerprint SonicWall SOHO firewall or Accelerated Networks VoDSL
+Fingerprint SonicWall SOHO firewall, Enterasys Matrix E1, or Accelerated Networks VoDSL
 TSeq(Class=64K)
 T1(DF=N%W=2000%ACK=S++%Flags=AS%Ops=MNW)
 T2(Resp=N)
@@ -4400,6 +4400,17 @@ T5(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(Resp=Y%DF=N%W=0%ACK=S%Flags=R%Ops=)
 T7(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(Resp=N)
+
+Fingerprint Linksys BEFW11S4 802.11B WAP
+TSeq(Class=TD%gcd=<F4%SI=<1E%IPID=Z%TS=U)
+T1(DF=N%W=1000|C00|400|800%ACK=S++%Flags=AR%Ops=)
+T2(Resp=Y%DF=N%W=1000|C00|400|800%ACK=S%Flags=AR%Ops=)
+T3(Resp=Y%DF=N%W=1000|C00|400|800%ACK=S++%Flags=AR%Ops=)
+T4(DF=N%W=1000|C00|400|800%ACK=S%Flags=AR%Ops=)
+T5(DF=N%W=1000|C00|400|800%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=1000|C00|400|800%ACK=S%Flags=AR%Ops=)
+T7(DF=N%W=1000|C00|400|800%ACK=S++%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint LinkSys WAP11 wireless AP firmware ver. 2.2
 TSeq(Class=TD%gcd=<1F502%SI=<1E%IPID=I%TS=U)

@@ -878,7 +878,7 @@ struct ppkt {
 } pingpkt;
 u32 *datastart = (u32 *) pingpkt.data;
 int datalen = sizeof(pingpkt.data); 
-int icmplen;
+int icmplen=0;
 int decoy;
 int res;
 struct sockaddr_in sock;

@@ -1010,6 +1010,8 @@ mount             635/udp    # NFS Mount Service
 ldapssl           636/tcp    # LDAP over SSL
 pcnfs             640/udp    # PC-NFS DOS Authentication
 bwnfs             650/udp    # BW-NFS DOS Authentication
+mac-srvr-admin    660/tcp    # MacOS Server Admin
+mac-srvr-admin    660/udp    # MacOS Server Admin
 doom              666/tcp    # doom Id Software
 doom              666/udp    # doom Id Software
 lanserver         637/tcp    #

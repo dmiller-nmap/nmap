@@ -1,5 +1,30 @@
 # Nmap Changelog ($Id$)
 
+Nmap 2.99RC1
+
+o Implemented the biggest OS fingerprint update since December 1999!
+  More than 200 fingerprints were added/modified.  This includes
+  OpenBSD 3.1, Solaris 9, Mac OS 10.1.5, OS/400, FreeBSD 4.6, The
+  latest MS WinXP changes, new CISCO equiptment, and loads of network
+  devices such as VoIP phones, switches, printers, WAPs, etc.
+
+o Updated build system to work on MacOS X.
+
+o I removed "credit" lines from the nmap-os-fingerprints file out of
+  concern that evil spammers might harvest the 602 addresses.  Plus
+  those took up 28K and the size of nmap-os-fingerprints has already
+  caused trouble for some handheld devices.  If anyone actually cares
+  about the "fame" of being listed, let me know and I'll put you back
+  in.  I still appreciate everyone who submits fingerprints!  I just
+  don't want you to be spammed when the fingerprint file goes online.
+
+o Minor usage screen (nmap -h) fix suggested by Martin Kluge 
+  ( martin@elxsi.info )
+
+o Insured that the initial pound (#) in C preprocessor directives is
+  always in column 1 (portability fix).  Problem noted by Shamsher
+  Sran (ssran@bechtel.com)
+
 Nmap 2.54BETA37
 
 o Made SYN scan the default for privileged (root) users.  This offers

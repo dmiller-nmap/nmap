@@ -55,7 +55,7 @@ static struct protocol_list *protocol_table[PROTOCOL_TABLE_SIZE];
 static int nmap_protocols_init() {
   char filename[512];
   FILE *fp;
-  char protocolname[128], proto[16];
+  char protocolname[128];
   unsigned short protno;
   char *p;
   char line[1024];

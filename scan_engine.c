@@ -525,7 +525,7 @@ static void get_syn_results(struct hoststruct *target, struct portinfo *scan,
 void pos_scan(struct hoststruct *target, u16 *portarray, int numports, stype scantype) {
   int initial_packet_width;  /* How many scan packets in parallel (to start with) */
   struct scanstats ss;
-  int rawsd;
+  int rawsd = -1;
   char myname[513];
   int scanflags = 0;
   int victim;

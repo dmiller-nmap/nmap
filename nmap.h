@@ -265,9 +265,7 @@ void *realloc();
 /* DO NOT change stuff after this point */
 #define UC(b)   (((int)b)&0xff)
 #define SA    struct sockaddr  /*Ubertechnique from R. Stevens */
-/*#define fatal(x) { fprintf(stderr, "%s\n", x); exit(-1); }
-  #define error(x) fprintf(stderr, "%s\n", x);*/
-/* hoststruct->flags stuff */
+
 #define HOST_UP 1
 #define HOST_DOWN 2 
 #define HOST_FIREWALLED 4 
@@ -326,36 +324,36 @@ void *realloc();
 
 /* Funny story about this one in /usr/include/apache/ap_config.h */
 #if defined(AIX)
-  #if AIX >= 42
-  #define NET_SIZE_T size_t
-  #endif
+#  if AIX >= 42
+#    define NET_SIZE_T size_t
+#  endif
 #elif defined(LINUX)
-  #if defined(__GLIBC__) && (__GLIBC__ > 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ > 0))
-  #define NET_SIZE_T socklen_t
-  #endif
+#  if defined(__GLIBC__) && (__GLIBC__ > 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ > 0))
+#  define NET_SIZE_T socklen_t
+#  endif
 #elif defined(SEQUENT)
-  #if SEQUENT < 44
-    #define NO_KILLPG 1
-    #define NET_SIZE_T int
-  #endif
-  #if SEQUENT >= 44
-    #undef NO_KILLPG
-    #define NET_SIZE_T size_t
-  #endif
+#  if SEQUENT < 44
+#    define NO_KILLPG 1
+#    define NET_SIZE_T int
+#  endif
+#  if SEQUENT >= 44
+#    undef NO_KILLPG
+#    define NET_SIZE_T size_t
+#  endif
 #elif defined(SVR4)
-  #define NET_SIZE_T size_t
+#  define NET_SIZE_T size_t
 #elif defined(UW)
-  #define NET_SIZE_T size_t
+#  define NET_SIZE_T size_t
 #elif defined(__FreeBSD__)
   /* XXX: Apache didn't have this one,
           so watch it be wrong :)... */
-  #define NET_SIZE_T size_t
+#  define NET_SIZE_T size_t
 #elif defined(OS390)
-  #define NET_SIZE_T size_t
+#  define NET_SIZE_T size_t
 #endif
 
 #ifndef NET_SIZE_T
-  #define NET_SIZE_T int
+#  define NET_SIZE_T int
 #endif
 
 /********************** LOCAL INCLUDES *****************************/

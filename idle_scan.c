@@ -549,7 +549,7 @@ int idlescan_countopen2(struct idle_proxy_info *proxy,
   struct timeval probe_times[4];
   int pr0be;
   static u32 seq = 0;
-  int newipid;
+  int newipid = 0;
   int sleeptime;
   int lasttry = 0;
   int dotry3 = 0;

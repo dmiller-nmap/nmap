@@ -160,7 +160,7 @@ create_main_win ()
   our_uid = 0;
   /* for nmap version */
 #include "nmap_winconfig.h"
-#define VERSION "0." NMAP_VERSION
+#define VERSION NMAP_VERSION
 #else
   our_uid = getuid();
 #endif
