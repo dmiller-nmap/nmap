@@ -12,7 +12,13 @@ short quashargv = 0, pingscan = 0, lamerscan = 0;
 int lookahead = LOOKAHEAD;
 short bouncescan = 0;
 short *ports = NULL;
+#ifdef __SOLARIS__
+/* Note that struct in_addr in solaris is 3 levels deep just to store an
+ * unsigned int! */
+struct ftpinfo ftp = { FTPUSER, FTPPASS, "",  { { { 0 } } } , 21, 0};
+#else
 struct ftpinfo ftp = { FTPUSER, FTPPASS, "", { 0 }, 21, 0};
+#endif
 struct hostent *target = NULL;
 struct in_addr *source=NULL;
 char *fakeargv[argc + 1];
@@ -286,10 +292,10 @@ return 1;
 __inline__ void max_rcvbuf(int sd) {
 int optval = 524288 /*2^19*/, optlen = sizeof(int);
 
-if (setsockopt(sd, SOL_SOCKET, SO_RCVBUF, &optval, optlen))
+if (setsockopt(sd, SOL_SOCKET, SO_RCVBUF, (void *) &optval, optlen))
   if (o.debugging) perror("Problem setting large socket recieve buffer");
 if (o.debugging) {
-  getsockopt(sd, SOL_SOCKET, SO_RCVBUF, &optval, &optlen);
+  getsockopt(sd, SOL_SOCKET, SO_RCVBUF,(void *) &optval, &optlen);
   printf("Our buffer size is now %d\n", optval);
 }
 }
@@ -329,7 +335,7 @@ return 1;
 
 __inline__ void broadcast_socket(int sd) {
   int one = 1;
-  if (setsockopt(sd, SOL_SOCKET, SO_BROADCAST, &one, sizeof(int)) != 0) {
+  if (setsockopt(sd, SOL_SOCKET, SO_BROADCAST, (void *)&one, sizeof(int)) != 0) {
     printf("Failed to secure socket broadcasting permission\n");
     perror("setsockopt");
   }
@@ -343,7 +349,7 @@ struct linger l;
 l.l_onoff = 1;
 l.l_linger = 0;
 
-if (setsockopt(sd, SOL_SOCKET, SO_LINGER,  &l, sizeof(struct linger)))
+if (setsockopt(sd, SOL_SOCKET, SO_LINGER,  (void *) &l, sizeof(struct linger)))
   {
    fprintf(stderr, "Problem setting socket SO_LINGER, errno: %d\n", errno);
    perror("setsockopt");
@@ -978,15 +984,9 @@ int listen_icmp(int icmpsock,  unsigned short outports[],
   struct sockaddr_in stranger;
   int sockaddr_in_size = sizeof(struct sockaddr_in);
   struct in_addr bs;
-#ifdef __FreeBSD__
   struct ip *ip = (struct ip *)response;
   struct ip *ip2;
   struct icmp *icmp = (struct icmp *) (response + sizeof(struct ip));
-#else
-  struct iphdr *ip = (struct iphdr *) response;
-  struct iphdr *ip2;
-  struct icmphdr *icmp = (struct icmphdr *) (response + sizeof(struct iphdr));
-#endif
   unsigned short *data;
   int badport, numcaught=0, bytes, i, tmptry=0, found=0;
   
@@ -994,19 +994,13 @@ int listen_icmp(int icmpsock,  unsigned short outports[],
 			    (struct sockaddr *) &stranger,
 			    &sockaddr_in_size)) > 0) {
   numcaught++;
-#ifdef __FreeBSD__
+
     bs.s_addr = ip->ip_src.s_addr;
     if (ip->ip_src.s_addr == target.s_addr && ip->ip_p == IPPROTO_ICMP 
       && icmp->icmp_type == 3 && icmp->icmp_code == 3) {    
     ip2 = (struct ip *) (response + 4 * ip->ip_hl + sizeof(struct icmp));
     data = (unsigned short *) ((char *)ip2 + 4 * ip2->ip_hl);
-#else
-    bs.s_addr = ip->saddr;
-    if (ip->saddr == target.s_addr && ip->protocol == IPPROTO_ICMP 
-      && icmp->type == 3 && icmp->code == 3) {    
-    ip2 = (struct iphdr *) (response + 4 * ip->ihl + sizeof(struct icmphdr));
-    data = (unsigned short *) ((char *)ip2 + 4 * ip2->ihl);
-#endif
+
     badport = ntohs(data[1]);
     /*delete it from our outports array */
     found = 0;
@@ -1028,11 +1022,9 @@ int listen_icmp(int icmpsock,  unsigned short outports[],
     }
   }
   else {
-#ifdef __FreeBSD__
+
     if (o.debugging) printf("Caught icmp type %d code %d\n", icmp->icmp_type, icmp->icmp_code);
-#else
-    if (o.debugging) printf("Caught icmp type %d code %d\n", icmp->type, icmp->code);
-#endif
+
   }
 }
   return numcaught;
@@ -1338,13 +1330,8 @@ int sockets[o.max_sockets];
 struct timeval tv,start,end;
 unsigned int elapsed_time;
 char packet[65535];
-#ifdef __FreeBSD__
 struct ip *ip = (struct ip *) packet;
 struct tcphdr *tcp = (struct tcphdr *) (packet + sizeof(struct ip));
-#else
-struct iphdr *ip = (struct iphdr *) packet;
-struct tcphdr *tcp = (struct tcphdr *) (packet + sizeof(struct iphdr));
-#endif
 fd_set fd_read, fd_write;
 int res;
 struct hostent *myhostent;
@@ -1401,13 +1388,10 @@ do {
     else /*if (res > 0)*/ {
       while  ((bytes = recvfrom(received, packet, 65535, 0, 
 				(struct sockaddr *)&from, &fromsize)) > 0 ) {
-#ifdef __FreeBSD__
+
 	if (ip->ip_src.s_addr == target->host.s_addr && tcp->th_sport != magic_port_NBO
 	    && tcp->th_dport == magic_port_NBO) {
-#else
-	if (ip->saddr == target->host.s_addr && tcp->th_sport != magic_port_NBO
-	    && tcp->th_dport == magic_port_NBO) {
-#endif
+
 	  packets_out--;
 	  if (tcp->th_flags & TH_RST) {
 	    if (o.debugging > 1) printf("Nothing open on port %d\n",
@@ -1449,23 +1433,18 @@ int send_tcp_raw( int sd, struct in_addr *source,
 
 struct pseudo_header { 
   /*for computing TCP checksum, see TCP/IP Illustrated p. 145 */
-  unsigned long s_addr;
+  unsigned long s_addy;
   unsigned long d_addr;
   char zer0;
   unsigned char protocol;
   unsigned short length;
 };
-#ifdef __FreeBSD__
+
 char packet[sizeof(struct ip) + sizeof(struct tcphdr) + datalen];
 struct ip *ip = (struct ip *) packet;
 struct tcphdr *tcp = (struct tcphdr *) (packet + sizeof(struct ip));
 struct pseudo_header *pseudo =  (struct pseudo_header *) (packet + sizeof(struct ip) - sizeof(struct pseudo_header)); 
-#else
-char packet[sizeof(struct iphdr) + sizeof(struct tcphdr) + datalen];
-struct iphdr *ip = (struct iphdr *) packet;
-struct tcphdr *tcp = (struct tcphdr *) (packet + sizeof(struct iphdr));
-struct pseudo_header *pseudo =  (struct pseudo_header *) (packet + sizeof(struct iphdr) - sizeof(struct pseudo_header)); 
-#endif
+
  /*With these placement we get data and some field alignment so we aren't
    wasting too much in computing the checksum */
 int res;
@@ -1500,13 +1479,10 @@ sock.sin_family = AF_INET;
 sock.sin_port = htons(dport);
 sock.sin_addr.s_addr = victim->s_addr;
 
-#ifdef __FreeBSD__
-bzero(packet, sizeof(struct ip) + sizeof(struct tcphdr));
-#else
-bzero(packet, sizeof(struct iphdr) + sizeof(struct tcphdr));
-#endif
 
-pseudo->s_addr = source->s_addr;
+bzero(packet, sizeof(struct ip) + sizeof(struct tcphdr));
+
+pseudo->s_addy = source->s_addr;
 pseudo->d_addr = victim->s_addr;
 pseudo->protocol = IPPROTO_TCP;
 pseudo->length = htons(sizeof(struct tcphdr) + datalen);
@@ -1533,7 +1509,7 @@ tcp->th_sum = in_cksum((unsigned short *)pseudo, sizeof(struct tcphdr) +
 		       sizeof(struct pseudo_header) + datalen);
 
 /* Now for the ip header */
-#ifdef __FreeBSD__
+
 bzero(packet, sizeof(struct ip)); 
 ip->ip_v = 4;
 ip->ip_hl = 5;
@@ -1544,41 +1520,19 @@ ip->ip_p = IPPROTO_TCP;
 ip->ip_src.s_addr = source->s_addr;
 ip->ip_dst.s_addr= victim->s_addr;
 ip->ip_sum = in_cksum((unsigned short *)ip, sizeof(struct ip));
-#else
-bzero(packet, sizeof(struct iphdr)); 
-ip->version = 4;
-ip->ihl = 5;
-ip->tot_len = htons(sizeof(struct iphdr) + sizeof(struct tcphdr) + datalen);
-ip->id = rand();
-ip->ttl = 255;
-ip->protocol = IPPROTO_TCP;
-ip->saddr = source->s_addr;
-ip->daddr = victim->s_addr;
-ip->check = in_cksum((unsigned short *)ip, sizeof(struct iphdr));
-#endif
 
 if (o.debugging > 1) {
 printf("Raw TCP packet creation completed!  Here it is:\n");
-#ifdef __FreeBSD__
+
 readtcppacket(packet,ntohs(ip->ip_len));
-#else
-readtcppacket(packet,ntohs(ip->tot_len));
-#endif
 }
 if (o.debugging > 1) 
-#ifdef __FreeBSD__
+
   printf("\nTrying sendto(%d , packet, %d, 0 , %s , %d)\n",
 	 sd, ntohs(ip->ip_len), inet_ntoa(*victim),
 	 sizeof(struct sockaddr_in));
 if ((res = sendto(sd, packet, ntohs(ip->ip_len), 0,
 		  (struct sockaddr *)&sock, sizeof(struct sockaddr_in))) == -1)
-#else
-  printf("\nTrying sendto(%d , packet, %d, 0 , %s , %d)\n",
-	 sd, ntohs(ip->tot_len), inet_ntoa(*victim),
-	 sizeof(struct sockaddr_in));
-if ((res = sendto(sd, packet, ntohs(ip->tot_len), 0,
-		  (struct sockaddr *)&sock, sizeof(struct sockaddr_in))) == -1)
-#endif
   {
     perror("sendto in send_tcp_raw");
     if (source_malloced) free(source);
@@ -1593,15 +1547,10 @@ return res;
 /* A simple program I wrote to help in debugging, shows the important fields
    of a TCP packet*/
 int readtcppacket(char *packet, int readdata) {
-#ifdef __FreeBSD__
+
 struct ip *ip = (struct ip *) packet;
 struct tcphdr *tcp = (struct tcphdr *) (packet + sizeof(struct ip));
 char *data = packet +  sizeof(struct ip) + sizeof(struct tcphdr);
-#else
-struct iphdr *ip = (struct iphdr *) packet;
-struct tcphdr *tcp = (struct tcphdr *) (packet + sizeof(struct iphdr));
-char *data = packet +  sizeof(struct iphdr) + sizeof(struct tcphdr);
-#endif
 int tot_len;
 struct in_addr bullshit, bullshit2;
 char sourcehost[16];
@@ -1612,25 +1561,16 @@ if (!packet) {
   fprintf(stderr, "readtcppacket: packet is NULL!\n");
   return -1;
     }
-#ifdef __FreeBSD__
+
 bullshit.s_addr = ip->ip_src.s_addr; bullshit2.s_addr = ip->ip_dst.s_addr;
 /* this is gay */
 realfrag = ntohs(ip->ip_off) & 8191 /* 2^13 - 1 */;
 tot_len = ntohs(ip->ip_len);
 strncpy(sourcehost, inet_ntoa(bullshit), 16);
 i =  4 * (ntohs(ip->ip_hl) + ntohs(tcp->th_off));
-if (ip->ip_p== IPPROTO_TCP)
-#else
-bullshit.s_addr = ip->saddr; bullshit2.s_addr = ip->daddr;
-/* this is gay */
-realfrag = ntohs(ip->frag_off) & 8191 /* 2^13 - 1 */;
-tot_len = ntohs(ip->tot_len);
-strncpy(sourcehost, inet_ntoa(bullshit), 16);
-i =  4 * (ntohs(ip->ihl) + ntohs(tcp->th_off));
-if (ip->protocol == IPPROTO_TCP)
-#endif
-  if (realfrag) printf("Packet is fragmented, offset field: %u\n",
-			   realfrag);
+if (ip->ip_p== IPPROTO_TCP) {
+  if (realfrag) 
+    printf("Packet is fragmented, offset field: %u\n", realfrag);
   else {
     printf("TCP packet: %s:%d -> %s:%d (total: %d bytes)\n", sourcehost, 
 	   ntohs(tcp->th_sport), inet_ntoa(bullshit2), 
@@ -1644,16 +1584,15 @@ if (ip->protocol == IPPROTO_TCP)
     if (tcp->th_flags & TH_FIN) printf("FIN ");
     if (tcp->th_flags & TH_URG) printf("URG ");
     printf("\n");
-#ifdef __FreeBSD__
+
     printf("ttl: %hi ", ip->ip_ttl);
-#else
-    printf("ttl: %hi ", ip->ttl);
-#endif
+
     if (tcp->th_flags & (TH_SYN | TH_ACK)) printf("Seq: %lu\tAck: %lu\n", 
 						  (unsigned long) ntohl(tcp->th_seq), (unsigned long) ntohl(tcp->th_ack));
     else if (tcp->th_flags & TH_SYN) printf("Seq: %lu\n", (unsigned long) ntohl(tcp->th_seq));
     else if (tcp->th_flags & TH_ACK) printf("Ack: %lu\n", (unsigned long) ntohl(tcp->th_ack));
   }
+}
 if (readdata && i < tot_len) {
 printf("Data portion:\n");
 while(i < tot_len)  printf("%2X%c", data[i], (++i%16)? ' ' : '\n');
@@ -1685,7 +1624,7 @@ int send_small_fragz(int sd, struct in_addr *source, struct in_addr *victim,
 
 struct pseudo_header { 
 /*for computing TCP checksum, see TCP/IP Illustrated p. 145 */
-  unsigned long s_addr;
+  unsigned long s_addy;
   unsigned long d_addr;
   char zer0;
   unsigned char protocol;
@@ -1693,21 +1632,13 @@ struct pseudo_header {
 };
 /*In this placement we get data and some field alignment so we aren't wasting
   too much to compute the TCP checksum.*/
-#ifdef __FreeBSD__
+
 char packet[sizeof(struct ip) + sizeof(struct tcphdr) + 100];
 struct ip *ip = (struct ip *) packet;
 struct tcphdr *tcp = (struct tcphdr *) (packet + sizeof(struct ip));
 struct pseudo_header *pseudo = (struct pseudo_header *) (packet + sizeof(struct ip) - sizeof(struct pseudo_header)); 
 char *frag2 = packet + sizeof(struct ip) + 16;
 struct ip *ip2 = (struct ip *) (frag2 - sizeof(struct ip));
-#else
-char packet[sizeof(struct iphdr) + sizeof(struct tcphdr) + 100];
-struct iphdr *ip = (struct iphdr *) packet;
-struct tcphdr *tcp = (struct tcphdr *) (packet + sizeof(struct iphdr));
-struct pseudo_header *pseudo = (struct pseudo_header *) (packet + sizeof(struct iphdr) - sizeof(struct pseudo_header)); 
-char *frag2 = packet + sizeof(struct iphdr) + 16;
-struct iphdr *ip2 = (struct iphdr *) (frag2 - sizeof(struct iphdr));
-#endif
 int res;
 struct sockaddr_in sock;
 int id;
@@ -1715,25 +1646,15 @@ int id;
 /*Why do we have to fill out this damn thing? This is a raw packet, after all */
 sock.sin_family = AF_INET;
 sock.sin_port = htons(dport);
-#ifdef __FreeBSD__
+
 sock.sin_addr.s_addr = victim->s_addr;
 
 bzero(packet, sizeof(struct ip) + sizeof(struct tcphdr));
 
-pseudo->s_addr = source->s_addr;
+pseudo->s_addy = source->s_addr;
 pseudo->d_addr = victim->s_addr;
 pseudo->protocol = IPPROTO_TCP;
 pseudo->length = htons(sizeof(struct tcphdr));
-#else
-sock.sin_addr.s_addr = victim->s_addr;
-
-bzero(packet, sizeof(struct iphdr) + sizeof(struct tcphdr));
-
-pseudo->s_addr = source->s_addr;
-pseudo->d_addr = victim->s_addr;
-pseudo->protocol = IPPROTO_TCP;
-pseudo->length = htons(sizeof(struct tcphdr));
-#endif
 
 tcp->th_sport = htons(sport);
 tcp->th_dport = htons(dport);
@@ -1748,7 +1669,7 @@ tcp->th_sum = in_cksum((unsigned short *)pseudo,
 		       sizeof(struct tcphdr) + sizeof(struct pseudo_header));
 
 /* Now for the ip header of frag1 */
-#ifdef __FreeBSD__
+
 bzero(packet, sizeof(struct ip)); 
 ip->ip_v = 4;
 ip->ip_hl = 5;
@@ -1762,40 +1683,17 @@ ip->ip_p = IPPROTO_TCP;
 ip->ip_src.s_addr = source->s_addr;
 ip->ip_dst.s_addr = victim->s_addr;
 ip->ip_sum= in_cksum((unsigned short *)ip, sizeof(struct ip));
-#else
-bzero(packet, sizeof(struct iphdr)); 
-ip->version = 4;
-ip->ihl = 5;
-/*RFC 791 allows 8 octet frags, but I get "operation not permitted" (EPERM)
-  when I try that.  */
-ip->tot_len = htons(sizeof(struct iphdr) + 16);
-id = ip->id = rand();
-ip->frag_off = htons(MORE_FRAGMENTS);
-ip->ttl = 255;
-ip->protocol = IPPROTO_TCP;
-ip->saddr = source->s_addr;
-ip->daddr = victim->s_addr;
-ip->check = in_cksum((unsigned short *)ip, sizeof(struct iphdr));
-#endif
 
 if (o.debugging > 1) {
   printf("Raw TCP packet fragment #1 creation completed!  Here it is:\n");
   hdump(packet,20);
 }
 if (o.debugging > 1) 
-#ifdef __FreeBSD__
   printf("\nTrying sendto(%d , packet, %d, 0 , %s , %d)\n",
 	 sd, ntohs(ip->ip_len), inet_ntoa(*victim),
 	 sizeof(struct sockaddr_in));
 if ((res = sendto(sd, packet, ntohs(ip->ip_len), 0, 
 		  (struct sockaddr *)&sock, sizeof(struct sockaddr_in))) == -1)
-#else
-  printf("\nTrying sendto(%d , packet, %d, 0 , %s , %d)\n",
-	 sd, ntohs(ip->tot_len), inet_ntoa(*victim),
-	 sizeof(struct sockaddr_in));
-if ((res = sendto(sd, packet, ntohs(ip->tot_len), 0, 
-		  (struct sockaddr *)&sock, sizeof(struct sockaddr_in))) == -1)
-#endif
   {
     perror("sendto in send_syn_fragz");
     return -1;
@@ -1803,7 +1701,7 @@ if ((res = sendto(sd, packet, ntohs(ip->tot_len), 0,
 if (o.debugging > 1) printf("successfully sent %d bytes of raw_tcp!\n", res);
 
 /* Create the second fragment */
-#ifdef __FreeBSD__
+
 bzero(ip2, sizeof(struct ip));
 ip2->ip_v= 4;
 ip2->ip_hl = 5;
@@ -1815,35 +1713,18 @@ ip2->ip_p = IPPROTO_TCP;
 ip2->ip_src.s_addr = source->s_addr;
 ip2->ip_dst.s_addr= victim->s_addr;
 ip2->ip_sum = in_cksum((unsigned short *)ip2, sizeof(struct ip));
-#else
-bzero(ip2, sizeof(struct iphdr));
-ip2->version = 4;
-ip2->ihl = 5;
-ip2->tot_len = htons(sizeof(struct iphdr) + 4); /* the rest of our TCP packet */
-ip2->id = id;
-ip2->frag_off = htons(2);
-ip2->ttl = 255;
-ip2->protocol = IPPROTO_TCP;
-ip2->saddr = source->s_addr;
-ip2->daddr = victim->s_addr;
-ip2->check = in_cksum((unsigned short *)ip2, sizeof(struct iphdr));
-#endif
+
 if (o.debugging > 1) {
   printf("Raw TCP packet fragment creation completed!  Here it is:\n");
   hdump(packet,20);
 }
 if (o.debugging > 1) 
-#ifdef __FreeBSD__
+
   printf("\nTrying sendto(%d , ip2, %d, 0 , %s , %d)\n", sd, 
 	 ntohs(ip2->ip_len), inet_ntoa(*victim), sizeof(struct sockaddr_in));
-if ((res = sendto(sd, ip2, ntohs(ip2->ip_len), 0, 
+if ((res = sendto(sd, (void *)ip2, ntohs(ip2->ip_len), 0, 
 		  (struct sockaddr *)&sock, sizeof(struct sockaddr_in))) == -1)
-#else
-  printf("\nTrying sendto(%d , ip2, %d, 0 , %s , %d)\n", sd, 
-	 ntohs(ip2->tot_len), inet_ntoa(*victim), sizeof(struct sockaddr_in));
-if ((res = sendto(sd, ip2, ntohs(ip2->tot_len), 0, 
-		  (struct sockaddr *)&sock, sizeof(struct sockaddr_in))) == -1)
-#endif
+
   {
     perror("sendto in send_tcp_raw");
     return -1;
@@ -1878,11 +1759,9 @@ int bytes, dupesinarow = 0;
 unsigned long timeout;
 struct hostent *myhostent;
 char response[65535], myname[513];
-#ifdef __FreeBSD__
+
 struct ip *ip = (struct ip *) response;
-#else
-struct iphdr *ip = (struct iphdr *) response;
-#endif
+
 struct tcphdr *tcp;
 unsigned short portno[o.max_sockets], trynum[o.max_sockets];
 struct sockaddr_in stranger;
@@ -1935,13 +1814,10 @@ while(!done) {
   dupesinarow = 0;
   while ((bytes = recvfrom(tcpsd, response, 65535, 0, (struct sockaddr *)
 			   &stranger, &sockaddr_in_size)) > 0) 
-#ifdef __FreeBSD__
+
     if (ip->ip_src.s_addr == target->host.s_addr) {
       tcp = (struct tcphdr *) (response + 4 * ip->ip_hl);
-#else
-    if (ip->saddr == target->host.s_addr) {
-      tcp = (struct tcphdr *) (response + 4 * ip->ihl);
-#endif
+
       if (tcp->th_flags & TH_RST) {
 	badport = ntohs(tcp->th_sport);
 	if (o.debugging > 1) printf("Nothing open on port %d\n", badport);

@@ -2,14 +2,20 @@
 #define NMAP_H
 
 /************************INCLUDES**********************************/
+/* Linux uses these defines in netinet/ip.h and netinet/tcp.h to
+   use the correct struct ip and struct tcphdr */
+#define __FAVOR_BSD
+#define __USE_BSD
+
+#undef _IP_VHL
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <ctype.h>
 #include <sys/types.h>
-#ifdef __FreeBSD__
-#include <sys/param.h> /* Defines MAXHOSTNAMELEN */
-#endif
+#include <sys/param.h> /* Defines MAXHOSTNAMELEN on BSD*/
 #include <rpc/types.h>
 #include <sys/socket.h>
 #include <sys/socket.h> 
@@ -22,28 +28,19 @@
 #include <fcntl.h>
 #include <signal.h> 
 #include <signal.h>
-#ifdef __FreeBSD__
 #include <netinet/in_systm.h> /* defines n_long needed for netinet/ip.h */
-#endif
 #include <netinet/ip.h> 
 #include <netinet/ip_icmp.h> 
 #include <arpa/inet.h>
 #include <math.h>
 #include <sys/time.h> 
-/*#include <asm/byteorder.h> Trouble with GNU Libc redefining ntohl */
-/* RedHat Linux 5.0 with GNU Libc requires this to use the right tcphdr 
-   struct */
 #define __FAVOR_BSD
 #include <netinet/tcp.h>          /*#include <netinet/ip_tcp.h>*/
-#undef __FAVOR_BSD
 #include <sys/resource.h>
-#ifdef __FreeBSD__
-#include <net/if_arp.h> /* defines struct arphdr needed for if_ether.h */
+/*#include <net/if_arp.h> *//* defines struct arphdr needed for if_ether.h */
 #include <net/if.h>     /* defines struct ifnet needed for if_ether.h */
-#include <netinet/if_ether.h> /* in a different place */
-#else
-#include <linux/if_ether.h>
-#endif
+#include <netinet/if_ether.h> 
+
 /************************DEFINES************************************/
 
 /* User configurable #defines: */
@@ -220,35 +217,8 @@ void *safe_malloc(int size);
 int parse_targets(struct targets *targets, char *h);
 struct hoststruct *nexthost(char *hostexp, int lookahead, int pingtimeout);
 void options_init();
+#ifdef __SOLARIS__
+/* From glibc 2.0.6 because Solaris doesn't seem to have this function */
+int inet_aton(register const char *cp, struct in_addr *addr);
+#endif
 #endif /* NMAP_H */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -102,7 +102,7 @@ if (targets->netmask < 0 || targets->netmask > 32) {
   targets->netmask = 32;
 }
 for(i=0; *(hostexp + i); i++) 
-  if (isupper(*(hostexp +i)) || islower(*(hostexp +i))) {
+  if (isupper((int) *(hostexp +i)) || islower((int) *(hostexp +i))) {
   namedhost = 1;
   break;
 }
@@ -143,7 +143,7 @@ else {
      *r = '\0';
      addy[4] = r + 1;
      }*/
-    else if (*r != '*' && *r != ',' && *r != '-' && !isdigit(*r)) fatal("Invalid character in  host specification.");
+    else if (*r != '*' && *r != ',' && *r != '-' && !isdigit((int)*r)) fatal("Invalid character in  host specification.");
   }
   if (i != 3) fatal("Target host specification is illegal.");
   
@@ -223,11 +223,7 @@ struct ppkt {
   unsigned short seq;
 } pingpkt;
 struct {
-#ifdef __FreeBSD__
   struct ip ip;
-#else
-  struct iphdr ip;
-#endif
   unsigned char type;
   unsigned char code;
   unsigned short checksum;
@@ -264,13 +260,14 @@ for(;;) {
 
     /* Update the new packet sequence nr. and checksum */
     pingpkt.seq = ++seq;
-    if (seq > 0) /* Don't increment the very first packet */
+    if (seq > 0 ) { /* Don't increment the very first packet */
       if (ping[2] != 0) ping[2]--; /* Shit, now not using NBO is hitting the fan ;) */
       else if (ping[1] != 255) { 
 	ping[2] = 255;
 	ping[1]--;
       }
       else ping[2] = ping[3] = 255;
+    }
 
     /* If (we don't know whether the host is up yet) ... */
     if (!(hostbatch[seq%num_hosts].flags & HOST_UP) && !hostbatch[seq%num_hosts].wierd_responses && !(hostbatch[seq%num_hosts].flags & HOST_DOWN)) {  
@@ -291,15 +288,10 @@ for(;;) {
       if  ( !response.type && !response.code && response.identifier == pid) {
 	gettimeofday(&end, NULL);
 	hostno = response.sequence % num_hosts;
-#ifdef __FreeBSD__
+
 	hostbatch[hostno].source_ip.s_addr = response.ip.ip_dst.s_addr;
 	if (o.debugging) printf("We got a ping packet back from %s: id = %d seq = %d checksum = %d\n", inet_ntoa(*(struct in_addr *)(&response.ip.ip_src.s_addr)), response.identifier, response.sequence, response.checksum);
 	if (hostbatch[hostno].host.s_addr == response.ip.ip_src.s_addr) {
-#else
-	hostbatch[hostno].source_ip.s_addr = response.ip.daddr;
-	if (o.debugging) printf("We got a ping packet back from %s: id = %d seq = %d checksum = %d\n", inet_ntoa(*(struct in_addr *)(&response.ip.saddr)), response.identifier, response.sequence, response.checksum);
-	if (hostbatch[hostno].host.s_addr == response.ip.saddr) {
-#endif
 	  hostbatch[hostno].rtt = (end.tv_sec - time[response.sequence].tv_sec) * 1e6
 	    + end.tv_usec - time[response.sequence].tv_usec;
 	  if (!(hostbatch[hostno].flags & HOST_UP)) {	  
@@ -310,31 +302,22 @@ for(;;) {
 	}
 	else  hostbatch[hostno].wierd_responses++;
       }
-#ifdef __FreeBSD__
+
       else if (response.type == 3 && ((struct ppkt *) (response.crap + 4 * response.ip.ip_hl))->id == pid) {
 	ushorttmp = ((struct ppkt *) (response.crap + 4 * response.ip.ip_hl))->seq;
-#else
-      else if (response.type == 3 && ((struct ppkt *) (response.crap + 4 * response.ip.ihl))->id == pid) {
-	ushorttmp = ((struct ppkt *) (response.crap + 4 * response.ip.ihl))->seq;
-#endif
 	if (o.debugging) printf("Got destination unreachable for %s\n", inet_ntoa(hostbatch[ushorttmp % num_hosts].host));
 	hostbatch[ushorttmp % num_hosts].flags |= HOST_DOWN;
 	num_down++;
 	if (num_responses + num_down == num_hosts) goto alldone; /* GOTO!  Hell yeah! */
       }
-#ifdef __FreeBSD__
+
       else if (response.type == 4 && ((struct ppkt *) (response.crap + 4 * response.ip.ip_hl))->id == pid)  {      
-#else
-      else if (response.type == 4 && ((struct ppkt *) (response.crap + 4 * response.ip.ihl))->id == pid)  {      
-#endif
 	if (o.debugging) printf("Got ICMP source quench\n");
 	usleep(15000);
       }
-#ifdef __FreeBSD__
+
       else if (o.debugging > 1 && ((struct ppkt *) (response.crap + 4 * response.ip.ip_hl))->id == pid ) {
-#else
-      else if (o.debugging > 1 && ((struct ppkt *) (response.crap + 4 * response.ip.ihl))->id == pid ) {
-#endif
+
 	printf("Got ICMP message type %d code %d\n", response.type, response.code);
       }
     }
