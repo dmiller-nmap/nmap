@@ -929,7 +929,7 @@ int done = 0;
 return NULL;
 }
 #endif /* 0 */
-#endif WIN32
+#endif /* WIN32 */
 
 int getsourceip(struct in_addr *src, struct in_addr *dst) {
   int sd;

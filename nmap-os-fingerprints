@@ -1963,6 +1963,18 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=F%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
+# Contributed by drUm
+Fingerprint DG/UX Release R4.20MU06
+TSeq(Class=RI%gcd=<6%SI=<E21EE&>779%IPID=I%TS=U)
+T1(DF=N%W=FFAF%ACK=S++%Flags=AS%Ops=M)
+T2(Resp=N)
+T3(Resp=Y%DF=N%W=FFAB%ACK=O%Flags=A%Ops=)
+T4(DF=N%W=FFFF%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=F%RIPCK=0%UCK=0%ULEN=134%DAT=E)
+
 # Contributed by Bogdan Nicolae bogdan@core.com
 Fingerprint Digital Link DL2001 Management Access Processor
 TSeq(Class=TD%gcd=<2780%SI=<14)
@@ -3626,9 +3638,9 @@ PU(DF=N%TOS=C0|A0|0%IPLEN=164%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Linux 2.1.19 - 2.2.16
 TSeq(Class=RI%gcd=<8%SI=>10000%IPID=I%TS=100HZ)
-T1(DF=Y%W=3C0A|3F25|7B2F|7F53|7C38|B63%ACK=S++%Flags=AS%Ops=MENNTNW)
+T1(DF=Y|N%W=3C0A|3F25|7B2F|7F53|7C38|B63%ACK=S++%Flags=AS%Ops=MENNTNW)
 T2(Resp=N)
-T3(Resp=Y%DF=Y%W=3C0A|3F25|7B2F|7F53|7C38|B63%ACK=S++%Flags=AS%Ops=MENNTNW)
+T3(Resp=Y|N%DF=Y%W=3C0A|3F25|7B2F|7F53|7C38|B63%ACK=S++%Flags=AS%Ops=MENNTNW)
 T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
@@ -4364,7 +4376,7 @@ T7(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=F%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
 # Thanks to Charles M. Hannum <root@ihack.net>
-Fingerprint NetBSD 1.3H (after 19980919) or 1.3I (before 19990119) big endian arch
+Fingerprint NetBSD 1.3H-1.42 (after 19980919) or 1.3I (before 19990119) big endian arch
 TSeq(Class=RI%gcd=<6%SI=>18000)
 T1(Resp=Y%DF=N%W=4000%ACK=S++%Flags=AS%Ops=MNWNNT|M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -6170,6 +6182,18 @@ T4(Resp=Y%DF=N%W=2000%ACK=O%Flags=R%Ops=)
 T5(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(Resp=Y%DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=15C%RID=F%RIPCK=0%UCK=0%ULEN=134%DAT=E)
+
+# Contributed by 3rr0r
+Fingerprint CacheOS 3.1 on a CacheFlow 6000
+TSeq(Class=RI%gcd=<6%SI=<6DE6416&>1C6E5%IPID=RPI%TS=2HZ)
+T1(DF=N%W=FFFF%ACK=S++%Flags=AS%Ops=MNWNNT)
+T2(Resp=N)
+T3(Resp=Y%DF=N%W=FFFF%ACK=O%Flags=A%Ops=NNT)
+T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=15C%RID=F%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
 # Contributed by "Richard Johnson" <rdump@river.com>

@@ -160,5 +160,5 @@ on_cancel_button1_clicked              (GtkButton       *button,
 int arg_parse(const char *command, char ***argv);
 void arg_parse_free(char **argv);
 
-#endif NMAPFE_SIG_H
+#endif /*  NMAPFE_SIG_H */
 

@@ -73,6 +73,7 @@ static const char rcsid[] =
 #include <netinet/in.h>
 #include <linux/if_ether.h>
 #include <net/if_arp.h>
+#include <assert.h>
 
 #ifdef HAVE_NETPACKET_PACKET_H
 # include <netpacket/packet.h>
@@ -292,6 +293,31 @@ pcap_read_packet(pcap_t *handle, pcap_handler callback, u_char *userdata)
 
 	do {
 		fromlen = sizeof(from);
+		/* If the user specified a timeout in pcap_open_live(),
+		   we will honor the timeout and return even if no packets
+		   have arrived */
+                if (handle->md.timeout > 0) {
+		  fd_set readfs;
+		  struct timeval tv;
+		  int res;
+
+		  FD_ZERO(&readfs);
+		  FD_SET(handle->fd, &readfs);
+		  bzero((void *) &tv, sizeof(tv));
+		  tv.tv_sec = handle->md.timeout / 1000;
+		  tv.tv_usec = (handle->md.timeout % 1000 ) * 1000;
+		  do {
+		    /* since this is in pcap-linux.c, we can assume
+		       Linux select() behavior WRT decrementing tv */
+		    res = select(handle->fd + 1, &readfs, NULL, NULL, &tv);
+		    if (res == 1) break;
+		    if (res == 0) return 0;
+		    assert(res == -1);
+		    if (errno == EINTR) continue;
+		    snprintf(handle->errbuf, sizeof(handle->errbuf), "select: %s", pcap_strerror(errno));
+		    return -1;
+		  } while (1);
+		}
 		packet_len = recvfrom( 
 			handle->fd, handle->buffer + offset + handle->offset,
 			handle->md.readlen - offset, MSG_TRUNC, 
