@@ -398,7 +398,7 @@ o.decoys[o.decoyturn] = currenths->source_ip;
 	  nmap_log("Host  %s (%s) seems to be a subnet broadcast address (returned %d extra pings)\n",  currenths->name, inet_ntoa(currenths->host), currenths->wierd_responses);
       }
       if (currenths->ports) {
-	nmap_log("Open ports on %s (%s):\n", currenths->name, 
+	nmap_log("Interesting ports on %s (%s):\n", currenths->name, 
 	       inet_ntoa(currenths->host));
 	printandfreeports(currenths->ports);
 	if (currenths->wierd_responses)
@@ -944,6 +944,10 @@ if (*ports) {
   /* case 1: we add to the front of the list */
   if (portno <= current->portno) {
     if (current->portno == portno && current->proto == protocol) {
+      if (current->state != state) {      
+	current->state = state;
+	return 0;
+      }
       if (o.debugging || o.verbose) 
 	printf("Duplicate port (%hi/%s)\n", portno , 
 	       (protocol == IPPROTO_TCP)? "tcp": "udp");
@@ -969,6 +973,10 @@ if (*ports) {
       current = current->next;
     if (current->next && current->next->portno == portno 
 	&& current->next->proto == protocol) {
+      if (current->state != state) {      
+	current->state = state;
+	return 0;
+      }
       if (o.debugging || o.verbose) 
 	printf("Duplicate port (%hi/%s)\n", portno , 
 	       (protocol == IPPROTO_TCP)? "tcp": "udp");
@@ -2188,27 +2196,22 @@ portlist pos_scan(struct hoststruct *target, unsigned short *portarray, stype sc
   char myname[513];
   int scanflags = 0;
 
-  int dropped = 0;  /* These three are for UDP squelching */
-  int freshportstried = 0;
   int victim;
   int senddelay = 0;
 
   pcap_t *pd;
-  int bytes;
-  struct ip *ip, *ip2;
-  struct tcphdr *tcp;
   struct bpf_program fcode;
   char err0r[PCAP_ERRBUF_SIZE];
   char filter[512];
   char *p;
   int tries = 0;
-  int tmp = 0, res;
+  int  res;
   unsigned int localnet, netmask;
-  int starttime, delta;
-  unsigned short newport;
+  int starttime;
   struct hostent *myhostent = NULL;
   struct sockaddr_in sock;
-  struct portinfo *scan, *openlist, *firewalled, *current, *fresh, *testinglist, *next;
+  struct portinfo *scan,  *current, *fresh, *next;
+  struct portinfolist pil;
   int portlookup[65536]; /* Indexes port number -> scan[] index */
   int decoy;
   struct timeval now;
@@ -2216,10 +2219,6 @@ portlist pos_scan(struct hoststruct *target, unsigned short *portarray, stype sc
 				 ones rather than simply incrementing from
 				 a base */
   int i;
-  unsigned short *data;
-  int packet_trynum = 0;
-  int windowdecrease = 0; /* Has the window been decreased this round yet? */
-  struct icmp *icmp;
 
   ss.packet_incr = 4;
   ss.fallback_percent = 0.7;
@@ -2228,12 +2227,14 @@ portlist pos_scan(struct hoststruct *target, unsigned short *portarray, stype sc
   ss.ports_left = o.numports;
   ss.alreadydecreasedqueries = 0;
 
+  bzero(&pil, sizeof(pil));
+
   if (scantype == SYN_SCAN)
     ss.max_width = 150;
   else ss.max_width = o.max_sockets;
   memset(portlookup, 255, 65536 * sizeof(int)); /* 0xffffffff better always be (int) -1 */
   scan = safe_malloc(o.numports * sizeof(struct portinfo));
-
+  
   /* Initialize our portlist (scan) */
   for(i = 0; i < o.numports; i++) {
     scan[i].state = PORT_FRESH;
@@ -2246,9 +2247,8 @@ portlist pos_scan(struct hoststruct *target, unsigned short *portarray, stype sc
     portlookup[portarray[i]] = i;
   }
 
-  current = fresh = testinglist = &scan[0]; /* fresh == unscanned ports, testinglist is a list of all ports that haven't been determined to be closed yet */
-  openlist = NULL; /* we haven't shown any ports to be open yet... */
-  firewalled = NULL; /* No firewalled b0xes either */
+  current = fresh = pil.testinglist = &scan[0]; /* fresh == unscanned ports, testinglist is a list of all ports that haven't been determined to be closed yet */
+
 
     
   /* Init our raw socket */
@@ -2287,6 +2287,7 @@ portlist pos_scan(struct hoststruct *target, unsigned short *portarray, stype sc
     p = strdup(inet_ntoa(target->host));
     sprintf(filter, "(icmp and dst host %s) or (tcp and src host %s and dst host %s)", inet_ntoa(target->source_ip), p, inet_ntoa(target->source_ip));
     free(p);
+    /* Stupid libpcap problem, is this Linux only? */
 #ifdef LINUX
     if (target->source_ip.s_addr == htonl(0x7F000001))
       filter[0] = '\0';
@@ -2323,34 +2324,34 @@ portlist pos_scan(struct hoststruct *target, unsigned short *portarray, stype sc
       if (o.verbose) printf("Bumping up senddelay, due to excessive drops\n");
     }
 			    
-    while(testinglist != NULL)  /* While we have live queries or more ports to scan */
+    while(pil.testinglist != NULL)  /* While we have live queries or more ports to scan */
     {
       /* Check the possible retransmissions first */
       gettimeofday(&now, NULL);
-      for( current = testinglist; current ; current = next) {
+      for( current = pil.testinglist; current ; current = next) {
 	next = (current->next > -1)? &scan[current->next] : NULL;
 	if (current->state == PORT_TESTING) {
 	  if ( TIMEVAL_SUBTRACT(now, current->sent[current->trynum]) > target->to.timeout) {
 	    if (current->trynum > 1) {
 	      /* No responses !#$!#@$ firewalled? */
 	      if (o.debugging) { printf("Moving port %hi to the potentially firewalled list\n", current->portno); }
-	      freshportstried--;
+	      if (current->state != PORT_TESTING)
+		fatal("Whacked port state!  Bailing!");
 	      current->state = PORT_FIREWALLED; /* For various reasons */
 	      /* First delete from old list */
 	      if (current->next > -1) scan[current->next].prev = current->prev;
 	      if (current->prev > -1) scan[current->prev].next = current->next;
-	      if (current == testinglist)
-		testinglist = (current->next >= 0)?  &scan[current->next] : NULL;
+	      if (current == pil.testinglist)
+		pil.testinglist = (current->next >= 0)?  &scan[current->next] : NULL;
 	      current->next = -1;
 	      current->prev = -1;
 	      /* Now move into new list */
-	      if (!firewalled) firewalled = current;
+	      if (!pil.firewalled) pil.firewalled = current;
 	      else {
-		current->next = firewalled - scan;
-		firewalled = current;
+		current->next = pil.firewalled - scan;
+		pil.firewalled = current;
 		scan[current->next].prev = current - scan;	      
 	      }
-	      ss.ports_left--;
 	      if (scantype == SYN_SCAN)
 		ss.numqueries_outstanding--;
 	      else {
@@ -2403,19 +2404,19 @@ portlist pos_scan(struct hoststruct *target, unsigned short *portarray, stype sc
 		
 		res =  connect(res,(struct sockaddr *)&sock,sizeof(struct sockaddr));
 		if (res != -1) {
-		  goodposport(target, current, current->trynum, scan, &ss, scantype, &testinglist);
+		  posportupdate(target, current, current->trynum, scan, &ss, scantype, PORT_OPEN, &pil);
 		}
 	      }
 	      if (senddelay) usleep(senddelay);
 	    }
 	  }
 	} else { 
+	  if (current->state != PORT_FRESH) fatal("State mismatch!%!@% %d", current->state);
 	  /* current->state == PORT_FRESH */
 	  /* OK, now we have gone through our list of in-transit queries, so now
 	     we try to send off new queries if we can ... */
 	  if (ss.numqueries_outstanding > (int) ss.numqueries_ideal) break;
 	  if (o.debugging > 1) printf("Sending initial query to port %hu\n", current->portno);
-	  freshportstried++;
 	  /* Otherwise lets send a packet! */
 	  current->state = PORT_TESTING;
 	  /*	if (!testinglist) testinglist = current; */
@@ -2440,25 +2441,24 @@ portlist pos_scan(struct hoststruct *target, unsigned short *portarray, stype sc
 	    
 	    res =  connect(res,(struct sockaddr *)&sock,sizeof(struct sockaddr));
 	    if (res != -1) {
-	      goodposport(target, current, current->trynum, scan,&ss, scantype, &testinglist);
+	      posportupdate(target, current, current->trynum, scan,&ss, scantype, PORT_OPEN, &pil);
 	    }
 	  }
 	  if (senddelay) usleep(senddelay);
 	}
       }
       /*      if (o.debugging > 1) printf("Ideal number of queries: %d outstanding: %d max %d ports_left %d timeout %d\n", (int) ss.numqueries_ideal, ss.numqueries_outstanding, ss.max_width, ss.ports_left, target->to.timeout);*/
-      tmp++;
+
       /* Now that we have sent the packets we wait for responses */
       ss.alreadydecreasedqueries = 0;
       if (scantype == SYN_SCAN)
-	get_syn_results(target, scan, &ss, openlist, firewalled, &testinglist,
-			portlookup, pd, sequences);
+	get_syn_results(target, scan, &ss, &pil, portlookup, pd, sequences);
       else {
 	/*	get_connect_results(target, scan, ss, openports);*/
       }
     }
 
-    if (ss.ports_left != 0 || ss.numqueries_outstanding != 0) {
+    if (ss.numqueries_outstanding != 0) {
       fatal("Bean counting error no. 4321897: ports_left: %d numqueries_outstanding: %d\n", ss.ports_left, ss.numqueries_outstanding);
     }
     
@@ -2466,35 +2466,37 @@ portlist pos_scan(struct hoststruct *target, unsigned short *portarray, stype sc
        meaning that some ports timed out.  We retry until nothing
        changes for a round (not counting the very first round).
     */
-    if (firewalled) {
+    if (pil.firewalled) {
       if (tries == 0 || ss.changed) {	
-	testinglist = firewalled;
-	ss.ports_left = 0;
-	for( current = testinglist; current ; 
+	pil.testinglist = pil.firewalled;
+	for( current = pil.testinglist; current ; 
 	     current = (current->next > -1)? &scan[current->next] : NULL) {
 	  current->state = PORT_FRESH;
-	  ss.ports_left++;
 	  current->trynum = 0;
 	  current->sd[0] = current->sd[1] = current->sd[2] = -1;
 	  if (o.debugging) { 
 	    printf("Preparing for retry, nonresponsive port %d noted\n", current->portno); 
 	  }
 	}
-	firewalled = NULL;
+	pil.firewalled = NULL;
       } else {
 	/* Consider the ports firewalled */	
-	for( current = firewalled; current ; 
+	for( current = pil.firewalled; current ; 
 	     current = (current->next > -1)? &scan[current->next] : NULL) {
-	  current->state = PORT_FIREWALLED;
+	  addport(&target->ports, current->portno, IPPROTO_TCP, NULL, PORT_FIREWALLED);
 	}
-	testinglist = NULL;
+	pil.testinglist = NULL;
       }
-	tries++;
+      tries++;
     }
     ss.numqueries_ideal = initial_packet_width;
     if (o.debugging)
       printf("Done with round %d\n", tries);
-  } while(testinglist);
+  } while(pil.testinglist && tries < 20);
+
+  if (tries == 20) {
+    error("WARNING: GAVE UP ON SYN SCAN AFTER 20 RETRIES");
+  }
 
   if (o.verbose)
     printf("The SYN scan took %ld seconds to scan %d ports.\n", 
@@ -2508,67 +2510,13 @@ portlist pos_scan(struct hoststruct *target, unsigned short *portarray, stype sc
 }
 
 /* Does the appropriate stuff when the port we are looking at is found
-   to be open trynum is the try number that was successful */
-void badposport(struct hoststruct *target, struct portinfo *current, 
-		 int trynum, struct portinfo *scan,
-		 struct scanstats *ss ,stype scantype, 
-		struct portinfo **testinglist) {
-int i;
-
-  if (o.debugging > 1)
-    printf("Got BAD packet (trynum %d, packetnum %d), srtt %d rttvar %d timeout %d ->", current->trynum, trynum, target->to.srtt, target->to.rttvar, target->to.timeout);
-
-/* Lets do the timing stuff */
-if (trynum > -1) 
-  adjust_timeouts(current->sent[trynum], &(target->to));
-
- if (o.debugging > 1)
-    printf(" srtt %d rttvar %d timeout %d\n", target->to.srtt, target->to.rttvar, target->to.timeout);
-
-
-
-/* If a non-zero trynum finds a closed port, droppage is a 
-   possibility.  To be conservative we decrease our numqueries_ideal
-   in this case, otherwise we increase it slightly */
-if (trynum == 0) {
-  ss->numqueries_ideal = MIN(ss->numqueries_ideal + (ss->packet_incr/ss->numqueries_ideal), ss->max_width);
-} else if (trynum != -1) {
-  if (!ss->alreadydecreasedqueries) {
-    ss->alreadydecreasedqueries = 1;
-    ss->numqueries_ideal *= ss->fallback_percent;
-    if (ss->numqueries_ideal < 1.0) ss->numqueries_ideal = 1.0;
-  }
-}
-
- current->state = PORT_CLOSED;
-
- if (scantype == CONNECT_SCAN) { 
-   for(i=0; i <= current->trynum; i++)
-     if (current->sd[i] > -1) {
-       close(current->sd[i]);
-       current->sd[i] = -1;
-       ss->numqueries_outstanding--;
-     }
- }
-
- /* Now we delete the port from the testinglist */
- if (current == *testinglist)
-   *testinglist = (current->next >= 0)? &scan[current->next] : NULL;
- if (current->next >= 0)  scan[current->next].prev = current->prev;
- if (current->prev >= 0)  scan[current->prev].next = current->next;
-
-}
-
-
-
-/* Does the appropriate stuff when the port we are looking at is found
    to be open trynum is the try number that was successful 
    I USE CURRENT->STATE TO DETERMINE WHETHER THE PORT IS OPEN
    OR FIREWALLED */
-void goodposport(struct hoststruct *target, struct portinfo *current, 
+void posportupdate(struct hoststruct *target, struct portinfo *current, 
 		 int trynum, struct portinfo *scan,
-		 struct scanstats *ss ,stype scantype, 
-		 struct portinfo **testinglist) {
+		 struct scanstats *ss ,stype scantype, int newstate,
+		 struct portinfolist *pil) {
 static int tryident = -1;
 static struct hoststruct *lasttarget = NULL;
 struct sockaddr_in mysock;
@@ -2579,7 +2527,7 @@ if (tryident == -1 || target != lasttarget)
   tryident = o.identscan;
 lasttarget = target;
 
-if (current->state == PORT_UNKNOWN) current->state = PORT_OPEN;
+/*if (newstate == PORT_CLOSED) current->state = PORT_OPEN;*/
 
 /* Lets do the timing stuff */
   if (o.debugging > 1) 
@@ -2590,12 +2538,7 @@ if (trynum > -1)
  if (o.debugging > 1) 
     printf(" srtt %d rttvar %d timeout %d\n", target->to.srtt, target->to.rttvar, target->to.timeout);
 
-/* lets see if the port has already been added */
-if (lookupport(target->ports, current->portno, IPPROTO_TCP)) {
-  /* All sockets have already been closed if connect scan since
-     we would have closed them when the first port was discovered */
-  return;
-} 
+
 
 /* If a non-zero trynum finds a port that hasn't been discovered, the
    earlier packets(s) were probably dropped.  So we decrease our 
@@ -2610,33 +2553,62 @@ if (trynum == 0) {
   }
 }
 
- if (o.verbose) printf("Adding TCP port %hi (state %d).\n", current->portno, current->state);
- owner[0] = '\0'; 
-
- if (scantype == CONNECT_SCAN && tryident) {
-   if (getsockname(current->sd[trynum], (SA *) &mysock,
-		   &sockaddr_in_len )) {
-     pfatal("getsockname");
+/* Now we convert current->state to state by making whatever adjustments
+   are neccessary */
+switch(current->state) {
+ case PORT_OPEN:
+   return; /* Whew!  That was easy! */
+   break;
+ case PORT_FRESH:
+   printf("Fresh port %hi passed to posportupdate!\n", current->portno);
+   return;
+   break;
+ case PORT_CLOSED:
+   current->state = newstate;
+   break;
+ case PORT_TESTING:
+   ss->changed++;
+   if (scantype == SYN_SCAN)
+     ss->numqueries_outstanding--;
+   else {
+     for(i=0; i <= current->trynum; i++)
+       if (current->sd[i] > -1) {
+	 close(current->sd[i]);
+	 current->sd[i] = -1;
+	 ss->numqueries_outstanding--;
+       }
    }
-   if (getidentinfoz(target->host, ntohs(mysock.sin_port), current->portno, owner) == -1)
-     tryident = 0;
- }
- addport(&target->ports, current->portno, IPPROTO_TCP, owner, current->state);
-
- if (scantype == CONNECT_SCAN) { 
-   /* Should do something with TCP banners here */
-   for(i=0; i <= current->trynum; i++)
-     if (current->sd[i] > -1) {
-       close(current->sd[i]);
-       current->sd[i] = -1;
-       ss->numqueries_outstanding--;
+   /* Now we delete the port from the testinglist */
+   if (current == pil->testinglist)
+     pil->testinglist = (current->next >= 0)? &scan[current->next] : NULL;
+   if (current->next >= 0)  scan[current->next].prev = current->prev;
+   if (current->prev >= 0)  scan[current->prev].next = current->next;
+   break;
+ case PORT_FIREWALLED:
+   ss->changed++;
+   if (current == pil->firewalled)
+     pil->firewalled = (current->next >= 0)? &scan[current->next] : NULL;
+   if (current->next >= 0)  scan[current->next].prev = current->prev;
+   if (current->prev >= 0)  scan[current->prev].next = current->next;
+   break;
+ default:
+   fatal("Unexpected port state: %d\n", current->state);
+   break;
+} 
+ current->state = newstate;
+ if (newstate == PORT_OPEN || newstate == PORT_FIREWALLED) {
+   if (o.verbose) printf("Adding TCP port %hi (state %d).\n", current->portno, current->state);
+   if (newstate == PORT_OPEN && scantype == CONNECT_SCAN && tryident) {
+     if (getsockname(current->sd[trynum], (SA *) &mysock,
+		     &sockaddr_in_len )) {
+       pfatal("getsockname");
      }
+     if (getidentinfoz(target->host, ntohs(mysock.sin_port), current->portno, owner) == -1)
+       tryident = 0;
+   }
+   addport(&target->ports, current->portno, IPPROTO_TCP, owner, newstate);
  }
-/* Now we delete the port from the testinglist */
- if (current == *testinglist)
-   *testinglist = (current->next >= 0)? &scan[current->next] : NULL;
- if (current->next >= 0)  scan[current->next].prev = current->prev;
- if (current->prev >= 0)  scan[current->prev].next = current->next;
+ return;
 }
 
 void adjust_timeouts(struct timeval sent, struct timeout_info *to) {
@@ -2651,15 +2623,14 @@ void adjust_timeouts(struct timeval sent, struct timeout_info *to) {
 }
 
 void get_syn_results(struct hoststruct *target, struct portinfo *scan,
-		     struct scanstats *ss, struct portinfo *openports, 
-		     struct portinfo *firewalled, 
-		     struct portinfo **testinglist, int *portlookup,
-		     pcap_t *pd, unsigned long *sequences) {
+		     struct scanstats *ss, struct portinfolist *pil, 
+		     int *portlookup, pcap_t *pd, unsigned long *sequences) {
+
 struct ip *ip;
 int bytes;
 struct tcphdr *tcp;
 int trynum;
-int state = -1;
+int newstate = -1;
 int i;
 int newport;
 struct portinfo *current;
@@ -2667,14 +2638,16 @@ struct icmp *icmp;
 struct ip *ip2;
 unsigned short *data;
 
-      while (ss->ports_left && ( ip = (struct ip*) readip_pcap(pd, &bytes))) {
+      while (ss->numqueries_outstanding > 0 && ( ip = (struct ip*) readip_pcap(pd, &bytes))) {
 	if (bytes < (4 * ip->ip_hl) + 4)
 	  continue;
 	current = NULL;
 	trynum = newport = -1;
+	newstate = PORT_UNKNOWN;
 	if (ip->ip_src.s_addr == target->host.s_addr && ip->ip_p == IPPROTO_TCP) {
 	  tcp = (struct tcphdr *) (((char *) ip) + 4 * ip->ip_hl);
 	  newport = ntohs(tcp->th_sport);
+	  /* In case we are scanning localhost and see outgoing packets */
 	  if (ip->ip_src.s_addr == target->source_ip.s_addr && !tcp->th_ack) {
 	    continue;
 	  }
@@ -2699,21 +2672,11 @@ unsigned short *data;
 	    trynum = (current->trynum == 0)? 0 : -1;
 	  }
 	  if ((tcp->th_flags & (TH_SYN|TH_ACK)) == (TH_SYN|TH_ACK)) {	  
-	    if (!(current->state & (PORT_OPEN|PORT_CLOSED|PORT_FIREWALLED))) {
-	      ss->changed++;
-	      ss->ports_left--;
-	      ss->numqueries_outstanding--;
-	    }
-	    current->state = PORT_OPEN;
+	    newstate = PORT_OPEN;
 	  }
 	  else if (tcp->th_flags & TH_RST) {	  
-	    if (!(current->state & (PORT_OPEN|PORT_CLOSED|PORT_FIREWALLED))) {
-	      ss->changed++;
-	      ss->ports_left--;
-	      ss->numqueries_outstanding--;
-	    }
-	    current->state = PORT_CLOSED;
-	  }
+	    newstate = PORT_CLOSED;
+	    }	
 	} else if (ip->ip_p == IPPROTO_ICMP) {
 	  icmp = (struct icmp *) ((char *)ip + sizeof(struct ip));
 	  ip2 = (struct ip *) (((char *) ip) + 4 * ip->ip_hl + 8);
@@ -2728,12 +2691,7 @@ unsigned short *data;
 	      if (portlookup[newport] >= 0) {
 		current = &scan[portlookup[newport]];
 		trynum = (current->trynum == 0)? 0 : -1;
-		if (!(current->state & (PORT_OPEN|PORT_CLOSED|PORT_FIREWALLED))) {
-		  ss->changed++;
-		  ss->ports_left--;
-		  ss->numqueries_outstanding--;
-		}
-		current->state = PORT_FIREWALLED;
+		newstate = PORT_FIREWALLED;
 	      }
 	      else { 
 		if (o.debugging) {
@@ -2748,12 +2706,7 @@ unsigned short *data;
 	      if (portlookup[newport] >= 0) {
 		current = &scan[portlookup[newport]];
 		trynum = (current->trynum == 0)? 0 : -1;
-		if (!(current->state & (PORT_OPEN|PORT_CLOSED|PORT_FIREWALLED))) {
-		  ss->changed++;
-		  ss->ports_left--;
-		  ss->numqueries_outstanding--;
-		}
-		current->state = PORT_FIREWALLED;
+		newstate = PORT_FIREWALLED;
 	      }
 	      else { 
 		if (o.debugging) {
@@ -2765,20 +2718,17 @@ unsigned short *data;
 	      break;
 	    }
 	  }	
-	}
+	}      
 	/* OK, now we manipulate the port lists and adjust the time */
 	if (current) {
-	  if (current->state & (PORT_OPEN|PORT_FIREWALLED)) {
-	    goodposport(target, current, trynum, scan, ss, SYN_SCAN, testinglist);
-	  } else {
-	    badposport(target,current,trynum,scan, ss,SYN_SCAN, testinglist);
-	  }
-
-
+	  posportupdate(target, current, trynum, scan, ss, SYN_SCAN, newstate,
+			pil);
+	  current = NULL;
+	  trynum = -1;
+	  newstate = PORT_UNKNOWN;
 	}
       }
 }
-
 
 portlist fin_scan(struct hoststruct *target, unsigned short *portarray) {
 

@@ -20,6 +20,13 @@ typedef struct port {
    int prev;
   };
 
+struct portinfolist {
+   struct portinfo *openlist;
+   struct portinfo *firewalled;
+   struct portinfo *testinglist;
+};
+
+
 /* The runtime statistics used to decide how fast to proced and how
    many ports we can try at once */
 struct scanstats {

@@ -239,12 +239,13 @@ void badposport(struct hoststruct *target, struct portinfo *current,
 		 int trynum, struct portinfo *scan,
 		 struct scanstats *ss ,stype scantype, 
 		struct portinfo **testinglist);
-
+void posportupdate(struct hoststruct *target, struct portinfo *current, 
+		 int trynum, struct portinfo *scan,
+		 struct scanstats *ss ,stype scantype, int newstate,
+		 struct portinfolist *pil);
 void get_syn_results(struct hoststruct *target, struct portinfo *scan,
-		     struct scanstats *ss, struct portinfo *openports, 
-		     struct portinfo *firewalled, 
-		     struct portinfo **testinglist, int *portlookup,
-		     pcap_t *pd, unsigned long *sequences);
+		     struct scanstats *ss, struct portinfolist *pil, 
+		     int *portlookup, pcap_t *pd, unsigned long *sequences);
 void adjust_timeouts(struct timeval sent, struct timeout_info *to);
 /* port manipulators */
 unsigned short *getpts(char *expr); /* someone stole the name getports()! */
