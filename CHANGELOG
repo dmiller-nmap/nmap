@@ -1,20 +1,25 @@
 # Nmap Changelog ($Id$)
 
+Nmap 2.54BETA30
+
+-- Added a Document Type Definition (DTD) for the Nmap XML output
+   format (-oX) to the docs directory.  This allows validating parsers
+   to check nmap XML output files for correctness.  It is also useful
+   for application programmers to understand the XML output structure.
+   The DTD was written by William McVey (wam@cisco.com) of Cisco Secure 
+   Consulting Services ( http://www.cisco.com/go/securityconsulting ).
+
 -- Merged in a number of Windows fixes/updates from Andy Lutomirski
    (Luto@myrealbox.com)
 
 -- Merged in fixes/updates (mostly to the Windows functionality) from
    Matt Hargett (matt@use.net)
 
--- Documented the --append_output option which tells Nmap to append 
-   scan results to any output files you have specified rather than 
-   overwriting the files.
+-- Applied patch by Colin Phipps (cph@netcraft.com) which correctly
+   encodes special characters in the XML output.
 
 -- Applied patch by William McVey (wam@cisco.com) which adds the uptime
    information printed with -O to the XML output format.
-   
--- Applied patch by Colin Phipps (cph@netcraft.com) which correctly
-   encodes special characters in the XML output.
 
 -- Fixed byte-order bug in Windows packet matching code which caused
    -PS and -PT to fail.  Bug found and patch sent by Tim Adam 
@@ -25,6 +30,10 @@
    version of Nmap, it is probably a bug -- please mail me the command 
    you used, the OS/platform you are running on, and whether it is
    reproducable.
+
+-- Documented the --append_output option which tells Nmap to append 
+   scan results to any output files you have specified rather than 
+   overwriting the files.
 
 -- Integrate TIMEVAL_SEC_SUBTRACT() fix by Scott Renfro (scott@renfro.org)
    which improves timing accuracy.

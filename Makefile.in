@@ -1,4 +1,4 @@
-NMAP_VERSION = 2.54BETA29
+NMAP_VERSION = 2.54BETA30
 NMAP_NAME= nmap
 NMAP_URL= www.insecure.org/nmap/
 NMAP_PLATFORM=@host@
@@ -121,7 +121,7 @@ distro:
 	            nmap_manpage-it.html nmap_manpage.html \
                     nmap_spanish.1 nmap_lithuanian.1 nmap_italian.1 \
                     nmap_portuguese.1 nmapfe.1 \
-	            xnmap.1 \
+	            xnmap.1 nmap.dtd \
                     /usr/tmp/nmap-$(NMAP_VERSION)/docs
 	$(SHTOOL) mkdir /usr/tmp/nmap-$(NMAP_VERSION)/nmapfe
 	cd nmapfe; cp -ra Makefile.in aclocal.m4 configure configure.in \
