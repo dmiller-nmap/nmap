@@ -16,6 +16,11 @@ int addport(portlist *plist, unsigned short portno, unsigned short protocol,
   struct port *current = NULL;
   struct port **portarray = NULL;
 
+  if (o.debugging > 1) {
+    error("addport: Adding port %hi/%s (owner: %s) in state %s",
+	  portno, (protocol == IPPROTO_TCP)? "tcp" : "udp", (owner)? owner : "none", statenum2str(state));
+  }
+
 /* Make sure state is OK */
   if (state != PORT_OPEN && state != PORT_CLOSED && state != PORT_FIREWALLED &&
       state != PORT_UNFIREWALLED)
