@@ -1931,6 +1931,7 @@ if (o.debugging || o.verbose)
       /* Now that we have sent the packets we wait for responses */
       windowdecrease = 0;
       while (( ip = (struct ip*) readip_pcap(pd, &bytes))) {
+	printf("G0t packet\n");
 	if (bytes < (4 * ip->ip_hl) + 4)
 	  continue;
 	if (ip->ip_src.s_addr == target->host.s_addr) {
