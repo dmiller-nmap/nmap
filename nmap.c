@@ -1821,8 +1821,8 @@ while(!done) {
       for(decoy=0; decoy < o.numdecoys; decoy++) {
 	if (o.fragscan)
 	  send_small_fragz(rawsd, &o.decoys[decoy], &target->host, MAGIC_PORT, portno[i], scanflags);
-	/*	else send_tcp_raw(rawsd, &o.decoys[decoy], &target->host, MAGIC_PORT, 
-		portno[i], 0, 0, scanflags, 0, 0, 0);*/
+	else send_tcp_raw(rawsd, &o.decoys[decoy], &target->host, MAGIC_PORT, 
+			  portno[i], 0, 0, scanflags, 0, 0, 0);
 	usleep(10000); /* *WE* normally do not need this, but the target 
 			  lamer often does */
       }
