@@ -91,6 +91,8 @@ int main(int argc, char *argv[]) {
       break;
     linelen = strlen(line);
     /* Check if it is a duplicate testname */
+    if (*line == '#')
+      continue;
     p = strchr(line, '(');
     if (p) {
       *p = '\0';
