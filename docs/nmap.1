@@ -645,16 +645,16 @@ is actually up on the network.  You might want to use IP
 addresses instead of names (so the decoy networks don't see
 you in their nameserver logs).
 .Sp
-Also note that some (stupid) "port scan detectors" will
-firewall/deny routing to hosts that attempt port scans.
-Thus you might inadvertently cause the machine you scan to
-lose connectivity with the decoy machines you are using.
-This could cause the target machines major problems if the
-decoy is, say, its Internet gateway or even "localhost".
-Thus you might want to be careful of this option.  The real
-moral of the story is that detectors of spoofable port scans
-should not take action against the machine that seems like
-it is port scanning them.  It could just be a decoy!
+Also note that some "port scan detectors" will
+firewall/deny routing to hosts that attempt port scans.  The problem
+is that many scan types can be forged (as this option demonstrates).
+So attackers can cause such a machine to sever connectivity with
+important hosts such as its internet gateway, DNS TLD servers, sites
+like Windows Update, etc.  Most such software offers whitelist
+capabilities, but you are unlikely to enumerate all of the critical
+machines.  For this reason we never recommend taking
+action against port scan that can be forged, including SYN scans, UDP
+scans, etc.  The machine you block could just be a decoy.
 .Sp
 Decoys are used both in the initial ping scan (using ICMP,
 SYN, ACK, or whatever) and during the actual port scanning

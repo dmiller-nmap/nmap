@@ -35,6 +35,15 @@ o Made Ident-scan (-I) limits on the length and type of responses
   characters.  The new length limit is 32.  Thanks to Tom Rune Flo
   (tom(a)x86.no) for the suggestion and a patch.
 
+o Service scan now chops commas and whitespace from the end of
+  vendorproductname, version, and info fields.  This makes it easier to
+  write templates incorporating lists.  For example, the tcpmux service
+  (TCP port 1) gives a list of supported services separated by CRLF.
+  Nmap uses this new feature to print them comma separated without
+  having an annoying trailing comma as so (linewrapped):
+  match tcpmux m|^(sgi_[-.\w]+\r\n([-.\w]+\r\n)*)$| 
+        v/SGI IRIX tcpmux//Available services: $SUBST(1, "\r\n", ",")/
+
 Nmap 3.48
 
 o Integrated an enormous number of version detection service

@@ -657,7 +657,7 @@ static int substvar(char *tmplvar, char **tmplvarend, char *newstr,
 // that was run against subject, and subjectlen, with the 'nummatches'
 // matches in ovector.  The NUL-terminated newly composted string is
 // placed into 'newstr', as long as it doesn't exceed 'newstrlen'
-// bytes.  Returns zero for success
+// bytes.  Trailing whitespace and commas are removed.  Returns zero for success
 static int dotmplsubst(const u8 *subject, int subjectlen, 
 		       int *ovector, int nummatches, char *tmpl, char *newstr,
 		       int newstrlen) {
@@ -680,6 +680,11 @@ static int dotmplsubst(const u8 *subject, int subjectlen,
 	*dst++ = *srcstart++;
       }
       *dst = '\0';
+      while (--dst >= newstr) {
+	if (isspace(*dst) || *dst == ',') 
+	  *dst = '\0';
+	else break;
+      }
       return 0;
     } else {
       // Copy the literal text up to the '$', then do the substitution
@@ -702,6 +707,11 @@ static int dotmplsubst(const u8 *subject, int subjectlen,
   if (dst >= newstrend - 1)
     return -1;
   *dst = '\0';
+  while (--dst >= newstr) {
+    if (isspace(*dst) || *dst == ',') 
+      *dst = '\0';
+    else break;
+  }
   return 0;
 
 }

@@ -821,8 +821,11 @@ T6(Resp=Y%DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(Resp=N)
 
-Fingerprint Alcatel Advanced Reflexes IP Phone, Version: E/AT400/46.8
+# Advanced Reflexes IP Phone, Version: E/AT400/46.8
+# IBM x450 remote management console (lets you switch machine on/off, check temp, etc)
+Fingerprint Alcatel Advanced Reflexes IP Phone or IBM x450 remote management console
 Class Alcatel | embedded || VoIP phone
+Class IBM | embedded || specialized
 TSeq(Class=TR%gcd=<6%IPID=I%TS=U)
 T1(DF=N%W=3E80%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=ARF%Ops=)
@@ -10594,7 +10597,8 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(Resp=N)
 
 # Tektronix Phaser 360 Extended
-Fingerprint Tektronix Phaser 360 printer
+# Tektronix Phaser 750
+Fingerprint Tektronix Phaser printer
 Class Tektonix | embedded || printer
 TSeq(Class=i800)
 T1(DF=N%W=F87%ACK=S++%Flags=AS%Ops=ME)
