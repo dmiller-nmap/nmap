@@ -40,7 +40,7 @@ T6(DF=Y%W=0%ACK=O%Flags=R%Ops=)
 T7(Resp=N)
 PU(DF=Y%TOS=0%IPLEN=70%RIPTL=148%RID=E|F%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
-Fingerprint 3Com Access Builder 4000 7.2
+Fingerprint 3Com Access Builder 4000 Switch
 T1(DF=N%W=0|800%ACK=S++%Flags=AR|AS%Ops=|M)
 T2(Resp=Y%DF=N%W=0%ACK=O%Flags=AR%Ops=)
 T3(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
@@ -1996,7 +1996,7 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=C0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
-Fingerprint Cisco CacheEngine
+Fingerprint Cisco Cache Engine Web Proxy
 TSeq(Class=RI%gcd=<6%SI=>FF&<FFFF)
 T1(DF=N%W=2017%ACK=S++%Flags=AS%Ops=MNW)
 T2(Resp=N)
