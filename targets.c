@@ -1,6 +1,7 @@
 #include "targets.h"
 
 extern struct ops o;
+
 struct hoststruct *nexthost(char *hostexp, int lookahead, int pingtimeout) {
 static int lastindex = -1;
 static struct hoststruct *hostbatch  = NULL;
@@ -272,7 +273,7 @@ int blockinc;
 int sd_blocking = 1;
 struct sockaddr_in sock;
 short seq = 0;
-int sd, rawsd;
+int sd, rawsd, rawpingsd;
 struct timeval *time;
 struct timeval start, end, t1, t2;
 unsigned short id;
@@ -347,6 +348,10 @@ if (o.numdecoys > 1 || ptech.rawtcpscan || ptech.rawicmpscan) {
   if ((rawsd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) < 0 )
     pfatal("socket trobles in massping");
   if (o.allowall) broadcast_socket(rawsd);
+
+  if ((rawpingsd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) < 0 )
+    pfatal("socket trobles in massping");
+  if (o.allowall) broadcast_socket(rawpingsd);
 }
 else rawsd = -1; 
 
@@ -407,7 +412,7 @@ gettimeofday(&start, NULL);
 	   block_socket(sd); sd_blocking = 1; 
 	 }
 	 if (ptech.icmpscan || ptech.rawicmpscan)
-	   sendpingquery(sd, rawsd, &hostbatch[hostnum],  
+	   sendpingquery(sd, rawpingsd, &hostbatch[hostnum],  
 			 seq, id, &ss, time, ptech);
        
 	 if (ptech.rawtcpscan) {
@@ -467,6 +472,7 @@ gettimeofday(&start, NULL);
  close(sd);
  if (o.numdecoys > 1)
    close(rawsd);
+ if (ptech.connecttcpscan) free(tqi.sockets);
  if (sd >= 0) close(sd);
  if (rawsd >= 0) close(rawsd);
  free(time);
@@ -846,7 +852,7 @@ while(pt->block_unaccounted) {
   }
   gettimeofday(&end, NULL);
   tm = TIMEVAL_SUBTRACT(end,start);  
-  if (tm > (10 * to->timeout)) {
+  if (tm > (30 * to->timeout)) {
     error("WARNING: getconnecttcpscanresults is taking way to long, skipping");
     break;
   }

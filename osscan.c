@@ -373,36 +373,43 @@ struct AVal *fingerprint_iptcppacket(struct ip *ip, int mss, unsigned long syn) 
   char *p,*q;
   struct tcphdr *tcp = ((struct tcphdr *) (((char *) ip) + 4 * ip->ip_hl));
 
-  AVs = malloc(5 * sizeof(struct AVal));
+  AVs = malloc(6 * sizeof(struct AVal));
 
   /* Link them together */
   AVs[0].next = &AVs[1];
   AVs[1].next = &AVs[2];
   AVs[2].next = &AVs[3];
   AVs[3].next = &AVs[4];
-  AVs[4].next = NULL;
+  AVs[4].next = &AVs[5];
+  AVs[5].next = NULL;
 
-  /* First we check whether the Don't Fragment bit is set */
-  AVs[0].attribute = "DF";
+  /* First we give the "response" flag to say we did actually receive
+     a packet -- this way we won't match a template with Resp=N */
+  AVs[0].attribute = "Resp";
+  strcpy(AVs[0].value, "Y");
+
+
+  /* Next we check whether the Don't Fragment bit is set */
+  AVs[1].attribute = "DF";
   if(ip->ip_off && 0x4000) {
-    strcpy(AVs[0].value,"Y");
-  } else strcpy(AVs[0].value, "N");
+    strcpy(AVs[1].value,"Y");
+  } else strcpy(AVs[1].value, "N");
 
   /* Now we do the TCP Window size */
-  AVs[1].attribute = "W";
-  sprintf(AVs[1].value, "%hX", ntohs(tcp->th_win));
+  AVs[2].attribute = "W";
+  sprintf(AVs[2].value, "%hX", ntohs(tcp->th_win));
 
   /* Time for the ACK, the codes are:
      S   = same as syn
      S++ = syn + 1
      O   = other
   */
-  AVs[2].attribute = "ACK";
+  AVs[3].attribute = "ACK";
   if (ntohl(tcp->th_ack) == syn + 1)
-    strcpy(AVs[2].value, "S++");
+    strcpy(AVs[3].value, "S++");
   else if (ntohl(tcp->th_ack) == syn) 
-    strcpy(AVs[2].value, "S");
-  else strcpy(AVs[2].value, "O");
+    strcpy(AVs[3].value, "S");
+  else strcpy(AVs[3].value, "O");
     
   /* Now time for the flags ... they must be in this order:
      B = Bogus (64, not a real TCP flag)
@@ -413,8 +420,8 @@ struct AVal *fingerprint_iptcppacket(struct ip *ip, int mss, unsigned long syn) 
      S = Synchronize
      F = Final
   */
-  AVs[3].attribute = "Flags";
-  p = AVs[3].value;
+  AVs[4].attribute = "Flags";
+  p = AVs[4].value;
   if (tcp->th_flags & TH_BOG) *p++ = 'B';
   if (tcp->th_flags & TH_URG) *p++ = 'U';
   if (tcp->th_flags & TH_ACK) *p++ = 'A';
@@ -425,8 +432,8 @@ struct AVal *fingerprint_iptcppacket(struct ip *ip, int mss, unsigned long syn) 
   *p++ = '\0';
 
   /* Now for the TCP options ... */
-  AVs[4].attribute = "Ops";
-  p = AVs[4].value;
+  AVs[5].attribute = "Ops";
+  p = AVs[5].value;
   /* Partly swiped from /usr/src/linux/net/ipv4/tcp_input.c in Linux kernel */
   length = (tcp->th_off * 4) - sizeof(struct tcphdr);
   q = ((char *)tcp) + sizeof(struct tcphdr);
@@ -554,6 +561,20 @@ int AVal_match(struct AVal *reference, struct AVal *fprint) {
   return 1;  
 }
 
+void freeFingerPrint(FingerPrint *FP) {
+FingerPrint *currentFP;
+FingerPrint *nextFP;
+
+if (!currentFP) return;
+
+ for(currentFP = FP; currentFP; currentFP = nextFP) {
+   nextFP = currentFP->next;
+   if (currentFP->results)
+     free(currentFP->results);
+   free(currentFP);
+ }
+return;
+}
 
 
 int os_scan(struct hoststruct *target) {

@@ -446,16 +446,20 @@ o.decoys[o.decoyturn] = currenths->source_ip;
 	  nmap_log("Host  %s (%s) seems to be a subnet broadcast address (returned %d extra pings)\n",  currenths->name, inet_ntoa(currenths->host), currenths->wierd_responses);
       } if (o.osscan) {
 	if (currenths->seq.responses > 3) {
-	  nmap_log("TCP Seq prediction report:  %s\n", seqreport(&(currenths->seq)));
+	  nmap_log("%s", seqreport(&(currenths->seq)));
 	}
 	if (currenths->FP_matches[0]) {
-	  i=0;
 	  if (!currenths->FP_matches[1])
-	    nmap_log("Remote operating system guess: ");
-	  else  nmap_log("Remote OS guesses: ");
-	  while(currenths->FP_matches[i]) {
-	    nmap_log(" %s", currenths->FP_matches[i]->OS_name);
-	    i++;
+	    nmap_log("Remote operating system guess: %s", 
+		     currenths->FP_matches[0]->OS_name);
+	  else  {
+	    nmap_log("Remote OS guesses: %s", 
+		     currenths->FP_matches[0]->OS_name);
+	    i = 1;
+	    while(currenths->FP_matches[i]) {
+	      nmap_log(", %s", currenths->FP_matches[i]->OS_name);
+	      i++;
+	    }
 	  }
 	  nmap_log("\n");
 	  if (o.debugging || o.verbose > 1) {
@@ -465,6 +469,7 @@ o.decoys[o.decoyturn] = currenths->source_ip;
 	} else {
 	  nmap_log("No OS matches for this host.  TCP fingerprint:\n%s\n\n", fp2ascii(currenths->FP));
 	}
+	freeFingerPrint(currenths->FP);
       }
     }
     fflush(stdout);
@@ -656,7 +661,7 @@ Options (none are required, most can be combined):\n\
    -PT Use \"TCP Ping\" to see what hosts are up (for normal and ping scans).\n\
    -PT80 Use \"TCP Ping\" scan with probe destination port of 80 (or whatever).\n\
    -PI Use ICMP ping packet to determines hosts that are up (default for root users)\n\
-   -i Get identd (rfc 1413) info on listening TCP processes.\n\
+   -I Get identd (rfc 1413) info on listening TCP processes.\n\
    -p <range> ports: ex: \'-p 23\' will only try port 23 of the host(s)\n\
                   \'-p 20-30,63000-\' scans 20-30 and 63000-65535. default: 1-1024\n\
    -D <decoy_host> Make it appear that a scan is also coming from decoy_host.  Even\n\
@@ -990,7 +995,7 @@ char tmp[256];
 char *p;
 int i;
 int len;
- sprintf(report, "Class=%s; Difficulty=%s; Index=%d  (lower=easier)", seqclass2ascii(seq->class), (seq->index < 10)? "Trivial joke" : (seq->index < 40)? "Easy" : (seq->index < 150)? "Medium" : (seq->index < 1000)? "Formidable" : (seq->index < 100000)? "Very difficult" : "Good luck!", seq->index);
+ sprintf(report, "TCP Sequence Prediction:  Class=%s\n                          Difficulty=%s; Seq Index=%d (lower=easier)\n", seqclass2ascii(seq->class), (seq->index < 10)? "Trivial joke" : (seq->index < 40)? "Easy" : (seq->index < 150)? "Medium" : (seq->index < 1000)? "Formidable" : (seq->index < 100000)? "Very difficult" : "Good luck!", seq->index);
  if (o.verbose) {
    tmp[0] = '\n';
    tmp[1] = '\0'; 
@@ -1001,6 +1006,7 @@ int len;
      len = sprintf(p, "%lX ", seq->seqs[i]);
      p += len;
    }
+   *--p = '\n';
    strcat(report, tmp);
  }
 return report;
@@ -2386,6 +2392,7 @@ portlist pos_scan(struct hoststruct *target, unsigned short *portarray, stype sc
     if ((rawsd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) < 0 )
       pfatal("socket trobles in super_scan");
     unblock_socket(rawsd);
+    broadcast_socket(rawsd);
     
 
     /* Init ISNs */
@@ -2731,6 +2738,16 @@ if (trynum == 0) {
   }
 }
 
+/* Collect IDENT info if requested */
+ if (newstate == PORT_OPEN && scantype == CONNECT_SCAN && tryident) {
+   if (getsockname(current->sd[trynum], (SA *) &mysock,
+		   &sockaddr_in_len )) {
+     pfatal("getsockname");
+   }
+   if (getidentinfoz(target->host, ntohs(mysock.sin_port), current->portno, owner) == -1)
+     tryident = 0;
+ }
+
 /* Now we convert current->state to state by making whatever adjustments
    are neccessary */
 switch(current->state) {
@@ -2782,15 +2799,9 @@ switch(current->state) {
  current->state = newstate;
  if (newstate == PORT_OPEN || newstate == PORT_FIREWALLED) {
    if (o.verbose) printf("Adding TCP port %hi (state %s).\n", current->portno, (current->state == PORT_OPEN)? "Open" : "Firewalled");
-   if (newstate == PORT_OPEN && scantype == CONNECT_SCAN && tryident) {
-     if (getsockname(current->sd[trynum], (SA *) &mysock,
-		     &sockaddr_in_len )) {
-       pfatal("getsockname");
-     }
-     if (getidentinfoz(target->host, ntohs(mysock.sin_port), current->portno, owner) == -1)
-       tryident = 0;
-   }
+
    addport(&target->ports, current->portno, IPPROTO_TCP, owner, newstate);
+
  }
  return;
 }

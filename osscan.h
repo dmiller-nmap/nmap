@@ -21,6 +21,7 @@ FingerPrint **match_fingerprint(FingerPrint *FP);
 struct AVal *str2AVal(char *p);
 struct AVal *gettestbyname(FingerPrint *FP, char *name);
 int AVal_match(struct AVal *reference, struct AVal *fprint); 
+void freeFingerPrint(FingerPrint *FP);
 #endif /*OSSCAN_H*/
 
 
