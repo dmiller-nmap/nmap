@@ -1,4 +1,4 @@
-NMAP_VERSION = 3.59ALPHA3
+NMAP_VERSION = 3.59ALPHA5
 NMAP_NAME= nmap
 NMAP_URL= http://www.insecure.org/nmap/
 NMAP_PLATFORM=@host@
@@ -216,7 +216,7 @@ distro:
                             nsock_event.c nsock_internal.h nsock_iod.c \
                             nsock_pool.c nsock_read.c nsock_ssl.h \
                             nsock_ssl.c nsock_timers.c \
-                            nsock_write.c utils.c utils.h \
+                            nsock_write.c nsock_utils.c nsock_utils.h \
                             /usr/tmp/nmap-$(NMAP_VERSION)/nsock/src/
 
 	rm -f /usr/tmp/nmap-$(NMAP_VERSION)/nbase/nbase_config.h 

@@ -104,7 +104,7 @@ case "$host" in
     AC_DEFINE(STUPID_SOLARIS_CHECKSUM_BUG)
     AC_DEFINE(SOLARIS)
     ;;
-  *-solaris2.[1-9][0-9]*)
+  *-solaris2.[[1-9]][[0-9]]*)
     AC_DEFINE(SOLARIS)
     ;;
   *-solaris2.1*)

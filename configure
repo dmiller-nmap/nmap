@@ -2895,7 +2895,7 @@ _ACEOF
 _ACEOF
 
     ;;
-  *-solaris2.1-90-9*)
+  *-solaris2.[1-9][0-9]*)
     cat >>confdefs.h <<\_ACEOF
 #define SOLARIS 1
 _ACEOF

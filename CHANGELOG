@@ -1,9 +1,24 @@
 # Nmap Changelog ($Id$)
 
+o Fixed a bug that caused the source host (localhost) to be
+  skipped when scanning a network that includes the host itself (at
+  least on Linux).
+
+o Fixed Solaris 10 detection by the build system, thanks to a patch by
+  Tom Duffy (tduffy(a)sun.com).
+
+o Improved Windows support when using the MingW compiler thanks to a
+  patch from Gisle Vanem (giva(a)bgnett.no).
+
+Nmap 3.59ALPHA4
+
 o Many Windows portability fix and bug fixes, thanks to patch from
   Gisle Vanem (giva(a)bgnett.no).  With these changes, he was able to
   compile Nmap on Windows using MingW + gcc 3.4 C++ rather than MS
   Visual Studio.
+
+o Made a number of important timing fixes, that should spead things up
+  against hosts where many packet drops were detected.
 
 o Fixed compilation on Solaris versions < 2.51 thanks to a patch by
   Tom Duffy (tduffy(a)sun.com)

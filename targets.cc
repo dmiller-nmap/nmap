@@ -309,7 +309,10 @@ do {
 
       /* In some cases, we can only allow hosts that use the same device
 	 in a group. */
-      if (o.af() == AF_INET && o.isr00t && hidx > 0 && *hs->hostbatch[hidx]->device && hs->hostbatch[hidx]->v4source().s_addr != hs->hostbatch[0]->v4source().s_addr) {
+      if (o.af() == AF_INET && o.isr00t && hidx > 0 && 
+	  *hs->hostbatch[hidx]->device && 
+	  (hs->hostbatch[hidx]->v4source().s_addr != hs->hostbatch[0]->v4source().s_addr || 
+	   strcmp(hs->hostbatch[0]->device, hs->hostbatch[hidx]->device) != 0)) {
 	/* Cancel everything!  This guy must go in the next group and we are
 	   outtof here */
 	hs->current_expression.return_last_host();
