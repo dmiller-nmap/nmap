@@ -648,6 +648,8 @@ match telnet m|^\xff\xfb\x01\r\n\r\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*
 match telnet m|^\xff\xfb\x01\r\n\r\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\n\r\r\* Nortel Networks,Inc\..*\n\r\r\* Passport ([-.\w]+) .*\r\* Software Release (\d[-.\w]+) |s v/Nortel Networks Passport switch telnetd/$2/Passport $1/
 # NCD Thinstar 300 running NCD Software 2.31 build 6
 match telnet m|^\xff\xfb\x03\xff\xfd\x03\xff\xfb\x01WinCE/WBT Command Shell Version (\d[-.\w]+)\r\nSerial Number: (\w+)  MAC Address: 0000(\w+)\r\nUUID: [-\w]+\r\nPassword: | v/NCD Thinster terminal command shell/$1/Serial# $2; MAC $3/
+# Netopia 4542 aDSL router telnetd
+match telnet m|^\xff\xfb\x01\xff\xfd\x03\xff\xfb\x03\x1b\[2J\x1b\[Hname:| v/Netopia aDSL router telnetd///
 
 # NetportExpress PRO/100 3 port print server
 match telnet m|^\xff\xfb\x01\r\nNetportExpress\(tm\) ([-/.+\w]+)\r\n.*\r\n\r\nlogin: | v/Intel NetportExpress print server telnetd//Model $1/
@@ -1789,7 +1791,7 @@ ports 1352
 # Lotus Notes domino 5.0.11
 # Lotus Server 6.0.1
 # Lotus Domino (r) Server (Release 6.0.1CF1 for Windows/32
-match lotusnotes m|^.\0\0\0.\0\0\0\x03\0\0@\x02\x0f\0.\x009......\x03\0\0\0\0\x02\0/\0.\0\0\0\0\0\0\0@\x1f.*CN=([-.\w ]+)/O=([-.\w ]+)[^-.\w ]|s v/Lotus Domino server//CN=$1;Org=$2/
+match lotusnotes m|^.\0\0\0.\0\0\0\x03\0\0@\x02\x0f\0.*\x03\0\0\0\0\x02\0/\0.\0\0\0\0\0\0\0@\x1f.*CN=([-.\w ]+)/O=([-.\w ]+)[^-.\w ]|s v/Lotus Domino server//CN=$1;Org=$2/
 ##############################NEXT PROBE##############################
 Probe UDP Sqlping q|\x02|
 ports 1434

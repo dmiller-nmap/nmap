@@ -207,6 +207,7 @@ int nmap_main(int argc, char *argv[]) {
   HostGroupState *hstate = NULL;
   int numhosts_up = 0;
   int starttime;
+  char *endptr = NULL;
   struct scan_lists *ports = NULL;
   TargetGroup *exclude_group = NULL;
   char myname[MAXHOSTNAMELEN + 1];
@@ -453,8 +454,8 @@ int nmap_main(int argc, char *argv[]) {
 	}
       } else if (strcmp(long_options[option_index].name, "iR") == 0) {
 	o.generate_random_ips = 1;
-	o.max_ips_to_scan = atoi(optarg);
-	if (o.max_ips_to_scan < 0) {
+	o.max_ips_to_scan = strtoul(optarg, &endptr, 10);
+	if (*endptr != '\0') {
 	  fatal("ERROR: -iR argument must be the maximum number of random IPs you wish to scan (use 0 for unlimited)");
 	}
       } else if (strcmp(long_options[option_index].name, "sI") == 0) {
@@ -754,6 +755,10 @@ int nmap_main(int argc, char *argv[]) {
     if (strftime(tbuf, sizeof(tbuf), "%Y-%m-%d %H:%M %Z", tm) <= 0)
       fatal("Unable to properly format time");
     log_write(LOG_STDOUT|LOG_SKID, "\nStarting %s %s ( %s ) at %s\n", NMAP_NAME, NMAP_VERSION, NMAP_URL, tbuf);
+    if (o.verbose && tm->tm_mon == 8 && tm->tm_mday == 1) {
+      log_write(LOG_STDOUT|LOG_SKID, "Happy %dth Birthday to Nmap, may it live to be %d!\n", tm->tm_year - 97, tm->tm_year + 3 );
+    }
+
   }
 
   if ((o.pingscan || o.listscan) && fastscan) {

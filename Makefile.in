@@ -1,4 +1,4 @@
-NMAP_VERSION = 3.59ALPHA6
+NMAP_VERSION = 3.70
 NMAP_NAME= nmap
 NMAP_URL= http://www.insecure.org/nmap/
 NMAP_PLATFORM=@host@
@@ -170,7 +170,7 @@ distro:
            Win32/Src/inet_pton.c /usr/tmp/nmap-$(NMAP_VERSION)/$(LIBPCAPDIR)
 
 	$(SHTOOL) mkdir /usr/tmp/nmap-$(NMAP_VERSION)/docs
-	cd docs; cp -ra README COPYING COPYING.OpenSSL 
+	cd docs; cp -ra README \
                     nmap-fingerprinting-article.txt \
                     nmap.deprecated.txt nmap.usage.txt nmap_doc.html \
                     nmap_manpage-de.html nmap_manpage-es.html \

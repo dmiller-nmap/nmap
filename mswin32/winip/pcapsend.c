@@ -108,7 +108,7 @@ static int SearchARP(DWORD ip, int ifi, BYTE *phys, int *physlen);
 
 static CRITICAL_SECTION csAdapter, csQueue, csFailCache, csArpCache, csArpTable;
 static HANDLE hEvWakeup, hThread, hSemQueue;
-static killthread = 0;
+static int killthread = 0;
 
 //	For rawsock fallback
 extern SOCKET global_raw_socket;
@@ -813,7 +813,7 @@ void pcapsend_init()
 	nRes = GetIpNetTableSafe(pArpTable, &arpalloclen, FALSE);
 	if(arpalloclen == 0)
 	{
-		if(o.debugging)
+		if(o.debugging && nRes != ERROR_NO_DATA)
 			printf("ARP table length failure (%lu) during init -- try kludge1 :(\n", nRes);
 		arpalloclen = 100 * sizeof(MIB_IPNETROW) + 8;
 	}
@@ -830,7 +830,7 @@ void pcapsend_init()
 
 	if(nRes != NO_ERROR)
 	{
-		if(o.debugging)
+		if(o.debugging && nRes != ERROR_NO_DATA)
 			printf("ARP failure (%lu) during init -- trying kludge2\n", nRes);
 		pArpTable->dwNumEntries = 0;
 	}

@@ -53,7 +53,7 @@ pcap_t *rawrecv_open(const char *dev)
 	struct sockaddr_in sin;
 
 	if(o.debugging > 1)
-		printf("Trying to open %s for rawsock recieve\n", dev);
+		printf("Trying to open %s for rawsock receive\n", dev);
 
 	ZeroMemory(&sin, sizeof(sin));
 	sin.sin_family = AF_INET;

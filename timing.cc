@@ -268,8 +268,8 @@ bool ScanProgressMeter::mayBePrinted(const struct timeval *now) {
     return false;
 
   if (!now) {
-    *(struct timeval *)now = tv;
-    gettimeofday((struct timeval *)now, NULL);
+    gettimeofday(&tv, NULL);
+    now = (const struct timeval *) &tv;
   }
 
   if (last_print.tv_sec == 0) {
@@ -307,8 +307,8 @@ bool ScanProgressMeter::printStatsIfNeccessary(double perc_done,
   struct tm *ltime;
 
   if (!now) {
-    *(struct timeval *)now = tvtmp;
-    gettimeofday((struct timeval *)now, NULL);
+    gettimeofday(&tvtmp, NULL);
+    now = (const struct timeval *) &tvtmp;
   }
   
   if (!mayBePrinted(now))

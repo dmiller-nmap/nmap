@@ -1,18 +1,31 @@
 # Nmap Changelog ($Id$)
 
+o Nmap now wishes itself a happy birthday when run on September 1 in
+  verbose mode!  The first public release was on that date in 1997.
+
+o Removed a spurious warning message relating to the Windows ARP cache
+  being empty.  Patch by Gisle Vanem (giva(a)bgnett.no).
+
+o Changed the argument parser to better detect bogus arguments to the
+  -iR option.
+
+o Fixed a compilation problem when using some new versions of g++.
+  The problem was noted and patch sent by Gisle Vanem
+  (giva(a)bgnett.no).
+
 Nmap 3.59ALPHA7
+
+o Fixed a problem which could cause a deadlock in some dropped packet
+  cases.
+
+o Fixed some serious runtime portability issues on *BSD systems.
+  Thanks to Eric (catastrophe.net) for reporting the problem.
 
 o Tweaked the License blurb on source files and in the man page.  It
   clarifies some issues and includes a new GPL exception that
   explicitly allows linking with the OpenSSL library.  Some people
   believe that the GPL and OpenSSL licenses are incompatable without
   this special exception.
-
-o Fixed some runtime portability issues on *BSD systems.  Thanks to
-  Eric (catastrophe.net) for reporting the problem.
-
-o Fixed a problem which could cause a deadlock in some dropped packet
-  cases.
 
 Nmap 3.59ALPHA6
 

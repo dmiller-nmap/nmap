@@ -525,7 +525,7 @@ pcap_t *my_real_pcap_open_live(char *device, int snaplen, int promisc, int to_ms
     fatal("my_real_pcap_open_live: invalid device %s\n", device);
   
   if(o.debugging > 1)
-    printf("Trying to open %s for recieve with winpcap.\n", device);
+    printf("Trying to open %s for receive with winpcap.\n", device);
   
   ifentry = ifi2ifentry(ifi);
   
@@ -2164,7 +2164,7 @@ void max_rcvbuf(int sd) {
 
 #ifndef WIN32
   if (setsockopt(sd, SOL_SOCKET, SO_RCVBUF, (const char *) &optval, optlen))
-    if (o.debugging) perror("Problem setting large socket recieve buffer");
+    if (o.debugging) perror("Problem setting large socket receive buffer");
   if (o.debugging) {
     getsockopt(sd, SOL_SOCKET, SO_RCVBUF,(char *) &optval, &optlen);
     log_write(LOG_STDOUT, "Our buffer size is now %d\n", optval);
