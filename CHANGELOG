@@ -1,5 +1,19 @@
 # Nmap Changelog ($Id$)
 
+Nmap 3.59ALPHA7
+
+o Tweaked the License blurb on source files and in the man page.  It
+  clarifies some issues and includes a new GPL exception that
+  explicitly allows linking with the OpenSSL library.  Some people
+  believe that the GPL and OpenSSL licenses are incompatable without
+  this special exception.
+
+o Fixed some runtime portability issues on *BSD systems.  Thanks to
+  Eric (catastrophe.net) for reporting the problem.
+
+o Fixed a problem which could cause a deadlock in some dropped packet
+  cases.
+
 Nmap 3.59ALPHA6
 
 o Added --exclude option, which lets you specify a comma-separated

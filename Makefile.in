@@ -131,7 +131,7 @@ distro:
         config.h.in aclocal.m4 nmap_winconfig.h Makefile.in \
 	configure $(SHTOOL) install-sh config.guess \
 	nmap-$(NMAP_VERSION)-1.spec config.sub INSTALL README-WIN32 COPYING \
-	CHANGELOG HACKING /usr/tmp/nmap-$(NMAP_VERSION)
+	COPYING.OpenSSL CHANGELOG HACKING /usr/tmp/nmap-$(NMAP_VERSION)
 
 	$(SHTOOL) mkdir /usr/tmp/nmap-$(NMAP_VERSION)/mswin32
 	cd mswin32; cp -ra *.[hHcC] *.cc ARPA NET NETINET RPC icon1.ico \
@@ -170,7 +170,8 @@ distro:
            Win32/Src/inet_pton.c /usr/tmp/nmap-$(NMAP_VERSION)/$(LIBPCAPDIR)
 
 	$(SHTOOL) mkdir /usr/tmp/nmap-$(NMAP_VERSION)/docs
-	cd docs; cp -ra README copying.html nmap-fingerprinting-article.txt \
+	cd docs; cp -ra README COPYING COPYING.OpenSSL 
+                    nmap-fingerprinting-article.txt \
                     nmap.deprecated.txt nmap.usage.txt nmap_doc.html \
                     nmap_manpage-de.html nmap_manpage-es.html \
                     nmap_manpage-fr.html nmap_manpage-it.html \
@@ -235,7 +236,7 @@ distro:
 # Update the web site
 web:
 	test x$(wroot) != x
-	cp -a CHANGELOG HACKING COPYING INSTALL $(DATAFILES) README-WIN32 mswin32/nmap_performance.reg $(wroot)/nmap/data
+	cp -a CHANGELOG HACKING COPYING COPYING.OpenSSL INSTALL $(DATAFILES) README-WIN32 mswin32/nmap_performance.reg $(wroot)/nmap/data
 	cd docs && cp -a nmap_manpage*.html nmap*.1 xnmap.1 nmap.usage.txt nmap.dtd $(wroot)/nmap/data/
 	scripts/produceosclasschoosebox.pl nmap-os-fingerprints > $(wroot)/nmap/data/os-classes.txt
 	find $(wroot)/nmap/data/ -type f -exec chmod 644 '{}' \;
