@@ -353,11 +353,11 @@ if (o.debugging)
 void masstcpping(struct hoststruct *hostbatch, int num_hosts, int pingtimeout) {
   int sockets[MAX_SOCKETS_ALLOWED];
   int hostindex = 0;
-  struct timeval start, end, waittime, tmptv;
+  struct timeval start, waittime, tmptv;
   int numretries = 1;
   int maxsock = 0;
   int res;
-  int i=0;
+  char buf[255];
   int numcomplete = 0;
   struct sockaddr_in sock;
   int sockaddr_in_len = sizeof(struct sockaddr_in);
@@ -371,7 +371,6 @@ void masstcpping(struct hoststruct *hostbatch, int num_hosts, int pingtimeout) {
   waittime.tv_usec = ((pingtimeout % (numretries +1)) * 1e6) / (numretries +1);
   /*  unsigned short tport = rand() % 27500 + 38000;  */
   for(retry = 0;(numcomplete < num_hosts) && retry <= numretries; retry++) {
-    printf("Retry number %d\n", retry);
     for(hostindex = 0; hostindex < num_hosts; hostindex++) {
       if ((hostbatch[hostindex].flags & (HOST_UP|HOST_DOWN)) == 0) {
 	sockets[hostindex] = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -414,64 +413,51 @@ void masstcpping(struct hoststruct *hostbatch, int num_hosts, int pingtimeout) {
     while((numcomplete < num_hosts) && (res = select(maxsock+1, &fds_read, &fds_write, &fds_ex, &tmptv)) > 0) {
       for(hostindex = 0; hostindex < num_hosts; hostindex++) {
 	if (sockets[hostindex]) {
-	  if (FD_ISSET(sockets[hostindex], &fds_write)) {
-	    printf("WRITE selected for machine %s\n", inet_ntoa(hostbatch[hostindex].host));  
-	  }
-	  if ( FD_ISSET(sockets[hostindex], &fds_read)) {
-	    printf("READ selected for machine %s\n", inet_ntoa(hostbatch[hostindex].host)); 
-	  }
-	  if  ( FD_ISSET(sockets[hostindex], &fds_ex)) {
-	    printf("EXC selected for machine %s\n", inet_ntoa(hostbatch[hostindex].host));
-	  }
-	  if (FD_ISSET(sockets[hostindex], &fds_write)) {
-	    char buf[256];
-	    i =2;
-	    if (i == 0 ) {
-	      res = connect(sockets[hostindex],(struct sockaddr *)&sock,sizeof(struct sockaddr));
-	      if (res != -1) printf("Connect to host suceeded!@#$!@#$\n");
-	      else {
-		sprintf(buf, "connect to %s", inet_ntoa(hostbatch[hostindex].host));
-		perror(buf);
-	      }
-	    } else if (i == 1) {
-	      res = write(sockets[hostindex], "", 0);
-	      if (res == 0) printf("0 returned from write\n");
-	      sprintf(buf, "write to %s", inet_ntoa(hostbatch[hostindex].host));
-	      perror(buf);
-	    }  else if (i == 2) {
-	      res = read(sockets[hostindex], buf, 1);
-	      sprintf (buf, "The result is %d for read from %s", res, inet_ntoa(hostbatch[hostindex].host));
-	      perror(buf);
+	  if (o.debugging > 1) {
+	    if (FD_ISSET(sockets[hostindex], &fds_read)) {
+	      printf("WRITE selected for machine %s\n", inet_ntoa(hostbatch[hostindex].host));  
 	    }
+	    if ( FD_ISSET(sockets[hostindex], &fds_write)) {
+	      printf("READ selected for machine %s\n", inet_ntoa(hostbatch[hostindex].host)); 
+	    }
+	    if  ( FD_ISSET(sockets[hostindex], &fds_ex)) {
+	      printf("EXC selected for machine %s\n", inet_ntoa(hostbatch[hostindex].host));
+	    }
+	  }
+	  if (FD_ISSET(sockets[hostindex], &fds_read) || FD_ISSET(sockets[hostindex], &fds_write) ||  FD_ISSET(sockets[hostindex], &fds_ex)) {
+	    res = read(sockets[hostindex], buf, 1);
+	    if (res == -1) {
+	      switch(errno) {
+	      case ECONNREFUSED:
+		hostbatch[hostindex].flags |= HOST_UP;	
+		break;
+	      case ENONET:
+	      case ENOLINK:
+	      case ENETDOWN:
+	      case ENETUNREACH:
+	      case ENETRESET:
+	      case ECONNABORTED:
+	      case ETIMEDOUT:
+	      case EHOSTDOWN:
+	      case EHOSTUNREACH:
+		hostbatch[hostindex].flags |= HOST_DOWN;
+		break;
+	      default:
+		sprintf (buf, "Strange read error from %s", inet_ntoa(hostbatch[hostindex].host));
+		perror(buf);
+		break;
+	      }
+	    } else { 
+	      error("Read succeeded from %s (returned %d) ... strange\n", inet_ntoa(hostbatch[hostindex].host), res); 
+	    } 
 	    close(sockets[hostindex]);
 	    if (maxsock == sockets[hostindex]) maxsock--;
 	    FD_CLR(sockets[hostindex], &fds_write);
 	    FD_CLR(sockets[hostindex], &fds_read);
 	    FD_CLR(sockets[hostindex], &fds_ex);
 	    sockets[hostindex] = 0;
-	    hostbatch[hostindex].flags |= HOST_UP;	 	    
 	    numcomplete++;
 	  }
-	  else if ( FD_ISSET(sockets[hostindex], &fds_read)) {
-	    close(sockets[hostindex]);
-	    if (maxsock == sockets[hostindex]) maxsock--;
-	    FD_CLR(sockets[hostindex], &fds_write);
-	    FD_CLR(sockets[hostindex], &fds_read);
-	    FD_CLR(sockets[hostindex], &fds_ex);
-	    sockets[hostindex] = 0;
-	    hostbatch[hostindex].flags |= HOST_UP;	 		    
-	    numcomplete++;
-	  }
-	  else if  ( FD_ISSET(sockets[hostindex], &fds_ex)) {
-	    close(sockets[hostindex]);
-	    if (maxsock == sockets[hostindex]) maxsock--;
-	    FD_CLR(sockets[hostindex], &fds_write);
-	    FD_CLR(sockets[hostindex], &fds_read);
-	    FD_CLR(sockets[hostindex], &fds_ex);
-	    sockets[hostindex] = 0;
-	    hostbatch[hostindex].flags |= HOST_UP;	 		    
-	    numcomplete++;
-	  }	  
 	}
       }
       tmptv = waittime;
