@@ -1479,15 +1479,16 @@ struct scan_lists *getpts(char *origexpr) {
 	  error("WARNING:  Duplicate port number(s) specified.  Are you alert enough to be using Nmap?  Have some coffee or Jolt(tm).");
 	  portwarning++;
 	} 
+      } else {      
+	if (range_type & SCAN_TCP_PORT)
+	  tcpportcount++;
+	if (range_type & SCAN_UDP_PORT)
+	  udpportcount++;
+	if (range_type & SCAN_PROTOCOLS && rangestart < 256)
+	  protcount++;
+	porttbl[rangestart] |= range_type;
+	rangestart++;
       }
-      if (range_type & SCAN_TCP_PORT)
-	tcpportcount++;
-      if (range_type & SCAN_UDP_PORT)
-	udpportcount++;
-      if (range_type & SCAN_PROTOCOLS)
-	protcount++;
-      porttbl[rangestart] |= range_type;
-      rangestart++;
     }
     
     /* Find the next range */
@@ -1528,7 +1529,7 @@ struct scan_lists *getpts(char *origexpr) {
       ports->tcp_ports[tcpportcount++] = i;
     if (porttbl[i] & SCAN_UDP_PORT)
       ports->udp_ports[udpportcount++] = i;
-    if (porttbl[i] & SCAN_PROTOCOLS)
+    if (porttbl[i] & SCAN_PROTOCOLS && i < 256)
       ports->prots[protcount++] = i;
   }
 

@@ -5,6 +5,11 @@ o Applied patch from Andy Lutomirski (Luto@myrealbox.com) which fixes
   speedup in some circumstances.  The patch had other misc. changes
   too.
 
+o Fix bug noted by Chris V (iselldrugstokidsonline@yahoo.com) in which
+  Nmap could segmentation fault with the (bogus) command: './nmap -sO
+  -p 1-65535 hostname' (protocol only can go up to 255).  That being
+  said, Nmap should never segfault just because of bogus options.
+
 Nmap 2.54BETA30
 
 o Added a Document Type Definition (DTD) for the Nmap XML output

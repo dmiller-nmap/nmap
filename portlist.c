@@ -90,6 +90,7 @@ int addport(portlist *plist, u16 portno, u8 protocol, char *owner, int state) {
     }
     portarray = plist->udp_ports;
   } else if (protocol == IPPROTO_IP) {
+    assert(portno < 256);
     if (!plist->ip_prots) {
       plist->ip_prots = (struct port **) safe_malloc(256 * sizeof(struct port *));
       bzero(plist->ip_prots, 256 * sizeof(struct port *));
