@@ -23,6 +23,8 @@
 # T7 is a FIN|PSH|URG to a closed port w/options
 # PU is a UDP packet to a closed port
 
+# $Id$ 
+
 # Contributed by Jason Roysdon jason@artoo.net
 Fingerprint 3Com Access Builder 4000 7.2
 T1(DF=N%W=0|800%ACK=S++%Flags=AR|AS%Ops=|M)
