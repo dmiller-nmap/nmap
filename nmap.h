@@ -315,7 +315,7 @@ void *realloc();
 #elif defined(__FreeBSD__)
   /* XXX: Apache didn't have this one,
           so watch it be wrong :)... */
-  #define NET_SIZE_T socklen_t
+  #define NET_SIZE_T size_t
 #elif defined(OS390)
   #define NET_SIZE_T size_t
 #endif
