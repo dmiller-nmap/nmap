@@ -964,7 +964,6 @@ sethdrinclude(sd);
 		     (struct sockaddr *)&sock, (int) sizeof(struct sockaddr_in))) == -1)
      {
        perror("sendto in send_udp_raw");
-       free(packet);
        return NULL;
      }
 

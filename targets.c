@@ -119,7 +119,7 @@ do {
     }
   }
 
-if (hostbatch[0].host.s_addr && (o.pingtype != PINGTYPE_NONE)) 
+if ((o.pingtype == PINGTYPE_ICMP) || (hostbatch[0].host.s_addr && (o.pingtype != PINGTYPE_NONE))) 
   massping(hostbatch, i, pingtimeout);
 else for(i=0; hostbatch[i].host.s_addr; i++)  {
   hostbatch[i].to.srtt = -1;

@@ -284,6 +284,17 @@ T5(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
 T7(Resp=N)
 
+FingerPrint  HP JetDirect Printer
+T1(Resp=Y%DF=N%W=400%ACK=S++%Flags=APS%Ops=M)
+T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
+T3(Resp=Y%DF=N%W=0%ACK=O%Flags=AR%Ops=)
+T4(Resp=Y%DF=N%W=0%ACK=S%Flags=R%Ops=)
+T5(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(Resp=Y%DF=N%W=0%ACK=S%Flags=R%Ops=)
+T7(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+PU(Resp=N)
+
+
 FingerPrint  HP LaserJet 4000N Printer  # Thanks to David O'Brien
 TSeq(Class=TD%gcd=<3%SI=<10)
 T1(DF=N%W=860%ACK=S++%Flags=AS%Ops=M)
@@ -504,6 +515,7 @@ T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
+PU(DF=N%TOS=C0%IPLEN=164%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 FingerPrint  Linux 2.0.33-34
 TSeq(Class=TR)
@@ -539,7 +551,7 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=C0%IPLEN=164%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
-FingerPrint  Linux 2.1.122
+FingerPrint  Linux 2.1.122 - 2.1.125
 TSeq(Class=RI%gcd=1%SI=>500000)
 T1(DF=Y%W=7F53%ACK=S++%Flags=AS%Ops=MENNTNW)
 T2(Resp=N)
@@ -548,6 +560,7 @@ T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
+PU(DF=N%TOS=C0%IPLEN=164%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 FingerPrint NetBSD 1.3.X       # Thanks to jwa@jammed.com and Lamont Granquist
 TSeq(Class=RI%gcd=<5)
@@ -720,16 +733,6 @@ T4(Resp=Y%DF=N%W=0%ACK=O%Flags=R%Ops=)
 T5(Resp=Y%DF=N%W=0%ACK=O%Flags=R%Ops=)
 T6(Resp=Y%DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(Resp=Y%DF=N%W=0%ACK=O%Flags=R%Ops=)
-PU(Resp=N)
-
-TSeq(gcd=4096|8192|12288)
-T1(DF=N%W=100%ACK=S++%Flags=AS%Ops=M)
-T2(Resp=Y%DF=N%W=0%ACK=O%Flags=R%Ops=)
-T3(Resp=Y%DF=N%W=100%ACK=S++%Flags=AS%Ops=M)
-T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
-T5(DF=N%W=0%ACK=O%Flags=R%Ops=)
-T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
-T7(DF=N%W=0%ACK=O%Flags=R%Ops=)
 PU(Resp=N)
 
 FingerPrint Xerox DocuPrint C55
