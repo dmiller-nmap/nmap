@@ -137,7 +137,7 @@ inline int my_close(int sd);
 
 typedef unsigned short u_short_t;
 
-int win32_sendto(int sd, char *packet, int len, 
+int win32_sendto(int sd, const char *packet, int len, 
 	   unsigned int flags, struct sockaddr *to, int tolen);
 
 int win32_socket(int af, int type, int proto);

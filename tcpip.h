@@ -416,7 +416,7 @@ int getsourceip(struct in_addr *src, struct in_addr *dst);
 char *getsourceif(struct in_addr *src, struct in_addr *dst);
 int islocalhost(struct in_addr *addr);
 int unblock_socket(int sd);
-int Sendto(char *functionname, int sd, unsigned char *packet, int len, 
+int Sendto(char *functionname, int sd, const unsigned char *packet, int len, 
 	   unsigned int flags, struct sockaddr *to, int tolen);
 /* Standard swiped internet checksum routine */
 unsigned short in_cksum(unsigned short *ptr,int nbytes);

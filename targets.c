@@ -420,7 +420,7 @@ struct sockaddr_in sock;
 short seq = 0;
 int sd = -1, rawsd = -1, rawpingsd = -1;
 struct timeval *time;
-struct timeval start, end, t1, t2;
+struct timeval start, end, t2;
 unsigned short id;
 pcap_t *pd = NULL;
 char filter[512];
@@ -571,7 +571,7 @@ gettimeofday(&start, NULL);
 	 if (TIMEVAL_SUBTRACT(t2,time[seq]) > 1000000) {
 	   pt.discardtimesbefore = hostnum;
 	   if (o.debugging) 
-	     log_write(LOG_STDOUT, "Huge send delay: %lu microseconds\n", (unsigned long) TIMEVAL_SUBTRACT(t2,t1));
+	     log_write(LOG_STDOUT, "Huge send delay: %lu microseconds\n", (unsigned long) TIMEVAL_SUBTRACT(t2,time[seq]));
 	 }
        }
      } /* for() loop */

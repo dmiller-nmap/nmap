@@ -485,7 +485,7 @@ inline int unblock_socket(int sd)
 
 /* A simple function I wrote to help in debugging, shows the important fields
    of a TCP packet*/
-int readtcppacket(char *packet, int readdata) 
+int readtcppacket(unsigned char *packet, int readdata) 
 {
 	struct ip *ip = (struct ip *) packet;
 	struct tcphdr *tcp = (struct tcphdr *) (packet + sizeof(struct ip));
@@ -539,7 +539,7 @@ int readtcppacket(char *packet, int readdata)
 
 /* A simple function I wrote to help in debugging, shows the important fields
    of a UDP packet*/
-int readudppacket(char *packet, int readdata) 
+int readudppacket(unsigned char *packet, int readdata) 
 {
 
 	struct ip *ip = (struct ip *) packet;

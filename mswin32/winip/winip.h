@@ -159,7 +159,7 @@ int get_best_route(DWORD dest, PMIB_IPFORWARDROW r);
 //	pcapsend interface
 void pcapsend_init();
 pcap_t *my_real_pcap_open_live(char *device, int snaplen, int promisc, int to_ms);
-int pcapsendraw(char *packet, int len, 
+int pcapsendraw(const char *packet, int len, 
 	   struct sockaddr *to, int tolen);
 
 //	rawrecv interface

@@ -636,7 +636,7 @@ char *routethrough(struct in_addr *dest, struct in_addr *source)
 
 
 //	socket and sendto replacements
-int win32_sendto(int sd, char *packet, int len, 
+int win32_sendto(int sd, const char *packet, int len, 
 	   unsigned int flags, struct sockaddr *to, int tolen)
 {
 	if(sd == 501)
@@ -644,7 +644,7 @@ int win32_sendto(int sd, char *packet, int len,
 	else return sendto(sd, packet, len, flags, to, tolen);
 }
 
-int Sendto(char *fn, int sd, char *packet, int len, 
+int Sendto(char *functionname, int sd, const unsigned char *packet, int len, 
 	   unsigned int flags, struct sockaddr *to, int tolen)
 {
 	return win32_sendto(sd, packet, len, flags, to, tolen);

@@ -66,7 +66,7 @@ void pcapsend_init();
 static void pcapsend_cleanup(void);
 
 static int realsend(LPADAPTER pAdap,
-					char *packet, int len,
+					const char *packet, int len,
 					BYTE *to, BYTE *from, int addrlen,
 					DWORD linktype, DWORD protocol);
 
@@ -206,7 +206,7 @@ static int build_ethernet(u_char *dst, u_char *src, u_short type, const u_char *
 
 //	assumes Ethernet
 static int realsend(LPADAPTER pAdap,
-					char *packet, int len,
+					const char *packet, int len,
 					BYTE *to, BYTE *from, int addrlen,
 					DWORD linktype, DWORD protocol)
 {
@@ -449,7 +449,7 @@ static DWORD WINAPI SendThreadProc(LPVOID unused0)
 }
 
 //	helpers
-static void AddPacketToQueue(void *data, int len, DWORD ip, int ifi)
+static void AddPacketToQueue(const void *data, int len, DWORD ip, int ifi)
 {
 	int i;
 	Q_ROUTE *r;
@@ -737,7 +737,7 @@ static void releaseadapter()
 
 //	The almighty pcapsendraw
 //	This is the whole point of this file :)
-int pcapsendraw(char *packet, int len, 
+int pcapsendraw(const char *packet, int len, 
 	   struct sockaddr *to, int tolen) 
 {
 	struct sockaddr_in *sin = (struct sockaddr_in *) to;
