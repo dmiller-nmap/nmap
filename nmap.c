@@ -420,8 +420,9 @@ o.decoys[o.decoyturn] = currenths->source_ip;
 	  if (o.debugging || o.verbose > 1) {
 	    nmap_log("OS Fingerprint:\n%s\n", fp2ascii(currenths->FP));
 	  }
+	  nmap_log("\n");
 	} else {
-	  nmap_log("No OS matches for this host.  TCP fingerprint:\n%s\n", fp2ascii(currenths->FP));
+	  nmap_log("No OS matches for this host.  TCP fingerprint:\n%s\n\n", fp2ascii(currenths->FP));
 	}
 
 
