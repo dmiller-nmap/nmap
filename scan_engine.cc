@@ -236,7 +236,7 @@ public:
   int probes_sent_at_last_wait;
   // number of hosts that timed out during scan, or were already timedout
   int num_hosts_timedout;
-  struct ConnectScanInfo *CSI;
+  ConnectScanInfo *CSI;
 private:
 };
 
@@ -1183,7 +1183,7 @@ int HostScanStats::freshPortsLeft() {
   /* Removes a probe from probes_outstanding, adjusts HSS and USS
      active probe stats accordingly, then deletes the probe. */
 void HostScanStats::destroyOutstandingProbe(list<UltraProbe *>::iterator probeI) {
-  struct UltraProbe *probe = *probeI;
+  UltraProbe *probe = *probeI;
   assert(!probes_outstanding.empty());
   if (!probe->timedout) {
     assert(num_probes_active > 0);

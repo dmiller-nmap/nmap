@@ -309,8 +309,8 @@ void winip_postopt_init()
    pcap_avail = 1;
    if(wo.trace) printf("***WinIP***  trying to initialize winpcap 2.1\n");
    PacketGetAdapterNames(pcaplist, &len);
-   if(o.debugging > 1 || wo.trace)
-     printf("***WinIP***  winpcap is present\n");
+   if(o.debugging || wo.trace)
+     printf("***WinIP***  winpcap present, version %s\n", pcap_lib_version());
  }
     }
 #ifdef _MSC_VER

@@ -1157,7 +1157,7 @@ int get_ping_results(int sd, pcap_t *pd, Target *hostbatch[], int pingtype,
       /* if it is our response */
       ping = (struct ppkt *) ((ip->ip_hl * 4) + (char *) ip);
       if (bytes < ip->ip_hl * 4 + 8U) {
-	if (!ip->ip_off && !ip->ip_off&IP_MF)
+	if (!ip->ip_off)
            error("Supposed ping packet is only %d bytes long!", bytes);
 	continue;
       }
