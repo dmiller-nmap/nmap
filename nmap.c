@@ -808,7 +808,7 @@ int nmap_main(int argc, char *argv[]) {
     /* Brief info incase they forget what was scanned */
     Strncpy(mytime, ctime(&timep), sizeof(mytime));
     chomp(mytime);
-  log_write(LOG_NORMAL|LOG_MACHINE, "# Nmap (V. %s) scan initiated %s as: ", NMAP_NAME, NMAP_VERSION, mytime);
+  log_write(LOG_NORMAL|LOG_MACHINE, "# %s (V. %s) scan initiated %s as: ", NMAP_NAME, NMAP_VERSION, mytime);
 
   for(i=0; i < argc; i++) log_write(LOG_NORMAL|LOG_MACHINE,"%s ", fakeargv[i]);
   log_write(LOG_NORMAL|LOG_MACHINE,"\n");  
