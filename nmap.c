@@ -1843,12 +1843,12 @@ if (pcap_setfilter(pd, &fcode) < 0 )
 if (scantype == XMAS_SCAN) scanflags = TH_FIN|TH_URG|TH_PUSH;
 else if (scantype == NULL_SCAN) scanflags = 0;
 else if (scantype == FIN_SCAN) scanflags = TH_FIN;
-else { fatal("Unknown scna type for super_scan"); }
+else if (scantype != UDP_SCAN) { fatal("Unknown scna type for super_scan"); }
 
 starttime = time(NULL);
 
 if (o.debugging || o.verbose)
-  printf("Initiating FIN,NULL,or Xmas stealth scan against %s (%s)\n", target->name, inet_ntoa(target->host));
+  printf("Initiating FIN,NULL, UDP, or Xmas stealth scan against %s (%s)\n", target->name, inet_ntoa(target->host));
   
 
   do {    
@@ -1892,11 +1892,14 @@ if (o.debugging || o.verbose)
 	    for(decoy=0; decoy < o.numdecoys; decoy++) {
 	      if (o.fragscan)
 		send_small_fragz(rawsd, &o.decoys[decoy], &target->host, i, current->portno, scanflags);
-	      else send_tcp_raw(rawsd, &o.decoys[decoy], &target->host, i, 
-				current->portno, 0, 0, scanflags, 0, 0, 0);
+	      else if (scantype != UDP_SCAN) 
+		send_tcp_raw(rawsd, &o.decoys[decoy], &target->host, i, 
+			     current->portno, 0, 0, scanflags, 0, 0, 0);
+	      else send_udp_raw(rawsd, &o.decoys[decoy], &target->host, i,
+				current->portno, 0,0);	      
 	      /*usleep(10000);*/ /* *WE* normally do not need this, but the target 
 		lamer often does */
-	    }	    
+	    }
 	    }
 	  }
 	} else { 
