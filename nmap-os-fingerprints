@@ -4633,30 +4633,6 @@ T6(Resp=Y%DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
-# Contributed by dmcguire@mit.edu
-Fingerprint NetBSD 1.4 / Generic mac68k (Quadra 610)
-TSeq(Class=RI%gcd=<5%SI=>FFFFF)
-T1(DF=Y%W=212%ACK=S++%Flags=AS%Ops=MENNT)
-T2(Resp=N)
-T3(Resp=Y%DF=Y%W=212%ACK=S++%Flags=AS%Ops=MENNT)
-T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
-T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
-T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
-T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
-PU(DF=N%TOS=C0%IPLEN=164%RIPTL=148%RIPCK=E%UCK=E%ULEN=134%DAT=E)
-
-# Contributed by Cliph cliph@csd.dot-ie.com
-Fingerprint NetBSD 1.4 running on a SPARC IPX
-TSeq(Class=RI|TR%gcd=<6%SI=<4452AA0&>AEE6D)
-T1(DF=N%W=212%ACK=S++%Flags=AS%Ops=MNNT)
-T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
-T3(Resp=Y%DF=N%W=212%ACK=S++%Flags=AS%Ops=MNNT)
-T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
-T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
-T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
-T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
-PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
-
 # Contributed by Philipp Huber uebs@gmx.at
 Fingerprint NetBSD 1.5_ALPHA i386
 TSeq(Class=RI%gcd=<6%SI=<5CF5F1C&>EDF97)

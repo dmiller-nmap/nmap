@@ -19,7 +19,7 @@ Copyright: GPL
 Group: Applications/System
 Source0: http://www.insecure.org/nmap/dist/%{name}-%{version}.tgz
 URL: http://www.insecure.org/nmap/
-BuildRoot: /var/tmp/%{name}-root
+BuildRoot: %{_tmppath}/%{name}-root
 # RPM can't be relocatable until I stop storing path info in the binary
 # Prefix: %{prefix}
 

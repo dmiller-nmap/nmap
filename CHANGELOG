@@ -2,211 +2,207 @@
 
 Nmap 2.54BETA30
 
--- Added a Document Type Definition (DTD) for the Nmap XML output
+o Added a Document Type Definition (DTD) for the Nmap XML output
    format (-oX) to the docs directory.  This allows validating parsers
    to check nmap XML output files for correctness.  It is also useful
    for application programmers to understand the XML output structure.
    The DTD was written by William McVey (wam@cisco.com) of Cisco Secure 
    Consulting Services ( http://www.cisco.com/go/securityconsulting ).
 
--- Merged in a number of Windows fixes/updates from Andy Lutomirski
-   (Luto@myrealbox.com)
+o Merged in a number of Windows fixes/updates from Andy Lutomirski
+  (Luto@myrealbox.com)
 
--- Merged in fixes/updates (mostly to the Windows functionality) from
-   Matt Hargett (matt@use.net)
+o Merged in fixes/updates (mostly to the Windows functionality) from
+  Matt Hargett (matt@use.net)
 
--- Applied patch by Colin Phipps (cph@netcraft.com) which correctly
-   encodes special characters in the XML output.
+o Applied patch by Colin Phipps (cph@netcraft.com) which correctly
+  encodes special characters in the XML output.
 
--- Applied patch by William McVey (wam@cisco.com) which adds the uptime
-   information printed with -O to the XML output format.
+o Applied patch by William McVey (wam@cisco.com) which adds the uptime
+  information printed with -O to the XML output format.
 
--- Fixed byte-order bug in Windows packet matching code which caused
-   -PS and -PT to fail.  Bug found and patch sent by Tim Adam 
-   (tma@osa.com.au)
+o Fixed byte-order bug in Windows packet matching code which caused
+  -PS and -PT to fail.  Bug found and patch sent by Tim Adam
+  (tma@osa.com.au)
 
--- Fixed segfault problem with "-sU -F".  Nobody reported this until
-   I noticed it :(.  Anytime you see "Segmentation Fault" in the latest
-   version of Nmap, it is probably a bug -- please mail me the command 
-   you used, the OS/platform you are running on, and whether it is
-   reproducable.
+o Fixed segfault problem with "-sU -F".  Nobody reported this until I
+  noticed it :(.  Anytime you see "Segmentation Fault" in the latest
+  version of Nmap, it is probably a bug -- please mail me the command
+  you used, the OS/platform you are running on, and whether it is
+  reproducable.
 
--- Added a convenience option "-oA (basefilename)".  This tells Nmap
-   to log in ALL the major formats (normal, grepable, and XML).  You
-   give a base for the filename, and the output files will be
-   base.nmap, base.gnmap, and base.xml.
+o Added a convenience option "-oA (basefilename)".  This tells Nmap to
+  log in ALL the major formats (normal, grepable, and XML).  You give
+  a base for the filename, and the output files will be base.nmap,
+  base.gnmap, and base.xml.
 
--- Documented the --append_output option which tells Nmap to append 
-   scan results to any output files you have specified rather than 
-   overwriting the files.
+o Documented the --append_output option which tells Nmap to append
+  scan results to any output files you have specified rather than
+  overwriting the files.
 
--- Integrate TIMEVAL_SEC_SUBTRACT() fix by Scott Renfro (scott@renfro.org)
-   which improves timing accuracy.
+o Integrate TIMEVAL_SEC_SUBTRACT() fix by Scott Renfro (scott@renfro.org)
+  which improves timing accuracy.
 
 ** 2.54BETA29
 
--- Integrated William McVey's multi-portlist patch.  This allows you
-   to specify different port numbers when scanning both TCP & UDP.
-   For example, if you want to UDP for 53,111 and 137 while TCP
-   scanning for 21-25,80,139,515,6000,8080 you could do: 
-   nmap -sSU -p U:53,111,137,T:21-25,80,139,515,6000,8080 target.com .
-   Prior to this patch, you had to either use different Nmap
-   executions or scan both UDP & TCP of each port.  See the man page
-   for more usage info.
+o Integrated William McVey's multi-portlist patch.  This allows you to
+  specify different port numbers when scanning both TCP & UDP.  For
+  example, if you want to UDP for 53,111 and 137 while TCP scanning
+  for 21-25,80,139,515,6000,8080 you could do: nmap -sSU -p
+  U:53,111,137,T:21-25,80,139,515,6000,8080 target.com .  Prior to
+  this patch, you had to either use different Nmap executions or scan
+  both UDP & TCP of each port.  See the man page for more usage info.
 
--- Added/updated a bunch of fingerprints, including Windows XP
-   release candidates #1 & #2, OpenBSD 2.9, various home
-   gateways/cable modem, MacOS X 10.0.4, Linux 2.4.7, Guantlet
-   Firewall 4.0a, a few Cisco routers, and, most importantly, the
-   Alcatel Advanced Reflexes IP Phone :).  Many other fingerprints
-   were updated as well.
+o Added/updated a bunch of fingerprints, including Windows XP release
+  candidates #1 & #2, OpenBSD 2.9, various home gateways/cable modem,
+  MacOS X 10.0.4, Linux 2.4.7, Guantlet Firewall 4.0a, a few Cisco
+  routers, and, most importantly, the Alcatel Advanced Reflexes IP
+  Phone :).  Many other fingerprints were updated as well.
 
--- Found and fixed some relatively major memory leaks based on reports
-   sent in by H D Moore (hdm@secureaustin.com), mugz
-   (mugz@x-mafia.org), and Steven Van Acker (deepstar@ulyssis.org)
+o Found and fixed some relatively major memory leaks based on reports
+  sent in by H D Moore (hdm@secureaustin.com), mugz
+  (mugz@x-mafia.org), and Steven Van Acker (deepstar@ulyssis.org)
 
--- Applied patch from Chad Loder (chad_loder@rapid7.com) which
-   improves random target host selection (-iR) by excluding more
-   undesirable addresses.
+o Applied patch from Chad Loder (chad_loder@rapid7.com) which improves
+  random target host selection (-iR) by excluding more undesirable
+  addresses.
 
--- Fixed portscan timing bug found by H D Moore
-   (hdm@secureaustin.com).  This bug can occur when you specify a
-   --max_rtt_timeout but not --initial_rtt_timeout and then scan
-   certain firewalled hosts.
+o Fixed portscan timing bug found by H D Moore (hdm@secureaustin.com).
+  This bug can occur when you specify a --max_rtt_timeout but not
+  --initial_rtt_timeout and then scan certain firewalled hosts.
 
--- Fixed port number printing bug found by "Stephen Leavitt"
-   <stephen_j_leavitt@hotmail.com>
+o Fixed port number printing bug found by "Stephen Leavitt"
+  <stephen_j_leavitt@hotmail.com>
 
--- The Nmap source tarball now extracts with more lenient permissions
-   (sometimes world-readable or world-executable, but never
-   world-writable).  If you don't want this, set your umask to 077
-   (which is what I do).  Suggested by Line Printer (lps@rahul.net)
+o The Nmap source tarball now extracts with more lenient permissions
+  (sometimes world-readable or world-executable, but never
+  world-writable).  If you don't want this, set your umask to 077
+  (which is what I do).  Suggested by Line Printer (lps@rahul.net)
 
 ** 2.54BETA28
 
--- I hope that I have fixed the Libpcap "Unknown datalink type" problem that
-   many people reported.  If you still receive this error, please send
-   me the following info:
-   1) Full output of Nmap including the command you typed
-   2) What OS/OS version you are using
-   3) What type of interface is the scan going through (PPP, ISDN, ethernet,
-      PPPoE, etc)
-   4) Whether you compiled from source or used the RPM version
+o I hope that I have fixed the Libpcap "Unknown datalink type" problem that
+  many people reported.  If you still receive this error, please send
+  me the following info:
+  1) Full output of Nmap including the command you typed
+  2) What OS/OS version you are using
+  3) What type of interface is the scan going through (PPP, ISDN, ethernet,
+     PPPoE, etc)
+  4) Whether you compiled from source or used the RPM version
 
--- Hopefully fixed Libpcap lex/yacc generated file problem that
-   plagued a few folks.
+o Hopefully fixed Libpcap lex/yacc generated file problem that
+  plagued a few folks.
 
--- Various minor fixes/changes/updates
+o Various minor fixes/changes/updates
 
 ** 2.54BETA27
 
--- Fixed bug that caused "adding open port" messages to be printed
-   even when verbose mode was not specified. (patch sent by Doug Hoyte
-   ( dugely@yahoo.com ).
+o Fixed bug that caused "adding open port" messages to be printed even
+  when verbose mode was not specified. (patch sent by Doug Hoyte (
+  dugely@yahoo.com ).
 
--- Fixed bug in zombie:port option parsing in Idlescan as well a few
-   other bugs in patch sent by Germano Caronni (gec@acm.org)
+o Fixed bug in zombie:port option parsing in Idlescan as well a few
+  other bugs in patch sent by Germano Caronni (gec@acm.org)
 
--- Fixed Windows compilation (I broke it when I added Idlescan).
+o Fixed Windows compilation (I broke it when I added Idlescan).
 
--- Fixed a (Win32 only) port identification bug which would cause some
-   ports to be listed as "unknown" even when Nmap should know their
-   name.  This was found at patched by David Griffiths
-   (davidg@intrinsica.co.uk).
+o Fixed a (Win32 only) port identification bug which would cause some
+  ports to be listed as "unknown" even when Nmap should know their
+  name.  This was found at patched by David Griffiths
+  (davidg@intrinsica.co.uk).
 
--- Fixed more nmap-os-fingerprints syntax/grammar violations found by
-   Raymond Mercier of VIGILANTe
+o Fixed more nmap-os-fingerprints syntax/grammar violations found by
+  Raymond Mercier of VIGILANTe
 
--- Fixed a memory leak in Nbase str*casecmp() functions by applying
-   patch sent by Matt (matt@use.net).  I plan to kill this whole
-   strcasecmp.c file as soon as possible (it is a mess).
+o Fixed a memory leak in Nbase str*casecmp() functions by applying
+  patch sent by Matt (matt@use.net).  I plan to kill this whole
+  strcasecmp.c file as soon as possible (it is a mess).
 
 ** 2.54BETA26
 
--- Added Idlescan (IPID blind scan).  The usage syntax is 
-   "-sI <zombie>".
+o Added Idlescan (IPID blind scan).  The usage syntax is 
+  "-sI <zombie>".
 
--- Fixed a bunch of fingerprints that were corrupt due to violations
-   of the fingerprint syntax/grammar (problems were found by Raymond
-   Mercier of VIGILANTe )
+o Fixed a bunch of fingerprints that were corrupt due to violations of
+  the fingerprint syntax/grammar (problems were found by Raymond
+  Mercier of VIGILANTe )
 
--- Fixed command-line option parsing bug found 
-   by "m r rao" (mrrao@del3.vsnl.net.in )
+o Fixed command-line option parsing bug found 
+  by "m r rao" (mrrao@del3.vsnl.net.in )
 
--- Fixed an OS fingerprinting bug that caused many extra packets to be
-   sent if you request a lot of decoys.
+o Fixed an OS fingerprinting bug that caused many extra packets to be
+  sent if you request a lot of decoys.
 
--- Added some debug code to help diagnose the "Unknown datalink type"
-   error.  If Nmap is giving you this error, please send the following
-   info to fyodor@insecure.org :
-   1) The full output from Nmap (including the command arguments)
-   2) What OS and OS version are you using
-   3) What type of adaptor are you using (modem, ethernet, FDDI, etc)
+o Added some debug code to help diagnose the "Unknown datalink type"
+  error.  If Nmap is giving you this error, please send the following
+  info to fyodor@insecure.org : 1) The full output from Nmap
+  (including the command arguments) 2) What OS and OS version are you
+  using 3) What type of adaptor are you using (modem, ethernet, FDDI,
+  etc)
 
--- Added a bunch of IDS sensor/console/agent port numbers from
-   Patrick Mueller (pmueller@neohapsis.com)
+o Added a bunch of IDS sensor/console/agent port numbers from
+  Patrick Mueller (pmueller@neohapsis.com)
 
 ** 2.54BETA25
 
--- Added a whole bunch of new OS fingerprints (and adjustments)
-   ranging from big important ones (Linux 2.4.X, OpenBSD 2.9, FreeBSD
-   4.3, Cisco 12.2.1, MacOS X, etc) to some that are more obscure (
-   such as Apple Color LaserWriter 12/660 PS and VirtualAccess
-   LinxpeedPro 120 )
+o Added a whole bunch of new OS fingerprints (and adjustments) ranging
+  from big important ones (Linux 2.4.X, OpenBSD 2.9, FreeBSD 4.3,
+  Cisco 12.2.1, MacOS X, etc) to some that are more obscure ( such as
+  Apple Color LaserWriter 12/660 PS and VirtualAccess LinxpeedPro 120 )
 
--- Upgraded Libpcap to the latest version (0.6.2) from tcpdump.org.  I
-   modified the build system slightly by shipping pre-generated
-   scanner.c/grammer.c (instead of using lex/yacc) and I also upgraded
-   to the newest config.sub/config.guess .
+o Upgraded Libpcap to the latest version (0.6.2) from tcpdump.org.  I
+  modified the build system slightly by shipping pre-generated
+  scanner.c/grammer.c (instead of using lex/yacc) and I also upgraded
+  to the newest config.sub/config.guess .
 
--- Fixed some issues with the new Libpcap under Linux (patches will be
-   sent to the developers).
+o Fixed some issues with the new Libpcap under Linux (patches will be
+  sent to the developers).
 
--- Added "All zeros" IP.ID sequence classification to account for the
-   new Linux 2.4 scheme which seems to use 0 whenever the DF bit is
-   set (probably a good idea).
+o Added "All zeros" IP.ID sequence classification to account for the
+  new Linux 2.4 scheme which seems to use 0 whenever the DF bit is set
+  (probably a good idea).
 
--- Tweaked TCP Timestamp and IP.ID sequence classification algorithms
+o Tweaked TCP Timestamp and IP.ID sequence classification algorithms
 
 ** 2.54BETA24
 
--- Fixed compilation problems on MacOS X publis release.  Thanks to
-   Nicolas Dawson (nizcolas@myrealbox.com) for securing an account for
-   me.
+o Fixed compilation problems on MacOS X publis release.  Thanks to
+  Nicolas Dawson (nizcolas@myrealbox.com) for securing an account for
+  me.
 
--- On the suggestion of the ever-helpful LaMont Jones (lamont@hp.com),
-   I obtained the newest config.guess/config.sub from
-   http://subversions.gnu.org/cgi-bin/cvsweb/config and made
-   libpcap/nbase use symlinks rather than copeis of the file
+o On the suggestion of the ever-helpful LaMont Jones (lamont@hp.com),
+  I obtained the newest config.guess/config.sub from
+  http://subversions.gnu.org/cgi-bin/cvsweb/config and made
+  libpcap/nbase use symlinks rather than copeis of the file
 
--- Applied patch from LaMont Jones (lamont@hp.com) which makes Nmap
-   compatable with gcc 3.0 (apparently printf() is a macro in that
-   version)
+o Applied patch from LaMont Jones (lamont@hp.com) which makes Nmap
+  compatable with gcc 3.0 (apparently printf() is a macro in that
+  version)
 
--- Applied patch from Colin Phipps (cph@netcraft.com) which fixes a
-   problem that kept UDP RPC scanning from working unless you were
-   also doing a TCP scan.
+o Applied patch from Colin Phipps (cph@netcraft.com) which fixes a
+  problem that kept UDP RPC scanning from working unless you were also
+  doing a TCP scan.
 
--- Applied a patch from Chris Eagle (cseagle@redshift.com) which fixes
-   Windows compilation (I broke it with a recent change).
+o Applied a patch from Chris Eagle (cseagle@redshift.com) which fixes
+  Windows compilation (I broke it with a recent change).
 
--- Updated Lithuanian translation of man page based on a newer version sent 
-   by Aurimas Mikalauskas (inner@crazy.lt)
+o Updated Lithuanian translation of man page based on a newer version sent 
+  by Aurimas Mikalauskas (inner@crazy.lt)
 
--- Killed carriage returns in nmap.c and nmapfe.c, which caused problems
-   for some (SGI) compilers.  Problem noted by Artur 
-   Niederstebruch (artur@sgi.com)
+o Killed carriage returns in nmap.c and nmapfe.c, which caused
+  problems for some (SGI) compilers.  Problem noted by Artur
+  Niederstebruch (artur@sgi.com)
 
--- Updated to latest version of rpc program number list, maintained by
-   Eilon Gishri (eilon@aristo.tau.ac.il)
+o Updated to latest version of rpc program number list, maintained by
+  Eilon Gishri (eilon@aristo.tau.ac.il)
 
--- Fixed a quoting bug in the Nmap man page found by 
-   Rasmus Andersson <rasmus@pole-position.org>
+o Fixed a quoting bug in the Nmap man page found by 
+  Rasmus Andersson <rasmus@pole-position.org>
 
--- Applied RPM spec file changes from "Benjamin Reed"
-   (ranger@befunk.com) which allows you to avoid building the frontend
-   by adding "--define frontend 0" to the build command (eg --rebuild,
-   --ba, etc).
+o Applied RPM spec file changes from "Benjamin Reed"
+  (ranger@befunk.com) which allows you to avoid building the frontend
+  by adding "--define frontend 0" to the build command (eg --rebuild,
+  --ba, etc).
 
 ** 2.54BETA22
 
