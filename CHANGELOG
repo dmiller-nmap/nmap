@@ -1,5 +1,18 @@
 # Nmap Changelog ($Id$)
 
+o Fixed a problem related to building Nmap on systems that lack PCRE
+  libs (and thus have to use the ones included by Nmap).  Thanks to Remi
+  Denis-Courmont (deniscr6(a)cti.ecp.fr) for the repot and patch.
+
+o If responses to a probe fail to match any of the registered match
+  strings for that probe, Nmap will now try against the registered "null
+  probe" match strings.  This helps in the case that the NULL probe
+  initially times out (perhaps because of initial DNS lookup) but the
+  banner appears in later responses.
+
+o Alphebetized the service names in each Probe section in
+  nmap-service-probes (makes them easier to find and add to).
+
 o Fixed the problem several people reported where Nmap would quit with
   a "broken pipe" error during service scanning.  Thanks to Jari Ruusu
   (jari.ruusu(a)pp.inet.fi) for sending a patch.  The actual error

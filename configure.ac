@@ -369,8 +369,6 @@ AC_SUBST(PCAP_DIST_CLEAN)
 have_pcre=no
 LIBPCREDIR=libpcre
 
-# test "${with_libpcre+set}" != "set" && with_libpcre=yes
-
 # First we test whether they specified libpcre explicitly
 AC_ARG_WITH(libpcre,
 [  --with-libpcre=DIR    Use an existing (compiled) pcre lib from DIR/include and DIR/lib)],
@@ -399,18 +397,18 @@ fi
 if test $have_pcre != yes ; then
   AC_CONFIG_SUBDIRS( libpcre )
   CXXFLAGS="-I$LIBPCREDIR $CXXFLAGS"
-  LIBPCRE_LIB="$LIBPCREDIR"
-  LIBS="$LIBS $LIBPCRE_LIB/libpcre.a"
-  PCRE_DEPENDS="$LIBPCRE_LIB/libpcre.a"
+  LIBPCRE_LIBS="$LIBPCREDIR/libpcre.a"
+  PCRE_DEPENDS="$LIBPCREDIR/libpcre.a"
   PCRE_CLEAN="pcre_clean"
   PCRE_DIST_CLEAN="pcre_dist_clean"
 else
-  LIBS="-lpcre $LIBS"
+  LIBPCRE_LIBS="-lpcre"
   PCRE_DEPENDS=""
   PCRE_CLEAN=""
   PCRE_DIST_CLEAN=""
 fi
 
+AC_SUBST(LIBPCRE_LIBS)
 AC_SUBST(LIBPCREDIR)
 AC_SUBST(PCRE_DEPENDS)
 AC_SUBST(PCRE_CLEAN)

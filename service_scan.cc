@@ -181,6 +181,7 @@ public:
   // Get the full current response string.  Note that this pointer is 
   // INVALIDATED if you call appendtocurrentproberesponse() or nextProbe()
   u8 *getcurrentproberesponse(int *respstrlen);
+  AllProbes *AP;
           
 private:
   // Adds a character to servicefp.  Takes care of word wrapping if
@@ -192,7 +193,6 @@ private:
   vector<ServiceProbe *>::iterator current_probe;
   u8 *currentresp;
   int currentresplen;
-  AllProbes *AP;
   char *servicefp;
   int servicefplen;
   int servicefpalloc;
@@ -997,7 +997,7 @@ void ServiceNFO::addToServiceFingerprint(const char *probeName, const u8 *resp,
       if (srcidx + 1 >= respused || !isdigit(resp[srcidx + 1]))
 	addServiceString("\\0", servicewrap);
       else addServiceString("\\x00", servicewrap);
-    } else if (strchr("\\?\"[]().*+$", resp[srcidx])) {
+    } else if (strchr("\\?\"[]().*+$^", resp[srcidx])) {
       addServiceChar('\\', servicewrap);
       addServiceChar(resp[srcidx], servicewrap);
     } else if (ispunct((int)resp[srcidx])) {
@@ -1468,6 +1468,7 @@ void servicescan_read_handler(nsock_pool nsp, nsock_event nse, void *mydata) {
   const u8 *readstr;
   int readstrlen;
   const struct MatchDetails *MD;
+  bool nullprobecheat = false; // We cheated and found a match in the NULL probe to a non-null-probe response
 
   assert(type == NSE_TYPE_READ);
 
@@ -1480,6 +1481,16 @@ void servicescan_read_handler(nsock_pool nsp, nsock_event nse, void *mydata) {
     // Now let us try to match it.
     MD = probe->testMatch(readstr, readstrlen);
 
+    // Sometimes a service doesn't respond quickly enough to the NULL
+    // scan, even though it would have match.  In that case, Nmap can
+    // end up tediously going through every probe without finding a
+    // match.  So we test the NULL probe matches if the probe-specific
+    // matches fail
+    if (!MD && !probe->isNullProbe() && svc->AP->nullProbe) {
+      MD = svc->AP->nullProbe->testMatch(readstr, readstrlen);
+      nullprobecheat = true;
+    }
+
     if (MD && MD->serviceName) {
       // WOO HOO!!!!!!  MATCHED!  But might be soft
       if (MD->isSoft && svc->probe_matched) {
@@ -1491,9 +1502,14 @@ void servicescan_read_handler(nsock_pool nsp, nsock_event nse, void *mydata) {
       } else {
 	if (o.debugging > 1)
 	  if (MD->product || MD->version || MD->info)
-	    printf("Service scan match: %s:%hi is %s%s.  Version: |%s|%s|%s|\n", svc->target->NameIP(), svc->portno, (svc->tunnel == SERVICE_TUNNEL_SSL)? "SSL/" : "", MD->serviceName, (MD->product)? MD->product : "", (MD->version)? MD->version : "", (MD->info)? MD->info : "");
+	    printf("Service scan %smatch: %s:%hi is %s%s.  Version: |%s|%s|%s|\n", nullprobecheat? "NULL-CHEAT " : "", 
+		   svc->target->NameIP(), svc->portno, (svc->tunnel == SERVICE_TUNNEL_SSL)? "SSL/" : "", 
+		   MD->serviceName, (MD->product)? MD->product : "", (MD->version)? MD->version : "", 
+		   (MD->info)? MD->info : "");
 	  else
-	    printf("Service scan %s match: %s:%hi is %s%s\n", (MD->isSoft)? "soft" : "hard", svc->target->NameIP(), svc->portno, (svc->tunnel == SERVICE_TUNNEL_SSL)? "SSL/" : "", MD->serviceName);
+	    printf("Service scan %s%s match: %s:%hi is %s%s\n", nullprobecheat? "NULL-CHEAT " : "", 
+		   (MD->isSoft)? "soft" : "hard", svc->target->NameIP(), 
+		   svc->portno, (svc->tunnel == SERVICE_TUNNEL_SSL)? "SSL/" : "", MD->serviceName);
 	svc->probe_matched = MD->serviceName;
 	if (MD->product)
 	  Strncpy(svc->product_matched, MD->product, sizeof(svc->product_matched));

@@ -5153,9 +5153,10 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=F%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
-# HP JetDirect Print Server
+# HP JetDirect printer/rint server
 Fingerprint HP printer w/JetDirect card
 Class HP | embedded || printer
+Class HP | embedded || print server
 TSeq(Class=TD%gcd=<6%SI=<1E)
 T1(DF=N%W=16D0|C90%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -5244,8 +5245,9 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N|Y%TOS=0%IPLEN=38%RIPTL=148%RID=F%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
 # 2100 Series, 4000 TN, 4000 PS, 8000 DN
-Fingerprint HP LaserJet Printer
+Fingerprint HP LaserJet printer/print server
 Class HP | embedded || printer
+Class HP | embedded || print server
 TSeq(Class=TD%gcd=<6%SI=<100)
 T1(DF=N%W=16D0%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -5305,7 +5307,7 @@ PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=0%UCK=E%ULEN=134%DAT=E)
 
 # Jet Direct Model J3113A, Firmware Rev G.07.20
 # HP Color LaserJet 4500N, Jet Direct J3113A/2100
-Fingerprint HP Printer w/Jet Direct J3113A/2100 card
+Fingerprint HP Printer w/Jet Direct
 Class HP | embedded || printer
 T1(DF=N%W=16D0|0%ACK=S++%Flags=AS|AR%Ops=M|)
 T2(Resp=N)
@@ -6923,8 +6925,11 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
-Fingerprint Linksys WAP11 wireless AP v2.2 firmware 1.06
+# Linksys WAP11 wireless AP v2.2 firmware 1.06
+# DLink DWL-900+ with Firmware Version 2.57, Wed, 30 Apr 2003
+Fingerprint Linksys WAP11 or D-Link DWL-900+ wireless AP
 Class Linksys | embedded || WAP
+Class D-Link | embedded || WAP
 TSeq(Class=TD%gcd=<1F502%SI=<1E%IPID=I%TS=U)
 T1(DF=N%W=2000%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)

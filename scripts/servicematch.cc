@@ -112,11 +112,15 @@ int doMatch(AllProbes *AP, char *fprint, int fplen, char *ipaddystr) {
   char *currentprobe = NULL;
   char probename[128];
   char resptext[2048];
+  char *endp = NULL;
+  unsigned long fullrlen;
+  bool trunc = false; // Was at least one response truncated due to length?
   unsigned int resptextlen;
   char *dst;
   ServiceProbe *SP = NULL;
   char softmatch[32] = {0};
   const struct MatchDetails *MD = NULL;
+  bool nullprobecheat = false; // We cheated and found a match in the NULL probe to a non-null-probe response
 
   // First lets find the port number and protocol
   assert(fplen > 10);
@@ -140,11 +144,12 @@ int doMatch(AllProbes *AP, char *fprint, int fplen, char *ipaddystr) {
     }
     *dst++ = '\0';
 
-    // Skip the response length
+    // Grab
     assert(*p == ',');
     p++;
-    while(*p && *p != ',') 
-      p++;
+    assert(isxdigit(*p));
+    fullrlen = strtoul(p, &endp, 16);
+    p = endp;
     assert(*p == ',');
     p++;
     assert(*p == '"');
@@ -160,6 +165,9 @@ int doMatch(AllProbes *AP, char *fprint, int fplen, char *ipaddystr) {
     // Now we unescape the response into plain binary
     cstring_unescape(resptext, &resptextlen);
 
+    if (resptextlen < fullrlen)
+      trunc = true;
+
     // Finally we try to match this with the appropriate probe from the
     // nmap-service-probes file.
     SP = AP->getProbeByName(probename, proto);
@@ -167,7 +175,12 @@ int doMatch(AllProbes *AP, char *fprint, int fplen, char *ipaddystr) {
     if (!SP) {
       error("WARNING: Unable to find probe named %s in given probe file.", probename);
     } else {
+      nullprobecheat = false;
       MD = SP->testMatch((u8 *) resptext, resptextlen);
+      if (!MD && !SP->isNullProbe() && AP->nullProbe) {
+	MD = AP->nullProbe->testMatch((u8 *) resptext, resptextlen);
+	nullprobecheat = true;
+      }
       if (MD && MD->serviceName) {
 	if (MD->isSoft) {
 	  // We'll just squirrel it away for now
@@ -177,9 +190,9 @@ int doMatch(AllProbes *AP, char *fprint, int fplen, char *ipaddystr) {
 	} else {
 	  // YEAH!  Found a hard match!
 	  if (MD->product || MD->version || MD->info)
-	    printf("MATCHED svc %s |%s|%s|%s|%s: %s\n", MD->serviceName, MD->product? MD->product : "", MD->version? MD->version : "", MD->info? MD->info : "", ipaddystr, fprint);
+	    printf("MATCHED %ssvc %s |%s|%s|%s|%s: %s\n", nullprobecheat? "(NULLPROBE CHEAT) " : "", MD->serviceName, MD->product? MD->product : "", MD->version? MD->version : "", MD->info? MD->info : "", ipaddystr, fprint);
 	  else
-	    printf("MATCHED svc %s (NO VERSION)%s: %s\n", MD->serviceName, ipaddystr, fprint);
+	    printf("MATCHED %ssvc %s (NO VERSION)%s: %s\n", nullprobecheat? "(NULLPROBE CHEAT) " : "", MD->serviceName, ipaddystr, fprint);
 	  return 0;
 	}
       }
@@ -188,6 +201,7 @@ int doMatch(AllProbes *AP, char *fprint, int fplen, char *ipaddystr) {
     currentprobe = strstr(p, "%r(");
   }
   
+  if (trunc) printf("WARNING:  At least one probe response was truncated\n");
   if (*softmatch) printf("SOFT MATCH svc %s (SOFT MATCH)%s: %s\n", softmatch, ipaddystr, fprint);
   else printf("FAILED to match%s: %s\n", ipaddystr, fprint);
 
