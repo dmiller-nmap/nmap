@@ -18,7 +18,7 @@ while(<>) {
     chomp;
     $line = $_;
 
-    if ($line eq ".") { last; }
+    if ($line eq "." || $line eq "") { last; }
     if (!$line =~ /(Fingerprint\s+\S)|(^T[1-7])|(^PU)|(^Contributed by)/i) { next; }
 
     if ($line =~ /Contributed by (.*)/) {
