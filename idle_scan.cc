@@ -592,7 +592,6 @@ int idlescan_countopen2(struct idle_proxy_info *proxy,
 
   openports = -1;
   tries = 0;
-  /* CHANGEME: I d'nt think that MAX() line works right */
   TIMEVAL_MSEC_ADD(probe_times[0], start, MAX(50, (target->to.srtt * 3/4) / 1000));
   TIMEVAL_MSEC_ADD(probe_times[1], start, target->to.srtt / 1000 );
   TIMEVAL_MSEC_ADD(probe_times[2], end, MAX(75, (target->to.srtt + 
@@ -887,7 +886,7 @@ void idle_scan(Target *target, u16 *portarray, int numports,
   /* If we don't have timing infoz for the new target, we'll use values 
      derived from the proxy */
   if (target->to.srtt == -1 && target->to.rttvar == -1) {
-    target->to.srtt = MAX(200,2 * proxy.host.to.srtt);
+    target->to.srtt = MAX(200000,2 * proxy.host.to.srtt);
     target->to.rttvar = MAX(10000, MIN(target->to.srtt, 2000000));
     target->to.timeout = target->to.srtt + (target->to.rttvar << 2);
   }
