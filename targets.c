@@ -435,8 +435,6 @@ void masstcpping(struct hoststruct *hostbatch, int num_hosts, int pingtimeout) {
 	      case ECONNREFUSED:
 		hostbatch[hostindex].flags |= HOST_UP;	
 		break;
-	      case ENONET:
-	      case ENOLINK:
 	      case ENETDOWN:
 	      case ENETUNREACH:
 	      case ENETRESET:
