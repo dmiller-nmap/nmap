@@ -729,6 +729,9 @@
        <B>-r</B>     Tells Nmap <B>NOT</B> to  randomize  the  order  in  which
               ports are scanned.
 
+       <B>-ttl</B> <B>&lt;time</B> <B>to</B> <B>live&gt;</B>
+              Sets the time to live field in the IPv4 header.
+
        <B>--randomize_hosts</B>
               Tells  Nmap  to  shuffle  each  group of up to 2048
               hosts before it scans  them.   This  can  make  the
@@ -806,8 +809,8 @@
               probe.
 
        <B>--initial_rtt_timeout</B> <B>&lt;milliseconds&gt;</B>
-              Specifies  the  initial  probe  timeout.   This  is
-              generally only useful when scanning firwalled hosts
+              Specifies the initial probe timeout.  This is  gen­
+              erally  only  useful  when scanning firwalled hosts
               with -P0.  Normally Nmap can obtain good RTT  esti­
               mates  from the ping and the first few probes.  The
               default mode uses 6000.
@@ -1014,8 +1017,8 @@
        of  this  classification  is  AT  (anti-terrorism),  which
        applies to almost all goods and denies export to a handful
        of  rogue  nations  such  as  Iraq  and North Korea.  Thus
-       exporting Nmap  does  not  require  any  special  license,
-       permit, or other governmental authorization.
+       exporting Nmap does not require any special license,  per­
+       mit, or other governmental authorization.
 
 
 
