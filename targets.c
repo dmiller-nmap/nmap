@@ -357,7 +357,8 @@ group_end = MIN(group_start + group_size -1, num_hosts -1);
 	       to.timeout = to.srtt + (to.rttvar << 2);
 	     } else {	     
 	       delta = TIMEVAL_SUBTRACT(end, time[response.sequence]) - to.srtt;
-	       printf("ping --adj to (delta %d) changing srtt %d rttvar %d timeout %d to ", delta, to.srtt, to.rttvar, to.timeout);
+	       if (o.debugging > 1)
+		 printf("ping --adj to (delta %d) changing srtt %d rttvar %d timeout %d to ", delta, to.srtt, to.rttvar, to.timeout);
 	       to.srtt += delta >> 3;
 	       to.rttvar += (ABS(delta) - to.rttvar) >> 2;
 	       to.timeout = to.srtt + (to.rttvar << 2);

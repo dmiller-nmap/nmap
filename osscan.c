@@ -115,8 +115,6 @@ if (o.verbose && openport != -1)
      } else if (TIMEVAL_SUBTRACT(t2,t1) > 5 * target->to.timeout) {
        timeout = 1;
      }		  
-     printf("GOT RESPONSE\n");
-     readtcppacket((char *) ip, ntohs(ip->ip_len));
      if (bytes < (4 * ip->ip_hl) + 4)
        continue;
      if (ip->ip_p == IPPROTO_TCP) {
@@ -155,45 +153,45 @@ if (o.verbose && openport != -1)
      }
      printf("\n");
      seq_gcd = get_gcd_n_ulong(target->seq.responses -1, seq_diffs);
-     printf("The GCD is %lu\n", seq_gcd);
+     /*     printf("The GCD is %lu\n", seq_gcd);*/
      for(i=0; i < target->seq.responses - 1; i++)
        seq_diffs[i] /= seq_gcd;
      for(i=0; i < target->seq.responses - 1; i++) {     
        if (MOD_DIFF(target->seq.seqs[i+1],target->seq.seqs[i]) > 10000000) {
 	 target->seq.class = SEQ_TR;
 	 target->seq.index = 999999;
-	 printf("Target is a TR box\n");
+	 /*	 printf("Target is a TR box\n");*/
 	 break;
        }	
        seq_avg_inc += seq_diffs[i];
      }
      if (seq_gcd % 64000 == 0) {
        target->seq.class = SEQ_64K;
-       printf("Target is a 64K box\n");
+       /*       printf("Target is a 64K box\n");*/
        target->seq.index = 0;
      } else if (seq_gcd % 800 == 0) {
        target->seq.class = SEQ_i800;
-       printf("Target is a i800 box\n");
+       /*       printf("Target is a i800 box\n");*/
        target->seq.index = 10;
      } else if (target->seq.class == SEQ_UNKNOWN) {
        seq_avg_inc = (0.5) + seq_avg_inc / (target->seq.responses - 1);
-       printf("seq_avg_inc=%lu\n", seq_avg_inc);
+       /*       printf("seq_avg_inc=%lu\n", seq_avg_inc);*/
        for(i=0; i < target->seq.responses -1; i++)       {     
-	 printf("The difference is %lu\n", seq_diffs[i]);
-	 printf("Adding %lu^2=%e", MOD_DIFF(seq_diffs[i], seq_avg_inc), pow(MOD_DIFF(seq_diffs[i], seq_avg_inc), 2));
+	 /*	 printf("The difference is %lu\n", seq_diffs[i]);
+		 printf("Adding %lu^2=%e", MOD_DIFF(seq_diffs[i], seq_avg_inc), pow(MOD_DIFF(seq_diffs[i], seq_avg_inc), 2));*/
 	 seq_inc_sum += pow(MOD_DIFF(seq_diffs[i], seq_avg_inc), 2);
        }
-       printf("The sequence sum is %e\n", seq_inc_sum);
+       /*       printf("The sequence sum is %e\n", seq_inc_sum);*/
        seq_inc_sum /= (target->seq.responses - 1);
        target->seq.index = (unsigned long) (0.5 + pow(seq_inc_sum, 0.5));
-       printf("The sequence index is %d\n", target->seq.index);
+       /*       printf("The sequence index is %d\n", target->seq.index);*/
        if (target->seq.index < 50) {
 	 target->seq.class = SEQ_TD;
-	 printf("Target is a Micro$oft style time dependant box\n");
+	 /*	 printf("Target is a Micro$oft style time dependant box\n");*/
        }
        else {
 	 target->seq.class = SEQ_RI;
-	 printf("Target is a random incremental box\n");
+	 /*	 printf("Target is a random incremental box\n");*/
        }
      }
      FPtmp = safe_malloc(sizeof(FingerPrint));
@@ -306,7 +304,8 @@ if (o.verbose && openport != -1)
 	 continue;
        }
        testno = ntohs(tcp->th_dport) - current_port + 2;
-       printf("Got packet for test number %d\n", testno);
+       if (o.debugging > 1)
+	 printf("Got packet for test number %d\n", testno);
        if (FPtests[testno]) continue;
        testsleft--;
        newcatches++;
