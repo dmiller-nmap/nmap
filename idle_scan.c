@@ -833,7 +833,8 @@ int idle_treescan(struct idle_proxy_info *proxy, struct hoststruct *target,
 /* The very top-level idle scan function -- scans the given target
    host using the given proxy -- the proxy is cached so that you can keep
    calling this function with different targets */
-void idle_scan(struct hoststruct *target, u16 *portarray, char *proxyName) {
+void idle_scan(struct hoststruct *target, u16 *portarray, int numports,
+	       char *proxyName) {
 
   static char lastproxy[MAXHOSTNAMELEN + 1] = ""; /* The proxy used in any previous call */
   static struct idle_proxy_info proxy;
@@ -842,6 +843,7 @@ void idle_scan(struct hoststruct *target, u16 *portarray, char *proxyName) {
   int portsleft;
   time_t starttime;
   
+  if (numports == 0) return; /* nothing to scan for */
   if (!proxyName) fatal("Idlescan requires a proxy host");
 
   if (*lastproxy && strcmp(proxyName, lastproxy))
@@ -873,8 +875,8 @@ void idle_scan(struct hoststruct *target, u16 *portarray, char *proxyName) {
      it up and drill down in subscans of the group), we split the port
      space into smaller groups and then call a recursive
      divide-and-counquer function to find the open ports */
-  while(portidx < o.numports) {
-    portsleft = o.numports - portidx;
+  while(portidx < numports) {
+    portsleft = numports - portidx;
     /* current_groupsz is doubled below because idle_subscan cuts in half */
     groupsz = MIN(portsleft, (int) (proxy.current_groupsz * 2));
     idle_treescan(&proxy, target, portarray + portidx, groupsz, -1);
@@ -885,12 +887,12 @@ void idle_scan(struct hoststruct *target, u16 *portarray, char *proxyName) {
   if (o.verbose) {
     long timediff = time(NULL) - starttime;
     log_write(LOG_STDOUT, "The Idlescan took %ld %s to scan %d ports.\n", 
-	      timediff, (timediff == 1)? "second" : "seconds", o.numports);
+	      timediff, (timediff == 1)? "second" : "seconds", numports);
   }
 
   /* Now we go through the ports which were not determined were scanned
      but not determined to be open, and add them in the "closed" state */
-  for(portidx = 0; portidx < o.numports; portidx++) {
+  for(portidx = 0; portidx < numports; portidx++) {
     if (lookupport(&target->ports, portarray[portidx], IPPROTO_TCP) == NULL) {
       addport(&target->ports, portarray[portidx], IPPROTO_TCP, NULL,
 	      PORT_CLOSED);

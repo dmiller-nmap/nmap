@@ -654,21 +654,21 @@
               For  IP protocol scanning (-sO), this specifies the
               protocol number you wish to scan for (0-255).
 
+              When scanning both TCP and UDP ports, you can spec-
+              ify  a  particular  protocol  by preceding the port
+              numbers by "T:" or "U:".  The qualifier lasts until
+              you  specify  another  qualifier.  For example, the
+              argument   "-p    U:53,111,137,T:21-25,80,139,8080"
+              would scan UDP ports 53,111,and 137, as well as the
+              listed TCP ports.  Note that to  scan  both  UDP  &amp;
+              TCP,  you  have to specify -sU and at least one TCP
+              scan type (such as -sS, -sF, or -sT).  If no proto-
+              col  qualifier is given, the port numbers are added
+              to all protocol lists.
+
        <B>-F</B> <B>Fast</B> <B>scan</B> <B>mode.</B>
               Specifies that you only  wish  to  scan  for  ports
               listed  in  the services file which comes with nmap
-              (or the protocols file for -sO).  This is obviously
-              much  faster  than  scanning  all  65535 ports on a
-              host.
-
-       <B>-D</B> <B>&lt;decoy1</B> <B>[,decoy2][,ME],...&gt;</B>
-              Causes a decoy scan to be performed which makes  it
-              appear  to  the  remote  host  that the host(s) you
-              specify as decoys are scanning the  target  network
-              too.   Thus  their IDS might report 5-10 port scans
-              from unique IP addresses, but they won't know which
-              IP  was  scanning  them  and  which  were  innocent
-              decoys.  While this can be defeated through  router
 
 
 
@@ -681,6 +681,18 @@
 <B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
 
 
+              (or the protocols file for -sO).  This is obviously
+              much  faster  than  scanning  all  65535 ports on a
+              host.
+
+       <B>-D</B> <B>&lt;decoy1</B> <B>[,decoy2][,ME],...&gt;</B>
+              Causes a decoy scan to be performed which makes  it
+              appear  to  the  remote  host  that the host(s) you
+              specify as decoys are scanning the  target  network
+              too.   Thus  their IDS might report 5-10 port scans
+              from unique IP addresses, but they won't know which
+              IP  was  scanning  them  and  which  were  innocent
+              decoys.  While this can be defeated through  router
               path tracing, response-dropping, and other "active"
               mechanisms, it is generally an extremely  effective
               technique for hiding your IP address.
@@ -723,18 +735,6 @@
               It is worth noting that using too many  decoys  may
               slow  your  scan  and potentially even make it less
               accurate.  Also, some ISPs  will  filter  out  your
-              spoofed  packets, although many (currently most) do
-              not restrict spoofed IP packets at all.
-
-       <B>-S</B> <B>&lt;IP_Address&gt;</B>
-              In some circumstances, <I>nmap</I>  may  not  be  able  to
-              determine  your source address ( <I>nmap</I> will tell you
-              if this is the case).  In this  situation,  use  -S
-              with  your IP address (of the interface you wish to
-              send packets through).
-
-              Another possible use of this flag is to  spoof  the
-              scan to make the targets think that <B>someone</B> <B>else</B> is
 
 
 
@@ -747,6 +747,18 @@
 <B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
 
 
+              spoofed  packets, although many (currently most) do
+              not restrict spoofed IP packets at all.
+
+       <B>-S</B> <B>&lt;IP_Address&gt;</B>
+              In some circumstances, <I>nmap</I>  may  not  be  able  to
+              determine  your source address ( <I>nmap</I> will tell you
+              if this is the case).  In this  situation,  use  -S
+              with  your IP address (of the interface you wish to
+              send packets through).
+
+              Another possible use of this flag is to  spoof  the
+              scan to make the targets think that <B>someone</B> <B>else</B> is
               scanning them.  Imagine a company being  repeatedly
               port  scanned  by a competitor!  This is not a sup-
               ported usage (or the main purpose) of this flag.  I
@@ -789,18 +801,6 @@
               the  target  IP  addresses.   Normally this is only
               done when a machine is found to be alive.
 
-       <B>-r</B>     Tells Nmap <B>NOT</B> to  randomize  the  order  in  which
-              ports are scanned.
-
-       <B>--randomize_hosts</B>
-              Tells  Nmap  to  shuffle  each  group of up to 2048
-              hosts before it scans  them.   This  can  make  the
-              scans  less  obvious  to various network monitoring
-              systems, especially when you combine it  with  slow
-              timing options (see below).
-
-       <B>-M</B> <B>&lt;max</B> <B>sockets&gt;</B>
-              Sets  the  maximum  number  of sockets that will be
 
 
 
@@ -813,6 +813,18 @@
 <B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
 
 
+       <B>-r</B>     Tells Nmap <B>NOT</B> to  randomize  the  order  in  which
+              ports are scanned.
+
+       <B>--randomize_hosts</B>
+              Tells  Nmap  to  shuffle  each  group of up to 2048
+              hosts before it scans  them.   This  can  make  the
+              scans  less  obvious  to various network monitoring
+              systems, especially when you combine it  with  slow
+              timing options (see below).
+
+       <B>-M</B> <B>&lt;max</B> <B>sockets&gt;</B>
+              Sets  the  maximum  number  of sockets that will be
               used in parallel for  a  TCP  connect()  scan  (the
               default).   This  is useful to slow down the scan a
               little bit  and  avoid  crashing  remote  machines.
@@ -855,18 +867,6 @@
               you Paranoid mode and '-T 5' is Insane mode.
 
               These  canned  timing  modes  should NOT be used in
-              combination with the  lower  level  controls  given
-              below.
-
-       <B>--host_timeout</B> <B>&lt;milliseconds&gt;</B>
-              Specifies  the  amount  of  time Nmap is allowed to
-              spend scanning a single host before  giving  up  on
-              that IP.  The default timing mode has no host time-
-              out.
-
-       <B>--max_rtt_timeout</B> <B>&lt;milliseconds&gt;</B>
-              Specifies  the  maximum  amount  of  time  Nmap  is
-              allowed   to  wait  for  a  probe  response  before
 
 
 
@@ -879,6 +879,18 @@
 <B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
 
 
+              combination with the  lower  level  controls  given
+              below.
+
+       <B>--host_timeout</B> <B>&lt;milliseconds&gt;</B>
+              Specifies  the  amount  of  time Nmap is allowed to
+              spend scanning a single host before  giving  up  on
+              that IP.  The default timing mode has no host time-
+              out.
+
+       <B>--max_rtt_timeout</B> <B>&lt;milliseconds&gt;</B>
+              Specifies  the  maximum  amount  of  time  Nmap  is
+              allowed   to  wait  for  a  probe  response  before
               retransmitting or timing out that particular probe.
               The default mode sets this to about 9000.
 
@@ -923,18 +935,6 @@
        addresses,  you  can  append <B>'/mask'</B> to the hostname or IP
        address.  <B>mask</B> must be between 0 (scan the whole internet)
        and  32 (scan the single host specified).  Use /24 to scan
-       a class 'C' address and /16 for a class 'B'.
-
-       Nmap also has a more  powerful  notation  which  lets  you
-       specify an IP address using lists/ranges for each element.
-       Thus you can scan the whole class 'B' network  192.168.*.*
-       by  specifying  '192.168.*.*'  or '192.168.0-255.0-255' or
-       even '192.168.1-50,51-255.1,2,3,4,5-255'.  And  of  course
-       you  can  use  the mask notation: '192.168.0.0/16'.  These
-       are all equivalent.  If you use asterisks ('*'),  remember
-       that  most  shells  require  you  to escape them with back
-       slashes or protect them with quotes.
-
 
 
 
@@ -946,6 +946,18 @@
 
 <B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
 
+
+       a class 'C' address and /16 for a class 'B'.
+
+       Nmap also has a more  powerful  notation  which  lets  you
+       specify an IP address using lists/ranges for each element.
+       Thus you can scan the whole class 'B' network  192.168.*.*
+       by  specifying  '192.168.*.*'  or '192.168.0-255.0-255' or
+       even '192.168.1-50,51-255.1,2,3,4,5-255'.  And  of  course
+       you  can  use  the mask notation: '192.168.0.0/16'.  These
+       are all equivalent.  If you use asterisks ('*'),  remember
+       that  most  shells  require  you  to escape them with back
+       slashes or protect them with quotes.
 
        Another interesting thing to do is slice the Internet  the
        other  way.   Instead of scanning all the hosts in a class
@@ -992,18 +1004,6 @@
 
        <B>nmap</B> <B>-v</B> <B>--randomize_hosts</B> <B>-p</B> <B>80</B> <B>'*.*.2.3-5'</B>
 
-       Rather than focus on a specific IP range, it is  sometimes
-       interesting  to  slice  up  the entire Internet and scan a
-       small sample from each slice.  This command finds all  web
-       servers  on  machines  with  IP  addresses ending in .2.3,
-       .2.4, or .2.5 find more interesting machines  starting  at
-       127.  so  you  might  want to use '127-222' instead of the
-       first asterisks because that section has a greater density
-       of interesting machines (IMHO).
-
-       <B>host</B> <B>-l</B> <B>company.com</B> <B>|</B> <B>cut</B> <B>'-d</B> <B>'</B> <B>-f</B> <B>4</B> <B>|</B> <B>./nmap</B> <B>-v</B> <B>-iL</B> <B>-</B>
-
-
 
 
                                                                15
@@ -1014,6 +1014,17 @@
 
 <B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
 
+
+       Rather than focus on a specific IP range, it is  sometimes
+       interesting  to  slice  up  the entire Internet and scan a
+       small sample from each slice.  This command finds all  web
+       servers  on  machines  with  IP  addresses ending in .2.3,
+       .2.4, or .2.5 find more interesting machines  starting  at
+       127.  so  you  might  want to use '127-222' instead of the
+       first asterisks because that section has a greater density
+       of interesting machines (IMHO).
+
+       <B>host</B> <B>-l</B> <B>company.com</B> <B>|</B> <B>cut</B> <B>'-d</B> <B>'</B> <B>-f</B> <B>4</B> <B>|</B> <B>./nmap</B> <B>-v</B> <B>-iL</B> <B>-</B>
 
        Do  a  DNS  zone transfer to find the hosts in company.com
        and then feed the IP addresses to <I>nmap.</I>   The  above  com-
@@ -1064,17 +1075,6 @@
        far).
 
        Source code also allows you to port Nmap to new platforms,
-       fix bugs, and add new features.  You are highly encouraged
-       to send your changes to fyodor@insecure.org  for  possible
-       incorporation  into  the  main  distribution.   By sending
-       these changes to Fyodor or one the  insecure.org  develop-
-       ment  mailing  lists,  it is assumed that you are offering
-       Fyodor the unlimited, non-exclusive right to  reuse,  mod-
-       ify,  and  relicense  the code.  This is important because
-       the inability to relicense  code  has  caused  devastating
-       problems for other Free Software projects (such as KDE and
-       NASM).  Nmap will always be available Open Source.  If you
-       wish   to  specify  special  license  conditions  of  your
 
 
 
@@ -1087,7 +1087,18 @@
 <B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
 
 
-       contributions, just say so when you send them.
+       fix bugs, and add new features.  You are highly encouraged
+       to send your changes to fyodor@insecure.org  for  possible
+       incorporation  into  the  main  distribution.   By sending
+       these changes to Fyodor or one the  insecure.org  develop-
+       ment  mailing  lists,  it is assumed that you are offering
+       Fyodor the unlimited, non-exclusive right to  reuse,  mod-
+       ify,  and  relicense  the code.  This is important because
+       the inability to relicense  code  has  caused  devastating
+       problems for other Free Software projects (such as KDE and
+       NASM).  Nmap will always be available Open Source.  If you
+       wish to specify special license conditions of your contri-
+       butions, just say so when you send them.
 
        This program is distributed in the hope that  it  will  be
        useful, but <B>WITHOUT</B> <B>ANY</B> <B>WARRANTY;</B> without even the implied
@@ -1118,17 +1129,6 @@
        believed to be Year 2000 (Y2K) compliant in all  respects.
        There  is  no  reason to believe versions earlier than 2.0
        are susceptible to problems, but we have not tested  them.
-
-
-
-
-
-
-
-
-
-
-
 
 
 

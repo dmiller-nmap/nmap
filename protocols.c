@@ -140,44 +140,36 @@ struct protoent *nmap_getprotbynum(int num) {
 }
 
 /* Be default we do all prots 0-255. */
-unsigned short *getdefaultprots(void) {
+struct scan_lists *getdefaultprots(void) {
   int protindex = 0;
-  unsigned short *prots;
-  char usedprots[256];
+  struct scan_lists *scanlist;
   /*struct protocol_list *current;*/
   int bucket;
-  int protsneeded = 1; /* the 1 is for the terminating 0 */
+  int protsneeded = 255;
 
   if (!protocols_initialized)
     if (nmap_protocols_init() == -1)
       fatal("getdefaultprots(): Couldn't get protocol numbers");
   
-  bzero(usedprots, sizeof(usedprots));
-  for(bucket = 1; bucket < 255; bucket++) {  
-    usedprots[bucket] = 1;
-    protsneeded++;
+  scanlist = (struct scan_lists *) cp_alloc(sizeof(struct scan_lists));
+  bzero(scanlist, sizeof(scanlist));
+  scanlist->prots = (unsigned short *) cp_alloc((protsneeded +1) * sizeof(unsigned short));
+  scanlist->prot_count = protsneeded;
+
+  for(bucket = 1; bucket < protsneeded; bucket++) {
+    scanlist->prots[protindex++] = bucket;
   }
-
-  prots = (unsigned short *) cp_alloc(protsneeded * sizeof(unsigned short));
-  o.numports = protsneeded - 1;
-
-  for(bucket = 1; bucket < 255; bucket++) {
-    if (usedprots[bucket])
-      prots[protindex++] = bucket;
-  }
-  prots[protindex] = 0;
-
-return prots;
-
+  scanlist->prots[protindex] = 0;
+  return scanlist;
 }
 
-unsigned short *getfastprots(void) {
+struct scan_lists *getfastprots(void) {
   int protindex = 0;
-  unsigned short *prots;
+  struct scan_lists *scanlist;
   char usedprots[256];
   struct protocol_list *current;
   int bucket;
-  int protsneeded = 1; /* the 1 is for the terminating 0 */
+  int protsneeded;
 
   if (!protocols_initialized)
     if (nmap_protocols_init() == -1)
@@ -194,16 +186,18 @@ unsigned short *getfastprots(void) {
     }
   }
 
-  prots = (unsigned short *) cp_alloc(protsneeded * sizeof(unsigned short));
-  o.numports = protsneeded - 1;
+  scanlist = (struct scan_lists *) cp_alloc(sizeof(struct scan_lists));
+  bzero(scanlist, sizeof(scanlist));
+  scanlist->prots = (unsigned short *) cp_alloc((protsneeded +1) * sizeof(unsigned short));
+  scanlist->prot_count = protsneeded;
 
   for(bucket = 1; bucket < 256; bucket++) {
     if (usedprots[bucket])
-      prots[protindex++] = bucket;
+      scanlist->prots[protindex++] = bucket;
   }
-  prots[protindex] = 0;
+  scanlist->prots[protindex] = 0;
 
-return prots;
+  return scanlist;
 }
 
 

@@ -69,7 +69,6 @@ struct port {
   u16 portno;
   u8 proto;
   char *owner;
-  char *rpc_name;
   int rpc_status; /* RPC_STATUS_UNTESTED means we haven't checked
 		    RPC_STATUS_UNKNOWN means the port appears to be RPC
 		    but we couldn't find a match

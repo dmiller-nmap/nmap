@@ -1,4 +1,3 @@
-
 /***********************************************************************/
 /* scanengine.c -- Includes much of the "engine" functions for         */
 /* scanning, such as pos_scan and super_scan.  It also includes        */
@@ -521,7 +520,7 @@ static void get_syn_results(struct hoststruct *target, struct portinfo *scan,
 /* Handles the "positive-response" scans (where we get a response
    telling us that the port is open based on the probe.  This includes
    SYN Scan, Connect Scan, RPC scan, Window Scan, and ACK scan */
-void pos_scan(struct hoststruct *target, u16 *portarray, stype scantype) {
+void pos_scan(struct hoststruct *target, u16 *portarray, int numports, stype scantype) {
   int initial_packet_width;  /* How many scan packets in parallel (to start with) */
   struct scanstats ss;
   int rawsd;
@@ -554,10 +553,12 @@ void pos_scan(struct hoststruct *target, u16 *portarray, stype scantype) {
   if (target->timedout)
     return;
 
+  if (! numports) return;		 /* nothing to scan for */
+
   /* If it is a SYN scan and we have already figured out the states
      of all the TCP ports, might as well skip the scan (this can happen
      if the ping scan determined the states) */
-  if (target->ports.state_counts_tcp[PORT_OPEN] + target->ports.state_counts_tcp[PORT_CLOSED] + target->ports.state_counts_tcp[PORT_FIREWALLED] == o.numports && scantype == SYN_SCAN) {
+  if (target->ports.state_counts_tcp[PORT_OPEN] + target->ports.state_counts_tcp[PORT_CLOSED] + target->ports.state_counts_tcp[PORT_FIREWALLED] == numports && scantype == SYN_SCAN) {
     if (o.debugging)
       error("Skipping SYN scan since all ports already known");
     return;
@@ -572,7 +573,7 @@ void pos_scan(struct hoststruct *target, u16 *portarray, stype scantype) {
   ss.packet_incr = 4;
   ss.fallback_percent = 0.7;
   ss.numqueries_outstanding = 0;
-  ss.ports_left = o.numports;
+  ss.ports_left = numports;
   ss.alreadydecreasedqueries = 0;
 
   bzero(&pil, sizeof(pil));
@@ -606,14 +607,14 @@ void pos_scan(struct hoststruct *target, u16 *portarray, stype scantype) {
 
   if (scantype != RPC_SCAN) {
     /* Initialize our portlist (scan) */
-    scan = (struct portinfo *) safe_malloc(o.numports * sizeof(struct portinfo));
-    for(i = 0; i < o.numports; i++) {
+    scan = (struct portinfo *) safe_malloc(numports * sizeof(struct portinfo));
+    for(i = 0; i < numports; i++) {
       scan[i].state = PORT_FRESH;
       scan[i].portno = portarray[i];
       scan[i].trynum = 0;
       scan[i].prev = i-1;
       scan[i].sd[0] = scan[i].sd[1] = scan[i].sd[2] = -1;
-      if (i < o.numports -1 ) scan[i].next = i+1;
+      if (i < numports -1 ) scan[i].next = i+1;
       else scan[i].next = -1;
       portlookup[portarray[i]] = i;
     }
@@ -1059,7 +1060,7 @@ void pos_scan(struct hoststruct *target, u16 *portarray, stype scantype) {
   }
   
   if (o.verbose)
-    log_write(LOG_STDOUT, "The %s took %ld %s to scan %d ports.\n", scantype2str(scantype),  (long) time(NULL) - starttime, (((long) time(NULL) - starttime) == 1)? "second" : "seconds", o.numports);
+    log_write(LOG_STDOUT, "The %s took %ld %s to scan %d ports.\n", scantype2str(scantype),  (long) time(NULL) - starttime, (((long) time(NULL) - starttime) == 1)? "second" : "seconds", numports);
   
  posscan_timedout:
   
@@ -1076,7 +1077,7 @@ void pos_scan(struct hoststruct *target, u16 *portarray, stype scantype) {
 /* FTP bounce attack scan.  This function is rather lame and should be
    rewritten.  But I don't think it is used much anyway.  If I'm going to
    allow FTP bounce scan, I should really allow SOCKS proxy scan.  */
-void bounce_scan(struct hoststruct *target, u16 *portarray,
+void bounce_scan(struct hoststruct *target, u16 *portarray, int numports,
 		 struct ftpinfo *ftp) {
   int starttime,  res , sd = ftp->sd,  i=0;
   char *t = (char *)&target->host; 
@@ -1086,6 +1087,8 @@ void bounce_scan(struct hoststruct *target, u16 *portarray,
   char command[512];
   unsigned short portno,p1,p2;
   struct timeval now;
+
+  if (! numports) return;		 /* nothing to scan for */
 
   snprintf(targetstr, 20, "%d,%d,%d,%d,", UC(t[0]), UC(t[1]), UC(t[2]), UC(t[3]));
 
@@ -1196,14 +1199,14 @@ void bounce_scan(struct hoststruct *target, u16 *portarray,
 
   if (o.debugging || o.verbose) 
     log_write(LOG_STDOUT, "Scanned %d ports in %ld seconds via the Bounce scan.\n",
-	    o.numports, (long) time(NULL) - starttime);
+	    numports, (long) time(NULL) - starttime);
   return;
 }
 
 /* Handles the scan types where no positive-acknowledgement of open
    port is received (those scans are in pos_scan).  Super_scan
    includes scans such as FIN/XMAS/NULL/Maimon/UDP and IP Proto scans */
-void super_scan(struct hoststruct *target, u16 *portarray, 
+void super_scan(struct hoststruct *target, u16 *portarray, int numports,
 		stype scantype) {
   int initial_packet_width;  /* How many scan packets in parallel (to start with) */
   int packet_incr = 4; /* How much we increase the parallel packets by each round */
@@ -1247,6 +1250,8 @@ void super_scan(struct hoststruct *target, u16 *portarray,
   if (target->timedout)
     return;
 
+  if (! numports) return;		 /* nothing to scan for */
+
   if (o.debugging) 
     log_write(LOG_STDOUT, "Starting super_scan\n");
 
@@ -1254,7 +1259,7 @@ void super_scan(struct hoststruct *target, u16 *portarray,
   numqueries_ideal = initial_packet_width = MIN(max_width, 10);
 
   memset(portlookup, 255, 65536 * sizeof(int)); /* 0xffffffff better always be (int) -1 */
-  scan = (struct portinfo *) safe_malloc(o.numports * sizeof(struct portinfo));
+  scan = (struct portinfo *) safe_malloc(numports * sizeof(struct portinfo));
 
   /* Initialize timeout info */
   /*
@@ -1264,12 +1269,12 @@ void super_scan(struct hoststruct *target, u16 *portarray,
   */
 
   /* Initialize our portlist (scan) */
-  for(i = 0; i < o.numports; i++) {
+  for(i = 0; i < numports; i++) {
     scan[i].state = PORT_FRESH;
     scan[i].portno = portarray[i];
     scan[i].trynum = 0;
     scan[i].prev = i-1;
-    if (i < o.numports -1 ) scan[i].next = i+1;
+    if (i < numports -1 ) scan[i].next = i+1;
     else scan[i].next = -1;
     portlookup[portarray[i]] = i;
   }
@@ -1651,7 +1656,7 @@ void super_scan(struct hoststruct *target, u16 *portarray,
   openlist = testinglist;
 
   if (o.debugging || o.verbose)
-    log_write(LOG_STDOUT, "The %s took %ld %s to scan %d ports.\n", scantype2str(scantype), (long) time(NULL) - starttime, (((long) time(NULL) - starttime) == 1)? "second" : "seconds",  o.numports);
+    log_write(LOG_STDOUT, "The %s took %ld %s to scan %d ports.\n", scantype2str(scantype), (long) time(NULL) - starttime, (((long) time(NULL) - starttime) == 1)? "second" : "seconds",  numports);
   
   for (current = openlist; current;  current = (current->next >= 0)? &scan[current->next] : NULL) {
     if (scantype == IPPROT_SCAN)
@@ -1675,9 +1680,9 @@ void super_scan(struct hoststruct *target, u16 *portarray,
      ports were scanned and they are ALL considered open by this
      function, then it is reasonably to assume that the REAL reason
      they are all open is that they have been filtered. */
-  if (o.numports > 25) {    
+  if (numports > 25) {    
     if (scantype == UDP_SCAN) {
-      if (target->ports.state_counts_udp[PORT_OPEN] == o.numports) {
+      if (target->ports.state_counts_udp[PORT_OPEN] == numports) {
 	if (o.verbose) { 
 	  error("(no udp responses received -- assuming all ports filtered)");
 	}
@@ -1695,7 +1700,7 @@ void super_scan(struct hoststruct *target, u16 *portarray,
 	  }
       }
     } else { 
-      if (target->ports.state_counts_tcp[PORT_OPEN] == o.numports) {
+      if (target->ports.state_counts_tcp[PORT_OPEN] == numports) {
 	if (o.verbose) { 
 	  error("(no tcp responses received -- assuming all ports filtered)");
 	}

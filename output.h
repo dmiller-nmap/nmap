@@ -95,16 +95,12 @@ int log_open(int logt, int append, char *filename);
 /* Used in creating skript kiddie style output.  |<-R4d! */
 void skid_output(char *s);
 
-/* The items in ports should be
-   in sequential order for space savings and easier to read output */
-void output_rangelist_given_ports_to_machine_output(unsigned short *ports,
-						    int numports);
 /* Output the list of ports scanned to the top of machine parseable
    logs (in a comment, unfortunately).  The items in ports should be
    in sequential order for space savings and easier to read output */
-void output_ports_to_machine_parseable_output(unsigned short *ports, 
-					      int numports, int tcpscan, 
-					      int udpscan);
+void output_ports_to_machine_parseable_output(struct scan_lists *ports, 
+					      int tcpscan, int udpscan,
+					      int protscan);
 
 /* The items in ports should be
    in sequential order for space savings and easier to read output.  Outputs
@@ -116,8 +112,7 @@ void output_rangelist_given_ports(int logt, unsigned short *ports,
 /* Similar to output_ports_to_machine_parseable_output, this function
    outputs the XML version, which is scaninfo records of each scan
    requested and the ports which it will scan for */
-void output_xml_scaninfo_records(unsigned short *ports, 
-				 int numports);
+void output_xml_scaninfo_records(struct scan_lists *ports);
 
 /* Writes host status info to the log streams (including STDOUT).  An
    example is "Host: 10.11.12.13 (foo.bar.example.com)\tStatus: Up\n" to 

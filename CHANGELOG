@@ -1,11 +1,36 @@
-# Nmap Changelog
+# Nmap Changelog ($Id$)
+
+** 2.54BETA29
+
+-- Integrated William McVey's multi-portlist patch.  This allows you
+   to specify different port numbers when scanning both TCP & UDP.
+   For example, if you want to UDP for 53,111 and 137 while TCP
+   scanning for 21-25,80,139,515,6000,8080 you could do: 
+   nmap -sSU -p U:53,111,137,T:21-25,80,139,515,6000,8080 target.com .
+   Prior to this patch, you had to either use different Nmap
+   executions or scan both UDP & TCP of each port.  See the man page
+   for more usage info.
+
+-- Found and fixed some relatively major memory leaks based on reports
+   sent in by H D Moore (hdm@secureaustin.com), mugz
+   (mugz@x-mafia.org), and Steven Van Acker (deepstar@ulyssis.org)
 
 -- Applied patch from Chad Loder (chad_loder@rapid7.com) which
    improves random target host selection (-iR) by excluding more
    undesirable addresses.
 
+-- Fixed portscan timing bug found by H D Moore
+   (hdm@secureaustin.com).  This bug can occur when you specify a
+   --max_rtt_timeout but not --initial_rtt_timeout and then scan
+   certain firewalled hosts.
+
 -- Fixed port number printing bug found by "Stephen Leavitt"
    <stephen_j_leavitt@hotmail.com>
+
+-- The Nmap source tarball now extracts with more lenient permissions
+   (sometimes world-readable or world-executable, but never
+   world-writable).  If you don't want this, set your umask to 077
+   (which is what I do).  Suggested by Line Printer (lps@rahul.net)
 
 ** 2.54BETA28
 

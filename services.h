@@ -60,14 +60,20 @@
 
 #define SERVICE_TABLE_SIZE 1024
 
+/* just flags to indicate whether a particular port number should get tcp 
+ * scanned, udp scanned, or both
+ */
+#define SCAN_TCP_PORT	(1 << 0)
+#define SCAN_UDP_PORT	(1 << 1)
+#define SCAN_PROTOCOLS	(1 << 2)
+
 struct service_list {
   struct servent *servent;
   struct service_list *next;
 };
 
 struct servent *nmap_getservbyport(int port, const char *proto);
-unsigned short *getfastports(int tcpscan, int udpscan);
-unsigned short *getdefaultports(int tcpscan, int udpscan);
-
+struct scan_lists *getfastports(int tcpscan, int udpscan);
+struct scan_lists *getdefaultports(int tcpscan, int udpscan);
 
 #endif

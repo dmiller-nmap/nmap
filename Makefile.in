@@ -1,4 +1,4 @@
-NMAP_VERSION = 2.54BETA28
+NMAP_VERSION = 2.54BETA29
 NMAP_NAME= nmap
 NMAP_URL= www.insecure.org/nmap/
 NMAP_PLATFORM=@host@
@@ -22,8 +22,8 @@ CFLAGS = -g @CFLAGS@ $(CCOPT) $(DEFS) $(INCLS)
 STATIC = 
 LDFLAGS = @LDFLAGS@ $(STATIC)
 LIBS =  @LIBS@ -lpcap
-# LIBS =  -lefence @LIBS@ -lpcap -lm
-# LIBS =  -lrmalloc @LIBS@ -lpcap -lm
+# LIBS =  -lefence @LIBS@ -lpcap
+# LIBS =  -lrmalloc @LIBS@ -lpcap
 SHTOOL = ./shtool
 INSTALL = $(SHTOOL) install 
 MAKEDEPEND = @MAKEDEPEND@
@@ -136,6 +136,7 @@ distro:
 	rm -f /usr/tmp/nmap-$(NMAP_VERSION)/nbase/nbase_config.h 
 # Kill the CVS crap
 	find /usr/tmp/nmap-$(NMAP_VERSION) -type d -name CVS | xargs rm -rf
+	find /usr/tmp/nmap-$(NMAP_VERSION) -exec chmod go=u-w '{}' \;
 	cd /usr/tmp; \
 	tar czf nmap-$(NMAP_VERSION).tgz nmap-$(NMAP_VERSION)
 # Make the actual RPM

@@ -389,7 +389,7 @@ int check_ident_port(struct in_addr target);
 int ftp_anon_connect(struct ftpinfo *ftp);
 
 /* port manipulators */
-unsigned short *getpts(char *expr); /* someone stole the name getports()! */
+struct scan_lists *getpts(char *expr); /* someone stole the name getports()! */
 int getidentinfoz(struct in_addr target, u16 localport, u16 remoteport,
 		  char *owner, int ownersz);
 

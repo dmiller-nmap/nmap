@@ -65,8 +65,8 @@ struct protocol_list {
 };
 
 struct protoent *nmap_getprotbynum(int num);
-unsigned short *getfastprots(void);
-unsigned short *getdefaultprots(void);
+struct scan_lists *getfastprots(void);
+struct scan_lists *getdefaultprots(void);
 
 
 #endif

@@ -66,8 +66,7 @@ extern struct ops o;
 extern unsigned long flt_dsthost, flt_srchost, flt_baseport;
 
 
-FingerPrint *get_fingerprint(struct hoststruct *target, struct seq_info *si, 
-			     u16 *portarray) {
+FingerPrint *get_fingerprint(struct hoststruct *target, struct seq_info *si) {
 FingerPrint *FP = NULL, *FPtmp = NULL;
 FingerPrint *FPtests[9];
 struct AVal *seq_AVs;
@@ -1043,7 +1042,7 @@ return;
 }
 
 
-int os_scan(struct hoststruct *target, u16 *portarray) {
+int os_scan(struct hoststruct *target) {
 struct FingerPrintResults FP_matches[3];
 struct seq_info si[3];
 int itry;
@@ -1079,7 +1078,7 @@ int bestaccidx;
 	 return 1;
        }
    }
-   target->FPs[itry] = get_fingerprint(target, &si[itry], portarray); 
+   target->FPs[itry] = get_fingerprint(target, &si[itry]); 
    if (target->timedout)
      return 1;
    match_fingerprint(target->FPs[itry], &FP_matches[itry], 

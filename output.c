@@ -381,17 +381,21 @@ char outpbuf[128];
 /* Output the list of ports scanned to the top of machine parseable
    logs (in a comment, unfortunately).  The items in ports should be
    in sequential order for space savings and easier to read output */
-void output_ports_to_machine_parseable_output(unsigned short *ports, 
-					      int numports, int tcpscan, 
-					      int udpscan) {
-  int tcpportsscanned = (tcpscan)? numports : 0;
-  int udpportsscanned = (udpscan)? numports : 0;
+void output_ports_to_machine_parseable_output(struct scan_lists *ports, 
+					      int tcpscan, int udpscan,
+					      int protscan) {
+  int tcpportsscanned = ports->tcp_count;
+  int udpportsscanned = ports->udp_count;
+  int protsscanned = ports->prot_count;
  log_write(LOG_MACHINE, "# Ports scanned: TCP(%d;", tcpportsscanned);
  if (tcpportsscanned)
-   output_rangelist_given_ports(LOG_MACHINE, ports, tcpportsscanned);
+   output_rangelist_given_ports(LOG_MACHINE, ports->tcp_ports, tcpportsscanned);
  log_write(LOG_MACHINE, ") UDP(%d;", udpportsscanned);
  if (udpportsscanned)
-   output_rangelist_given_ports(LOG_MACHINE, ports, udpportsscanned);
+   output_rangelist_given_ports(LOG_MACHINE, ports->udp_ports, udpportsscanned);
+ log_write(LOG_MACHINE, ") PROTOCOLS(%d;", protsscanned);
+ if (protsscanned)
+   output_rangelist_given_ports(LOG_MACHINE, ports->prots, protsscanned);
  log_write(LOG_MACHINE, ")\n");
 }
 
@@ -406,21 +410,29 @@ static void doscaninfo(char *type, char *proto, unsigned short *ports,
 /* Similar to output_ports_to_machine_parseable_output, this function
    outputs the XML version, which is scaninfo records of each scan
    requested and the ports which it will scan for */
-void output_xml_scaninfo_records(unsigned short *ports, 
-					      int numports) {
-
-  if (o.synscan) doscaninfo("syn", "tcp", ports, numports);
-  if (o.ackscan) doscaninfo("ack", "tcp", ports, numports);
-  if (o.bouncescan) doscaninfo("bounce", "tcp", ports, numports);
-  if (o.connectscan) doscaninfo("connect", "tcp", ports, numports);
-  if (o.nullscan) doscaninfo("null", "tcp", ports, numports);
-  if (o.xmasscan) doscaninfo("xmas", "tcp", ports, numports);
-  if (o.windowscan) doscaninfo("window", "tcp", ports, numports);
-  if (o.maimonscan) doscaninfo("maimon", "tcp", ports, numports);
-  if (o.finscan) doscaninfo("fin", "tcp", ports, numports);
-  if (o.udpscan) doscaninfo("udp", "udp", ports, numports);
-  if (o.ipprotscan) doscaninfo("ipproto", "ip", ports, numports);
-  
+void output_xml_scaninfo_records(struct scan_lists *scanlist) {
+  if (o.synscan) 
+    doscaninfo("syn", "tcp", scanlist->tcp_ports, scanlist->tcp_count);
+  if (o.ackscan) 
+    doscaninfo("ack", "tcp", scanlist->tcp_ports, scanlist->tcp_count);
+  if (o.bouncescan) 
+    doscaninfo("bounce", "tcp", scanlist->tcp_ports, scanlist->tcp_count);
+  if (o.connectscan)
+    doscaninfo("connect", "tcp", scanlist->tcp_ports, scanlist->tcp_count);
+  if (o.nullscan)
+    doscaninfo("null", "tcp", scanlist->tcp_ports, scanlist->tcp_count);
+  if (o.xmasscan)
+    doscaninfo("xmas", "tcp", scanlist->tcp_ports, scanlist->tcp_count);
+  if (o.windowscan)
+    doscaninfo("window", "tcp", scanlist->tcp_ports, scanlist->tcp_count);
+  if (o.maimonscan) 
+    doscaninfo("maimon", "tcp", scanlist->tcp_ports, scanlist->tcp_count);
+  if (o.finscan) 
+    doscaninfo("fin", "tcp", scanlist->tcp_ports, scanlist->tcp_count);
+  if (o.udpscan) 
+    doscaninfo("udp", "udp", scanlist->udp_ports, scanlist->udp_count);
+  if (o.ipprotscan) 
+    doscaninfo("ipproto", "ip", scanlist->prots, scanlist->prot_count); 
 }
 
 /* Helper function to write the status and address/hostname info of a host 

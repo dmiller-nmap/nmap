@@ -119,6 +119,7 @@ static int nmap_services_init() {
       }
       previous = current;
     }
+    /* Current service in the file was a duplicate, get another one */
     if (current)
       continue;
 
@@ -177,14 +178,16 @@ struct servent *nmap_getservbyport(int port, const char *proto) {
 }
 
 /* Be default we do all ports 1-1024 as well as any higher ports
-   that are in /etc/services. */
-unsigned short *getdefaultports(int tcpscan, int udpscan) {
-  int portindex = 0;
-  unsigned short *ports;
+   that are in the services file */
+struct scan_lists *getdefaultports(int tcpscan, int udpscan) {
+  int tcpportindex = 0;
+  int udpportindex = 0;
+  struct scan_lists *ports;
   char usedports[65536];
   struct service_list *current;
   int bucket;
-  int portsneeded = 1; /* the 1 is for the terminating 0 */
+  int tcpportsneeded = 0;
+  int udpportsneeded = 0;
 
   if (!services_initialized)
     if (nmap_services_init() == -1)
@@ -192,42 +195,65 @@ unsigned short *getdefaultports(int tcpscan, int udpscan) {
   
   bzero(usedports, sizeof(usedports));
   for(bucket = 1; bucket < 1025; bucket++) {  
-    usedports[bucket] = 1;
-    portsneeded++;
+    if (tcpscan) {
+      usedports[bucket] |= SCAN_TCP_PORT;
+      tcpportsneeded++;
+    }
+    if (udpscan) {
+      usedports[bucket] |= SCAN_UDP_PORT;
+      udpportsneeded++;
+    }
   }
 
   for(bucket = 0; bucket < SERVICE_TABLE_SIZE; bucket++) {  
     for(current = service_table[bucket % SERVICE_TABLE_SIZE];
 	current; current = current->next) {
-      if (!usedports[ntohs(current->servent->s_port)] &&
-	  ((tcpscan && !strncmp(current->servent->s_proto, "tcp", 3)) ||
-	   (udpscan && !strncmp(current->servent->s_proto, "udp", 3)))) {      
-	usedports[ntohs(current->servent->s_port)] = 1;
-	portsneeded++;
+      if (tcpscan &&
+	  ! (usedports[ntohs(current->servent->s_port)] & SCAN_TCP_PORT) &&
+          ! strncmp(current->servent->s_proto, "tcp", 3)) {
+	usedports[ntohs(current->servent->s_port)] |= SCAN_TCP_PORT;
+	tcpportsneeded++;
+      }
+      if (udpscan && 
+	  ! (usedports[ntohs(current->servent->s_port)] & SCAN_UDP_PORT) &&
+	  !strncmp(current->servent->s_proto, "udp", 3)) {      
+	usedports[ntohs(current->servent->s_port)] |= SCAN_UDP_PORT;
+	udpportsneeded++;
       }
     }
   }
 
-  ports = (unsigned short *) cp_alloc(portsneeded * sizeof(unsigned short));
-  o.numports = portsneeded - 1;
+  ports = (struct scan_lists *) cp_alloc(sizeof(struct scan_lists));
+  bzero(ports, sizeof(ports));
+  if (tcpscan) 
+    ports->tcp_ports = (unsigned short *) cp_alloc((tcpportsneeded+1) * sizeof(unsigned short));
+  if (udpscan) 
+    ports->udp_ports = (unsigned short *) cp_alloc((udpportsneeded+1) * sizeof(unsigned short));
+  ports->tcp_count= tcpportsneeded;
+  ports->udp_count= udpportsneeded;
 
   for(bucket = 1; bucket < 65536; bucket++) {
-    if (usedports[bucket])
-      ports[portindex++] = bucket;
+    if (usedports[bucket] & SCAN_TCP_PORT) 
+      ports->tcp_ports[tcpportindex++] = bucket;
+    if (usedports[bucket] & SCAN_UDP_PORT) 
+      ports->udp_ports[udpportindex++] = bucket;
   }
-  ports[portindex] = 0;
-
+  if (tcpscan) 
+    ports->tcp_ports[tcpportindex] = 0;
+  if (udpscan) 
+    ports->udp_ports[udpportindex] = 0;
 return ports;
-
 }
 
-unsigned short *getfastports(int tcpscan, int udpscan) {
-  int portindex = 0;
-  unsigned short *ports;
+struct scan_lists *getfastports(int tcpscan, int udpscan) {
+  int tcpportindex = 0;
+  int udpportindex = 0;
+  struct scan_lists *ports;
   char usedports[65536];
   struct service_list *current;
   int bucket;
-  int portsneeded = 1; /* the 1 is for the terminating 0 */
+  int tcpportsneeded = 0;
+  int udpportsneeded = 0;
 
   if (!services_initialized)
     if (nmap_services_init() == -1)
@@ -238,28 +264,40 @@ unsigned short *getfastports(int tcpscan, int udpscan) {
   for(bucket = 0; bucket < SERVICE_TABLE_SIZE; bucket++) {  
     for(current = service_table[bucket % SERVICE_TABLE_SIZE];
 	current; current = current->next) {
-      if (!usedports[ntohs(current->servent->s_port)] &&
-	  ((tcpscan && !strncmp(current->servent->s_proto, "tcp", 3)) ||
-	   (udpscan && !strncmp(current->servent->s_proto, "udp", 3)))) {      
-	usedports[ntohs(current->servent->s_port)] = 1;
-	portsneeded++;
+      if (tcpscan  &&
+	  ! (usedports[ntohs(current->servent->s_port)] & SCAN_TCP_PORT) &&
+	  !strncmp(current->servent->s_proto, "tcp", 3)) {
+	usedports[ntohs(current->servent->s_port)] |= SCAN_TCP_PORT;
+	tcpportsneeded++;
+      }
+      if (udpscan &&
+	  ! (usedports[ntohs(current->servent->s_port)] & SCAN_UDP_PORT) &&
+	  !strncmp(current->servent->s_proto, "udp", 3)) {      
+	usedports[ntohs(current->servent->s_port)] |= SCAN_UDP_PORT;
+	udpportsneeded++;
       }
     }
   }
 
-  ports = (unsigned short *) cp_alloc(portsneeded * sizeof(unsigned short));
-  o.numports = portsneeded - 1;
+  ports = (struct scan_lists *) cp_alloc(sizeof(struct scan_lists));
+  bzero(ports, sizeof(ports));
+  if (tcpscan) 
+    ports->tcp_ports = (unsigned short *) cp_alloc((tcpportsneeded+1) * sizeof(unsigned short));
+  if (udpscan)
+    ports->udp_ports = (unsigned short *) cp_alloc((udpportsneeded+1) * sizeof(unsigned short));
+  ports->tcp_count= tcpportsneeded;
+  ports->udp_count= udpportsneeded;
 
   for(bucket = 1; bucket < 65536; bucket++) {
-    if (usedports[bucket])
-      ports[portindex++] = bucket;
+    if (usedports[bucket] & SCAN_TCP_PORT) 
+      ports->tcp_ports[tcpportindex++] = bucket;
+    if (usedports[bucket] & SCAN_UDP_PORT) 
+      ports->udp_ports[udpportindex++] = bucket;
   }
-  ports[portindex] = 0;
-
+  if (tcpscan) 
+    ports->tcp_ports[tcpportindex] = 0;
+  if (udpscan) 
+    ports->tcp_ports[udpportindex] = 0;
 return ports;
 }
-
-
-
-
 

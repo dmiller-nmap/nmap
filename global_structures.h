@@ -266,7 +266,6 @@ struct ops /* someone took struct options, <grrr> */ {
   int listscan;
   int pingscan;
   int allowall;
-  int numports;
   int ackscan;
   int bouncescan;
   int connectscan;
@@ -288,17 +287,20 @@ struct ops /* someone took struct options, <grrr> */ {
   FILE *nmap_stdout; /* Nmap standard output */
 };
   
+
+/* The various kinds of port/protocol scans we can have
+ * Each element is to point to an array of port/protocol numbers
+ */
+struct scan_lists {
+	unsigned short *tcp_ports;
+	int tcp_count;
+	unsigned short *udp_ports;
+	int udp_count;
+	unsigned short *prots;
+	int prot_count;
+};
+
+
 typedef enum { ACK_SCAN, SYN_SCAN, FIN_SCAN, XMAS_SCAN, UDP_SCAN, CONNECT_SCAN, NULL_SCAN, WINDOW_SCAN, RPC_SCAN, MAIMON_SCAN, IPPROT_SCAN } stype;
 
 #endif /*GLOBAL_STRUCTURES_H */
-
-
-
-
-
-
-
-
-
-
-

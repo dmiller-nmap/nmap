@@ -48,6 +48,7 @@
 
 #include "targets.h"
 #include "timing.h"
+#include "osscan.h"
 
 extern struct ops o;
 
@@ -59,13 +60,17 @@ extern unsigned long flt_dsthost, flt_srchost, flt_baseport;
    checked (such as ping scanned) in advance.  Randomize causes each
    group of up to lookahead hosts to be internally shuffled around.
    The target_expressions array must remail valid in memory as long as
-   this hostgroup_state structure is used -- the array is NOT copied */
+   this hostgroup_state structure is used -- the array is NOT copied.
+   Also, REMEMBER TO CALL hostgroup_state_destroy() when you are done
+   with the hostgroup_state (the latter function only frees internal
+   resources -- you still have to free the alocated memory (if any)
+   for the struct hostgroup_state itself.  */
 int hostgroup_state_init(struct hostgroup_state *hs, int lookahead,
 			 int randomize, char *target_expressions[],
 			 int num_expressions) {
   bzero(hs, sizeof(struct hostgroup_state));
   assert(lookahead > 0);
-  hs->hostbatch = (struct hoststruct *) safe_malloc(lookahead * sizeof(struct hostgroup_state));
+  hs->hostbatch = (struct hoststruct *) safe_malloc(lookahead * sizeof(struct hoststruct));
   hs->max_batch_sz = lookahead;
   hs->current_batch_sz = 0;
   hs->next_batch_no = 0;
@@ -75,6 +80,17 @@ int hostgroup_state_init(struct hostgroup_state *hs, int lookahead,
   hs->next_expression = 0;
   hs->current_expression.nleft = 0; 
   return 0;
+}
+
+/* Free the *internal state* of a hostgroup_state structure -- it is
+   important to note that this does not free the actual memory
+   allocated for the "struct hostgroup_state" you pass in.  It only
+   frees internal stuff -- after all, your hostgroup_state could be on
+   the stack */
+void hostgroup_state_destroy(struct hostgroup_state *hs) {
+  if (!hs) fatal("NULL hostgroup_state passed to hostgroup_state_destroy()!");
+  if (!hs->hostbatch) fatal("hostgroup_state passed to hostgroup_state_destroy() contains NULL hostbatch!");
+  free(hs->hostbatch);
 }
 
 
@@ -174,8 +190,10 @@ void hoststructfry(struct hoststruct *hostbatch, int nelem) {
   return;
 }
 
+/* REMEMBER TO CALL hoststruct_free() on the hoststruct when you are done
+   with it!!! */
 struct hoststruct *nexthost(struct hostgroup_state *hs, 
-			    unsigned short *ports) {
+			    struct scan_lists *ports) {
 int hidx;
 char *device;
 int i;
@@ -185,7 +203,7 @@ if (hs->next_batch_no < hs->current_batch_sz) {
   return &hs->hostbatch[hs->next_batch_no++];
 }
 /* Doh, we need to refresh our array */
-bzero(hs->hostbatch, hs->max_batch_sz * sizeof(struct hostgroup_state));
+bzero(hs->hostbatch, hs->max_batch_sz * sizeof(struct hoststruct));
 hs->current_batch_sz = hs->next_batch_no = 0;
 do {
   /* Grab anything we have in our current_expression */
@@ -268,6 +286,30 @@ if (hs->randomize) {
  }
  return &hs->hostbatch[hs->next_batch_no++];
 }
+
+/* Frees the *INTERNAL STRUCTURES* inside a hoststruct -- does not
+   free the actual memory allocated to the hoststruct itself (for all
+   this function knows, you could have declared it on the stack */
+void hoststruct_free(struct hoststruct *currenths) {
+  int i;
+
+  /* Free the DNS name if we resolved one */
+  if (currenths->name && *currenths->name)
+    free(currenths->name);
+
+  /* Free OS fingerprints of OS scanning was done */
+  for(i=0; i < currenths->numFPs; i++) {
+    freeFingerPrint(currenths->FPs[i]);
+    currenths->FPs[i] = NULL;
+  }
+  currenths->numFPs = 0;
+
+  /* Free the port lists */
+  resetportlist(&currenths->ports);
+
+}
+
+
 
 int parse_targets(struct targets *targets, char *h) {
 int i=0,j=0,k=0;
@@ -394,8 +436,8 @@ else {
 }
 
 
-void massping(struct hoststruct *hostbatch, int num_hosts, unsigned short 
-	      *ports) {
+void massping(struct hoststruct *hostbatch, int num_hosts, 
+              struct scan_lists *ports) {
 static struct timeout_info to = { 0,0,0};
 static int gsize = LOOKAHEAD;
 int hostnum;
@@ -908,7 +950,7 @@ return 0;
 }
 
 
-int get_ping_results(int sd, pcap_t *pd, struct hoststruct *hostbatch, struct timeval *time,  struct pingtune *pt, struct timeout_info *to, int id, struct pingtech *ptech, unsigned short *ports) {
+int get_ping_results(int sd, pcap_t *pd, struct hoststruct *hostbatch, struct timeval *time,  struct pingtune *pt, struct timeout_info *to, int id, struct pingtech *ptech, struct scan_lists *ports) {
 fd_set fd_r, fd_x;
 struct timeval myto, tmpto, start, end;
 unsigned int bytes;
@@ -1201,7 +1243,7 @@ while(pt->block_unaccounted > 0 && !timeout) {
     if (newport && newportstate != PORT_UNKNOWN) {
       /* OK, we can add it, but that is only appropriate if this is one
 	 of the ports the user ASKED for */
-      if (ports && o.numports == 1 && ports[0] == newport)
+      if (ports && ports->tcp_count == 1 && ports->tcp_ports[0] == newport)
 	addport(&(hostbatch[hostnum].ports), newport, IPPROTO_TCP, NULL, 
 		newportstate);
     }

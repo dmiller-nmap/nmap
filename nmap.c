@@ -358,7 +358,7 @@ int nmap_main(int argc, char *argv[]) {
   struct hostgroup_state hstate;
   int numhosts_up = 0;
   int starttime;
-  u16 *ports = NULL;
+  struct scan_lists *ports = NULL;
   char myname[MAXHOSTNAMELEN + 1];
 #if (defined(IN_ADDR_DEEPSTRUCT) || defined( SOLARIS))
   /* Note that struct in_addr in solaris is 3 levels deep just to store an
@@ -456,8 +456,13 @@ int nmap_main(int argc, char *argv[]) {
       if (strcmp(long_options[option_index].name, "max_rtt_timeout") == 0) {
 	o.max_rtt_timeout = atoi(optarg);
 	if (o.max_rtt_timeout <= 5) {
-	  fatal("max_rtt_timeout is given in milliseconds and must be greater than 5");
+	  fatal("max_rtt_timeout is given in milliseconds and must be at least 5");
+	}       
+        if (o.max_rtt_timeout < 20) {
+	  error("WARNING: You specified a round-trip time timeout (%d ms) that is EXTRAORDINARILY SMALL.  Accuracy may suffer.", o.max_rtt_timeout);
 	}
+	if ( o.initial_rtt_timeout > o.max_rtt_timeout)
+	  o.initial_rtt_timeout = o.max_rtt_timeout;
       } else if (strcmp(long_options[option_index].name, "min_rtt_timeout") == 0) {
 	o.min_rtt_timeout = atoi(optarg);
 	if (o.min_rtt_timeout > 50000) {
@@ -811,6 +816,20 @@ int nmap_main(int argc, char *argv[]) {
     error("WARNING:  -S will not affect the source address used in a connect() scan.  Use -sS or another raw scan if you want to use the specified source address for the port scanning stage of nmap");
   }
 
+
+  if (o.ipprotscan && (o.connectscan | o.windowscan | o.synscan | o.finscan | o.maimonscan | o.xmasscan | o.nullscan | o.ackscan | o.udpscan | o.idlescan )) {
+  /* It's no longer the case that the reason this doesn't work is due to port
+   * list conflicts. Port ranges and protocol ranges could be specified on
+   * the command line. Right now though, the main issue is with conflicting
+   * port vs protocol scan output (in particular, -oG output format would have
+   * to be updated). 
+   *
+   * if (!ports)
+   *   fatal("Sorry, IP protocol scan can only be used with other scan types if port ranges and protocol ranges are specified on command line with -p\n");
+   */
+     fatal("Sorry, IP protocol scan can not be used with other scan types for now");
+   }
+
   if (fastscan && ports) {
     fatal("You can specify fast scan (-F) or explicitly select individual ports (-p), but not both");
   } else if (fastscan && o.ipprotscan) {
@@ -818,6 +837,7 @@ int nmap_main(int argc, char *argv[]) {
   } else if (fastscan) {
     ports = getfastports(o.windowscan|o.synscan|o.connectscan|o.fragscan|o.idlescan|o.finscan|o.maimonscan|o.bouncescan|o.nullscan|o.xmasscan|o.ackscan,o.udpscan);
   }
+
 
   if ((o.pingscan || o.listscan) && ports) {
     fatal("You cannot use -F (fast scan) or -p (explicit port selection) with PING scan or LIST scan");
@@ -840,6 +860,18 @@ int nmap_main(int argc, char *argv[]) {
 			      o.udpscan);
     }
   }
+
+  /* By now, we've got our port lists.  Give the user a warning if no 
+   * ports are specified for the type of scan being requested.  Other things
+   * (such as OS ident scan) might break cause no ports were specified,  but
+   * we've given our warning...
+   */
+  if ((o.windowscan|o.synscan|o.connectscan|o.fragscan|o.finscan|o.maimonscan|o.bouncescan|o.nullscan|o.xmasscan|o.ackscan|o.idlescan) && ! ports->tcp_count)
+    error("WARNING: a TCP scan type was requested, but no tcp ports were specified.  Skipping this scan type.");
+  if (o.udpscan && ! ports->udp_count)
+    error("WARNING: UDP scan was requested, but no udp ports were specified.  Skipping this scan type.");
+  if (o.ipprotscan && ! ports->prot_count)
+    error("WARNING: protocol scan was requested, but no protocols were specified to be scanned.  Skipping this scan type.");
 
   /* Default dest port for tcp probe */
   if (!o.tcp_probe_port) o.tcp_probe_port = DEFAULT_TCP_PROBE_PORT;
@@ -908,10 +940,6 @@ int nmap_main(int argc, char *argv[]) {
   if (o.connectscan + o.windowscan + o.synscan + o.finscan + o.idlescan + o.maimonscan + o.xmasscan + o.nullscan + o.ackscan  > 1) {
     fatal("You specified more than one type of TCP scan.  Please choose only one of -sT, -sS, -sF, -sM, -sX, -sA, -sW, and -sN");
   }
-
-  if (o.ipprotscan && (o.connectscan | o.windowscan | o.synscan | o.idlescan | o.finscan | o.maimonscan | o.xmasscan | o.nullscan | o.ackscan | o.udpscan))
-    fatal("Sorry, IP protocol scan cannot be combined with any other scans\n");
-  /* this is due to use of the port spec infrastructure for protocols */
 
   if (o.numdecoys > 0 && (o.bouncescan || o.connectscan)) {
     fatal("Decoys are irrelevant to the bounce or connect scans");
@@ -1013,14 +1041,15 @@ int nmap_main(int argc, char *argv[]) {
   log_write(LOG_XML, "start=\"%d\" version=\"%s\" xmloutputversion=\"1.0\">\n",
 	    timep, NMAP_VERSION);
 
-  output_xml_scaninfo_records(ports, o.numports);
+  output_xml_scaninfo_records(ports);
+
   log_write(LOG_XML, "<verbose level=\"%d\" />\n<debugging level=\"%d\" />\n",
 	    o.verbose, o.debugging);
 
   /* Before we randomize the ports scanned, lets output them to machine 
      parseable output */
   if (o.verbose)
-    output_ports_to_machine_parseable_output(ports, o.numports, o.windowscan|o.synscan|o.connectscan|o.fragscan|o.idlescan|o.finscan|o.maimonscan|o.bouncescan|o.nullscan|o.xmasscan|o.ackscan,o.udpscan);
+     output_ports_to_machine_parseable_output(ports, o.windowscan|o.synscan|o.connectscan|o.fragscan|o.finscan|o.maimonscan|o.bouncescan|o.nullscan|o.xmasscan|o.ackscan|o.idlescan,o.udpscan,o.ipprotscan);
 
   /* more fakeargv junk, BTW malloc'ing extra space in argv[0] doesn't work */
   if (quashargv) {
@@ -1049,8 +1078,14 @@ int nmap_main(int argc, char *argv[]) {
   if (o.debugging > 1) log_write(LOG_STDOUT, "The max # of sockets we are using is: %d\n", o.max_parallelism);
 
 
-  if (randomize)
-    shortfry(ports, o.numports); 
+  if  (randomize) {
+    if (ports->tcp_count) 
+	    shortfry(ports->tcp_ports, ports->tcp_count); 
+    if (ports->udp_count) 
+	    shortfry(ports->udp_ports, ports->udp_count); 
+    if (ports->prot_count) 
+	    shortfry(ports->prots, ports->prot_count); 
+  }
 
   starttime = time(NULL);
 
@@ -1128,31 +1163,39 @@ int nmap_main(int argc, char *argv[]) {
 	o.decoys[o.decoyturn] = currenths->source_ip;
 	
 	/* Time for some actual scanning! */    
-	if (o.synscan) pos_scan(currenths, ports, SYN_SCAN);
-	if (o.windowscan) pos_scan(currenths, ports, WINDOW_SCAN);
-	if (o.connectscan) pos_scan(currenths, ports, CONNECT_SCAN);      
-	if (o.ackscan) pos_scan(currenths, ports, ACK_SCAN);
-	
-	if (o.finscan) super_scan(currenths, ports, FIN_SCAN);
-	if (o.xmasscan) super_scan(currenths, ports, XMAS_SCAN);
-	if (o.nullscan) super_scan(currenths, ports, NULL_SCAN);
-	if (o.maimonscan) super_scan(currenths, ports, MAIMON_SCAN);
-	if (o.udpscan) super_scan(currenths, ports, UDP_SCAN);
-	if (o.ipprotscan) super_scan(currenths, ports, IPPROT_SCAN);
-	
-	if (o.idlescan) idle_scan(currenths, ports, idleProxy);
+	        /* Time for some actual scanning! */    
+	if (o.synscan) pos_scan(currenths, ports->tcp_ports, ports->tcp_count, SYN_SCAN);
+	if (o.windowscan) pos_scan(currenths, ports->tcp_ports, ports->tcp_count, WINDOW_SCAN);
+	if (o.connectscan) pos_scan(currenths, ports->tcp_ports, ports->tcp_count, CONNECT_SCAN);
+	if (o.ackscan) pos_scan(currenths, ports->tcp_ports, ports->tcp_count, ACK_SCAN); 
+	if (o.finscan) super_scan(currenths, ports->tcp_ports, ports->tcp_count, FIN_SCAN);
+	if (o.xmasscan) super_scan(currenths, ports->tcp_ports, ports->tcp_count, XMAS_SCAN);
+	if (o.nullscan) super_scan(currenths, ports->tcp_ports, ports->tcp_count, NULL_SCAN);
+	if (o.maimonscan) super_scan(currenths, ports->tcp_ports, 
+				     ports->tcp_count, MAIMON_SCAN);
+	if (o.udpscan) super_scan(currenths, ports->udp_ports, 
+				  ports->udp_count, UDP_SCAN);
+	if (o.ipprotscan) super_scan(currenths, ports->prots, 
+				     ports->prot_count, IPPROT_SCAN);
+
+	if (o.idlescan) idle_scan(currenths, ports->tcp_ports, 
+				  ports->tcp_count, idleProxy);
 
 	if (o.bouncescan) {
 	  if (ftp.sd <= 0) ftp_anon_connect(&ftp);
-	  if (ftp.sd > 0) bounce_scan(currenths, ports, &ftp);
+	  if (ftp.sd > 0) bounce_scan(currenths, ports->tcp_ports, 
+				      ports->tcp_count, &ftp);
 	}
 	
-	/* This scantype must be after any TCP or UDP scans ... */
-	if (o.rpcscan)  pos_scan(currenths, ports, RPC_SCAN);
+	/* This scantype must be after any TCP or UDP scans since it
+	 * get's it's port scan list from the open port list of the current
+	 * host rather than port list the user specified.
+	 */
+	if (o.rpcscan)  pos_scan(currenths, NULL, 0, RPC_SCAN);
 	
 	
 	if (o.osscan) {
-	  os_scan(currenths, ports);
+	  os_scan(currenths);
 	}
 	
 	if (currenths->timedout) {
@@ -1163,17 +1206,8 @@ int nmap_main(int argc, char *argv[]) {
 	} else {
 	  assignignoredportstate(&currenths->ports);
 	  printportoutput(currenths, &currenths->ports);
-	  resetportlist(&currenths->ports);
 	  printosscanoutput(currenths);
-
-	  /* should be moved to some sort of freecurrenths function */
-	  for(i=0; i < currenths->numFPs; i++) {
-	    freeFingerPrint(currenths->FPs[i]);
-	    currenths->FPs[i] = NULL;
-	  }
-	  currenths->numFPs = 0;
- 
-	}      
+ 	}      
 
 	if (o.debugging) log_write(LOG_STDOUT, "Final times for host: srtt: %d rttvar: %d  to: %d\n", currenths->to.srtt, currenths->to.rttvar, currenths->to.timeout);
 	log_write(LOG_MACHINE,"\n");
@@ -1181,13 +1215,17 @@ int nmap_main(int argc, char *argv[]) {
       log_write(LOG_XML, "</host>\n");
   
       log_flush_all();
-      if (*currenths->name) free(currenths->name);
+      hoststruct_free(currenths);
     }
+
+    hostgroup_state_destroy(&hstate);
+
     /* Free my host expressions */
     for(i=0; i < num_host_exp_groups; i++)
       free(host_exp_group[i]);
     num_host_exp_groups = 0;
   }
+
   free(host_exp_group);
 
   printfinaloutput(numhosts_scanned, numhosts_up, starttime);
@@ -1353,22 +1391,38 @@ void init_socket(int sd) {
 /* Convert a string like "-100,200-1024,3000-4000,60000-" into an array 
    of port numbers. Note that one trailing comma is OK -- this is actually
    useful for machine generated lists */
-unsigned short *getpts(char *origexpr) {
+struct scan_lists *getpts(char *origexpr) {
   u8 porttbl[65536];
   int portwarning = 0; /* have we warned idiot about dup ports yet? */
   long rangestart = -2343242, rangeend = -9324423;
   char *current_range;
   char *endptr;
   int i;
-  u16 *ports;
+  int tcpportcount = 0, udpportcount = 0, protcount = 0;
+  struct scan_lists *ports;
+  int range_type = SCAN_TCP_PORT|SCAN_UDP_PORT|SCAN_PROTOCOLS;
 
   bzero(porttbl, sizeof(porttbl));
-  o.numports = 0;
 
   current_range = origexpr;
   do {
     while(isspace((int) *current_range))
       current_range++; /* I don't know why I should allow spaces here, but I will */
+    if (*current_range == 'T' && *++current_range == ':') {
+	current_range++;
+	range_type = SCAN_TCP_PORT;
+	continue;
+    }
+    if (*current_range == 'U' && *++current_range == ':') {
+	current_range++;
+	range_type = SCAN_UDP_PORT;
+	continue;
+    }
+    if (*current_range == 'P' && *++current_range == ':') {
+	current_range++;
+	range_type = SCAN_PROTOCOLS;
+	continue;
+    }
     if (*current_range == '-') {
       rangestart = 1;
     }
@@ -1380,7 +1434,7 @@ unsigned short *getpts(char *origexpr) {
       current_range = endptr;
       while(isspace((int) *current_range)) current_range++;
     } else {
-      fatal("Your port specifications are illegal.  Example of proper form: \"-100,200-1024,3000-4000,60000-\"");
+      fatal("Error #485: Your port specifications are illegal.  Example of proper form: \"-100,200-1024,T:3000-4000,U:60000-\"");
     }
     /* Now I have a rangestart, time to go after rangeend */
     if (!*current_range || *current_range == ',') {
@@ -1398,47 +1452,80 @@ unsigned short *getpts(char *origexpr) {
 	}
 	current_range = endptr;
       } else {
-	fatal("Your port specifications are illegal.  Example of proper form: \"-100,200-1024,3000-4000,60000-\"");
+	fatal("Error #486: Your port specifications are illegal.  Example of proper form: \"-100,200-1024,3000-4000,60000-\"");
       }
+    } else {
+	fatal("Error #487: Your port specifications are illegal.  Example of proper form: \"-100,200-1024,3000-4000,60000-\"");
     }
 
     /* Now I have a rangestart and a rangeend, so I can add these ports */
     while(rangestart <= rangeend) {
-      if (porttbl[rangestart]) {      
+      if (porttbl[rangestart] & range_type) {
 	if (!portwarning) {
 	  error("WARNING:  Duplicate port number(s) specified.  Are you alert enough to be using Nmap?  Have some coffee or Jolt(tm).");
 	  portwarning++;
 	} 
-      } else o.numports++;
-      porttbl[rangestart] = 1;
+      }
+      if (range_type & SCAN_TCP_PORT)
+	tcpportcount++;
+      if (range_type & SCAN_UDP_PORT)
+	udpportcount++;
+      if (range_type & SCAN_PROTOCOLS)
+	protcount++;
+      porttbl[rangestart] |= range_type;
       rangestart++;
     }
     
     /* Find the next range */
     while(isspace((int) *current_range)) current_range++;
     if (*current_range && *current_range != ',') {
-      fatal("Your port specifications are illegal.  Example of proper form: \"-100,200-1024,3000-4000,60000-\"");
+      fatal("Error #488: Your port specifications are illegal.  Example of proper form: \"-100,200-1024,3000-4000,60000-\"");
     }
     if (*current_range == ',')
       current_range++;
   } while(current_range && *current_range);
 
-  if (o.numports == 0)
+  if ( 0 == (tcpportcount + udpportcount + protcount))
     fatal("No ports specified -- If you really don't want to scan any ports use ping scan...");
 
-  ports = (unsigned short *) safe_malloc(2 * (o.numports + 1));
-  bzero(ports, 2 * (o.numports + 1));
+  ports = (struct scan_lists *) safe_malloc(sizeof(struct scan_lists));
+  bzero(ports, sizeof(ports));
+  if (tcpportcount) {
+    ports->tcp_ports = (unsigned short *)safe_malloc((tcpportcount + 1) * sizeof(unsigned short));
+    bzero(ports->tcp_ports, (tcpportcount + 1) * sizeof(unsigned short));
+  }
+  if (udpportcount) {
+    ports->udp_ports = (unsigned short *)safe_malloc((udpportcount + 1) * sizeof(unsigned short));
+    bzero(ports->udp_ports, (udpportcount + 1) * sizeof(unsigned short));
+  }
+  if (protcount) {
+    ports->prots = (unsigned short *)safe_malloc((protcount + 1) * sizeof(unsigned short));
+    bzero(ports->prots, (protcount + 1) * sizeof(unsigned short));
+  }
+  ports->tcp_count = tcpportcount;
+  ports->udp_count = udpportcount;
+  ports->prot_count = protcount;
 
-  /* I is the next index into which we should add good ports */
-  for(i=0, rangestart = 1; i < o.numports ; rangestart++) {
-    assert(rangestart <= 65535);
-    if (porttbl[rangestart]) {
-      ports[i++] = rangestart;
-    }
+  tcpportcount=0;
+  udpportcount=0;
+  protcount=0;
+  for(i=0; i <= 65535; i++) {
+    if (porttbl[i] & SCAN_TCP_PORT)
+      ports->tcp_ports[tcpportcount++] = i;
+    if (porttbl[i] & SCAN_UDP_PORT)
+      ports->udp_ports[udpportcount++] = i;
+    if (porttbl[i] & SCAN_PROTOCOLS)
+      ports->prots[protcount++] = i;
   }
 
-  ports[o.numports] = 0; /* Someday I am going to make sure this isn't neccessary
-			    and then I will start allowing (invalid) port 0 scans */
+  /* Someday I am going to make sure this isn't neccessary and then I
+     will start allowing (invalid) port 0 scans */
+  if (tcpportcount)
+    ports->tcp_ports[ports->tcp_count] = 0; 
+  if (udpportcount)
+    ports->udp_ports[ports->udp_count] = 0; 
+  if (protcount)
+    ports->prots[ports->prot_count] = 0; 
   return ports;
 }
 

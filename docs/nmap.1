@@ -274,6 +274,12 @@ firewall (or protected by TCP wrappers).  Decoys do not
 currently work with RPC scan, at some point I may add decoy
 support for UDP RPC scans.
 .TP
+.TP
+.B \-sL
+List scan.  This method simply generates and prints a list of
+IPs/Names without actually pinging or port scanning them.  DNS name
+resolution will be performed unless you use -n.
+.TP
 .B \-b <ftp relay host>
 FTP bounce attack: An interesting "feature" of the ftp
 protocol (RFC 959) is support for "proxy" ftp
@@ -338,7 +344,8 @@ this port is often not filtered out.
 .B \-PS
 This option uses SYN (connection request) packets instead of
 ACK packets for root users.  Hosts that are up should
-respond with a RST (or, rarely, a SYN|ACK).
+respond with a RST (or, rarely, a SYN|ACK).  You can set the
+destination port in the same manner as \-PT above.
 .TP
 .B \-PI
 This option uses a true ping (ICMP echo request) packet.  It
@@ -515,6 +522,15 @@ scan all ports between 1 and 1024 as well as any ports
 listed in the services file which comes with nmap.  For IP protocol
 scanning (-sO), this specifies the protocol number you wish to scan
 for (0-255).
+.Sp
+When scanning both TCP and UDP ports, you can specify a particular
+protocol by preceding the port numbers by "T:" or "U:".  The qualifier
+lasts until you specify another qualifier.  For example, the argument
+"-p U:53,111,137,T:21-25,80,139,8080" would scan UDP ports 53,111,and
+137, as well as the listed TCP ports.  Note that to scan both UDP &
+TCP, you have to specify -sU and at least one TCP scan type (such as
+-sS, -sF, or -sT).  If no protocol qualifier is given, the port
+numbers are added to all protocol lists.
 .TP
 .B \-F Fast scan mode.
 Specifies that you only wish to scan for ports listed in the services
