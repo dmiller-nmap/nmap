@@ -210,10 +210,9 @@ your real IP address).  Instead, a unique side-channel attack exploits
 predictable "IP fragmentation ID" sequence generation on the zombie host
 to glean information about the open ports on the target.  IDS systems
 will display the scan as coming from the zombie machine you specify
-(which must be up and meet certain criteria).  I am planning to put a
-more detailed explanation up at
-http://www.insecure.org/nmap/nmap_documentation.html in the near
-future.
+(which must be up and meet certain criteria).  I wrote an informal
+paper about this technique at
+http://www.insecure.org/nmap/idlescan.html .
 .Sp
 Besides being extraordinarily stealthy (due to its blind nature), this
 scan type permits mapping out IP-based trust relationships between machines.
@@ -768,6 +767,12 @@ perform in parallel.  Setting this to one means Nmap will
 never try to scan more than 1 port at a time.  It also
 effects other parallel scans such as ping sweep, RPC scan,
 etc.
+.TP
+.B --min_parallelism <number>
+Tells Nmap to scan at least the given number of ports in parallel.
+This can speed up scans against certain firewalled hosts by an order
+of magnitude.  But be careful -- results will become unreliable if you
+push it too far.
 .TP
 .B --scan_delay <milliseconds>
 Specifies the 
