@@ -1,5 +1,8 @@
 # Nmap Changelog ($Id$)
 
+-- Applied patch by Colin Phipps (cph@netcraft.com) which correctly
+   encodes special characters in the XML output.
+
 -- Fixed byte-order bug in Windows packet matching code which caused
    -PS and -PT to fail.  Bug found and patch sent by Tim Adam 
    (tma@osa.com.au)

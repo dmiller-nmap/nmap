@@ -129,4 +129,5 @@ void printosscanoutput(struct hoststruct *currenths);
 void printfinaloutput(int numhosts_scanned, int numhosts_up, 
 		      time_t starttime);
 
+char* xml_convert (const char* str);
 #endif /* OUTPUT_H */

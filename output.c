@@ -220,6 +220,44 @@ void printportoutput(struct hoststruct *currenths, portlist *plist) {
   log_write(LOG_XML, "</ports>\n");
 }
 
+char* xml_convert (const char* str) {
+  unsigned int i;
+  char *temp, ch, prevch = 0, *p;
+  temp = malloc(strlen(str)*6+1);
+  for (p = temp;(prevch = ch, ch = *str);str++) {
+    char *a;
+    switch (ch) {
+    case '<':
+      a = "&lt;";
+      break;
+    case '>':
+      a = "&gt;";
+      break;
+    case '&':
+      a =  "&amp;";
+      break;
+    case '"':
+      a = "&quot;";
+      break;
+    case '\'':
+      a = "&apos;";
+      break;
+    case '-': 
+      if (prevch == '-') { /* Must escape -- for comments */
+        a =  "&#45;";
+        break;
+      }
+    default:
+      *p++ = ch;
+      continue;
+    }
+    strcpy(p,a); p += strlen(a);
+  }
+  *p = 0;
+  temp = realloc(temp,strlen(temp)+1);
+  return temp;
+}
+
 /* Write some information (printf style args) to the given log stream(s) */
 void log_write(int logt, const char *fmt, ...)
 {
@@ -538,14 +576,17 @@ void printosscanoutput(struct hoststruct *currenths) {
     
     if (currenths->FPR.overall_results == OSSCAN_SUCCESS) {
       if (currenths->FPR.num_perfect_matches > 0) {
+        char *p;
 	log_write(LOG_MACHINE,"\tOS: %s",  currenths->FPR.prints[0]->OS_name);
 	log_write(LOG_XML, "<osmatch name=\"%s\" accuracy=\"100\" />\n", 
-		  currenths->FPR.prints[0]->OS_name);
+		  p = xml_convert(currenths->FPR.prints[0]->OS_name));
+        free(p);
 	i = 1;
 	while(currenths->FPR.accuracy[i] == 1 ) {
 	  log_write(LOG_MACHINE,"|%s", currenths->FPR.prints[i]->OS_name);
 	  log_write(LOG_XML, "<osmatch name=\"%s\" accuracy=\"100\" />\n", 
-		    currenths->FPR.prints[i]->OS_name);
+		    p = xml_convert(currenths->FPR.prints[i]->OS_name));
+          free(p);
 	  i++;
 	}
 	
@@ -572,10 +613,12 @@ void printosscanoutput(struct hoststruct *currenths) {
 	  for(i=1; i < 10 && currenths->FPR.num_matches > i &&
 		currenths->FPR.accuracy[i] > 
 		currenths->FPR.accuracy[0] - 0.10; i++) {
+            char *p;
 	    log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,", %s (%d%%)", currenths->FPR.prints[i]->OS_name, (int) (currenths->FPR.accuracy[i] * 100));
 	    log_write(LOG_XML, "<osmatch name=\"%s\" accuracy=\"%d\" />\n", 
-		      currenths->FPR.prints[i]->OS_name,  
+		      p = xml_convert(currenths->FPR.prints[i]->OS_name),  
 		      (int) (currenths->FPR.accuracy[i] * 100));
+            free(p);
 	  }
 	  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT, "\n");
 	}

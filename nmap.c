@@ -1030,7 +1030,12 @@ int nmap_main(int argc, char *argv[]) {
   log_write(LOG_NORMAL|LOG_MACHINE|LOG_XML, "%s (V. %s) scan initiated %s as: ", NMAP_NAME, NMAP_VERSION, mytime);
   
 
-  for(i=0; i < argc; i++) log_write(LOG_NORMAL|LOG_MACHINE|LOG_XML,"%s ", fakeargv[i]);
+  for(i=0; i < argc; i++) {
+    char *p = xml_convert(fakeargv[i]);
+    log_write(LOG_XML,"%s ", p);
+    free(p);
+    log_write(LOG_NORMAL|LOG_MACHINE,"%s ", fakeargv[i]);
+  }
   log_write(LOG_XML, "-->");
   log_write(LOG_NORMAL|LOG_MACHINE|LOG_XML,"\n");  
 
