@@ -1,6 +1,11 @@
 # Nmap Changelog
 
 ** 2.54BETA20 
+-- Cleaned up a few build/distribution issues that were reported 
+   by LaMont Jones (lamont@hp.com) 
+
+-- Fixed compiler warning noted by Gabor Z. Papp (gzp@papp.hu) )
+
 -- Added TCP Timestamp sequence checking for OS detection and
    Netcraft-style uptime tests.
 

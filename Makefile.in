@@ -93,15 +93,27 @@ distro:
 	nmapfe.desktop nmap-services nmap-rpc nmap-protocols \
 	configure.in config.h.in nmap_winconfig.h Makefile.in configure \
         $(SHTOOL) install-sh config.guess nmap-$(NMAP_VERSION)-1.spec \
-        config.sub INSTALL README-WIN32 COPYING CHANGELOG HACKING \
-	$(LIBPCAPDIR) /usr/tmp/nmap-$(NMAP_VERSION)
+            config.sub INSTALL README-WIN32 COPYING CHANGELOG HACKING \
+            /usr/tmp/nmap-$(NMAP_VERSION)
 	$(SHTOOL) mkdir /usr/tmp/nmap-$(NMAP_VERSION)/mswin32
-	cd mswin32; cp *.h *.H ARPA NET NETINET RPC icon1.ico \
+	cd mswin32; cp -ra *.h *.H ARPA NET NETINET RPC icon1.ico \
                     ifaddrlist.h lib libpcap-note.txt nmap.dsp \
                     nmap.dsw nmap.rc winip \
                     /usr/tmp/nmap-$(NMAP_VERSION)/mswin32
+	$(SHTOOL) mkdir /usr/tmp/nmap-$(NMAP_VERSION)/$(LIBPCAPDIR)
+	cd $(LIBPCAPDIR); cp -ra CHANGES CREDITS FILES INSTALL Makefile.in \
+            NMAP_MODIFICATIONS README README.aix SUNOS4 VERSION acconfig.h \
+            aclocal.m4 bpf bpf_dump.c bpf_image.c config.guess config.sub \
+            config.h.in configure.in configure etherent.c ethertype.h \
+            gencode.c gencode.h  grammar.c grammar.y inet.c \
+            install-sh lbl linux-include mkdep nametoaddr.c \
+            optimize.c pcap-bpf.c pcap-dlpi.c pcap-enet.c \
+            pcap-int.h pcap-linux.c pcap-namedb.h pcap-nit.c pcap-nit.h \
+            pcap-null.c pcap-pf.c pcap-pf.h pcap-snit.c pcap-snoop.c pcap.3 \
+            pcap.c pcap.h ppp.h savefile.c scanner.c scanner.l tokdefs.h \
+            /usr/tmp/nmap-$(NMAP_VERSION)/$(LIBPCAPDIR)
 	$(SHTOOL) mkdir /usr/tmp/nmap-$(NMAP_VERSION)/docs
-	cd docs; cp README copying.html nmap-fingerprinting-article.txt \
+	cd docs; cp -ra README copying.html nmap-fingerprinting-article.txt \
                     nmap.1 nmap.deprecated.txt nmap.usage.txt nmap_doc.html \
                     nmap_manpage-es.html nmap_manpage-fr.html \
                     nmap_manpage-lt.html nmap_manpage-ru.html \
@@ -111,12 +123,12 @@ distro:
 	            xnmap.1 \
                     /usr/tmp/nmap-$(NMAP_VERSION)/docs
 	$(SHTOOL) mkdir /usr/tmp/nmap-$(NMAP_VERSION)/nmapfe
-	cd nmapfe; cp Makefile.in aclocal.m4 configure configure.in \
+	cd nmapfe; cp -ra Makefile.in aclocal.m4 configure configure.in \
 	              nmapfe.c nmapfe.h nmapfe_sig.c nmapfe_sig.h \
 	              nmapfe_error.c nmapfe_error.h NmapFE.dsp nmapfe.dsw \
 	              /usr/tmp/nmap-$(NMAP_VERSION)/nmapfe
 	$(SHTOOL) mkdir /usr/tmp/nmap-$(NMAP_VERSION)/nbase
-	cd $(NBASEDIR); cp Makefile.in aclocal.m4 configure configure.in \
+	cd $(NBASEDIR); cp -ra Makefile.in aclocal.m4 configure configure.in \
 	             install-sh config.guess config.sub nbase_config.h.in \
                      *.c *.h CHANGELOG /usr/tmp/nmap-$(NMAP_VERSION)/nbase
 	rm -f /usr/tmp/nmap-$(NMAP_VERSION)/nbase/nbase_config.h 
@@ -142,7 +154,7 @@ clean: @PCAP_CLEAN@ nmapfe_clean nbase_clean my_clean
 my_clean:
 	rm -f $(OBJS) $(TARGET) config.cache
 pcap_clean:
-	cd $(LIBPCAPDIR); $(MAKE) distclean
+	cd $(LIBPCAPDIR); $(MAKE) clean
 nmapfe_clean:
 	cd nmapfe; $(MAKE) clean
 nbase_clean:

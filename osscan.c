@@ -6,14 +6,13 @@
 /* http://www.insecure.org/nmap/nmap-fingerprinting-article.html       */
 /*                                                                     */
 /***********************************************************************/
-/*  The Nmap Security Scanner is (C) 1995-2000 Insecure.Org.  This     */
+/*  The Nmap Security Scanner is (C) 1995-2001 Insecure.Com LLC. This  */
 /*  program is free software; you can redistribute it and/or modify    */
 /*  it under the terms of the GNU General Public License as published  */
 /*  by the Free Software Foundation; Version 2.  This guarantees your  */
 /*  right to use, modify, and redistribute this software under certain */
-/*  conditions.  If this license is unacceptable to you,               */
-/*  Insecure.Com LLC may be willing to sell alternative licenses       */
-/*  (contact sales@insecure.com ).                                     */
+/*  conditions.  If this license is unacceptable to you, we may be     */
+/*  willing to sell alternative licenses (contact sales@insecure.com). */
 /*                                                                     */
 /*  If you received these files with a written license agreement       */
 /*  stating terms other than the (GPL) terms above, then that          */
