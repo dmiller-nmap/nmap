@@ -13,6 +13,10 @@ o Added MAC address printing.  If Nmap receives packet from a target
   MAC Address: 08:00:20:8F:6B:2F (SUN Microsystems)
   <address addr="00:A0:CC:63:85:4B" vendor="Lite-on Communications" addrtype="mac" />
 
+o Updated the XML DTD to support the newly printed MAC addresses.
+  Thanks to Thorsten Holz (thorsten.holz(a)mmweg.rwth-aachen.de) for
+  sending this patch.
+
 o Normalized many of the OS names in nmap-os-fingerprints (fixed
   capitalization, typos, etc.).  Thanks to Royce Williams
   (royce(a)alaska.net) and Ping Huang (pshuang(a)alum.mit.edu) for
