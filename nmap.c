@@ -803,6 +803,10 @@ int nmap_main(int argc, char *argv[]) {
     sleep(1); /* Give ppl a chance for ^C :) */
   }
 
+  if (o.numdecoys > 1 && o.idlescan) {
+    error("WARNING: Your decoys won't be used in the Idlescan portion of your scanning (although all packets sent to the target are spoofed anyway");
+  }
+
   if (o.connectscan && o.spoofsource) {
     error("WARNING:  -S will not affect the source address used in a connect() scan.  Use -sS or another raw scan if you want to use the specified source address for the port scanning stage of nmap");
   }
