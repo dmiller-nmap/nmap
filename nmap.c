@@ -1969,8 +1969,8 @@ if (o.debugging || o.verbose)
 	    icmp = (struct icmp *) ((char *)ip + sizeof(struct ip));
 	    ip2 = (struct ip *) (((char *) ip) + 4 * ip->ip_hl + 8);
 	    data = (unsigned short *) ((char *)ip2+ 4 * ip2->ip_hl);
-	    printf("Caught ICMP packet:\n");
-	    hdump(icmp, ntohs(ip->ip_len) - sizeof(struct ip));
+	    /*	    printf("Caught ICMP packet:\n");
+		    hdump(icmp, ntohs(ip->ip_len) - sizeof(struct ip)); */
 	    if (icmp->icmp_type == 3) {
 	      switch(icmp->icmp_code) {
 		
