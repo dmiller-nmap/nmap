@@ -150,6 +150,10 @@ install: $(TARGET)
 	$(INSTALL) -c -m 644 nmap-rpc  $(nmapdatadir)/nmap-rpc
 
 uninstall:
+	rm -f $(bindir)/$(TARGET) $(bindir)/nmapfe $(bindir)/xnmap
+	rm -f $(deskdir)/nmapfe.desktop $(mandir)/man1/nmapfe.1
+	rm -f $(mandir)/man1/xnmap.1 $(mandir)/man1/nmap.1
+	rm -rf $(nmapdatadir) 
 	rm -f $(bindir)/$(TARGET)
 
 ${srcdir}/configure: configure.in 
