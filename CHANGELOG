@@ -1,5 +1,9 @@
 # Nmap Changelog
 
+-- Applied patch from Chad Loder (chad_loder@rapid7.com) which
+   improves random target host selection (-iR) by excluding more
+   undesirable addresses.
+
 -- Fixed port number printing bug found by "Stephen Leavitt"
    <stephen_j_leavitt@hotmail.com>
 
