@@ -203,6 +203,18 @@ T6(DF=Y%W=1F4%ACK=S%Flags=AR%Ops=)
 T7(DF=Y%W=1F4%ACK=S++%Flags=AR%Ops=)
 PU(Resp=N)
 
+# Contributed by Jason R DePriest - jrdepriest@ftb.com
+Fingerprint Aironet AP4800E v8.07 - Aironet (Cisco?) 11 Mbps wireless access point
+TSeq(Class=TR%gcd=<6)
+T1(DF=N%W=1000%ACK=S++%Flags=AS%Ops=)
+T2(Resp=Y%DF=N%W=1F4%ACK=S%Flags=AR%Ops=)
+T3(Resp=Y%DF=N%W=1F4%ACK=S++%Flags=AR%Ops=)
+T4(DF=N%W=1F4%ACK=S%Flags=AR%Ops=)
+T5(DF=N%W=1F4%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=1F4%ACK=S%Flags=AR%Ops=)
+T7(DF=N%W=1F4%ACK=S++%Flags=AR%Ops=)
+PU(Resp=N)
+
 # Contributed by Jaanus Toomsalu
 Fingerprint Aironet Wireless Bridge running firmware V5.0J
 TSeq(Class=C|TR)
@@ -227,6 +239,18 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=15C%RID=E%RIPCK=F%UCK=0%ULEN=134%DAT=E)
 
+# Contributed by tusi@sch.bme.hu
+Fingerprint AIX 3.2
+TSeq(Class=64K)
+T1(DF=N%W=7F53%ACK=S++%Flags=AS%Ops=M)
+T2(Resp=N)
+T3(Resp=Y%DF=N%W=7F53%ACK=O%Flags=A%Ops=)
+T4(DF=N%W=8000%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=15C%RID=E%RIPCK=F%UCK=0%ULEN=134%DAT=E)
+
 # Contributed by AndroSyn asethman@mandate-inc.com
 Fingerprint AIX 3.2 running on RS/6000
 TSeq(Class=64K)
@@ -238,6 +262,18 @@ T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=15C%RID=E%RIPCK=F%UCK=0%ULEN=134%DAT=E)
+
+# Contributed by Mark Bover mark@peri.gg
+Fingerprint AIX 3.2.3 running on RS6000 model 560
+TSeq(Class=64K)
+T1(DF=N%W=3F25%ACK=S++%Flags=AS%Ops=M)
+T2(Resp=N)
+T3(Resp=Y%DF=N%W=3F25%ACK=O%Flags=A%Ops=)
+T4(DF=N%W=4000%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
+PU(DF=Y%TOS=0%IPLEN=38%RIPTL=15C%RID=%RIPCK=F%UCK=0%ULEN=134%DAT=E)
 
 # Contributed by Salim Gasmi (salim@gasmi.net)
 Fingerprint AIX 3.2.5 (Bull HardWare)
@@ -367,6 +403,18 @@ T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(Resp=N)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=15C%RID=E%RIPCK=F%UCK=0%ULEN=134%DAT=E)
+
+# Contributed by joshua
+Fingerprint AIX 4.3
+TSeq(Class=TR%gcd=<6)
+T1(DF=Y%W=F87%ACK=S++%Flags=AS%Ops=M)
+T2(Resp=N)
+T3(Resp=N)
+T4(DF=N%W=1000%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(Resp=N)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=15C%RID=E%RIPCK=E|F%UCK=0%ULEN=134%DAT=E)
 
 # Contributed by Tony Arkles <tony.arkles@sk.sympatico.ca>
 Fingerprint Alcatel 1000 ADSL (modem)
@@ -561,11 +609,12 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=0%UCK=E%ULEN=134%DAT=E)
 
 # Contributed by masklin@debian.org
-Fingerprint Apple Airport (Wireless Network Hub)
-T5(Resp=Y%DF=N%W=C00%ACK=S++%Flags=AR%Ops=L)
-T6(Resp=Y%DF=N%W=C00%ACK=S%Flags=AR%Ops=)
-T7(Resp=Y%DF=N%W=C00%ACK=S%Flags=AR%Ops=)
-PU(Resp=Y%DF=N%TOS=A0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
+# Contributed by Clinton Wong, clintdw@netcom.com
+Fingerprint Apple AirPort Wireless Hub Base Station v3.x
+T5(DF=N%W=C00|1000%ACK=S++%Flags=AR%Ops=L)
+T6(DF=N%W=C00|1000%ACK=S|S++%Flags=AR%Ops=|L)
+T7(DF=N%W=C00|1000%ACK=S|S++%Flags=AR%Ops=|L)
+PU(DF=N%TOS=A0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 # Thanks to Mike Fidler <mike@concourse.com>
 Fingerprint Ascend P130 Router
@@ -890,7 +939,7 @@ T7(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(Resp=Y%DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
 # Contributed by John Kerbawy [john@maKintosh.com]
-Fingerprint Assured Access Technology: ISAS Switch Release-2.3.0
+Fingerprint Cisco 1538M HUB running Cisco 1538M EES (1.00.00) or Assured Access Technology ISAS Switch Release-2.3.0
 TSeq(Class=64K)
 T1(Resp=Y%DF=N%W=1000%ACK=S++%Flags=AS%Ops=)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -912,6 +961,18 @@ T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=C0%IPLEN=164%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
+
+# Contributed by "Steven Lawrance" <slawrance@technologist.com>
+Fingerprint AtheOS ( www.atheos.cx )
+TSeq(Class=RI%gcd=<8%SI=<A78&>6)
+T1(DF=N%W=3FF0%ACK=S++%Flags=AS%Ops=M)
+T2(Resp=N)
+T3(Resp=Y%DF=N%W=3FF0%ACK=S++%Flags=AS%Ops=M)
+T4(DF=N%W=0%ACK=S%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=S%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+PU(Resp=N)
 
 # Contributed by matt@snark.net
 Fingerprint ATT Unix SVR4.2 on a Lucent Definity voicemail system
@@ -985,6 +1046,17 @@ T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+
+# Contributed by Drew Smith <drew@pctc.com>
+Fingerprint AXIS 540+/542+ Network Print Server
+T1(DF=N%W=100%ACK=S++%Flags=AS%Ops=M)
+T2(Resp=N)
+T3(Resp=Y%DF=N%W=100%ACK=O%Flags=A%Ops=)
+T4(DF=N%W=100%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+PU(Resp=N)
 
 # Contributed by RAS <richards@eugene.net>
 # Bay Networks BLN-2 Network Router (latest Bay OS as of Feb16'99)
@@ -1119,15 +1191,16 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=15C%RID=F%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
-Fingerprint BSDI 4.0-4.0.1  # Thanks to tom@bpf.promisc.org
-TSeq(Class=RI%gcd=<6%SI=>FFF)
-T1(Resp=Y%DF=Y%W=2017%ACK=S++%Flags=AS%Ops=MNWNNT)
+# Contributed by Lorell Hathcock - lorell@hathcock.org
+Fingerprint BSDI 4.0-4.0.1  
+TSeq(Class=RI%gcd=<A%SI=<1974A&>16F)
+T1(DF=Y%W=2017%ACK=S++%Flags=AS%Ops=MNWNNT)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
 T3(Resp=Y%DF=Y%W=2017%ACK=S++%Flags=AS%Ops=MNWNNT)
-T4(Resp=Y%DF=N%W=0%ACK=O%Flags=R%Ops=)
-T5(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
-T6(Resp=Y%DF=N%W=0%ACK=O%Flags=R%Ops=)
-T7(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
+T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=15C%RID=E%RIPCK=0%UCK=E%ULEN=134%DAT=E)
 
 # Contributed by Rink Springer (rink@springer.cx)
@@ -1142,18 +1215,6 @@ T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E|F%ULEN=134%DAT=E)
-
-# Contributed by Anonymous
-Fingerprint BSDI Version 7.00LS
-TSeq(Class=RI%gcd=<5%SI=>FFF)
-T1(DF=Y%W=2017%ACK=S++%Flags=AS%Ops=MNWNNT)
-T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
-T3(Resp=Y%DF=Y%W=2017%ACK=S++%Flags=AS%Ops=MNWNNT)
-T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
-T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
-T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
-T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
-PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=0%UCK=E%ULEN=134%DAT=E)
 
 # Contributed by kbaker3@ic3.ithaca.edu
 Fingerprint CABLETRON Systems, Incorporated, Module Firmware Revision: 01.01.01
@@ -1362,11 +1423,8 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=C0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
-# Thanks to Stuart Stock
-# Thanks to Jordan Ritter <jpr5@netect.com>
-# Netopia 655-U/POTS ISDN Router or Netopia R3100-I v4.3.1
-Fingerprint Cisco Catalyst 1900 switch or Netopia DSL/ISDN router or Bay 450
-TSeq(Class=TD%gcd=<6|9C4|1388|1D4C|2710|30D4|3A98|445C|4E20%SI=<64) 
+Fingerprint Cisco Catalyst 1900 switch or Netopia DSL/ISDN router or Bay 350-450
+TSeq(Class=TD%gcd=<138C%SI=<1E)
 T1(DF=N%W=400%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
 T3(Resp=Y%DF=N%W=400%ACK=S++%Flags=AS%Ops=M)
@@ -1374,10 +1432,11 @@ T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 # Thanks to Jan B. Koum (Cisco 2516,7500,7505)
-Fingerprint Cisco IOS 11.3 - 12.0(9)
-TSeq(Class=RI%gcd=<6%SI=>50)
+Fingerprint Cisco IOS 11.3 - 12.0(11)
+TSeq(Class=TD|RI%gcd=<6)
 T1(DF=N%W=1020%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
 T3(Resp=Y%DF=N%W=1020%ACK=S++%Flags=AS%Ops=M)
@@ -1897,10 +1956,9 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=0%ULEN=134%DAT=E)
 
-# Contributed by manapy manapy@transient.net
-# Contributed by Andre Diller dillera@isc.upenn.edu
+# Contributed by manapy manapy@transient.net, Andre Diller dillera@isc.upenn.edu
 Fingerprint Compaq Tru64 UNIX 5.0 on AlphaServer
-TSeq(Class=RI%gcd=<6%SI=<2783A&>63E)
+TSeq(Class=RI%gcd=<10%SI=<1C90D0&>490C)
 T1(DF=N%W=805C%ACK=S++%Flags=AS%Ops=MNW)
 T2(Resp=N)
 T3(Resp=Y%DF=N%W=805C%ACK=O%Flags=A%Ops=)
@@ -1909,6 +1967,18 @@ T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=0%ULEN=134%DAT=E)
+
+# Contributed by RaW
+Fingerprint OS-9/68K V2.4 (Quanterra Q4124 - 68030)
+TSeq(Class=i800)
+T1(DF=N%W=C000%ACK=S++%Flags=AS%Ops=)
+T2(Resp=N)
+T3(Resp=Y%DF=N%W=C000%ACK=O%Flags=A%Ops=)
+T4(DF=N%W=C000%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
+PU(Resp=N)
 
 # Contributed by Slimey Talc <Slimey_Talc@yahoo.com>
 Fingerprint OSF1 5.0 Rev. 910 (a.k.a. Compaq/Digital Tru64 Unix)
@@ -2033,6 +2103,18 @@ T6(Resp=N)
 T7(Resp=N)
 PU(Resp=N)
 
+# Contributed by patrick.audemard@bigfoot.com
+Fingerprint NCR MP-RAS SVR4 UNIX System Version 3
+TSeq(Class=RI%gcd=<6%SI=<31BA1E&>7F38)
+T1(DF=N%W=60F4%ACK=S++%Flags=AS%Ops=MNWNNT)
+T2(Resp=N)
+T3(Resp=Y%DF=N%W=6041%ACK=O%Flags=A%Ops=NNT)
+T4(DF=N%W=6000%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
+
 Fingerprint NCR S26 (i386) running NCR MP-RAS SVR4 UNIX System
 TSeq(Class=RI%gcd=<6%SI=<2BB718&>6FD5)
 T1(DF=Y%W=60F4%ACK=S++%Flags=AS%Ops=MNWNNT)
@@ -2092,6 +2174,18 @@ T6(DF=Y%W=1%ACK=O%Flags=R%Ops=)
 T7(DF=Y%W=1%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
+# Contributed by Jeffrey H. Johnson - jeff@websitefactory.net
+Fingerprint Foundry ServerIron XL Switch Version 06.0.00T12
+TSeq(Class=C)
+T1(DF=Y%W=4000%ACK=S++|O%Flags=AS%Ops=M)
+T2(Resp=Y%DF=Y%W=1%ACK=S%Flags=AR%Ops=)
+T3(Resp=Y%DF=Y%W=1%ACK=S++%Flags=AR%Ops=)
+T4(DF=Y%W=1%ACK=O%Flags=R%Ops=)
+T5(Resp=N)
+T6(DF=Y%W=1%ACK=O%Flags=R%Ops=)
+T7(DF=Y%W=1%ACK=S%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=44%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=F)
+
 # Contributed by sboyd@futures.com
 Fingerprint Netopia DSL router
 TSeq(Class=TR)
@@ -2127,6 +2221,18 @@ T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=E0%IPLEN=164%RIPTL=134%RID=E%RIPCK=F%UCK=0%ULEN=134%DAT=E)
+
+# Contributed by Nir Zuk, nir@nirzuk.com
+Fingerprint NOKIA IPSO 3.2 Running Checkpoint Firewall-1
+TSeq(Class=RI%gcd=<6%SI=<E4656&>2476)
+T1(DF=N%W=4000%ACK=O|S++%Flags=A|AS%Ops=NNT|MNWNNT)
+T2(Resp=N)
+T3(Resp=Y%DF=N%W=4000%ACK=O|S++%Flags=A|AS%Ops=NNT|MNWNNT)
+T4(DF=N%W=4000%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
+PU(DF=Y|N%TOS=E0|0%IPLEN=164|38%RIPTL=134|148%RID=E%RIPCK=E%UCK=0|E%ULEN=134%DAT=E)
 
 # Contributed by Mike Barnard (mike@bleeding-head.com)
 Fingerprint Galacticomm WorldGroup BBS / Vircom TCP/IP stack
@@ -2211,6 +2317,18 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=15C%RID=E%RIPCK=F%UCK=0%ULEN=134%DAT=E)
 
+# Contributed by David O'Brien, Jan Koum, webmaster@merging.org
+Fingerprint FreeBSD 2.2.1 - 4.1
+TSeq(Class=RI%gcd=<8%SI=<38E50&>906)
+T1(DF=Y%W=403D|C0B7|402E|C08A|FFFF%ACK=S++%Flags=AS%Ops=MNWNNT|M)
+T2(Resp=N)
+T3(Resp=Y%DF=Y%W=403D|C0B7|402E|C08A|FFFF%ACK=S++%Flags=AS|A%Ops=MNWNNT|NNT|M)
+T4(DF=N%W=4000|0|0%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=F%RIPCK=F%UCK=0|F%ULEN=134%DAT=E)
+
 # Thanks to Alexandr D. Kanevskiy <kad@dgtu.donetsk.ua>
 Fingerprint FreeBSD 2.1.0 - 2.1.5  # Thanks to Jan Koum!
 TSeq(Class=64K)
@@ -2223,17 +2341,6 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=F%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
-Fingerprint FreeBSD 2.2.1 - 4.1  # Thanks to David O'Brien
-TSeq(Class=RI%gcd=<6)
-T1(DF=Y%W=403D|C0B7%ACK=S++%Flags=AS%Ops=MNWNNT)
-T2(Resp=N)
-T3(Resp=Y%DF=Y%W=403D|C0B7%ACK=S++%Flags=AS|A%Ops=MNWNNT|NNT)
-T4(DF=N%W=4000|0%ACK=O%Flags=R%Ops=)
-T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
-T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
-T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
-PU(TOS=0%IPLEN=38%RIPTL=148%RID=F%RIPCK=F%UCK=0%ULEN=134%DAT=E)
-
 # Contributed by Michael - webmaster@tenebrous.com
 Fingerprint FreeBSD 2.2.1-STABLE
 TSeq(Class=RI%gcd=<8%SI=<74A54&>1295)
@@ -2245,17 +2352,6 @@ T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E|F%RIPCK=E|F%UCK=0%ULEN=134%DAT=E)
-
-Fingerprint FreeBSD 2.2.1 - 4.1  #Thanks to Jan Koum
-TSeq(Class=RI%gcd=<6)
-T1(DF=Y%W=402E|C08A|FFFF%ACK=S++%Flags=AS%Ops=M)
-T2(Resp=N)
-T3(Resp=Y%DF=Y%W=402E|C08A|FFFF%ACK=S++%Flags=AS%Ops=M)
-T4(DF=N%W=4000|0%ACK=O%Flags=R%Ops=)
-T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
-T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
-T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
-PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=F%RIPCK=F%UCK=0%ULEN=134%DAT=E)
 
 # Contributed by pawel@essus.com.pl
 Fingerprint FreeBSD 3.2-STABLE
@@ -2605,6 +2701,18 @@ T6(DF=N%W=0%ACK=S++%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
+# Contributed by lorns_1999@yahoo.com
+Fingerprint IBM 2210 Router MRS 2.x on Token Ring interface
+TSeq(Class=TR%gcd=<6)
+T1(DF=N%W=7FE0%ACK=S++%Flags=AS%Ops=ME)
+T2(Resp=N)
+T3(Resp=Y%DF=N%W=7FE0%ACK=S++%Flags=ASF%Ops=ME)
+T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=S++%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
+
 # Contributed by Wade Morris (wade.morris@dal.ca)
 # IBM AIX v3.2.5 running on 8xPower-2 wide nodes
 # Fingerprint AIX Version 4
@@ -2740,8 +2848,8 @@ PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=0%ULEN=134%DAT=E)
 
 # Contributed by Ben Harris <bjh21@cam.ac.uk>
 # D-Link Corp. DE-1800 Stackable Hub SNMP/Telnet Agent Compiled 
-# Date: Oct 14 1997, Time: 09:35:04  (claims software version 2.04B3, boot PROM 
-# version 2.21)
+# Date: Oct 14 1997, Time: 09:35:04  (claims software version 2.04B3,
+# boot PROM version 2.21)
 Fingerprint D-Link Corp. DE-1800 Stackable Hub SNMP/Telnet Agent Software version 2.04B3 boot PROM 2.21
 TSeq(Class=TD%gcd=1388%SI=0)
 T1(DF=N%W=400%ACK=S++%Flags=AS%Ops=M)
@@ -2752,6 +2860,18 @@ T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RIPCK=E%UCK=E%ULEN=134%DAT=E)
+
+# Contributed by Adam Goode <adam@myrealbox.com>
+Fingerprint D-Link DI-701, Version 2.22
+TSeq(Class=RI%gcd=<6%SI=<12E1C&>2F1)
+T1(DF=Y%W=402E%ACK=S++%Flags=AS%Ops=MNWNNT)
+T2(Resp=N)
+T3(Resp=Y%DF=Y%W=402E%ACK=S++%Flags=AS%Ops=MNWNNT)
+T4(Resp=N)
+T5(DF=N%W=400%ACK=S++%Flags=AR%Ops=WNMETL)
+T6(DF=N%W=400%ACK=S++%Flags=AR%Ops=WNMETL)
+T7(DF=N%W=400%ACK=S++%Flags=AR%Ops=WNMETL)
+PU(Resp=N)
 
 # Contributed by Stephen M. Youndt <steve@smy.com>
 Fingerprint D-Link Print Server
@@ -2837,6 +2957,18 @@ T6(Resp=Y%DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(Resp=Y%DF=N%W=0%ACK=S%Flags=R%Ops=)
 PU(Resp=Y%DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=0%ULEN=134%DAT=E)
 
+# Contributed by srp@zzap.org
+Fingerprint Labtam MT300, X-Terminal Kernel
+TSeq(Class=64K)
+T1(DF=N%W=1000%ACK=S++%Flags=AS%Ops=M)
+T2(Resp=N)
+T3(Resp=Y%DF=N%W=1000%ACK=O%Flags=A%Ops=)
+T4(DF=N%W=1000%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=15C%RID=F%RIPCK=0%UCK=0%ULEN=134%DAT=E)
+
 # Contributed by Anatole Shaw <nmap-contact@research.poc.net>
 Fingerprint Lantronix ETS16P Version V3.5/2(970721)
 TSeq(Class=RI%gcd=<6%SI=<404C&>90)
@@ -2907,6 +3039,16 @@ T5(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=O%Flags=R%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
+
+Fingerprint Mulit-Tech standalone firewall box, version 3
+TSeq(Class=TD%gcd=<714%SI=<14)
+T1(DF=N%W=600%ACK=S++%Flags=AS%Ops=M)
+T2(Resp=Y%DF=N%W=0%ACK=O%Flags=R%Ops=)
+T3(Resp=Y%DF=N%W=600%ACK=S++%Flags=AS%Ops=M)
+T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=O%Flags=R%Ops=)
 
 Fingerprint MVS TCP/IP TCPMVS 3.2
 TSeq(Class=TD%gcd=64|C8|12C|190|1F4%SI=<1E)
@@ -3070,9 +3212,8 @@ T7(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(Resp=Y%DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 # Contributed by Roberto Totaro (roto@enigma.ethz.ch)
-# Fingerprint SGI O2 R5000 (IP32) running IRIX 6.5.7f
-Fingerprint IRIX 6.5.7f
-TSeq(Class=TD|RI%gcd=<6%SI=<4A434&>BCD)
+Fingerprint IRIX 6.5.7f-6.5.8
+TSeq(Class=64K)
 T1(DF=N%W=EF2A%ACK=S++%Flags=AS%Ops=MNWNNTNNM)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
 T3(Resp=Y%DF=N%W=EF2A%ACK=O%Flags=A%Ops=NNT)
@@ -3358,9 +3499,9 @@ PU(DF=N%TOS=C0|A0|0%IPLEN=164%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Linux 2.1.122 - 2.2.16
 TSeq(Class=RI%gcd=<8%SI=>10000)
-T1(DF=Y%W=3C0A|3F25|7F53|7C38%ACK=S++%Flags=AS%Ops=MENNTNW)
+T1(DF=Y%W=3C0A|3F25|7F53|7C38|B63%ACK=S++%Flags=AS%Ops=MENNTNW)
 T2(Resp=N)
-T3(Resp=Y%DF=Y%W=3C0A|3F25|7F53|7C38%ACK=S++%Flags=AS%Ops=MENNTNW)
+T3(Resp=Y%DF=Y%W=3C0A|3F25|7F53|7C38|B63%ACK=S++%Flags=AS%Ops=MENNTNW)
 T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
@@ -3402,17 +3543,17 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=C0|A0|0%IPLEN=164%RIPTL=148%RID=E%RIPCK=E%UCK=F%ULEN=134%DAT=E)
 
-# Contributed by mouse-aj3d@datastacks.com
+# Contributed by mouse-aj3d@datastacks.com, Samuel Knapp, madranis@madranis.com
 Fingerprint Linux 2.2.14
-TSeq(Class=RI%gcd=<6%SI=<2151920&>554A7)
-T1(DF=Y%W=7C38%ACK=S++%Flags=AS%Ops=MENNTNW)
+TSeq(Class=RI%gcd=<6%SI=<2DD9C88&>755F7)
+T1(DF=Y%W=7C38|7F53%ACK=S++%Flags=AS%Ops=MENNTNW)
 T2(Resp=N)
-T3(Resp=Y%DF=Y%W=7C38%ACK=S++%Flags=AS%Ops=MENNTNW)
+T3(Resp=Y%DF=Y%W=7C38|7F53%ACK=S++%Flags=AS%Ops=MENNTNW)
 T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
-T5(Resp=N)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
-PU(DF=N%TOS=C0%IPLEN=178%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=F)
+PU(DF=N%TOS=C0%IPLEN=178%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=F|E)
 
 # Contributed by qnex@ssw.krakow.pl
 Fingerprint Linux 2.3.12
@@ -3464,15 +3605,15 @@ PU(DF=Y%TOS=C0|0%IPLEN=164%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 # Contributed by Reuben Farrelly
 Fingerprint Linux Kernel 2.4.0-test5
-TSeq(Class=RI%gcd=<6%SI=<34D8282&>8746D)
-T1(DF=Y%W=7C70%ACK=S++%Flags=AS%Ops=MNNTNW)
+TSeq(Class=RI%gcd=<6%SI=<34AE3EC&>86DB8)
+T1(DF=Y%W=7C70|7E18%ACK=S++%Flags=AS%Ops=MNNTNW)
 T2(Resp=N)
-T3(Resp=Y%DF=Y%W=7C70%ACK=S++%Flags=AS%Ops=MNNTNW)
+T3(Resp=Y%DF=Y%W=7C70|7E18%ACK=S++%Flags=AS%Ops=MNNTNW)
 T4(DF=Y%W=0%ACK=O%Flags=R%Ops=)
 T5(DF=Y%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=Y%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=Y%W=0%ACK=S++%Flags=AR%Ops=)
-PU(DF=Y%TOS=C0%IPLEN=178%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=F)
+PU(DF=Y%TOS=C0%IPLEN=178%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=F|E)
 
 # Not really constant -- just slow incrementation
 # This is an LCIII
@@ -3593,6 +3734,18 @@ T7(DF=Y%W=0%ACK=S%Flags=AR%Ops=)
 #T7(Resp=Y%DF=Y%W=0%ACK=S%Flags=AR%Ops=)
 #PU(Resp=Y%DF=Y%TOS=0%IPLEN=70%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
+# Contributed by Gilles Depeyrot <Gilles.Depeyrot@wanadoo.fr>
+Fingerprint Mac OS 8.6
+TSeq(Class=64K)
+T1(DF=Y%W=455B%ACK=S++%Flags=AS%Ops=MEWL)
+T2(Resp=N)
+T3(Resp=Y%DF=Y%W=455B%ACK=S++%Flags=AS%Ops=MEWL)
+T4(DF=Y%W=0%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=800|400%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=800|400%ACK=S%Flags=AR%Ops=)
+T7(DF=N%W=400%ACK=S%Flags=AR%Ops=)
+PU(Resp=N)
+
 # Contributed by Lynda L. True <shrdlu@hazel.sdd.TRW.COM>
 Fingerprint Apple MacOS 9.04 (Powermac or G4)
 TSeq(Class=RI%gcd=<9%SI=>3FFF)
@@ -3626,6 +3779,18 @@ T3(Resp=Y%DF=N%W=640%ACK=S++%Flags=AS%Ops=ME)
 T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)   
+T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=F%ULEN=134%DAT=E)
+
+# Contributed by Stu Ekins (stu@ekins.net)
+Fingerprint APC Web/SNMP UPS management card
+TSeq(Class=RI%gcd=<6%SI=<52FB700&>D46DF)
+T1(DF=N%W=640%ACK=S++%Flags=AS%Ops=ME)
+T2(Resp=N)
+T3(Resp=Y%DF=N%W=640%ACK=S++%Flags=AS%Ops=ME)
+T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=F%ULEN=134%DAT=E)
 
@@ -4056,6 +4221,18 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
+# Contributed by Philipp Huber uebs@gmx.at
+Fingerprint NetBSD 1.5_ALPHA i386
+TSeq(Class=RI%gcd=<6%SI=<5CF5F1C&>EDF97)
+T1(DF=N%W=4000%ACK=S++%Flags=AS%Ops=MNWNNT)
+T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
+T3(Resp=Y%DF=N%W=4000%ACK=S++%Flags=AS%Ops=MNWNNT)
+T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(Resp=N)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
+
 # Contributed by Ben Harris <bjh21@cam.ac.uk>
 Fingerprint NetJet Version 3.0 - 4.0 Printer
 TSeq(Class=TD%gcd=<4%SI=<4)
@@ -4163,10 +4340,10 @@ T6(Resp=Y%DF=Y%W=0%ACK=O%Flags=R%Ops=)
 T7(Resp=Y%DF=Y%W=0%ACK=S++%Flags=AR%Ops=)
 PU(Resp=Y%DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=F%ULEN=134%DAT=E)
 
-# Thanks to Jonathan Hunter
+# Contributed by venglin@freebsd.lublin.pl
 Fingerprint Novell NetWare 3.12 or 386 TCP/IP
-TSeq(Class=TD%gcd=35A3%SI=<5)
-T1(DF=N%W=73F|F87%ACK=S++%Flags=AS%Ops=ME)
+TSeq(Class=TD%gcd=<6B4A%SI=<1E)
+T1(DF=N%W=73F|F87|3F25%ACK=S++%Flags=AS%Ops=ME)
 T2(Resp=N)
 T3(Resp=Y%DF=N%W=FFFF%ACK=O%Flags=AS|ASF%Ops=ME)
 T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
@@ -4181,6 +4358,18 @@ TSeq(Class=RI%gcd=<8%SI=<5641338&>DCCE9)
 T1(DF=Y%W=8000%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
 T3(Resp=Y%DF=Y%W=7FFF%ACK=O%Flags=AS%Ops=M)
+T4(Resp=N)
+T5(DF=Y%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=Y%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=Y%W=0%ACK=S++%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
+
+# Contributed by Anonymous
+Fingerprint Novell Netware 5.0 SP5
+TSeq(Class=RI%gcd=<6%SI=<2B302C0&>6E8E8)
+T1(DF=Y%W=1800%ACK=S++%Flags=AS%Ops=M)
+T2(Resp=N)
+T3(Resp=Y%DF=Y%W=17FF%ACK=O%Flags=AS%Ops=M)
 T4(Resp=N)
 T5(DF=Y%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=Y%W=0%ACK=O%Flags=R%Ops=)
@@ -4347,7 +4536,8 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=F%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
 # Contributed by Miles Reed <miles@goiter.org>
-Fingerprint OpenVMS 6.2 on VAX
+# Contributed by Jayson Larose (jayson_larose@hotmail.com)
+Fingerprint OpenVMS 6.2 - 7.2-1 on VAX or AXP
 TSeq(Class=TR%gcd=<6)
 T1(DF=N%W=1800%ACK=S++%Flags=AS%Ops=MNWNNT)
 T2(Resp=N)
@@ -4464,6 +4654,18 @@ T5(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(Resp=Y%DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(Resp=Y%DF=N%TOS=0%IPLEN=38%RIPTL=15C%RID=E%RIPCK=F%UCK=E%ULEN=134%DAT=E)
+
+# Contributed by Anonymous
+Fingerprint Sequent DYNIX/ptx(R) V4.4.6
+TSeq(Class=RI|TD%gcd=<6%SI=<3FC)
+T1(DF=Y%W=6000%ACK=S++%Flags=AS%Ops=MNW)
+T2(Resp=N)
+T3(Resp=Y%DF=Y%W=6000%ACK=O%Flags=A%Ops=)
+T4(DF=N%W=6000%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=15C%RID=E%RIPCK=F%UCK=E%ULEN=134%DAT=E)
 
 # Contributed by Robert Lister <robl@lentil.org>
 Fingerprint Siemens HICOM 300 Phone switch (WAML LAN card)
@@ -4668,7 +4870,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=70%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 # Thanks to Michael Connolly <connolly@hawaii.edu>
-Fingerprint Proteon OpenRoute 2.1 on a RBX200 Router
+Fingerprint Proteon OpenRoute 2.1 on a RBX200 Router or IBM 2210 Router
 TSeq(Class=TD%gcd=<6%SI=<BB)
 T1(DF=N%W=200%ACK=S++%Flags=AS%Ops=ML)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -4738,6 +4940,18 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=F%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
+# Contributed by Who Else <whoelse@elitedigital.net>
+Fingerprint RedBack SMS 1800
+TSeq(Class=RI%gcd=<6%SI=<4CA7C&>C2F)
+T1(DF=N%W=2000%ACK=S++%Flags=AS%Ops=MNW)
+T2(Resp=N)
+T3(Resp=Y%DF=N%W=2000%ACK=O%Flags=A%Ops=)
+T4(DF=N%W=2000%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=0%UCK=0%ULEN=134%DAT=E)
+
 # Contributed by mur@lynx.ru
 Fingerprint ReliantUNIX-Y 5.44 B0033 RM600 1/256 R10000
 TSeq(Class=64K)
@@ -4749,6 +4963,18 @@ T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=0%UCK=E%ULEN=134%DAT=E)
+
+# Contributed by Cory Petkovsek, coryp@petersen-arne.com
+Fingerprint Ricoh Aficio AP4500 Network Laser Printer
+TSeq(Class=C%Val=0)
+T1(DF=N%W=800%ACK=S++%Flags=AS%Ops=M)
+T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
+T3(Resp=N)
+T4(DF=N%W=0%ACK=S%Flags=AR%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=S%Flags=AR%Ops=)
+T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=164%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 # Contributed by Frank Vorstenbosch (frank@falstaff.demon.co.uk)
 Fingerprint Ringdale RP21 Print server
@@ -4966,17 +5192,17 @@ T7(DF=Y%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=Y%TOS=0%IPLEN=70%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Solaris 2.6 - 2.7
-TSeq(Class=RI%gcd=<6)
-T1(DF=Y%W=2297|2788|4431|8371|8F4D|ABCD|FFF7|FFFF%ACK=S++%Flags=AS%Ops=NNTNWME)
-T2(Resp=N)
+TSeq(Class=RI%gcd=<6%SI=<57A26&>DF1)
+T1(DF=Y%W=2297|2788|4431|8371|8F4D|ABCD|FFF7|FFFF|2297|212%ACK=S++%Flags=AS%Ops=NNTNWME)
+T2(DF=N%W=0%ACK=O%Flags=R%Ops=WNMETL)
 T3(Resp=N)
-T4(DF=Y%W=0%ACK=O%Flags=R%Ops=)
+T4(DF=Y|N%W=0%ACK=O%Flags=R%Ops=|WNMETL)
 T5(DF=Y%W=0%ACK=S++%Flags=AR%Ops=)
-T6(DF=Y%W=0%ACK=O|S%Flags=AR|R%Ops=)
-T7(DF=Y%W=0%ACK=S%Flags=AR%Ops=)
-PU(DF=Y%TOS=0%IPLEN=70%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
+T6(DF=Y|N%W=0%ACK=O|S%Flags=AR|R%Ops=|WNMETL)
+T7(DF=Y|N%W=0%ACK=S|O%Flags=AR|R%Ops=|WNMETL)
+PU(DF=Y%TOS=0%IPLEN=70%RIPTL=148%RID=E%RIPCK=E|F%UCK=E|F|F|E%ULEN=134%DAT=E)
 
-Fingerprint Solaris 2.6 - 2.7 X86
+Fingerprint Solaris 2.6 - 7 X86
 TSeq(Class=RI%gcd=<6)
 T1(DF=Y%W=2491|462B%ACK=S++%Flags=AS%Ops=NNTNWME)
 T2(Resp=N)
@@ -5020,18 +5246,6 @@ T5(DF=Y%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=Y%W=0%ACK=O|S%Flags=AR|R%Ops=)
 T7(DF=Y%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=Y%TOS=0%IPLEN=70%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
-
-# Contributed by root@hq.palmreach.com ludde@hq.palmreach.com
-Fingerprint Solaris 7
-TSeq(Class=RI%gcd=<6%SI=<66C38&>105D)
-T1(DF=Y%W=2297|212%ACK=S++%Flags=AS%Ops=NNTNWME|NNTME)
-T2(Resp=N)
-T3(Resp=N)
-T4(DF=Y%W=0%ACK=O%Flags=R%Ops=)
-T5(DF=Y%W=0%ACK=S++%Flags=AR%Ops=)
-T6(DF=Y%W=0%ACK=O%Flags=R%Ops=)
-T7(DF=Y%W=0%ACK=S%Flags=AR%Ops=)
-PU(DF=Y%TOS=0%IPLEN=70%RIPTL=148%RID=E%RIPCK=E%UCK=F|E%ULEN=134%DAT=E)
 
 # Contributed by elliotb@flash.net
 Fingerprint Sun Solaris 8 early acces beta through actual release
@@ -5140,6 +5354,29 @@ T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=0%UCK=0%ULEN=134%DAT=E)
+
+# Contributed by nate.king@globalintegrity.com
+Fingerprint Tandem NSK D40
+TSeq(Class=64K)
+T1(DF=N%W=2000%ACK=S++%Flags=AS%Ops=MNWNNT)
+T2(Resp=N)
+T3(Resp=Y%DF=N%W=2000%ACK=O%Flags=A%Ops=NNT)
+T4(DF=N%W=2000%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=0%UCK=0%ULEN=134%DAT=E)
+
+# Contributed by Ian Fraser fraseri@asm.org.uk
+Fingerprint Tektronix Phaser 350 firmware 3.3 (printer)
+T1(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
+T3(Resp=Y%DF=N%W=0%ACK=O%Flags=AR%Ops=)
+T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+PU(Resp=N)
 
 # Thanks to Sandor Barany" <S.Barany@infosys.tuwien.ac.at>
 Fingerprint Tektronix Phaser 360 Extended
@@ -5339,9 +5576,9 @@ PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Windows NT4 / Win95 / Win98
 TSeq(Class=TD|RI%gcd=1|2|3|4|5|A|14|1E|28|5A%SI=<1F4)
-T1(DF=Y%W=2017|16D0|860|869F%ACK=S++%Flags=AS%Ops=M|MNWNNT)
-T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
-T3(Resp=Y%DF=Y%W=2017|16D0|860|869F%ACK=S++%Flags=AS%Ops=M|MNWNNT)
+T1(DF=Y%W=2017|16D0|860|8000|869F%ACK=S++%Flags=A|AS%Ops=|M|MNWNNT)
+T2(DF=N%W=0%ACK=S%Flags=AR%Ops=)
+T3(Resp=Y%DF=Y%W=2017|16D0|860|8000|869F%ACK=S++%Flags=AS%Ops=M|MNWNNT)
 T4(DF=N%W=0%ACK=S++|O%Flags=R%Ops=)
 T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=S++|O%Flags=R%Ops=)
@@ -5363,7 +5600,7 @@ PU(DF=%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 # Thanks to Mike Bressem <mb@imsc.de>
 Fingerprint Windows NT4 / Win95 / Win98
 TSeq(Class=TD|RI%gcd=1|2|3|4|5|8|A|14|1E|28|5A%SI=<1F4)
-T1(DF=Y%W=2017|16D0|860|869F%ACK=S++%Flags=AS%Ops=M|MNWNNT)
+T1(DF=Y%W=2017|16D0|860|8000|869F%ACK=S++%Flags=AS%Ops=M|MNWNNT)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
 T3(Resp=Y%DF=Y%W=0%ACK=O%Flags=AR%Ops=)
 T4(DF=N%W=0%ACK=S++|O%Flags=R%Ops=)
@@ -5474,6 +5711,18 @@ TSeq(Class=RI%gcd=<8%SI=<27D922&>65EE)
 T1(DF=Y%W=402E|2017%ACK=S++%Flags=AS%Ops=MNWNNT)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
 T3(Resp=Y%DF=Y%W=402E|2017%ACK=S++|O%Flags=AS|A%Ops=MNWNNT|NNT)
+T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
+
+# Contributed by Ken Snider (ksnider@iprimus.ca)
+Fingerprint Windows Millenium Edition v4.90.3000
+TSeq(Class=RI%gcd=<6%SI=<23726&>597)
+T1(DF=Y%W=B5C9|402E|FFFF%ACK=S++%Flags=AS%Ops=MNWNNT)
+T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
+T3(Resp=Y%DF=Y%W=B5C9|402E|FFFF%ACK=S++%Flags=AS%Ops=MNWNNT)
 T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
@@ -5671,7 +5920,7 @@ T7(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=15C%RID=F%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
 # Contributed by "Richard Johnson" <rdump@river.com>
-Fingerprint Cayman 2E <http://www.cayman.com/2e_qs.html>
+Fingerprint Cayman 2E <http://www.cayman.com/>
 TSeq(Class=TR%gcd=<6)
 T1(DF=N%W=3F25%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -5681,6 +5930,18 @@ T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
+
+# Contributed by Anonymous
+Fingerprint Chase IOLAN Terminal Server v3.5.02 CDi
+TSeq(Class=TD%gcd=<84%SI=<1E)
+T1(DF=N%W=600%ACK=S++%Flags=AS%Ops=)
+T2(Resp=N)
+T3(Resp=Y%DF=N%W=600%ACK=O%Flags=A%Ops=)
+T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
+PU(Resp=N)
 
 # Contributed by eric@snowmoon.com
 Fingerprint Xyplex Network9000
@@ -5718,6 +5979,18 @@ T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
+
+# Contributed by robodoc@robodoc.net
+Fingerprint ZyXEL P480 ISDN router running ZyNOS v2.42(O.00)
+TSeq(Class=TD%gcd=<2004%SI=<1E)
+T1(DF=N%W=2000%ACK=S++%Flags=AS%Ops=M)
+T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
+T3(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
+PU(Resp=N)
 
 # Contributed by kribe@iname.com
 Fingerprint Hardware: Zyxel Prestige 128L router

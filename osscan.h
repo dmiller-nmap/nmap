@@ -10,7 +10,7 @@
 #define OSSCAN_TOOMANYMATCHES -2
 
 /* We won't even consider matches with a lower accuracy than this */
-#define OSSCAN_GUESS_THRESHOLD 0.9
+#define OSSCAN_GUESS_THRESHOLD 0.85
 /**********************  STRUCTURES  ***********************************/
 
 /* moved to global_structures.h */

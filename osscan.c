@@ -71,10 +71,10 @@ get_random_bytes(&sequence_base, sizeof(unsigned int));
 ossofttimeout = MAX(200000, target->to.timeout);
 oshardtimeout = MAX(500000, 5 * target->to.timeout);
 
- pd = my_pcap_open_live(target->device, 650,  (o.spoofsource)? 1 : 0, (ossofttimeout + 500)/ 1000);
+ pd = my_pcap_open_live(target->device, /*650*/ 8192,  (o.spoofsource)? 1 : 0, (ossofttimeout + 500)/ 1000);
 
 if (o.debugging)
-   log_write(LOG_STDOUT, "Wait time is %d\n", (ossofttimeout +500)/1000);
+   log_write(LOG_STDOUT, "Wait time is %dms\n", (ossofttimeout +500)/1000);
 
 if (pcap_lookupnet(target->device, &localnet, &netmask, err0r) < 0)
   fatal("Failed to lookup device subnet/netmask: %s", err0r);
@@ -269,6 +269,8 @@ if (o.verbose && openport != -1)
    while(si->responses < NUM_SEQ_SAMPLES && !timeout) {
      ip = (struct ip*) readip_pcap(pd, &bytes, oshardtimeout);
      gettimeofday(&t2, NULL);
+     /*     error("DEBUG: got a response (len=%d):\n", bytes);  */
+     /*     lamont_hdump((unsigned char *) ip, bytes); */
      /* Insure we haven't overrun our allotted time ... */
      if (o.host_timeout && (TIMEVAL_MSEC_SUBTRACT(t2, target->host_timeout) >= 0))
        {
@@ -285,12 +287,13 @@ if (o.verbose && openport != -1)
      if (bytes < (4 * ip->ip_hl) + 4)
        continue;
      if (ip->ip_p == IPPROTO_TCP) {
+       /*       readtcppacket((char *) ip, ntohs(ip->ip_len));  */
        tcp = ((struct tcphdr *) (((char *) ip) + 4 * ip->ip_hl));
        if (ntohs(tcp->th_dport) < o.magic_port || ntohs(tcp->th_dport) - o.magic_port > NUM_SEQ_SAMPLES || ntohs(tcp->th_sport) != openport) {
 	 continue;
        }
        if ((tcp->th_flags & TH_RST)) {
-	 /*readtcppacket((char *) ip, ntohs(ip->ip_len));*/	 
+	 /*	 readtcppacket((char *) ip, ntohs(ip->ip_len));*/	 
 	 if (si->responses == 0) {	 
 	     fprintf(stderr, "WARNING:  RST from port %d -- is this port really open?\n", openport);
 	     /* We used to quit in this case, but left-overs from a SYN
@@ -298,6 +301,7 @@ if (o.verbose && openport != -1)
 	 } 
 	 continue;
       } else if ((tcp->th_flags & (TH_SYN|TH_ACK)) == (TH_SYN|TH_ACK)) {
+	/*	error("DEBUG: response is SYN|ACK to port %hi\n", ntohs(tcp->th_dport)); */
 	/*readtcppacket((char *)ip, ntohs(ip->ip_len));*/
 	  si->seqs[si->responses++] = ntohl(tcp->th_seq);
 	  if (si->responses > 1) {
@@ -415,7 +419,7 @@ if (o.verbose && openport != -1)
      }
    }
    else {
-     log_write(LOG_STDOUT|LOG_NORMAL|LOG_SKID,"Insufficient responses for TCP sequencing (%d), OS detection will be MUCH less reliable\n", si->responses);
+     log_write(LOG_STDOUT|LOG_NORMAL|LOG_SKID,"Insufficient responses for TCP sequencing (%d), OS detection may be less accurate\n", si->responses);
    }
  } else {
  }
@@ -609,7 +613,7 @@ void match_fingerprint(FingerPrint *FP, struct FingerPrintResults *FPR,
       }
     assert(num_subtests_succeeded <= num_subtests);
     acc = num_subtests_succeeded / (double) num_subtests;
-    error("Comp to %s: %li/%li=%f", o.reference_FPs[i]->OS_name, num_subtests_succeeded, num_subtests, acc);
+    /*    error("Comp to %s: %li/%li=%f", o.reference_FPs[i]->OS_name, num_subtests_succeeded, num_subtests, acc); */
     if (acc >= FPR_entrance_requirement || acc == 1.0) {
 
       state = 0;
@@ -624,6 +628,7 @@ void match_fingerprint(FingerPrint *FP, struct FingerPrintResults *FPR,
 	    memmove(FPR->accuracy + idx, FPR->accuracy + idx + 1,
 		    (FPR->num_matches - 1 - idx) * sizeof(double));
 	    FPR->num_matches--;
+	    FPR->accuracy[FPR->num_matches] = 0;
 	  }
 	  break; /* There can only be 1 in the list with same name */
 	}
@@ -632,7 +637,7 @@ void match_fingerprint(FingerPrint *FP, struct FingerPrintResults *FPR,
       if (!skipfp) {      
 	/* First we check whether we have overflowed with perfect matches */
 	if (acc == 1) {
-	  error("DEBUG: Perfect match #%d/%d", FPR->num_perfect_matches + 1, max_prints);
+	  /*	  error("DEBUG: Perfect match #%d/%d", FPR->num_perfect_matches + 1, max_prints); */
 	  if (FPR->num_perfect_matches == max_prints) {
 	    FPR->overall_results = OSSCAN_TOOMANYMATCHES;
 	    return;
@@ -662,10 +667,13 @@ void match_fingerprint(FingerPrint *FP, struct FingerPrintResults *FPR,
 	    state = 1;
 	  }
 	}
-	assert(state == 1); /* Sine it met the entrance req, it better have
-			       found a place in the list */
+	if (state != 1) {
+	  fatal("Bogus list insertion state (%d) -- num_matches = %d num_perfect_matches=%d entrance_requirement=%f", state, FPR->num_matches, FPR->num_perfect_matches, FPR_entrance_requirement);
+	}
 	FPR->num_matches++;
-	
+	/* If we are over max_prints, one was shoved off list */
+	if (FPR->num_matches > max_prints) FPR->num_matches = max_prints;
+
 	/* Calculate the new min req. */
 	if (FPR->num_matches == max_prints) {
 	  FPR_entrance_requirement = FPR->accuracy[max_prints - 1] + 0.00001;
@@ -726,9 +734,9 @@ int AVal_match(struct AVal *reference, struct AVal *fprint, unsigned long *num_s
     current_fp = getattrbyname(fprint, current_ref->attribute);    
     if (!current_fp) continue;
     /* OK, we compare an attribute value in  current_fp->value to a 
-     potentially large expression in current_ref->value.  The syntax uses
-    < (less than), > (greather than), + (non-zero), | (or), and & (and) 
-    No parenthesis are allowed and an expression cannot have | AND & */
+       potentially large expression in current_ref->value.  The syntax uses
+       < (less than), > (greather than), + (non-zero), | (or), and & (and) 
+       No parenthesis are allowed and an expression cannot have | AND & */
     numtrue = andexp = orexp = 0; testfailed = 0;
     Strncpy(valcpy, current_ref->value, sizeof(valcpy));
     p = valcpy;
@@ -740,29 +748,29 @@ int AVal_match(struct AVal *reference, struct AVal *fprint, unsigned long *num_s
     do {
       q = strchr(p, expchar);
       if (q) *q = '\0';
-      if (!strcmp(p, "+")) {
-	if (!*current_fp->value) { if (andexp) testfailed=1; break; }
+      if (strcmp(p, "+") == 0) {
+	if (!*current_fp->value) { if (andexp) { testfailed=1; break; } }
 	else {
 	  val = strtol(current_fp->value, &endptr, 16);
-	  if (val == 0 || *endptr) { if (andexp) testfailed=1; break; }
+	  if (val == 0 || *endptr) { if (andexp) { testfailed=1; break; } }
 	  else { numtrue++; if (orexp) break; }
 	}
       } else if (*p == '<' && isxdigit((int) p[1])) {
-	if (!*current_fp->value) { if (andexp) testfailed=1; break; }
+	if (!*current_fp->value) { if (andexp) { testfailed=1; break; } }
 	number = strtol(p + 1, &endptr, 16);
 	val = strtol(current_fp->value, &endptr, 16);
-	if (val >= number || *endptr) { if (andexp) testfailed=1; break; }
+	if (val >= number || *endptr) { if (andexp)  { testfailed=1; break; } }
 	else { numtrue++; if (orexp) break; }
       } else if (*p == '>' && isxdigit((int) p[1])) {
-	if (!*current_fp->value) { if (andexp) testfailed=1; break; }
+	if (!*current_fp->value) { if (andexp) { testfailed=1; break; } }
 	number = strtol(p + 1, &endptr, 16);
 	val = strtol(current_fp->value, &endptr, 16);
-	if (val <= number || *endptr) { if (andexp) testfailed=1; break; }
+	if (val <= number || *endptr) { if (andexp) { testfailed=1; break; } }
 	else { numtrue++; if (orexp) break; }
       }
       else {
 	if (strcmp(p, current_fp->value))
-	  { if (andexp) testfailed=1; break; }
+	  { if (andexp) { testfailed=1; break; } }
 	else { numtrue++; if (orexp) break; }
       }
       if (q) p = q + 1;
@@ -811,6 +819,8 @@ int bestaccidx;
  if (target->timedout)
    return 1;
  
+ bzero(FP_matches, sizeof(FP_matches));
+
  bzero(si, sizeof(si));
  if (target->ports.state_counts_tcp[PORT_OPEN] == 0 ||
      (target->ports.state_counts_tcp[PORT_CLOSED] == 0 &&
@@ -820,7 +830,7 @@ int bestaccidx;
        log_write(LOG_STDOUT|LOG_NORMAL|LOG_SKID, "Skipping OS Scan due to absence of open (or perhaps closed) ports\n", target->host);
      return 1;
    } else {   
-     log_write(LOG_STDOUT|LOG_NORMAL|LOG_SKID,"Warning:  No TCP ports found open on this machine, OS detection will be MUCH less reliable\n");
+     log_write(LOG_STDOUT|LOG_NORMAL|LOG_SKID,"Warning:  OS detection will be MUCH less reliable because we did not find at least 1 open and 1 closed TCP port\n");
    }
  }
 
@@ -872,9 +882,9 @@ int bestaccidx;
    }
  }
 
- if (target->numFPs > 0 && target->FPR.overall_results == OSSCAN_SUCCESS &&
+ if (target->numFPs > 1 && target->FPR.overall_results == OSSCAN_SUCCESS &&
      target->FPR.accuracy[0] == 1.0) {
-   if (o.verbose) error("WARNING:  OS didn't match until the %d try", target->numFPs);
+   if (o.verbose) error("WARNING:  OS didn't match until the try #%d", target->numFPs);
  } 
 
  target->goodFP = bestaccidx;

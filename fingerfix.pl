@@ -83,17 +83,17 @@ while(<>) {
 	if ($line =~ /Resp=([NY])/) {
 	    $resp = $1;
 	}
-	if ($line =~ /%DF=([NY])/) {
+	if ($line =~ /[(%]DF=([NY])/) {
 	    $df = $1;
 	}
-	if ($line =~ /%W=([^%]+)/) {
+	if ($line =~ /[(%]W=([^%]+)/) {
 	    $w = $1;
 	    if (!$w) { $w = "NULL"; }
 	}
-	if ($line =~ /%ACK=([^%]+)/) {
+	if ($line =~ /[(%]ACK=([^%]+)/) {
 	    $ack = $1;
 	}
-	if ($line =~ /%Flags=([^%]*)/) {
+	if ($line =~ /[(%]Flags=([^%]*)/) {
 	    $flags = $1;
 	    if (!$flags) { $flags = "NULL"; }
 	}
@@ -106,7 +106,7 @@ while(<>) {
 	    $fp{$test}{resp} = "Y";
 	    if ($df and index($fp{$test}{df}, $df) == -1) {
 		if ($fp{$test}{df}) {
-		    $fp{$test}{df} = $fp{$test}{df} . qq^|$df^;
+		    $fp{$test}{df} .= qq^|$df^;
 		} else {
 		    $fp{$test}{df} = $df;
 		}
@@ -152,34 +152,34 @@ while(<>) {
 	if ($line =~ /Resp=([NY])/) {
 	    $resp = $1;
 	}
-	if ($line =~ /%DF=([NY])/) {
+	if ($line =~ /[(%]DF=([NY])/) {
 	    $df = $1;
 	}
-	if ($line =~ /%TOS=([^%]+)/) {
+	if ($line =~ /[(%]TOS=([^%]+)/) {
 	    $tos = $1;
 	    if (!$tos) { $tos = "NULL"; }
 	}
-	if ($line =~ /%IPLEN=([^%]+)/) {
+	if ($line =~ /[(%]IPLEN=([^%]+)/) {
 	    $iplen = $1;
 	}
-	if ($line =~ /%RIPTL=([^%]+)/) {
+	if ($line =~ /[(%]RIPTL=([^%]+)/) {
 	    $riptl = $1;
 	}
-	if ($line =~ /%RID=([^%]+)/) {
+	if ($line =~ /[(%]RID=([^%]+)/) {
 	    $rid = $1;
 	}
-	if ($line =~ /%RIPCK=([^%]+)/) {
+	if ($line =~ /[(%]RIPCK=([^%]+)/) {
 	    $ripck = $1;
 	    if (!$ripck) { $ripck = "NULL"; }
 	}
-	if ($line =~ /%UCK=([^%]+)/) {
+	if ($line =~ /[(%]UCK=([^%]+)/) {
 	    $uck = $1;
 	    if (!$uck) { $uck = "NULL"; }
 	}
-	if ($line =~ /%ULEN=([^%]+)/) {
+	if ($line =~ /[(%]ULEN=([^%]+)/) {
 	    $ulen = $1;
 	}
-	if ($line =~ /%DAT=([A-Z|]+)/) {
+	if ($line =~ /[(%]DAT=([A-Z|]+)/) {
 	    $dat = $1;
 	}
 

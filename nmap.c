@@ -1034,15 +1034,15 @@ int nmap_main(int argc, char *argv[]) {
 			currenths->FPR.accuracy[0] - 0.15; i++) {
 		    log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,", %s (%d%%)", currenths->FPR.prints[i]->OS_name, (int) (currenths->FPR.accuracy[i] * 100));
 		  }
-		} else {
-		    if (o.scan_delay < 500) {
-		      log_write(LOG_NORMAL|LOG_SKID_NOXLT|LOG_STDOUT,"No OS matches for host (If you know what OS is running on it, see http://www.insecure.org/cgi-bin/nmap-submit.cgi).\nTCP/IP fingerprint:\n%s\n\n", mergeFPs(currenths->FPs, currenths->numFPs));
-		    }
+		  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT, "\n");
+		}
+		if (o.scan_delay < 500) {
+		  log_write(LOG_NORMAL|LOG_SKID_NOXLT|LOG_STDOUT,"No exact OS matches for host (If you know what OS is running on it, see http://www.insecure.org/cgi-bin/nmap-submit.cgi).\nTCP/IP fingerprint:\n%s\n\n", mergeFPs(currenths->FPs, currenths->numFPs));
 		}
 	      }
 	      
 	      log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"\n");	  
-	      if (currenths->goodFP >= 0 && (o.debugging || o.verbose > 1)) {
+	      if (currenths->goodFP >= 0 && (o.debugging || o.verbose > 1) && currenths->FPR.num_perfect_matches > 0 ) {
 		log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"OS Fingerprint:\n%s\n", fp2ascii(currenths->FPs[currenths->goodFP]));
 	      }
 	      log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"\n");
@@ -1506,7 +1506,7 @@ char *grab_next_host_spec(FILE *inputfd, int argc, char **fakeargv) {
     do {    
       ipc = (unsigned char *) &ip.s_addr;
       get_random_bytes(ipc, 4);
-    } while(ipc[0] == 10 || ipc[0] > 224 || ipc[0] == 127 || !ipc[0]); /* Skip these private, multicast, reserved, and localhost addresses */
+    } while(ipc[0] == 10 || ipc[0] > 224 || ipc[0] == 127 || !ipc[0] || ipc[0] == 6 || ( ipc[0] == 192 && ipc[1] == 168) ); /* Skip these private, multicast, reserved, and localhost addresses -- I also skip 6.*.*.* because that is the U.S. Army Yuma Proving Ground and it is kindof wacky */
     strcpy(host_spec, inet_ntoa(ip));
   } else if (!inputfd) {
     return( (optind < argc)?  fakeargv[optind++] : NULL);
@@ -2448,7 +2448,7 @@ void pos_scan(struct hoststruct *target, unsigned short *portarray, stype scanty
   /* If it is a SYN scan and we have already figured out the states
      of all the TCP ports, might as well skip the scan (this can happen
      if the ping scan determined the states) */
-  if (target->ports.state_counts_tcp[PORT_OPEN] + target->ports.state_counts_tcp[PORT_CLOSED] + target->ports.state_counts_tcp[PORT_FIREWALLED] == o.numports) {
+  if (target->ports.state_counts_tcp[PORT_OPEN] + target->ports.state_counts_tcp[PORT_CLOSED] + target->ports.state_counts_tcp[PORT_FIREWALLED] == o.numports && scantype == SYN_SCAN) {
     if (o.debugging)
       error("Skipping SYN scan since all ports already known");
     return;
@@ -2592,7 +2592,9 @@ void pos_scan(struct hoststruct *target, unsigned short *portarray, stype scanty
 
   starttime = time(NULL);
 
-  ack_number = get_random_uint();
+  if (scantype != SYN_SCAN)
+    ack_number = get_random_uint();
+  else ack_number = 0;
 
   if (o.debugging || o.verbose) {  
     log_write(LOG_STDOUT, "Initiating %s against %s (%s)\n", scantype2str(scantype), target->name, inet_ntoa(target->host));

@@ -1,4 +1,4 @@
-NMAP_VERSION = 2.54BETA2
+NMAP_VERSION = 2.54BETA4
 NMAP_NAME= nmap
 NMAP_URL= www.insecure.org/nmap/
 prefix = @prefix@
@@ -53,7 +53,7 @@ nmapfe/nmapfe:
 	@echo "FAILURES HERE ARE OK -- THEY JUST MEAN YOU CANNOT USE nmapfe"
 #	-rm -f nmapfe/Makefile
 #	-cd nmapfe; ./configure;
-	-cd nmapfe; test -f Makefile && $(MAKE) VERSION=0.$(VERSION) STATIC=$(STATIC);
+	-cd nmapfe; test -f Makefile && $(MAKE) VERSION=0.$(NMAP_VERSION) STATIC=$(STATIC);
 	@echo "END OF SECTION WHERE FAILURES ARE OK"
 
 ci: checkin

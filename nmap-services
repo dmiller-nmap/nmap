@@ -1010,6 +1010,7 @@ pcnfs             640/udp    # PC-NFS DOS Authentication
 bwnfs             650/udp    # BW-NFS DOS Authentication
 doom              666/tcp    # doom Id Software
 doom              666/udp    # doom Id Software
+resvc             691/tcp    # The Microsoft Exchange 2000 Server Routing Service          
 elcsd             704/tcp    # errlog copy/server daemon
 elcsd             704/udp    # errlog copy/server daemon
 entrustmanager    709/tcp    # EntrustManager - NorTel DES auth network see 389/tcp
