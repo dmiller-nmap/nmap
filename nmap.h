@@ -351,10 +351,12 @@ void *realloc();
 #  define NET_SIZE_T size_t
 #elif defined(SOLARIS)
 #  define NET_SIZE_T socklen_t
+#elif defined(WIN32)
+#  define NET_SIZE_T int
 #endif
 
 #ifndef NET_SIZE_T
-#  define NET_SIZE_T unsigned int
+#  define NET_SIZE_T int
 #endif
 
 /********************** LOCAL INCLUDES *****************************/

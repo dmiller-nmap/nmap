@@ -152,6 +152,180 @@ int resolve(char *hostname, struct sockaddr_storage *ss, size_t *sslen,
   return 1;
 }
 
+/* Returns a buffer of ASCII information about a packet that may look
+   like "TCP 127.0.0.1:50923 > 127.0.0.1:3 S ttl=61 id=39516 iplen=40
+   seq=625950769" or "ICMP PING (0/1) ttl=61 id=39516 iplen=40".
+   Since this is a static buffer, don't use threads or call twice
+   within (say) printf().  And certainly don't try to free() it!  The
+   returned buffer is NUL-terminated */
+const char *ippackethdrinfo(const u8 *packet, u32 len) {
+  static char protoinfo[256];
+  struct ip *ip = (struct ip *) packet;
+  struct tcphdr *tcp;
+  udphdr_bsd *udp;
+  char ipinfo[64];
+  char srchost[INET6_ADDRSTRLEN], dsthost[INET6_ADDRSTRLEN];
+  char *p;
+  struct in_addr saddr, daddr;
+  int frag_off = 0;
+  char fragnfo[64] = "";
+  char tflags[10];
+  if (ip->ip_v != 4)
+    return "BOGUS!  IP Version in packet is not 4";
+
+  if (len < sizeof(struct ip))
+    return "BOGUS!  Packet too short.";
+
+  saddr.s_addr = ip->ip_src.s_addr;
+  daddr.s_addr = ip->ip_dst.s_addr;
+
+  inet_ntop(AF_INET, &saddr, srchost, sizeof(srchost));
+  inet_ntop(AF_INET, &daddr, dsthost, sizeof(dsthost));
+
+  frag_off = BSDFIX(ntohs(ip->ip_off) & 8191 /* 2^13 - 1 */);
+  if (frag_off) {
+    snprintf(fragnfo, sizeof(fragnfo), " frag offset=%d)", frag_off);
+  }
+
+  snprintf(ipinfo, sizeof(ipinfo), "ttl=%d id=%d iplen=%d%s", 
+	   ip->ip_ttl, ntohs(ip->ip_id), BSDUFIX(ip->ip_len), fragnfo);
+
+  if (ip->ip_p == IPPROTO_TCP) {
+    char tcpinfo[64] = "";
+    char buf[32];
+    tcp = (struct tcphdr *)  (packet + ip->ip_hl * 4);
+    if ((len < ip->ip_hl * 4 + 20) || len < (ip->ip_hl + tcp->th_off) * 4)
+      Strncpy(protoinfo, "TCP header incomplete", sizeof(protoinfo));
+    else {
+
+      snprintf(tcpinfo, sizeof(tcpinfo), "seq=%lu win=%hi", 
+	       (unsigned long) ntohl(tcp->th_seq),
+	       ntohs(tcp->th_win));
+      p = tflags;
+      /* These are basically in tcpdump order */
+      if (tcp->th_flags & TH_SYN) *p++ = 'S';
+      if (tcp->th_flags & TH_FIN) *p++ = 'F';
+      if (tcp->th_flags & TH_RST) *p++ = 'R';
+      if (tcp->th_flags & TH_PUSH) *p++ = 'P';
+      if (tcp->th_flags & TH_ACK) {
+	*p++ = 'A';
+	snprintf(buf, sizeof(buf), " ack=%lu", 
+		 (unsigned long) ntohl(tcp->th_seq));
+	strncat(tcpinfo, buf, sizeof(tcpinfo));
+      }
+      if (tcp->th_flags & TH_URG) *p++ = 'U';
+      *p++ = '\0';
+
+      snprintf(protoinfo, sizeof(protoinfo), "TCP %s:%d > %s:%d %s %s %s",
+	       srchost, ntohs(tcp->th_sport), dsthost, ntohs(tcp->th_dport),
+	       tflags, ipinfo, tcpinfo);
+    }
+  } else if (ip->ip_p == IPPROTO_UDP) {
+    udp =  (udphdr_bsd *) (packet + sizeof(struct ip));
+
+    snprintf(protoinfo, sizeof(protoinfo), "UDP %s:%d > %s:%d %s",
+	     srchost, ntohs(udp->uh_sport), dsthost, ntohs(udp->uh_dport),
+	     ipinfo);
+  } else if (ip->ip_p == IPPROTO_ICMP) {
+    char icmptype[128];
+    struct ppkt {
+      unsigned char type;
+      unsigned char code;
+      unsigned short checksum;
+      unsigned short id;
+      unsigned short seq;
+    } *ping;
+    ping = (struct ppkt *) ((ip->ip_hl * 4) + (char *) ip);
+    snprintf(protoinfo, sizeof(protoinfo), "ICMP not handled yet");
+    switch(ping->type) {
+    case 0:
+      strcpy(icmptype, "Echo reply"); break;
+    case 3:
+      if (ping->code == 0)
+	strcpy(icmptype, "network unreachable");
+      else if (ping->code == 1)
+	strcpy(icmptype, "host unreachable");
+      else if (ping->code == 2)
+	strcpy(icmptype, "protocol unreachable");
+      else if (ping->code == 3)
+	strcpy(icmptype, "port unreachable");
+      else if (ping->code == 4)
+	strcpy(icmptype, "fragmentation required");
+      else if (ping->code == 5)
+	strcpy(icmptype, "source route failed");
+      else if (ping->code == 6)
+	strcpy(icmptype, "destination network unknown");
+      else if (ping->code == 7)
+	strcpy(icmptype, "destination host unknown");
+      else if (ping->code == 8)
+	strcpy(icmptype, "source host isolated");
+      else if (ping->code == 9)
+	strcpy(icmptype, "destination network administratively prohibited");
+      else if (ping->code == 10)
+	strcpy(icmptype, "destination host administratively prohibited");
+      else if (ping->code == 11)
+	strcpy(icmptype, "network unreachable for TOS");
+      else if (ping->code == 12)
+	strcpy(icmptype, "host unreachable for TOS");
+      else if (ping->code == 13)
+	strcpy(icmptype, "communication administratively prohibited by filtering");
+      else if (ping->code == 14)
+	strcpy(icmptype, "host precedence violation");
+      else if (ping->code == 15)
+	strcpy(icmptype, "precedence cutoff in effect");
+      else
+	strcpy(icmptype, "unknown unreachable code");
+      break;
+    case 4:
+      strcpy(icmptype, "source quench"); break;
+    case 5:
+      if (ping->code == 0)
+	strcpy(icmptype, "network redirect");
+      else if (ping->code == 1)
+	strcpy(icmptype, "host redirect");
+      else strcpy(icmptype, "unknown redirect");
+      break;
+    case 8:
+      strcpy(icmptype, "Echo request"); break;
+    case 11:
+      if (ping->code == 0)
+	strcpy(icmptype, "TTL=0 during transit");
+      else if (ping->code == 1)
+	strcpy(icmptype, "TTL=0 during reassembly");
+      else strcpy(icmptype, "TTL exceeded (unknown code)");
+      break;
+    case 12:
+      if (ping->code == 0)
+	strcpy(icmptype, "IP header bad");
+      else 
+	strcpy(icmptype, "Misc. parameter problem");
+      break;
+    case 13: 
+      strcpy(icmptype, "Timestamp request"); break;
+    case 14: 
+      strcpy(icmptype, "Timestamp reply"); break;
+    case 15:
+      strcpy(icmptype, "Information request"); break;
+    case 16: 
+      strcpy(icmptype, "Information reply"); break;
+    case 17:
+      strcpy(icmptype, "Address mask request"); break;
+    case 18: 
+      strcpy(icmptype, "Address mask reply"); break;
+    default:
+      strcpy(icmptype, "Unknown type"); break;
+      break;
+    }
+    snprintf(protoinfo, sizeof(protoinfo), "ICMP %s (type=%d/code=%d) %s",
+	     icmptype, ping->type, ping->code, ipinfo);
+  } else {
+    snprintf(protoinfo, sizeof(protoinfo), "Unknown protocol: %s", ipinfo);
+  }    
+
+  return protoinfo;
+}
+
+
 /* Tests whether a packet sent to  IP is LIKELY to route 
  through the kernel localhost interface */
 #ifndef WIN32 /* This next group of functions are already defined in 
@@ -438,180 +612,6 @@ if (TCPIP_DEBUGGING > 1)
 
 return res;
 }
-
-/* Returns a buffer of ASCII information about a packet that may look
-   like "TCP 127.0.0.1:50923 > 127.0.0.1:3 S ttl=61 id=39516 iplen=40
-   seq=625950769" or "ICMP PING (0/1) ttl=61 id=39516 iplen=40".
-   Since this is a static buffer, don't use threads or call twice
-   within (say) printf().  And certainly don't try to free() it!  The
-   returned buffer is NUL-terminated */
-const char *ippackethdrinfo(const u8 *packet, u32 len) {
-  static char protoinfo[256];
-  struct ip *ip = (struct ip *) packet;
-  struct tcphdr *tcp;
-  udphdr_bsd *udp;
-  char ipinfo[64];
-  char srchost[INET6_ADDRSTRLEN], dsthost[INET6_ADDRSTRLEN];
-  char *p;
-  struct in_addr saddr, daddr;
-  int frag_off = 0;
-  char fragnfo[64] = "";
-  char tflags[10];
-  if (ip->ip_v != 4)
-    return "BOGUS!  IP Version in packet is not 4";
-
-  if (len < sizeof(struct ip))
-    return "BOGUS!  Packet too short.";
-
-  saddr.s_addr = ip->ip_src.s_addr;
-  daddr.s_addr = ip->ip_dst.s_addr;
-
-  inet_ntop(AF_INET, &saddr, srchost, sizeof(srchost));
-  inet_ntop(AF_INET, &daddr, dsthost, sizeof(dsthost));
-
-  frag_off = BSDFIX(ntohs(ip->ip_off) & 8191 /* 2^13 - 1 */);
-  if (frag_off) {
-    snprintf(fragnfo, sizeof(fragnfo), " frag offset=%d)", frag_off);
-  }
-
-  snprintf(ipinfo, sizeof(ipinfo), "ttl=%d id=%d iplen=%d%s", 
-	   ip->ip_ttl, ntohs(ip->ip_id), BSDUFIX(ip->ip_len), fragnfo);
-
-  if (ip->ip_p == IPPROTO_TCP) {
-    char tcpinfo[64] = "";
-    char buf[32];
-    tcp = (struct tcphdr *)  (packet + ip->ip_hl * 4);
-    if ((len < ip->ip_hl * 4 + 20) || len < (ip->ip_hl + tcp->th_off) * 4)
-      Strncpy(protoinfo, "TCP header incomplete", sizeof(protoinfo));
-    else {
-
-      snprintf(tcpinfo, sizeof(tcpinfo), "seq=%lu win=%hi", 
-	       (unsigned long) ntohl(tcp->th_seq),
-	       ntohs(tcp->th_win));
-      p = tflags;
-      /* These are basically in tcpdump order */
-      if (tcp->th_flags & TH_SYN) *p++ = 'S';
-      if (tcp->th_flags & TH_FIN) *p++ = 'F';
-      if (tcp->th_flags & TH_RST) *p++ = 'R';
-      if (tcp->th_flags & TH_PUSH) *p++ = 'P';
-      if (tcp->th_flags & TH_ACK) {
-	*p++ = 'A';
-	snprintf(buf, sizeof(buf), " ack=%lu", 
-		 (unsigned long) ntohl(tcp->th_seq));
-	strncat(tcpinfo, buf, sizeof(tcpinfo));
-      }
-      if (tcp->th_flags & TH_URG) *p++ = 'U';
-      *p++ = '\0';
-
-      snprintf(protoinfo, sizeof(protoinfo), "TCP %s:%d > %s:%d %s %s %s",
-	       srchost, ntohs(tcp->th_sport), dsthost, ntohs(tcp->th_dport),
-	       tflags, ipinfo, tcpinfo);
-    }
-  } else if (ip->ip_p == IPPROTO_UDP) {
-    udp =  (udphdr_bsd *) (packet + sizeof(struct ip));
-
-    snprintf(protoinfo, sizeof(protoinfo), "UDP %s:%d > %s:%d %s",
-	     srchost, ntohs(udp->uh_sport), dsthost, ntohs(udp->uh_dport),
-	     ipinfo);
-  } else if (ip->ip_p == IPPROTO_ICMP) {
-    char icmptype[128];
-    struct ppkt {
-      unsigned char type;
-      unsigned char code;
-      unsigned short checksum;
-      unsigned short id;
-      unsigned short seq;
-    } *ping;
-    ping = (struct ppkt *) ((ip->ip_hl * 4) + (char *) ip);
-    snprintf(protoinfo, sizeof(protoinfo), "ICMP not handled yet");
-    switch(ping->type) {
-    case 0:
-      strcpy(icmptype, "Echo reply"); break;
-    case 3:
-      if (ping->code == 0)
-	strcpy(icmptype, "network unreachable");
-      else if (ping->code == 1)
-	strcpy(icmptype, "host unreachable");
-      else if (ping->code == 2)
-	strcpy(icmptype, "protocol unreachable");
-      else if (ping->code == 3)
-	strcpy(icmptype, "port unreachable");
-      else if (ping->code == 4)
-	strcpy(icmptype, "fragmentation required");
-      else if (ping->code == 5)
-	strcpy(icmptype, "source route failed");
-      else if (ping->code == 6)
-	strcpy(icmptype, "destination network unknown");
-      else if (ping->code == 7)
-	strcpy(icmptype, "destination host unknown");
-      else if (ping->code == 8)
-	strcpy(icmptype, "source host isolated");
-      else if (ping->code == 9)
-	strcpy(icmptype, "destination network administratively prohibited");
-      else if (ping->code == 10)
-	strcpy(icmptype, "destination host administratively prohibited");
-      else if (ping->code == 11)
-	strcpy(icmptype, "network unreachable for TOS");
-      else if (ping->code == 12)
-	strcpy(icmptype, "host unreachable for TOS");
-      else if (ping->code == 13)
-	strcpy(icmptype, "communication administratively prohibited by filtering");
-      else if (ping->code == 14)
-	strcpy(icmptype, "host precedence violation");
-      else if (ping->code == 15)
-	strcpy(icmptype, "precedence cutoff in effect");
-      else
-	strcpy(icmptype, "unknown unreachable code");
-      break;
-    case 4:
-      strcpy(icmptype, "source quench"); break;
-    case 5:
-      if (ping->code == 0)
-	strcpy(icmptype, "network redirect");
-      else if (ping->code == 1)
-	strcpy(icmptype, "host redirect");
-      else strcpy(icmptype, "unknown redirect");
-      break;
-    case 8:
-      strcpy(icmptype, "Echo request"); break;
-    case 11:
-      if (ping->code == 0)
-	strcpy(icmptype, "TTL=0 during transit");
-      else if (ping->code == 1)
-	strcpy(icmptype, "TTL=0 during reassembly");
-      else strcpy(icmptype, "TTL exceeded (unknown code)");
-      break;
-    case 12:
-      if (ping->code == 0)
-	strcpy(icmptype, "IP header bad");
-      else 
-	strcpy(icmptype, "Misc. parameter problem");
-      break;
-    case 13: 
-      strcpy(icmptype, "Timestamp request"); break;
-    case 14: 
-      strcpy(icmptype, "Timestamp reply"); break;
-    case 15:
-      strcpy(icmptype, "Information request"); break;
-    case 16: 
-      strcpy(icmptype, "Information reply"); break;
-    case 17:
-      strcpy(icmptype, "Address mask request"); break;
-    case 18: 
-      strcpy(icmptype, "Address mask reply"); break;
-    default:
-      strcpy(icmptype, "Unknown type"); break;
-      break;
-    }
-    snprintf(protoinfo, sizeof(protoinfo), "ICMP %s (type=%d/code=%d) %s",
-	     icmptype, ping->type, ping->code, ipinfo);
-  } else {
-    snprintf(protoinfo, sizeof(protoinfo), "Unknown protocol: %s", ipinfo);
-  }    
-
-  return protoinfo;
-}
-
 
 
 

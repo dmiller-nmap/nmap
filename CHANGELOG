@@ -1,5 +1,7 @@
 # Nmap Changelog ($Id$)
 
+Nmap 3.10ALPHA7
+
 o Upgraded libpcap from version 0.6.2 to 0.7.1.  Updated the
   libpcap-possiblymodified/NMAP_MODIFICATIONS file to give a much
   more extensive list (including diffs) of the changes included
@@ -8,10 +10,7 @@ o Upgraded libpcap from version 0.6.2 to 0.7.1.  Updated the
 o Applied patch to fix a libpcap alignment bug found by Tom Duffy
   (tduffy@sun.com).
 
-o Applied patch from Matthieu Verbert (mve@zurich.ibm.com) which
-  places the Nmap man pages under ${prefix}/share/man rather than
-  ${prefix}/man when installed via RPM.  Maybe the tarball
-  install should do this too?  Opinions?
+o Fixed Windows compilation.
 
 o Applied patch by Chad Loder (cloder@loder.us) of Rapid7 which
   fixes OpenBSD compilation.  I believe Chad is now the official
@@ -19,9 +18,14 @@ o Applied patch by Chad Loder (cloder@loder.us) of Rapid7 which
   random-scan (-iR) to include the recently allocated 82.0.0.0/8
   space.
 
-o Fixed (I hope) a couple compilation problems on
+o Fixed (I hope) a few compilation problems on
   non-IPv6-enabled machines which were noted by Josef 'Jupp'
   Schugt (jupp@gmx.de)
+
+o Applied patch from Matthieu Verbert (mve@zurich.ibm.com) which
+  places the Nmap man pages under ${prefix}/share/man rather than
+  ${prefix}/man when installed via RPM.  Maybe the tarball
+  install should do this too?  Opinions?
 
 o Applied patch from R Anderson (listbox@pole-position.org) which
   improves the way ICMP port unreadhables from intermediate hosts

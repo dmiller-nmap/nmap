@@ -465,11 +465,11 @@ int unblock_socket(int sd)
 
 /* A simple function I wrote to help in debugging, shows the important fields
    of a TCP packet*/
-int readtcppacket(unsigned char *packet, int readdata) 
+int readtcppacket(const u8 *packet, int readdata) 
 {
 	struct ip *ip = (struct ip *) packet;
 	struct tcphdr *tcp = (struct tcphdr *) (packet + sizeof(struct ip));
-	unsigned char *data = packet +  sizeof(struct ip) + sizeof(struct tcphdr);
+	const u8 *data = packet +  sizeof(struct ip) + sizeof(struct tcphdr);
 	int tot_len;
 	struct in_addr bullshit, bullshit2;
 	char sourcehost[16];
