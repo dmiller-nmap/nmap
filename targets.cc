@@ -1172,6 +1172,12 @@ while(pt->block_unaccounted > 0 && !timeout) {
 	}
 	continue;
       }
+      if (hostbatch[hostnum]->v4host().s_addr != ip->ip_src.s_addr) {
+	if (o.debugging) {
+	  error("TCP ping response from unexpected host %s\n", inet_ntoa(ip->ip_src));
+	}
+	continue;
+      }
       if (o.debugging) 
 	log_write(LOG_STDOUT, "We got a TCP ping packet back from %s port %hi (hostnum = %d trynum = %d\n", inet_ntoa(ip->ip_src), htons(tcp->th_sport), hostnum, trynum);
       pingstyle = pingstyle_rawtcp;
