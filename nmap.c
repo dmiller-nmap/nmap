@@ -655,16 +655,18 @@ tmp = realloc(ports, i * sizeof(short));
 /* Be default we do all ports 1-1024 as well as any higher ports
    that are in /etc/services. */
 unsigned short *getdefaultports(int tcpscan, int udpscan) {
-  int portindex = 0, res, lastport = 0;
+  int portindex = 0, res;
   unsigned int portno = 0;
   unsigned short *ports;
+  char usedports[65536];
   char proto[10];
   char line[201];
   FILE *fp;
   ports = safe_malloc(65535 * sizeof(unsigned short));
   proto[0] = '\0';
-
-  for(portindex = 0; portindex < 1025; portindex++)
+  bzero(usedports, sizeof(usedports));
+  usedports[0] = 1; /* We do not allow scanning this "port" */
+  for(portindex = 1; portindex < 1025; portindex++)
     ports[portindex] = portindex;
 
   if (!(fp = fopen("/etc/services", "r"))) {
@@ -674,12 +676,15 @@ unsigned short *getdefaultports(int tcpscan, int udpscan) {
     while(fgets(line, 200, fp)) {
       res = sscanf(line, "%*s %u/%s", &portno, proto);
       if (portno < 1025) continue;
-      if (res == 2 && portno != 0 && portno != lastport) { 
-	lastport = portno;
-	if (tcpscan && proto[0] == 't')
+      if (res == 2 && !usedports[portno]) { 
+	if (tcpscan && proto[0] == 't') {	
 	  ports[portindex++] = portno;
-	else if (udpscan && proto[0] == 'u')
+	  usedports[portno] = 1;
+	}
+	else if (udpscan && proto[0] == 'u') {	
 	  ports[portindex++] = portno;
+	  usedports[portno] = 1;
+	}
       }
     }
     fclose(fp);
@@ -692,13 +697,17 @@ return realloc(ports, portindex * sizeof(unsigned short));
 }
 
 unsigned short *getfastports(int tcpscan, int udpscan) {
-  int portindex = 0, res, lastport = 0;
+  int portindex = 0, res;
   unsigned int portno = 0;
   unsigned short *ports;
   char proto[10];
+  char usedports[65536];
   char line[201];
   FILE *fp;
   ports = safe_malloc(65535 * sizeof(unsigned short));
+  bzero(usedports, sizeof(usedports));  
+  usedports[0] = 1; /* We do not allow scanning this "port" */
+
   proto[0] = '\0';
   if (!(fp = fopen("/etc/services", "r"))) {
     printf("We can't open /etc/services for reading!  Fix your system or don't use -f\n");
@@ -708,12 +717,15 @@ unsigned short *getfastports(int tcpscan, int udpscan) {
   
   while(fgets(line, 200, fp)) {
     res = sscanf(line, "%*s %u/%s", &portno, proto);
-    if (res == 2 && portno != 0 && portno != lastport) { 
-      lastport = portno;
-      if (tcpscan && proto[0] == 't')
+    if (res == 2 && !usedports[portno]) { 
+      if (tcpscan && proto[0] == 't') {      
 	ports[portindex++] = portno;
-      else if (udpscan && proto[0] == 'u')
+	usedports[portno] = 1;
+      }
+      else if (udpscan && proto[0] == 'u') {      
 	ports[portindex++] = portno;
+	usedports[portno] = 1;
+      }
     }
   }
 
@@ -740,12 +752,16 @@ Options (none are required, most can be combined):\n\
    -PT21 Use \"TCP Ping\" scan with probe destination port of 21 (or whatever).\n\
    -PI Use ICMP ping packet to determines hosts that are up\n\
    -PB Do BOTH TCP & ICMP scans in parallel (TCP dest port can be specified after the 'B')\n\
+   -PS Use TCP SYN sweep rather than the default ACK sweep used in \"TCP ping\"\n\
    -O Use TCP/IP fingerprinting to guess what OS the remote host is running\n\
    -I Get identd (rfc 1413) info on listening TCP processes.\n\
    -p <range> ports: ex: \'-p 23\' will only try port 23 of the host(s)\n\
                   \'-p 20-30,63000-\' scans 20-30 and 63000-65535. default: 1-1024\n\
-   -D <decoy_host> Make it appear that a scan is also coming from decoy_host.  Even\n\
-      if the target detects the scan, they won't know who is scanning them.\n\
+   -Ddecoy_host1,decoy2,ME,decoy3[,...] Launch scans from decoy host(s) along\n\
+      with the real one.  If you care about the order your real IP appears,\n\
+      stick \"ME\" somewhere in the list.  Even if the target detects the\n\
+      scan, they are unlikely to know which IP is scanning them and which \n\
+      are decoys.
    -F fast scan. Only scans ports in /etc/services, a la strobe(1).\n\
    -n Don't DNS resolve anything unless we have to (makes ping scans faster)\n\
    -o <logfile> Output scan logs to <logfile>.\n\
@@ -1288,7 +1304,7 @@ ip->ip_ttl = myttl;
 ip->ip_p = IPPROTO_TCP;
 ip->ip_src.s_addr = source->s_addr;
 ip->ip_dst.s_addr = victim->s_addr;
-ip->ip_sum = 0;
+
 #if HAVE_IP_IP_SUM
 ip->ip_sum= in_cksum((unsigned short *)ip, sizeof(struct ip));
 #endif
@@ -1323,7 +1339,7 @@ ip2->ip_ttl = myttl;
 ip2->ip_p = IPPROTO_TCP;
 ip2->ip_src.s_addr = source->s_addr;
 ip2->ip_dst.s_addr = victim->s_addr;
-ip2->ip_sum = 0;
+
 #if HAVE_IP_IP_SUM
 ip2->ip_sum = in_cksum((unsigned short *)ip2, sizeof(struct ip));
 #endif
@@ -1415,7 +1431,12 @@ portlist super_scan(struct hoststruct *target, unsigned short *portarray, stype 
   /* Init our raw socket */
   if ((rawsd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) < 0 )
     pfatal("socket troubles in super_scan");
-  unblock_socket(rawsd);
+
+  /* No reason to do this since we don't receive on this socket,
+     and it can cause ENOBUF errors if socket transmit buffers
+     overflow 
+     unblock_socket(rawsd);
+  */
 
   /* Do we have a correct source address? */
   if (!target->source_ip.s_addr) {
@@ -1514,7 +1535,7 @@ if (o.debugging || o.verbose)
 			       0, 0);
 		else send_udp_raw(rawsd, &o.decoys[decoy], &target->host, i,
 				  current->portno, NULL ,0);	      
-		if (senddelay) usleep(senddelay);
+		if (senddelay && scantype == UDP_SCAN) usleep(senddelay);
 	      }
 	    }
 	  }
@@ -1803,7 +1824,11 @@ portlist pos_scan(struct hoststruct *target, unsigned short *portarray, stype sc
   if (scantype == SYN_SCAN) {  
     if ((rawsd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) < 0 )
       pfatal("socket troubles in super_scan");
-    unblock_socket(rawsd);
+    /* We do not wan't to unblock the socket since we want to wait 
+       if kernel send buffers fill up rather than get ENOBUF, and
+       we won't be receiving on the socket anyway 
+       unblock_socket(rawsd);*/
+
     broadcast_socket(rawsd);
     
 

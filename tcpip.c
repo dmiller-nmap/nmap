@@ -910,7 +910,6 @@ struct interface_info *getinterfaces(int *howmany) {
 char *routethrough(struct in_addr *dest, struct in_addr *source) {
   static int initialized = 0;
   int i;
-  int res;
   struct in_addr addy;
   static enum { procroutetechnique, connectsockettechnique, guesstechnique } technique = procroutetechnique;
   char buf[10240];
@@ -921,9 +920,9 @@ char *routethrough(struct in_addr *dest, struct in_addr *source) {
     unsigned long dest;
   } myroutes[32];
   int numinterfaces = 0;
+  char *p, *endptr;
   char iface[64];
   static int numroutes = 0;
-  unsigned long tmp;
   FILE *routez;
 
   if (!dest) fatal("ipaddr2devname passed a NULL dest address");
@@ -936,21 +935,43 @@ char *routethrough(struct in_addr *dest, struct in_addr *source) {
 
     /* Now we must go through several techniques to determine info */
     routez = fopen("/proc/net/route", "r");
+    /*    routez = fopen("/tmp/route", "r");*/
     if (routez) {
       /* OK, linux style /proc/net/route ... we can handle this ... */
       /* Now that we've got the interfaces, we g0 after the r0ut3Z, this
 	 is the part that is partially from CRH #7 */
       
       fgets(buf, sizeof(buf), routez); /* Kill the first line */
-      while(1) {
-	res = fscanf(routez, "%s %8lX %8lX %lX %ld %ld %ld %8lX %ld %ld %ld \n",iface,&myroutes[numroutes].dest,&tmp,&tmp,&tmp,&tmp,&tmp,&myroutes[numroutes].mask, &tmp, &tmp, &tmp);
-	if (res == EOF) break;
-	if (res != 11) { 
-	  error("fscanf on route table returned %d (should be 11)", res); 
-	  continue; 
+      while(fgets(buf,sizeof(buf), routez)) {
+	p = strtok(buf, " \t\n");
+	if (!p) {
+	  error("Could not find interface in /proc/net/route line");
+	  continue;
 	}
-	/*      myroutes[numroutes].dest = htonl(myroutes[numroutes].dest);
-		myroutes[numroutes].mask = htonl(myroutes[numroutes].mask);*/
+	Strncpy(iface, p, sizeof(iface));
+	p = strtok(NULL, " \t\n");
+	endptr = NULL;
+	myroutes[numroutes].dest = strtol(p, &endptr, 16);
+	if (!endptr || *endptr) {
+	  error("Failed to determine Destination from /proc/net/route");
+	  continue;
+	}
+	for(i=0; i < 6; i++) {
+	  p = strtok(NULL, " \t\n");
+	  if (!p) break;
+	}
+	if (!p) {
+	  error("Failed to find field %d in /proc/net/route", i + 2);
+	  continue;
+	}
+	endptr = NULL;
+	myroutes[numroutes].mask = strtol(p, &endptr, 16);
+	if (!endptr || *endptr) {
+	  error("Failed to determine mask from /proc/net/route");
+	  continue;
+	}
+
+
 #if TCPIP_DEBUGGING
 	  printf("#%d: for dev %s, The dest is %lX and the mask is %lX\n", numroutes, iface, myroutes[numroutes].dest, myroutes[numroutes].mask);
 #endif

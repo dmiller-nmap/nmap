@@ -2,6 +2,7 @@
 #define UTILS_H
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #if MISSING_USLEEP
 #include <time.h>
 #endif
@@ -30,7 +31,7 @@
 
 void *safe_malloc(int size);
 void hdump(unsigned char *packet, int len);
-
+void Strncpy(char *dest, const char *src, size_t n);
 #if MISSING_USLEEP
 void usleep(unsigned long usec);
 #endif

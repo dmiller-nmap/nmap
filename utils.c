@@ -38,3 +38,8 @@ ts.tv_nsec = (usec % 1000000) * 1000;
 nanosleep(&tsfoo, NULL);
 }
 #endif
+
+void Strncpy(char *dest, const char *src, size_t n) {
+  strncpy(dest, src, n);
+  dest[n] = '\0';
+}

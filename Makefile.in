@@ -11,7 +11,6 @@ CC = @CC@
 CCOPT = 
 LIBPCAPDIR = @libpcapdir@
 INCLS = -I. -I$(LIBPCAPDIR)
-VERSION = 2.0-Beta8-pre1
 DEFS = @DEFS@ -DVERSION=\"$(VERSION)\" -DLIBDIR=\"$(libdir)\"
 #CFLAGS = @CFLAGS@ $(CCOPT) $(DEFS) $(INCLS)
 CFLAGS = -g -Wall $(DEFS) $(INCLS)
@@ -19,6 +18,7 @@ LDFLAGS = @LDFLAGS@
 LIBS =  @LIBS@ -lpcap -lm
 INSTALL = @INSTALL@
 MAKEDEPEND = @MAKEDEPEND@
+VERSION = 2.0-Beta9
 
 TARGET = nmap
 
