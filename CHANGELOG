@@ -1,5 +1,9 @@
 # Nmap Changelog ($Id$)
 
+o Fixed the way tcp connect scan (-sT) respons to ICMP network
+  unreachable responses (patch by Richard Moore
+  (rich(a)westpoint.ltd.uk).
+
 Nmap 3.81
 
 o Nmap now ships with and installs (in the same directory as other
@@ -34,7 +38,7 @@ o Fixed fragmentation option (-f).  One -f now sets sends fragments
   flag.  Don't also specify -f if you use --mtu.  Remember that some
   systems (such as Linux with connection tracking) will defragment in
   the kernel anyway -- so test first while sniffing with ethereal.
-  These changes are from a patch by Martin Maèok
+  These changes are from a patch by Martin Macok
   (martin.macok(a)underground.cz).
 
 o Nmap now prints the number (and total bytes) of raw IP packets sent
@@ -95,10 +99,10 @@ o Nmap now prints a warning message on Windows if Winpcap is not found
 
 o Added an NTP probe and matches to the version detection database
   (nmap-service-probes) thanks to a submission from Martin
-  Maèok (martin.macok@underground.cz).
+  Macok (martin.macok@underground.cz).
 
 o Applied several Nmap service detection database updates sent in by
-  Martin Maèok (martin.macok(a)underground.cz).
+  Martin Macok (martin.macok(a)underground.cz).
 
 o The XML nmaprun element now has a startstr attribute which gives the
   human readable calendar time format that a scan started.  Similarly
@@ -138,7 +142,7 @@ o Fixed compilation on some HP-UX 11 boxes thanks to a patch by Petter
 o Fixed a portability problem on some OpenBSD and FreeBSD machines
   thanks to a patch by Okan Demirmen (okan(a)demirmen.com).
 
-o Applied Martin Maèok's (martin.macok(a)underground.cz) "cosmetics
+o Applied Martin Macok's (martin.macok(a)underground.cz) "cosmetics
   patch", which fixes a few typos and minor problems.
 
 Nmap 3.75
@@ -163,7 +167,7 @@ o Updated nmap-protocols with the latest IP protocols from IANA
   [ http://www.iana.org/assignments/protocol-numbers ]
 
 o Added a few new Nmap version detection signatures thanks to a patch
-  from Martin Maèok (martin.macok(a)underground.cz).
+  from Martin Macok (martin.macok(a)underground.cz).
 
 o Fixed a crash problem in the Windows version of Nmap, thanks to a
   patch from Ganga Bhavani GBhavani(a)everdreamcorp.com).
@@ -213,7 +217,7 @@ o Fixed an error in the Nmap RPM spec file reported by Pascal Trouvin
 
 o Fixed a timing problem in which a specified large --send_delay would
   sometimes be reduced to 1 second during a scan.  Thanks to Martin
-  Maèok (martin.macok(a)underground.cz) for reporting the problem.
+  Macok (martin.macok(a)underground.cz) for reporting the problem.
 
 o Fixed a timing problem with sneaky and paranoid modes (-T1 and -T0)
   which would cause Nmap to continually scan the same port and never
@@ -472,7 +476,7 @@ o Updated the XML DTD to support the newly printed MAC addresses.
   sending this patch.
 
 o Added a bunch of new and fixed service fingerprints for version
-  detection.  These are from Martin Maèok
+  detection.  These are from Martin Macok
   (martin.macok(a)underground.cz).
 
 o Normalized many of the OS names in nmap-os-fingerprints (fixed

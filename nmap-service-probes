@@ -507,8 +507,6 @@ match resvc m|^\{0000004c\} NODEINFO \(5\) \{38\}Version: (\d[-.\w ]+) Microsoft
 # rsync 2.5.5-0.1 with custom banner on Debian Woody
 match rsync m|^@RSYNCD: (\d+)| v///protocol version $1/
 match sdmsvc m|^[\xaa\xff]$| v/LANDesk Software Distribution//sdmsvc.exe/
-# Tumbleweed SecureTransport 4.1.1 Transaction Manager Secure Port on Solaris
-match securetransport m|^\x15\x03\x01\0\x02\x01\0$| v/Tumbleweed SecureTransport Transaction Manager Secure Port///
 # http://www.ietf.org/internet-drafts/draft-martin-managesieve-04.txt
 match sieve m|^NO Fatal error: Error initializing actions\r\n$| v|Cyrus timsieved||included w/cyrus imap|
 match sieve m|^\"IMPLEMENTATION\" \"Cyrus timsieved v(\d[-.\w]+)\"\r\n| v|Cyrus timsieved||included w/cyrus imap|
@@ -1657,7 +1655,7 @@ match webster m/^DICTIONARY server protocol:\r\n\r\nContact name is/ v/Webster d
 
 ##############################NEXT PROBE##############################
 Probe TCP SSLSessionReq q|\x16\x03\0\0S\x01\0\0O\x03\0?G\xd7\xf7\xba,\xee\xea\xb2`~\xf3\0\xfd\x82{\xb9\xd5\x96\xc8w\x9b\xe6\xc4\xdb<=\xdbo\xef\x10n\0\0(\0\x16\0\x13\0\x0a\0f\0\x05\0\x04\0e\0d\0c\0b\0a\0`\0\x15\0\x12\0\x09\0\x14\0\x11\0\x08\0\x06\0\x03\x01\0|
-ports 427,443,444,548,636,1241,2000,8009
+ports 427,443,444,548,636,1241,1311,2000,8009
 # Apple Filing Protocol (AFP) over TCP on Mac OS X 10.1.5
 match afp m|^\x01\x03\0\0\xff\xff\xecQ\0\0\x01.\0\0\0\0\0.\0.\0.\0.\x80\xfb.([-.\w]+)[^-.\w].*\tMacintosh\x05\x06AFPX03\x06AFP2\.2\x0eAFPVersion 2\.1\x0eAFPVersion 2\.0\x0eAFPVersion 1\.1.\tDHCAST128|s v/Apple AFP//name: $1; protocol 2.2; Mac OS X 10.1.*/
 match afp m|^\x01\x03\0\0\xff\xff\xecQ\0\0\x01.\0\0\0\0\0.\0.\0.\0.\x83\xfb.([-.\w]+)[^-.\w].*\tMacintosh\x06\x06AFP3\.1\x06AFPX03\x06AFP2\.2\x0eAFPVersion 2\.1\x0eAFPVersion 2\.0\x0eAFPVersion 1\.1\x04\tDHCAST128| v/Apple AFP//name: $1; protocol 3.1; Mac OS X 10.2.*;/
@@ -1682,6 +1680,9 @@ match ssl m|^\x16\x03\0\0\+\x02\0\0'\x03\0...\?|s v/PGP Corporation product SSL/
 match ssl m|^\x16\x03\0\0\*\x02\0\0&\x03\0\?| 
 # Timbuktu Pro 6.0.3 on Mac OS X 10.2.6
 match svrloc m|^\x02\x02\0\0\x12\0\0\0\0\0\0\0\0\x02en\0\x02$| v/Apple slpd///
+# Tumbleweed SecureTransport 4.1.1 Transaction Manager Secure Port on Solaris
+# Dell Openmanage
+match ssl m|^\x15\x03[\x01\x00]\0\x02\x01\0$| v/multi-vendor SSL///
 
 # SMB Negotiate Protocol
 ##############################NEXT PROBE##############################

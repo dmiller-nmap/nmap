@@ -2167,20 +2167,20 @@ static bool do_one_select_round(UltraScanInfo *USI, struct timeval *stime) {
 	case EHOSTUNREACH:
 	case ETIMEDOUT:
 	case EHOSTDOWN:
+	case ENETUNREACH:
 	  /* It could be the host is down, or it could be firewalled.  We
 	     will go on the safe side & assume port is closed ... on second
 	     thought, lets go firewalled! and see if it causes any trouble */
 	  newstate = PORT_FILTERED;
 	  break;
 	case ENETDOWN:
-	case ENETUNREACH:
 	case ENETRESET:
 	case ECONNABORTED:
-	  snprintf(buf, sizeof(buf), "Strange SO_ERROR from connection to %s (%d) -- bailing scan", host->target->targetipstr(), optval);
+	  snprintf(buf, sizeof(buf), "Strange SO_ERROR from connection to %s (%d - '%s') -- bailing scan", host->target->targetipstr(), optval, strerror(optval) );
 	  pfatal(buf);
 	  break;
 	default:
-	  snprintf(buf, sizeof(buf), "Strange read error from %s (%d)", host->target->targetipstr(), optval);
+	  snprintf(buf, sizeof(buf), "Strange read error from %s (%d - '%s')", host->target->targetipstr(), optval, strerror(optval));
 	  perror(buf);
 	  break;
 	}
