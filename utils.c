@@ -512,5 +512,57 @@ char *mmapfile(char *fname, int *length, int openflags) {
   *length = st.st_size;
   return fileptr;
 }
+#else /* WIN32 */
+/* FIXME:  From the looks of it, this function can only handle one mmaped 
+   file at a time (note how gmap is used).*/
+/* I believe this was written by Ryan Permeh ( ryan@eeye.com) */
+
+HANDLE gmap = 0;
+char *mmapfile(char *fname, int *length, int openflags) {
+	HANDLE fd;
+	char *fileptr;
+
+	if (!length || !fname) {
+		WSASetLastError(EINVAL);
+		return NULL;
+	}
+
+	*length = -1;
+
+	fd= CreateFile(fname,
+		openflags,                // open for writing 
+		0,                            // do not share 
+		NULL,                         // no security 
+		OPEN_EXISTING,                // overwrite existing 
+		FILE_ATTRIBUTE_NORMAL,
+		NULL);                        // no attr. template 
+
+	gmap=CreateFileMapping(fd,NULL, (openflags & O_RDONLY)? PAGE_READONLY:(openflags & O_RDWR)? (PAGE_READONLY|PAGE_READWRITE) : PAGE_READWRITE,0,0,NULL);
+
+	fileptr = (char *)MapViewOfFile(gmap, FILE_MAP_ALL_ACCESS,0,0,0);
+	*length = (int) GetFileSize(fd,NULL);
+	CloseHandle(fd);
+
+	#ifdef MAP_FAILED
+	if (fileptr == MAP_FAILED) return NULL;
+	#else
+	if (fileptr == (char *) -1) return NULL;
+	#endif
+	return fileptr;
+}
+
+
+/* FIXME:  This only works if the file was mapped by mmapfile (and only
+   works if the file is the most recently mapped one */
+int win32_munmap(char *filestr, int filelen)
+{
+	if(gmap == 0)
+		fatal("win32_munmap: no current mapping !\n");
+	FlushViewOfFile(filestr, filelen);
+	UnmapViewOfFile(filestr);
+	CloseHandle(gmap);
+	gmap = 0;
+	return 0;
+}
 
 #endif

@@ -761,8 +761,12 @@ if (ptech.icmpscan) {
 
  for (decoy = 0; decoy < o.numdecoys; decoy++) {
    if (ptech.icmpscan && decoy == o.decoyturn) {
+     /* FIXME: If EHOSTUNREACH (Windows does that) then we were
+	probably unable to obtain an arp response from the machine.
+	We should just considering the host down rather than ignoring
+	the error */
      if ((res = sendto(sd,(char *) ping,8,0,(struct sockaddr *)&sock,
-		       sizeof(struct sockaddr))) != 8) {
+		       sizeof(struct sockaddr))) != 8 && errno != EHOSTUNREACH ) {
        fprintf(stderr, "sendto in sendpingquery returned %d (should be 8)!\n", res);
        perror("sendto");
      }

@@ -163,5 +163,14 @@ char *strerror(int errnum);
 */
 char *mmapfile(char *fname, int *length, int openflags);
 
+#ifdef WIN32
+#define PROT_READ       0x1             /* page can be read */
+#define PROT_WRITE      0x2             /* page can be written */
+#define PROT_EXEC       0x4             /* page can be executed */
+#define PROT_NONE       0x0             /* page can not be accessed */
 
-#endif
+#define MAP_SHARED      0x01            /* Share changes */
+
+#endif /* WIN32 */
+
+#endif /* UTILS_H */

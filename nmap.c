@@ -92,15 +92,14 @@ int main(int argc, char *argv[], char *envp[]) {
   /* initialize our options */
   options_init();
 
-
-
   /* Trap these sigs for cleanup */
+#if HAVE_SIGNAL
   signal(SIGINT, sigdie);
   signal(SIGTERM, sigdie);
   signal(SIGHUP, sigdie); 
 
   signal(SIGCHLD, reaper);
-
+#endif
 
   /* First we figure out whether the name nmap is called as qualifies it 
      for interactive mode treatment */
@@ -249,10 +248,12 @@ int main(int argc, char *argv[], char *envp[]) {
 	}       
 
 	/* We should be courtious and give Nmap reasonable signal defaults */
+#if HAVE_SIGNAL
 	signal(SIGINT, SIG_DFL);
 	signal(SIGTERM, SIG_DFL);
 	signal(SIGHUP, SIG_DFL);
 	signal(SIGSEGV, SIG_DFL);
+#endif
 
 	/* Now I must handle spoofery */
 	if (*fakeargs) {
@@ -407,7 +408,13 @@ int nmap_main(int argc, char *argv[]) {
     {"append_output", no_argument, 0, 0},
     {"noninteractive", no_argument, 0, 0},
 #ifdef WIN32
-	WIN32_EXTRA_LONGOPT_LIST
+    {"win_list_interfaces", no_argument, 0, 0},
+    {"win_norawsock", no_argument, 0, 0}, 
+    {"win_forcerawsock", no_argument, 0, 0}, 
+    {"win_nopcap", no_argument, 0, 0}, 
+    {"win_nt4route", no_argument, 0, 0}, 
+    {"win_noiphlpapi", no_argument, 0, 0}, 
+    {"win_help", no_argument, 0, 0},
 #endif
     {0, 0, 0, 0}
   };
@@ -461,7 +468,27 @@ int nmap_main(int argc, char *argv[]) {
 	  fatal("host_timeout is given in milliseconds and must be greater than 200");
 	}
 #ifdef WIN32
-	WIN32_EXTRA_LONGOPT_IMP
+      } else if (strcmp(long_options[option_index].name, "win_list_interfaces") == 0 ) { 
+	wo.listinterfaces = 1; 
+      } else if (strcmp(long_options[option_index].name, "win_norawsock") == 0 ) { 
+	wo.norawsock = 1; 
+      } else if (strcmp(long_options[option_index].name, "win_forcerawsock") == 0 ) { 
+	wo.forcerawsock = 1; 
+      } else if (strcmp(long_options[option_index].name, "win_nopcap") == 0 ) { 
+	wo.nopcap = 1; 
+      } else if (strcmp(long_options[option_index].name, "win_nt4route") == 0 ) { 
+	wo.nt4route = 1; 
+      } else if (strcmp(long_options[option_index].name, "win_noiphlpapi") == 0 ) { 
+	wo.noiphlpapi = 1; 
+      } else if (strcmp(long_options[option_index].name, "win_help") == 0 ) { 
+	printf("Windows-specific options:\n\n"); 
+	printf(" --win_list_interfaces : list all network interfaces\n"); 
+	printf(" --win_norawsock       : disable raw socket support\n"); 
+	printf(" --win_forcerawsock    : try raw sockets even on non-W2K systems\n"); 
+	printf(" --win_nopcap          : disable winpcap support\n"); 
+	printf(" --win_nt4route        : test nt4 route code\n"); 
+	printf(" --win_noiphlpapi      : test response to lack of iphlpapi.dll\n"); 
+	exit(0);
 #endif
       } else if (strcmp(long_options[option_index].name, "append_output") == 0) {
 	o.append_output = 1;
@@ -720,8 +747,10 @@ int nmap_main(int argc, char *argv[]) {
   winip_postopt_init();
 #endif
 
+#if HAVE_SIGNAL
   if (!o.debugging)
     signal(SIGSEGV, sigdie); 
+#endif
 
   if (!o.interactivemode)
     log_write(LOG_STDOUT|LOG_SKID, "\nStarting %s V. %s ( %s )\n", NMAP_NAME, NMAP_VERSION, NMAP_URL);
@@ -982,9 +1011,12 @@ int nmap_main(int argc, char *argv[]) {
     }
   }
 
+#if HAVE_SIGNAL
   signal(SIGPIPE, SIG_IGN); /* ignore SIGPIPE so our program doesn't crash because
 			       of it, but we really shouldn't get an unsuspected
 			       SIGPIPE */
+#endif
+
   if (o.max_parallelism && (i = max_sd()) && i < o.max_parallelism) {
     fprintf(stderr, "WARNING:  Your specified max_parallel_sockets of %d, but your system says it might only give us %d.  Trying anyway\n", o.max_parallelism, i);
   }

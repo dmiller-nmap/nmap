@@ -57,7 +57,11 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#else
+#ifdef WIN32
+#include "nmap_winconfig.h"
+#endif /* WIN32 */
+#endif /* HAVE_CONFIG_H */
 
 #include <nbase.h>
 
