@@ -8,6 +8,9 @@
 -- Applied patch from Steve Bleazard (steve@bleazard.com) which fixed
    bug in internal Smoothed Round Trim Time calculations.
 
+-- Fixed CFLAGS computation error in configure.  Problem discovered
+   and patched by Fredrik Lundholm (exce7@ce.chalmers.se)
+
 -- Added more debugging code for "Unknown datalink type" error -- if
    you get this, please send me the full error msg including hex values.
 

@@ -1779,6 +1779,7 @@ sybase            2638/tcp   # Sybase database
 listen            2766/tcp   # System V listener port
 www-dev           2784/tcp   # world wide web - development
 www-dev           2784/udp   # world wide web - development
+iss-realsec       2998/tcp   # ISS RealSecure IDS Remote Console Admin port
 ppp               3000/tcp   # User-level ppp daemon
 nessusd           3001/tcp   # Nessus Security Scanner (www.nessus.org) Daemon
 deslogin          3005/tcp   # encrypted symmetric telnet/login
@@ -1875,6 +1876,8 @@ hacl-test         5305/tcp   #
 hacl-test         5305/udp   # 
 cfengine          5308/tcp   # 
 cfengine          5308/udp   # 
+pcduo-old         5400/tcp   # RemCon PC-Duo - old port
+pcduo             5405/tcp   # RemCon PC-Duo - new port
 postgres          5432/tcp   # postgres database server
 securid           5500/udp   # SecurID
 secureidprop      5510/tcp   # ACE/Server services
