@@ -404,6 +404,11 @@ void initialize_idleproxy(struct idle_proxy_info *proxy, char *proxyName,
     }
   }
 
+  if (probes_returned == 0)
+    fatal("Idlescan zombie %s (%s) port %hu cannot be used because it has not returned any of our probes -- perhaps it is down or firewalled.", 
+	  proxy->host.HostName(), proxy->host.targetipstr(), 
+	  proxy->probe_port);
+
   proxy->seqclass = ipid_sequence(probes_returned, ipids, 0);
   switch(proxy->seqclass) {
   case IPID_SEQ_INCR:
