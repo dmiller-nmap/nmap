@@ -47,9 +47,14 @@
 
 #ifndef NMAPFE_ERROR_H
 #define NMAPFE_ERROR_H
+#include <nbase.h>
 
 #include <stdarg.h>
 #include <stdio.h>
+
+#ifdef STDC_HEADERS
+#include <stdlib.h>
+#endif
 
 #if HAVE_UNISTD_H
 #include <unistd.h>

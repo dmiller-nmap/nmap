@@ -28,6 +28,9 @@ o Fixed problem noted by Maximiliano (emax25@arnet.com.ar) where Nmap
 o Included a number of fingerprint updates, but I still have many more
   web submissions to go through.
 
+o Included a bunch of fixes (mostly to prevent compiler warnings) from
+  William McVey (wam@cisco.com)
+
 Nmap 2.54BETA30
 
 o Added a Document Type Definition (DTD) for the Nmap XML output

@@ -50,6 +50,18 @@
 #include "mswin32\winclude.h"
 #endif
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#else
+#ifdef WIN32
+#include "nmap_winconfig.h"
+#endif /* WIN32 */
+#endif /* HAVE_CONFIG_H */
+
+#ifdef STDC_HEADERS
+#include <stdlib.h>
+#endif
+
 #include <stdarg.h>
 #include <stdio.h>
 

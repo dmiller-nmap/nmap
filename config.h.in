@@ -17,6 +17,8 @@
 
 #undef STDC_HEADERS
 
+#undef HAVE_UNISTD_H
+
 #undef HAVE_STRING_H
 
 #undef HAVE_GETOPT_H
