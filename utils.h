@@ -7,6 +7,7 @@
 #include <time.h>
 #endif
 #include "error.h"
+#include "config.h"
 
 #ifndef MAX
 #define MAX(x,y) (((x)>(y))?(x):(y))
@@ -32,8 +33,11 @@
 void *safe_malloc(int size);
 void hdump(unsigned char *packet, int len);
 void Strncpy(char *dest, const char *src, size_t n);
-#if MISSING_USLEEP
+#ifndef HAVE_USLEEP
+#ifdef HAVE_NANOSLEEP
 void usleep(unsigned long usec);
+#endif
 #endif
 
 #endif
+

@@ -104,13 +104,122 @@ closedport = (rand() % 14781) + 30000;
 
 if (o.verbose && openport != -1)
   printf("For OSScan assuming that port %d is open and port %d is closed and neither are firewalled\n", openport, closedport);
+
+ current_port = o.magic_port + NUM_SEQ_SAMPLES +1;
  
- /* First we send our initial NUM_SEQ_SAMPLES SYN packets, 50ms apart */
+ /* Now lets do the NULL packet technique */
+ testsleft = (openport == -1)? 4 : 7;
+ FPtmp = NULL;
+ /* bzero(FPtests, sizeof(FPtests));*/
+ tries = 0;
+ do { 
+   newcatches = 0;
+   if (openport != -1) {   
+     /* Test 1 */
+     if (!FPtests[1])
+       for(decoy=0; decoy < o.numdecoys; decoy++) {
+	 send_tcp_raw(rawsd, &o.decoys[decoy], &target->host, current_port, 
+		      openport, sequence_base, 0,TH_BOGUS|TH_SYN, 0,"\003\003\012\001\002\004\001\011\010\012\077\077\077\077\000\000\000\000\000\000" , 20, NULL, 0);
+       }
+     
+     /* Test 2 */
+     if (!FPtests[2])
+       for(decoy=0; decoy < o.numdecoys; decoy++) {
+	 send_tcp_raw(rawsd, &o.decoys[decoy], &target->host, current_port +1, 
+		      openport, sequence_base, 0,0, 0,"\003\003\012\001\002\004\001\011\010\012\077\077\077\077\000\000\000\000\000\000" , 20, NULL, 0);
+       }
+     /* Test 3 */
+     if (!FPtests[3])
+       for(decoy=0; decoy < o.numdecoys; decoy++) {
+	 send_tcp_raw(rawsd, &o.decoys[decoy], &target->host, current_port +2, 
+		      openport, sequence_base, 0,TH_SYN|TH_FIN|TH_URG|TH_PUSH, 0,"\003\003\012\001\002\004\001\011\010\012\077\077\077\077\000\000\000\000\000\000" , 20, NULL, 0);
+       }
+     /* Test 4 */
+     if (!FPtests[4])
+       for(decoy=0; decoy < o.numdecoys; decoy++) {
+	 send_tcp_raw(rawsd, &o.decoys[decoy], &target->host, current_port +3, 
+		      openport, sequence_base, 0,TH_ACK, 0,"\003\003\012\001\002\004\001\011\010\012\077\077\077\077\000\000\000\000\000\000" , 20, NULL, 0);
+       }
+   }
+   /* Test 5 */
+   if (!FPtests[5])
+     for(decoy=0; decoy < o.numdecoys; decoy++) {
+       send_tcp_raw(rawsd, &o.decoys[decoy], &target->host, current_port +4,
+		    closedport, sequence_base, 0,TH_SYN, 0,"\003\003\012\001\002\004\001\011\010\012\077\077\077\077\000\000\000\000\000\000" , 20, NULL, 0);
+     }
+     /* Test 6 */
+   if (!FPtests[6])
+     for(decoy=0; decoy < o.numdecoys; decoy++) {
+       send_tcp_raw(rawsd, &o.decoys[decoy], &target->host, current_port +5, 
+		    closedport, sequence_base, 0,TH_ACK, 0,"\003\003\012\001\002\004\001\011\010\012\077\077\077\077\000\000\000\000\000\000" , 20, NULL, 0);
+     }
+     /* Test 7 */
+   if (!FPtests[7])
+     for(decoy=0; decoy < o.numdecoys; decoy++) {
+       send_tcp_raw(rawsd, &o.decoys[decoy], &target->host, current_port +6, 
+		    closedport, sequence_base, 0,TH_FIN|TH_PUSH|TH_URG, 0,"\003\003\012\001\002\004\001\011\010\012\077\077\077\077\000\000\000\000\000\000" , 20, NULL, 0);
+     }
+   if (!FPtests[8]) {
+     upi = send_closedudp_probe(rawsd, &target->host, o.magic_port, closedport);
+   }
+   gettimeofday(&t1, NULL);
+   timeout = 0;
+   while(( ip = (struct ip*) readip_pcap(pd, &bytes)) && !timeout) {
+     gettimeofday(&t2, NULL);
+     if (TIMEVAL_SUBTRACT(t2,t1) > oshardtimeout) {
+       timeout = 1;
+     }
+     if (bytes < (4 * ip->ip_hl) + 4)
+       continue;
+     if (ip->ip_p == IPPROTO_TCP) {
+       tcp = ((struct tcphdr *) (((char *) ip) + 4 * ip->ip_hl));
+       if (ntohs(tcp->th_dport) < current_port || ntohs(tcp->th_dport) - current_port > 6) {
+	 continue;
+       }
+       testno = ntohs(tcp->th_dport) - current_port + 1;
+       if (o.debugging > 1)
+	 printf("Got packet for test number %d\n", testno);
+       if (FPtests[testno]) continue;
+       testsleft--;
+       newcatches++;
+       FPtests[testno] = safe_malloc(sizeof(FingerPrint));
+       bzero(FPtests[testno], sizeof(FingerPrint));
+       FPtests[testno]->results = fingerprint_iptcppacket(ip, 265, sequence_base);
+       FPtests[testno]->name = (testno == 1)? "T1" : (testno == 2)? "T2" : (testno == 3)? "T3" : (testno == 4)? "T4" : (testno == 5)? "T5" : (testno == 6)? "T6" : (testno == 7)? "T7" : "PU";
+     } else if (ip->ip_p == IPPROTO_ICMP) {
+       icmp = ((struct icmp *)  (((char *) ip) + 4 * ip->ip_hl));
+       /* It must be a destination port unreachable */
+       if (icmp->icmp_type != 3 || icmp->icmp_code != 3) {
+	 /* This ain't no stinking port unreachable! */
+	 continue;
+       }
+       if (bytes < ntohs(ip->ip_len)) {
+	 error("We only got %d bytes out of %d on our ICMP port unreachable packet, skipping", bytes, ntohs(ip->ip_len));
+	 continue;
+       }
+       if (FPtests[8]) continue;
+       FPtests[8] = safe_malloc(sizeof(FingerPrint));
+       bzero(FPtests[8], sizeof(FingerPrint));
+       FPtests[8]->results = fingerprint_portunreach(ip, upi);
+       if (FPtests[8]->results) {       
+	 FPtests[8]->name = "PU";
+	 testsleft--;
+	 newcatches++;
+       } else {
+	 free(FPtests[8]);
+	 FPtests[8] = NULL;
+       }
+     }
+   }     
+ } while ( testsleft > 0 && (tries++ < 5 && (newcatches || tries == 1)));
+
+ 
+ /* First we send our initial NUM_SEQ_SAMPLES SYN packets  */
  if (openport != -1) {
    for(i=1; i <= NUM_SEQ_SAMPLES; i++) {
      for(decoy=0; decoy < o.numdecoys; decoy++) {
        send_tcp_raw(rawsd, &o.decoys[decoy], &target->host, o.magic_port+i, 
-		    openport, sequence_base + i, 0,TH_BOGUS|TH_SYN, 0,"\003\003\012\001\002\004\001\011\010\012\077\077\077\077\000\000\000\000\000\000" , 20, NULL, 0);
+		    openport, sequence_base + i, 0, TH_SYN, 0 , NULL, 0, NULL, 0);
        usleep( 5000 + target->to.srtt);
     }
      /*     usleep(25000);*/
@@ -119,7 +228,6 @@ if (o.verbose && openport != -1)
    si->responses = 0;
    timeout = 0; 
    gettimeofday(&t1,NULL);
-   if (o.debugging > 1) printf("TMP1\n");
    while(si->responses < NUM_SEQ_SAMPLES && !timeout) {
      ip = (struct ip*) readip_pcap(pd, &bytes);
      gettimeofday(&t2, NULL);
@@ -150,18 +258,11 @@ if (o.verbose && openport != -1)
 	  si->seqs[si->responses++] = ntohl(tcp->th_seq);
 	  if (si->responses > 1) {
 	    seq_diffs[si->responses-2] = MOD_DIFF(ntohl(tcp->th_seq), si->seqs[si->responses-2]);
-	  }
-	if (!FPtests[1]) {
-	  FPtests[1] = safe_malloc(sizeof(FingerPrint));
-	  bzero(FPtests[1], sizeof(FingerPrint));
-	  FPtests[1]->name = "T1";
-	  FPtests[1]->results = fingerprint_iptcppacket(ip ,265, ntohl(tcp->th_ack) -1);
-	  FPtests[1]->next = NULL;
-	}
+	  }      
       }
      }
    }
-   if (o.debugging > 1) printf("TMP2\n");
+     
    if (si->responses >= 4) {
      seq_gcd = get_gcd_n_ulong(si->responses -1, seq_diffs);
      /*     printf("The GCD is %lu\n", seq_gcd);*/
@@ -234,19 +335,19 @@ if (o.verbose && openport != -1)
        strcpy(seq_AVs[0].value, "TD");
        seq_AVs[0].next = &seq_AVs[1];
        seq_AVs[1].attribute= "gcd";     
-       sprintf(seq_AVs[1].value, "%lu", seq_gcd);
+       sprintf(seq_AVs[1].value, "%lX", seq_gcd);
        seq_AVs[1].next = &seq_AVs[2];
        seq_AVs[2].attribute="SI";
-       sprintf(seq_AVs[2].value, "%d", si->index);
+       sprintf(seq_AVs[2].value, "%X", si->index);
        break;
      case SEQ_RI:
        strcpy(seq_AVs[0].value, "RI");
        seq_AVs[0].next = &seq_AVs[1];
        seq_AVs[1].attribute= "gcd";     
-       sprintf(seq_AVs[1].value, "%lu", seq_gcd);
+       sprintf(seq_AVs[1].value, "%lX", seq_gcd);
        seq_AVs[1].next = &seq_AVs[2];
        seq_AVs[2].attribute="SI";
-       sprintf(seq_AVs[2].value, "%d", si->index);
+       sprintf(seq_AVs[2].value, "%X", si->index);
        break;
      case SEQ_TR:
        strcpy(seq_AVs[0].value, "TR");
@@ -259,110 +360,9 @@ if (o.verbose && openport != -1)
  } else {
    nmap_log("Warning:  No ports found open on this machine, OS detection will be MUCH less reliable\n");
  }
- current_port = o.magic_port + NUM_SEQ_SAMPLES +1;
- 
- /* Now lets do the NULL packet technique */
- testsleft = (openport == -1)? 4 : 7;
- FPtmp = NULL;
- /* bzero(FPtests, sizeof(FPtests));*/
- tries = 0;
- do { 
-   newcatches = 0;
-   if (openport != -1) {   
-     /* Test 2 */
-     if (!FPtests[2])
-       for(decoy=0; decoy < o.numdecoys; decoy++) {
-	 send_tcp_raw(rawsd, &o.decoys[decoy], &target->host, current_port, 
-		      openport, sequence_base, 0,0, 0,"\003\003\012\001\002\004\001\011\010\012\077\077\077\077\000\000\000\000\000\000" , 20, NULL, 0);
-       }
-     /* Test 3 */
-     if (!FPtests[3])
-       for(decoy=0; decoy < o.numdecoys; decoy++) {
-	 send_tcp_raw(rawsd, &o.decoys[decoy], &target->host, current_port +1, 
-		      openport, sequence_base, 0,TH_SYN|TH_FIN|TH_URG|TH_PUSH, 0,"\003\003\012\001\002\004\001\011\010\012\077\077\077\077\000\000\000\000\000\000" , 20, NULL, 0);
-       }
-     /* Test 4 */
-     if (!FPtests[4])
-       for(decoy=0; decoy < o.numdecoys; decoy++) {
-	 send_tcp_raw(rawsd, &o.decoys[decoy], &target->host, current_port +2, 
-		      openport, sequence_base, 0,TH_ACK, 0,"\003\003\012\001\002\004\001\011\010\012\077\077\077\077\000\000\000\000\000\000" , 20, NULL, 0);
-       }
-   }
-   /* Test 5 */
-   if (!FPtests[5])
-     for(decoy=0; decoy < o.numdecoys; decoy++) {
-       send_tcp_raw(rawsd, &o.decoys[decoy], &target->host, current_port +3, 
-		    closedport, sequence_base, 0,TH_SYN, 0,"\003\003\012\001\002\004\001\011\010\012\077\077\077\077\000\000\000\000\000\000" , 20, NULL, 0);
-     }
-     /* Test 6 */
-   if (!FPtests[6])
-     for(decoy=0; decoy < o.numdecoys; decoy++) {
-       send_tcp_raw(rawsd, &o.decoys[decoy], &target->host, current_port +4, 
-		    closedport, sequence_base, 0,TH_ACK, 0,"\003\003\012\001\002\004\001\011\010\012\077\077\077\077\000\000\000\000\000\000" , 20, NULL, 0);
-     }
-     /* Test 7 */
-   if (!FPtests[7])
-     for(decoy=0; decoy < o.numdecoys; decoy++) {
-       send_tcp_raw(rawsd, &o.decoys[decoy], &target->host, current_port +5, 
-		    closedport, sequence_base, 0,TH_FIN|TH_PUSH|TH_URG, 0,"\003\003\012\001\002\004\001\011\010\012\077\077\077\077\000\000\000\000\000\000" , 20, NULL, 0);
-     }
-   if (!FPtests[8]) {
-     upi = send_closedudp_probe(rawsd, &target->host, o.magic_port, closedport);
-   }
-   gettimeofday(&t1, NULL);
-   timeout = 0;
-   while(( ip = (struct ip*) readip_pcap(pd, &bytes)) && !timeout) {
-     gettimeofday(&t2, NULL);
-     if (TIMEVAL_SUBTRACT(t2,t1) > oshardtimeout) {
-       timeout = 1;
-     }
-     if (bytes < (4 * ip->ip_hl) + 4)
-       continue;
-     if (ip->ip_p == IPPROTO_TCP) {
-       tcp = ((struct tcphdr *) (((char *) ip) + 4 * ip->ip_hl));
-       if (ntohs(tcp->th_dport) < current_port || ntohs(tcp->th_dport) - current_port > 5) {
-	 continue;
-       }
-       testno = ntohs(tcp->th_dport) - current_port + 2;
-       if (o.debugging > 1)
-	 printf("Got packet for test number %d\n", testno);
-       if (FPtests[testno]) continue;
-       testsleft--;
-       newcatches++;
-       FPtests[testno] = safe_malloc(sizeof(FingerPrint));
-       bzero(FPtests[testno], sizeof(FingerPrint));
-       FPtests[testno]->results = fingerprint_iptcppacket(ip, 255, sequence_base);
-       FPtests[testno]->name = (testno == 2)? "T2" : (testno == 3)? "T3" : (testno == 4)? "T4" : (testno == 5)? "T5" : (testno == 6)? "T6" : (testno == 7)? "T7" : "PU";
-     } else if (ip->ip_p == IPPROTO_ICMP) {
-       icmp = ((struct icmp *)  (((char *) ip) + 4 * ip->ip_hl));
-       /* It must be a destination port unreachable */
-       if (icmp->icmp_type != 3 || icmp->icmp_code != 3) {
-	 /* This ain't no stinking port unreachable! */
-	 continue;
-       }
-       if (bytes < ntohs(ip->ip_len)) {
-	 error("We only got %d bytes out of %d on our ICMP port unreachable packet, skipping", bytes, ntohs(ip->ip_len));
-	 continue;
-       }
-       if (FPtests[8]) continue;
-       FPtests[8] = safe_malloc(sizeof(FingerPrint));
-       bzero(FPtests[8], sizeof(FingerPrint));
-       FPtests[8]->results = fingerprint_portunreach(ip, upi);
-       if (FPtests[8]->results) {       
-	 FPtests[8]->name = "PU";
-	 testsleft--;
-	 newcatches++;
-       } else {
-	 free(FPtests[8]);
-	 FPtests[8] = NULL;
-       }
-     }
-   }     
-   if (o.debugging > 1) printf("TMP3\n");
- } while ( testsleft > 0 && (tries++ < 5 && (newcatches || tries == 1)));
- 
+
 for(i=0; i < 9; i++) {
-  if (i > 1 && !FPtests[i] && ((openport != -1) || i > 4)) {
+  if (i > 0 && !FPtests[i] && ((openport != -1) || i > 4)) {
     /* We create a Resp (response) attribute with value of N (no) because
        it is important here to note whether responses were or were not 
        received */
@@ -373,7 +373,7 @@ for(i=0; i < 9; i++) {
     strcpy(seq_AVs->value, "N");
     seq_AVs->next = NULL;
     FPtests[i]->results = seq_AVs;
-    FPtests[i]->name =  (i == 2)? "T2" : (i == 3)? "T3" : (i == 4)? "T4" : (i == 5)? "T5" : (i == 6)? "T6" : (i == 7)? "T7" : "PU";
+    FPtests[i]->name =  (i == 1)? "T1" : (i == 2)? "T2" : (i == 3)? "T3" : (i == 4)? "T4" : (i == 5)? "T5" : (i == 6)? "T6" : (i == 7)? "T7" : "PU";
   }
 }
  last = -1;
@@ -387,7 +387,7 @@ for(i=0; i < 9; i++) {
    last = i;
  }
  if (last) FPtests[last]->next = NULL;
-
+ 
  close(rawsd);
  pcap_close(pd);
  return FP;
@@ -591,13 +591,13 @@ int AVal_match(struct AVal *reference, struct AVal *fprint) {
 	  if (val == 0 || *endptr) { if (andexp) return 0; }
 	  else { numtrue++; if (orexp) break; }
 	}
-      } else if (*p == '<' && isdigit((int) p[1])) {
+      } else if (*p == '<' && isxdigit((int) p[1])) {
 	if (!*current_fp->value) { if (andexp) return 0; }
 	number = strtol(p + 1, &endptr, 16);
 	val = strtol(current_fp->value, &endptr, 16);
 	if (val >= number || *endptr) { if (andexp) return 0; }
 	else { numtrue++; if (orexp) break; }
-      } else if (*p == '>' && isdigit((int) p[1])) {
+      } else if (*p == '>' && isxdigit((int) p[1])) {
 	if (!*current_fp->value) { if (andexp) return 0; }
 	number = strtol(p + 1, &endptr, 16);
 	val = strtol(current_fp->value, &endptr, 16);
@@ -621,7 +621,7 @@ void freeFingerPrint(FingerPrint *FP) {
 FingerPrint *currentFP;
 FingerPrint *nextFP;
 
-if (!currentFP) return;
+if (!FP) return;
 
  for(currentFP = FP; currentFP; currentFP = nextFP) {
    nextFP = currentFP->next;
@@ -1016,6 +1016,8 @@ if (ntohs(udp->uh_sport) != upi->sport || ntohs(udp->uh_dport) != upi->dport) {
 
 /* Create the Avals */
 AVs = safe_malloc(numtests * sizeof(struct AVal));
+bzero(AVs, numtests * sizeof(struct AVal));
+
 /* Link them together */
 for(i=0; i < numtests - 1; i++)
   AVs[i].next = &AVs[i+1];

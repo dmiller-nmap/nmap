@@ -667,8 +667,9 @@ unsigned short *getdefaultports(int tcpscan, int udpscan) {
   bzero(usedports, sizeof(usedports));
   usedports[0] = 1; /* We do not allow scanning this "port" */
   for(portindex = 1; portindex < 1025; portindex++)
-    ports[portindex] = portindex;
+    ports[portindex-1] = portindex;
 
+  portindex--;
   if (!(fp = fopen("/etc/services", "r"))) {
     error("We can't open /etc/services for reading!  Using just ports 1-1024\n");
     perror("fopen");
@@ -761,7 +762,7 @@ Options (none are required, most can be combined):\n\
       with the real one.  If you care about the order your real IP appears,\n\
       stick \"ME\" somewhere in the list.  Even if the target detects the\n\
       scan, they are unlikely to know which IP is scanning them and which \n\
-      are decoys.
+      are decoys.\n\
    -F fast scan. Only scans ports in /etc/services, a la strobe(1).\n\
    -n Don't DNS resolve anything unless we have to (makes ping scans faster)\n\
    -o <logfile> Output scan logs to <logfile>.\n\

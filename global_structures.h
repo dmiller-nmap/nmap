@@ -73,7 +73,7 @@ struct ftpinfo {
 
 struct AVal {
   char *attribute;
-  char value[32];
+  char value[128];
   struct AVal *next;
 };
 

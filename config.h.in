@@ -3,7 +3,9 @@
 
 #undef HAVE_STRUCT_IP
 
-#undef MISSING_USLEEP
+#undef HAVE_USLEEP
+
+#undef HAVE_NANOSLEEP
 
 #undef HAVE_STRUCT_ICMP
 

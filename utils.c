@@ -29,14 +29,15 @@ for(i=0; i < len; i++){
 printf("\n");
 }
 
-
-#if MISSING_USLEEP
+#ifndef HAVE_USLEEP
+#ifdef HAVE_NANOSLEEP
 void usleep(unsigned long usec) {
 struct timespec ts; 
 ts.tv_sec = usec / 1000000; 
 ts.tv_nsec = (usec % 1000000) * 1000; 
-nanosleep(&tsfoo, NULL);
+nanosleep(&ts, NULL);
 }
+#endif
 #endif
 
 void Strncpy(char *dest, const char *src, size_t n) {

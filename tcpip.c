@@ -918,7 +918,7 @@ char *routethrough(struct in_addr *dest, struct in_addr *source) {
     struct interface_info *dev;
     unsigned long mask;
     unsigned long dest;
-  } myroutes[32];
+  } myroutes[128];
   int numinterfaces = 0;
   char *p, *endptr;
   char iface[64];
@@ -949,6 +949,9 @@ char *routethrough(struct in_addr *dest, struct in_addr *source) {
 	  continue;
 	}
 	Strncpy(iface, p, sizeof(iface));
+	if ((p = strchr(iface, ':'))) {
+	  *p = '\0'; /* To support IP aliasing */
+	}
 	p = strtok(NULL, " \t\n");
 	endptr = NULL;
 	myroutes[numroutes].dest = strtol(p, &endptr, 16);
@@ -975,16 +978,16 @@ char *routethrough(struct in_addr *dest, struct in_addr *source) {
 #if TCPIP_DEBUGGING
 	  printf("#%d: for dev %s, The dest is %lX and the mask is %lX\n", numroutes, iface, myroutes[numroutes].dest, myroutes[numroutes].mask);
 #endif
-	for(i=0; i < numinterfaces; i++)
-	  if (!strcmp(iface, mydevs[i].name)) {
-	    myroutes[numroutes].dev = &mydevs[i];
-	    break;
-	  }
-	if (i == numinterfaces) 
-	  fatal("Failed to find interface %s mentioned in /proc/net/route\n", iface);
-	numroutes++;
-	if (numroutes == 32)
-	  fatal("My god!  You seem to have WAY to many routes!\n");
+	  for(i=0; i < numinterfaces; i++)
+	    if (!strcmp(iface, mydevs[i].name)) {
+	      myroutes[numroutes].dev = &mydevs[i];
+	      break;
+	    }
+	  if (i == numinterfaces) 
+	    fatal("Failed to find interface %s mentioned in /proc/net/route\n", iface);
+	  numroutes++;
+	  if (numroutes == 128)
+	    fatal("My god!  You seem to have WAY to many routes!\n");
       }
       fclose(routez);
     } else {

@@ -271,7 +271,7 @@ int blockinc;
 int sd_blocking = 1;
 struct sockaddr_in sock;
 short seq = 0;
-int sd, rawsd, rawpingsd;
+int sd, rawsd, rawpingsd = -1;
 struct timeval *time;
 struct timeval start, end, t1, t2;
 unsigned short id;
@@ -642,7 +642,7 @@ int get_connecttcpscan_results(struct tcpqueryinfo *tqi,
 int res, res2, tm;
 struct timeval myto, start, end;
 int hostindex;
-int trynum, newstate;
+int trynum, newstate = HOST_DOWN;
 int seq;
 char buf[256];
 int foundsomething = 0;
@@ -781,15 +781,15 @@ struct {
 }  response;
 struct tcphdr *tcp;
 struct ip *ip;
-int hostnum;
+int hostnum = -99999; /* This ought to crash us if it is used uninitialized */
 int tm;
-int dotimeout;
-int newstate;
+int dotimeout = 1;
+int newstate = HOST_DOWN;
 int foundsomething;
 unsigned short newport;
-int trynum;
-int pingtype;
-unsigned short sequence;
+int trynum = -999999;
+int pingtype = -999999;
+unsigned short sequence = 65534;
 unsigned long tmpl;
 unsigned short sportbase;
 
@@ -828,6 +828,7 @@ while(pt->block_unaccounted > 0) {
     res = select(sd+1, &fd_r, NULL, &fd_x, &tmpto);
     if (res == 0) break;
     bytes = read(sd,&response,sizeof(response));
+    ip = &(response.ip);
   }
   if (bytes > 0 && bytes <= 20) {  
     error("%d byte micro packet received in get_ping_results");
@@ -853,7 +854,7 @@ while(pt->block_unaccounted > 0) {
 	  newstate = HOST_UP;
 	}
 	else hostbatch[hostnum].wierd_responses++;
-      } 
+      }
       else if (response.type == 3 && ((struct ppkt *) (response.crap + 4 * response.ip.ip_hl))->id == id) {
 	sequence = ((struct ppkt *) (response.crap + 4 * response.ip.ip_hl))->seq;
 	hostnum = sequence / pt->max_tries;

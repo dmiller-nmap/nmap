@@ -146,12 +146,6 @@ AC_TRY_COMPILE(, [ __inline__ void foo (void) ; ],
 
 dnl AC_HEADER_TIME
 
-dnl lets see if we have usleep
-AC_MSG_CHECKING(for usleep)
-AC_TRY_COMPILE([#include <stdlib.h>], [int main() { usleep(400); } ],
-               [AC_MSG_RESULT(yes) ],
-               [AC_MSG_RESULT(no); AC_DEFINE(MISSING_USLEEP) ])
-
 AC_MSG_CHECKING([struct ip])
 AC_TRY_COMPILE([#include <sys/types.h>
 #include <netinet/in.h>
@@ -194,6 +188,8 @@ if test $bsd_networking = yes; then
     fi
   fi
 fi
+
+AC_SUBST(CFLAGS)
 
 dnl This test is from the configure.in of Unix Network Programming second
 dnl edition example code by W. Richard Stevens
@@ -276,13 +272,13 @@ fi
 
 dnl Checks for library functions.
 dnl AC_TYPE_SIGNAL
-AC_CHECK_FUNCS(bzero snprintf memcpy)
+AC_CHECK_FUNCS(bzero snprintf memcpy usleep nanosleep)
 
 AC_CHECK_FUNC(inet_aton, , 
   [ COMPAT_SRCS="$COMPAT_SRCS inet_aton.c"
     COMPAT_OBJS="$COMPAT_OBJS inet_aton.o" ])
 
-dnl AC_CHECK_FUNCS(gethostname gettimeofday select socket strdup strstr)
+dnl AC_CHECK_FUNCS(gethostname gettimeofday select socket strdup strstr )
 
 dnl Configure libpcap if we need to since a lot of lamers don't
 dnl already have it installed ...

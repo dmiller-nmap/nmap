@@ -12,13 +12,13 @@ CCOPT =
 LIBPCAPDIR = @libpcapdir@
 INCLS = -I. -I$(LIBPCAPDIR)
 DEFS = @DEFS@ -DVERSION=\"$(VERSION)\" -DLIBDIR=\"$(libdir)\"
-#CFLAGS = @CFLAGS@ $(CCOPT) $(DEFS) $(INCLS)
-CFLAGS = -g -Wall $(DEFS) $(INCLS)
+CFLAGS = @CFLAGS@ $(CCOPT) $(DEFS) $(INCLS)
+# CFLAGS = -g -Wall $(DEFS) $(INCLS)
 LDFLAGS = @LDFLAGS@
 LIBS =  @LIBS@ -lpcap -lm
 INSTALL = @INSTALL@
 MAKEDEPEND = @MAKEDEPEND@
-VERSION = 2.0-Beta9
+VERSION = 2.0-Beta11
 
 TARGET = nmap
 
@@ -125,4 +125,10 @@ config.status: configure
 	./config.status --recheck
 
 # DO NOT DELETE -- Needed by makedepend
+
+
+
+
+
+
 
