@@ -116,7 +116,12 @@ begin:
 	FD_SET(s, &fds);
 	tv.tv_usec = to_usec % 1000000;
 	tv.tv_sec = to_usec / 1000000;
-	if(0 == select(0, &fds, 0, 0, &tv)) return 0;
+	if(0 == select(0, &fds, 0, 0, &tv))
+        {
+          if(len) *len = 0;
+          return 0;
+        }
+
 	rcvlen = recv(s, buf, sizeof(buf), 0);
 	time2 = GetTickCount() + 10;
 
