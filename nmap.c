@@ -1860,7 +1860,7 @@ if (o.debugging || o.verbose)
 	  if ( TIMEVAL_SUBTRACT(now, current->sent[current->trynum]) > to.timeout) {
 	    if (current->trynum > 0) {
 	      /* We consider this port valid, move it to open list */
-	      if (o.debugging) { printf("Moving port %hi to the open list\n", current->portno); }
+	      if (o.debugging > 1) { printf("Moving port %hi to the open list\n", current->portno); }
 	      current->state = port_open;    
 	      /* First delete from old list */
 	      if (current->next > -1) scan[current->next].prev = current->prev;
@@ -1879,7 +1879,7 @@ if (o.debugging || o.verbose)
 	      numqueries_outstanding--;
 	    } else {
 	      /* Initial timeout ... we've got to resend */
-	      if (o.debugging) { printf("Initial timeout, resending to portno %hi\n", current->portno); }
+	      if (o.debugging > 1) { printf("Initial timeout, resending to portno %hi\n", current->portno); }
 	      current->trynum++;
 	      /* If they didn't specify the magic port, we use magic_port +1
 		 so we can tell that it was a retransmit later */
@@ -1901,7 +1901,7 @@ if (o.debugging || o.verbose)
 	  /* OK, now we have gone through our list of in-transit queries, so now
 	     we try to send off new queries if we can ... */
 	  if (numqueries_outstanding > (int) numqueries_ideal) break;
-	  printf("Sending initial query to port %hi\n", current->portno);
+	  if (o.debugging > 1) printf("Sending initial query to port %hi\n", current->portno);
 	  /* Otherwise lets send a packet! */
 	  current->state = port_testing;
 	  /*	if (!testinglist) testinglist = current; */
@@ -1918,7 +1918,7 @@ if (o.debugging || o.verbose)
 	}
       }
 
-      printf("Ideal number of queries: %d\n", (int) numqueries_ideal);
+      if (o.debugging > 1) printf("Ideal number of queries: %d\n", (int) numqueries_ideal);
       /* Now that we have sent the packets we wait for responses */
       windowdecrease = 0;
       while (( ip = (struct ip*) readip_pcap(pd, &bytes))) {
@@ -1949,12 +1949,12 @@ if (o.debugging || o.verbose)
 	      } else if (i > -1) {		
 		/* Update our records */
 		delta = TIMEVAL_SUBTRACT(now,current->sent[i]) - to.srtt;
-		printf("Got packet (trynum %d, packetnum %d), delta %d srtt %d rttvar %d timeout %d ->", current->trynum, i, delta, to.srtt, to.rttvar, to.timeout);
+		if (o.debugging > 1) printf("Got packet (trynum %d, packetnum %d), delta %d srtt %d rttvar %d timeout %d ->", current->trynum, i, delta, to.srtt, to.rttvar, to.timeout);
 		numqueries_ideal = MIN(numqueries_ideal + (4/numqueries_ideal), max_width);
 		to.srtt += delta >> 3;
 		to.rttvar += (ABS(delta) - to.rttvar) >> 2;
 		to.timeout = to.srtt + (to.rttvar << 2);
-		printf("srtt %d rttvar %d timeout %d\n",  to.srtt, to.rttvar, to.timeout);
+		if (o.debugging > 1) printf("srtt %d rttvar %d timeout %d\n",  to.srtt, to.rttvar, to.timeout);
 		if (i > 0 && current->trynum > 0) {
 		  /* The first packet was apparently lost, slow down */
 		  if (windowdecrease == 0) {
@@ -1963,7 +1963,7 @@ if (o.debugging || o.verbose)
 		    if (o.debugging) { printf("Lost a packet, decreasing window to %d\n", (int) numqueries_ideal);
 		    windowdecrease++;
 		    }
-		    } else if (o.debugging) { printf("Lost a packet, but not decreasing\n");
+		    } else if (o.debugging > 1) { printf("Lost a packet, but not decreasing\n");
 		    }
 		}
 	      }	      	      
