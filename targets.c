@@ -357,6 +357,7 @@ void masstcpping(struct hoststruct *hostbatch, int num_hosts, int pingtimeout) {
   int numretries = 1;
   int maxsock = 0;
   int res;
+  int i=0;
   int numcomplete = 0;
   struct sockaddr_in sock;
   int sockaddr_in_len = sizeof(struct sockaddr_in);
@@ -424,10 +425,22 @@ void masstcpping(struct hoststruct *hostbatch, int num_hosts, int pingtimeout) {
 	  }
 	  if (FD_ISSET(sockets[hostindex], &fds_write)) {
 	    char buf[256];
-	    res = connect(sockets[hostindex],(struct sockaddr *)&sock,sizeof(struct sockaddr));
-	    if (res != -1) printf("Connect to host suceeded!@#$!@#$\n");
-	    else {
-	      sprintf(buf, "connect to %s", inet_ntoa(hostbatch[hostindex].host));
+	    i =2;
+	    if (i == 0 ) {
+	      res = connect(sockets[hostindex],(struct sockaddr *)&sock,sizeof(struct sockaddr));
+	      if (res != -1) printf("Connect to host suceeded!@#$!@#$\n");
+	      else {
+		sprintf(buf, "connect to %s", inet_ntoa(hostbatch[hostindex].host));
+		perror(buf);
+	      }
+	    } else if (i == 1) {
+	      res = write(sockets[hostindex], "", 0);
+	      if (res == 0) printf("0 returned from write\n");
+	      sprintf(buf, "write to %s", inet_ntoa(hostbatch[hostindex].host));
+	      perror(buf);
+	    }  else if (i == 2) {
+	      res = read(sockets[hostindex], buf, 1);
+	      sprintf (buf, "The result is %d for read from %s", res, inet_ntoa(hostbatch[hostindex].host));
 	      perror(buf);
 	    }
 	    close(sockets[hostindex]);
