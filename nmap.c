@@ -2335,7 +2335,7 @@ portlist pos_scan(struct hoststruct *target, unsigned short *portarray, stype sc
 	      /* No responses !#$!#@$ firewalled? */
 	      if (o.debugging) { printf("Moving port %hi to the potentially firewalled list\n", current->portno); }
 	      freshportstried--;
-	      /*	      	      current->state = PORT_FRESH;*/
+	      current->state = PORT_FIREWALLED; /* For various reasons */
 	      /* First delete from old list */
 	      if (current->next > -1) scan[current->next].prev = current->prev;
 	      if (current->prev > -1) scan[current->prev].next = current->next;
@@ -2430,7 +2430,6 @@ portlist pos_scan(struct hoststruct *target, unsigned short *portarray, stype sc
 	      if (senddelay) usleep(senddelay);
 	    }
 	  } else { /* CONNECT SCAN */
-	    ss.numqueries_outstanding++;
 	    
 	    res = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	    if (res == -1) pfatal("Socket troubles in pos_scan 143");
@@ -2457,7 +2456,11 @@ portlist pos_scan(struct hoststruct *target, unsigned short *portarray, stype sc
       else {
 	/*	get_connect_results(target, scan, ss, openports);*/
       }
-    } 
+    }
+
+    if (ss.ports_left != 0 || ss.numqueries_outstanding != 0) {
+      fatal("Bean counting error no. 4321897: ports_left: %d numqueries_outstanding: %d\n", ss.ports_left, ss.numqueries_outstanding);
+    }
     
     /* We only want to try if the 'firewalled' list contains elements,
        meaning that some ports timed out.  We retry until nothing
