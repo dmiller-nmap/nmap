@@ -2,20 +2,29 @@
 
 Nmap 3.45
 
-o Added new HTTPOptions and RTSPRequest probes suggested by MadHat
-  (madhat(a)unspecific.com)
-
 o Integrated more service signatures from MadHat
   (madhat(a)unspecific.com), Brian Hatch (bri(a)ifokr.org), Niels
   Heinen (zillion(a)safemode.org), Solar Designer
   (solar(a)openwall.com), Seth Master
   (smaster(a)stanford.edu), and Curt Wilson
-  (netw3_security(a)hushmail.com), 
+  (netw3_security(a)hushmail.com).  We now have 378 signatures
+  recognizing 86 unique service protocols.
+
+o Added new HTTPOptions and RTSPRequest probes suggested by MadHat
+  (madhat(a)unspecific.com)
+
+o Changed the .spec file to compile Nmap RPMs without SSL support to
+  improve compatability (Some users might not have OpenSSL, and even
+  those who do might not have the right version (libopenssl.so.2 vs
+  libopenssl.so.4, etc).
 
 o Applied a patch from Solar Eclipse (solareclipse(a)phreedom.org)
   which increases the allowed size of the 'extrainfo' version field from
   80 characters to 128.  The main benefit is to allow longer apache module
   version strings.
+
+o Fixed Windows compilation and improved the Windows port slightly (no
+  more macro to redefine read().
 
 o Applied some updates to README-WIN32 sent in by Kirby Kuehl
   (kkuehl(a)cisco.com).  He improved the list of suggested registry
@@ -327,8 +336,9 @@ o Various minor fixes
 Nmap 3.40PVT8
 
 o Service scan is now OFF by default.  You can activate it with -sV.
-  Or use the snazzy new -A (for "All recommended features" or "Aggressive") option which
-  turns on both OS detection and service detection.
+  Or use the snazzy new -A (for "All recommended features" or
+  "Aggressive") option which turns on both OS detection and service
+  detection.
 
 o Fixed compilation on my ancient OpenBSD 2.3 machine (a Pentium 60 :)
 

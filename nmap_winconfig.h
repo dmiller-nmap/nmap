@@ -91,7 +91,7 @@
 
 #define NMAP_VERSION "3.45"
 #define NMAP_NAME "nmap"
-#define NMAP_URL "www.insecure.org/nmap"
+#define NMAP_URL "http://www.insecure.org/nmap"
 #define NMAP_PLATFORM "i686-pc-windows-windows"
 #define NMAPDATADIR "c:\nmap" /* FIXME: I really need to make this dynamic */
 #endif /* NMAP_WINCONFIG_H */

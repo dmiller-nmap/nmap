@@ -235,7 +235,7 @@ match pop3 m/^\+OK\r\n$/ v/Openwall popa3d///
 match pop3 m|^\+OK [-.\w]+ MultiNet POP3 Server Process V(\S+) at| v/DEC OpenVMS MultiNet pop3d/$1//
 match pop3 m|^\+OK <.*>, MercuryP/NLM v(\d[-.\w]+) ready.\r\n$| v/Mercury POP3 server/$1/on Novell Netware/
 match pop3 m|^\+OK Microsoft Windows POP3 Service Version 1.0 <| v/Microsoft Windows 2003 POP3 Service/1.0//
-match pop3 m|^\+OK POP3 nucleus v(200\d\.[-.\w]+) server ready\r\n| v/UW Imap pop3 server/$1//
+match pop3 m|^\+OK POP3 [-.\w]+ v(200\d\.[-.\w]+) server ready\r\n| v/UW Imap pop3 server/$1//
 match pop3 m|^\+OK POP3 server ready <\w{11}>\r\n$| v/WebSTAR pop-3 server///
 softmatch pop3 m|^\+OK [-\[\]\(\)!,/+:<>@.\w ]+\r\n$|
 
@@ -257,7 +257,6 @@ match imap m|^\* OK \[CAPABILITY IMAP4rev1 NAMESPACE AUTH=CRAM-MD5 AUTH=CRAM-SHA
 match imap m|^\* OK \[CAPABILITY IMAP4rev1.*Courier-IMAP ready\.| v/Courier Imap///
 # Courier IMAP 1.7.2
 match imap m|\* OK \[CAPABILITY IMAP4rev1 CHILDREN NAMESPACE THREAD=ORDEREDSUBJECT THREAD=REFERENCES SORT QUOTA\] Courier-IMAP ready. Copyright 1998-2003 Double Precision, Inc.  See COPYING for distribution information.\r\n$| v/Courier IMAP4rev1/1.7.2//
-match imap m|^\* OK starvation.hungry.com IMAP4rev(\d) v([-.\w]+) server ready\r\n$| v/Courier IMAP4rev$1/$2//
 match imap m|^\* OK CommuniGate Pro IMAP Server ([-.\w]+) at [-.\w]+ ready\r\n$| v/CommuniGate Pro imapd/$1//
 # W-Imapd-SSL v2001adebian-6
 match imap m|^\* OK \[CAPABILITY IMAP4REV1 X-NETSCAPE LOGIN-REFERRALS STARTTLS AUTH=LOGIN\] \S+ IMAP4rev1 ([-.\w]+) at| v/UW-Imapd-SSL/$1//
@@ -311,7 +310,7 @@ match dict m|^220 [-.\w]+ dictd ([-.\w/]+) on ([-.+ \w]+) <auth\.mime>| v/dictd/
 match sftp m|^\+Shiva SFTP Service\0$| v/Shiva LanRover SFTP service///
 # Tiny Personal Firewall 2.0
 match tinyfw m|^\x0f\0\n\0\x01\0\0\0\0\x02\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\xc0\x0ef7\xbb\x9bS\xfc\x86\xe4\x7f\x18\xb8\x97\x06 | v/Tiny Personal Firewall/2.0//
-
+match sdmsvc m|^[\xaa\xff]$| v/LANDesk Software Distribution//sdmsvc.exe/
 
 ##############################NEXT PROBE##############################
 Probe TCP GenericLines q|\r\n\r\n|
@@ -465,7 +464,7 @@ Probe TCP HTTPOptions q|OPTIONS / HTTP/1.0\r\n\r\n|
 
 Probe TCP RTSPRequest q|OPTIONS / RTSP/1.0\r\n\r\n|
 match rtsp m|^RTSP/1\.0 200 OK\r\nCSeq: 0\r\nDate: .*\r\nServer: RealServer Version (\d[-.\w]+) \(win32\)\r\n| v/Realserver RTSP/$1/win32/
-
+match rtsp m|^RTSP/1\.0 200 OK\r\n.*Server: RealMedia EncoderServer Version (\d[-.\w]+) \(win32\)\r\n|s v/RealMedia EncoderServer/$1/win32/
 
 # This probe sends an RPC "Null command" to the port for service
 # 100000 (portmapper).
@@ -668,7 +667,10 @@ ports 389
 sslports 636
 # OpenLDAP 2.0.15 on RH Linux 7.3
 match ldap m|^0%\x02\x01\x01a \n\x010\x04\0\x04\x19anonymous bind disallowed$| v/OpenLDAP//access denied/
-match ldap m|^0\x0c\x02\x01\x01a\x07\n\x01\0\x04\0\x04\0| v/Netware 6 ldap//Anonymous bind OK/
+# Netware 6
+# Macintosh 8
+# Win 2000 Advanced server.
+match ldap m|^0\x0c\x02\x01\x01a\x07\n\x01\0\x04\0\x04\0| v///Anonymous bind OK/
 # MS Windows Win2K SP4 AD server
 match ldap m|^0\x84\0\0\0\x10\x02\x01\x01a\x84\0\0\0\x07\n\x01\0\x04\0\x04\0$| v/Microsoft LDAP server///
 

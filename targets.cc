@@ -923,7 +923,7 @@ while(pt->block_unaccounted) {
 	    }
 	    if (FD_ISSET(tqi->sockets[p][seq], &myfds_r) || FD_ISSET(tqi->sockets[p][seq], &myfds_w) ||  FD_ISSET(tqi->sockets[p][seq], &myfds_x)) {
 	      foundsomething = 0;
-	      res2 = read(tqi->sockets[p][seq], buf, sizeof(buf) - 1);
+	      res2 = recv(tqi->sockets[p][seq], buf, sizeof(buf) - 1, 0);
 	      if (res2 == -1) {
 	        switch(socket_errno()) {
 	        case ECONNREFUSED:
@@ -1075,7 +1075,7 @@ int get_ping_results(int sd, pcap_t *pd, Target *hostbatch[], int pingtype,
       FD_SET(sd, &fd_x);
       res = select(sd+1, &fd_r, NULL, &fd_x, &tmpto);
       if (res == 0) break;
-      bytes = read(sd, response,sizeof(response));
+      bytes = recv(sd, response,sizeof(response), 0 );
       ip = (struct ip *) response;
       if (bytes > 0) {
 	gettimeofday(&rcvdtime, NULL);

@@ -529,7 +529,7 @@ unsigned long current_msg_len;
      }
    } else if (tcp_rpc_socket >= 0 && FD_ISSET(tcp_rpc_socket, &fds_r)) {
      do {     
-       res = read(tcp_rpc_socket, readbuf + tcp_readlen, sizeof(readbuf) - tcp_readlen);
+       res = recv(tcp_rpc_socket, readbuf + tcp_readlen, sizeof(readbuf) - tcp_readlen, 0);
      } while(res == -1 && socket_errno() == EINTR);
      if (res <= 0) {
        if (o.debugging) {

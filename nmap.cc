@@ -1739,7 +1739,7 @@ int getidentinfoz(struct in_addr target, u16 localport, u16 remoteport,
     close(sd);
     return 0;
   }
-  else if ((res = read(sd, response, sizeof(response))) == -1) {
+  else if ((res = recv(sd, response, sizeof(response), 0)) == -1) {
     perror("reading from identd");
     close(sd);
     return 0;

@@ -162,6 +162,7 @@ void NmapOps::Initialize() {
     isr00t = !(geteuid());
 # endif // __amigaos__
 #else
+  isr00t = 1;
   winip_init();	/* wrapper for all win32 initialization */
 #endif
   debugging = DEBUGGING;

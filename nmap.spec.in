@@ -27,12 +27,13 @@ BuildRoot: %{_tmppath}/%{name}-root
 %description
 Nmap is a utility for network exploration or security auditing. It
 supports ping scanning (determine which hosts are up), many port
-scanning techniques (determine what services the hosts are offering),
-and TCP/IP fingerprinting (remote host operating system
-identification). Nmap also offers flexible target and port
-specification, decoy scanning, determination of TCP sequence
-predictability characteristics, sunRPC scanning, reverse-identd
-scanning, and more.
+scanning techniques, version detection (determine service protocols
+and application versions listening behind ports), and TCP/IP
+fingerprinting (remote host OS or device identification). Nmap also
+offers flexible target and port specification, decoy/stealth scanning,
+sunRPC scanning, and more. Most Unix and Windows platforms are
+supported in both GUI and commandline modes. Several popular handheld
+devices are also supported, including the Sharp Zaurus and the iPAQ.
 
 %if "%{buildfe}" == "1"
 %package frontend
@@ -52,7 +53,7 @@ be installed before installing nmap-frontend.
 %build
 export CFLAGS="$RPM_OPT_FLAGS"
 export CXXFLAGS="$RPM_OPT_FLAGS"
-./configure --prefix=%{prefix} --mandir=%{prefix}/share/man 
+./configure --prefix=%{prefix} --mandir=%{prefix}/share/man --without-openssl
 make 
 
 %install
