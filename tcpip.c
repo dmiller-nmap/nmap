@@ -173,6 +173,10 @@ else tcp->th_win = htons(1024 * (myttl % 4 + 1)); /* Who cares */
  /* We should probably copy the data over too */
  if (data)
    memcpy(packet + sizeof(struct ip) + sizeof(struct tcphdr) + optlen, data, datalen);
+ /* And the options */
+ if (optlen) {
+   memcpy(packet + sizeof(struct ip) + sizeof(struct tcphdr), options, optlen);
+ }
 
 
 tcp->th_sum = in_cksum((unsigned short *)pseudo, sizeof(struct tcphdr) + 
