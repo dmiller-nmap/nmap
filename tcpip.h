@@ -199,7 +199,7 @@ extern "C" {
 #endif
 
 #ifndef BSDFIX
-#if FREEBSD || BSDI || NETBSD
+#if FREEBSD || BSDI || NETBSD || DEC
 #define BSDFIX(x) x
 #define BSDUFIX(x) x
 #else

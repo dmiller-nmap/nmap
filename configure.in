@@ -37,6 +37,9 @@ macosx=no
 needs_cpp_precomp=no
 
 case "$host" in
+  *alpha-dec-osf*)
+    AC_DEFINE(DEC)
+    ;;
   *-netbsd*)
     AC_DEFINE(NETBSD)
     ;;

@@ -69,6 +69,7 @@
 #undef TIME_WITH_SYS_TIME
 #undef HAVE_SYS_TIME_H
 
+#undef DEC
 #undef LINUX
 #undef FREEBSD
 #undef OPENBSD
