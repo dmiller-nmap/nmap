@@ -887,8 +887,13 @@ void idle_scan(Target *target, u16 *portarray, int numports,
      derived from the proxy */
   if (target->to.srtt == -1 && target->to.rttvar == -1) {
     target->to.srtt = MAX(200000,2 * proxy.host.to.srtt);
-    target->to.rttvar = MAX(10000, MIN(target->to.srtt, 2000000));
+    target->to.rttvar = MAX(10000, MIN(proxy.host.to.rttvar, 2000000));
     target->to.timeout = target->to.srtt + (target->to.rttvar << 2);
+  } else {
+    target->to.srtt = MAX(target->to.srtt, proxy.host.to.srtt);
+    target->to.rttvar = MAX(target->to.rttvar, proxy.host.to.rttvar);
+    target->to.timeout = target->to.srtt + (target->to.rttvar << 2);
+
   }
 
   /* Now I guess it is time to let the scanning begin!  Since Idle

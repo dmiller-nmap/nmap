@@ -11,6 +11,9 @@ o Added --packet_trace option, which tells Nmap to display all of the
 
 o Fixed a segmentation fault in Idlescan (-sI).
 
+o Made Idlescan timing more conservative when -P0 is specified to
+  improve accuracy.
+
 o Nmap now reports execution times to millisecond precision (rather
   than rouding to the nearest second).
 
