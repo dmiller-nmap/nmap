@@ -1,4 +1,4 @@
-NMAP_VERSION = 3.00
+NMAP_VERSION = 3.10ALPHA1
 NMAP_NAME= nmap
 NMAP_URL= www.insecure.org/nmap/
 NMAP_PLATFORM=@host@
@@ -12,13 +12,13 @@ nmapdatadir = @datadir@/nmap
 deskdir = $(prefix)/share/gnome/apps/Utilities
 
 NBASEDIR=@NBASEDIR@
-CC = @CXX@
+# CC = @CXX@
 CCOPT = 
 LIBPCAPDIR = @libpcapdir@
 INCLS = -I$(LIBPCAPDIR) 
 DEFS = @DEFS@ -DNMAP_VERSION=\"$(NMAP_VERSION)\" -DNMAP_NAME=\"$(NMAP_NAME)\" -DNMAP_URL=\"$(NMAP_URL)\" -DNMAP_PLATFORM=\"$(NMAP_PLATFORM)\" -DNMAPDATADIR=\"$(nmapdatadir)\"
 CXXFLAGS = -g -Wall @CXXFLAGS@ $(CCOPT) $(DEFS) $(INCLS)
-CFLAGS = $(CXXFLAGS)
+# CFLAGS = $(CXXFLAGS)
 # CFLAGS = -g -Wall $(DEFS) $(INCLS)
 STATIC = 
 LDFLAGS = @LDFLAGS@ $(STATIC)
@@ -32,7 +32,7 @@ RPMTDIR=$(HOME)/rpmdir
 
 TARGET = nmap
 
-SRCS = main.c nmap.c targets.c tcpip.c nmap_error.c utils.c idle_scan.c osscan.c output.c scan_engine.c timing.c charpool.c services.c protocols.c nmap_rpc.c portlist.c NmapOps.cc @COMPAT_SRCS@
+SRCS = main.cc nmap.cc targets.cc tcpip.cc nmap_error.cc utils.cc idle_scan.cc osscan.cc output.cc scan_engine.cc timing.cc charpool.cc services.cc protocols.cc nmap_rpc.cc portlist.cc NmapOps.ccc @COMPAT_SRCS@
 
 OBJS = main.o nmap.o targets.o tcpip.o nmap_error.o utils.o idle_scan.o osscan.o output.o scan_engine.o timing.o charpool.o services.o protocols.o nmap_rpc.o portlist.o NmapOps.o @COMPAT_OBJS@
 
@@ -132,7 +132,7 @@ distro:
 	$(SHTOOL) mkdir /usr/tmp/nmap-$(NMAP_VERSION)/nbase
 	cd $(NBASEDIR); cp -ra Makefile.in aclocal.m4 configure configure.in \
 	             nbase_config.h.in \
-                     *.c *.cc *.h CHANGELOG /usr/tmp/nmap-$(NMAP_VERSION)/nbase
+                     *.c *.h CHANGELOG /usr/tmp/nmap-$(NMAP_VERSION)/nbase
 
 	rm -f /usr/tmp/nmap-$(NMAP_VERSION)/nbase/nbase_config.h 
 # Kill the CVS crap
