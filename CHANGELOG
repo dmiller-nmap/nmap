@@ -1,5 +1,11 @@
 # Nmap Changelog ($Id$)
 
+Nmap 3.59ALPHA2
+
+o Fixed a segfault bug, occuring during certain connect() scans.
+  These are normally only done by non-root users.  Bug reported by
+  Arturo "Buanzo" Busleiman (buanzo(a)buanzo.com.ar)
+
 Nmap 3.59ALPHA1
 
 o Rewrote core port scanning engine, which is now named ultra_scan().

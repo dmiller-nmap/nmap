@@ -1542,10 +1542,11 @@ static UltraProbe *sendConnectScanProbe(UltraScanInfo *USI, HostScanStats *hss,
 
   if (rc != -1) {
     /* Connection succeeded! */
-    if (probe->isPing())
+    if (probe->isPing()) 
       ultrascan_ping_update(USI, hss, probeI, &USI->now);
     else 
       ultrascan_port_update(USI, hss, probeI, PORT_OPEN, &USI->now);
+    probe = NULL;
   } else {
     switch(socket_errno()) {
     case EINPROGRESS:
@@ -1752,9 +1753,10 @@ static void retransmitProbe(UltraScanInfo *USI, HostScanStats *hss,
 				 0);
     }
   } else if (probe->type == UltraProbe::UP_CONNECT) {
-    sendConnectScanProbe(USI, hss, probe->portno(), probe->tryno + 1, 0);
+    newProbe = sendConnectScanProbe(USI, hss, probe->portno(), probe->tryno + 1, 0);
   } else assert(0); /* TODO: Support any other probe types */
-  newProbe->prevSent = probe->sent;
+  if (newProbe)
+    newProbe->prevSent = probe->sent;
   probe->retransmitted = true;
   assert(hss->num_probes_waiting_retransmit > 0);
   hss->num_probes_waiting_retransmit--;
