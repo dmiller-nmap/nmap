@@ -1915,7 +1915,7 @@ if (o.debugging || o.verbose)
 	  /* OK, now we have gone through our list of in-transit queries, so now
 	     we try to send off new queries if we can ... */
 	  if (numqueries_outstanding > (int) numqueries_ideal) break;
-	  if (o.debugging > 1) printf("Sending initial query to port %hi\n", current->portno);
+	  if (o.debugging > 1) printf("Sending initial query to port %hu\n", current->portno);
 	  freshportstried++;
 	  /* Otherwise lets send a packet! */
 	  current->state = port_testing;
