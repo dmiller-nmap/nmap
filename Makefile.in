@@ -13,7 +13,7 @@ deskdir = $(prefix)/share/gnome/apps/Utilities
 CC = @CC@
 CCOPT = 
 LIBPCAPDIR = @libpcapdir@
-INCLS = -I. -I$(LIBPCAPDIR)
+INCLS = -I$(LIBPCAPDIR)
 DEFS = @DEFS@ -DNMAP_VERSION=\"$(NMAP_VERSION)\" -DNMAP_NAME=\"$(NMAP_NAME)\" -DNMAP_URL=\"$(NMAP_URL)\" -DNMAPDATADIR=\"$(nmapdatadir)\"
 CFLAGS = @CFLAGS@ $(CCOPT) $(DEFS) $(INCLS)
 # CFLAGS = -g -Wall $(DEFS) $(INCLS)
