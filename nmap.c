@@ -11,8 +11,8 @@ short fastscan=0, tcpscan=0, udpscan=0, randomize=0, resolve_all=0;
 short quashargv = 0, pingscan = 0, lamerscan = 0;
 int lookahead = LOOKAHEAD;
 short bouncescan = 0;
-short *ports = NULL;
-#ifdef __SOLARIS__
+unsigned short *ports = NULL;
+#ifdef IN_ADDR_DEEPSTRUCT
 /* Note that struct in_addr in solaris is 3 levels deep just to store an
  * unsigned int! */
 struct ftpinfo ftp = { FTPUSER, FTPPASS, "",  { { { 0 } } } , 21, 0};
@@ -21,7 +21,7 @@ struct ftpinfo ftp = { FTPUSER, FTPPASS, "", { 0 }, 21, 0};
 #endif
 struct hostent *target = NULL;
 struct in_addr *source=NULL;
-char *fakeargv[argc + 1];
+char **fakeargv = (char **) safe_malloc(sizeof(char *) * (argc + 1));
 struct hoststruct *currenths;
 char emptystring[1];
 
@@ -235,7 +235,7 @@ return 0;
 }
 
 void options_init() {
-bzero(&o, sizeof(struct ops));
+bzero( (char *) &o, sizeof(struct ops));
 o.debugging = DEBUGGING;
 o.verbose = DEBUGGING;
 o.max_sockets = MAX_SOCKETS;
@@ -442,37 +442,36 @@ return realloc(ports, portindex * sizeof(unsigned short));
 }
 
 void printusage(char *name) {
-printf("%s [options] [hostname[/mask] . . .]
-options (none are required, most can be combined):
-   -t tcp connect() port scan
-   -s tcp SYN stealth port scan (must be root)
-   -u UDP port scan, will use MUCH better version if you are root
-   -U Uriel Maimon (P49-15) style FIN stealth scan.
-   -l Do the lamer UDP scan even if root.  Less accurate.
-   -P ping \"scan\". Find which hosts on specified network(s) are up.
-   -D Don't ping hosts (needed to scan scan www.microsoft.com and others)
-   -b <ftp_relay_host> ftp \"bounce attack\" port scan
-   -f use tiny fragmented packets for SYN or FIN scan.
-   -i Get identd (rfc 1413) info on listening TCP processes.
-   -n Don't DNS resolve anything unless we have too (makes ping scans faster)
-   -p <range> ports: ex: \'-p 23\' will only try port 23 of the host(s)
-                  \'-p 20-30,63000-\' scans 20-30 and 63000-65535 default: 1-1024
-   -F fast scan. Only scans ports in /etc/services, a la strobe(1).
-   -L <num> Number of pings to perform in parallel.  Your default is: %d
-   -R Try to resolve all hosts, even down ones (can take a lot of time)
-   -r randomize target port scanning order.
-   -h help, print this junk.  Also see http://www.dhp.com/~fyodor/nmap/
-   -S If you want to specify the source address of SYN or FYN scan.", name, LOOKAHEAD);
-if (!o.allowall) printf("
-   -A Allow scanning .0 and .255 addresses" );
-printf("
-   -T <seconds> Set the ping and tcp connect() timeout.
-   -V Print version number and exit.
-   -v Verbose.  Its use is recommended.  Use twice for greater effect.
-   -w <n> delay.  n microsecond delay. Not recommended unless needed.
-   -M <n> maximum number of parallel sockets.  Larger isn't always better.
-   -q quash argv to something benign, currently set to \"%s\".
-Hostnames specified as internet hostname or IP address.  Optional '/mask' specifies subnet. cert.org/24 or 192.88.209.5/24 scan CERT's Class C.\n", 
+printf("%s [options] [hostname[/mask] . . .]\n\
+options (none are required, most can be combined):\n\
+   -t tcp connect() port scan\n\
+   -s tcp SYN stealth port scan (must be root)\n\
+   -u UDP port scan, will use MUCH better version if you are root\n\
+   -U Uriel Maimon (P49-15) style FIN stealth scan.\n\
+   -l Do the lamer UDP scan even if root.  Less accurate.\n\
+   -P ping \"scan\". Find which hosts on specified network(s) are up.\n\
+   -D Don't ping hosts (needed to scan scan www.microsoft.com and others)\n\
+   -b <ftp_relay_host> ftp \"bounce attack\" port scan\n\
+   -f use tiny fragmented packets for SYN or FIN scan.\n\
+   -i Get identd (rfc 1413) info on listening TCP processes.\n\
+   -n Don't DNS resolve anything unless we have too (makes ping scans faster)\n\
+   -p <range> ports: ex: \'-p 23\' will only try port 23 of the host(s)\n\
+                  \'-p 20-30,63000-\' scans 20-30 and 63000-65535 default: 1-1024\n\
+   -F fast scan. Only scans ports in /etc/services, a la strobe(1).\n\
+   -L <num> Number of pings to perform in parallel.  Your default is: %d\n\
+   -R Try to resolve all hosts, even down ones (can take a lot of time)\n\
+   -r randomize target port scanning order.\n\
+   -h help, print this junk.  Also see http://www.dhp.com/~fyodor/nmap/\n\
+   -S If you want to specify the source address of SYN or FYN scan.\n", name, LOOKAHEAD);
+if (!o.allowall) printf("-A Allow scanning .0 and .255 addresses" );
+printf("-T <seconds> Set the ping and tcp connect() timeout.\n\
+   -V Print version number and exit.\n\
+   -v Verbose.  Its use is recommended.  Use twice for greater effect.\n\
+   -w <n> delay.  n microsecond delay. Not recommended unless needed.\n\
+   -M <n> maximum number of parallel sockets.  Larger isn't always better.\n\
+   -q quash argv to something benign, currently set to \"%s\".\n\
+Hostnames specified as internet hostname or IP address.  Optional '/mask' \
+specifies subnet. cert.org/24 or 192.88.209.5/24 scan CERT's Class C.\n",
         FAKE_ARGV);
 exit(1);
 }
@@ -483,13 +482,13 @@ int starttime, current_out = 0, res , deadindex = 0, i=0, j=0, k=0, max=0;
 struct sockaddr_in sock, stranger, mysock;
 int sockaddr_in_len = sizeof(struct sockaddr_in);
 int seconds, seconds2;  /* Store time temporarily for timeout purposes */
-int sockets[o.max_sockets];  /* All socket descriptors */
-int  deadstack[o.max_sockets]; /* Stack of dead descriptors (indexes to sockets[] */
-unsigned short portno[o.max_sockets]; /* port numbers of sd's, parallel to sockets[] */
-int times[o.max_sockets]; /* initial connect() times of sd's, parallel to sockets[].  For timeout information. */
-int retrystack[o.max_sockets]; /* sd's that need to be retried */
+int *sockets = safe_malloc(sizeof(int) * o.max_sockets);  /* All socket descriptors */
+int *deadstack = safe_malloc(sizeof(int) * o.max_sockets); /* Stack of dead descriptors (indexes to sockets[] */
+unsigned short *portno = safe_malloc(sizeof(unsigned short) * o.max_sockets); /* port numbers of sd's, parallel to sockets[] */
+int *times = safe_malloc(sizeof(int) * o.max_sockets); /* initial connect() times of sd's, parallel to sockets[].  For timeout information. */
+int *retrystack = safe_malloc(sizeof(int) * o.max_sockets); /* sd's that need to be retried */
+int *retries = safe_malloc(sizeof(int) * 65535); /* nr. or retries for this port */
 int retryindex = -1;
-int retries[o.max_sockets]; /* nr. of retries for sd, parallel to sockets[] */
 int numretries = 2; /* How many retries before we give up on a connection */
 char owner[513], buf[65536]; 
 int tryident = o.identscan, current_socket /*actually it is a socket INDEX*/;
@@ -522,7 +521,7 @@ for(i = 0 ; i < o.max_sockets; i++) {
 deadindex--; 
 /* deadindex always points to the most recently added dead socket index */
 
-while(portarray[j] || retryindex >= 0) {
+while(portarray[j] || retryindex >= 0 || current_out != 0) {
   longwait.tv_sec = timeout;
   longwait.tv_usec = nowait.tv_sec = nowait.tv_usec = 0;
   seconds = time(NULL);
@@ -590,7 +589,7 @@ while(portarray[j] || retryindex >= 0) {
       }
     }
   }
-  if (!portarray[j] && retryindex < 0) sleep(1); /*If we are done, wait a second for any last packets*/
+  /*  if (!portarray[j] && retryindex < 0) sleep(2); *//*If we are done, wait a second for any last packets*/
   while((res = select(max + 1, &fds_read, &fds_write, NULL, 
 		      (current_out < o.max_sockets)?
 		      &nowait : &longwait)) > 0) {
@@ -675,7 +674,9 @@ while(portarray[j] || retryindex >= 0) {
 	  FD_SET(sockets[k], &fds_read);
 	  }
 	  else { /* time elapsed */
-	    if (retries[portno[k]] < numretries) {
+	    if (retries[portno[k]] < numretries  && 
+		(portarray[j] || retryindex >= 0)) {
+	    /* don't readd if we are done with all other ports */ 
 	      if (o.debugging) printf("Initial timeout.\n");
 	      retries[portno[k]]++;
 	      retrystack[++retryindex] = portno[k];
@@ -695,8 +696,7 @@ while(portarray[j] || retryindex >= 0) {
 		     close(sockets[k]);
 		 return NULL;
 	      }
-	    }
-	    
+	    }	  	    
 	    if (max == sockets[k]) max--;
 	    FD_CLR(sockets[k], &fds_write);
 	    FD_CLR(sockets[k], &fds_read);
@@ -710,28 +710,39 @@ while(portarray[j] || retryindex >= 0) {
   longwait.tv_sec = timeout;
   longwait.tv_usec = 0;
   }
-  if (current_out == o.max_sockets) {
+  /* If we can't send anymore packets (because full or out of ports) */
+  if (current_out == o.max_sockets || (!portarray[j] && retryindex < 0)) {
     int z;
     seconds2 = time(NULL);
     for(z=0; z < o.max_sockets; z++) {
-      if (seconds2 - times[z] >= o.ptime) { /* Timed out, dr0p it */
-	    if (o.debugging)
-	      printf("Port %d timed out\n", portno[z]);
-	    timeouts++;	      
-	    if (timeouts > MAX_TIMEOUTS && !target->ports && !o.force) {
-	      printf("MAX_TIMEOUT threshold (%d) reached, giving up on host %s (%s).  Use -N to skip this check.\n", MAX_TIMEOUTS, target->name, inet_ntoa(target->host));		
-	      for(k=0; k < o.max_sockets; k++) 
-		if (portno[k]) 
-		  close(sockets[k]);
-	      return NULL;
-	    }
-	    if (max == sockets[z]) max--;
-	    FD_CLR(sockets[z], &fds_write);
-	    FD_CLR(sockets[z], &fds_read);
-	    deadstack[++deadindex] = z;
-	    current_out--;
-	    portno[z] = 0;
-	    close(sockets[z]);
+      if (portno[z] && seconds2 - times[z] >= o.ptime) { /* Timed out, dr0p it */
+	if (retries[portno[z]] < numretries && 
+	    (portarray[j] || retryindex >= 0)) { /* don't re-add if we
+						    are done with all other
+						    ports */
+	  if (o.debugging) printf("Initial timeout.\n");
+	  retries[portno[z]]++;
+	  retrystack[++retryindex] = portno[z];
+	}
+	else {
+	  if (o.debugging)
+	    printf("Port %d timed out\n", portno[z]);
+	  timeouts++;	      
+	  if (timeouts > MAX_TIMEOUTS && !target->ports && !o.force) {
+	    printf("MAX_TIMEOUT threshold (%d) reached, giving up on host %s (%s).  Use -N to skip this check.\n", MAX_TIMEOUTS, target->name, inet_ntoa(target->host));		
+	    for(k=0; k < o.max_sockets; k++) 
+	      if (portno[k]) 
+		close(sockets[k]);
+	    return NULL;
+	  }
+	  if (max == sockets[z]) max--;
+	  FD_CLR(sockets[z], &fds_write);
+	  FD_CLR(sockets[z], &fds_read);
+	  deadstack[++deadindex] = z;
+	  current_out--;
+	  portno[z] = 0;
+	  close(sockets[z]);
+	}
       }
     }
   }
@@ -746,7 +757,7 @@ for(k=0; k < o.max_sockets; k++) {
 
 if (o.debugging || o.verbose) 
   printf("Scanned %d ports in %ld seconds with %d parallel sockets.\n",
-	 o.numports, time(NULL) - starttime, o.max_sockets);
+	 o.numports, (long) time(NULL) - starttime, o.max_sockets);
 return target->ports;
 }
 
@@ -886,15 +897,16 @@ void printandfreeports(portlist ports) {
 portlist udp_scan(struct hoststruct *target, unsigned short *portarray) {
   int icmpsock, udpsock, tmp, done=0, retries, bytes = 0, res,  num_out = 0;
   int i=0,j=0, k=0, icmperrlimittime, max_tries = UDP_MAX_PORT_RETRIES;
-  unsigned short outports[o.max_sockets], numtries[o.max_sockets];
+  unsigned short *outports = safe_malloc(sizeof(unsigned short) * o.max_sockets);
+  unsigned short *numtries = safe_malloc(sizeof(unsigned short) * o.max_sockets);
   struct sockaddr_in her;
   char senddata[] = "blah\n";
   unsigned long starttime, sleeptime;
   struct timeval shortwait = {1, 0 };
   fd_set  fds_read, fds_write;
   
-  bzero(outports, o.max_sockets * sizeof(unsigned short));
-  bzero(numtries, o.max_sockets * sizeof(unsigned short));
+  bzero( (char *) outports, o.max_sockets * sizeof(unsigned short));
+  bzero( (char *) numtries, o.max_sockets * sizeof(unsigned short));
   
    /* Some systems (like linux) follow the advice of rfc1812 and limit
     * the rate at which they will respons with icmp error messages 
@@ -1025,40 +1037,40 @@ int listen_icmp(int icmpsock,  unsigned short outports[],
   while  ((bytes = recvfrom(icmpsock, response, 1024, 0,
 			    (struct sockaddr *) &stranger,
 			    &sockaddr_in_size)) > 0) {
-  numcaught++;
-
+    numcaught++;
+    
     bs.s_addr = ip->ip_src.s_addr;
     if (ip->ip_src.s_addr == target.s_addr && ip->ip_p == IPPROTO_ICMP 
-      && icmp->icmp_type == 3 && icmp->icmp_code == 3) {    
-    ip2 = (struct ip *) (response + 4 * ip->ip_hl + sizeof(struct icmp));
-    data = (unsigned short *) ((char *)ip2 + 4 * ip2->ip_hl);
-
-    badport = ntohs(data[1]);
-    /*delete it from our outports array */
-    found = 0;
-    for(i=0; i < o.max_sockets; i++) 
-      if (outports[i] == badport) {
-	found = 1;
-	tmptry = numtries[i];
-	outports[i] = numtries[i] = 0;
-	(*num_out)--;
-	break;
+	&& icmp->icmp_type == 3 && icmp->icmp_code == 3) {    
+      ip2 = (struct ip *) (response + 4 * ip->ip_hl + sizeof(struct icmp));
+      data = (unsigned short *) ((char *)ip2 + 4 * ip2->ip_hl);
+      
+      badport = ntohs(data[1]);
+      /*delete it from our outports array */
+      found = 0;
+      for(i=0; i < o.max_sockets; i++) 
+	if (outports[i] == badport) {
+	  found = 1;
+	  tmptry = numtries[i];
+	  outports[i] = numtries[i] = 0;
+	  (*num_out)--;
+	  break;
+	}
+      if (o.debugging && found && tmptry > 0) 
+	printf("Badport: %d on try number %d\n", badport, tmptry);
+      if (!found) {
+	if (o.debugging) 
+	  printf("Badport %d came in late, deleting from portlist.\n", badport);
+	if (deleteport(ports, badport, IPPROTO_UDP) < 0)
+	  if (o.debugging) printf("Port deletion failed.\n");
       }
-    if (o.debugging && found && tmptry > 0) 
-      printf("Badport: %d on try number %d\n", badport, tmptry);
-    if (!found) {
-      if (o.debugging) 
-	printf("Badport %d came in late, deleting from portlist.\n", badport);
-      if (deleteport(ports, badport, IPPROTO_UDP) < 0)
-	if (o.debugging) printf("Port deletion failed.\n");
+    }
+    else {
+      
+      if (o.debugging) printf("Caught icmp type %d code %d\n", icmp->icmp_type, icmp->icmp_code);
+      
     }
   }
-  else {
-
-    if (o.debugging) printf("Caught icmp type %d code %d\n", icmp->icmp_type, icmp->icmp_code);
-
-  }
-}
   return numcaught;
 }
 
@@ -1070,8 +1082,9 @@ int listen_icmp(int icmpsock,  unsigned short outports[],
    are r00t */
 portlist lamer_udp_scan(struct hoststruct *target, unsigned short *portarray) {
 int sockaddr_in_size = sizeof(struct sockaddr_in),i=0,j=0,k=0, bytes;
-int sockets[o.max_sockets], trynum[o.max_sockets];
-unsigned short portno[o.max_sockets];
+int *sockets = safe_malloc(sizeof(int) * o.max_sockets);
+int *trynum = safe_malloc(sizeof(int) * o.max_sockets);
+unsigned short *portno = safe_malloc(sizeof(unsigned short) * o.max_sockets);
 int last_open = 0;
 char response[1024];
 struct sockaddr_in her, stranger;
@@ -1188,7 +1201,7 @@ while(portarray[j]) {
 }
 if (o.debugging)
   printf("UDP scanned %d ports in %ld seconds with %d parallel sockets\n",
-	 o.numports, time(NULL) - starttime, o.max_sockets);
+	 o.numports, (long) time(NULL) - starttime, o.max_sockets);
 return target->ports;
 }
 
@@ -1207,7 +1220,7 @@ int getsourceip(struct hoststruct *target) {
     close(sd);
     return 0;
     }
-  bzero(&sock, sizeof(struct sockaddr_in));
+  bzero( (char * )&sock, sizeof(struct sockaddr_in));
   if (getsockname(sd, (SA *)&sock, &socklen) == -1) {
     perror("getsockname");
     close(sd);
@@ -1358,7 +1371,7 @@ portlist syn_scan(struct hoststruct *target, unsigned short *portarray) {
 int i=0, j=0, received, bytes, starttime;
 struct sockaddr_in from;
 int fromsize = sizeof(struct sockaddr_in);
-int sockets[o.max_sockets];
+int *sockets = safe_malloc(sizeof(int) * o.max_sockets);
 struct timeval tv,start,end;
 unsigned int elapsed_time;
 char packet[65535];
@@ -1449,7 +1462,7 @@ do {
 } while (portarray[j]);
 if (o.debugging || o.verbose)
   printf("The TCP SYN scan took %ld seconds to scan %d ports.\n",
-	 time(NULL) - starttime, o.numports);
+	 (long) time(NULL) - starttime, o.numports);
 close(received);
 return target->ports;
 }
@@ -1472,7 +1485,7 @@ struct pseudo_header {
   unsigned short length;
 };
 
-char packet[sizeof(struct ip) + sizeof(struct tcphdr) + datalen];
+char *packet = safe_malloc(sizeof(struct ip) + sizeof(struct tcphdr) + datalen);
 struct ip *ip = (struct ip *) packet;
 struct tcphdr *tcp = (struct tcphdr *) (packet + sizeof(struct ip));
 struct pseudo_header *pseudo =  (struct pseudo_header *) (packet + sizeof(struct ip) - sizeof(struct pseudo_header)); 
@@ -1512,7 +1525,7 @@ sock.sin_port = htons(dport);
 sock.sin_addr.s_addr = victim->s_addr;
 
 
-bzero(packet, sizeof(struct ip) + sizeof(struct tcphdr));
+bzero((char *) packet, sizeof(struct ip) + sizeof(struct tcphdr));
 
 pseudo->s_addy = source->s_addr;
 pseudo->d_addr = victim->s_addr;
@@ -1523,18 +1536,18 @@ tcp->th_sport = htons(sport);
 tcp->th_dport = htons(dport);
 if (seq)
   tcp->th_seq = htonl(seq);
-else tcp->th_seq = rand() + rand();
+else if (flags & TH_SYN) tcp->th_seq = rand() + rand();
 
-if (flags & TH_ACK && ack)
-  tcp->th_ack = htonl(seq);
-else if (flags & TH_ACK)
-  tcp->th_ack = rand() + rand();
+if (ack)
+  tcp->th_ack = htonl(ack);
+/*else if (flags & TH_ACK)
+  tcp->th_ack = rand() + rand();*/
 
 tcp->th_off = 5 /*words*/;
 tcp->th_flags = flags;
 
 if (window)
-  tcp->th_win = window;
+  tcp->th_win = htons(window);
 else tcp->th_win = htons(2048); /* Who cares */
 
 tcp->th_sum = in_cksum((unsigned short *)pseudo, sizeof(struct tcphdr) + 
@@ -1553,6 +1566,10 @@ ip->ip_src.s_addr = source->s_addr;
 ip->ip_dst.s_addr= victim->s_addr;
 ip->ip_sum = in_cksum((unsigned short *)ip, sizeof(struct ip));
 
+ /* We should probably copy the data over too */
+if (data)
+  memcpy(packet + sizeof(struct ip) + sizeof(struct tcphdr), data, datalen);
+
 if (o.debugging > 1) {
 printf("Raw TCP packet creation completed!  Here it is:\n");
 
@@ -1564,7 +1581,7 @@ if (o.debugging > 1)
 	 sd, ntohs(ip->ip_len), inet_ntoa(*victim),
 	 sizeof(struct sockaddr_in));
 if ((res = sendto(sd, packet, ntohs(ip->ip_len), 0,
-		  (struct sockaddr *)&sock, sizeof(struct sockaddr_in))) == -1)
+		  (struct sockaddr *)&sock, (int) sizeof(struct sockaddr_in))) == -1)
   {
     perror("sendto in send_tcp_raw");
     if (source_malloced) free(source);
@@ -1681,7 +1698,7 @@ sock.sin_port = htons(dport);
 
 sock.sin_addr.s_addr = victim->s_addr;
 
-bzero(packet, sizeof(struct ip) + sizeof(struct tcphdr));
+bzero((char *)packet, sizeof(struct ip) + sizeof(struct tcphdr));
 
 pseudo->s_addy = source->s_addr;
 pseudo->d_addr = victim->s_addr;
@@ -1702,7 +1719,7 @@ tcp->th_sum = in_cksum((unsigned short *)pseudo,
 
 /* Now for the ip header of frag1 */
 
-bzero(packet, sizeof(struct ip)); 
+bzero((char *) packet, sizeof(struct ip)); 
 ip->ip_v = 4;
 ip->ip_hl = 5;
 /*RFC 791 allows 8 octet frags, but I get "operation not permitted" (EPERM)
@@ -1723,7 +1740,7 @@ if (o.debugging > 1) {
 if (o.debugging > 1) 
   printf("\nTrying sendto(%d , packet, %d, 0 , %s , %d)\n",
 	 sd, ntohs(ip->ip_len), inet_ntoa(*victim),
-	 sizeof(struct sockaddr_in));
+	 (int) sizeof(struct sockaddr_in));
 if ((res = sendto(sd, packet, ntohs(ip->ip_len), 0, 
 		  (struct sockaddr *)&sock, sizeof(struct sockaddr_in))) == -1)
   {
@@ -1734,7 +1751,7 @@ if (o.debugging > 1) printf("successfully sent %d bytes of raw_tcp!\n", res);
 
 /* Create the second fragment */
 
-bzero(ip2, sizeof(struct ip));
+bzero((char *) ip2, sizeof(struct ip));
 ip2->ip_v= 4;
 ip2->ip_hl = 5;
 ip2->ip_len = htons(sizeof(struct ip) + 4); /* the rest of our TCP packet */
@@ -1753,9 +1770,9 @@ if (o.debugging > 1) {
 if (o.debugging > 1) 
 
   printf("\nTrying sendto(%d , ip2, %d, 0 , %s , %d)\n", sd, 
-	 ntohs(ip2->ip_len), inet_ntoa(*victim), sizeof(struct sockaddr_in));
+	 ntohs(ip2->ip_len), inet_ntoa(*victim), (int) sizeof(struct sockaddr_in));
 if ((res = sendto(sd, (void *)ip2, ntohs(ip2->ip_len), 0, 
-		  (struct sockaddr *)&sock, sizeof(struct sockaddr_in))) == -1)
+		  (struct sockaddr *)&sock, (int) sizeof(struct sockaddr_in))) == -1)
 
   {
     perror("sendto in send_tcp_raw");
@@ -1795,7 +1812,8 @@ char response[65535], myname[513];
 struct ip *ip = (struct ip *) response;
 
 struct tcphdr *tcp;
-unsigned short portno[o.max_sockets], trynum[o.max_sockets];
+unsigned short *portno = safe_malloc(sizeof(unsigned short) * o.max_sockets);
+unsigned short *trynum = safe_malloc(sizeof(unsigned short) * o.max_sockets);
 struct sockaddr_in stranger;
 
 
@@ -1912,7 +1930,7 @@ while(!done) {
 
 if (o.debugging || o.verbose)
   printf("The TCP stealth FIN scan took %ld seconds to scan %d ports.\n", 
-	 time(NULL) - starttime, o.numports);
+	 (long) time(NULL) - starttime, o.numports);
 close(tcpsd);
 close(rawsd);
 return target->ports;
@@ -1953,7 +1971,12 @@ if (res < 0) {
   exit(1);
 }
 
+#ifndef HAVE_SNPRINTF
+sprintf(command, "USER %s\r\n", ftp->user);
+#else
 snprintf(command, 511, "USER %s\r\n", ftp->user);
+#endif
+
 send(sd, command, strlen(command), 0);
 res = recvtime(sd, recvbuf, 2048,12);
 if (res <= 0) {
@@ -1967,7 +1990,13 @@ if (recvbuf[0] == '5') {
 	 ftp->user);
   exit(1);
 }
+
+#ifndef HAVE_SNPRINTF
+sprintf(command, "PASS %s\r\n", ftp->pass);
+#else
 snprintf(command, 511, "PASS %s\r\n", ftp->pass);
+#endif
+
 send(sd, command, strlen(command), 0);
 res = recvtime(sd, recvbuf, 2048,12);
 if (res < 0) {
@@ -2002,9 +2031,11 @@ return sd;
 int recvtime(int sd, char *buf, int len, int seconds) {
 
 int res;
-struct timeval timeout = {seconds, 0};
+struct timeval timeout;
 fd_set readfd;
 
+timeout.tv_sec = seconds;
+timeout.tv_usec = 0;
 FD_ZERO(&readfd);
 FD_SET(sd, &readfd);
 res = select(sd + 1, &readfd, NULL, NULL, &timeout);
@@ -2027,13 +2058,23 @@ int retriesleft = FTP_RETRIES;
 char recvbuf[2048]; 
 char targetstr[20];
 char command[512];
-snprintf(targetstr, 20, "%d,%d,%d,%d,0,", UC(t[0]), UC(t[1]), UC(t[2]), UC(t[3]));
+
+#ifndef HAVE_SNPRINTF
+sprintf(targetstr, "%d,%d,%d,%d,0,", UC(t[0]), UC(t[1]), UC(t[2]), UC(t[3]));
+#else
+  snprintf(targetstr, 20, "%d,%d,%d,%d,0,", UC(t[0]), UC(t[1]), UC(t[2]), UC(t[3]));
+#endif
+
 starttime = time(NULL);
 if (o.verbose || o.debugging)
   printf("Initiating TCP ftp bounce scan against %s (%s)\n",
 	 target->name,  inet_ntoa(target->host));
 for(i=0; portarray[i]; i++) {
+#ifndef HAVE_SNPRINTF
+  sprintf(command, "PORT %s%i\r\n", targetstr, portarray[i]);
+#else
   snprintf(command, 512, "PORT %s%i\r\n", targetstr, portarray[i]);
+#endif
   if (send(sd, command, strlen(command), 0) < 0 ) {
     perror("send in bounce_scan");
     if (retriesleft) {
@@ -2108,7 +2149,7 @@ for(i=0; portarray[i]; i++) {
 }
 if (o.debugging || o.verbose) 
   printf("Scanned %d ports in %ld seconds via the Bounce scan.\n",
-	 o.numports, time(NULL) - starttime);
+	 o.numports, (long) time(NULL) - starttime);
 return target->ports;
 }
 
