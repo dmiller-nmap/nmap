@@ -105,7 +105,8 @@ struct hostent *myhostent = NULL;
 int source_malloced = 0;
 
 /* check that required fields are there and not too silly */
-if ( !victim || !sport || !dport || sd < 0) {
+/* We used to check that sport and dport were nonzer0, but scr3w that! */
+if ( !victim || sd < 0) {
   fprintf(stderr, "send_tcp_raw: One or more of your parameters suck!\n");
   return -1;
 }
