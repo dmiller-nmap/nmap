@@ -80,9 +80,9 @@ do {
     hostbatch[i].host.s_addr = 0;
   }
 
-if (hostbatch[0].host.s_addr && o.pingtype == icmp ) 
+if (hostbatch[0].host.s_addr && (o.pingtype == icmp )) 
   massping(hostbatch, i, pingtimeout);
-else if (hostbatch[0].host.s_addr && o.pingtype == tcp)
+else if (hostbatch[0].host.s_addr && (o.pingtype == tcp))
   masstcpping(hostbatch, i, pingtimeout);
 else for(i=0; hostbatch[i].host.s_addr; i++) 
 	hostbatch[i].flags |= HOST_UP; /*hostbatch[i].up = 1;*/
