@@ -441,7 +441,8 @@ group_end = MIN(group_start + group_size -1, num_hosts -1);
      dropthistry = 0;
    } while ((up_this_block > 0 || group_end - group_start <= 3) && block_unaccounted > 0 && ++block_tries < max_tries);
 
-   printf("Finished block: srtt: %d rttvar: %d timeout: %d block_tries: %d up_this_block: %d down_this_block: %d\n", to.srtt, to.rttvar, to.timeout, block_tries, up_this_block, down_this_block);
+   if (o.debugging)
+     printf("Finished block: srtt: %d rttvar: %d timeout: %d block_tries: %d up_this_block: %d down_this_block: %d\n", to.srtt, to.rttvar, to.timeout, block_tries, up_this_block, down_this_block);
 
    if ((block_tries == 1) || (block_tries == 2 && up_this_block == 0 && down_this_block == 0)) 
      /* Then it did not miss any hosts (that we know of)*/

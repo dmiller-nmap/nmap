@@ -1617,7 +1617,7 @@ if (!target->source_ip.s_addr) {
  * get out of promisc. if we can figure out the problem.
  */
 if (!(pd = pcap_open_live(target->device, 92, (o.spoofsource)? 1 : 0, 1000, err0r)))
-  fatal("pcap_open_live: %s", err0r);
+  fatal("pcap_open_live in syn_scan: %s", err0r);
 if (pcap_lookupnet(target->device, &localnet, &netmask, err0r) < 0)
   fatal("Failed to lookup device subnet/netmask: %s", err0r);
 p = strdup(inet_ntoa(target->host));
