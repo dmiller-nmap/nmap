@@ -561,7 +561,7 @@ struct AVal *fingerprint_iptcppacket(struct ip *ip, int mss, unsigned int syn) {
 
 FingerPrint **match_fingerprint(FingerPrint *FP, int *matches_found) {
   static FingerPrint *matches[15];
-  int max_matches = 14;
+  int max_matches = (sizeof(matches) / sizeof(FingerPrint *)) - 1;
   FingerPrint *current_os;
   FingerPrint *current_test;
   struct AVal *tst;
@@ -720,7 +720,7 @@ struct timeval now;
  bzero(si, sizeof(si));
  if (target->ports.state_counts_tcp[PORT_OPEN] == 0 ||
      (target->ports.state_counts_tcp[PORT_CLOSED] == 0 &&
-      target->ports.state_counts_tcp[PORT_UNFIREWALLED])) {
+      target->ports.state_counts_tcp[PORT_UNFIREWALLED] == 0)) {
    if (o.osscan_limit) {
      if (o.verbose)
        log_write(LOG_STDOUT|LOG_NORMAL|LOG_SKID, "Skipping OS Scan due to absence of open (or perhaps closed) ports\n", target->host);

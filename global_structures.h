@@ -116,8 +116,8 @@ struct hoststruct {
   struct in_addr source_ip;
   char *name;
   struct seq_info seq;
-  FingerPrint **FP_matches;
-  FingerPrint *FPs[10];
+  FingerPrint **FP_matches; /* Pointers to reference fingerprints matched */
+  FingerPrint *FPs[10]; /* Fingerprint data obtained from host */
   int osscan_performed; /* nonzero if an osscan was performed */
   int numFPs;
   int goodFP;
