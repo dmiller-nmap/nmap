@@ -1421,7 +1421,7 @@ char *seqreport(struct seq_info *seq) {
     strcpy(p, "TCP ISN Seq. Numbers: ");
     p += 22;
     for(i=0; i < seq->responses; i++) {
-      if (p - tmp + 20 > (sizeof(tmp)))
+      if (p - tmp + 20 > ((int) sizeof(tmp)))
 	fatal("0verfl0w Error #234112");
       p += snprintf(p, 16, "%X ", seq->seqs[i]);
     }

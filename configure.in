@@ -9,7 +9,7 @@ if test -d /usr/local/lib; then
   LDFLAGS="$LDFLAGS -L/usr/local/lib"
 fi
 if test -d /usr/local/include; then
-  CFLAGS="$CFLAGS -I/usr/local/include"
+  CXXFLAGS="$CXXFLAGS -I/usr/local/include"
 fi
 
 libpcapdir=libpcap-possiblymodified
@@ -19,9 +19,9 @@ dnl use config.h instad of -D macros
 AC_CONFIG_HEADER(config.h)
 
 dnl Checks for programs.
-AC_PROG_CC
+AC_PROG_CXX
  if test -n "$GCC"; then
-      CFLAGS="$CFLAGS -Wall "
+      CXXFLAGS="$CXXFLAGS -Wall "
  fi
 dnl AC_PROG_INSTALL
 dnl AC_PATH_PROG(MAKEDEPEND, makedepend)
@@ -159,15 +159,15 @@ if test $linux = yes; then
 fi
 
 if test $needs_cpp_precomp = yes; then
-  CFLAGS="-no-cpp-precomp $CFLAGS"
+  CXXFLAGS="-no-cpp-precomp $CXXFLAGS"
 fi
 
 if test $have_libpcap = yes; then
   if test "${LIBPCAP_INC+set}" = "set"; then
-    _cflags=$CFLAGS
+    _cflags=$CXXFLAGS
     _ldflags=$LDFLAGS
 
-    CFLAGS="-I$LIBPCAP_INC $CFLAGS"
+    CXXFLAGS="-I$LIBPCAP_INC $CXXFLAGS"
     LDFLAGS="-L$LIBPCAP_LIB $LDFLAGS"
   fi
 
@@ -208,10 +208,10 @@ if test $have_libpcap = yes; then
 else
   if test "${LIBPCAP_INC+set}" = "set"; then
     LDFLAGS="-L$libpcapdir $_ldflags"
-    CFLAGS="$_cflags -I$libpcapdir"
+    CXXFLAGS="$_cflags -I$libpcapdir"
   else
     LDFLAGS="-L$libpcapdir $LDFLAGS"
-    CFLAGS="$CFLAGS -I$libpcapdir"
+    CXXFLAGS="$CXXFLAGS -I$libpcapdir"
   fi
   PCAP_DEPENDS='$(LIBPCAPDIR)/libpcap.a'
   PCAP_CLEAN="pcap_clean"
@@ -268,8 +268,8 @@ if test $bsd_networking = yes; then
                  [AC_MSG_RESULT(no); has_bitfields=no])
 
   if test $has_bitfields = no; then
-    SAVE_CFLAGS="$CFLAGS"
-    CFLAGS="-D__STDC__=2"
+    SAVE_CXXFLAGS="$CXXFLAGS"
+    CXXFLAGS="-D__STDC__=2"
 
     AC_MSG_CHECKING([if setting __STDC__=2 gives ip_v])
     AC_TRY_COMPILE([#include <sys/types.h>
@@ -280,9 +280,9 @@ if test $bsd_networking = yes; then
                    [AC_MSG_RESULT(yes); setting_stdc_helps=yes],
                   [AC_MSG_RESULT(no); setting_stdc_helps=no])
 
-    CFLAGS="$SAVE_CFLAGS"
+    CXXFLAGS="$SAVE_CXXFLAGS"
     if test $setting_stdc_helps = yes; then
-      CFLAGS="$CFLAGS -D__STDC__=2"
+      CXXFLAGS="$CXXFLAGS -D__STDC__=2"
     else
       AC_MSG_RESULT(Can't figure out how to get bitfields - configure failed)
       exit 1
@@ -290,7 +290,7 @@ if test $bsd_networking = yes; then
   fi
 fi
 
-AC_SUBST(CFLAGS)
+AC_SUBST(CXXFLAGS)
 
 dnl This test is from the configure.in of Unix Network Programming second
 dnl edition example code by W. Richard Stevens
@@ -395,7 +395,7 @@ NBASEDIR="nbase"
 )
 
 LDFLAGS="$LDFLAGS -L$NBASEDIR"
-CFLAGS="$CFLAGS -I$NBASEDIR"
+CXXFLAGS="$CXXFLAGS -I$NBASEDIR"
 LIBS="$LIBS -lnbase"
 
 AC_SUBST(NBASEDIR)
@@ -437,9 +437,9 @@ else
   else
     subdirs="$subdirs nmapfe"
     dnl Maybe also define the flags to compile and link GTK+
-    dnl GTK_CFLAGS=`gtk-config --cflags`
+    dnl GTK_CXXFLAGS=`gtk-config --cflags`
     dnl GTK_LIBS=`gtk-config --libs`
-    dnl AC_SUBST(GTK_CFLAGS)
+    dnl AC_SUBST(GTK_CXXFLAGS)
     dnl AC_SUBST(GTK_LIBS)
   fi
 fi

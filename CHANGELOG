@@ -1,5 +1,9 @@
 # Nmap Changelog ($Id$)
 
+o UNIX compilation cleaned up and converted to C++ -- so you'll need
+g++ or another C++ compiler.  I accidently let a C++ requirement slip
+in a while back and found that almost everyone has such a compiler.
+
 o Fixed an debug statement C ambiguity discovered by Kronos
   (kronos@kronoz.cjb.net)
 

@@ -433,14 +433,5 @@ int gather_logfile_resumption_state(char *fname, int *myargc, char ***myargv);
 int inet_aton(register const char *, struct in_addr *);
 #endif
 
-/* Sets a pcap filter function -- makes SOCK_RAW reads easier */
-#ifndef WINIP_H
-typedef int (*PFILTERFN)(const char *packet, int len); /* 1 to keep */
-void set_pcap_filter(struct hoststruct *target, pcap_t *pd, PFILTERFN filter, char *bpf, ...);
-#endif
-
-int flt_icmptcp(const char *packet, int len);
-int flt_icmptcp_2port(const char *packet, int len);
-int flt_icmptcp_5port(const char *packet, int len);
 
 #endif /* NMAP_H */

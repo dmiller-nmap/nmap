@@ -12,12 +12,12 @@ nmapdatadir = @datadir@/nmap
 deskdir = $(prefix)/share/gnome/apps/Utilities
 
 NBASEDIR=@NBASEDIR@
-CC = @CC@
+CC = @CXX@
 CCOPT = 
 LIBPCAPDIR = @libpcapdir@
 INCLS = -I$(LIBPCAPDIR) 
 DEFS = @DEFS@ -DNMAP_VERSION=\"$(NMAP_VERSION)\" -DNMAP_NAME=\"$(NMAP_NAME)\" -DNMAP_URL=\"$(NMAP_URL)\" -DNMAP_PLATFORM=\"$(NMAP_PLATFORM)\" -DNMAPDATADIR=\"$(nmapdatadir)\"
-CFLAGS = -g @CFLAGS@ $(CCOPT) $(DEFS) $(INCLS)
+CFLAGS = -g -Wall @CXXFLAGS@ $(CCOPT) $(DEFS) $(INCLS)
 # CFLAGS = -g -Wall $(DEFS) $(INCLS)
 STATIC = 
 LDFLAGS = @LDFLAGS@ $(STATIC)
@@ -149,7 +149,7 @@ distro:
 # For distributing the binary
 static: 	
 	cd $(LIBPCAPDIR); $(MAKE)
-	$(CC) $(CFLAGS) -static $(LDFLAGS) -o nmap.linux.bin  $(SRCS) $(LIBS)
+	$(CC) $(CXXFLAGS) -static $(LDFLAGS) -o nmap.linux.bin  $(SRCS) $(LIBS)
 	strip nmap.linux.bin
 
 clean: @PCAP_CLEAN@ nmapfe_clean nbase_clean my_clean

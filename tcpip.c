@@ -176,7 +176,7 @@ int resolve(char *hostname, struct in_addr *ip) {
 
 int send_tcp_raw_decoys( int sd, struct in_addr *victim, u16 sport, 
 			 u16 dport, u32 seq, u32 ack, u8 flags, u16 window, 
-                         u8 *options, int optlen, u8 *data, u16 datalen) 
+                         u8 *options, int optlen, char *data, u16 datalen) 
 {
   int decoy;
 
@@ -469,7 +469,7 @@ if (ip->ip_p== IPPROTO_UDP) {
 }
 
 int send_udp_raw_decoys( int sd, struct in_addr *victim, u16 sport, 
-			 u16 dport, u8 *data, u16 datalen) {
+			 u16 dport, char *data, u16 datalen) {
   int decoy;
   
   for(decoy = 0; decoy < o.numdecoys; decoy++) 
@@ -483,7 +483,7 @@ int send_udp_raw_decoys( int sd, struct in_addr *victim, u16 sport,
 
 
 int send_udp_raw( int sd, struct in_addr *source, struct in_addr *victim, 
-		  u16 sport, u16 dport, u8 *data, u16 datalen) 
+		  u16 sport, u16 dport, char *data, u16 datalen) 
 {
 
 unsigned char *packet = (unsigned char *) safe_malloc(sizeof(struct ip) + sizeof(udphdr_bsd) + datalen);
@@ -739,7 +739,7 @@ return 1;
 }
 
 int send_ip_raw_decoys( int sd, struct in_addr *victim, u8 proto,
-			u8 *data, u16 datalen) {
+			char *data, u16 datalen) {
 
   int decoy;
 
@@ -754,7 +754,7 @@ int send_ip_raw_decoys( int sd, struct in_addr *victim, u8 proto,
 }
 
 int send_ip_raw( int sd, struct in_addr *source, struct in_addr *victim, 
-		 u8 proto, u8 *data, u16 datalen) 
+		 u8 proto, char *data, u16 datalen) 
 {
 
 unsigned char *packet = (unsigned char *) safe_malloc(sizeof(struct ip) + datalen);
@@ -1032,7 +1032,7 @@ int datalink;
 int timedout = 0;
 struct timeval tv_start, tv_end;
 static char *alignedbuf = NULL;
-static int alignedbufsz=0;
+static unsigned int alignedbufsz=0;
 
 if (!pd) fatal("NULL packet device passed to readip_pcap");
 
@@ -1125,7 +1125,7 @@ if (!pd) fatal("NULL packet device passed to readip_pcap");
  }
  *len = head.caplen - offset;
  if (*len > alignedbufsz) {
-   alignedbuf = realloc(alignedbuf, *len);
+   alignedbuf = (char *) realloc(alignedbuf, *len);
    if (!alignedbuf) {
      fatal("Unable to realloc %d bytes of mem", *len);
    }
@@ -1171,7 +1171,7 @@ void set_pcap_filter(struct hoststruct *target,
 unsigned long flt_dsthost, flt_srchost;	/* _net_ order */
 unsigned short flt_baseport;	/*	_host_ order */
 
-int flt_icmptcp(const char *packet, int len)
+int flt_icmptcp(const char *packet, unsigned int len)
 {
   struct ip* ip = (struct ip*)packet;
   if(ip->ip_dst.s_addr != flt_dsthost) return 0;
@@ -1181,7 +1181,7 @@ int flt_icmptcp(const char *packet, int len)
   return 0;
 }
 
-int flt_icmptcp_2port(const char *packet, int len)
+int flt_icmptcp_2port(const char *packet, unsigned int len)
 {
   unsigned short dport;
   struct ip* ip = (struct ip*)packet;
@@ -1200,7 +1200,7 @@ int flt_icmptcp_2port(const char *packet, int len)
   return 0;
 }
 
-int flt_icmptcp_5port(const char *packet, int len)
+int flt_icmptcp_5port(const char *packet, unsigned int len)
 {
   unsigned short dport;
   struct ip* ip = (struct ip*)packet;

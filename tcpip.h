@@ -369,10 +369,10 @@ int send_tcp_raw( int sd, struct in_addr *source, struct in_addr *victim,
 		  u16 window, u8 *options, int optlen, char *data, 
 		  u16 datalen);
 int send_udp_raw( int sd, struct in_addr *source, struct in_addr *victim, 
-		  u16 sport, u16 dport, u8 *data, u16 datalen);
+		  u16 sport, u16 dport, char *data, u16 datalen);
 
 int send_ip_raw( int sd, struct in_addr *source, struct in_addr *victim, 
-		 u8 proto, u8 *data, u16 datalen);
+		 u8 proto, char *data, u16 datalen);
 
 /* Much of this is swiped from my send_tcp_raw function above, which 
    doesn't support fragmentation */
@@ -381,16 +381,16 @@ int send_small_fragz(int sd, struct in_addr *source, struct in_addr *victim,
 /* Decoy versions of the raw packet sending functions ... */
 int send_tcp_raw_decoys( int sd, struct in_addr *victim, u16 sport, 
 			 u16 dport, u32 seq, u32 ack, u8 flags, u16 window, 
-                         u8 *options, int optlen, u8 *data, u16 datalen);
+                         u8 *options, int optlen, char *data, u16 datalen);
 
 int send_udp_raw_decoys( int sd, struct in_addr *victim, u16 sport, 
-			 u16 dport, u8 *data, u16 datalen);
+			 u16 dport, char *data, u16 datalen);
 
 int send_small_fragz_decoys(int sd, struct in_addr *victim, u32 seq, 
 			    u16 sport, u16 dport, int flags);
 
 int send_ip_raw_decoys( int sd, struct in_addr *victim, u8 proto,
-			u8 *data, u16 datalen);
+			char *data, u16 datalen);
 
 /* Calls pcap_open_live and spits out an error (and quits) if the call fails.
    So a valid pcap_t will always be returned. */
@@ -462,6 +462,16 @@ int recvtime(int sd, char *buf, int len, int seconds);
    always true nowadays --fyodor).  This is now 
    implemented in isup() for users who are root.  */
 unsigned long calculate_sleep(struct in_addr target);
+
+/* Sets a pcap filter function -- makes SOCK_RAW reads easier */
+#ifndef WINIP_H
+typedef int (*PFILTERFN)(const char *packet, unsigned int len); /* 1 to keep */
+void set_pcap_filter(struct hoststruct *target, pcap_t *pd, PFILTERFN filter, char *bpf, ...);
+#endif
+
+int flt_icmptcp(const char *packet, unsigned int len);
+int flt_icmptcp_2port(const char *packet, unsigned int len);
+int flt_icmptcp_5port(const char *packet, unsigned int len);
 
 #endif /*TCPIP_H*/
 

@@ -1219,7 +1219,7 @@ while(pt->block_unaccounted > 0 && !timeout) {
 	  if (o.debugging) {	
 	    error("Illegal id %d found, should be %d (icmp type/code %d/%d)", ping2->id, id, ping->type, ping->code);
 	    if (o.debugging > 1)
-	      lamont_hdump((unsigned char *)ip, bytes);
+	      lamont_hdump((char *)ip, bytes);
 	  }
 	  continue;
 	}

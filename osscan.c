@@ -204,28 +204,28 @@ if (o.verbose && openport != (unsigned long) -1)
      if (!FPtests[1]) {     
        if (o.scan_delay) enforce_scan_delay(NULL);
        send_tcp_raw_decoys(rawsd, &target->host, current_port, 
-			   openport, sequence_base, 0,TH_BOGUS|TH_SYN, 0,"\003\003\012\001\002\004\001\011\010\012\077\077\077\077\000\000\000\000\000\000" , 20, NULL, 0);
+			   openport, sequence_base, 0,TH_BOGUS|TH_SYN, 0, (u8 *) "\003\003\012\001\002\004\001\011\010\012\077\077\077\077\000\000\000\000\000\000" , 20, NULL, 0);
      }
      
      /* Test 2 */
      if (!FPtests[2]) {     
        if (o.scan_delay) enforce_scan_delay(NULL);
        send_tcp_raw_decoys(rawsd, &target->host, current_port +1, 
-			   openport, sequence_base, 0,0, 0,"\003\003\012\001\002\004\001\011\010\012\077\077\077\077\000\000\000\000\000\000" , 20, NULL, 0);
+			   openport, sequence_base, 0,0, 0, (u8 *) "\003\003\012\001\002\004\001\011\010\012\077\077\077\077\000\000\000\000\000\000" , 20, NULL, 0);
      }
 
      /* Test 3 */
      if (!FPtests[3]) {     
        if (o.scan_delay) enforce_scan_delay(NULL);
        send_tcp_raw_decoys(rawsd, &target->host, current_port +2, 
-			   openport, sequence_base, 0,TH_SYN|TH_FIN|TH_URG|TH_PUSH, 0,"\003\003\012\001\002\004\001\011\010\012\077\077\077\077\000\000\000\000\000\000" , 20, NULL, 0);
+			   openport, sequence_base, 0,TH_SYN|TH_FIN|TH_URG|TH_PUSH, 0,(u8 *) "\003\003\012\001\002\004\001\011\010\012\077\077\077\077\000\000\000\000\000\000" , 20, NULL, 0);
      }
 
      /* Test 4 */
      if (!FPtests[4]) {     
        if (o.scan_delay) enforce_scan_delay(NULL);
        send_tcp_raw_decoys(rawsd, &target->host, current_port +3, 
-			   openport, sequence_base, 0,TH_ACK, 0,"\003\003\012\001\002\004\001\011\010\012\077\077\077\077\000\000\000\000\000\000" , 20, NULL, 0);
+			   openport, sequence_base, 0,TH_ACK, 0, (u8 *) "\003\003\012\001\002\004\001\011\010\012\077\077\077\077\000\000\000\000\000\000" , 20, NULL, 0);
      }
    }
    
@@ -233,21 +233,21 @@ if (o.verbose && openport != (unsigned long) -1)
    if (!FPtests[5]) {   
      if (o.scan_delay) enforce_scan_delay(NULL);
      send_tcp_raw_decoys(rawsd, &target->host, current_port +4,
-			 closedport, sequence_base, 0,TH_SYN, 0,"\003\003\012\001\002\004\001\011\010\012\077\077\077\077\000\000\000\000\000\000" , 20, NULL, 0);
+			 closedport, sequence_base, 0,TH_SYN, 0, (u8 *) "\003\003\012\001\002\004\001\011\010\012\077\077\077\077\000\000\000\000\000\000" , 20, NULL, 0);
    }
 
      /* Test 6 */
    if (!FPtests[6]) {   
      if (o.scan_delay) enforce_scan_delay(NULL);
      send_tcp_raw_decoys(rawsd, &target->host, current_port +5, 
-			 closedport, sequence_base, 0,TH_ACK, 0,"\003\003\012\001\002\004\001\011\010\012\077\077\077\077\000\000\000\000\000\000" , 20, NULL, 0);
+			 closedport, sequence_base, 0,TH_ACK, 0, (u8 *) "\003\003\012\001\002\004\001\011\010\012\077\077\077\077\000\000\000\000\000\000" , 20, NULL, 0);
    }
 
      /* Test 7 */
    if (!FPtests[7]) {
      if (o.scan_delay) enforce_scan_delay(NULL);   
      send_tcp_raw_decoys(rawsd, &target->host, current_port +6, 
-			 closedport, sequence_base, 0,TH_FIN|TH_PUSH|TH_URG, 0,"\003\003\012\001\002\004\001\011\010\012\077\077\077\077\000\000\000\000\000\000" , 20, NULL, 0);
+			 closedport, sequence_base, 0,TH_FIN|TH_PUSH|TH_URG, 0, (u8 *) "\003\003\012\001\002\004\001\011\010\012\077\077\077\077\000\000\000\000\000\000" , 20, NULL, 0);
    }
 
    /* Test 8 */
@@ -330,7 +330,7 @@ if (o.verbose && openport != (unsigned long) -1)
 			 o.magic_port + seq_packets_sent + 1, 
 			 openport, 
 			 sequence_base + seq_packets_sent + 1, 0, 
-			 TH_SYN, 0 ,"\003\003\012\001\002\004\001\011\010\012\077\077\077\077\000\000\000\000\000\000" , 20, NULL, 0);
+			 TH_SYN, 0 , (u8 *) "\003\003\012\001\002\004\001\011\010\012\077\077\077\077\000\000\000\000\000\000" , 20, NULL, 0);
      if (!o.scan_delay)
        usleep( MAX(110000, target->to.srtt)); /* Main reason we wait so long is that we need to spend more than .5 seconds to detect 2HZ timestamp sequencing -- this also should make ISN sequencing more regular */
    
@@ -395,7 +395,7 @@ if (o.verbose && openport != (unsigned long) -1)
 	     /* BzzT! Value out of range */
 	     if (o.debugging) {
 	       error("Unable to associate os scan response with sent packet (received ack: %lX; sequence base: %lX. Packet:", ntohl(tcp->th_ack), sequence_base);
-	       readtcppacket((char *)ip,BSDUFIX(ip->ip_len));
+	       readtcppacket((unsigned char *)ip,BSDUFIX(ip->ip_len));
 	     }
 	     seq_response_num = si->responses;
 	   }
@@ -1250,16 +1250,16 @@ if(*(FP->OS_name)) {
 for(current = FP; current ; current = current->next) {
   Strncpy(p, current->name, sizeof(str) - (p-str));
   p += strlen(p);
-  assert(p-str < sizeof(str) - 30);
+  assert(p-str < (int) sizeof(str) - 30);
   *p++='(';
   for(AV = current->results; AV; AV = AV->next) {
     Strncpy(p, AV->attribute, sizeof(str) - (p-str));
     p += strlen(p);
-    assert(p-str < sizeof(str) - 30);
+    assert(p-str < (int) sizeof(str) - 30);
     *p++='=';
     Strncpy(p, AV->value, sizeof(str) - (p-str));
     p += strlen(p);
-    assert(p-str < sizeof(str) - 30);
+    assert(p-str < (int) sizeof(str) - 30);
     *p++ = '%';
   }
   if(*(p-1) != '(')
@@ -1285,7 +1285,7 @@ FingerPrint *parse_single_fingerprint(char *fprint_orig) {
   FingerPrint *current; /* Since a fingerprint is really a linked list of
 			   FingerPrint structures */
 
-  current = FP = safe_zalloc(sizeof(FingerPrint));
+  current = FP = (FingerPrint *) safe_zalloc(sizeof(FingerPrint));
 
   thisline = fprint;
   
@@ -1304,7 +1304,7 @@ FingerPrint *parse_single_fingerprint(char *fprint_orig) {
       q = FP->OS_name;
       
       while(*p && *p != '\n' && *p != '#') {
-	if (q - FP->OS_name >= (sizeof(FP->OS_name) -2))
+	if (q - FP->OS_name >= (int) (sizeof(FP->OS_name) - 2))
 	  fatal("Ack!  0v3rf0w r3ad|ng fIng3rpRint FiLE!");
 	*q++ = *p++;
       }
@@ -1380,7 +1380,7 @@ while(fgets(line, sizeof(line), fp)) {
   FPs[numrecords] = (FingerPrint *) safe_zalloc(sizeof(FingerPrint));
   q = FPs[numrecords]->OS_name;
   while(*p && *p != '\n' && *p != '#') {
-    if (q - FPs[numrecords]->OS_name >= (sizeof(FPs[numrecords]->OS_name) -2))
+    if (q - FPs[numrecords]->OS_name >= (int) (sizeof(FPs[numrecords]->OS_name) -2))
       fatal("Ack!  0v3rf0w r3ad|ng fIng3rpRint FiLE!");
     *q++ = *p++;
   }
@@ -1785,7 +1785,7 @@ int ipid_sequence(int numSamples, u16 *ipids, int islocalhost) {
 		         find a nonzero */
   int j,k;
 
-  assert(numSamples < (sizeof(ipid_diffs) / 2));
+  assert(numSamples < (int) (sizeof(ipid_diffs) / 2));
   if (numSamples < 2) return IPID_SEQ_UNKNOWN;
 
   for(i = 1; i < numSamples; i++) {

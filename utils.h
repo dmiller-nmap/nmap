@@ -132,7 +132,7 @@ void *safe_malloc(int size);
 /* Zero-initializing version of safe_malloc */
 void *safe_zalloc(int size);
 void hdump(unsigned char *packet, unsigned int len);
-void lamont_hdump(unsigned char *bp, unsigned int length);
+void lamont_hdump(char *cp, unsigned int length);
 int get_random_bytes(void *buf, int numbytes);
 int get_random_int();
 unsigned short get_random_ushort();

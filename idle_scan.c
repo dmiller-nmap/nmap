@@ -109,7 +109,7 @@ int ipid_proxy_probe(struct idle_proxy_info *proxy, int *probes_sent,
   struct timeval tv_sent[3];
   int ipid = -1;
   int to_usec;
-  int bytes;
+  unsigned int bytes;
   int timedout = 0;
   int base_port;
   struct ip *ip;
@@ -161,12 +161,12 @@ int ipid_proxy_probe(struct idle_proxy_info *proxy, int *probes_sent,
 		error("Received IPID zombie probe response which probably came from an earlier prober instance ... increasing rttvar from %d to %d", 
 		      proxy->host.to.rttvar, (int) (proxy->host.to.rttvar * 1.2));
 	      }
-	      proxy->host.to.rttvar *= 1.2;
+	      proxy->host.to.rttvar = (int) (proxy->host.to.rttvar * 1.2);
 	      rcvd++;
 	    }
 	    else if (o.debugging > 1) {
 	      error("Received unexpected response packet from %s during ipid zombie probing:", inet_ntoa(ip->ip_src));
-	      readtcppacket((char *)ip,BSDUFIX(ip->ip_len));
+	      readtcppacket( (unsigned char *) ip,BSDUFIX(ip->ip_len));
 	    }
 	    continue;
 	  }
@@ -217,7 +217,7 @@ void initialize_idleproxy(struct idle_proxy_info *proxy, char *proxyName,
 			  struct in_addr *first_target) {
   int probes_sent = 0, probes_returned = 0;
   int hardtimeout = 9000000; /* Generally don't wait more than 9 secs total */
-  int bytes, to_usec;
+  unsigned int bytes, to_usec;
   int timedout = 0;
   char *p, *q;
   char *endptr = NULL;
@@ -506,7 +506,7 @@ void adjust_idle_timing(struct idle_proxy_info *proxy,
       /* W00p We got a perfect match.  That means we get a slight increase
 	 in allowed group size and we can lightly decrease the senddelay */
 
-      proxy->senddelay *= 0.9;
+      proxy->senddelay = (int) (proxy->senddelay * 0.9);
       proxy->current_groupsz = MIN(proxy->current_groupsz * 1.1, 500000 / (proxy->senddelay + 1));
       proxy->current_groupsz = MIN(proxy->max_groupsz, proxy->current_groupsz);
 
@@ -649,7 +649,7 @@ int idlescan_countopen2(struct idle_proxy_info *proxy,
   } else {
     /* Yeah, we got as many responses as we sent probes.  This calls for a 
        very light timing acceleration ... */
-    proxy->senddelay *= 0.95;
+    proxy->senddelay = (int) (proxy->senddelay * 0.95);
     proxy->current_groupsz = MAX(2, MIN(proxy->current_groupsz, 500000 / (proxy->senddelay+1)));
   }
 

@@ -90,18 +90,19 @@ printf("\n");
 
 /* A better version of hdump, from Lamont Granquist.  Modified slightly
    by Fyodor (fyodor@insecure.org) */
-void lamont_hdump(unsigned char *bp, unsigned int length) {
+void lamont_hdump(char *cp, unsigned int length) {
 
   /* stolen from tcpdump, then kludged extensively */
 
   static const char asciify[] = "................................ !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~.................................................................................................................................";
 
-  register const u_short *sp;
-  register const u_char *ap;
-  register u_int i, j;
-  register int nshorts, nshorts2;
-  register int padding;
-
+  const u_short *sp;
+  const u_char *ap;
+  unsigned char *bp = (unsigned char *) cp;
+  u_int i, j;
+  int nshorts, nshorts2;
+  int padding;
+  
   printf("\n\t");
   padding = 0;
   sp = (u_short *)bp;

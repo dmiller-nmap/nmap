@@ -222,7 +222,7 @@ void printportoutput(struct hoststruct *currenths, portlist *plist) {
 
 char* xml_convert (const char* str) {
   char *temp, ch=0, prevch = 0, *p;
-  temp = malloc(strlen(str)*6+1);
+  temp = (char *) malloc(strlen(str)*6+1);
   for (p = temp;(prevch = ch, ch = *str);str++) {
     char *a;
     switch (ch) {
@@ -253,7 +253,7 @@ char* xml_convert (const char* str) {
     strcpy(p,a); p += strlen(a);
   }
   *p = 0;
-  temp = realloc(temp,strlen(temp)+1);
+  temp = (char *) realloc(temp,strlen(temp)+1);
   return temp;
 }
 
@@ -475,7 +475,7 @@ void output_xml_scaninfo_records(struct scan_lists *scanlist) {
 /* Helper function to write the status and address/hostname info of a host 
    into the XML log */
 static void write_xml_initial_hostinfo(struct hoststruct *currenths,
-				  char *status) {
+				  const char *status) {
   log_write(LOG_XML, "<status state=\"%s\" />\n<address addr=\"%s\" addrtype=\"ipv4\" />\n", status,inet_ntoa(currenths->host));
   if (currenths->name && *currenths->name) {
     log_write(LOG_XML, "<hostnames><hostname name=\"%s\" type=\"PTR\" /></hostnames>\n", currenths->name);
@@ -662,7 +662,7 @@ void printosscanoutput(struct hoststruct *currenths) {
      if (currenths->seq.responses > 3) {
        p=numlst;
        for(i=0; i < currenths->seq.responses; i++) {
-	 if (p - numlst > (sizeof(numlst) - 15)) 
+	 if (p - numlst > (int) (sizeof(numlst) - 15)) 
 	   fatal("STRANGE ERROR #3877 -- please report to fyodor@insecure.org\n");
 	 if (p != numlst) *p++=',';
 	 sprintf(p, "%X", currenths->seq.seqs[i]);
@@ -678,7 +678,7 @@ void printosscanoutput(struct hoststruct *currenths) {
      if (currenths->seq.responses > 2) {
        p=numlst;
        for(i=0; i < currenths->seq.responses; i++) {
-	 if (p - numlst > (sizeof(numlst) - 15)) 
+	 if (p - numlst > (int) (sizeof(numlst) - 15)) 
 	   fatal("STRANGE ERROR #3876 -- please report to fyodor@insecure.org\n");
 	 if (p != numlst) *p++=',';
 	 sprintf(p, "%hX", currenths->seq.ipids[i]);
@@ -691,7 +691,7 @@ void printosscanoutput(struct hoststruct *currenths) {
 
        p=numlst;
        for(i=0; i < currenths->seq.responses; i++) {
-	 if (p - numlst > (sizeof(numlst) - 15)) 
+	 if (p - numlst > (int) (sizeof(numlst) - 15)) 
 	   fatal("STRANGE ERROR #3877 -- please report to fyodor@insecure.org\n");
 	 if (p != numlst) *p++=',';
 	 sprintf(p, "%X", currenths->seq.timestamps[i]);
