@@ -8,7 +8,7 @@ struct ops o;  /* option structure */
 int main(int argc, char *argv[]) {
 char *p;
 int i, j, arg, argvlen;
-short fastscan=0, tcpscan=0, randomize=1, resolve_all=0;
+short fastscan=0, randomize=1, resolve_all=0;
 short quashargv = 0;
 int lookahead = LOOKAHEAD;
 struct timeval tv; /* Just for seeding random generator */
@@ -111,9 +111,12 @@ while((arg = getopt(argc,fakeargv,"Ab:Dde:FfhiL:lM:Nno:P::p:qrRS:s:T:tUuw:Vv")) 
       while(*p) {
 	switch(*p) {
 	case 'F':  o.finscan++;break;
+	case 'N':  o.nullscan++;break;
 	case 'P':  o.pingscan++;break;
 	case 'S':  o.synscan++;break;
+	case 'T':  o.connectscan++;break;
 	case 'U':  o.udpscan++;break;
+	case 'X':  o.xmasscan++;break;
 	default:  error("Scantype %c not supported\n",*p); printusage(argv[0]); break;
 	}
 	p++;
@@ -128,7 +131,7 @@ while((arg = getopt(argc,fakeargv,"Ab:Dde:FfhiL:lM:Nno:P::p:qrRS:s:T:tUuw:Vv")) 
       fatal("Failed to resolve source address, try dotted decimal IP address\n");
     break;
   case 'T': o.ptime = atoi(optarg); break;
-  case 't': tcpscan++; break;
+  case 't': o.connectscan++; break;
   case 'U': o.finscan++; break;
   case 'u': o.udpscan++; break;
   case 'q': quashargv++; break;
@@ -147,7 +150,7 @@ if (!o.isr00t && o.pingtype == icmp) {
   o.pingtype = tcp;
 }
 if (bouncescan && o.pingtype != none) printf("Hint: if your bounce scan target hosts aren't reachable from here, remember to use -P0 so we don't try and ping them prior to the scan\n");
-if (tcpscan && (o.synscan || o.finscan)) 
+if (o.connectscan && (o.synscan || o.finscan)) 
   fatal("Pick just one of -t, -s, and -U.  They all do a TCP portscan.\
  If you are trying to do TCP SYN scanning, just use -s, for FIN use -U, and \
  for normal connect() style scanning, use -t");
@@ -156,10 +159,10 @@ if ((o.fragscan && !o.synscan && !o.finscan)) {
 }
 if (o.udpscan || o.lamerscan) 
   printf("Warning: udp scan is not always 100%c accurate, I will be rewriting it\n", '%'); /* Due to gcc -Wall stupidity */
-if ((o.synscan || o.finscan || o.fragscan) && !o.isr00t)
+if ((o.synscan || o.finscan || o.fragscan || o.xmasscan || o.nullscan) && !o.isr00t)
   fatal("Options specified require r00t privileges.  You don't have them!");
-if (!tcpscan && !o.udpscan && !o.synscan && !o.finscan && !bouncescan && !o.pingscan) {
-  tcpscan++;
+if (!o.connectscan && !o.udpscan && !o.synscan && !o.finscan && !bouncescan && !o.pingscan) {
+  o.connectscan++;
   if (o.verbose) error("No scantype specified, assuming vanilla tcp connect()\
  scan. Use -sP if you really don't want to portscan (and just want to see what hosts are up).");
 if (fastscan && ports)
@@ -200,7 +203,7 @@ if (!o.verbose)
   error("Hint: The -v option notifies you of open ports as they are found.\n");
   */
 if (fastscan)
-  ports = getfastports(o.synscan|tcpscan|o.fragscan|o.finscan|bouncescan,
+  ports = getfastports(o.synscan|o.connectscan|o.fragscan|o.finscan|bouncescan|o.nullscan|o.xmasscan,
                        o.udpscan|o.lamerscan);
 if (!ports && !o.pingscan) ports = getpts("1-1024");
 
@@ -289,11 +292,11 @@ if (!o.device[0] && currenths->flags & HOST_UP && (o.finscan || o.synscan) && !i
 
     /* Time for some actual scanning! */    
     if (currenths->flags & HOST_UP) {
-      if (tcpscan) tcp_scan(currenths, ports, o.ptime);
+      if (o.connectscan) tcp_scan(currenths, ports, o.ptime);
       
       if (o.synscan) syn_scan(currenths, ports);
       
-      if (o.finscan) fin_scan(currenths, ports);
+      if (o.finscan||o.xmasscan||o.nullscan) fin_scan(currenths, ports);
       
       if (bouncescan) {
 	if (ftp.sd <= 0) ftp_anon_connect(&ftp);
@@ -1709,6 +1712,7 @@ int done = 0, badport, starttime, someleft, i, j=0, retries=2;
 int waiting_period = retries, sockaddr_in_size = sizeof(struct sockaddr_in);
 int dupesinarow = 0;
 unsigned bytes;
+int scanflags =0;
 unsigned long timeout;
 struct hostent *myhostent = NULL;
 char response[65535], myname[513];
@@ -1732,9 +1736,12 @@ bzero(portno, o.max_sockets * sizeof(unsigned short));
 bzero(trynum, o.max_sockets * sizeof(unsigned short));
 starttime = time(NULL);
 
+if (o.xmasscan) scanflags = TH_FIN|TH_URG|TH_PUSH;
+else if (o.nullscan) scanflags = 0;
+else if (o.finscan) scanflags = TH_FIN;
 
 if (o.debugging || o.verbose)
-  printf("Initiating FIN stealth scan against %s (%s), sleep delay: %ld useconds\n", target->name, inet_ntoa(target->host), timeout);
+  printf("Initiating FIN,NULL,or Xmas stealth scan against %s (%s), sleep delay: %ld useconds\n", target->name, inet_ntoa(target->host), timeout);
 
 if (!target->source_ip.s_addr) {
   if (gethostname(myname, MAXHOSTNAMELEN) || 
@@ -1788,9 +1795,9 @@ while(!done) {
     }
     if (portno[i]) {
     if (o.fragscan)
-      send_small_fragz(rawsd, &target->source_ip, &target->host, MAGIC_PORT, portno[i], TH_FIN);
+      send_small_fragz(rawsd, &target->source_ip, &target->host, MAGIC_PORT, portno[i], scanflags);
     else send_tcp_raw(rawsd, &target->source_ip , &target->host, MAGIC_PORT, 
-		      portno[i], 0, 0, TH_FIN, 0, 0, 0);
+		      portno[i], 0, 0, scanflags, 0, 0, 0);
     usleep(10000); /* *WE* normally do not need this, but the target 
 		      lamer often does */
     }
@@ -1862,7 +1869,7 @@ while(!done) {
 	  printf("Good port %d detected by fin_scan!\n", portno[i]);
 	addport(&target->ports, portno[i], IPPROTO_TCP, NULL);
 	send_tcp_raw( rawsd, &target->source_ip, &target->host, MAGIC_PORT, portno[i], 0, 0, 
-		      TH_FIN, 0, 0, 0);
+		      scanflags, 0, 0, 0);
 	portno[i] = trynum[i] = 0;
       }
       else someleft = 1;
@@ -1872,7 +1879,7 @@ while(!done) {
 }
  
  if (o.debugging || o.verbose)
-  printf("The TCP stealth FIN scan took %ld seconds to scan %d ports.\n", 
+  printf("The TCP stealth FIN/NULL/XMAS scan took %ld seconds to scan %d ports.\n", 
 	 (long) time(NULL) - starttime, o.numports);
 /*close(tcpsd);*/
 pcap_close(pd);
