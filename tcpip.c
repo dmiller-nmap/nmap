@@ -735,7 +735,7 @@ if (ifc.ifc_len == 0)
 
 /* Read an IP packet using libpcap .  We return the packet and take
    a pcap descripter and a pointer to the packet length (which we set
-   in the function.  If you want a read timeout, specify on in 
+   in the function.  If you want a read timeout, specify one in 
    pcap_open_live(). If you want a maximum length returned, you also
    should specify that in pcap_open_live() */
 
@@ -762,7 +762,9 @@ if (!lastpcap || pd != lastpcap) {
 }
 lastpcap = pd;
 do {
+  printf("Calling pcap_next\n");
   p = (char *) pcap_next(pd, &head);
+  printf("Done with pcap_next\n");
   if (p)
     p += offset;
   else {
