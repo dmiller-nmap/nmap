@@ -487,6 +487,7 @@ o.decoys[o.decoyturn] = currenths->source_ip;
 	}
 	freeFingerPrint(currenths->FP);
       }
+      if (o.debugging) printf("Final times for host: srtt: %d rttvar: %d  to: %d\n", currenths->to.srtt, currenths->to.rttvar, currenths->to.timeout);
     }
     fflush(stdout);
   }
@@ -1255,7 +1256,7 @@ ip2->ip_off = BSDFIX(2);
 ip2->ip_ttl = 255;
 ip2->ip_p = IPPROTO_TCP;
 ip2->ip_src.s_addr = source->s_addr;
-ip2->ip_dst.s_addr= victim->s_addr;
+ip2->ip_dst.s_addr = victim->s_addr;
 #if HAVE_IP_IP_SUM
 ip2->ip_sum = in_cksum((unsigned short *)ip2, sizeof(struct ip));
 #endif
@@ -2145,18 +2146,19 @@ __inline__ void adjust_timeouts(struct timeval sent, struct timeout_info *to) {
   }
   else {
     delta = TIMEVAL_SUBTRACT(end, sent);
-    if (delta >= 25000000) {
+    if (delta >= 8000000) {
       if (o.verbose)
 	error("adjust_timeout: packet supposedly had rtt of %lu microseconds.  Ignoring time.", delta);
       return;
     }
     delta -= to->srtt;
     /* sanity check 2*/
-    if (delta > 1500000 && delta > 10 * to->srtt) {
+    if (delta > 1500000 && delta > 3 * to->srtt + 2 * to->rttvar) {
+      /* WANKER ALERT! */
       if (o.debugging) {
-	printf("Bogus delta: %d (srtt %d)\n", delta, to->srtt);
+	printf("Bogus delta: %d (srtt %d) ... ignoring\n", delta, to->srtt);
       }
-      delta = 7 * to->srtt;
+      return;
     }
     to->srtt += delta >> 3;
     to->rttvar += (ABS(delta) - to->rttvar) >> 2;
@@ -2165,10 +2167,18 @@ __inline__ void adjust_timeouts(struct timeval sent, struct timeout_info *to) {
   if (o.debugging > 1) {
     printf("delta %d ==> srtt: %d rttvar: %d to: %d\n", delta, to->srtt, to->rttvar, to->timeout);
   }
+  if (to->rttvar > 2300000) {
+    printf("RTTVAR has grown to over 2.3 seconds, decreasing to 2.0\n");
+    to->rttvar = 2000000;
+  }
+  
+  /* It hurts to do this ... it really does ... but otherwise we are being
+     too risky */
+  to->timeout = MAX(to->timeout, 75000);
+
   if (to->srtt < 0 || to->rttvar < 0 || to->timeout < 0 || delta < -50000000) {
     fatal("Serious time computation problem in adjust_timeout ... end = (%d, %d) sent=(%d,%d) delta = %d srtt = %d rttvar = %d to = %d", end.tv_sec, end.tv_usec, sent.tv_sec, sent.tv_usec, delta, to->srtt, to->rttvar, to->timeout);
   }
-  
 }
 
 
@@ -2331,7 +2341,7 @@ unsigned short *data;
 	  if (i < 3) trynum = i;
 	  else {
 	    if (o.debugging) 
-	      printf("Strange ACK number from target: %X\n", ntohl(tcp->th_ack));
+	      printf("Strange ACK number from target: %lX\n", (unsigned long) ntohl(tcp->th_ack));
 	    trynum = (current->trynum == 0)? 0 : -1;	    
 	  }
 	  if ((tcp->th_flags & (TH_SYN|TH_ACK)) == (TH_SYN|TH_ACK)) {	  

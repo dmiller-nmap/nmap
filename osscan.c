@@ -38,6 +38,7 @@ unsigned long  seq_avg_inc = 0;
 struct udpprobeinfo *upi = NULL;
 unsigned long seq_gcd = 1;
 unsigned long seq_diffs[NUM_SEQ_SAMPLES];
+int ossofttimeout, oshardtimeout;
 
 /* Init our fingerprint tests to each be NULL */
 bzero(FPtests, sizeof(FPtests)); 
@@ -62,11 +63,14 @@ bzero(FPtests, sizeof(FPtests));
   * header + 64 byte max TCP header.  Had to up it for UDP test
   */
 
-if (!(pd = pcap_open_live(target->device, 650,  (o.spoofsource)? 1 : 0, (target->to.timeout + 500)/ 1000, err0r)))
+ossofttimeout = MAX(200000, target->to.timeout);
+oshardtimeout = MAX(500000, 5 * target->to.timeout);
+
+if (!(pd = pcap_open_live(target->device, 650,  (o.spoofsource)? 1 : 0, (ossofttimeout + 500)/ 1000, err0r)))
   fatal("pcap_open_live: %s", err0r);
 
 if (o.debugging)
-  printf("Wait time is %d\n", (target->to.timeout +500)/1000);
+  printf("Wait time is %d\n", (ossofttimeout +500)/1000);
 
 if (pcap_lookupnet(target->device, &localnet, &netmask, err0r) < 0)
   fatal("Failed to lookup device subnet/netmask: %s", err0r);
@@ -120,10 +124,10 @@ if (o.verbose && openport != -1)
      ip = (struct ip*) readip_pcap(pd, &bytes);
      gettimeofday(&t2, NULL);
      if (!ip) { 
-       if (TIMEVAL_SUBTRACT(t2,t1) > target->to.timeout)
+       if (TIMEVAL_SUBTRACT(t2,t1) > ossofttimeout)
 	 timeout = 1;
        continue; 
-     } else if (TIMEVAL_SUBTRACT(t2,t1) > 5 * target->to.timeout) {
+     } else if (TIMEVAL_SUBTRACT(t2,t1) > oshardtimeout) {
        timeout = 1;
      }		  
      if (bytes < (4 * ip->ip_hl) + 4)
@@ -309,7 +313,7 @@ if (o.verbose && openport != -1)
    timeout = 0;
    while(( ip = (struct ip*) readip_pcap(pd, &bytes)) && !timeout) {
      gettimeofday(&t2, NULL);
-     if (TIMEVAL_SUBTRACT(t2,t1) > 5 * target->to.timeout) {
+     if (TIMEVAL_SUBTRACT(t2,t1) > oshardtimeout) {
        timeout = 1;
      }
      if (bytes < (4 * ip->ip_hl) + 4)
@@ -340,6 +344,7 @@ if (o.verbose && openport != -1)
 	 error("We only got %d bytes out of %d on our ICMP port unreachable packet, skipping", bytes, ntohs(ip->ip_len));
 	 continue;
        }
+       if (FPtests[8]) continue;
        FPtests[8] = safe_malloc(sizeof(FingerPrint));
        bzero(FPtests[8], sizeof(FingerPrint));
        FPtests[8]->results = fingerprint_portunreach(ip, upi);
@@ -642,7 +647,7 @@ bzero(si, sizeof(si));
   FP_matches[try] = match_fingerprint(FPs[try]);
   if (FP_matches[try][0]) 
     break;
-  usleep(target->to.timeout);
+  sleep(2);
  }
  if (try == 0) {
    /* Everything is hunky-dory so we do nothing */
@@ -934,8 +939,10 @@ sethdrinclude(sd);
    ip->ip_p = IPPROTO_UDP;
    ip->ip_src.s_addr = source->s_addr;
    ip->ip_dst.s_addr= victim->s_addr;
+
+   upi.ipck = in_cksum((unsigned short *)ip, sizeof(struct ip));
 #if HAVE_IP_IP_SUM
-   ip->ip_sum = in_cksum((unsigned short *)ip, sizeof(struct ip));
+   ip->ip_sum = upi.ipck;
 #endif
 
    /* OK, now if this is the real she-bang (ie not a decoy) then
@@ -943,7 +950,6 @@ sethdrinclude(sd);
    if (decoy == o.decoyturn) {   
      upi.iptl = 28 + datalen;
      upi.ipid = id;
-     upi.ipck = ip->ip_sum;
      upi.sport = sport;
      upi.dport = dport;
      upi.udpck = udp->uh_sum;
@@ -979,7 +985,8 @@ struct icmp *icmp;
 struct ip *ip2;
 int numtests = 9;
 unsigned short checksum;
-struct udphdr_bsd *udp;
+unsigned short *checksumptr;
+udphdr_bsd *udp;
 struct AVal *AVs;
 int i;
 int current_testno = 0;
@@ -1000,7 +1007,7 @@ if (icmp->icmp_type != 3 || icmp->icmp_code != 3)
   return NULL; /* Not a port unreachable */
 
 ip2 = (struct ip*) ((char *)icmp + 8);
-udp = (struct udphdr_bsd *) ((char *)ip2 + 20);
+udp = (udphdr_bsd *) ((char *)ip2 + 20);
 
 /* The ports better match as well ... */
 if (ntohs(udp->uh_sport) != upi->sport || ntohs(udp->uh_dport) != upi->dport) {
@@ -1054,17 +1061,21 @@ current_testno++;
 
 /* Let us see if the IP checksum we got back computes */
 AVs[current_testno].attribute = "RIPCK";
-if (ntohs(ip2->ip_sum) == 0)
+/* Thanks to some machines not having struct ip member ip_sum we
+   have to go with this BS */
+checksumptr = (unsigned short *)   ((char *) ip2 + 10);
+checksum =   *checksumptr;
+
+if (checksum == 0)
   sprintf(AVs[current_testno].value, "0");
 else {
-  checksum = ip2->ip_sum;
-  ip2->ip_sum = 0;
+  *checksumptr = 0;
   if (in_cksum((unsigned short *)ip2, 20) == checksum) {
     sprintf(AVs[current_testno].value, "E"); /* The "expected" value */
   } else {
     sprintf(AVs[current_testno].value, "F"); /* They fucked it up */
   }
-  ip2->ip_sum = checksum;
+  *checksumptr = checksum;
 }
 
 current_testno++;

@@ -11,7 +11,7 @@
 # T6 is an ACK to closed port w/options
 # T7 is a FIN|PSH|URG to a closed port w/options
 
-FingerPrint 3COM SuperStack hub  # 24 port 10mb / 2 port 100mb Thanks to Digital Messiah
+FingerPrint *NOPU* 3COM SuperStack hub  # 24 port 10mb / 2 port 100mb Thanks to Digital Messiah
 TSeq(Class=C%Val=803)
 T1(DF=N%W=400%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=APR%Ops=)
@@ -45,6 +45,17 @@ PU(DF=N%TOS=0%IPLEN=38%RIPTL=15C%RID=E%RIPCK=F%UCK=0%ULEN=134%DAT=E)
 
 FingerPrint  AIX 4.1
 TSeq(Class=64K)
+T1(DF=N%W=3E43%ACK=S++%Flags=AS%Ops=MNWNNT)
+T2(Resp=N)
+T3(Resp=N)
+T4(DF=N%W=4000%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=15C%RID=E%RIPCK=F%UCK=0%ULEN=134%DAT=E)
+
+FingerPrint  AIX 4.1
+TSeq(Class=64K)
 T1(DF=N%W=FFAF%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
 T3(Resp=N)
@@ -52,6 +63,7 @@ T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=15C%RID=E%RIPCK=F%UCK=0%ULEN=134%DAT=E)
 
 FingerPrint  AIX 4.1
 TSeq(Class=64K)
@@ -62,6 +74,7 @@ T4(DF=N%W=4000%ACK=O%Flags=R%Ops=)
 T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=15C%RID=E%RIPCK=F%UCK=0%ULEN=134%DAT=E)
 
 FingerPrint AIX 4.2
 TSeq(Class=TR)
@@ -72,6 +85,7 @@ T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=15C%RID=E%RIPCK=F%UCK=0%ULEN=134%DAT=E)
 
 FingerPrint AIX 4.2
 TSeq(Class=TR)
@@ -95,7 +109,7 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=15C%RID=E%RIPCK=F%UCK=0%ULEN=134%DAT=E)
 
-FingerPrint ALANTEC PowerHub, 2.5-Beta12 (s1.28) # Thanks to David O'Brien
+FingerPrint *NOPU* ALANTEC PowerHub, 2.5-Beta12 (s1.28) # Thanks to David O'Brien
 TSeq(Class=64K)
 T1(Resp=Y%DF=N%W=200%ACK=S++%Flags=AS%Ops=)
 T2(Resp=N)
@@ -105,7 +119,7 @@ T5(Resp=N)
 T6(Resp=N)
 T7(Resp=N)
 
-FingerPrint  Apple Computer LaserWriter 12/640 PS Printer
+FingerPrint  *NOPU* Apple Computer LaserWriter 12/640 PS Printer
 TSeq(Class=C%Val=C7001)
 T1(DF=Y%W=111C%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=O%Flags=R%Ops=)
@@ -115,7 +129,62 @@ T5(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=O%Flags=R%Ops=)
 
-FingerPrint  BSDI BSD/OS 2.1  # Thanks to dmessiah@silcon.com
+FingerPrint  Apple Color LaserWrite 600 Printer # Thanks to Pluvius
+TSeq(Class=C%Val=F4990800)
+T1(DF=N%W=A28%ACK=S++%Flags=AS%Ops=M)
+T2(Resp=N)
+T3(Resp=Y%DF=N%W=A28%ACK=S++%Flags=AS%Ops=M)
+T4(DF=N%W=800%ACK=O%Flags=R%Ops=)
+T5(Resp=N)
+T6(DF=N%W=800%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=800%ACK=S++%Flags=AR%Ops=)
+PU(Resp=N)
+
+FingerPrint  Asanta IntraStack Ethernet Switch (6014 DSB Versions: BP(2.06 ), FW(1.03 ))
+TSeq(Class=C%Val=4090000)
+T1(DF=N%W=400%ACK=S++%Flags=AS%Ops=M)
+T2(Resp=Y%DF=N%W=0%ACK=S%Flags=APR%Ops=)
+T3(Resp=Y%DF=N%W=400%ACK=S++%Flags=AS%Ops=M)
+T4(DF=N%W=0%ACK=S%Flags=APR%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=APR%Ops=)
+T6(DF=N%W=0%ACK=S%Flags=APR%Ops=)
+T7(DF=N%W=0%ACK=S%Flags=APR%Ops=)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
+
+FingerPrint  Asanta IntraSwitch 5324
+TSeq(Class=C%Val=80000)
+T1(Resp=Y%DF=N%W=400%ACK=S++%Flags=AS%Ops=M)
+T2(Resp=Y%DF=N%W=0%ACK=S%Flags=APR%Ops=)
+T3(Resp=Y%DF=N%W=400%ACK=S++%Flags=AS%Ops=M)
+T4(Resp=Y%DF=N%W=0%ACK=S%Flags=APR%Ops=)
+T5(Resp=Y%DF=N%W=0%ACK=S++%Flags=APR%Ops=)
+T6(Resp=Y%DF=N%W=0%ACK=S%Flags=APR%Ops=)
+T7(Resp=Y%DF=N%W=0%ACK=S%Flags=APR%Ops=)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
+
+FingerPrint  AsanteHub 2072 Ethernet Hub
+TSeq(Class=C%Val=B080000)
+T1(DF=N%W=400%ACK=S++%Flags=AS%Ops=M)
+T2(Resp=Y%DF=N%W=0%ACK=S%Flags=APR%Ops=)
+T3(Resp=Y%DF=N%W=400%ACK=S++%Flags=AS%Ops=M)
+T4(DF=N%W=0%ACK=S%Flags=APR%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=APR%Ops=)
+T6(DF=N%W=0%ACK=S%Flags=APR%Ops=)
+T7(DF=N%W=0%ACK=S%Flags=APR%Ops=)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
+
+FingerPrint  AXIS NetEye Camera Server V1.20 # Thanks to Pluvius
+TSeq(Class=C)
+T1(Resp=Y%DF=N%W=100%ACK=S++%Flags=AS%Ops=M)
+T2(Resp=N)
+T3(Resp=Y%DF=N%W=100%ACK=O%Flags=A%Ops=)
+T4(Resp=Y%DF=N%W=100%ACK=O%Flags=R%Ops=)
+T5(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(Resp=Y%DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+PU(Resp=N)
+
+FingerPrint  *NOPU* BSDI BSD/OS 2.1  # Thanks to dmessiah@silcon.com
 TSeq(Class=RI%gcd=<9)
 T1(DF=N%W=2017|805C%ACK=S++%Flags=AS%Ops=MNWNNT)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -147,7 +216,7 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=15C%RID=F%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
-FingerPrint  BSDI BSD/OS 4.0
+FingerPrint  *NOPU* BSDI BSD/OS 4.0
 TSeq(Class=RI%gcd=<9)
 T1(DF=Y%W=2017%ACK=S++%Flags=AS%Ops=MNWNNT)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -157,7 +226,18 @@ T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 
-FingerPrint  Cisco Catalyst 1900 switch
+FingerPrint  Cisco 2501 IOS Version 11.1(20)  # Thanks to Pluvius
+TSeq(Class=RI%gcd=<6%SI=<5000)
+T1(Resp=Y%DF=N%W=860%ACK=S++%Flags=AS%Ops=M)
+T2(Resp=Y%DF=N%W=0%ACK=O%Flags=AR%Ops=)
+T3(Resp=Y%DF=N%W=860%ACK=S++%Flags=AS%Ops=M)
+T4(Resp=Y%DF=N%W=0%ACK=O%Flags=R%Ops=)
+T5(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(Resp=Y%DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
+
+FingerPrint  Cisco Catalyst 1900 switch  # Thanks to Stuart Stock
 TSeq(Class=TD%gcd=2500|5000|7500|10000|12500|15000|17500|20000%SI=<100) 
 T1(DF=N%W=400%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -178,7 +258,7 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=C0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
-FingerPrint  Cisco 4500 Router (IOS 11.2(4))
+FingerPrint  *NOPU* Cisco 4500 Router (IOS 11.2(4))  # Thanks to Stuart Stock
 TSeq(Class=RI%gcd=<10)
 T1(DF=N%W=810%ACK=S++%Flags=AS%Ops=ML)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -189,7 +269,7 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 
 FingerPrint  Cisco 7513 Router
-TSeq(Class=RI%gcd=<5%SI=<50000)
+TSeq(Class=RI%gcd=<5%SI=<70000)
 T1(DF=N%W=10C0%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=O%Flags=AR%Ops=)
 T3(Resp=Y%DF=N%W=10C0%ACK=S++%Flags=AS%Ops=M)
@@ -197,6 +277,16 @@ T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
+T8(Resp=N)
+
+FingerPrint  ComOS - Livingston PortMaster (unknown version number) 
+T2(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T3(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T4(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T5(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T7(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=F%UCK=0%ULEN=134%DAT=E)
 
 FingerPrint Cray Unicos 9.0 - 10.0 or Unicos/mk 1.5.1  # Thanks to Mea Culpa
 TSeq(Class=RI%gcd=<9)
@@ -242,7 +332,7 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=0%ULEN=134%DAT=E)
 
-FingerPrint  FreeBSD 2.2.6 - 3.0 Beta
+FingerPrint  FreeBSD 2.2.6 - 3.0
 TSeq(Class=RI%gcd=<5)
 T1(DF=Y%W=403D%ACK=S++%Flags=AS%Ops=MNWNNT)
 T2(Resp=N)
@@ -253,18 +343,19 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=F%RIPCK=F%UCK=0%ULEN=134%DAT=E)
 
+# Probably includes FreeBSD 2.2.6 and later, can anyone confirm?
 FingerPrint  FreeBSD 3.0  #Thanks to Jan Koum
 TSeq(Class=RI%gcd=<6)
-T1(DF=Y%W=402E%ACK=S++%Flags=AS%Ops=M)
+T1(DF=Y%W=402E|C08A%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
-T3(Resp=Y%DF=Y%W=402E%ACK=S++%Flags=AS%Ops=M)
+T3(Resp=Y%DF=Y%W=402E|C08A%ACK=S++%Flags=AS%Ops=M)
 T4(DF=N%W=4000%ACK=O%Flags=R%Ops=)
 T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=F%RIPCK=F%UCK=0%ULEN=134%DAT=E)
 
-FingerPrint HP JetDirect Print Server
+FingerPrint *NOPU* HP JetDirect Print Server
 TSeq(Class=TD%gcd=1%SI=1)
 T1(DF=N%W=16D0%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -274,7 +365,7 @@ T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 T7(Resp=N)
 
-FingerPrint HP JetDirect Printer
+FingerPrint *NOPU* HP JetDirect Printer
 TSeq(Class=TD%gcd=4|8|12%SI=<30)
 T1(Resp=Y%DF=N%W=860%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -306,7 +397,7 @@ T6(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 T7(Resp=N)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=0%UCK=E%ULEN=134%DAT=E)
 
-FingerPrint  HP LaserJet (unknown version) # Thanks to jwa@jammed.com
+FingerPrint  *NOPU* HP LaserJet (unknown version) # Thanks to jwa@jammed.com
 TSeq(Class=TD%gcd=<9)
 T1(DF=N%W=C90%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -345,7 +436,7 @@ T6(Resp=Y%DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=0%UCK=E%ULEN=134%DAT=E)
 
-FingerPrint  HP-UX B.10.20 A 9000/715 9000/712 #Thanks to Lamont Granquist, David O'Brien
+FingerPrint  HP-UX B.10.20 A 9000/715 or 9000/712 or 9000/871 #Thanks to Lamont Granquist, David O'Brien
 TSeq(Class=64K)
 T1(DF=Y%W=8000%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -378,7 +469,7 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
-FingerPrint  IBM OS/2 V.3  # Thanks to van Hauser (vh@reptile.rug.ac.be)
+FingerPrint  *NOPU* IBM OS/2 V.3  # Thanks to van Hauser (vh@reptile.rug.ac.be)
 TSeq(Class=i800)
 T1(DF=N%W=7000%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -388,7 +479,7 @@ T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 
-FingerPrint  IBM MVS TCP/IP stack V. 3.2
+FingerPrint  *NOPU* IBM MVS TCP/IP stack V. 3.2
 TSeq(Class=TD%gcd=100|200|300|400|500%SI=<500)
 T1(DF=N%W=FFFF%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -398,7 +489,7 @@ T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 
-FingerPrint  IMB MVS TCP/IP stack V. 3.2
+FingerPrint  *NOPU-2* IBM MVS TCP/IP stack V. 3.2
 TSeq(Class=RI%gcd=<10%SI=<3000)
 T1(DF=N%W=8000%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -485,7 +576,7 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
-FingerPrint  Kalpana EtherSwitch or Cisco Catalyst 1900 switch
+FingerPrint  *NOPU* Kalpana EtherSwitch or Cisco Catalyst 1900 switch
 TSeq(Class=TD%gcd=<9)
 T1(DF=N%W=400%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -495,7 +586,19 @@ T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 
-FingerPrint Lexmark Optra S 1659 (MarkNetS) Printer
+FingerPrint  Kentrox Datasmart 656 CSU/DSU  # Thanks to Pluvius
+TSeq(Class=TD%gcd=25000|50000|75000%SI=0)
+T1(DF=N%W=400%ACK=S++%Flags=AS%Ops=M)
+T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
+T3(Resp=Y%DF=N%W=400%ACK=S++%Flags=AS%Ops=M)
+T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
+
+
+FingerPrint  Lexmark Optra S 1659 (MarkNetS) Printer
 TSeq(Class=TD%gcd=5011|10022%SI=<50)
 T1(DF=N%W=3F6%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -562,6 +665,26 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=C0%IPLEN=164%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
+FingerPrint  Meridian Data Network CD-ROM Server (V4.20 Nov 26 1997)
+TSeq(Class=C)
+T1(DF=N%W=200%ACK=S++%Flags=AS%Ops=M)
+T2(Resp=N)
+T3(Resp=Y%DF=N%W=200%ACK=O%Flags=A%Ops=)
+T4(DF=N%W=200%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=) PU(Resp=N)
+
+FingerPrint  Meridian Data Network CD-ROM Server (V4.20 Nov 26 1997)
+TSeq(Class=TD%gcd=262144%SI=0)
+T1(DF=N%W=200%ACK=S++%Flags=AS%Ops=M)
+T2(Resp=N)
+T3(Resp=Y%DF=N%W=200%ACK=O%Flags=A%Ops=)
+T4(DF=N%W=200%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=) PU(Resp=N)
+
 FingerPrint NetBSD 1.3.X       # Thanks to jwa@jammed.com and Lamont Granquist
 TSeq(Class=RI%gcd=<5)
 T1(DF=N%W=4000%ACK=S++%Flags=AS%Ops=MNWNNT)
@@ -572,6 +695,17 @@ T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=0%UCK=0%ULEN=134%DAT=E)
+
+FingerPrint Novell Netware V4.11 (I think)
+TSeq(Class=TD%gcd=16|32|48%SI=<500)
+T1(DF=Y%W=8000|1FFF%ACK=S++%Flags=AS%Ops=M)
+T2(Resp=N)
+T3(Resp=Y%DF=Y%W=7FFF|1FFE%ACK=O%Flags=AS%Ops=M)
+T4(Resp=N)
+T5(DF=Y%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=Y%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=Y%W=0%ACK=S++%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=F%ULEN=134%DAT=E)
 
 FingerPrint OpenBSD 2.3
 TSeq(Class=RI%gcd=<5)
@@ -595,7 +729,29 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=F%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
-FingerPrint  Shiva LanRover/E PLUS
+FingerPrint  SCO OpenServer Release 5
+TSeq(Class=RI%gcd=<6)
+T1(DF=N%W=6000%ACK=S++%Flags=AS%Ops=M)
+T2(Resp=N)
+T3(Resp=Y%DF=N%W=6041%ACK=O%Flags=A%Ops=)
+T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
+
+FingerPrint  Unknown SCO Version -- SysV R3.2 # Thanks to Stuart Stock
+TSeq(Class=64K)
+T1(DF=N%W=1000%ACK=S++%Flags=AS%Ops=M)
+T2(Resp=N)
+T3(Resp=Y%DF=N%W=FFC%ACK=O%Flags=A%Ops=)
+T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=F%RIPCK=0%UCK=0%ULEN=134%DAT=E)
+
+FingerPrint  *NOPU* Shiva LanRover/E PLUS   # Thanks to Stuart Stock
 TSeq(Class=64K) 
 T1(DF=N%W=F87%ACK=S++%Flags=AS%Ops=M) 
 T2(Resp=N)
@@ -660,7 +816,7 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=0%ULEN=134%DAT=E)
 
-FingerPrint  Tektronix Model 560 Printer
+FingerPrint  *NOPU* Tektronix Model 560 Printer  # Thanks to Stuart Stock
 TSeq(Class=RI%gcd=<5) 
 T1(DF=N%W=1000%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N) 
@@ -681,8 +837,8 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=F%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
-FingerPrint Windows Windows NT4 / Win95
-TSeq(Class=TD%gcd=1|2|3|4|5|10|20|30|40%SI=<500)
+FingerPrint Windows Windows NT4 / Win95 / Win98
+TSeq(Class=TD|RI%gcd=1|2|3|4|5|10|20|30|40%SI=<500)
 T1(DF=Y%W=2017%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
 T3(Resp=Y%DF=Y%W=2017%ACK=S++%Flags=AS%Ops=M)
@@ -691,27 +847,6 @@ T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=S++|O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
-
-# Does this count 95/NT?
-# FingerPrint Windows 95/98/NT  #I think this counts Win98, can anyone verify?
-# TSeq(Class=TD)
-# T1(DF=Y%W=2017%ACK=S++%Flags=AS%Ops=M)
-# T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
-# T3(Resp=Y%W=2017%Flags=AS%Ops=M)
-# T4(DF=N%W=0%Flags=R%Ops=)
-# T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
-# T6(DF=N%W=0%Flags=R%Ops=)
-# T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
-
-FingerPrint Windows 95/98/NT  #I think this counts Win98, can anyone verify?
-TSeq(Class=RI%SI=<500)
-T1(DF=Y%W=2017%ACK=S++%Flags=AS%Ops=M)
-T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
-T3(Resp=Y%W=2017%Flags=AS%Ops=M)
-T4(DF=N%W=0%Flags=R%Ops=)
-T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
-T6(DF=N%W=0%Flags=R%Ops=)
-T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 
 FingerPrint VAX 7000-610 or 4200/SPX OR 6000-430
 TSeq(Class=64K)
@@ -735,7 +870,7 @@ T6(Resp=Y%DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(Resp=Y%DF=N%W=0%ACK=O%Flags=R%Ops=)
 PU(Resp=N)
 
-FingerPrint Xerox DocuPrint C55
+FingerPrint *NOPU* Xerox DocuPrint C55
 TSeq(Class=TR)
 T1(DF=N%W=100%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=O%Flags=R%Ops=)

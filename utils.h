@@ -23,7 +23,7 @@
 #define TRUE 1
 #endif
 
-#define TIMEVAL_SUBTRACT(a,b) ((a.tv_sec - b.tv_sec) * 1000000 + a.tv_usec - b.tv_usec)
+#define TIMEVAL_SUBTRACT(a,b) (((a).tv_sec - (b).tv_sec) * 1000000 + (a).tv_usec - (b).tv_usec)
 
 void *safe_malloc(int size);
 void hdump(unsigned char *packet, int len);

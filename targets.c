@@ -258,7 +258,7 @@ struct scanstats ss;
 struct timeval begin_select;
 struct pingtech ptech;
 struct tcpqueryinfo tqi;
-int max_block_size = 150;
+int max_block_size = 40;
 struct ppkt {
   unsigned char type;
   unsigned char code;
@@ -309,7 +309,7 @@ time = safe_malloc(sizeof(struct timeval) * ((pt.max_tries) * num_hosts));
 id = (unsigned short) rand();
 
 if (ptech.connecttcpscan) 
-  max_block_size = MIN(150, o.max_sockets);
+  max_block_size = MIN(50, o.max_sockets);
 
 
 bzero((char *)&tqi, sizeof(tqi));
@@ -456,8 +456,6 @@ gettimeofday(&start, NULL);
 
    if ((pt.block_tries == 1) || (pt.block_tries == 2 && pt.up_this_block == 0 && pt.down_this_block == 0)) 
      /* Then it did not miss any hosts (that we know of)*/
-     if (ptech.rawicmpscan + ptech.icmpscan + ptech.connecttcpscan +
-	 ptech.rawtcpscan == 1)
        pt.group_size = MIN(pt.group_size + blockinc, max_block_size);
    
    /* Move to next block */
@@ -481,8 +479,10 @@ gettimeofday(&start, NULL);
  return;
 }
 
-int sendconnecttcpquery(struct hoststruct *hostbatch, struct tcpqueryinfo *tqi, struct hoststruct *target, 
-			int seq, struct timeval *time, struct pingtune *pt, struct timeout_info *to) {
+int sendconnecttcpquery(struct hoststruct *hostbatch, struct tcpqueryinfo *tqi,
+			struct hoststruct *target, int seq, 
+			struct timeval *time, struct pingtune *pt, 
+			struct timeout_info *to) {
 
   int res,i;
   int tmpsd;
@@ -906,7 +906,6 @@ while(pt->block_unaccounted > 0) {
       if (o.debugging) 
 	printf("We got a TCP ping packet back from %s (hostnum = %d trynum = %d\n", inet_ntoa(*(struct in_addr *)(&response.ip.ip_src.s_addr)),
 	       hostnum, trynum);
-      foundsomething = 1;
       pingtype = PINGTYPE_RAWTCP;
       foundsomething = 1;
       if (pt->discardtimesbefore < response.sequence)
@@ -938,9 +937,12 @@ int hostnum = target - hostbatch;
 int i;
 int seq;
 int tmpsd;
+struct timeval tv;
 
-if (o.debugging) 
-  printf("Hostupdate called for machne %s state %s -> %s (trynum %d)\n", inet_ntoa(target->host), readhoststate(target->flags), readhoststate(newstate), trynum);
+if (o.debugging)  {
+  gettimeofday(&tv, NULL);
+  printf("Hostupdate called for machne %s state %s -> %s (trynum %d, dotimeadj: %s time: %ld)\n", inet_ntoa(target->host), readhoststate(target->flags), readhoststate(newstate), trynum, (dotimeout)? "yes" : "no", TIMEVAL_SUBTRACT(tv, *sent));
+}
 assert(hostnum <= pt->group_end);
 
 if (dotimeout) {
@@ -979,9 +981,11 @@ if (target->flags & HOST_UP) {
 
 if (trynum > 0 && !(pt->dropthistry)) {
   pt->dropthistry = 1;
+  if (o.debugging) 
+    printf("Decreasing massping group size from %d to ", pt->group_size);
   pt->group_size = MAX(pt->group_size * 0.75, 10);
   if (o.debugging) 
-    printf("Decreasing massping group size to %d\n", pt->group_size);
+    printf("%d\n", pt->group_size);
 }
 
 if (newstate == HOST_DOWN && (target->flags & HOST_DOWN)) {
