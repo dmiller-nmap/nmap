@@ -78,10 +78,11 @@ static inline int gethostnum(Target *hostbatch[], Target *target) {
 /* Internal function to update the state of machine (up/down/etc) based on
    ping results */
 static int hostupdate(Target *hostbatch[], Target *target, 
-	       int newstate, int dotimeout, int trynum, 
-	       struct timeout_info *to, struct timeval *sent, 
-	       struct pingtune *pt, struct tcpqueryinfo *tqi, 
-	       enum pingstyle style)
+		      int newstate, int dotimeout, int trynum, 
+		      struct timeout_info *to, struct timeval *sent, 
+		      struct timeval *rcvd,
+		      struct pingtune *pt, struct tcpqueryinfo *tqi, 
+		      enum pingstyle style)
 {
 
   int hostnum = gethostnum(hostbatch, target);
@@ -90,7 +91,7 @@ static int hostupdate(Target *hostbatch[], Target *target,
   int seq;
   int tmpsd;
   struct timeval tv;
-  
+
   if (o.debugging)  {
     gettimeofday(&tv, NULL);
     log_write(LOG_STDOUT, "Hostupdate called for machine %s state %s -> %s (trynum %d, dotimeadj: %s time: %ld)\n", target->targetipstr(), readhoststate(target->flags), readhoststate(newstate), trynum, (dotimeout)? "yes" : "no", (long) TIMEVAL_SUBTRACT(tv, *sent));
@@ -99,7 +100,11 @@ static int hostupdate(Target *hostbatch[], Target *target,
   assert(hostnum <= pt->group_end);
   
   if (dotimeout) {
-    adjust_timeouts(*sent, to);
+    if (!rcvd) {
+      rcvd = &tv;
+      gettimeofday(&tv, NULL);
+    }
+    adjust_timeouts2(sent, rcvd, to);
   }
   
   /* If this is a tcp connect() pingscan, close all sockets */
@@ -315,7 +320,7 @@ struct sockaddr_in sock;
 u16 seq = 0;
 int sd = -1, rawsd = -1, rawpingsd = -1;
 struct timeval *time;
-struct timeval start, end, t2;
+struct timeval start, end;
 unsigned short id;
 pcap_t *pd = NULL;
 char filter[512];
@@ -330,7 +335,6 @@ bzero((char *) &pt, sizeof(pt));
 
 pt.up_this_block = 0;
 pt.block_unaccounted = LOOKAHEAD;
-pt.discardtimesbefore = 0;
 pt.down_this_block = 0;
 pt.num_responses = 0;
 pt.max_tries = 5; /* Maximum number of tries for a block */
@@ -454,7 +458,6 @@ gettimeofday(&start, NULL);
  
  while(pt.group_start < num_hosts) { /* while we have hosts left to scan */
    do { /* one block */
-     pt.discardtimesbefore = -1;
      pt.up_this_block = 0;
      pt.down_this_block = 0;
      pt.block_unaccounted = 0;
@@ -477,6 +480,7 @@ gettimeofday(&start, NULL);
 	   block_socket(sd); sd_blocking = 1; 
 	 }
 	 pt.block_unaccounted++;
+	 gettimeofday(&time[seq - pt.seq_offset], NULL);
 	 if (ptech.icmpscan || ptech.rawicmpscan)
 	   sendpingqueries(sd, rawpingsd, hostbatch[hostnum],  
 			   seq, pt.seq_offset, id, &ss, time, pingtype, ptech);
@@ -486,13 +490,6 @@ gettimeofday(&start, NULL);
 
 	 else if (ptech.connecttcpscan) {
 	   sendconnecttcpqueries(hostbatch, &tqi, hostbatch[hostnum], seq, time, &pt, &to, max_width);
-	 }
-
-	 gettimeofday(&t2, NULL);
-	 if (TIMEVAL_SUBTRACT(t2,time[seq - pt.seq_offset]) > 1000000) {
-	   pt.discardtimesbefore = hostnum;
-	   if (o.debugging) 
-	     log_write(LOG_STDOUT, "Huge send delay: %lu microseconds\n", (unsigned long) TIMEVAL_SUBTRACT(t2,time[seq - pt.seq_offset]));
 	 }
        }
      } /* for() loop */
@@ -615,22 +612,21 @@ int sendconnecttcpquery(Target *hostbatch[], struct tcpqueryinfo *tqi,
 #if HAVE_IPV6
   else sin6->sin6_port = htons(o.ping_synprobes[probe_port_num]);
 #endif //HAVE_IPV6
-  
+
   res = connect(tqi->sockets[probe_port_num][seq],(struct sockaddr *)&sock, socklen);
-  gettimeofday(&time[seq], NULL);
 
   if ((res != -1 || errno == ECONNREFUSED)) {
     /* This can happen on localhost, successful/failing connection immediately
        in non-blocking mode */
       hostupdate(hostbatch, target, HOST_UP, 1, trynum, to, 
-		 &time[seq], pt, tqi, pingstyle_connecttcp);
+		 &time[seq], NULL, pt, tqi, pingstyle_connecttcp);
     if (tqi->maxsd == tqi->sockets[probe_port_num][seq]) tqi->maxsd--;
   }
   else if (errno == ENETUNREACH) {
     if (o.debugging) 
       error("Got ENETUNREACH from sendconnecttcpquery connect()");
     hostupdate(hostbatch, target, HOST_DOWN, 1, trynum, to, 
-	       &time[seq], pt, tqi, pingstyle_connecttcp);
+	       &time[seq], NULL, pt, tqi, pingstyle_connecttcp);
   }
   else {
     /* We'll need to select() and wait it out */
@@ -684,7 +680,7 @@ else {
  
  send_udp_raw_decoys( rawsd, target->v4hostip(), o.ttl, sportbase + trynum, probe_port, seq, o.extra_payload, o.extra_payload_length);
 
- gettimeofday(&time[seq - pt->seq_offset], NULL);
+
  return 0;
 }
 
@@ -704,6 +700,7 @@ else {
  myseq = (get_random_uint() << 22) + (seq << 6) + 0x1E; /* (response & 0x3F) better be 0x1E or 0x1F */
  myack = (get_random_uint() << 22) + (seq << 6) + 0x1E; /* (response & 0x3F) better be 0x1E or 0x1F */
  o.decoys[o.decoyturn].s_addr = target->v4source().s_addr;
+
  if (pingtype & PINGTYPE_TCP_USE_SYN) {   
    send_tcp_raw_decoys( rawsd, target->v4hostip(), o.ttl, sportbase + trynum, probe_port, myseq, myack, TH_SYN, 0, NULL, 0, o.extra_payload, 
 			o.extra_payload_length);
@@ -712,7 +709,6 @@ else {
 			o.extra_payload_length);
  }
 
- gettimeofday(&time[seq - pt->seq_offset], NULL);
  return 0;
 }
 
@@ -817,7 +813,7 @@ if (ptech.icmpscan) {
      send_ip_raw( rawsd, &o.decoys[decoy], target->v4hostip(), o.ttl, IPPROTO_ICMP, ping, icmplen);
    }
  }
- gettimeofday(&time[seq - seq_offset], NULL);
+
  return 0;
 }
 
@@ -912,7 +908,7 @@ while(pt->block_unaccounted) {
 	      }
 	      if (foundsomething) {
 	        hostupdate(hostbatch, hostbatch[hostindex], newstate, 1, trynum,
-			 to,  &time[seq], pt, tqi, pingstyle_connecttcp);
+			 to,  &time[seq], NULL, pt, tqi, pingstyle_connecttcp);
 	      /*	      break;*/
 	      }
 	    }
@@ -956,7 +952,7 @@ return 0;
 
 int get_ping_results(int sd, pcap_t *pd, Target *hostbatch[], int pingtype, struct timeval *time,  struct pingtune *pt, struct timeout_info *to, int id, struct pingtech *ptech, struct scan_lists *ports) {
   fd_set fd_r, fd_x;
-  struct timeval myto, tmpto, start, end;
+  struct timeval myto, tmpto, start, end, rcvdtime;
   unsigned int bytes;
   int res;
   struct ppkt {
@@ -1009,7 +1005,7 @@ int get_ping_results(int sd, pcap_t *pd, Target *hostbatch[], int pingtype, stru
     tmpto = myto;
 
     if (pd) {
-      ip = (struct ip *) readip_pcap(pd, &bytes, to->timeout);
+      ip = (struct ip *) readip_pcap(pd, &bytes, to->timeout, &rcvdtime);
     } else {    
       FD_SET(sd, &fd_r);
       FD_SET(sd, &fd_x);
@@ -1064,9 +1060,7 @@ int get_ping_results(int sd, pcap_t *pd, Target *hostbatch[], int pingtype, stru
 	  pingstyle = pingstyle_icmp;
 	  newstate = HOST_UP;
 	  trynum = sequence % pt->max_tries;
-	  if (pt->discardtimesbefore < sequence)
-	    dotimeout = 1;
-	  else dotimeout = 0;
+	  dotimeout = 1;
 
 	  if (!hostbatch[hostnum]->v4sourceip()) {      	
 	    struct sockaddr_in sin;
@@ -1197,8 +1191,7 @@ int get_ping_results(int sd, pcap_t *pd, Target *hostbatch[], int pingtype, stru
 	assert (hostnum <= (u32) pt->group_end);
         
 	if (ping->type == 3) {
-	  if (pt->discardtimesbefore < sequence)
-	    dotimeout = 1;	
+	  dotimeout = 1;	
 	  foundsomething = 1;
 	  pingstyle = pingstyle_icmp;
 	  if (ping->code == 3 && ptech->rawudpscan) {
@@ -1285,8 +1278,7 @@ int get_ping_results(int sd, pcap_t *pd, Target *hostbatch[], int pingtype, stru
 	  log_write(LOG_STDOUT, "We got a TCP ping packet back from %s port %hi (hostnum = %d trynum = %d\n", inet_ntoa(ip->ip_src), htons(tcp->th_sport), hostnum, trynum);
 	pingstyle = pingstyle_rawtcp;
 	foundsomething = 1;
-	if (pt->discardtimesbefore < sequence)
-	  dotimeout = 1;
+	dotimeout = 1;
 	newstate = HOST_UP;
 
 	if (pingtype & PINGTYPE_TCP_USE_SYN) {
@@ -1329,8 +1321,7 @@ int get_ping_results(int sd, pcap_t *pd, Target *hostbatch[], int pingtype, stru
 	  log_write(LOG_STDOUT, "In response to UDP-ping, we got UDP packet back from %s port %hi (hostnum = %d trynum = %d\n", inet_ntoa(ip->ip_src), htons(tcp->th_sport), hostnum, trynum);
 	pingstyle = pingstyle_rawudp;
 	foundsomething = 1;
-	if (pt->discardtimesbefore < sequence)
-	  dotimeout = 1;
+	dotimeout = 1;
 	newstate = HOST_UP;
       }
     else if (o.debugging) {
@@ -1338,7 +1329,7 @@ int get_ping_results(int sd, pcap_t *pd, Target *hostbatch[], int pingtype, stru
     }
     if (foundsomething) {  
       hostupdate(hostbatch, hostbatch[hostnum], newstate, dotimeout, 
-		 trynum, to, &time[sequence], pt, NULL, pingstyle);
+		 trynum, to, &time[sequence], &rcvdtime, pt, NULL, pingstyle);
     }
     if (newport && newportstate != PORT_UNKNOWN) {
       /* OK, we can add it, but that is only appropriate if this is one

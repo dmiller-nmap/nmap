@@ -1311,9 +1311,12 @@ exit(1);
    in pcap_open_live()
  */
 
-#ifndef WIN32 /* Windows version of next few funcstions is currently 
+/* If rcvdtime is non-null and a packet is returned, rcvd will be filled
+   with the time that packet was captured from the wire by pcap */
+
+#ifndef WIN32 /* Windows version of next few functions is currently 
                  in wintcpip.c.  Should be merged at some point. */
-char *readip_pcap(pcap_t *pd, unsigned int *len, long to_usec) {
+char *readip_pcap(pcap_t *pd, unsigned int *len, long to_usec, struct timeval *rcvdtime) {
 int offset = -1;
 struct pcap_pkthdr head;
 char *p;
@@ -1404,6 +1407,7 @@ if (!pd) fatal("NULL packet device passed to readip_pcap");
  }
  do {
    p = (char *) pcap_next(pd, &head);
+
    if (p)
      p += offset;
    if (!p || (*p & 0x40) != 0x40) {
@@ -1432,6 +1436,12 @@ if (!pd) fatal("NULL packet device passed to readip_pcap");
  }
  memcpy(alignedbuf, p, *len);
  PacketTrace::trace(PacketTrace::RCVD, (u8 *) alignedbuf, *len);
+
+ if (rcvdtime) {
+   *rcvdtime = head.ts;
+   assert(head.ts.tv_sec);
+ }
+
  return alignedbuf;
 }
 

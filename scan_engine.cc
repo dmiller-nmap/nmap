@@ -62,7 +62,7 @@ extern unsigned short flt_baseport;
    I USE CURRENT->STATE TO DETERMINE WHETHER THE PORT IS OPEN
    OR FIREWALLED */
 static void posportupdate(Target *target, struct portinfo *current, 
-		   int trynum, struct portinfo *scan,
+		   struct timeval *rcvdtime, int trynum, struct portinfo *scan,
 		   struct scanstats *ss ,stype scantype, int newstate,
 		   struct portinfolist *pil, struct connectsockinfo *csi) {
   static int tryident = -1;
@@ -71,6 +71,7 @@ static void posportupdate(Target *target, struct portinfo *current,
   NET_SIZE_T sockaddr_in_len = sizeof(SA);
   int i;
   char owner[1024];
+  struct timeval tv;
 
   if (tryident == -1 || target->v4host().s_addr != lasttarget) 
     tryident = o.identscan;
@@ -84,7 +85,11 @@ static void posportupdate(Target *target, struct portinfo *current,
 
   /* Lets do the timing stuff */
   if (trynum > -1) {
-    adjust_timeouts(current->sent[trynum], &(target->to));
+    if (!rcvdtime) {
+      gettimeofday(&tv, NULL);
+      rcvdtime = &tv;
+    }
+    adjust_timeouts2(&(current->sent[trynum]), rcvdtime, &(target->to));
     target->firewallmode.responsive_ports++; 
   }
   /* If a non-zero trynum finds a port that hasn't been discovered, the
@@ -290,7 +295,7 @@ static int get_connect_results(Target *target,
 		log_write(LOG_STDOUT, "Bad port %lu caught by 0-byte write: ", current->portno);
 		perror("");
 	      }
-	      posportupdate(target, current, trynum, scan, ss, CONNECT_SCAN, PORT_CLOSED, pil, csi);
+	      posportupdate(target, current, NULL, trynum, scan, ss, CONNECT_SCAN, PORT_CLOSED, pil, csi);
 	    } else {
 	      if (getpeername(sd, (struct sockaddr *) &sin, &sinlen) < 0) {
 		pfatal("error in getpeername of connect_results for port %hu", (u16) current->portno);
@@ -320,20 +325,20 @@ static int get_connect_results(Target *target,
 		/* Linux 2.2 bug can lead to bogus successful connect()ions
 		   in this case -- we treat the port as bogus even though it
 		   is POSSIBLE that this is a real connection */
-		posportupdate(target, current, trynum, scan, ss, CONNECT_SCAN, PORT_CLOSED, pil, csi);
+		posportupdate(target, current, NULL, trynum, scan, ss, CONNECT_SCAN, PORT_CLOSED, pil, csi);
 	      } else {
-		posportupdate(target, current, trynum, scan, ss, CONNECT_SCAN, PORT_OPEN, pil, csi);
+		posportupdate(target, current, NULL, trynum, scan, ss, CONNECT_SCAN, PORT_OPEN, pil, csi);
 	      }
 	    }
 	  } else {
-	    posportupdate(target, current, trynum, scan, ss, CONNECT_SCAN, PORT_OPEN, pil, csi);
+	    posportupdate(target, current, NULL, trynum, scan, ss, CONNECT_SCAN, PORT_OPEN, pil, csi);
 	  }
 #else
-	  posportupdate(target, current, trynum, scan, ss, CONNECT_SCAN, PORT_OPEN, pil, csi);
+	  posportupdate(target, current, NULL, trynum, scan, ss, CONNECT_SCAN, PORT_OPEN, pil, csi);
 #endif
 	  break;
 	case ECONNREFUSED:
-	  posportupdate(target, current, trynum, scan, ss, CONNECT_SCAN, PORT_CLOSED, pil, csi);
+	  posportupdate(target, current, NULL, trynum, scan, ss, CONNECT_SCAN, PORT_CLOSED, pil, csi);
 	  break;
 	case EHOSTUNREACH:
 	case ETIMEDOUT:
@@ -341,7 +346,7 @@ static int get_connect_results(Target *target,
 	  /* It could be the host is down, or it could be firewalled.  We
 	     will go on the safe side & assume port is closed ... on second
 	     thought, lets go firewalled! and see if it causes any trouble */
-	  posportupdate(target, current, trynum, scan, ss, CONNECT_SCAN, PORT_FIREWALLED, pil, csi);
+	  posportupdate(target, current, NULL, trynum, scan, ss, CONNECT_SCAN, PORT_FIREWALLED, pil, csi);
 	  break;
 	case ENETDOWN:
 	case ENETUNREACH:
@@ -381,25 +386,22 @@ static void get_syn_results(Target *target, struct portinfo *scan,
   struct icmp *icmp;
   struct ip *ip2;
   u16 *data;
-  struct timeval tv;
-  struct timeval start;
+  struct timeval start, rcvdtime;
   int quit = 0;
 
   gettimeofday(&start, NULL);
 
   while (!quit && ss->numqueries_outstanding > 0 && 
-	 ( ip = (struct ip*) readip_pcap(pd, &bytes, target->to.timeout))) {
+	 ( ip = (struct ip*) readip_pcap(pd, &bytes, target->to.timeout, &rcvdtime))) {
     if (bytes < (4 * ip->ip_hl) + 4U)
       continue;
     current = NULL;
     trynum = newport = -1;
     newstate = PORT_UNKNOWN;
 
-    gettimeofday(&tv, NULL);
-    
     /* Insure there is no timeout ... */
     if (o.host_timeout) {	
-      if (TIMEVAL_MSEC_SUBTRACT(tv, target->host_timeout) >= 0) {
+      if (TIMEVAL_MSEC_SUBTRACT(rcvdtime, target->host_timeout) >= 0) {
 	target->timedout = 1;
 	return;
       }
@@ -408,7 +410,7 @@ static void get_syn_results(Target *target, struct portinfo *scan,
     /* If this takes at least 1.5 secs and is more than the targets
        timeout, lets get out of here.  Otherwise stray network packets
        could cause us trouble. */
-    if ( TIMEVAL_SUBTRACT(tv, start) > MAX(target->to.timeout, 1500)) {
+    if ( TIMEVAL_SUBTRACT(rcvdtime, start) > MAX(target->to.timeout, 1500)) {
       /* Lets quit after we process this packet */
       quit = 1;
     }
@@ -536,10 +538,10 @@ static void get_syn_results(Target *target, struct portinfo *scan,
 	  continue;
 	}	      
       }
-    }      
+    }
     /* OK, now we manipulate the port lists and adjust the time */
     if (current) {
-      posportupdate(target, current, trynum, scan, ss, SYN_SCAN, newstate,
+      posportupdate(target, current, &rcvdtime, trynum, scan, ss, SYN_SCAN, newstate,
 		    pil, NULL);
       current = NULL;
       trynum = -1;
@@ -932,7 +934,7 @@ void pos_scan(Target *target, u16 *portarray, int numports, stype scantype) {
 		  current->sd[current->trynum] = res;		
 		  res =  connect(res,(struct sockaddr *)&sock, socklen);
 		  if (res != -1) {
-		    posportupdate(target, current, current->trynum, scan, &ss, scantype, PORT_OPEN, &pil, &csi);
+		    posportupdate(target, current, NULL, current->trynum, scan, &ss, scantype, PORT_OPEN, &pil, &csi);
 		  } else {
 		    switch(errno) {
 		    case EINPROGRESS: /* The one I always see */
@@ -952,7 +954,7 @@ void pos_scan(Target *target, u16 *portarray, int numports, stype scantype) {
 			perror(""); /*falling through intentionally*/
 		      }
 		    case ECONNREFUSED:
-		      posportupdate(target, current, current->trynum, scan, &ss, scantype, PORT_CLOSED, &pil, &csi);
+		      posportupdate(target, current, NULL, current->trynum, scan, &ss, scantype, PORT_CLOSED, &pil, &csi);
 		      break;
 		    }  		  
 		  }
@@ -1011,7 +1013,7 @@ void pos_scan(Target *target, u16 *portarray, int numports, stype scantype) {
 	      current->sd[current->trynum] = res;		
 	      res =  connect(res,(struct sockaddr *)&sock, socklen);
 	      if (res != -1) {
-		posportupdate(target, current, current->trynum, scan, &ss, scantype, PORT_OPEN, &pil, &csi);
+		posportupdate(target, current, NULL, current->trynum, scan, &ss, scantype, PORT_OPEN, &pil, &csi);
 	      } else {
 		switch(errno) {
 		case EINPROGRESS: /* The one I always see */
@@ -1031,7 +1033,7 @@ void pos_scan(Target *target, u16 *portarray, int numports, stype scantype) {
 		    perror(""); /*falling through intentionally*/
 		  }
 		case ECONNREFUSED:
-		  posportupdate(target, current, current->trynum, scan, &ss, scantype, PORT_CLOSED, &pil, &csi);
+		  posportupdate(target, current, NULL, current->trynum, scan, &ss, scantype, PORT_CLOSED, &pil, &csi);
 		  break;
 		}  		  
 	      }	    
@@ -1528,12 +1530,11 @@ void super_scan(Target *target, u16 *portarray, int numports,
 	    target->timedout = 1;
 	    goto superscan_timedout;
 	  }
-	while (!timedout && numqueries_outstanding > 0 && ( ip = (struct ip*) readip_pcap(pd, &bytes, target->to.timeout)))
+	while (!timedout && numqueries_outstanding > 0 && ( ip = (struct ip*) readip_pcap(pd, &bytes, target->to.timeout, &end)))
 	  {
 	    if (++packcount >= 30) {
 	      /* We don't want to allow for the possibility if this going
 		 forever */
-	      gettimeofday(&end, NULL);
 	      if (TIMEVAL_SUBTRACT(end, now) > 8000000)
 		timedout = 1;
 	    }
@@ -1661,7 +1662,7 @@ void super_scan(Target *target, u16 *portarray, int numports,
 		} 
 		if (packet_trynum > -1) {		
 		  /* Update our records */
-		  adjust_timeouts(current->sent[packet_trynum], &(target->to));
+		  adjust_timeouts2(&current->sent[packet_trynum], &end, &(target->to));
 		  numqueries_ideal = MIN(numqueries_ideal + (packet_incr/numqueries_ideal), max_width);
 		  if (packet_trynum > 0 && current->trynum > 0) {
 		    /* The first packet was apparently lost, slow down */

@@ -22,6 +22,10 @@ o Fixed an "assertion failure" which would cause Nmap to exit when you
   (rathbun2@llnl.gov) and Jan Roger Wilkens (jrw@proseq.net) for
   reporting this.
 
+o Packet receive times are now obtained from libpcap rather than
+  simply using the time the packets are passed to Nmap.  This should
+  improve performance slightly.
+
 o Fixed bug that caused Nmap to ignore certain RST responses when you
   do both -PS and -PA.
 

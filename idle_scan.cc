@@ -109,7 +109,7 @@ int ipid_proxy_probe(struct idle_proxy_info *proxy, int *probes_sent,
   int trynum;
   int sent=0, rcvd=0;
   int maxtries = 3; /* The maximum number of tries before we give up */
-  struct timeval tv_sent[3];
+  struct timeval tv_sent[3], rcvdtime;
   int ipid = -1;
   int to_usec;
   unsigned int bytes;
@@ -150,7 +150,7 @@ int ipid_proxy_probe(struct idle_proxy_info *proxy, int *probes_sent,
 
       to_usec = proxy->host.to.timeout - TIMEVAL_SUBTRACT(tv_end, tv_sent[tries-1]);
       if (to_usec < 0) to_usec = 0; // Final no-block poll
-      ip = (struct ip *) readip_pcap(proxy->pd, &bytes, to_usec);      
+      ip = (struct ip *) readip_pcap(proxy->pd, &bytes, to_usec, &rcvdtime);      
       gettimeofday(&tv_end, NULL);
       if (ip) {
 	if (bytes < ( 4 * ip->ip_hl) + 14U)
@@ -179,7 +179,7 @@ int ipid_proxy_probe(struct idle_proxy_info *proxy, int *probes_sent,
 	  rcvd++;
 
 	  ipid = ntohs(ip->ip_id);
-	  adjust_timeouts2(&(tv_sent[trynum]), &tv_end, &(proxy->host.to));
+	  adjust_timeouts2(&(tv_sent[trynum]), &rcvdtime, &(proxy->host.to));
 	}
       }
     }
@@ -235,7 +235,7 @@ void initialize_idleproxy(struct idle_proxy_info *proxy, char *proxyName,
   size_t sslen;
   u32 sequence_base;
   u32 ack = 0;
-  struct timeval probe_send_times[NUM_IPID_PROBES], tmptv;
+  struct timeval probe_send_times[NUM_IPID_PROBES], tmptv, rcvdtime;
   u16 lastipid = 0;
   struct ip *ip;
   struct tcphdr *tcp;
@@ -348,7 +348,7 @@ void initialize_idleproxy(struct idle_proxy_info *proxy, char *proxyName,
     while(probes_returned < probes_sent && !timedout) {
 
       to_usec = (probes_sent == NUM_IPID_PROBES)? hardtimeout : 1000;
-      ip = (struct ip *) readip_pcap(proxy->pd, &bytes, to_usec);
+      ip = (struct ip *) readip_pcap(proxy->pd, &bytes, to_usec, &rcvdtime);
 
       gettimeofday(&tmptv, NULL);
       
@@ -398,7 +398,7 @@ void initialize_idleproxy(struct idle_proxy_info *proxy, char *proxyName,
 	probes_returned++;
 	ipids[seq_response_num] = (u16) ntohs(ip->ip_id);
 	probe_returned[seq_response_num] = 1;
-	adjust_timeouts2(&probe_send_times[seq_response_num], &(tmptv), &(proxy->host.to));
+	adjust_timeouts2(&probe_send_times[seq_response_num], &rcvdtime, &(proxy->host.to));
       }
     }
   }

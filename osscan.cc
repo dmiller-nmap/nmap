@@ -243,7 +243,7 @@ if (o.verbose && openport != (unsigned long) -1)
        target->timedout = 1;
        goto osscan_timedout;
      }
-   while(( ip = (struct ip*) readip_pcap(pd, &bytes, oshardtimeout)) && !timeout) {
+   while(( ip = (struct ip*) readip_pcap(pd, &bytes, oshardtimeout, NULL)) && !timeout) {
      gettimeofday(&t2, NULL);
      if (TIMEVAL_SUBTRACT(t2,t1) > oshardtimeout) {
        timeout = 1;
@@ -321,8 +321,8 @@ if (o.verbose && openport != (unsigned long) -1)
      while(si->responses < seq_packets_sent && !timeout) {
        
        if (seq_packets_sent == NUM_SEQ_SAMPLES)
-	 ip = (struct ip*) readip_pcap(pd, &bytes, oshardtimeout);
-       else ip = (struct ip*) readip_pcap(pd, &bytes, 10);
+	 ip = (struct ip*) readip_pcap(pd, &bytes, oshardtimeout, NULL);
+       else ip = (struct ip*) readip_pcap(pd, &bytes, 10, NULL);
        
        gettimeofday(&t2, NULL);
        /*     error("DEBUG: got a response (len=%d):\n", bytes);  */

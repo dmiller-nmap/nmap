@@ -462,7 +462,7 @@ int Sendto(char *functionname, int sd, const unsigned char *packet, int len,
 
 /* Hex dump */
 int get_link_offset(char *device);
-char *readip_pcap(pcap_t *pd, unsigned int *len, long to_usec);
+char *readip_pcap(pcap_t *pd, unsigned int *len, long to_usec, struct timeval *rcvdtime);
 #ifndef HAVE_INET_ATON
 int inet_aton(register const char *, struct in_addr *);
 #endif

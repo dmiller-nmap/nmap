@@ -87,7 +87,6 @@ struct pingtune {
   int min_group_size; /* The group size must never go below this value */
   int group_start;
   int group_end;
-  int discardtimesbefore;
   u16 seq_offset; // For distinguishing between received packets from this 
                   // execution vs. concurrent nmaps
 };
