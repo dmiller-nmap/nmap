@@ -148,10 +148,6 @@ if (o.verbose && openport != -1)
      }
    }
    if (target->seq.responses >= 4) {
-     for(i=0; i < target->seq.responses; i++) {     
-       printf("%lX  ", target->seq.seqs[i]);
-     }
-     printf("\n");
      seq_gcd = get_gcd_n_ulong(target->seq.responses -1, seq_diffs);
      /*     printf("The GCD is %lu\n", seq_gcd);*/
      if (seq_gcd) {     
@@ -247,7 +243,7 @@ if (o.verbose && openport != -1)
      }
    }
    else {
-     printf("Only got %d responses\n", target->seq.responses);
+     printf("Insuficient responses for TCP sequencing (%d)\n", target->seq.responses);
    }
  } else {
    printf("Warning:  No ports found open on this machine, OS detection will be less reliable");
