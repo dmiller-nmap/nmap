@@ -92,6 +92,17 @@ const struct in_addr *NmapOps::v4sourceip() {
   return NULL;
 }
 
+// Number of milliseconds since getStartTime().  The current time is an
+// optional argument to avoid an extre gettimeofday() call.
+int NmapOps::TimeSinceStartMS(struct timeval *now) {
+  struct timeval tv;
+  if (!now)
+    gettimeofday(&tv, NULL);
+  else tv = *now;
+
+  return TIMEVAL_MSEC_SUBTRACT(tv, start_time);
+}
+
 void NmapOps::Initialize() {
   setaf(AF_INET);
 #ifndef WIN32
@@ -134,6 +145,7 @@ void NmapOps::Initialize() {
   force = append_output = 0;
   bzero(logfd, sizeof(FILE *) * LOG_TYPES);
   nmap_stdout = stdout;
+  gettimeofday(&start_time, NULL);
   pTrace = false;
 }
 

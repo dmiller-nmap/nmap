@@ -718,7 +718,9 @@ void printfinaloutput(int numhosts_scanned, int numhosts_up,
   time_t timep;
   int i;
   char mytime[128];
+  struct timeval tv;
 
+  gettimeofday(&tv, NULL);
   timep = time(NULL);
   i = timep - starttime;
   
@@ -727,7 +729,7 @@ void printfinaloutput(int numhosts_scanned, int numhosts_up,
   if (numhosts_scanned == 1 && numhosts_up == 0 && !o.listscan)
     log_write(LOG_STDOUT, "Note: Host seems down. If it is really up, but blocking our ping probes, try -P0\n");
   /*  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"\n"); */
-  log_write(LOG_STDOUT|LOG_SKID, "Nmap run completed -- %d %s (%d %s up) scanned in %d %s\n", numhosts_scanned, (numhosts_scanned == 1)? "IP address" : "IP addresses", numhosts_up, (numhosts_up == 1)? "host" : "hosts",  i, (i == 1)? "second": "seconds");
+  log_write(LOG_STDOUT|LOG_SKID, "Nmap run completed -- %d %s (%d %s up) scanned in %.3f seconds\n", numhosts_scanned, (numhosts_scanned == 1)? "IP address" : "IP addresses", numhosts_up, (numhosts_up == 1)? "host" : "hosts",  o.TimeSinceStartMS(&tv) / 1000.0);
 
 
   Strncpy(mytime, ctime(&timep), sizeof(mytime));
@@ -735,8 +737,8 @@ void printfinaloutput(int numhosts_scanned, int numhosts_up,
   
   log_write(LOG_XML, "<runstats><finished time=\"%d\" /><hosts up=\"%d\" down=\"%d\" total=\"%d\" />\n", timep, numhosts_up, numhosts_scanned - numhosts_up, numhosts_scanned);
 
-  log_write(LOG_XML, "<!-- Nmap run completed at %s; %d %s (%d %s up) scanned in %d %s -->\n", mytime, numhosts_scanned, (numhosts_scanned == 1)? "IP address" : "IP addresses", numhosts_up, (numhosts_up == 1)? "host" : "hosts",  i, (i == 1)? "second": "seconds");
-  log_write(LOG_NORMAL|LOG_MACHINE, "# Nmap run completed at %s -- %d %s (%d %s up) scanned in %d %s\n", mytime, numhosts_scanned, (numhosts_scanned == 1)? "IP address" : "IP addresses", numhosts_up, (numhosts_up == 1)? "host" : "hosts",  i, (i == 1)? "second": "seconds");
+  log_write(LOG_XML, "<!-- Nmap run completed at %s; %d %s (%d %s up) scanned in %.3f seconds -->\n", mytime, numhosts_scanned, (numhosts_scanned == 1)? "IP address" : "IP addresses", numhosts_up, (numhosts_up == 1)? "host" : "hosts",  o.TimeSinceStartMS(&tv) / 1000.0 );
+  log_write(LOG_NORMAL|LOG_MACHINE, "# Nmap run completed at %s -- %d %s (%d %s up) scanned in %.3f seconds\n", mytime, numhosts_scanned, (numhosts_scanned == 1)? "IP address" : "IP addresses", numhosts_up, (numhosts_up == 1)? "host" : "hosts", o.TimeSinceStartMS(&tv) / 1000.0 );
 
   log_write(LOG_XML, "</runstats></nmaprun>\n");
 

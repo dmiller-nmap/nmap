@@ -1,7 +1,16 @@
 # Nmap Changelog ($Id$)
 
-o Add nmap --packet_trace option which shows ALL raw packets Nmap sends
-or receives.  Should be turned on automatically at debuglevel 3.
+Nmap 3.10ALPHA3
+
+o Added --packet_trace option, which tells Nmap to display all of the
+  packets it sends and receives in a format similar to tcpdump.  I
+  mostly added this for debugging purposes, but ppl wishing to learn
+  how Nmap works or for experts wanting to ensure Nmap is doing
+  exactly what they epect.  If you want this feature supported under
+  Windows, please send me a patch :).
+
+o Made Nmap reported execution time more accurate and granular (to the
+  millisecond instead of the nearest second).
 
 o Fixed a segmentation fault in Idlescan (-sI).
 

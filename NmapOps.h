@@ -58,6 +58,11 @@ class NmapOps {
   /* Note that it is OK to pass in a sockaddr_in or sockaddr_in6 casted
      to sockaddr_storage */
   void setSourceSockAddr(struct sockaddr_storage *ss, size_t ss_len);
+// The time this obj. was instantiated   or last ReInit()ed.
+  const struct timeval *getStartTime() { return &start_time; }
+  // Number of milliseconds since getStartTime().  The current time is an
+  // optional argument to avoid an extre gettimeofday() call.
+  int TimeSinceStartMS(struct timeval *now=NULL); 
   struct in_addr v4source();
   const struct in_addr *v4sourceip();
   bool TCPScan(); /* Returns true if at least one chosen scan type is TCP */
@@ -141,6 +146,7 @@ class NmapOps {
   int addressfamily; /*  Address family:  AF_INET or AF_INET6 */  
   struct sockaddr_storage sourcesock;
   size_t sourcesocklen;
+  struct timeval start_time;
   bool pTrace; // Whether packet tracing has been enabled
 };
   

@@ -221,10 +221,13 @@ class PacketTrace {
   /*  static const int SEND=1;
       static const int RCV=2; */
   enum pdirection { SENT=1, RCVD=2 };
-  /* Takes an IP PACKET and prints it if packet tracing is
-     enabled.  'packet' must point to the IPv4 header. The direction
-     must be PacketTrace.SEND or PacketTrace.RCV */
-  static void trace(pdirection pdir, const u8 *packet, u32 len);
+  /* Takes an IP PACKET and prints it if packet tracing is enabled.
+     'packet' must point to the IPv4 header. The direction must be
+     PacketTrace::SENT or PacketTrace::RCVD .  Optional 'now' argument
+     makes this function slightly more efficient by avoiding a gettimeofday()
+     call. */
+  static void trace(pdirection pdir, const u8 *packet, u32 len,
+		    struct timeval *now=NULL);
 };
 
 struct interface_info {
@@ -420,6 +423,14 @@ int send_ip_raw_decoys( int sd, const struct in_addr *victim, u8 proto,
    So a valid pcap_t will always be returned. */
 pcap_t *my_pcap_open_live(char *device, int snaplen, int promisc, int to_ms);
 
+
+/* Returns a buffer of ASCII information about a packet that may look
+   like "TCP 127.0.0.1:50923 > 127.0.0.1:3 S ttl=61 id=39516 iplen=40
+   seq=625950769" or "ICMP PING (0/1) ttl=61 id=39516 iplen=40".
+   Since this is a static buffer, don't use threads or call twice
+   within (say) printf().  And certainly don't try to free() it!  The
+   returned buffer is NUL-terminated */
+const char *ippackethdrinfo(const u8 *packet, u32 len);
 /* Shows the most important fields of an IP packet (including dissecting TCP/UDP headers.  packet should point to the beginning of the IP header  */
 void readippacket(const u8 *packet, int readdata);
 /* A simple function I wrote to help in debugging, shows the important fields
