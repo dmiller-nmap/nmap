@@ -1,5 +1,15 @@
 # Nmap Changelog ($Id$)
 
+o Initial implementation of service detection.  Nmap will now probe
+  ports to determine what is listening, rather than guessing based on
+  the nmap-services table lookup.  This can be very useful for
+  services on unidentified ports and for UDP services where it is not
+  always clear (without these probes) whether the port is really open
+  or just firewalled.  It is also handy for when services are run on
+  the well-known-port of another protocol -- this is happening more
+  and more as users try to circumvent increasingly strict firewall
+  policies.
+
 o Nmap now uses the excellent libpcre (Perl Compatible Regular
   Expressions) library from http://www.pcre.org/ .  Many systems
   already have this, otherwise Nmap will use the copy it now includes.

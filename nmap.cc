@@ -236,7 +236,7 @@ int nmap_main(int argc, char *argv[]) {
 
   /* OK, lets parse these args! */
   optind = 1; /* so it can be called multiple times */
-  while((arg = getopt_long_only(argc,fakeargv,"6b:D:d::e:Ffg:hIi:M:m:NnOo:P:p:qRrS:s:T:Vv", long_options, &option_index)) != EOF) {
+  while((arg = getopt_long_only(argc,fakeargv,"6Ab:D:d::e:Ffg:hIi:M:m:NnOo:P:p:qRrS:s:T:Vv", long_options, &option_index)) != EOF) {
     switch(arg) {
     case 0:
       if (strcmp(long_options[option_index].name, "max_rtt_timeout") == 0) {
@@ -391,6 +391,9 @@ int nmap_main(int argc, char *argv[]) {
 #else
       o.setaf(AF_INET6);
 #endif /* !HAVE_IPV6 */
+      break;
+    case 'A':
+      o.servicescan = false;
       break;
     case 'b': 
       o.bouncescan++;
@@ -951,7 +954,6 @@ int nmap_main(int argc, char *argv[]) {
 	  log_write(LOG_MACHINE,"Host: %s (%s)\tStatus: Timeout", 
 		    currenths->targetipstr(), currenths->HostName());
 	} else {
-	  assignignoredportstate(&currenths->ports);
 	  printportoutput(currenths, &currenths->ports);
 	  printosscanoutput(currenths);
  	}      

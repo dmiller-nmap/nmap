@@ -55,13 +55,112 @@
 #endif /* HAVE_STRINGS_H */
 
 extern NmapOps o;  /* option structure */
-static struct port *freeportlist = NULL;
 
-/* gawd, my next project will be in c++ so I don't have to deal with
-   this crap ... simple linked list implementation */
-int addport(portlist *plist, u16 portno, u8 protocol, char *owner, int state) {
-  struct port *current = NULL;
-  struct port **portarray = NULL;
+Port::Port() {
+  portno = proto = 0;
+  owner = NULL;
+  rpc_status = RPC_STATUS_UNTESTED;
+  rpc_program = rpc_lowver = rpc_highver = 0;
+  state = confidence = 0;
+  next = NULL;
+  serviceprobe_results = PROBESTATE_INITIAL;
+  serviceprobe_service = NULL;
+}
+
+Port::~Port() {
+ if (owner)
+   free(owner);
+}
+
+// Obtain the service name listening on the port (NULL if port is
+  // not open or service) is unknown.  Detection type will be
+  // SERVICE_DETECTION_TABLE or SERVICE_DETECTION_PROBED.  Confidence
+  // is a number from 0 (least confident) to 10 (most confident)
+  // expressing how accurate the service detection is likely to be.  Either argument
+  // can be NULL if you aren't interested.
+const char *Port::serviceName(enum service_detection_type *detection_type, int *confidence) {
+  int conf = 0;
+  struct servent *service;
+
+  if (!confidence) confidence = &conf; // to make code cleaner
+
+  if (serviceprobe_results == PROBESTATE_FINISHED_MATCHED) {
+    assert(serviceprobe_service);
+    if (detection_type)
+      *detection_type = SERVICE_DETECTION_PROBED;
+    *confidence = 10;
+    return serviceprobe_service;
+  } else if (serviceprobe_results == PROBESTATE_FINISHED_TCPWRAPPED) {
+    if (detection_type)
+      *detection_type = SERVICE_DETECTION_PROBED;
+    *confidence = 8;
+    return "tcpwrapped";
+  }
+
+  // TODO:  Should do RPC-related stuff here.
+
+  // So much for service detection or RPC.  Maybe we can find it in the file
+  service = nmap_getservbyport(htons(portno), (proto == IPPROTO_TCP)? "tcp" : "udp");
+  if (service) {
+    if (detection_type) *detection_type = SERVICE_DETECTION_TABLE;
+    *confidence = 3;
+    return service->s_name;
+  }
+  
+  // Couldn't find it.  [shrug]
+  return NULL;
+
+}
+
+void Port::setServiceProbeResults(enum serviceprobestate sres, const char *sname) {
+  serviceprobe_results = sres;
+  serviceprobe_service = sname;
+}
+
+PortList::PortList() {
+  udp_ports = tcp_ports = ip_prots;
+  bzero(state_counts, sizeof(state_counts));
+  bzero(state_counts_udp, sizeof(state_counts_udp));
+  bzero(state_counts_tcp, sizeof(state_counts_tcp));
+  bzero(state_counts_ip, sizeof(state_counts_ip));
+  numports = 0;
+}
+
+PortList::~PortList() {
+  int i;
+
+  if (tcp_ports) {  
+    for(i=0; i < 65536; i++) {
+      if (tcp_ports[i])
+	delete tcp_ports[i];
+    }
+    free(tcp_ports);
+    tcp_ports = NULL;
+  }
+
+  if (udp_ports) {  
+    for(i=0; i < 65536; i++) {
+      if (udp_ports[i])
+	delete udp_ports[i];
+    }
+    free(udp_ports);
+    udp_ports = NULL;
+  }
+
+  if (ip_prots) {
+    for(i=0; i < 256; ++i) {
+      if (ip_prots[i])
+	delete ip_prots[i];
+    }
+    free(ip_prots);
+    ip_prots = NULL;
+  }
+}
+
+
+int PortList::addPort(u16 portno, u8 protocol, char *owner, int state) {
+  Port *current = NULL;
+  Port **portarray = NULL;
   char msg[128];
 
   if ((state == PORT_OPEN && o.verbose) || (o.debugging > 1)) {
@@ -85,25 +184,25 @@ int addport(portlist *plist, u16 portno, u8 protocol, char *owner, int state) {
 /* Make sure state is OK */
   if (state != PORT_OPEN && state != PORT_CLOSED && state != PORT_FIREWALLED &&
       state != PORT_UNFIREWALLED)
-    fatal("addport: attempt to add port number %d with illegal state %d\n", portno, state);
+    fatal("addPort: attempt to add port number %d with illegal state %d\n", portno, state);
 
   if (protocol == IPPROTO_TCP) {
-    if (!plist->tcp_ports) {
-      plist->tcp_ports = (struct port **) safe_zalloc(65536 * sizeof(struct port *));
+    if (!tcp_ports) {
+      tcp_ports = (Port **) safe_zalloc(65536 * sizeof(Port *));
     }
-    portarray = plist->tcp_ports;
+    portarray = tcp_ports;
   } else if (protocol == IPPROTO_UDP) {
-    if (!plist->udp_ports) {
-      plist->udp_ports = (struct port **) safe_zalloc(65536 * sizeof(struct port *));
+    if (!udp_ports) {
+      udp_ports = (Port **) safe_zalloc(65536 * sizeof(Port *));
     }
-    portarray = plist->udp_ports;
+    portarray = udp_ports;
   } else if (protocol == IPPROTO_IP) {
     assert(portno < 256);
-    if (!plist->ip_prots) {
-      plist->ip_prots = (struct port **) safe_zalloc(256 * sizeof(struct port *));
+    if (!ip_prots) {
+      ip_prots = (Port **) safe_zalloc(256 * sizeof(Port *));
     }
-    portarray = plist->ip_prots;
-  } else fatal("addport: attempted port insertion with invalid protocol");
+    portarray = ip_prots;
+  } else fatal("addPort: attempted port insertion with invalid protocol");
 
   if (portarray[portno]) {
     /* We must discount our statistics from the old values.  Also warn
@@ -114,30 +213,30 @@ int addport(portlist *plist, u16 portno, u8 protocol, char *owner, int state) {
 	    (protocol == IPPROTO_TCP)? "tcp":
 	    (protocol == IPPROTO_UDP)? "udp": "ip");
     } 
-    plist->state_counts[current->state]--;
+    state_counts[current->state]--;
     if (current->proto == IPPROTO_TCP) {
-      plist->state_counts_tcp[current->state]--;
+      state_counts_tcp[current->state]--;
     } else if (current->proto == IPPROTO_UDP) {
-      plist->state_counts_udp[current->state]--;
+      state_counts_udp[current->state]--;
     } else
-      plist->state_counts_ip[current->state]--;
+      state_counts_ip[current->state]--;
   } else {
-    portarray[portno] = make_empty_port();
+    portarray[portno] = new Port();
     current = portarray[portno];
-    plist->numports++;
+    numports++;
     current->rpc_status = RPC_STATUS_UNTESTED;
     current->confidence = CONF_HIGH;
     current->portno = portno;
   }
   
-  plist->state_counts[state]++;
+  state_counts[state]++;
   current->state = state;
   if (protocol == IPPROTO_TCP) {
-    plist->state_counts_tcp[state]++;
+    state_counts_tcp[state]++;
   } else if (protocol == IPPROTO_UDP) {
-    plist->state_counts_udp[state]++;
+    state_counts_udp[state]++;
   } else
-    plist->state_counts_ip[state]++;
+    state_counts_ip[state]++;
   current->proto = protocol;
 
   if (owner && *owner) {
@@ -149,19 +248,19 @@ int addport(portlist *plist, u16 portno, u8 protocol, char *owner, int state) {
   return 0; /*success */
 }
 
-int deleteport(portlist *plist, u16 portno, u8 protocol) {
-  struct port *answer = NULL;
+int PortList::removePort(u16 portno, u8 protocol) {
+  Port *answer = NULL;
 
-  if (protocol == IPPROTO_TCP && plist->tcp_ports) {
-   answer = plist->tcp_ports[portno];
-   plist->tcp_ports[portno] = NULL;
+  if (protocol == IPPROTO_TCP && tcp_ports) {
+   answer = tcp_ports[portno];
+   tcp_ports[portno] = NULL;
   }
 
-  if (protocol == IPPROTO_UDP && plist->udp_ports) {  
-    answer = plist->udp_ports[portno];
-    plist->udp_ports[portno] = NULL;
-  } else if (protocol == IPPROTO_IP && plist->ip_prots) {
-    answer = plist->ip_prots[portno] = NULL;
+  if (protocol == IPPROTO_UDP && udp_ports) {  
+    answer = udp_ports[portno];
+    udp_ports[portno] = NULL;
+  } else if (protocol == IPPROTO_IP && ip_prots) {
+    answer = ip_prots[portno] = NULL;
   }
 
   if (!answer)
@@ -174,101 +273,42 @@ int deleteport(portlist *plist, u16 portno, u8 protocol) {
     log_flush(LOG_STDOUT);
   }    
 
-  free_port(answer);
+  delete answer;
   return 0;
 }
 
 
-struct port *lookupport(portlist *ports, u16 portno, u8 protocol) {
+Port *PortList::lookupPort(u16 portno, u8 protocol) {
 
-  if (protocol == IPPROTO_TCP && ports->tcp_ports)
-    return ports->tcp_ports[portno];
+  if (protocol == IPPROTO_TCP && tcp_ports)
+    return tcp_ports[portno];
 
-  if (protocol == IPPROTO_UDP && ports->udp_ports)
-    return ports->udp_ports[portno];
+  if (protocol == IPPROTO_UDP && udp_ports)
+    return udp_ports[portno];
 
-  if (protocol == IPPROTO_IP && ports->ip_prots)
-    return ports->ip_prots[portno];
+  if (protocol == IPPROTO_IP && ip_prots)
+    return ip_prots[portno];
 
   return NULL;
 }
 
+int PortList::getIgnoredPortState() {
+  int ignored = PORT_UNKNOWN;
 
-/* RECYCLES the port so that it can later be obtained again using 
-   make_port_structure */
-void free_port(struct port *pt) {
-  struct port *tmp;
-  if (pt->owner)
-    free(pt->owner);
-  tmp = freeportlist;
-  freeportlist = pt;
-  pt->next = tmp;
+  if (state_counts[PORT_FIREWALLED] > 10 + 
+      MAX(state_counts[PORT_UNFIREWALLED], 
+	  state_counts[PORT_CLOSED])) {
+    ignored = PORT_FIREWALLED;
+  } else if (state_counts[PORT_UNFIREWALLED] > 
+	     state_counts[PORT_CLOSED]) {
+    ignored = PORT_UNFIREWALLED;
+  } else ignored = PORT_CLOSED;
+
+  if (state_counts[ignored] < 10)
+    ignored = PORT_UNKNOWN;
+
+  return ignored;
 }
-
-struct port *make_empty_port() {
-int i;
-struct port *newpt;
-
- if (!freeportlist) {
-   freeportlist = (struct port *) safe_malloc(sizeof(struct port) * 1024);
-   for(i=0; i < 1023; i++)
-     freeportlist[i].next = &freeportlist[i+1];
-   freeportlist[1023].next = NULL;
- }
-
- newpt = freeportlist;
- freeportlist = freeportlist->next;
- bzero(newpt, sizeof(struct port));
- return newpt;
-}
-
-/* Empties out a portlist so that it can be reused (or freed).  All the 
-   internal structures that must be freed are done so here. */
-void resetportlist(portlist *plist) {
-  int i;
-  if (plist->tcp_ports) {  
-    for(i=0; i < 65536; i++) {
-      if (plist->tcp_ports[i])
-	free_port(plist->tcp_ports[i]);
-    }
-    free(plist->tcp_ports);
-  }
-
-  if (plist->udp_ports) {  
-    for(i=0; i < 65536; i++) {
-      if (plist->udp_ports[i])
-	free_port(plist->udp_ports[i]);
-    }
-    free(plist->udp_ports);
-  }
-
-  if (plist->ip_prots) {
-    for(i=0; i < 256; ++i) {
-      if (plist->ip_prots[i])
-	free_port(plist->ip_prots[i]);
-    }
-    free(plist->ip_prots);
-  }
-
-  bzero(plist, sizeof(*plist));
-}
-
-
-/* Decide which port we want to ignore in output (for example, we don't want
- to show closed ports if there are 40,000 of them.) */
-void assignignoredportstate(portlist *plist) {
-
-  if (plist->state_counts[PORT_FIREWALLED] > 10 + 
-      MAX(plist->state_counts[PORT_UNFIREWALLED], 
-	  plist->state_counts[PORT_CLOSED])) {
-    plist->ignored_port_state = PORT_FIREWALLED;
-  } else if (plist->state_counts[PORT_UNFIREWALLED] > 
-	     plist->state_counts[PORT_CLOSED]) {
-    plist->ignored_port_state = PORT_UNFIREWALLED;
-  } else plist->ignored_port_state = PORT_CLOSED;
-}
-
-
 
 /* A function for iterating through the ports.  Give NULL for the
    first "afterthisport".  Then supply the most recent returned port
@@ -281,9 +321,9 @@ void assignignoredportstate(portlist *plist) {
    UDP, every TCP port will be returned before we start returning UDP
    ports.  */
 
-struct port *nextport(portlist *plist, struct port *afterthisport, 
-		      u8 allowed_protocol, int allowed_state, 
-		      bool allow_portzero) {
+Port *PortList::nextPort(Port *afterthisport, 
+			 u8 allowed_protocol, int allowed_state, 
+			 bool allow_portzero) {
 
   /* These two are chosen because they come right "before" port 1/tcp */
 unsigned int current_portno = 0;
@@ -300,11 +340,11 @@ if (afterthisport) {
 /* First we look for TCP ports ... */
 if (current_proto == IPPROTO_TCP) {
  if ((allowed_protocol == 0 || allowed_protocol == IPPROTO_TCP) && 
-    current_proto == IPPROTO_TCP && plist->tcp_ports)
+    current_proto == IPPROTO_TCP && tcp_ports)
   for(; current_portno < 65536; current_portno++) {
-    if (plist->tcp_ports[current_portno] &&
-	(!allowed_state || plist->tcp_ports[current_portno]->state == allowed_state))
-      return plist->tcp_ports[current_portno];
+    if (tcp_ports[current_portno] &&
+	(!allowed_state || tcp_ports[current_portno]->state == allowed_state))
+      return tcp_ports[current_portno];
   }
 
   /*  Uh-oh.  We have tried all tcp ports, lets move to udp */
@@ -313,11 +353,11 @@ if (current_proto == IPPROTO_TCP) {
 }
 
 if ((allowed_protocol == 0 || allowed_protocol == IPPROTO_UDP) && 
-    current_proto == IPPROTO_UDP && plist->udp_ports) {
+    current_proto == IPPROTO_UDP && udp_ports) {
   for(; current_portno < 65536; current_portno++) {
-    if (plist->udp_ports[current_portno] &&
-	(!allowed_state || plist->udp_ports[current_portno]->state == allowed_state))
-      return plist->udp_ports[current_portno];
+    if (udp_ports[current_portno] &&
+	(!allowed_state || udp_ports[current_portno]->state == allowed_state))
+      return udp_ports[current_portno];
   }
 }
 

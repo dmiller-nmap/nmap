@@ -101,7 +101,7 @@ class Target {
   struct seq_info seq;
   FingerPrintResults *FPR;
   int osscan_performed; /* nonzero if an osscan was performed */
-  struct portlist ports;
+  PortList ports;
   /*
   unsigned int up;
   unsigned int down; */

@@ -58,7 +58,6 @@ void Target::Initialize() {
   bzero(&seq, sizeof(seq));
   FPR = NULL;
   osscan_performed = 0;
-  bzero(&ports, sizeof(struct portlist));
   wierd_responses = flags = 0;
   bzero(&to, sizeof(to));
   bzero(&host_timeout, sizeof(host_timeout));
@@ -94,8 +93,6 @@ void Target::FreeInternal() {
 
   if (FPR) delete FPR;
 
-  /* Free the port lists */
-  resetportlist(&ports);
 }
 
 /*  Creates a "presentation" formatted string out of the IPv4/IPv6 address.

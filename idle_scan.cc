@@ -824,7 +824,7 @@ int idle_treescan(struct idle_proxy_info *proxy, Target *target,
 	/* If our first count erroneously found and added an open port,
 	   we must delete it */
 	if (firstHalfSz == 1 && flatcount1 == 1 && retrycount == 0)
-	  deleteport(&target->ports, ports[0], IPPROTO_TCP);
+	  target->ports.removePort(ports[0], IPPROTO_TCP);
 
       }
     }
@@ -850,7 +850,7 @@ int idle_treescan(struct idle_proxy_info *proxy, Target *target,
 	/* If our first count erroneously found and added an open port,
 	   we must delete it */
 	if (secondHalfSz == 1 && flatcount2 == 1 && retrycount == 0)
-	  deleteport(&target->ports, ports[firstHalfSz], IPPROTO_TCP);
+	  target->ports.removePort(ports[firstHalfSz], IPPROTO_TCP);
 
 
       }
@@ -858,10 +858,10 @@ int idle_treescan(struct idle_proxy_info *proxy, Target *target,
   }
 
   if (firstHalfSz == 1 && flatcount1 == 1) 
-    addport(&target->ports, ports[0], IPPROTO_TCP, NULL, PORT_OPEN);
+    target->ports.addPort(ports[0], IPPROTO_TCP, NULL, PORT_OPEN);
   
   if ((secondHalfSz == 1) && flatcount2 == 1) 
-    addport(&target->ports, ports[firstHalfSz], IPPROTO_TCP, NULL, PORT_OPEN);
+    target->ports.addPort(ports[firstHalfSz], IPPROTO_TCP, NULL, PORT_OPEN);
   return totalfound;
 
 }
@@ -935,8 +935,8 @@ void idle_scan(Target *target, u16 *portarray, int numports,
   /* Now we go through the ports which were not determined were scanned
      but not determined to be open, and add them in the "closed" state */
   for(portidx = 0; portidx < numports; portidx++) {
-    if (lookupport(&target->ports, portarray[portidx], IPPROTO_TCP) == NULL) {
-      addport(&target->ports, portarray[portidx], IPPROTO_TCP, NULL,
+    if (target->ports.lookupPort(portarray[portidx], IPPROTO_TCP) == NULL) {
+      target->ports.addPort(portarray[portidx], IPPROTO_TCP, NULL,
 	      PORT_CLOSED);
     }
   }

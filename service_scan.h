@@ -58,10 +58,11 @@
 
 using namespace std;
 
-/**********************  DEFINES     ***********************************/
+/**********************  DEFINES/ENUMS ***********************************/
 #define DEFAULT_SERVICEWAITMS 7500
 #define DEFAULT_CONNECT_TIMEOUT 5000
 #define SERVICEMATCH_REGEX 1
+#define SERVICEMATCH_STATIC 2
 
 /**********************  STRUCTURES  ***********************************/
 
@@ -86,11 +87,15 @@ class ServiceProbeMatch {
  private:
   bool isInitialized; // Has InitMatch yet been called?
   char *servicename;
-  int matchtype; // SERVICEMATCH_REGEX
-  char *matchstr;
-  pcre *matchstr_compiled;
-  pcre_extra *matchstr_extra;
+  int matchtype; // SERVICEMATCH_REGEX or SERVICESCAN_STATIC
+  char *matchstr; // Regular expression text, or static string
+  int matchstrlen; // Because static strings may have embedded NULs
+  pcre *regex_compiled;
+  pcre_extra *regex_extra;
   bool matchops_ignorecase;
+  // The anchor is for SERVICESCAN_STATIC matches.  If the anchor is not -1, the match must
+  // start at that zero-indexed position in the response str.
+  int matchops_anchor;
 };
 
 

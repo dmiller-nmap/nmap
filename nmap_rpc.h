@@ -104,7 +104,7 @@ struct rpc_info {
 };
 
 struct rpcscaninfo {
-  struct port *rpc_current_port;
+  Port *rpc_current_port;
   unsigned long *rpc_progs;
   unsigned long rpc_number;
   int valid_responses_this_port; /* Number of valid (RPC wise) responses we

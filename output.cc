@@ -59,7 +59,7 @@ static char *logtypes[LOG_TYPES]=LOG_NAMES;
    ports found on the machine.  It also handles the Machine/Greppable
    output and the XML output.  It is pretty ugly -- in particular I
    should write helper functions to handle the table creation */
-void printportoutput(Target *currenths, portlist *plist) {
+void printportoutput(Target *currenths, PortList *plist) {
   char protocol[4];
   char rpcinfo[64];
   char rpcmachineinfo[64];
@@ -69,21 +69,22 @@ void printportoutput(Target *currenths, portlist *plist) {
   char serviceinfo[64];
   char *name=NULL;
   int first = 1;
-  struct servent *service;
   struct protoent *proto;
-  struct port *current;
+  Port *current;
   int numignoredports;
   int portno, protocount;
-  struct port **protoarrays[2];
+  Port **protoarrays[2];
   char hostname[1200];
-
-  numignoredports = plist->state_counts[plist->ignored_port_state];
-
+  int istate = plist->getIgnoredPortState();
+  numignoredports = plist->state_counts[istate];
+  const char *servicename;
+  enum service_detection_type detection_type = SERVICE_DETECTION_TABLE;
+  int detection_conf = 0;
   assert(numignoredports <= plist->numports);
 
 
   log_write(LOG_XML, "<ports><extraports state=\"%s\" count=\"%d\" />\n", 
-	    statenum2str(currenths->ports.ignored_port_state), 
+	    statenum2str(istate), 
 	    numignoredports);
 
   if (numignoredports == plist->numports) {
@@ -92,8 +93,7 @@ void printportoutput(Target *currenths, portlist *plist) {
 	      (numignoredports == 1)? "The" : "All", numignoredports,
 	      (numignoredports == 1)? "port" : "ports", 
 	      currenths->NameIP(hostname, sizeof(hostname)), 
-	      (numignoredports == 1)? "is" : "are", 
-	      statenum2str(currenths->ports.ignored_port_state));
+	      (numignoredports == 1)? "is" : "are", statenum2str(istate));
     log_write(LOG_MACHINE,"Host: %s (%s)\tStatus: Up", 
 	      currenths->targetipstr(), currenths->HostName());
     log_write(LOG_XML, "</ports>\n");
@@ -107,7 +107,7 @@ void printportoutput(Target *currenths, portlist *plist) {
 	    currenths->HostName());
   
   if (numignoredports > 0) {
-    log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"(The %d %s%s scanned but not shown below %s in state: %s)\n", numignoredports, o.ipprotscan?"protocol":"port", (numignoredports == 1)? "" : "s", (numignoredports == 1)? "is" : "are", statenum2str(plist->ignored_port_state));
+    log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"(The %d %s%s scanned but not shown below %s in state: %s)\n", numignoredports, o.ipprotscan?"protocol":"port", (numignoredports == 1)? "" : "s", (numignoredports == 1)? "is" : "are", statenum2str(istate));
   }
 
   if (o.ipprotscan) {
@@ -127,7 +127,7 @@ void printportoutput(Target *currenths, portlist *plist) {
     for (portno = 0; portno < 256; portno++) {
       if (!plist->ip_prots[portno]) continue;
       current = plist->ip_prots[portno];
-      if (current->state != plist->ignored_port_state) {
+      if (current->state != istate) {
 	if (!first) log_write(LOG_MACHINE,", ");
 	else first = 0;
 	state = statenum2str(current->state);
@@ -139,7 +139,7 @@ void printportoutput(Target *currenths, portlist *plist) {
 		  (proto)? proto->p_name : "");
 	log_write(LOG_XML, "<port protocol=\"ip\" portid=\"%d\"><state state=\"%s\" />", current->portno, state);
 	if (proto && proto->p_name && *proto->p_name)
-	  log_write(LOG_XML, "\n<service name=\"%s\" conf=\"3\" method=\"table\" />", proto->p_name);
+	  log_write(LOG_XML, "\n<service name=\"%s\" conf=\"8\" method=\"table\" />", proto->p_name);
 	log_write(LOG_XML, "</port>\n");
       }
     }
@@ -150,13 +150,13 @@ void printportoutput(Target *currenths, portlist *plist) {
 	current = protoarrays[protocount][portno];
       else continue;
       
-      if (current->state != plist->ignored_port_state) {    
+      if (current->state != istate) {    
 	if (!first) log_write(LOG_MACHINE,", ");
 	else first = 0;
 	strcpy(protocol,(current->proto == IPPROTO_TCP)? "tcp": "udp");
 	snprintf(portinfo, sizeof(portinfo), "%d/%s", current->portno, protocol);
 	state = statenum2str(current->state);
-	service = nmap_getservbyport(htons(current->portno), protocol);
+	servicename = current->serviceName(&detection_type, &detection_conf);
 	
 	if (o.rpcscan) {
 	  switch(current->rpc_status) {
@@ -188,9 +188,10 @@ void printportoutput(Target *currenths, portlist *plist) {
 	    fatal("Unknown rpc_status %d", current->rpc_status);
 	    break;
 	  }
-	  snprintf(serviceinfo, sizeof(serviceinfo), "%s%s%s", (service)? service->s_name : ((*rpcinfo)? "" : "unknown"), (service)? " " : "",  rpcinfo);
+	  snprintf(serviceinfo, sizeof(serviceinfo), "%s%s%s", (servicename)? servicename : ((*rpcinfo)? "" : "unknown"), (servicename)? " " : "",  rpcinfo);
 	} else {
-	  Strncpy(serviceinfo, (service)? service->s_name : "unknown" , sizeof(serviceinfo));
+	  snprintf(serviceinfo, sizeof(serviceinfo), "%s%s", (servicename)? servicename : "unknown",
+		   (servicename && detection_conf <= 5)? "?" : "");
 	  strcpy(rpcmachineinfo, "");
 	}
 	// HACK: I hate the trailing whitespace so I'll just skip it unless
@@ -205,7 +206,7 @@ void printportoutput(Target *currenths, portlist *plist) {
 	
 	log_write(LOG_MACHINE,"%d/%s/%s/%s/%s/%s//", current->portno, state, 
 		  protocol, (current->owner)? current->owner : "",
-		  (service)? service->s_name: "", rpcmachineinfo);    
+		  (servicename)? servicename: "", rpcmachineinfo);    
 	
 	log_write(LOG_XML, "<port protocol=\"%s\" portid=\"%d\">", protocol, current->portno);
 	log_write(LOG_XML, "<state state=\"%s\" />", state);
@@ -216,8 +217,8 @@ void printportoutput(Target *currenths, portlist *plist) {
 	  if (name) Strncpy(tmpbuf, name, sizeof(tmpbuf));
 	  else snprintf(tmpbuf, sizeof(tmpbuf), "#%li", current->rpc_program);
 	  log_write(LOG_XML, "<service name=\"%s\" proto=\"rpc\" rpcnum=\"%li\" lowver=\"%i\" highver=\"%i\" method=\"detection\" conf=\"5\" />\n", tmpbuf, current->rpc_program, current->rpc_lowver, current->rpc_highver);
-	} else if (service) {
-	  log_write(LOG_XML, "<service name=\"%s\" method=\"table\" conf=\"3\" %s />\n", service->s_name, (o.rpcscan && current->rpc_status == RPC_STATUS_UNKNOWN)? "proto=\"rpc\"" : ""); 
+	} else if (servicename) {
+	  log_write(LOG_XML, "<service name=\"%s\" method=\"table\" conf=\"3\" %s />\n", servicename, (o.rpcscan && current->rpc_status == RPC_STATUS_UNKNOWN)? "proto=\"rpc\"" : ""); 
 	}
 	log_write(LOG_XML, "</port>\n");
       }
@@ -225,8 +226,8 @@ void printportoutput(Target *currenths, portlist *plist) {
    }
   }
   /*  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"\n"); */
-  if (plist->state_counts[plist->ignored_port_state] > 0)
-    log_write(LOG_MACHINE, "\tIgnored State: %s (%d)", statenum2str(plist->ignored_port_state), plist->state_counts[plist->ignored_port_state]);
+  if (plist->state_counts[istate] > 0)
+    log_write(LOG_MACHINE, "\tIgnored State: %s (%d)", statenum2str(istate), plist->state_counts[istate]);
   log_write(LOG_XML, "</ports>\n");
 }
 

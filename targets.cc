@@ -1363,8 +1363,8 @@ int get_ping_results(int sd, pcap_t *pd, Target *hostbatch[], int pingtype,
       /* OK, we can add it, but that is only appropriate if this is one
 	 of the ports the user ASKED for */
       if (ports && ports->tcp_count == 1 && ports->tcp_ports[0] == newport)
-	addport(&(hostbatch[hostnum]->ports), newport, IPPROTO_TCP, NULL, 
-		newportstate);
+	hostbatch[hostnum]->ports.addPort(newport, IPPROTO_TCP, NULL, 
+					  newportstate);
     }
   }
   return 0;

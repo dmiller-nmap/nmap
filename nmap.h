@@ -420,7 +420,7 @@ int recvtime(int sd, char *buf, int len, int seconds);
 int isup(struct in_addr target);
 int listen_icmp(int icmpsock, unsigned short outports[],
 		unsigned short numtries[], int *num_out,
-		struct in_addr target, portlist *ports);
+		struct in_addr target, PortList *ports);
 
 /* Renamed main so that interactive mode could preprocess when neccessary */
 int nmap_main(int argc, char *argv[]);

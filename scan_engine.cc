@@ -202,7 +202,7 @@ static void posportupdate(Target *target, struct portinfo *current,
   current->state = newstate;
   current->next = -1;
   current->prev = -1;
-  addport(&target->ports, current->portno, IPPROTO_TCP, owner, newstate);
+  target->ports.addPort(current->portno, IPPROTO_TCP, owner, newstate);
   return;
 }
 
@@ -757,7 +757,7 @@ void pos_scan(Target *target, u16 *portarray, int numports, stype scantype) {
     }
     current = pil.testinglist = &scan[0]; 
     rawsd = -1;
-    rsi.rpc_current_port = NULL; /*nextport(&target->ports, NULL, 0, PORT_OPEN); */
+    rsi.rpc_current_port = NULL; 
   } else {
     fatal("Unknown scan type given to pos_scan()");
   }
@@ -795,8 +795,8 @@ void pos_scan(Target *target, u16 *portarray, int numports, stype scantype) {
     /* Find a good port to scan if we are rpc scanning */
     if (scantype == RPC_SCAN) {    
       /* Make sure we have ports left to scan */
-      rsi.rpc_current_port = nextport(&target->ports, rsi.rpc_current_port,
-				      0, PORT_OPEN, true);
+      rsi.rpc_current_port = target->ports.nextPort(rsi.rpc_current_port,
+						    0, PORT_OPEN, true);
       if (!rsi.rpc_current_port) /* Woop!  Done! */ break;
 
       /* Reinit our testinglist so we try each RPC prog */
@@ -1127,7 +1127,7 @@ void pos_scan(Target *target, u16 *portarray, int numports, stype scantype) {
 	/* Consider the ports firewalled */	
 	for( current = pil.firewalled; current ; 
 	     current = (current->next > -1)? &scan[current->next] : NULL) {
-	  addport(&target->ports, current->portno, IPPROTO_TCP, NULL, PORT_FIREWALLED);
+	  target->ports.addPort(current->portno, IPPROTO_TCP, NULL, PORT_FIREWALLED);
 	}
 	pil.testinglist = NULL;
       }
@@ -1267,7 +1267,7 @@ void bounce_scan(Target *target, u16 *portarray, int numports,
 		res = recvtime(sd, recvbuf, 2048,10);
 	      }
 	      if (recvbuf[0] == '1' || recvbuf[0] == '2') {
-		addport(&target->ports, portarray[i], IPPROTO_TCP, NULL, PORT_OPEN);
+		target->ports.addPort(portarray[i], IPPROTO_TCP, NULL, PORT_OPEN);
 		if (recvbuf[0] == '1') {
 		  res = recvtime(sd, recvbuf, 2048,5);
 		  recvbuf[res] = '\0';
@@ -1275,7 +1275,7 @@ void bounce_scan(Target *target, u16 *portarray, int numports,
 		    if (o.debugging) log_write(LOG_STDOUT, "nxt line: %s", recvbuf);
 		    if (recvbuf[0] == '4' && recvbuf[1] == '2' && 
 			recvbuf[2] == '6') {	      	
-		      deleteport(&target->ports, portarray[i], IPPROTO_TCP);
+		      target->ports.removePort(portarray[i], IPPROTO_TCP);
 		      if (o.debugging || o.verbose)
 			log_write(LOG_STDOUT, "Changed my mind about port %i\n", portarray[i]);
 		    }
@@ -1283,7 +1283,7 @@ void bounce_scan(Target *target, u16 *portarray, int numports,
 		}
 	      } else {
 		/* This means the port is closed ... */
-		addport(&target->ports, portarray[i], IPPROTO_TCP, NULL, PORT_CLOSED);
+		target->ports.addPort(portarray[i], IPPROTO_TCP, NULL, PORT_CLOSED);
 	      }
 	    }
 	  }
@@ -1337,7 +1337,7 @@ void super_scan(Target *target, u16 *portarray, int numports,
   int windowdecrease = 0; /* Has the window been decreased this round yet? */
   struct icmp *icmp;
   int portno;
-  struct port *current_port_tmp;
+  Port *current_port_tmp;
   char hostname[1200];
 
   if (target->timedout)
@@ -1709,7 +1709,7 @@ void super_scan(Target *target, u16 *portarray, int numports,
 		if (current->prev >= 0) scan[current->prev].next = current->next;
 		current->next = current->prev = -1;
 		current->state = newstate;
-		addport(&target->ports, current->portno, 
+		target->ports.addPort(current->portno, 
 			(scantype == UDP_SCAN)? IPPROTO_UDP :
 			  (scantype == IPPROT_SCAN? IPPROTO_IP: IPPROTO_TCP), 
 			NULL, current->state);
@@ -1748,11 +1748,11 @@ void super_scan(Target *target, u16 *portarray, int numports,
   
   for (current = openlist; current;  current = (current->next >= 0)? &scan[current->next] : NULL) {
     if (scantype == IPPROT_SCAN)
-      addport(&target->ports, current->portno, IPPROTO_IP, NULL, PORT_OPEN);
+      target->ports.addPort(current->portno, IPPROTO_IP, NULL, PORT_OPEN);
     else if (scantype != UDP_SCAN)
-      addport(&target->ports, current->portno, IPPROTO_TCP, NULL, PORT_OPEN);
+      target->ports.addPort(current->portno, IPPROTO_TCP, NULL, PORT_OPEN);
     else
-      addport(&target->ports, current->portno, IPPROTO_UDP, NULL, PORT_OPEN);
+      target->ports.addPort(current->portno, IPPROTO_UDP, NULL, PORT_OPEN);
   }
 
  superscan_timedout:
@@ -1776,7 +1776,7 @@ void super_scan(Target *target, u16 *portarray, int numports,
 	}
 	for(portno = 0; portno < 65536; portno++)
 	  {
-	    current_port_tmp = lookupport(&target->ports, portno, IPPROTO_UDP);
+	    current_port_tmp = target->ports.lookupPort(portno, IPPROTO_UDP);
 	    if (current_port_tmp) {
 	      assert(current_port_tmp->state == PORT_OPEN);
 	      current_port_tmp->state = PORT_FIREWALLED;
@@ -1794,7 +1794,7 @@ void super_scan(Target *target, u16 *portarray, int numports,
 	}
 	for(portno = 0; portno < 65536; portno++)
 	  {
-	    current_port_tmp = lookupport(&target->ports, portno, IPPROTO_TCP);
+	    current_port_tmp = target->ports.lookupPort(portno, IPPROTO_TCP);
 	    if (current_port_tmp) {
 	      assert(current_port_tmp->state == PORT_OPEN);
 	      current_port_tmp->state = PORT_FIREWALLED;

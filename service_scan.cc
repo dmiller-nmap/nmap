@@ -67,7 +67,6 @@
 
 extern NmapOps o;
 
-
 class AllProbes {
 public:
   AllProbes();
@@ -76,23 +75,14 @@ public:
   ServiceProbe *nullProbe; // No probe text - just waiting for banner
 };
 
-enum probestate {
-  PROBESTATE_INITIAL=1, // No probes started yet
-  PROBESTATE_NULLPROBE, // Is working on the NULL Probe
-  PROBESTATE_MATCHINGPROBES, // Is doing matching probe(s)
-  PROBESTATE_NONMATCHINGPROBES, // The above failed, is checking nonmatches
-  PROBESTATE_FINISHED_MATCHED, // Yay!  Found a match
-  PROBESTATE_FINISHED_NOMATCH, // D'oh!  Failed to find the service.
-  PROBESTATE_FINISHED_TCPWRAPPED, // We think the port is blocked via tcpwrappers
-  PROBESTATE_INCOMPLETE // failed to complete (error, host timeout, etc.)
-};
-
 // Details on a particular service (open port) we are trying to match
 class ServiceNFO {
 public:
   ServiceNFO(AllProbes *AP);
   ~ServiceNFO();
+  // Note that the next 2 members are for convenience and are not destroyed w/the ServiceNFO
   Target *target; // the port belongs to this target host
+  Port *port; // The Port that this service represents (this copy is taken from inside Target)
   // if a match is found, it is placed here.  Otherwise NULL
   const char *probe_matched; 
   // most recent probe executed (or in progress).  If there has been a match 
@@ -105,7 +95,7 @@ public:
   // the probe is already expired.  Timeval can omitted, it is just there 
   // as an optimization in case you have it handy.
   int currentprobe_timemsleft(const struct timeval *now = NULL);
-  enum probestate probe_state;
+  enum serviceprobestate probe_state; // defined in portlist.h
   nsock_iod niod; // The IO Descriptor being used in this probe (or NULL)
   u16 portno; // in host byte order
   u8 proto; // IPPROTO_TCP or IPPROTO_UDP
@@ -140,7 +130,7 @@ public:
 void servicescan_read_handler(nsock_pool nsp, nsock_event nse, void *mydata);
 void servicescan_write_handler(nsock_pool nsp, nsock_event nse, void *mydata);
 void servicescan_connect_handler(nsock_pool nsp, nsock_event nse, void *mydata);
-void end_svcprobe(enum probestate probe_state, ServiceGroup *SG, ServiceNFO *svc, nsock_iod nsi);
+void end_svcprobe(enum serviceprobestate probe_state, ServiceGroup *SG, ServiceNFO *svc, nsock_iod nsi);
 static void startNextProbe(nsock_pool nsp, nsock_iod nsi, ServiceGroup *SG, 
 			   struct ServiceNFO *svc);
 int launchSomeServiceProbes(nsock_pool nsp, ServiceGroup *SG);
@@ -148,8 +138,8 @@ int launchSomeServiceProbes(nsock_pool nsp, ServiceGroup *SG);
 ServiceProbeMatch::ServiceProbeMatch() {
   servicename = NULL;
   matchstr = NULL;
-  matchstr_compiled = NULL;
-  matchstr_extra = NULL;
+  regex_compiled = NULL;
+  regex_extra = NULL;
   isInitialized = false;
   matchops_ignorecase = false;
 }
@@ -158,9 +148,11 @@ ServiceProbeMatch::~ServiceProbeMatch() {
   if (!isInitialized) return;
   if (servicename) free(servicename);
   if (matchstr) free(matchstr);
-  if (matchstr_compiled) pcre_free(matchstr_compiled);
-  if (matchstr_extra) pcre_free(matchstr_extra);
+  matchstrlen = 0;
+  if (regex_compiled) pcre_free(regex_compiled);
+  if (regex_extra) pcre_free(regex_extra);
   isInitialized = false;
+  matchops_anchor = -1;
 }
 
 // match text from the nmap-service-probes file.  This must be called before 
@@ -175,7 +167,9 @@ void ServiceProbeMatch::InitMatch(const char *matchtext, int lineno) {
   int pcre_compile_ops = 0;
   const char *pcre_errptr = NULL;
   int pcre_erroffset = 0;
-  
+  char tmpbuf[256];
+  unsigned int tmpbuflen = 0;
+
   if (isInitialized) fatal("Sorry ... ServiceProbeMatch::InitMatch does not yet support reinitializion");
   if (!matchtext || !*matchtext) 
     fatal("ServiceProbeMatch::InitMatch: no matchtext passed in (line %d of nmap-service-probes)", lineno);
@@ -200,44 +194,85 @@ void ServiceProbeMatch::InitMatch(const char *matchtext, int lineno) {
   // insensitive)
   matchtext = p;
   while(isspace(*matchtext)) matchtext++;
-  if (*matchtext != 'm' || !*(matchtext+1)) 
-    fatal("ServiceProbeMatch::InitMatch: parse error on line %d of nmap-service-probes", lineno);
-  matchtype = SERVICEMATCH_REGEX;
-  delimchar = *(++matchtext);
-  ++matchtext;
-  // find the end of the regex
-  p = strchr(matchtext, delimchar);
-  if (!p) fatal("ServiceProbeMatch::InitMatch: parse error on line %d of nmap-service-probes", lineno);
+  if (*matchtext == 'm') {
+    if (!*(matchtext+1))
+      fatal("ServiceProbeMatch::InitMatch: parse error on line %d of nmap-service-probes", lineno);
+    matchtype = SERVICEMATCH_REGEX;
+    delimchar = *(++matchtext);
+    ++matchtext;
+    // find the end of the regex
+    p = strchr(matchtext, delimchar);
+    if (!p) fatal("ServiceProbeMatch::InitMatch: parse error on line %d of nmap-service-probes", lineno);
+    matchstrlen = p - matchtext;
+    matchstr = (char *) safe_malloc(matchstrlen + 1);
+    memcpy(matchstr, matchtext, matchstrlen);
+    matchstr[matchstrlen]  = '\0';
+    
+    matchtext = p + 1; // skip past the delim
+    // any options?
+    while(*matchtext && !isspace(*matchtext)) {
+      if (*matchtext == 'i')
+	matchops_ignorecase = true;
+      else fatal("ServiceProbeMatch::InitMatch: illegal regexp option on line %d of nmap-service-probes", lineno);
+      matchtext++;
+    }
 
-  matchstr = (char *) safe_malloc(p - matchtext + 1);
-  memcpy(matchstr, matchtext, p - matchtext);
-  matchstr[p - matchtext]  = '\0';
-  
-  matchtext = p + 1; // skip past the delim
-  // any options?
-  while(*matchtext && !isspace(*matchtext)) {
-    if (*matchtext == 'i')
-      matchops_ignorecase = true;
-    else fatal("ServiceProbeMatch::InitMatch: illegal regexp option on line %d of nmap-service-probes", lineno);
-    matchtext++;
+    // Next we compile and study the regular expression to match
+    if (matchops_ignorecase)
+      pcre_compile_ops |= PCRE_CASELESS;
+    
+    regex_compiled = pcre_compile(matchstr, pcre_compile_ops, &pcre_errptr, 
+				     &pcre_erroffset, NULL);
+    
+    if (regex_compiled == NULL)
+      fatal("ServiceProbeMatch::InitMatch: illegal regexp on line %d of nmap-service-probes (at regexp offset %d): %s\n", lineno, pcre_erroffset, pcre_errptr);
+    
+    
+    // Now study the regexp for greater efficiency
+    regex_extra = pcre_study(regex_compiled, 0, &pcre_errptr);
+    if (pcre_errptr != NULL)
+      fatal("ServiceProbeMatch::InitMatch: failed to pcre_study regexp on line %d of nmap-service-probes: %s\n", lineno, pcre_errptr);
+  } else if (*matchtext == 'q') {
+    // The 'q' option is a simple C-like string for when regex would be overkill
+    if (!*(matchtext+1))
+      fatal("ServiceProbeMatch::InitMatch: parse error on line %d of nmap-service-probes", lineno);
+    matchtype = SERVICEMATCH_STATIC;
+    delimchar = *(++matchtext);
+    ++matchtext;
+    // find the end of the regex
+    p = strchr(matchtext, delimchar);
+    if (!p) fatal("ServiceProbeMatch::InitMatch: parse error on line %d of nmap-service-probes", lineno);
+    tmpbuflen = p - matchtext;
+    assert(tmpbuflen < sizeof(tmpbuf) - 1);
+    memcpy(tmpbuf, matchtext, tmpbuflen);
+    tmpbuf[tmpbuflen] = '\0';
+    if (!cstring_unescape(tmpbuf, &tmpbuflen)) {
+      fatal("ServiceProbeMatch::InitMatch: parse error on line %d of nmap-service-probes", lineno);
+    }
+    matchstr = (char *) safe_malloc(tmpbuflen + 1);
+    memcpy(matchstr, tmpbuf, tmpbuflen);
+    matchstrlen = tmpbuflen;
+    matchstr[matchstrlen]  = '\0'; // matchstr[] may have embedded NUL - only terminated for ease of debugging
+    matchtext = p + 1; // skip past the delim
+    // any options?
+    while(*matchtext && !isspace(*matchtext)) {
+      if (*matchtext == 'a') {
+	char *endptr = NULL;
+	matchtext++;
+	if (!isdigit(*matchtext))
+	  fatal("ServiceProbeMatch::InitMatch: static match string option 'a' must be followed by a number - line %d of nmap-service-probes", lineno);
+	matchops_ignorecase = true;
+	matchops_anchor = strtol(matchtext, &endptr, 10);
+	assert(matchops_anchor >= 0);
+	matchtext = endptr - 1; // will be incremented momentarily anyway
+      } else fatal("ServiceProbeMatch::InitMatch: illegal regexp option on line %d of nmap-service-probes", lineno);
+      matchtext++;
+    }
+  } else {
+    /* Invalid matchtext */
+    fatal("ServiceProbeMatch::InitMatch: parse error on line %d of nmap-service-probes", lineno);
   }
 
-  // Next we compile and study the regular expression to match
-  if (matchops_ignorecase)
-    pcre_compile_ops |= PCRE_CASELESS;
-
-  matchstr_compiled = pcre_compile(matchstr, pcre_compile_ops, &pcre_errptr, 
-				   &pcre_erroffset, NULL);
-
-  if (matchstr_compiled == NULL)
-    fatal("ServiceProbeMatch::InitMatch: illegal regexp on line %d of nmap-service-probes (at regexp offset %d): %s\n", lineno, pcre_erroffset, pcre_errptr);
-  
-
-  // Now study the regexp for greater efficiency
-  matchstr_extra = pcre_study(matchstr_compiled, 0, &pcre_errptr);
-  if (pcre_errptr != NULL)
-    fatal("ServiceProbeMatch::InitMatch: failed to pcre_study regexp on line %d of nmap-service-probes: %s\n", lineno, pcre_errptr);
-  
   isInitialized = 1;
 }
 
@@ -245,22 +280,45 @@ const char *ServiceProbeMatch::testMatch(const u8 *buf, int buflen) {
   int rc;
   char *bufc = (char *) buf;
   assert(isInitialized);
-  rc = pcre_exec(matchstr_compiled, matchstr_extra, bufc, buflen, 0, 0, NULL, 0);
-  if (rc < 0) {
-#ifdef PCRE_ERROR_MATCHLIMIT  // earlier PCRE versions lack this
-    if (rc == PCRE_ERROR_MATCHLIMIT) {
-      if (o.debugging || o.verbose > 1) 
-	error("Warning: Hit PCRE_ERROR_MATCHLIMIT when probing for service %s with the regex '%s'", servicename, matchstr);
-    } else
-#endif // PCRE_ERROR_MATCHLIMIT
- if (rc != PCRE_ERROR_NOMATCH) {
-      fatal("Unexpected PCRE error (%d) when probing for service %s with the regex '%s'", rc, servicename, matchstr);
-    }
-    return NULL;
-  }
 
-  // Yeah!  Match apparently succeeded.
-  return servicename;
+  if (matchtype == SERVICEMATCH_REGEX) {
+    rc = pcre_exec(regex_compiled, regex_extra, bufc, buflen, 0, 0, NULL, 0);
+    if (rc < 0) {
+#ifdef PCRE_ERROR_MATCHLIMIT  // earlier PCRE versions lack this
+      if (rc == PCRE_ERROR_MATCHLIMIT) {
+	if (o.debugging || o.verbose > 1) 
+	  error("Warning: Hit PCRE_ERROR_MATCHLIMIT when probing for service %s with the regex '%s'", servicename, matchstr);
+      } else
+#endif // PCRE_ERROR_MATCHLIMIT
+	if (rc != PCRE_ERROR_NOMATCH) {
+	  fatal("Unexpected PCRE error (%d) when probing for service %s with the regex '%s'", rc, servicename, matchstr);
+	}
+      return NULL;
+    }
+    // Yeah!  Match apparently succeeded.
+    return servicename;
+  } else {
+    assert(matchtype == SERVICEMATCH_STATIC);
+    if (matchops_anchor >= 0) {
+      if (buflen < matchstrlen + matchops_anchor)
+	return NULL; // no room to match
+      if (memcmp(buf + matchops_anchor, matchstr, matchstrlen) != 0)
+	return NULL; // TODO: I should somehow mark this as impossible to match
+      // Yeah!  At this point the match must have succeeded
+      return servicename;
+    } else {
+      for(int startpos = 0; startpos <= buflen - matchstrlen; startpos++) {
+	if (memcmp(buf + startpos, matchstr, matchstrlen) == 0) {
+	  // Yeah!  At this point the match must have succeeded
+	  return servicename;
+	}
+      }
+      // Went through all possible start positions (if any) and didn't find jack.
+      return NULL;
+    }
+  }
+  assert(0);
+  return NULL; // unreached
 }
 
 
@@ -523,7 +581,7 @@ ServiceNFO::ServiceNFO(AllProbes *newAP) {
   AP = newAP;
   currentresp = NULL; 
   currentresplen = 0;
-
+  port = NULL;
 }
 
 ServiceNFO::~ServiceNFO() {
@@ -641,24 +699,28 @@ ServiceGroup::ServiceGroup(Target *targets[], int num_targets,
 			   AllProbes *AP) {
   int targetno;
   ServiceNFO *svc;
-  struct port *nxtport;
+  Port *nxtport;
+  int desired_par;
 
   for(targetno = 0 ; targetno < num_targets; targetno++) {
-    /* TODO:  Change to support UDP when supported */
     nxtport = NULL;
-    while((nxtport = nextport(&(targets[targetno]->ports), nxtport, 
-			      IPPROTO_TCP, PORT_OPEN,
+    while((nxtport = targets[targetno]->ports.nextPort(nxtport, 0, PORT_OPEN,
 			      true))) {
       svc = new ServiceNFO(AP);
       svc->target = targets[targetno];
       svc->portno = nxtport->portno;
       svc->proto = nxtport->proto;
+      svc->port = nxtport;
       services_remaining.push_back(svc);
     }
   }
 
+  desired_par = 1;
+  if (o.timing_level == 3) desired_par = 10;
+  if (o.timing_level == 4) desired_par = 15;
+  if (o.timing_level >= 5) desired_par = 20;
   // TODO: Come up with better ways to determine ideal_services
-  ideal_parallelism = box(o.min_parallelism, o.max_parallelism? o.max_parallelism : 100, 10);
+  ideal_parallelism = box(o.min_parallelism, o.max_parallelism? o.max_parallelism : 100, desired_par);
 }
 
 ServiceGroup::~ServiceGroup() {
@@ -717,19 +779,30 @@ static void startNextProbe(nsock_pool nsp, nsock_iod nsi, ServiceGroup *SG,
     // The finisehd probe was not a NULL probe.  So we close the
     // connection, and if further probes are available, we launch the
     // next one.
-    nsi_delete(nsi);
     probe = svc->nextProbe();
     if (probe) {
-      // For a TCP probe, we start by requesting a connection to the target
-      assert(svc->proto == IPPROTO_TCP); // TODO: Handle UDP probes
-      if ((svc->niod = nsi_new(nsp, svc))) {
-	fatal("Failed to allocate Nsock I/O descriptor in startNextProbe()");
+      // For a TCP probe, we start by requesting a new connection to the target
+      if (svc->proto == IPPROTO_TCP) {
+	nsi_delete(nsi);
+	if ((svc->niod = nsi_new(nsp, svc)) == NULL) {
+	  fatal("Failed to allocate Nsock I/O descriptor in startNextProbe()");
+	}
+
+	nsock_connect_tcp(nsp, svc->niod, servicescan_connect_handler, 
+			  DEFAULT_CONNECT_TIMEOUT, svc, svc->target->v4host(),
+			  svc->portno);
+      } else {
+	assert(svc->proto == IPPROTO_UDP);
+	/* Can maintain the same UDP "connection" */
+	svc->currentprobe_exec_time = *nsock_gettimeofday();
+	send_probe_text(nsp, nsi, svc, probe);
+	// Now let us read any results
+	nsock_read(nsp, nsi, servicescan_read_handler, 
+		   svc->currentprobe_timemsleft(nsock_gettimeofday()), svc);
       }
-      nsock_connect_tcp(nsp, svc->niod, servicescan_connect_handler, 
-			DEFAULT_CONNECT_TIMEOUT, svc, svc->target->v4host(),
-			svc->portno);
     } else {
       // No more probes remaining!  Failed to match
+      nsi_delete(nsi);
       end_svcprobe(PROBESTATE_FINISHED_NOMATCH, SG, svc, NULL);
     }
   }
@@ -738,7 +811,7 @@ static void startNextProbe(nsock_pool nsp, nsock_iod nsi, ServiceGroup *SG,
 
 // A simple helper function to cancel further work on a service and set it to the given probe_state
 // pass NULL for nsi if you don't want it to be deleted (for example, if you already have done so).
-void end_svcprobe(enum probestate probe_state, ServiceGroup *SG, ServiceNFO *svc, nsock_iod nsi) {
+void end_svcprobe(enum serviceprobestate probe_state, ServiceGroup *SG, ServiceNFO *svc, nsock_iod nsi) {
   list<ServiceNFO *>::iterator member;
 
   svc->probe_state = probe_state;
@@ -791,11 +864,12 @@ void servicescan_write_handler(nsock_pool nsp, nsock_event nse, void *mydata) {
   enum nse_status status = nse_status(nse);
   nsock_iod nsi;
   struct ServiceNFO *svc = (struct ServiceNFO *)mydata;
-  ServiceGroup *SG = (ServiceGroup *) nsp_getud(nsp);
+  ServiceGroup *SG;
 
  if (status == NSE_STATUS_SUCCESS)
    return;
 
+ SG = (ServiceGroup *) nsp_getud(nsp);
  nsi = nse_iod(nse);
  // Uh-oh.  Some sort of write failure ... maybe the connection closed on us unexpectedly?
  if (o.debugging) 
@@ -832,7 +906,8 @@ void servicescan_read_handler(nsock_pool nsp, nsock_event nse, void *mydata) {
 
     if (matchname) {
       // WOO HOO!!!!!!  MATCHED!
-      printf("WOOHOO!  The host %s port %hi matches %s!\n", svc->target->NameIP(), svc->portno, matchname);
+      if (o.debugging > 1)
+	printf("Service scan match: %s:%hi is %s\n", svc->target->NameIP(), svc->portno, matchname);
       svc->probe_matched = matchname;
       end_svcprobe(PROBESTATE_FINISHED_MATCHED, SG, svc, nsi);
 
@@ -863,7 +938,23 @@ void servicescan_read_handler(nsock_pool nsp, nsock_event nse, void *mydata) {
     }
   } else if (status == NSE_STATUS_ERROR) {
     // Errors might happen in some cases ... I'll worry about later
-    fatal("Unexpected error in NSE_TYPE_READ callback.  Error code: %d", nse_errorcode(nse));
+    int err = nse_errorcode(nse);
+    switch(err) {
+    case ECONNRESET:
+      // Jerk hung up on us.  Probably didn't like our probe.  We treat it as with EOF above.
+      if (probe->isNullProbe()) {
+	// TODO:  Perhaps should do further verification before making this assumption
+	end_svcprobe(PROBESTATE_FINISHED_TCPWRAPPED, SG, svc, nsi);
+      } else {
+	// Perhaps this service didn't like the particular probe text.  We'll try the 
+	// next one
+	startNextProbe(nsp, nsi, SG, svc);
+      }
+      break;
+    default:
+      fatal("Unexpected error in NSE_TYPE_READ callback.  Error code: %d (%s)", err,
+	    strerror(err));
+    }
   } else {
     fatal("Unexpected status (%d) in NSE_TYPE_READ callback.", (int) status);
   }
@@ -872,6 +963,21 @@ void servicescan_read_handler(nsock_pool nsp, nsock_event nse, void *mydata) {
   launchSomeServiceProbes(nsp, SG);
   return;
 }
+
+// This is passed a completed ServiceGroup which contains the scanning results for every service.
+// The function iterates through each finished service and adds the results to Target structure for
+// Nmap to output later.
+
+static void processResults(ServiceGroup *SG) {
+list<ServiceNFO *>::iterator svc;
+
+ for(svc = SG->services_finished.begin(); svc != SG->services_finished.end(); svc++) {
+   if ((*svc)->probe_state == PROBESTATE_FINISHED_MATCHED) {
+     (*svc)->port->setServiceProbeResults(PROBESTATE_FINISHED_MATCHED, (*svc)->probe_matched);
+   }
+ }
+}
+
 
 // This function consults the ServiceGroup to determine whether any
 // more probes can be launched at this time.  If so, it determines the
@@ -885,17 +991,23 @@ int launchSomeServiceProbes(nsock_pool nsp, ServiceGroup *SG) {
     // Start executing a probe from the new list and move it to in_progress
     svc = SG->services_remaining.front();
     nextprobe = svc->nextProbe();
-    // For a TCP probe, we start by requesting a connection to the target
-    assert(svc->proto == IPPROTO_TCP); // TODO: Handle UDP probes
+    // We start by requesting a connection to the target
     if ((svc->niod = nsi_new(nsp, svc)) == NULL) {
       fatal("Failed to allocate Nsock I/O descriptor in launchSomeServiceProbes()");
     }
     if (o.debugging > 1) {
       printf("Starting probes against new service: %s:%hi (%s)\n", svc->target->targetipstr(), svc->portno, (svc->proto == IPPROTO_TCP)? "tcp" : "udp");
     }
-    nsock_connect_tcp(nsp, svc->niod, servicescan_connect_handler, 
-		      DEFAULT_CONNECT_TIMEOUT, svc, svc->target->v4host(),
-		      svc->portno);
+    if (svc->proto == IPPROTO_TCP)
+      nsock_connect_tcp(nsp, svc->niod, servicescan_connect_handler, 
+			DEFAULT_CONNECT_TIMEOUT, svc, svc->target->v4host(),
+			svc->portno);
+    else {
+      assert(svc->proto == IPPROTO_UDP);
+      nsock_connect_udp(nsp, svc->niod, servicescan_connect_handler, 
+			svc, svc->target->v4host(),
+			svc->portno);
+    }
     // Now remove it from the remaining service list
     SG->services_remaining.pop_front();
     // And add it to the in progress list
@@ -980,7 +1092,7 @@ int service_scan(Target *targets[], int num_targets) {
   // Yeah - done with the service scan.  Now I go through the results
   // discovered, store the important info away, and free up everything
   // else.
-  
+  processResults(SG);
 
   delete SG;
 

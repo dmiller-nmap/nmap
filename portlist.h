@@ -49,7 +49,7 @@
 
 #include <nbase.h>
 
-/* struct port stuff */
+/* port states */
 #define PORT_UNKNOWN 0
 #define PORT_CLOSED 1
 #define PORT_OPEN 2
@@ -64,8 +64,32 @@
 #define CONF_LOW 1
 #define CONF_HIGH 2
 
+enum serviceprobestate {
+  PROBESTATE_INITIAL=1, // No probes started yet
+  PROBESTATE_NULLPROBE, // Is working on the NULL Probe
+  PROBESTATE_MATCHINGPROBES, // Is doing matching probe(s)
+  PROBESTATE_NONMATCHINGPROBES, // The above failed, is checking nonmatches
+  PROBESTATE_FINISHED_MATCHED, // Yay!  Found a match
+  PROBESTATE_FINISHED_NOMATCH, // D'oh!  Failed to find the service.
+  PROBESTATE_FINISHED_TCPWRAPPED, // We think the port is blocked via tcpwrappers
+  PROBESTATE_INCOMPLETE // failed to complete (error, host timeout, etc.)
+};
 
-struct port {
+enum service_detection_type { SERVICE_DETECTION_TABLE, SERVICE_DETECTION_PROBED };
+
+class Port {
+ public:
+  Port();
+  ~Port();
+  // Obtain the service name listening on the port (NULL if port is
+  // not open or service) is unknown.  Detection type will be
+  // SERVICE_DETECTION_TABLE or SERVICE_DETECTION_PROBED.  Confidence
+  // is a number from 0 (least confident) to 10 (most confident)
+  // expressing how accurate the service detection is likely to be.  Either argument
+  // can be NULL if you aren't interested.
+  const char *serviceName(enum service_detection_type *detection_type, int *confidence);
+  // sname should be NULL if sres is not PROBESTATE_FINISHED_MATCHED
+  void setServiceProbeResults(enum serviceprobestate sres, const char *sname);
   u16 portno;
   u8 proto;
   char *owner;
@@ -81,28 +105,20 @@ struct port {
   int state; 
   int confidence; /* How sure are we about the state? */
 
-  struct port *next; /* Internal use only -- we sometimes like to link them
+ private:
+  Port *next; /* Internal use only -- we sometimes like to link them
 			together */
+  enum serviceprobestate serviceprobe_results; // overall results of service scan
+  const char *serviceprobe_service; // If a service was discovered, points to the name
 };
 
-
-
-typedef struct portlist {
-  struct port **udp_ports;
-  struct port **tcp_ports;
-  struct port **ip_prots;
-  int state_counts[PORT_HIGHEST_STATE]; /* How many ports in list are in each
-					   state */
-  int state_counts_udp[PORT_HIGHEST_STATE];
-  int state_counts_tcp[PORT_HIGHEST_STATE];
-  int state_counts_ip[PORT_HIGHEST_STATE];
-  int ignored_port_state; /* The state of the port we ignore for output */
-  int numports; /* Total number of ports in list in ANY state */
-} portlist;
-
-int addport(portlist *plist, u16 portno, u8 protocol, char *owner, int state);
-int deleteport(portlist *plist, u16 portno, u8 protocol);
-
+class PortList {
+ public:
+  PortList();
+  ~PortList();
+  // Add a new port to this list
+  int addPort(u16 portno, u8 protocol, char *owner, int state);
+  int removePort(u16 portno, u8 protocol);
 /* A function for iterating through the ports.  Give NULL for the
    first "afterthisport".  Then supply the most recent returned port
    for each subsequent call.  When no more matching ports remain, NULL
@@ -113,24 +129,23 @@ int deleteport(portlist *plist, u16 portno, u8 protocol);
    order from lowest to highest, except that if you ask for both TCP &
    UDP, every TCP port will be returned before we start returning UDP
    ports */
-struct port *nextport(portlist *plist, struct port *afterthisport, 
-		      u8 allowed_protocol, int allowed_state, 
-		      bool allow_portzero);
+    Port *nextPort(Port *afterthisport, 
+		   u8 allowed_protocol, int allowed_state, 
+		   bool allow_portzero);
 
-struct port *lookupport(portlist *ports, u16 portno, u8 protocol);
+  Port *lookupPort(u16 portno, u8 protocol);
+  Port **udp_ports;
+  Port **tcp_ports;
+  Port **ip_prots;
+  int state_counts[PORT_HIGHEST_STATE]; /* How many ports in list are in each
+					   state */
+  int state_counts_udp[PORT_HIGHEST_STATE];
+  int state_counts_tcp[PORT_HIGHEST_STATE];
+  int state_counts_ip[PORT_HIGHEST_STATE];
+  int getIgnoredPortState(); /* The state of the port we ignore for output */
+  int numports; /* Total number of ports in list in ANY state */
+ private:
 
-/* Decide which port we want to ignore in output (for example, we don't want
- to show closed ports if there are 40,000 of them.) */
-void assignignoredportstate(portlist *plist);
-
-/* RECYCLES the port so that it can later be obtained again using 
-   make_empty_port */
-void free_port(struct port *pt);
-
-struct port *make_empty_port();
-
-/* Empties out a portlist so that it can be reused (or freed).  All the 
-   internal structures that must be freed are done so here. */
-void resetportlist(portlist *plist);
+};
 
 #endif

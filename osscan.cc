@@ -93,7 +93,7 @@ unsigned int sequence_base;
 unsigned int openport;
 unsigned int bytes;
 unsigned int closedport = 31337;
-struct port *tport = NULL;
+Port *tport = NULL;
 char filter[512];
 double seq_inc_sum = 0;
 unsigned int  seq_avg_inc = 0;
@@ -151,16 +151,16 @@ snprintf(filter, sizeof(filter), "dst host %s and (icmp or (tcp and src host %s)
  target->FPR->osscan_opentcpport = -1;
  target->FPR->osscan_closedtcpport = -1;
  tport = NULL;
- if ((tport = nextport(&target->ports, NULL, IPPROTO_TCP, PORT_OPEN, false))) {
+ if ((tport = target->ports.nextPort(NULL, IPPROTO_TCP, PORT_OPEN, false))) {
    openport = tport->portno;
    target->FPR->osscan_opentcpport = tport->portno;
  }
  
  /* Now we should find a closed port */
- if ((tport = nextport(&target->ports, NULL, IPPROTO_TCP, PORT_CLOSED, false))) {
+ if ((tport = target->ports.nextPort(NULL, IPPROTO_TCP, PORT_CLOSED, false))) {
    closedport = tport->portno;
    target->FPR->osscan_closedtcpport = tport->portno;
- } else if ((tport = nextport(&target->ports, NULL, IPPROTO_TCP, PORT_UNFIREWALLED, false))) {
+ } else if ((tport = target->ports.nextPort(NULL, IPPROTO_TCP, PORT_UNFIREWALLED, false))) {
    /* Well, we will settle for unfiltered */
    closedport = tport->portno;
  } else {

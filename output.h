@@ -71,7 +71,7 @@
    ports found on the machine.  It also handles the Machine/Greppable
    output and the XML output.  It is pretty ugly -- in particular I
    should write helper functions to handle the table creation */
-void printportoutput(Target *currenths, portlist *plist);
+void printportoutput(Target *currenths, PortList *plist);
 
 /* Write some information (printf style args) to the given log stream(s) */
 void log_write(int logt, const char *fmt, ...)

@@ -564,7 +564,7 @@ void arg_parse_free(char **argv) {
 }
 
 // A simple function to form a character from 2 hex digits in ASCII form
-static char hex2char(char a, char b)
+static unsigned char hex2char(unsigned char a, unsigned char b)
 {
   int val;
   if (!isxdigit(a) || !isxdigit(b)) return 0;
@@ -572,13 +572,13 @@ static char hex2char(char a, char b)
   b = tolower(b);
   if (isdigit(a))
     val = (a - '0') << 4;
-  else val = (a - 'a') << 4;
+  else val = (10 + (a - 'a')) << 4;
 
   if (isdigit(b))
     val += (b - '0');
-  else val += (b - 'a');
+  else val += 10 + (b - 'a');
 
-  return (char) b;
+  return (unsigned char) val;
 }
 
 /* Convert a string in the format of a roughly C-style string literal
@@ -594,6 +594,8 @@ char *cstring_unescape(char *str, unsigned int *newlen) {
     if (*src == '\\' ) {
       src++;
       switch(*src) {
+      case '0':
+	newchar = '\0'; src++; break;
       case 'a': // Bell (BEL)
 	newchar = '\a'; src++; break;	
       case 'b': // Backspace (BS)
@@ -611,7 +613,7 @@ char *cstring_unescape(char *str, unsigned int *newlen) {
       case 'x':
 	src++;
 	if (!*src || !*(src + 1)) return NULL;
-	if (!isxdigit(*src) || !isxdigit(*src + 1)) return NULL;
+	if (!isxdigit(*src) || !isxdigit(*(src + 1))) return NULL;
 	newchar = hex2char(*src, *(src + 1));
 	src += 2;
 	break;
@@ -621,6 +623,7 @@ char *cstring_unescape(char *str, unsigned int *newlen) {
 	// Other characters I'll just copy as is
 	newchar = *src;
 	src++;
+	break;
       }
       *dst = newchar;
       dst++;
