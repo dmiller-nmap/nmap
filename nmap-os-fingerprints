@@ -199,7 +199,7 @@ T7(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint 4.3BSD-tahoe on a MicroVax III
-Class Unclassified | BSD-misc || general purpose 
+Class DEC | BSD-misc || general purpose
 TSeq(Class=64K%IPID=I%TS=U)
 T1(DF=N%W=1000|218%ACK=S++%Flags=AS%Ops=)
 T2(Resp=N)
@@ -224,7 +224,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Alteon Networks ACEswitch 180e Software Version 8.0.62.7
-Class Alteon | embedded-misc || load balancer 
+Class Alteon | embedded-misc || load balancer
 TSeq(Class=RI%gcd=<14%SI=<D45BC&>85A%IPID=I%TS=U)
 T1(DF=N%W=200%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -368,7 +368,7 @@ PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=F%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
 # AGE Logic, Inc. IBM X-Station
 Fingerprint AGE Logic, Inc. IBM XStation
-Class IBM | embedded-misc | x terminal
+Class IBM | embedded-misc || X terminal
 TSeq(Class=64K)
 T1(DF=N%W=2000%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -599,7 +599,7 @@ T7(Resp=N)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=15C%RID=E%RIPCK=0|F%UCK=0%ULEN=134%DAT=E)
 
 Fingerprint IBM 8239 Token-Ring Stackable Hub
-Class IBM | embedded-misc | hub
+Class IBM | embedded-misc || hub
 TSeq(Class=64K%IPID=I%TS=U)
 T1(DF=N%W=F87%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -1464,7 +1464,7 @@ T7(DF=N%W=0%ACK=S%Flags=APR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Asante FriendlyNet FR3004 Series Internet Hub
-Class Asante | embedded-misc || shub
+Class Asante | embedded-misc || hub
 TSeq(Class=TD%gcd=<68%SI=<32%IPID=RD%TS=U)
 T1(DF=N%W=800%ACK=S++%Flags=AR%Ops=)
 T2(Resp=Y%DF=N%W=800%ACK=S%Flags=AR%Ops=)
@@ -1500,7 +1500,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=C0%IPLEN=164%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint AtheOS ( www.atheos.cx )
-Class AtheOS | AtheOS | general purpose
+Class AtheOS | AtheOS || general purpose
 TSeq(Class=RI%gcd=<8%SI=<A78&>6)
 T1(DF=N%W=3FF0%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -1512,7 +1512,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(Resp=N)
 
 Fingerprint AtheOS/Syllable 0.4.2
-Class AtheOS | AtheOS | general purpose
+Class AtheOS | AtheOS || general purpose
 TSeq(Class=RI%gcd=<A%SI=<1BDA%IPID=I%TS=U)
 T1(DF=N%W=3FF0%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -1524,7 +1524,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(Resp=N)
 
 Fingerprint ATT Unix SVR4.2 on a Lucent Definity voicemail system
-Class Lucent | BSD-misc | general purpose
+Class Lucent | BSD-misc || general purpose
 TSeq(Class=64K)
 T1(Resp=Y%DF=N%W=1000%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -1548,7 +1548,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=Y%TOS=0%IPLEN=38%RIPTL=148%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
 Fingerprint Axent Raptor Firewall running on Windows NT
-Class Axent | Windows | NT/2K/XP | Firewall
+Class Axent | Windows | NT/2K/XP | firewall
 TSeq(Class=TR)
 T1(Resp=Y%DF=Y%W=2017%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -1686,7 +1686,7 @@ T7(Resp=N)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Bay Networks BayStack 310T switch
-Class Bay Networks | embedded-misc || swith
+Class Bay Networks | embedded-misc || switch
 TSeq(Class=TD%gcd=36524|33E14|320C8|31704%SI=<F)
 T1(Resp=Y%DF=N%W=400%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -1835,7 +1835,7 @@ PU(Resp=N)
 
 # http://www.brixnetworks.com/products/brix1000.html
 Fingerprint Brix 1000 Verifier
-Class Brix Networks | embedded-misc || test equiptment
+Class Brix Networks | embedded-misc || specialized
 TSeq(Class=TD%gcd=<5C494%SI=<262%IPID=I%TS=U)
 T1(DF=N%W=2000%ACK=S++%Flags=AS%Ops=ME)
 T2(Resp=N)
@@ -1896,7 +1896,7 @@ PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E|F%ULEN=134%DAT=E)
 
 # (rel. ID: 17908)
 Fingerprint CacheFlow 6000 web proxy running Security Gateway 2.1.0
-Class CacheFlow | cacheos || web proxy
+Class CacheFlow | CacheOS || web proxy
 TSeq(Class=RI%gcd=<6%SI=<CB91C&>15C0%IPID=I%TS=2HZ)
 T1(DF=N%W=FFFF%ACK=S++%Flags=AS%Ops=MENWNNT)
 T2(Resp=N)
@@ -1908,7 +1908,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=15C%RID=F%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
 Fingerprint CacheOS (CacheFlow 2000 proxy cache)
-Class CacheFlow | cacheos || web proxy
+Class CacheFlow | CacheOS || web proxy
 TSeq(Class=RI%gcd=<5%SI=>1111)
 T1(Resp=Y%DF=N%W=212%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -2253,8 +2253,8 @@ T6(DF=N%W=800%ACK=S%Flags=AR%Ops=WNMETL)
 T7(DF=N%W=800%ACK=S%Flags=UPRF%Ops=WNMETL)
 PU(Resp=N)
 
-Fingerprint Cisco Pix Firewall running PIX 4.1(5)
-Class Cisco | Pix | 4.X | firewall
+Fingerprint Cisco PIX Firewall running PIX 4.1(5)
+Class Cisco | PIX | 4.X | firewall
 TSeq(Class=C%Val=211E005F)
 T1(Resp=Y%DF=N%W=1000%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=800%ACK=S%Flags=R%Ops=WNMETL)
@@ -2266,7 +2266,7 @@ T7(Resp=Y%DF=N%W=800%ACK=S%Flags=UPRF%Ops=WNMETL)
 PU(Resp=N)
 
 Fingerprint Cisco PIX v4.2 Firewall
-Class Cisco | Pix | 4.X | firewall
+Class Cisco | PIX | 4.X | firewall
 TSeq(Class=RI%gcd=<8%SI=<1E1D60&>4D03)
 T1(DF=Y%W=2017%ACK=S++%Flags=AS%Ops=MNWNNT)
 T2(Resp=Y%DF=N%W=C00|400|800%ACK=S%Flags=R%Ops=WNMETL)
@@ -2277,7 +2277,7 @@ T6(DF=N%W=C00|400|800%ACK=S%Flags=AR%Ops=WNMETL)
 T7(DF=N%W=C00|400|800%ACK=S%Flags=UPRF%Ops=WNMETL)
 PU(Resp=N)
 
-Fingerprint Cisco Pix 506 Firewall
+Fingerprint Cisco PIX 506 Firewall
 Class Cisco | PIX || firewall
 TSeq(Class=TR%gcd=<6%IPID=I%TS=U)
 T1(DF=N%W=1000%ACK=S++%Flags=AS%Ops=M)
@@ -2756,8 +2756,8 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
-Fingerprint Intergraph CLIX R3.1 Vr.7.6.20 6480
-Class Intergraph | CLIX || general purpose
+Fingerprint Intergraph CLiX R3.1 Vr.7.6.20 6480
+Class Intergraph | CLiX || general purpose
 TSeq(Class=TD%gcd=<416%SI=<1E)
 T1(DF=N%W=73F%ACK=S++%Flags=AS%Ops=ME)
 T2(Resp=N)
@@ -2916,7 +2916,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
 Fingerprint UNICOS 10.0.0 on Cray 90
-Class Cray | UNICOX | 10.X | general purpose
+Class Cray | UNICOS | 10.X | general purpose
 TSeq(Class=RI%gcd=<F%SI=<22222&>2222)
 T1(Resp=Y%DF=Y%W=8000%ACK=S++%Flags=AS%Ops=MWNTL)
 T2(Resp=N)
@@ -3468,7 +3468,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Data General DG/UX Release R4.11MU02
-Class Data General | DG/UX || general purpose 
+Class Data General | DG/UX || general purpose
 TSeq(Class=TD%gcd=10000|20000|30000%SI=<F)
 T1(DF=N%W=2229%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -3480,7 +3480,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
 Fingerprint Data General DG/UX Release R4.20MU02
-Class Data General | DG/UX || general purpose 
+Class Data General | DG/UX || general purpose
 TSeq(Class=TD%gcd=<20004%SI=<1E)
 T1(DF=N%W=2229%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -3493,7 +3493,7 @@ PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=F%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
 # dgux DataGeneral_Server R4.20MU04 generic AViiON PentiumPro
 Fingerprint Data General DG/UX Release R4.20MU04
-Class Data General | DG/UX || general purpose 
+Class Data General | DG/UX || general purpose
 TSeq(Class=RI%gcd=<6%SI=<32CBC&>281)
 T1(DF=N%W=2229%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -3505,7 +3505,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=F%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
 Fingerprint Data General DG/UX Release R4.20MU06
-Class Data General | DG/UX || general purpose 
+Class Data General | DG/UX || general purpose
 TSeq(Class=RI%gcd=<6%SI=<E21EE&>779%IPID=I%TS=U)
 T1(DF=N%W=FFAF%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -4012,7 +4012,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(Resp=N)
 
 Fingerprint FastComm FRAD (Frame Relay Access Device) F9200-DS-DNI -- Ver. 4.2.3A
-Class FastComm | embedded-misc || specialised
+Class FastComm | embedded-misc || specialized
 TSeq(Class=TD|RI%gcd=<8%SI=<1E)
 T1(DF=N%W=648%ACK=S++%Flags=AS%Ops=)
 T2(Resp=N)
@@ -4596,7 +4596,7 @@ T7(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(Resp=Y%DF=N%TOS=0%IPLEN=38%RIPTL=15C%RID=E%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
 Fingerprint HP Entria X station (running Netstation 7.x)
-Class HP | Netstation || x terminal 
+Class HP | Netstation || X terminal
 TSeq(Class=64K)
 T1(DF=N%W=2017%ACK=S++%Flags=AS%Ops=MNWNNT)
 T2(Resp=N)
@@ -4955,7 +4955,7 @@ PU(DF=N|Y%TOS=0%IPLEN=70%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 # Mac OS9
 Fingerprint Mac OS 9, or HP/UX 11.00
 Class HP | HP-UX | 11.X | general purpose
-Class Applie | Mac OS | 9.X | general purpose
+Class Apple | Mac OS | 9.X | general purpose
 TSeq(Class=RI%gcd=<6%SI=<4F254&>C95)
 T1(DF=N%W=8000%ACK=S++%Flags=AS%Ops=MEWNNNT)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -5462,7 +5462,7 @@ T7(DF=N%W=0%ACK=S%Flags=R%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
 Fingerprint Intel Netport Express PRO print server V04.33a
-Class  Intel | embedded-misc || print server
+Class Intel | embedded-misc || print server
 TSeq(Class=TD%gcd=1%SI=0)
 T1(Resp=Y%DF=N%W=400|800|C00|1000%ACK=S++%Flags=AR%Ops=)
 T2(Resp=Y%DF=N%W=400|800|C00|1000%ACK=S%Flags=AR%Ops=)
@@ -5499,7 +5499,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Labtam MT300, X-Terminal Kernel
-Class Labtam | embedded-misc || x terminal
+Class Labtam | embedded-misc || X terminal
 TSeq(Class=64K)
 T1(DF=N%W=1000%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -5523,7 +5523,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=D%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=0%ULEN=134%DAT=E)
 
 Fingerprint Lantronix ETS16P terminal server Version V3.5/2(970721)
-Class Lantronix  | embedded-misc || terminal server
+Class Lantronix | embedded-misc || terminal server
 TSeq(Class=RI%gcd=<6%SI=<404C&>90)
 T1(DF=N%W=700|2000%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
@@ -5913,7 +5913,7 @@ T7(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=WNMETL)
 PU(Resp=N)
 
 Fingerprint Ixia 1600 -- Ixia Socket/Serial TCL traffic generation and analysis server
-Class Ixia | embedded-misc || specialised
+Class Ixia | embedded-misc || specialized
 TSeq(Class=TD%gcd=<34C%SI=<14%IPID=BI)
 T1(DF=Y%W=2017%ACK=S++%Flags=AS%Ops=MNWNNT)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -6068,12 +6068,12 @@ PU(Resp=N)
 # Trancell Webramp router or Xylan Omni Switch 3.2.X.X - 3.4.X.X
 # Epson Stylus Color 1520C with 100BTX-NIC from Epson
 # CISCO 6509 WS-C6509 Software, Version NmpSW: 5.3(3)CSX
-# Sonicwall firewall appliance 10meg firmware 3.3.1
-Fingerprint Router/Switch/Printer/Firewall (LanPlex 2500/Cisco Catalyst 5505/CISCO 6509/Trancell Webramp/Xylan Omni Switch)/Epson Stylus (100BTX-NIC HP Secure Web Console, Sonicwall firewall appliance 3.3.1)
+# SonicWall firewall appliance 10meg firmware 3.3.1
+Fingerprint Router/Switch/Printer/Firewall (LanPlex 2500/Cisco Catalyst 5505/CISCO 6509/Trancell Webramp/Xylan Omni Switch)/Epson Stylus (100BTX-NIC HP Secure Web Console, SonicWall firewall appliance 3.3.1)
 Class Cisco | embedded-misc || switch
 Class Xylan | embedded-misc || switch
 Class Epson | embedded-misc || printer
-Class Sonicwall | embedded-misc || firewall
+Class SonicWall | embedded-misc || firewall
 Class Trancell | embedded-misc || router
 TSeq(Class=64K)
 T1(DF=N%W=1000%ACK=S++%Flags=AS%Ops=M)
@@ -6977,8 +6977,8 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=0%ULEN=134%DAT=E)
 
-Fingerprint MegaBit Gear TE4111C
-Class Megabit | embedded-misc || modem
+Fingerprint MegaBit Gear TE4111C modem
+Class Megabit | embedded-misc || terminal server
 TSeq(Class=64K%IPID=I%TS=U)
 T1(DF=N%W=2000%ACK=S++%Flags=AS%Ops=MNW)
 T2(Resp=N)
@@ -7172,7 +7172,7 @@ PU(Resp=Y%DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=0%UCK=E%ULEN=134%DAT=E)
 
 # NCD X server (SNMP says: NCD16 server 2.3.0 03/12/91 downloaded)
 Fingerprint NCD X server (NCD16 server 2.3.0 03/12/91)
-Class NCD | embedded-misc || x terminal
+Class NCD | embedded-misc || X terminal
 TSeq(Class=64K)
 T1(DF=N%W=800%ACK=S++%Flags=AS%Ops=)
 T2(Resp=N)
@@ -7185,7 +7185,7 @@ PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
 
 Fingerprint NCR MP-RAS 3.0.x
-Class NCR | BSD-MISC || general purpose
+Class NCR | BSD-misc || general purpose
 TSeq(Class=64K)
 T1(DF=Y%W=111C%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -7197,7 +7197,7 @@ T7(DF=Y%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint NCR MP-RAS 3.01
-Class NCR | BSD-MISC || general purpose
+Class NCR | BSD-misc || general purpose
 TSeq(Class=i800)
 T1(DF=Y%W=60F4%ACK=S++%Flags=AS%Ops=MNWNNT)
 T2(Resp=N)
@@ -7238,8 +7238,8 @@ PU(Resp=N)
 # Hewlett-Packard ENTRIA Model C3230A Server Version B.05.30
 # Cisco 11151/Arrowpoint 150 Load Balancer
 Fingerprint Cisco 11151/Arrowpoint 150 load balancer, Neoware (was HDS) NetOS V. 2.0.1 or HP ENTRIA C3230A
-Class Neoware | NetOS || x terminal
-Class HP | embedded-misc || x terminal
+Class Neoware | NetOS || X terminal
+Class HP | embedded-misc || X terminal
 Class Cisco | embedded-misc || load balancer
 TSeq(Class=64K)
 T1(Resp=Y%DF=N%W=2000%ACK=S++%Flags=AS%Ops=|M)
@@ -8345,7 +8345,7 @@ T7(Resp=N)
 PU(DF=N%TOS=C0%IPLEN=164%RIPTL=148%RID=E|F%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint SonicWall/10 firewall
-Class Sonicwall | embedded-misc || firewall
+Class SonicWall | embedded-misc || firewall
 TSeq(Class=TR)
 T1(Resp=Y%DF=N%W=7FE0%ACK=S++%Flags=AS%Ops=ME)
 T2(Resp=Y%DF=N%W=1000%ACK=S++%Flags=AR%Ops=)
@@ -8357,7 +8357,7 @@ T7(Resp=Y%DF=N%W=1000%ACK=S++%Flags=AR%Ops=)
 PU(Resp=N)
 
 Fingerprint SonicWall SOHO-3 firewall
-Class Sonicwall | embedded-misc || firewall
+Class SonicWall | embedded-misc || firewall
 T1(DF=N%W=1000%ACK=S++%Flags=AR%Ops=)
 T2(Resp=Y%DF=N%W=1000%ACK=S++%Flags=AR%Ops=)
 T3(Resp=Y%DF=N%W=1000%ACK=S++%Flags=AR%Ops=)
@@ -8368,7 +8368,7 @@ T7(DF=N%W=1000%ACK=S++%Flags=AR%Ops=)
 PU(Resp=N)
 
 Fingerprint SonicWall/10 Firewall
-Class Sonicwall | embedded-misc || firewall
+Class SonicWall | embedded-misc || firewall
 TSeq(Class=TR)
 T1(Resp=Y%DF=Y%W=2017%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=400%ACK=S++%Flags=AR%Ops=)
@@ -8515,7 +8515,7 @@ PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 # Packeteer IP-PacketShaper 2000 V3.1
 Fingerprint pSOS embedded IP stack, such as Packeteer IP-PacketShaper 2000 V3.1
-Class Packateer | pSOS || load balancer
+Class Packeteer | pSOS || load balancer
 TSeq(Class=64K)
 T1(Resp=Y%DF=N%W=1000%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -9324,7 +9324,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=164%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Tandberg X-terminal
-Class Tandberg | embedded-misc || x terminal
+Class Tandberg | embedded-misc || X terminal
 TSeq(Class=64K)
 T1(DF=N%W=400%ACK=S++%Flags=AS%Ops=)
 T2(Resp=N)
@@ -9926,7 +9926,6 @@ PU(DF=N%TOS=0%IPLEN=B0%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 # Windows XP Build 2600
 # XP Professional 5.1 (build 2600).. all patches up to June 20, 2002
 # Fingerprint Windows XP Pro with all current updates to May 2002
-Class 
 # Windows 2000 Version 5.0 Build (2195: Service Pack 3)
 Fingerprint Microsoft Windows Millennium Edition (Me), Win 2000, or WinXP
 Class Microsoft | Windows | 95/98/ME | general purpose
@@ -10397,9 +10396,8 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(Resp=N)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
-Fingerprint xMach 0.1-CURRENT
-Class xMach free distributed OS version 0.1 current
-Fingerprint xMach | xMach || general purpose
+Fingerprint xMach free distributed OS version 0.1 current
+Class xMach | xMach || general purpose
 TSeq(Class=64K%IPID=I%TS=2HZ)
 T1(DF=N%W=2017%ACK=S++%Flags=AS%Ops=MNWNNT)
 T2(Resp=N)
