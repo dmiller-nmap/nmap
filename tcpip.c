@@ -1075,8 +1075,8 @@ if (!pd) fatal("NULL packet device passed to readip_pcap");
  case DLT_ENC: offset = 12; break;
 #endif
  default:
-   error("FATAL:  Unknown datalink type (%d). Packet:\n", datalink);
    p = (char *) pcap_next(pd, &head);
+   error("FATAL:  Unknown datalink type (%d). Caplen: %d; Packet:\n", datalink, head.caplen);
    lamont_hdump(p, head.caplen);
    exit(1);
  }
