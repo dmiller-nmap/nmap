@@ -154,7 +154,7 @@ static int getServiceXMLBuf(struct serviceDeductions *sd, char *xmlbuf,
 
 /* Fills in namebuf (as long as there is space in buflen) with the
    Name nmap normal output will use to describe the port.  This takes
-   into account to confidence level, any SSH tunneling, etc.  Truncates
+   into account to confidence level, any SSL tunneling, etc.  Truncates
    namebuf to 0 length if there is no room.*/
 static void getNmapServiceName(struct serviceDeductions *sd, int state, 
 			       char *namebuf, int buflen) {

@@ -120,6 +120,7 @@ match ssh m/^SSH-([.\d]+)-(\d+\.\d+\.[-.\w]+)/ v/SSH/$2/protocol $1/
 # Akamai hosted systems tend to run this - found on www.microsoft.com
 match ssh m|^SSH-(\d[.\d]*)-AKAMAI-I\n$| v/Akamai-I SSH//protocol $1/
 match ssh m|^SSH-(\d[.\d]+)-Cisco-(\d[.\d]+)\n$| v/Cisco SSH/$2/protocol $1/
+match ssh m|^SSH-(\d[.\d]+)-SSH Protocol Compatible Server SCS (\d[-.\w]+)\n| v/NetScreen SCS sshd/$2/protocol $1/
 softmatch ssh m/^SSH-([.\d]+)-/
 
 match telnet m/^Check Point FireWall-1 authenticated Telnet server running on/ v/Check Point Firewall-1 telnetd///
@@ -140,7 +141,9 @@ match telnet m|^\xff\xfb\x01\xff\xfb\x03\xff\xfd\x01\x0d\x0a\x0d\x0aCisco\x20Sys
 # Cisco 678 DSL router
 match telnet m|^\r\n\r\nUser Access Verification\r\nPassword:\xff\xfb\x01$| v/Cisco DSL router telnetd///
 #  Cisco 2900 Catalyst switch, IOS 12.0(5)XU
-match telnet m|^\xff\xfb\x01\xff\xfb\x03\xff\xfd\x18\xff\xfd\x1f\r\n\r\nUser Access Verification\r\n\r\nPassword: $| v/Cisco telnetd//IOS 12.X/
+# Cisco 3600 router running IOS 12.X
+match telnet m|^\xff\xfb\x01\xff\xfb\x03\xff\xfd\x18\xff\xfd\x1f.*User Access Verification\r\n\r\nPassword: $|s v/Cisco router telnetd//IOS 12.X/
+match telnet m|^Access not permitted\. Closing connection\.\.\.\n$|s v/Cisco catalyst switch telnetd//access denied/
 # OpenBSD 2.3
 # FreeBSD 5.1
 match telnet m|^\xff\xfd%$| v/BSD-derived telnetd///
@@ -162,6 +165,10 @@ match telnet m|^\xff\xfb\x03\xff\xfb\x01\xff\xfd\x1f\r\n\r\nUsername: $| v/Blue 
 match telnet m|^\xff\xfb\x01@ Userid: | v/Shiva LanRover telnetd///
 # Netscreen ScreenOS 4.0.1r1.0 telnetd on a netscreen 5XT running firmware 4.0.1r1.0
 match telnet m|^\xff\xfd\x18\xff\xfb\x01\xff\xfe\x01Remote Management Console\r\n\r\nlogin: $| v/Netscreen ScreenOS telnetd///
+# Note that openwall telnetd is derived from OpenBSD telnetd
+match telnet m|^\xff\xfd\x18\xff\xfd \xff\xfd#\xff\xfd'\xff\xfd\$$| v|Openwall GNU/*/Linux telnetd|||
+match telnet m|^\xff\xfc\x01\r\nHP JetDirect\r\n\r\nPlease type \"\?\" for HELP, or \"/\" for current settings\r\n> $| v/HP Jet Direct printer telnetd///
+
 match smtp m/^220 [-.+\w]+ \(IMail ([^)]+)\) NT-ESMTP Server/ v/IMail NT-ESMTP/$1//
 match smtp m/^220 X1 NT-ESMTP Server [-.+\w]+ \(IMail ([^)]+)\)\r\n/ v/IMail NT-ESMTP/$1//
 match smtp m/^220-[-.+\w]+ Microsoft SMTP MAIL ready at.*Version: ([-\w.]+)\r\n/ v/Microsoft SMTP/$1//
@@ -197,6 +204,8 @@ match smtp m|^220 [-.\w]+ Process Software ESMTP service V([-.\w]+) ready| v/Pro
 match smtp m|^220 [-.\w]+ Mercury (\d[-.\w]+) ESMTP server ready\.\r\n$| v/Mercury Mail smtpd/$1//
 match smtp m|^220 [-.\w]+ ESMTP Service \(Lotus Domino Release (\d[-.\w]+)\) ready at | v/Lotus Domino smtpd/$1//
 match smtp m|^relaylock: Error: PRODUCT_ROOT_D not defined\nrelaylock: Error: PRODUCT_ROOT_D not defined\n1\n$| v/Plesk relaylock smtp wrapper//broken/
+match smtp m|^220 [-.\w]+ WebSTAR Mail Simple Mail Transfer Service Ready\r\n| v/WebSTAR SMTP server///
+match smtp m|^220 [-.\w]+ Lotus SMTP MTA Service Ready\r\n$| v/Lotus Notes SMTP///
 softmatch smtp m|^220 [-.\w ]+SMTP.*\r\n|
 
 match pop3 m/^\+OK X1 NT-POP3 Server [-\w.]+ \(IMail ([^)]+)\)\r\n/ v/IMail pop3d/$1//
@@ -227,6 +236,7 @@ match pop3 m|^\+OK [-.\w]+ MultiNet POP3 Server Process V(\S+) at| v/DEC OpenVMS
 match pop3 m|^\+OK <.*>, MercuryP/NLM v(\d[-.\w]+) ready.\r\n$| v/Mercury POP3 server/$1/on Novell Netware/
 match pop3 m|^\+OK Microsoft Windows POP3 Service Version 1.0 <| v/Microsoft Windows 2003 POP3 Service/1.0//
 match pop3 m|^\+OK POP3 nucleus v(200\d\.[-.\w]+) server ready\r\n| v/UW Imap pop3 server/$1//
+match pop3 m|^\+OK POP3 server ready <\w{11}>\r\n$| v/WebSTAR pop-3 server///
 softmatch pop3 m|^\+OK [-\[\]\(\)!,/+:<>@.\w ]+\r\n$|
 
 match nntp m|^200 Lotus Domino NNTP Server for UNIX \(Release (\d[-.\w]+), .*\) - Not OK to post\r\n$| v/Lotus Domino nntpd/$1/posting denied/
@@ -235,7 +245,7 @@ softmatch nntp m|^200 [-\[\]\(\)!,/+:<>@.\w ]*nntp[-\[\]\(\)!,/+:<>@.\w ]*\r\n$|
 match nntp m|^200 NNTP Service 5\.00\.0984 Version: (5\.0\.2159.1) Posting Allowed \r\n| v/Microsoft NNTP Service/$1/on Windows 2000 Server/
 # Windows NT 4.0 SP5-SP6 
 match nntp m|^200 Microsoft Exchange Internet News Service Version (5\.5\.[.\d]+) \(posting allowed\)\r\n| v/Microsoft Exchange Internet News Service/$1/posting allowed/
-
+match nntp m|^200 [-.\w]+ InterNetNews NNRP server INN (\d[-.\w]+) ready \(posting ok\)\.\r\n$| v/InterNetNews (INN)/$1/posting ok/
 # courier-0.36.1
 match imap m|^\* OK Courier-IMAP ready\. Copyright 1998-2001 Double Precision, Inc\.  See COPYING for distribution information\.\r\n$| v/Courier Imap///
 # Courier-Imap 1.4.3-2.3
@@ -254,6 +264,7 @@ match imap m|^\* OK \[CAPABILITY IMAP4REV1 X-NETSCAPE LOGIN-REFERRALS STARTTLS A
 match imap m|^\* OK Domino IMAP4 Server Release (\d[-.\w]+) +ready| v/Lotus Domino imapd/$1//
 match imap m|^\* OK Microsoft Exchange IMAP4rev1 server version ([-.\w]+) | v/Microsoft Exchange IMAP4rev1 server/$1//
 match imap m|^\* OK \[CAPABILITY IMAP4REV1 .*IMAP4rev1 (200\d\.[-.\w]+) at| v/UW Imapd/$1//
+match imap m|^\* OK [-.\w]+ Cyrus IMAP4 v([-.\w]+) server ready\r\n| v/Cyrus IMAP4 server/$1//
 softmatch imap m/^\* OK [-.\w ]+\r\n$/
 
 match ident m|^flock\(\) on closed filehandle .*midentd| v/midentd//broken/
@@ -287,8 +298,8 @@ match pcanywheredata m/^\0X\x08\0}\x08\x0d\x0a\0\x2e\x08Please press<Enter>...\x
 match meetingmaker m/^\xc1,$/ v/Meeting Maker calendaring///
 match finger m|^\r\n    Line      User       Host\(s\)              Idle Location\r\n| v/Cisco fingerd//IOS 12.X/
 # Windows 2000 Server Windows Media Unicast Service (NsUnicast) - Nsum.exe
-match nsunicast m|^4\0\0\0V4\x12\0\0\0\0\0\0\0\0\x004\0\0\0\x04\0\xf0\0\xd3\x07\t\0\x02\0\t\0.\0.\0.\0..\0\0\0\0.\0\0\0.\0\0\0\x02\0| v/Microsoft Windows Media Unicast Service//nsum.exe/
-
+match nsunicast m|^4\0\0\0V4\x12\0\0\0\0\0\0\0\0\x004\0\0\0\x04\0\xf0\0\xd3\x07\t\0.\0.\0.\0.\0.\0..\0\0\0\0.\0\0\0.\0\0\0\x02\0|s v/Microsoft Windows Media Unicast Service//nsum.exe/
+match nsunicast m|^[4f]\0\0\0V4\x12\0\0\0\0\0\0\0\0\x00[4f]\0\0\0.\0\xf0\0\xd3\x07\t\0.\0.\0.\0.\0.\0..\0\0\0\0.\0\0\0..\0\0.\0|s v/Microsoft Windows Media Unicast Service//nsum.exe/
 # Redhat Linux 7.1 - HAHAHAHAHAHA!!!! I love this service :) 
 match systat m|^USER       PID %CPU %MEM   VSZ  RSS TTY      STAT START   TIME COMMAND\n| v/Linux systat///
 # I love this service too:
@@ -297,6 +308,10 @@ match hp-gsg m|^220 JetDirect GGW server \(version (\d[.\d]+)\) ready\r\n| v/HP 
 match http m|^HTTP/1.0 500\r\nContent-type: text/plain\r\n\r\nNo Scan Capable Devices Found\r\n| v/HP Embedded Web Server remote scan service//no scanner found/
 match dict m|^530 access denied\r\n$| v/dictd//access denied/
 match dict m|^220 [-.\w]+ dictd ([-.\w/]+) on ([-.+ \w]+) <auth\.mime>| v/dictd/$1/on $2/
+match sftp m|^\+Shiva SFTP Service\0$| v/Shiva LanRover SFTP service///
+# Tiny Personal Firewall 2.0
+match tinyfw m|^\x0f\0\n\0\x01\0\0\0\0\x02\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\xc0\x0ef7\xbb\x9bS\xfc\x86\xe4\x7f\x18\xb8\x97\x06 | v/Tiny Personal Firewall/2.0//
+
 
 ##############################NEXT PROBE##############################
 Probe TCP GenericLines q|\r\n\r\n|
@@ -305,6 +320,7 @@ ports 21,43,98,110,113,199,505,540,1248,5432,6667-6670,30444
 match pop3 m|^\+OK POP3 \[[-.\w]+\] v(200[-.\w]+) server ready\r\n-ERR Null command\r\n-ERR Null command\r\n| v/ipopd/$1//
 # Solid POP3d 0.15
 match pop3 m|^\+OK Solid POP3 server ready\r\n-ERR unknown command\r\n-ERR unknown command\r\n$| v/Solid POP3d///
+match http m|^HTTP/1\.1 400 Bad Request\r\nServer: Microsoft-IIS/(\d[-.\w]+)\r\n| v/Microsoft IIS webserver/$1//
 # OpenBSD 3.2 identd
 # May apply to Linux too -- need to investigate further.
 match ident m|^0 , 0 : ERROR : UNKNOWN-ERROR\r\n$| v/OpenBSD identd///
@@ -335,7 +351,7 @@ match linuxconf m|^500 access denied: Check networking/linuxconf network access\
 
 ##############################NEXT PROBE##############################
 Probe TCP GetRequest q|GET / HTTP/1.0\r\n\r\n|
-ports 79,80-85,88,113,139,143,280,497,515,554,631,783,993,995,1220,5000,5432,5800,5900,8000-8010,8080-8085,8888,40193
+ports 79,80-85,88,113,139,143,280,497,515,554,631,783,993,995,1220,5000,5432,5800,5900,7070,8000-8010,8080-8085,8888,40193
 sslports 443
 # Server: CUPS/1.1
 match ipp m|^HTTP/1\.0.*Server: CUPS/(\S+)|s v/CUPS $1///
@@ -350,7 +366,7 @@ match http m|^HTTP/1\.[01] \d\d\d.*\r\nDate: .*\r\nServer: Apache\r\n| v/Apache 
 match http m|^HTTP/1.[10] \d\d\d.*\r\nDate:.*\r\nServer: Stronghold/([-.\w]+) Apache/([-.\w]+)| v/Apache Stronghold httpd/$1/based on Apache $2/
 match http m|^HTTP/1\.1 \d\d\d.*Server: Apache Coyote/(\d[-\d.]+)\r\n|s v|Apache Tomcat/Coyote|$1||
 match http m|^HTTP/1\.1.*\r\nServer: Netscape-Enterprise/([-.\w]+)\r\n| v/Netscape Enterprise httpd/$1//
-match http m|^HTTP/1\.1.*\r\nServer: Microsoft-IIS/([-.\w]+)\r\n|s v/Microsoft IIS httpd/$1//
+match http m|^HTTP/1\.1.*\r\nServer: Microsoft-IIS/([-.\w]+)\r\n|s v/Microsoft IIS webserver/$1//
 match http m|^HTTP/1\.0 200 OK\r\nDate: .+\r\nServer: Tomcat/([-.\w]+)\r\nContent-Type: text/html\r\nContent-Length: \d+\r\nServlet-Engine: Tomcat/[-.\w]+ \(Java ([-.\w]+); SunOS ([-.\w]+) (\w+); java\.vendor=Sun Microsystems Inc\.\)\r\n| v/Solaris management console server//SunOS $3 $4; Java $2; Tomcat $1/
 match http m|^HTTP/1.1 200 OK\r\n.+Server: CommuniGatePro/([-.\w]+)\r\n|s v/CommuniGate Pro httpd/$1//
 match http m|^HTTP/1.0 \d\d\d .*\r\nDate: .*\r\nServer: DSS ([-.\w]+) Admin Server/([-.\w]+)| v/DarwinStreamingServer/$1/Admin Server $2/
@@ -361,6 +377,7 @@ match http m|^HTTP/1.1 200 OK\r\nServer: NetWare-Enterprise-Web-Server/([-.\w]+)
 match http m|^HTTP/1.1 302 Object Moved Temporarily\r\nServer: NetWare HTTP Stack\r\n| v/Novell Netware HTTP Stack//HTTPSTK.NLM/
 match http m|^HTTP/1\.0 \d\d\d .*\r\nServer: HTTPd-WASD/([-.\w]+) OpenVMS/VAX\r\n| v|HTTPd-WASD|$1|on OpenVMS/VAX)|
 match http m|^HTTP/1.1 \d\d\d .*\r\nServer: Lotus-Domino/0\r\n| v/Lotus Domino httpd///
+match http m|^HTTP/1.1 \d\d\d .*\r\nServer: Lotus-Domino/Release-(\d[-.\w]+)\r\n| v/Lotus Domino httpd/$1//
 # G-Net BB0060 ADSL Modem (I'm not sure this is GlobespanVirata, but that is
 # what the telnetd on this device said).
 match http m|^HTTP/1.1 302 Document Follows\r\nLocation: /hag/pages/home.ssi\r\n\r\n$| v/GlobespanVirata httpd//on broadband router/
@@ -373,7 +390,8 @@ match http m|^HTTP/1\.1 200 OK\r\nContent-Length: \d+\r\nConnection: close\r\nPr
 # Blue Coat Port 80 Security Appliance Model: Blue Coat SG400 Software Version: SGOS 2.1.6044 Software Release id: 19480 Service Pack 4
 match http m|^HTTP/1\.0 301 Moved Permanently\r\nLocation: /Secure/Local/console/index\.htm\r\n\r\n$| v/Blue Coat Security Appliance HTTP admin interface///
 match http m|^HTTP/1\.0 400 Bad Request\r\nServer: AkamaiGHost\r\n| v|AkamiGHost||Akamai's HTTP Acceleration/Mirror service|
-match http m|^HTTP/1\.0 \d\d\d .*\r\nServer: Netscape-Enterprise/([-.\w]+)\r\n| v/Netscape Enterprise httpd/$1//
+match http m|^HTTP/1\.0 \d\d\d .*\r\nServer: Netscape-Enterprise/([-.\w]+)\r\n| v/Netscape Enterprise webserver/$1//
+match http m|^HTTP/1\.1 \d\d\d .*\r\nServer: Netscape-Enterprise/([-. \w]+)\r\n| v/Netscape Enterprise webserver/$1//
 match http m|^HTTP/1\.0 \d\d\d .*\nDate: .*\nServer: NCSA/(1\.\d)\n| v/NCSA httpd/$1//
 match http m|^HTTP/1\.0 \d\d\d .*\r\nServer: Netscape-FastTrack/(\d[-.\w]+)\r\n| v/Netscape FastTrack web server/$1//
 match http m|^HTTP/1\.1 \d\d\d .*\r\nServer: (Oracle[-.\w/]+) Oracle HTTP Server ([-.\w]+)|s v/Oracle HTTP Server/$1/$2/
@@ -390,12 +408,17 @@ match http m|^HTTP/1\.1 200 OK\r\nContent-Length: \d+\r\nContent-Type: text/html
 match http m|^HTTP/1\.1 200 OK\r\nContent-Type: text/html\r\nDate: .*\r\nAllow: GET, HEAD\r\nServer: Spyglass_MicroServer/(\d[-.\w]+)\r\nLast-Modified: .*\r\nExpires: .*\r\nPragma: no-cache\r\n\r\n\n<html> \n<head>\n   <meta http-equiv=\"Content-Type\" content=\"text/html; charset=iso-8859-1\">\n   <meta name=\"keywords\" content=\"printer; embedded web server; int| v/Spyglass MicroServer/$1/embedded in printer/
 match http m|^HTTP/1\.0 500 Internal Server Error\r\nServer: Cougar (\d[-.\w]+)\r\n\r\n$| v/Microsoft Windows Media Server/$1//
 match http m|^HTTP/1\.0 200 OK\r\nContent-Type: video/x-ms-asf\r\nCache-Control: max-age=0, no-cache\r\nServer: Cougar/(\d[-.\w]+)\r\n| v/Microsoft Windows Media Server/$1//
+match http m|^HTTP/1\.1 \d\d\d .*Server: NetApp/(\d[-.\w]+)\r\n|s v/NetApp filer httpd/$1//
+match http m|^HTTP/1\.0 200 OK\r\nServer: RapidLogic/(\d[.\d]+)\r\nMIME-version: 1\.0\r\nContent-type: text/html\r\n\r\n<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4\.0 Frameset//EN\"\r\n\t\t\t\"http://www\.w3\.org/TR/REC-html40/frameset\.dtd\">\r\n<HTML>\r\n<HEAD>\r\n\t<TITLE>Netopia Router Web </TITLE>| v/Netopia RapidLogic admin server/$1//
+match http m|^HTTP/1\.1 200 OK\r\nServer: WebSTAR/(\d[-.()\w]+) ID/| v/WebSTAR httpd/$1//
+
 # No more HTTP softmatch because many services that I don't think are
 # best classified 'http' use http-like semantics (for example UPnP,
 # some https servers, etc).  Maybe I should make softmatch allow
 # future services that start with the service name, and relable all of
 # those.  Shrug.  For now it is gone.
 # softmatch http m|^HTTP/1.[01] \d\d\d|
+match http-proxy m|^HTTP/1\.0 \d\d\d .*Server: NetCache \(NetApp/(\d[-.\w]+)\)\r\n|s v/NetApp NetCache proxy/$1//
 match http-proxy m|^HTTP/1\.0 400 Bad Request\r\nServer: [sS]quid/([-.\w]+)\r\n| v/Squid webproxy/$1//
 # Blue Coat Port 80 Security Appliance  Model: Blue Coat SG400 Software Version: SGOS 2.1.6044 Software Release id: 19480 Service Pack 4
 match http-proxy m|^HTTP/1\.1 504 Gateway Time-out\r\nConnection: close\r\nCache-Control: no-cache\r\nPragma: no-cache\r\nContent-Length: 2976\r\nContent-Type: text/html\r\n\r\n<DIV class=Section1> \n\t\t<P class=MsoNormal| v/Blue Coat Security Appliance http proxy///
@@ -406,8 +429,11 @@ match vnc-http m|^HTTP/1\.0 200 OK\n\n<HTML>\n  <HEAD><TITLE>TightVNC desktop \[
 # Tightvnc-1.2.3
 match vnc-http m|^HTTP/1\.0 404 Not found\n\n<HEAD><TITLE>File Not Found</TITLE></HEAD>\n<BODY><H1>File Not Found</H1></BODY>\n$| v/TightVNC///
 # WinVNC 3.3.7 Build Mar 5 2003
-match vnc-http m|^HTTP/1\.0 200 OK\r\n\r\n<HTML><TITLE>VNC desktop \[[-.\w]+\]</TITLE>\n<APPLET CODE=vncviewer\.class ARCHIVE=vncviewer\.jar WIDTH=800 HEIGHT=632>\n<param name=PORT| v/WinVNC///
+match vnc-http m|^HTTP/1\.0 200 OK\r\n\r\n<HTML><TITLE>VNC desktop \[[-.\w]+\]</TITLE>\n<APPLET CODE=vncviewer\.class ARCHIVE=vncviewer\.jar WIDTH=800 HEIGHT=632>\n<param name=PORT| v/WinVNC/3.3.7//
+# WinVNC 3.3.3
+match vnc-http m|^HTTP/1\.0 200 OK\n\n<HTML><TITLE>VNC desktop \[[-.\w]+\]</TITLE>\n<APPLET CODE=vncviewer\.class ARCHIVE=vncviewer\.jar WIDTH=1024 HEIGHT=800>\n<param name=PORT value=5917></APPLET></HTML>\n$| v/WinVNC/3.3.3//
 match rtsp m|^RTSP/1.0 400 Bad Request\r\nServer: DSS/([-.\w]+) \[(v\d+)]-(\w+)\r\n| v/DarwinStreamingServer/$1/$2 on $3/
+match rtsp m|^RTSP/1\.0 400 Bad Request\r\nServer: QTSS/(\d[\d.]+ \[v\d+\]-Win32)\r\nCseq: \r\n| v/Apple Quick Time Streaming Server/$1//
 match rtsp m|^RTSP/1\.0 505 Protocol Version Not Supported\r\nDate: .*\r\nServer: WMServer/(\d[-.\w]+)\r\n\r\n$| v/Microsoft Windows Media Server/$1//
 # pidentd 2.81
 match ident m|^0 , 0 : ERROR : X-INVALID-REQUEST\r\n$| v/pidentd///
@@ -434,6 +460,12 @@ match netwareip m|^\xfb\xff\xfe\xff\xfb\xff\xfe\xff\xfb\xff\xfe\xff$| v|Novell N
 match upnp m|^HTTP/1.1 400 Bad Request\r\n\r\n$| v/Microsoft Windows UPnP///
 match irc m|^:Default-Chat-Community 421 \* GET :Unknown command\r\n| v/Microsoft Exchange 2000 Server Chat Service///
 match dantz m|^\0\xca\0\0\0\0\0\x04\0\0\0\0$| v/Dantz Retrospect/6.0//
+
+Probe TCP HTTPOptions q|OPTIONS / HTTP/1.0\r\n\r\n|
+
+Probe TCP RTSPRequest q|OPTIONS / RTSP/1.0\r\n\r\n|
+match rtsp m|^RTSP/1\.0 200 OK\r\nCSeq: 0\r\nDate: .*\r\nServer: RealServer Version (\d[-.\w]+) \(win32\)\r\n| v/Realserver RTSP/$1/win32/
+
 
 # This probe sends an RPC "Null command" to the port for service
 # 100000 (portmapper).
@@ -517,10 +549,12 @@ ports 137
 
 # I'm not convinced that these next 4 work on a very wide variety of
 # machines.  I think most of the real matching comes in the next block.
-match netbios-ns m|\x80\xf0\x84\0\0\0\0\x01\0\0\0\0 CKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\0\0!\0\x01\0\0\0\0...(\w{1,15}) *\0\x04\0(\w{1,15}) *\0\x84\0\w{1,15} *\x03\x04\0\w{1,15} *\x04\0\w{1,15} *\x1e\x84\0\w{1,15} *\x1d\x04\0\x01\x02__MSBROWSE__\x02\x01\x84\0(\w{1,15}) *\x03| v/Microsoft Windows XP netbios-ssn//host: $1 workgroup: $2 user: $3/
-match netbios-ns m|\x80\xf0\x84\0\0\0\0\x01\0\0\0\0 CKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\0\0!\0\x01\0\0\0\0...(\w{1,15}) *\0\x04\0(\w{1,15}) *\0\x84\0\w{1,15} *\x03\x04\0\w{1,15} *\x04\0\w{1,15} *\x1e\x84\0\w{1,15} *\x1d\x04\0\x01\x02__MSBROWSE__\x02\x01\x84\0\0| v/Microsoft Windows XP netbios-ssn//host: $1 workgroup: $2/
-match netbios-ns m|\x80\xf0\x84\0\0\0\0\x01\0\0\0\0 CKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\0\0!\0\x01\0\0\0\0...(\w{1,15}) *\0\x04\0(\w{1,15}) *\0\x84\0\w{1,15} *\x03\x04\0\w{1,15} *\x04\0(\w{1,15}) *\x03\x04\0\w{1,15} *\x1e\x84\0| v/Microsoft Windows XP netbios-ssn//host: $1 workgroup: $2 user: $3/
-match netbios-ns m|\x80\xf0\x84\0\0\0\0\x01\0\0\0\0 CKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\0\0!\0\x01\0\0\0\0...(\w{1,15}) *\0\x04\0(\w{1,15}) *\0\x84\0\w{1,15} *\x03\x04\0\w{1,15} *\x04\0\w{1,15} *\x1e\x84\0| v/Microsoft Windows XP netbios-ssn//host: $1 workgroup: $2/
+match netbios-ns m|^\x80\xf0\x84\0\0\0\0\x01\0\0\0\0 CKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\0\0!\0\x01\0\0\0\0...(\w{1,15}) *\0\x04\0(\w{1,15}) *\0\x84\0\w{1,15} *\x03\x04\0\w{1,15} *\x04\0\w{1,15} *\x1e\x84\0\w{1,15} *\x1d\x04\0\x01\x02__MSBROWSE__\x02\x01\x84\0(\w{1,15}) *\x03| v/Microsoft Windows XP netbios-ssn//host: $1 workgroup: $2 user: $3/
+match netbios-ns m|^\x80\xf0\x84\0\0\0\0\x01\0\0\0\0 CKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\0\0!\0\x01\0\0\0\0...(\w{1,15}) *\0\x04\0(\w{1,15}) *\0\x84\0\w{1,15} *\x03\x04\0\w{1,15} *\x04\0\w{1,15} *\x1e\x84\0\w{1,15} *\x1d\x04\0\x01\x02__MSBROWSE__\x02\x01\x84\0\0| v/Microsoft Windows XP netbios-ssn//host: $1 workgroup: $2/
+match netbios-ns m|^\x80\xf0\x84\0\0\0\0\x01\0\0\0\0 CKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\0\0!\0\x01\0\0\0\0...(\w{1,15}) *\0\x04\0(\w{1,15}) *\0\x84\0\w{1,15} *\x03\x04\0\w{1,15} *\x04\0(\w{1,15}) *\x03\x04\0\w{1,15} *\x1e\x84\0| v/Microsoft Windows XP netbios-ssn//host: $1 workgroup: $2 user: $3/
+match netbios-ns m|^\x80\xf0\x84\0\0\0\0\x01\0\0\0\0 CKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\0\0!\0\x01\0\0\0\0...(\w{1,15}) *\0\x04\0(\w{1,15}) *\0\x84\0\w{1,15} *\x03\x04\0\w{1,15} *\x04\0\w{1,15} *\x1e\x84\0| v/Microsoft Windows XP netbios-ssn//host: $1 workgroup: $2/
+
+
 # It would be really nice if we could get username and/or OS
 # information from this.  But it is quite hard to parse out the proper
 # information unambiguously, especially with just regular expressions.
@@ -532,7 +566,8 @@ match netbios-ns m|^\x80\xf0\x84\0\0\0\0\x01\0\0\0\0 CKAAAAAAAAAAAAAAAAAAAAAAAAA
 match netbios-ns m|^\x80\xf0\x84\0\0\0\0\x01\0\0\0\0 CKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\0\0!\0\x01\0\0\0\0\0..([\w\-]{1,15}) *\0D\0([\w\-]{1,15}) *\0\xc4\0| v/Microsoft Windows netbios-ssn//host: $1 workgroup: $2/
 match netbios-ns m|^\x80\xf0\x84\0\0\0\0\x01\0\0\0\0 CKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\0\0!\0\x01\0\0\0\0\0...*\0([\w\-]{1,15}) *\0D\0.*\0([\w\-]{1,15}) *\0\xc4\0| v/Microsoft Windows netbios-ssn//host: $1 workgroup: $2/
 match netbios-ns m|^\x80\xf0\x84\0\0\0\0\x01\0\0\0\0 CKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\0\0!\0\x01\0\0\0\0\0...*\0([\w\-]{1,15}) *\0D\0([\w\-]{1,15}) *\0\xc4\0| v/Microsoft Windows netbios-ssn//host: $1 workgroup: $2/
-
+# Windows NT 4.0 SP6a
+match netbios-ns m|^\x80\xf0\x84\0\0\0\0\x01\0\0\0\0 CKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\0\0!\0\x01\0\0\0\0...([\w\-]{1,15}).*\04\0([\w\-]{1,15}) *\0\x84\0| v/Microsoft Windows NT netbios-ssn//host: $1 workgroup: $2/
 
 ##############################NEXT PROBE##############################
 Probe UDP Help q|help\r\n\r\n|
@@ -655,6 +690,8 @@ match landesk-rc m|^TNMP\x16\0\0\0TNME\x80\0\xfe\xff..([\w.]+):(\d)$| v/LANDesk 
 ##############################NEXT PROBE##############################
 Probe TCP TerminalServer q|\x03\0\0\x0b\x06\xe0\0\0\0\0\0|
 ports 3389
+# Windows 2000 Server
+# Windows 2000 Advanced Server
 match microsoft-rdp m|^\x03\0\0\x0b\x06\xd0\0\0\x12.\0$|s v/Microsoft Terminal Service//Windows 2000 Server/
 # I don't know why this stupid service is answering to TerminalServer probe,
 # but that has been verified.  I'm not going to add 515 to the TerminalServer
@@ -681,9 +718,9 @@ match ms-sql-m m|^\x05..ServerName;([\w\-]+);InstanceName;[\w\-]+;IsClustered;\w
 match ms-sql-m m|^\x05..ServerName;([\w\-]+);InstanceName;[\w\-]+;IsClustered;\w{2,3};Version;([\d\.]+);tcp;(\d{1,5});np;(.+);$| v/Microsoft SQL Server/$2/ServerName: $1; TCPPort: $3/
 
 Probe TCP WMSRequest q|\x01\0\0\xfd\xce\xfa\x0b\xb0\xa0\0\0\0MMS\x14\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x12\0\0\0\x01\0\x03\0\xf0\xf0\xf0\xf0\x0b\0\x04\0\x1c\0\x03\0N\0S\0P\0l\0a\0y\0e\0r\0/\09\0.\00\0.\00\0.\02\09\08\00\0;\0 \0{\00\00\00\00\0A\0A\00\00\0-\00\0A\00\00\0-\00\00\0a\00\0-\0A\0A\00\0A\0-\00\00\00\00\0A\00\0A\0A\00\0A\0A\00\0}\0\0\0\xe0\x6d\xdf\x5f|
-ports 1755
+ports 1549,1755
 #WMS 4.1.0.3927
 match wms m|^\x01\0\0.\xce\xfa\x0b\xb0.\0\0\0MMS .\0{7}.{9}\0\0\0\x01\0\x04\0\0\0\0\0\xf0\xf0\xf0\xf0\x0b\0\x04\0\x1c\0\x03\0\0\0\0\0\0\0\xf0\?\x01\0\0\0\x01\0\0\0\0\x80\0\0...\0.\0\0\0\0\0\0\0\0\0\0\0.\0\0\x00(\d)\0\.\x00(\d)\0\.\x00(\d)\0\.\x00(\d)\x00(\d)\x00(\d)\x00(\d)\0\0\0|s v/Microsoft Windows Media Service/$1.$2.$3.$4$5$6$7//
 match wms m|^\x01\0\0.\xce\xfa\x0b\xb0.\0\0\0MMS .\0{7}.{9}\0\0\0\x01\0\x04\0\0\0\0\0\xf0\xf0\xf0\xf0\x0b\0\x04\0\x1c\0\x03\0\0\0\0\0\0\0\xf0\?\x01\0\0\0\x01\0\0\0\0\x80\0\0...\0.\0\0\0\0\0\0\0\0\0\0\0.\0\0\x00(\d)\0\.\x00(\d)\x00(\d)\0\.\x00(\d)\x00(\d)\0\.\x00(\d)\x00(\d)\x00(\d)\x00(\d)\0\0\0|s v/Microsoft Windows Media Service/$1.$2$3.$4$5.$6$7$8$9//
-
+match shivahose m|^\x02\x06$| v///Shiva network modem access/
 

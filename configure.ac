@@ -317,6 +317,8 @@ int main() {
 [AC_MSG_RESULT(no); have_libpcap=no],
 [AC_MSG_RESULT(no); have_libpcap=no])
 fi
+
+LIBS="$LIBS -lpcap"
 if test $have_libpcap = yes; then
   PCAP_DEPENDS=""
   PCAP_CLEAN=""
@@ -338,7 +340,6 @@ fi
 AC_SUBST(PCAP_DEPENDS)
 AC_SUBST(PCAP_CLEAN)
 AC_SUBST(PCAP_DIST_CLEAN)
-LIBS="$LIBS -lpcap"
 have_pcre=no
 LIBPCREDIR=libpcre
 

@@ -1,4 +1,4 @@
-NMAP_VERSION = 3.40PVT17
+NMAP_VERSION = 3.45
 NMAP_NAME= nmap
 NMAP_URL= http://www.insecure.org/nmap/
 NMAP_PLATFORM=@host@
@@ -128,8 +128,9 @@ distro:
 
 	$(SHTOOL) mkdir /usr/tmp/nmap-$(NMAP_VERSION)/mswin32
 	cd mswin32; cp -ra *.[hHcC] *.cc ARPA NET NETINET RPC icon1.ico \
-                    ifaddrlist.h lib libpcap-note.txt nmap.rc nmap.sln \
-                    nmap.vcproj winip /usr/tmp/nmap-$(NMAP_VERSION)/mswin32
+                    ifaddrlist.h lib libpcap-note.txt nmap.rc \
+                    nmap_performance.reg nmap.sln nmap.vcproj winip \
+                    /usr/tmp/nmap-$(NMAP_VERSION)/mswin32
 
 	$(SHTOOL) mkdir /usr/tmp/nmap-$(NMAP_VERSION)/$(LIBPCAPDIR)
 	cd $(LIBPCAPDIR); cp -ra acconfig.h aclocal.m4 arcnet.h bpf \

@@ -1340,6 +1340,7 @@ void printusage(char *name, int rc) {
 	 "* -sU UDP port scan\n"
 	 "  -sP ping scan (Find any reachable machines)\n"
 	 "* -sF,-sX,-sN Stealth FIN, Xmas, or Null scan (experts only)\n"
+         "  -sV Version scan probes open ports determining service and app names/versions"
 	 "  -sR/-I RPC/Identd scan (use with other scan types)\n"
 	 "Some Common Options (none are required, most can be combined):\n"
 	 "* -O Use TCP/IP fingerprinting to guess remote operating system\n"

@@ -276,7 +276,7 @@ void Port::setServiceProbeResults(enum serviceprobestate sres,
 
   if (extrainfo) {
     slen = strlen(extrainfo);
-    if (slen > 80) slen = 80;
+    if (slen > 128) slen = 128;
     serviceprobe_extrainfo = (char *) safe_malloc(slen + 1);
     memcpy(serviceprobe_extrainfo, extrainfo, slen);
     serviceprobe_extrainfo[slen] = '\0';

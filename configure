@@ -5253,6 +5253,8 @@ fi
 rm -f core core.* *.core gmon.out bb.out conftest$ac_exeext conftest.$ac_objext conftest.$ac_ext
 fi
 fi
+
+LIBS="$LIBS -lpcap"
 if test $have_libpcap = yes; then
   PCAP_DEPENDS=""
   PCAP_CLEAN=""
@@ -5277,7 +5279,6 @@ fi
 
 
 
-LIBS="$LIBS -lpcap"
 have_pcre=no
 LIBPCREDIR=libpcre
 

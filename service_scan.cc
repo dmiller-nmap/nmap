@@ -144,7 +144,7 @@ public:
   // 3 strings.  Otherwise the string will be 0 length.
   char product_matched[80];
   char version_matched[80];
-  char extrainfo_matched[80];
+  char extrainfo_matched[128];
   enum service_tunnel_type tunnel; /* SERVICE_TUNNEL_NONE, SERVICE_TUNNEL_SSL */
   // This stores our SSL session id, which will help speed up subsequent
   // SSL connections.  It's overwritten each time.  void* is used so we don't
@@ -410,7 +410,7 @@ const struct MatchDetails *ServiceProbeMatch::testMatch(const u8 *buf, int bufle
   int i;
   static char product[80];
   static char version[80];
-  static char info[80];
+  static char info[128];
   char *bufc = (char *) buf;
   int ovector[150]; // allows 50 substring matches (including the overall match)
   assert(isInitialized);
@@ -996,7 +996,7 @@ void ServiceNFO::addToServiceFingerprint(const char *probeName, const u8 *resp,
       if (srcidx + 1 >= respused || !isdigit(resp[srcidx + 1]))
 	addServiceString("\\0", servicewrap);
       else addServiceString("\\x00", servicewrap);
-    } else if (strchr("\\?\"[]().*+", resp[srcidx])) {
+    } else if (strchr("\\?\"[]().*+$", resp[srcidx])) {
       addServiceChar('\\', servicewrap);
       addServiceChar(resp[srcidx], servicewrap);
     } else if (ispunct((int)resp[srcidx])) {

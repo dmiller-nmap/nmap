@@ -22,20 +22,27 @@ o Nmap does not work under Windows ME .  This is a WinPcap
   limitation. [ Note -- I'm not sure this is still true ]
 
 o RAS connections (eg PPP, SLIP, etc) are not supported except under
-   Windows 2000.  This is a WinPcap limitation on NT and it isn't
-   supported (yet) on Win98.  Ethernet should work fine on all platforms.
+   Windows 2000/XP.  This is a WinPcap limitation on NT and it isn't
+   supported (yet) on Win98.  Ethernet should work fine on all
+   platforms.
 
 o All interfaces (except localhost) should work under Windows 2000 as
    administrator.  If you have trouble under Win2K, try the
    --win_norawsock switch.
 
-o TCP connect() scan can be agonizingly slow.  You may have luck by
-   adding a new registy DWORD value to
-   HKML\SYSTEM\CurrentControlSet\Services\TcpIp\Parameters named
-   "MaxUserPort", with a large value like 65534).  See MS KB Q196271.
+o TCP connect() scan can be agonizingly slow.  You may be able to
+   improve this by applying the registry changes in the included
+   nmap_performance.reg (in nmap-VERSION/ in the Win binary
+   distribution, and nmap-VERSION/mswin32 in the source distro).
+   Apply it by double-clicking on the file, or run the command
+   "regedt32 nmap_performance.reg".  Or you can make the changes by
+   hand - add the following two registry DWORD values to:
+   [HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters]
+     "MaxUserPort", with a large value like 65534 (0x0000fffe).  See MS KB Q196271.
+     "TcpTimedWaitDelay" with the minimum value (0x0000001e). [See MS KB 149532]
 
 o The NmapFE Nmap GUI frontend port is not yet stable enough to
-  include with the binary distrubiton.
+  include with the binary distribution.
 
 *** Using the Binary Distribution ***
 
@@ -43,8 +50,9 @@ There are a couple binary distributions of Windows Nmap.  One is
 Winmap, which is packaged in an install-shield installation wizard and
 includes a graphical GUI as well as command-line Nmap.  The other
 distribution is the command-line zipfile, called
-nmap-VERSION-win32.zip .  Here are the instructions for installing
-this zip archive:
+nmap-VERSION-win32.zip .  The .zip version is usually much more
+up-to-date.  Here are the instructions for installing the zip
+archive:
 
 1) Make sure you have installed Winpcap Version 2.1-beta or later.  This
    is available at http://netgroup-serv.polito.it/winpcap/ .  It is
@@ -54,7 +62,10 @@ this zip archive:
 2) Unzip the archive using Winzip or your favorite decompression
    utility -- a directory call nmap-VERSION will be extracted .
 
-3) Open a command prompt (DOS) window and cd into the new nmap-VERSION
+3) Consider applying the Nmap performance regisry changes discussed
+   above (double click on nmap_performance.reg).
+
+4) Open a command prompt (DOS) window and cd into the new nmap-VERSION
    directory.  Type "nmap -h" for usage information.  
 
 *** Compiling the Nmap Source Distribution for Windows ***
@@ -72,9 +83,9 @@ mine).
    C++ files.  You might have to make the following registry
 modifications (using regedt32 or whatever):
 
-HKEY_CURRENT_USER\Software\Microsoft\DevStudio\6.0\Text Editor\Tabs/Language Settings\C/C++ FileExtensions=cpp;cxx;c;h;hxx;hpp;inl;tlh;tli;rc;rc2;cc;cp 
-HKEY_USERS\S-1-5-21-1219703950-274334628-1532313055-1335\Software\Microsoft\DevStudio\6.0\Build System\Components\Platforms\Win32 (x86)\Tools\32-bit C/C++ Compiler for 80x86 Input_Spec=*.c;*.cpp;*.cxx,*.cc,*.cp 
-HKEY_USERS\S-1-5-21-1219703950-274334628-1532313055-1335\Software\Microsoft\DevStudio\6.0\Build System\Components\Tools\<Component 0x3> Input_Spec=*.c;*.cpp;*.cxx;*.cc;*.cp 
+[HKEY_CURRENT_USER\Software\Microsoft\DevStudio\6.0\Text Editor\Tabs/Language Settings\C/C++] FileExtensions=cpp;cxx;c;h;hxx;hpp;inl;tlh;tli;rc;rc2;cc;cp 
+[HKEY_CURRENT_USER\Software\Microsoft\DevStudio\6.0\Build System\Components\Platforms\Win32 (x86)\Tools\32-bit C/C++ Compiler for 80x86] Input_Spec=*.c;*.cpp;*.cxx,*.cc,*.cp 
+[HKEY_CURRENT_USER\Software\Microsoft\DevStudio\6.0\Build System\Components\Tools\<Component 0x3>] Input_Spec=*.c;*.cpp;*.cxx;*.cc;*.cp 
 
 Note:  The numbers in the "S-1-5-21-*" keys above may vary.
 

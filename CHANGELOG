@@ -1,5 +1,33 @@
 # Nmap Changelog ($Id$)
 
+Nmap 3.45
+
+o Added new HTTPOptions and RTSPRequest probes suggested by MadHat
+  (madhat(a)unspecific.com)
+
+o Integrated more service signatures from MadHat
+  (madhat(a)unspecific.com), Brian Hatch (bri(a)ifokr.org), Niels
+  Heinen (zillion(a)safemode.org), Solar Designer
+  (solar(a)openwall.com), Seth Master
+  (smaster(a)stanford.edu), and Curt Wilson
+  (netw3_security(a)hushmail.com), 
+
+o Applied a patch from Solar Eclipse (solareclipse(a)phreedom.org)
+  which increases the allowed size of the 'extrainfo' version field from
+  80 characters to 128.  The main benefit is to allow longer apache module
+  version strings.
+
+o Applied some updates to README-WIN32 sent in by Kirby Kuehl
+  (kkuehl(a)cisco.com).  He improved the list of suggested registry
+  changes and also fixed a typo or two.  He also attached a .reg file
+  automate the Nmap connect() scan performance enhancing registry
+  changes.  I am now including that with the Nmap Windows binary .zip
+  distribution (and in mswin32/ of the source distro).
+
+o Applied a one-line patch from Dmitry V. Levin (ldv@altlinux.org)
+  which fixes a test Nmap does during compilation to see if an existing
+  libpcap installation is recent enough.
+
 Nmap 3.40PVT17
 
 o Wrote and posted a new paper on version scanning to
@@ -11,7 +39,7 @@ o Integrated more service signatures from my own scanning as well as
   contributions from Brian Hatch (bri(a)ifokr.org), MadHat
   (madhat(a)unspecific.com), Max Vision (vision(a)whitehats.com), HD
   Moore (hdm(a)digitaloffense.net), Seth Master
-  (smaster(a)stanford.edu), and Niels Heien (zillion(a)safemode.org).
+  (smaster(a)stanford.edu), and Niels Heinen (zillion(a)safemode.org).
   MadHat also contributed a new probe for Windows Media Service.  Many
   people set a LOT of signatures, which has allowed
   nmap-service-probes to grow from 295 to 356 signatures representing
@@ -19,7 +47,7 @@ o Integrated more service signatures from my own scanning as well as
 
 o Applied a patch (with slight changes) from Brian Hatch
   (bri(a)ifokr.org) which enables caching of SSL sessions so that
-  negociation doesn't have to be repeated when Nmap reconnects to the same
+  negotiation doesn't have to be repeated when Nmap reconnects to the same
   between probes.
 
 o Applied a patch from Brian Hatch (bri@ifokr.org) which optimizes the
@@ -61,7 +89,6 @@ o Fixed a port number printing bug that would cause Nmap service
   above 32K.  Thanks to Seth Master (smaster@stanford.edu) for finding
   this.
 
-
 o Updated all the header text again to clarify our interpretation of
   "derived works" after some suggestions from Brian Hatch
   (bri(a)ifokr.org)
@@ -74,7 +101,7 @@ Nmap 3.40PVT16
 o Fixed a compilation problem on systems w/o OpenSSL that was
   discovered by Solar Designer.  I also fixed some compilation
   problems on non-IPv6 systems.  It now compiles and runs on my
-  Solaris and ancient OpenBDS systems.
+  Solaris and ancient OpenBSD systems.
 
 o Integrated more services thanks to submissions from Niels Heinen
   (zillion(a)safemode.org).
@@ -84,7 +111,6 @@ o Canonicalized the headers at the top of each Nmap/Nsock header src
   updating the copyright date to 2003, making the header a bit wider,
   and a few other light changes.  I've been putting this off for a
   while, because it required editing about a hundred !#$# files!
-
 
 Nmap 3.40PVT15
 
@@ -96,7 +122,7 @@ o Fixed a major bug in the Nsock time caching system.  This could
 o Fixed some *BSD compilation bugs found by 
   Zillion (zillion(a)safemode.org).
 
-o Integrated more services thanks to submissiosn from Fyodor Yarochkin
+o Integrated more services thanks to submissions from Fyodor Yarochkin
   (fygrave(a)tigerteam.net), and Niels Heinen
   (zillion(a)safemode.org), and some of my own exploring.  There are
   now 295 signatures.
@@ -124,7 +150,7 @@ o Added an 'sslports' directive to nmap-service-probes.  This tells
   For example, the HTTP probe has an 'sslports 443' line and
   SMTP-detecting probes have and 'sslports 465' line.
 
-o Integrated more services thanks to submissiosn from MadHat
+o Integrated more services thanks to submissions from MadHat
   (madhat(a)unspecific.com), Solar Designer (solar(a)openwall.com), Dug
   Song (dugsong(a)monkey.org), pope(a)undersec.com, and Brian Hatch
   (bri(a)ifokr.org).  There are now 288 signatures, matching these 65
@@ -156,22 +182,25 @@ o Applied a patch from Gisle Vanem (giva(a)bgnett.no) which improves
 
 Nmap 3.40PVT13
 
-o Added SSL-scanthru support.  If service detection finds a port to be
+o Added SSL-scan-through support.  If service detection finds a port to be
   SSL, it will transparently connect to the port using OpenSSL and use
   version detection to determine what service lies beneath.  This
   feature is only enabled if OpenSSL is available at build time.  A
   new --with-openssl=DIR configure option is available if OpenSSL is
   not in your default compiler paths.  You can use --without-openssl
   to disable this functionality.  Thanks to Brian Hatch
-  (bri(a)ifokr.org) for sample code and other assitance.  Make sure you
-  use a version without known exploitable overflows.  At the time of
-  this writing, I think post-beta 0.9.7 and 0.9.6e or later (in 0.9.6
-  series) are OK.
+  (bri(a)ifokr.org) for sample code and other assistance.  Make sure
+  you use a version without known exploitable overflows.  In
+  particular, versions up to and including OpenSSL 0.9.6d and
+  0.9.7-beta2 contained serious vulnerabilities described at
+  http://www.openssl.org/news/secadv_20020730.txt .  Note that these
+  vulnerabilities are well over a year old at the time of this
+  writing.
 
 o Integrated many more services thanks to submissions from Brian
   Hatch, HellNBack ( hellnbak(a)nmrc.org ), MadHat, Solar Designer,
   Simple Nomad, and Shawn Wallis (swallis(a)ku.edu).  The number of
-  signatures hsa grown from 242 to 271.  Thanks!
+  signatures has grown from 242 to 271.  Thanks!
 
 o Integrated Novell Netware NCP and MS Terminal Server probes from
   Simple Nomad (thegnome(a)nmrc.org).
@@ -190,7 +219,7 @@ o Fixed some portability issues reported by Solar Designer
 Nmap 3.40PVT12
 
 o I added probes for SSL (session startup request) and microsoft-ds
-  (SMB Negociate Protocol request).
+  (SMB Negotiate Protocol request).
 
 o I changed the default read timeout for a service probe from 7.5s to 5s.
 
@@ -259,7 +288,7 @@ o More service fingerprints!  Thanks to Solar Designer, Max Vision,
   to 201.
 
 o Updated XML output to handle new version and service detection
-  information.  Here are a few exmaples of the new output:
+  information.  Here are a few examples of the new output:
   <port protocol="tcp" portid="22"><state state="open" /><service
     name="ssh" version="OpenSSH 3.1p1 (protocol 1.99)" method="probed"
     conf="10" /></port>
@@ -289,7 +318,7 @@ o The Winpcap libraries used in the Windows build process have been
 o Most of the Windows port is complete.  It compiles and service scan
   works (I didn't test very deeply) on my WinXP box with VS.Net 2003.
   I try to work out remaining kinks and do some cleanup for the next
-  version.  The Windows code was restructed and improved quite a bit,
+  version.  The Windows code was restructured and improved quite a bit,
   but much more work remains to be done in that area.  I'll probably
   do a Windows binary .zip release of the next version.
 
@@ -314,7 +343,7 @@ o Various important and not-so-important fixes for bugs I encountered
 o The RPC grinder no longer prints a startup message if it has no
   RPC-detected ports to scan.
 
-o Soem of the service fingerprint length limitations are relaxed a bit
+o Some of the service fingerprint length limitations are relaxed a bit
   if you enable debugging (-d).
 
 Nmap 3.40PVT7
@@ -328,7 +357,7 @@ o The question mark now only appears for ports in the OPEN state and
   when service detection was requested.
 
 o I now print a separator bar between service fingerprints when Nmap
-  prints more than one for a given host so that users unerstand to
+  prints more than one for a given host so that users understand to
   submit them individually (suggested by Brian Hatch (bri(a)ifokr.org))
 
 o Fixed a bug that would cause Nmap to print "empty" service
@@ -368,7 +397,7 @@ o Limited the size of service fingerprints to roughly 1024 bytes.
 o Fixed a segmentation fault that could occur when ping-scanning large
   networks.
 
-o Fixed service scan to gracefully handle host_timeout occurances when
+o Fixed service scan to gracefully handle host_timeout occurrences when
   they happen during a service scan.
 
 o Fixed a service_scan bug that would cause an error when hosts send
@@ -390,7 +419,7 @@ o Nmap now prints a "service fingerprint" for services that it is
 o Service detection now does RPC grinding on ports it detects to be
   running RPC.
 
-o Fixed a bug that would cause Nmap to quit with an nsock error when
+o Fixed a bug that would cause Nmap to quit with an Nsock error when
   --host_timeout was used (or when -T5 was used, which sets it
   implicitly).
 
@@ -400,13 +429,13 @@ o Fixed a bug that would cause Nmap to fail to print the OS
 
 Nmap 3.40PVT2
 
-o Nmap now has a simple VERSION detecton scheme.  The 'match' lines in
+o Nmap now has a simple VERSION detection scheme.  The 'match' lines in
   nmap-service-probes can specify a template version string
   (referencing subexpression matches from the regex in a perl-like
   manner) so that the version is determined at the same time as the
   service.  This handles many common services in a highly efficient
   manner.  A more complex form of version detection (that initiates
-  further communication w/the target service) may be neccessary
+  further communication w/the target service) may be necessary
   eventually to handle services that aren't as forthcoming with
   version details.
 
