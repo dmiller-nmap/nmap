@@ -63,7 +63,7 @@ fi
 dnl Check whether libpcap is already available
 AC_CHECK_LIB(pcap, pcap_datalink, have_libpcap=yes, have_libpcap=no)
 if test $linux = yes; then
-  have_libpcap = no
+  have_libpcap=no
 fi
 if test $have_libpcap = yes; then
   AC_MSG_CHECKING(if libpcap version is recent enough)
