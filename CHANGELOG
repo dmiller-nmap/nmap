@@ -1,5 +1,9 @@
 # Nmap Changelog ($Id$)
 
+o Added new "closed|filtered" state.  This is used for Idlescan, since
+  that scan method can't distinguish between those two staes.  Nmap
+  previously just used "closed", but this is more accurate.
+
 o Fixed a memory leak that would generally consume several hundred
   bytes per down host scanned.  While the effect for most scans is
   negligible, it was overwhelming when Scott Carlson
