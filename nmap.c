@@ -1790,8 +1790,10 @@ portlist super_scan(struct hoststruct *target, unsigned short *portarray, stype 
     else scan[i].next = -1;
     portlookup[portarray[i]] = i;
   }
-  current = testinglist = fresh = &scan[0]; /* fresh == unscanned ports, testinglist is a list of all ports that haven't been determined to be closed yet */
+
+  current = fresh = testinglist = &scan[0]; /* fresh == unscanned ports, testinglist is a list of all ports that haven't been determined to be closed yet */
   openlist = NULL; /* we haven't shown any ports to be open yet... */
+
 
     
   /* Init our raw socket */
@@ -1845,66 +1847,69 @@ if (o.debugging || o.verbose)
   
 
   do {    
-    while((numqueries_outstanding > 0) || (fresh != NULL))  /* While we have live queries or more ports to scan */
+    while(testinglist != NULL)  /* While we have live queries or more ports to scan */
     {
       /* Check the possible retransmissions first */
       gettimeofday(&now, NULL);
-      for( current = testinglist; current && (current != fresh); 
+      for( current = testinglist; current ;
 	   current = (current->next >= 0)? &scan[current->next] : NULL) {
-	if ( TIMEVAL_SUBTRACT(now, current->sent[current->trynum]) > to.timeout) {
-	  if (current->trynum > 0) {
-	    /* We consider this port valid, move it to open list */
-	    current->state = port_open;
-	    /* First delete from old list */
-	    if (current->next > -1) scan[current->next].prev = current->prev;
-	    if (current->prev > -1) scan[current->prev].next = current->next;
-	    current->next = -1;
-	    current->prev = -1;
-	    /* Now move into new list */
-	    if (!openlist) openlist = current;
-	    else {
-	      current->next = openlist - scan;
-	      openlist = current;
-	      scan[current->next].prev = current - scan;	      
-	    }
-	    numqueries_outstanding -= 1;
-	    changed = 1;
-	  } else {
-	    /* Initial timeout ... we've got to resend */
-	    current->trynum++;
-	    /* If they didn't specify the magic port, we use magic_port +1
-	       so we can tell that it was a retransmit later */
-	    i = (o.magic_port_set)? o.magic_port : o.magic_port + 1;
-	    gettimeofday(&current->sent[1], NULL);
-	    now = current->sent[1];
+	if (current->state == port_testing) {
+	  if ( TIMEVAL_SUBTRACT(now, current->sent[current->trynum]) > to.timeout) {
+	    if (current->trynum > 0) {
+	      /* We consider this port valid, move it to open list */
+	      current->state = port_open;	    
+	      /* First delete from old list */
+	      if (current->next > -1) scan[current->next].prev = current->prev;
+	      if (current->prev > -1) scan[current->prev].next = current->next;
+	      if (current == testinglist)
+		testinglist = (current->next >= 0)?  &scan[current->next] : NULL;
+	      current->next = -1;
+	      current->prev = -1;
+	      /* Now move into new list */
+	      if (!openlist) openlist = current;
+	      else {
+		current->next = openlist - scan;
+		openlist = current;
+		scan[current->next].prev = current - scan;	      
+	      }
+	      numqueries_outstanding--;
+	      changed = 1;
+	    } else {
+	      /* Initial timeout ... we've got to resend */
+	      current->trynum++;
+	      /* If they didn't specify the magic port, we use magic_port +1
+		 so we can tell that it was a retransmit later */
+	      i = (o.magic_port_set)? o.magic_port : o.magic_port + 1;
+	      gettimeofday(&current->sent[1], NULL);
+	      now = current->sent[1];
 	    for(decoy=0; decoy < o.numdecoys; decoy++) {
 	      if (o.fragscan)
 		send_small_fragz(rawsd, &o.decoys[decoy], &target->host, o.magic_port, current->portno, scanflags);
 	      else send_tcp_raw(rawsd, &o.decoys[decoy], &target->host, o.magic_port, 
 				current->portno, 0, 0, scanflags, 0, 0, 0);
 	      /*usleep(10000);*/ /* *WE* normally do not need this, but the target 
-				lamer often does */
+		lamer often does */
 	    }	    
+	    }
+	  }
+	} else { /* current->state == port_fresh */
+	  /* OK, now we have gone through our list of in-transit queries, so now
+	     we try to send off new queries if we can ... */
+	  if (numqueries_outstanding > (int) numqueries_ideal) break;
+	  /* Otherwise lets send a packet! */
+	  current->state = port_testing;
+	  /*	if (!testinglist) testinglist = current; */
+	  numqueries_outstanding++;
+	  gettimeofday(&current->sent[0], NULL);
+	  for(decoy=0; decoy < o.numdecoys; decoy++) {
+	    if (o.fragscan)
+	      send_small_fragz(rawsd, &o.decoys[decoy], &target->host, o.magic_port, current->portno, scanflags);
+	    else send_tcp_raw(rawsd, &o.decoys[decoy], &target->host, o.magic_port, 
+			      current->portno, 0, 0, scanflags, 0, 0, 0);
+	    /*usleep(10000);*/ /* *WE* normally do not need this, but the target 
+	      lamer often does */
 	  }
 	}
-      }
-      /* OK, now we have gone through our list of in-transit queries, so now
-	 we try to send off new queries if we can ... */
-      for (current = fresh; current;  current = (current->next >= 0)? &scan[current->next] : NULL) {
-	if (numqueries_outstanding > (int) numqueries_ideal) break;
-	/* Otherwise lets send a packet! */
-	current->state = port_testing;
-	numqueries_outstanding++;
-	gettimeofday(&current->sent[0], NULL);
-	for(decoy=0; decoy < o.numdecoys; decoy++) {
-	  if (o.fragscan)
-	    send_small_fragz(rawsd, &o.decoys[decoy], &target->host, o.magic_port, current->portno, scanflags);
-	  else send_tcp_raw(rawsd, &o.decoys[decoy], &target->host, o.magic_port, 
-			    current->portno, 0, 0, scanflags, 0, 0, 0);
-	  /*usleep(10000);*/ /* *WE* normally do not need this, but the target 
-	    lamer often does */
-	}
-	fresh = (current->next > 0)? &scan[current->next] : NULL;
       }
       /* Now that we have sent the packets we wait for responses */
       while (( ip = (struct ip*) readip_pcap(pd, &bytes))) {
@@ -1926,10 +1931,9 @@ if (o.debugging || o.verbose)
 		  to.rttvar *= 1.2;
 		  if (o.debugging) { printf("Late packet, magic_port_set so we just do varianceincrease to %d\n", to.rttvar); }
 		}
-		else {
+		else { /* We figure out which packet it is from dst portno */
 		  gettimeofday(&now,NULL);
-		  if ((ntohs(tcp->th_dport) - o.magic_port) == 0 ||
-		      (ntohs(tcp->th_dport) - o.magic_port) == 1) { 
+		  if (((ntohs(tcp->th_dport) - o.magic_port) | 1) == 1) { 
 		    delta = TIMEVAL_SUBTRACT(now,current->sent[(ntohs(tcp->th_dport) - o.magic_port)]) - to.srtt;
 		    numqueries_ideal += (4/numqueries_ideal);
 		    to.srtt += delta >> 3;
@@ -1955,6 +1959,8 @@ if (o.debugging || o.verbose)
 		changed++;
 	      numqueries_outstanding--;
 	      current->state = port_closed;
+	      if (current == testinglist)
+		testinglist = (current->next >= 0)?  &scan[current->next] : NULL;
 	      if (current->next >= 0) scan[current->next].prev = current->prev;
 	      if (current->prev >= 0) scan[current->prev].next = current->next;
 	      }
@@ -1964,7 +1970,7 @@ if (o.debugging || o.verbose)
       }
     }
     /* Prepare for retry */
-    fresh = openlist;
+    testinglist = openlist;
     for(current = openlist; current; current = &scan[current->next]) {
       current->state = port_fresh;
       if (current->next < 0) current = NULL;
