@@ -340,19 +340,20 @@ compares with its database of known OS fingerprints (the
 nmap-os-fingerprints file) to decide what type of system you
 are scanning.
 .Sp
-If you find a machine that is misdiagnosed and has at least
-one port open, it would be useful if you mail me the details
-(ie OS blah version foo was detected as OS blah version
-bar).  If you find a machine with at least one port open for
-which nmap says 'unknown operating system', then it would be
-useful if you send me the IP address along with the OS name
-and version number.  If you can't send the IP address, the
-next best thing is to run nmap with the
-.B \-d
-option and send me the three fingerprints that should result
-along with the OS name and version number.  By doing this
-you contribute to the pool of operating systems known to
-nmap and thus it will be more accurate for everyone.
+If Nmap is unable to guess the OS of a machine, and conditions are
+good (eg at least one open port), Nmap will provide a URL you can use
+to submit the fingerprint if you know (for sure) the OS running on the
+machine.  By doing this you contribute to the pool of operating
+systems known to nmap and thus it will be more accurate for everyone.
+.Sp
+The \-O option also enables TCP Sequence Predictability
+Classification.  This is a measure that describes approximately how
+hard it is to establish a forged TCP connection against the remote
+host.  This is useful for exploiting source-IP based trust
+relationships (rlogin, firewall filters, etc) or for hiding the source
+of an attack.  The actual difficulty number is based on statistical
+sampling and may fluctuate.  It is generally better to use the English
+classification such as "worthy challenge" or "trivial joke".
 .TP
 .B \-I
 This turns on TCP reverse ident scanning. As noted by Dave
