@@ -1523,9 +1523,22 @@ static void startNextProbe(nsock_pool nsp, nsock_iod nsi, ServiceGroup *SG,
    will take a service that has just been detected (hard match only),
    and see if we can dig deeper through tunneling.  Nonzero is
    returned if we can do more.  Otherwise 0 is returned and the caller
-   should end the service with its successful match */
+   should end the service with its successful match.  If the tunnel
+   results can be determined with no more effort, 0 is also returned.
+   For example, a service that already matched as "ssl/ldap" will be
+   chaned to "ldap" with the tunnel being SSL and 0 will be returned.
+   That is a special case.
+*/
+
 static int scanThroughTunnel(nsock_pool nsp, nsock_iod nsi, ServiceGroup *SG, 
 			     ServiceNFO *svc) {
+
+  if (strncmp(svc->probe_matched, "ssl/", 4) == 0) {
+    /* The service has been detected without having to make an SSL connection */
+    svc->tunnel = SERVICE_TUNNEL_SSL;
+    svc->probe_matched += 4;
+    return 0;
+  }
 
 #ifndef HAVE_OPENSSL
   return 0;
