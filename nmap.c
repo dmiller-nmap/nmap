@@ -1976,7 +1976,6 @@ if (o.debugging || o.verbose)
 		
 	      case 3: /* p0rt unreachable */		
 		newport = ntohs(data[1]);
-		printf("Got port unreachable newport %hi\n", newport);
 		if (portlookup[newport] >= 0) {
 		  current = &scan[portlookup[newport]];
 		  if (!o.magic_port_set) {
