@@ -64,6 +64,10 @@
 
 extern NmapOps o;
 
+#ifdef __amigaos__
+extern void CloseLibs(void);
+#endif
+
 /*  predefined filters -- I need to kill these globals at some pont. */
 extern unsigned long flt_dsthost, flt_srchost;
 extern unsigned short flt_baseport;
@@ -791,7 +795,7 @@ if (ttl == -1) {
   myttl = ttl;
 }
 
-#ifdef WIN32
+#ifndef WIN32
 /* It was a tough decision whether to do this here for every packet
    or let the calling function deal with it.  In the end I grudgingly decided
    to do it here and potentially waste a couple microseconds... */
@@ -910,7 +914,7 @@ if (ttl == -1) {
   myttl = ttl;
 }
 
-#ifdef WIN32
+#ifndef WIN32
 /* It was a tough decision whether to do this here for every packet
    or let the calling function deal with it.  In the end I grudgingly decided
    to do it here and potentially waste a couple microseconds... */
@@ -1332,6 +1336,9 @@ if (!pd) fatal("NULL packet device passed to readip_pcap");
  switch(datalink) {
  case DLT_EN10MB: offset = 14; break;
  case DLT_IEEE802: offset = 22; break;
+#ifdef __amigaos__
+ case DLT_MIAMI: offset = 16; break;
+#endif
 #ifdef DLT_LOOP
  case DLT_LOOP:
 #endif
@@ -1436,7 +1443,7 @@ if (!pd) fatal("NULL packet device passed to readip_pcap");
  // FIXME: I eventually need to figure out why Windows head.ts time is sometimes BEFORE the time I
  // sent the packet (which is according to gettimeofday() in nbase).  For now, I will sadly have to
  // use gettimeofday() for Windows in this case
- #ifdef WIN32
+ #if defined(WIN32) || defined(__amigaos__)
  gettimeofday(&tv_end, NULL);
  *rcvdtime = tv_end;
  #else
@@ -1463,7 +1470,11 @@ void set_pcap_filter(Target *target,
   va_list ap;
   char buf[512];
   struct bpf_program fcode;
+#ifndef __amigaos__
   unsigned int localnet, netmask;
+#else
+  bpf_u_int32 localnet, netmask;
+#endif
   char err0r[256];
   
   if (pcap_lookupnet(target->device, &localnet, &netmask, err0r) < 0)

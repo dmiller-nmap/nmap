@@ -52,6 +52,10 @@
 
 extern NmapOps o;
 
+#ifdef __amigaos__
+extern void CloseLibs(void);
+#endif
+
 /*  predefined filters -- I need to kill these globals at some pont. */
 extern unsigned long flt_dsthost, flt_srchost;
 extern unsigned short flt_baseport;

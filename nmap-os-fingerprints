@@ -856,6 +856,17 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=0%ULEN=134%DAT=E)
 
+Fingerprint AmigaOS 3.5/3.9 running Miami Deluxe 1.0c
+TSeq(Class=TR%gcd=<6)
+T1(DF=Y%W=402E%ACK=S++%Flags=AS%Ops=M)
+T2(Resp=N)
+T3(Resp=Y%DF=Y%W=402E%ACK=S++%Flags=AS%Ops=M)
+T4(DF=N%W=4000%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=0%ULEN=134%DAT=E)
+
 Fingerprint AmigaOS AmiTCP/IP 4.3
 TSeq(Class=64K)
 T1(DF=N%W=1F0E%ACK=S++%Flags=AS%Ops=M)
@@ -8737,7 +8748,8 @@ T6(DF=N%W=0%ACK=S++%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
-Fingerprint Windows NT4 or 95/98/98SE
+# Windows NT 3.51 SP5
+Fingerprint Windows NT 3.51 SP5, NT4 or 95/98/98SE
 TSeq(Class=TD|RI%gcd=1|2|3|4|5|A|14|1E|28|5A%SI=<1F4%IPID=BI|RPI|RD%TS=U|0)
 T1(DF=Y|N%W=2017|3908|16D0|860|4470|61A8|7FFF|8000|869F|9C40|FAF0%ACK=S++%Flags=A|AS%Ops=|M|MNWNNT)
 T2(DF=N%W=0%ACK=S%Flags=AR%Ops=)

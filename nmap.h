@@ -62,6 +62,10 @@
 #endif /* WIN32 */
 #endif /* HAVE_CONFIG_H */
 
+#ifdef __amigaos__
+#include "nmap_amigaos.h"
+#endif
+
 #include <nbase.h>
 
 #if HAVE_UNISTD_H

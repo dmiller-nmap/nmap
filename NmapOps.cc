@@ -116,7 +116,11 @@ int NmapOps::TimeSinceStartMS(struct timeval *now) {
 void NmapOps::Initialize() {
   setaf(AF_INET);
 #ifndef WIN32
-  isr00t = !(geteuid());
+# ifdef __amigaos__
+    isr00t = 1;
+# else
+    isr00t = !(geteuid());
+# endif // __amigaos__
 #else
   winip_init();	/* wrapper for all win32 initialization */
 #endif

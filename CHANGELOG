@@ -1,5 +1,9 @@
 # Nmap Changelog ($Id$)
 
+o Fixed a backwards WIN32 ifdef that broke UDP and small-fragment
+ scans for some operating systems.  Thanks to Guido van Rooij
+ (guido@gvr.org) for reporting the problem and sending a patch.
+
 Nmap 3.26
 
 o Fixed Mac OS X Compilation (at least on most of the machines

@@ -56,6 +56,29 @@
 #include "mcheck.h"
 #endif
 
+#ifdef __amigaos__
+#include <proto/exec.h>
+#include <proto/dos.h>
+#include "nmap_amigaos.h"
+struct Library *SocketBase = NULL, *MiamiBase = NULL, *MiamiBPFBase = NULL, *MiamiPCapBase = NULL;
+static const char ver[] = "$VER:" NMAP_NAME " v"NMAP_VERSION " [Amiga.sf]";
+
+BOOL OpenLibs(void) {
+ if(!(    MiamiBase = OpenLibrary(MIAMINAME,21))) return FALSE;
+ if(!(   SocketBase = OpenLibrary("bsdsocket.library", 4))) return FALSE;
+ if(!( MiamiBPFBase = OpenLibrary(MIAMIBPFNAME,3))) return FALSE;
+ if(!(MiamiPCapBase = OpenLibrary(MIAMIPCAPNAME,5))) return FALSE;
+return TRUE;
+}
+
+void CloseLibs(void) {
+  if ( MiamiPCapBase ) CloseLibrary( MiamiPCapBase );
+  if ( MiamiBPFBase  ) CloseLibrary(  MiamiBPFBase );
+  if (  SocketBase   ) CloseLibrary(   SocketBase  );
+  if (   MiamiBase   ) CloseLibrary(   MiamiBase   );
+}
+#endif
+
 /* global options */
 extern NmapOps o;  /* option structure */
 extern char **environ;
@@ -87,6 +110,15 @@ int main(int argc, char *argv[], char *envp[]) {
   int interactivemode = 0;
   int fd;
   struct timeval tv;
+
+#ifdef __amigaos__
+	if(!OpenLibs()) {
+		printf("Couldn't open TCP/IP Stack Library(s)!\n");
+		exit(20);
+	}
+	MiamiBPFInit((struct Library *)MiamiBase, (struct Library *)SocketBase);
+	MiamiPCapInit((struct Library *)MiamiBase, (struct Library *)SocketBase);
+#endif
 
 #ifdef MTRACE
   // This glibc extension enables memory tracing to detect memory
@@ -308,6 +340,9 @@ int main(int argc, char *argv[], char *envp[]) {
     }
     arg_parse_free(myargv);
   }
+#ifdef __amigaos__
+  CloseLibs();
+#endif
   return 0;
 
 }

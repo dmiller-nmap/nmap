@@ -1002,7 +1002,7 @@ npmp-local        610/tcp    #
 npmp-local        610/udp    # 
 npmp-gui          611/tcp    # 
 npmp-gui          611/udp    # 
-sco-dtmgr         617/tcp    # SCO Desktop Administration Server
+sco-dtmgr         617/tcp    # SCO Desktop Administration Server or Arkeia (www.akriea.com) backup software
 sco-dtmgr         617/udp    # SCO Desktop Administration Server
 qmqp              628/tcp    # Qmail Quick Mail Queueing
 ipp               631/tcp    # Internet Printing Protocol -- for one implementation see http://www.cups.org (Common UNIX Printing System)
@@ -1010,14 +1010,15 @@ ginad             634/tcp    #
 ginad             634/udp    # 
 mount             635/udp    # NFS Mount Service
 ldapssl           636/tcp    # LDAP over SSL
+lanserver         637/tcp    #
+lanserver         637/udp    #
 pcnfs             640/udp    # PC-NFS DOS Authentication
 bwnfs             650/udp    # BW-NFS DOS Authentication
 mac-srvr-admin    660/tcp    # MacOS Server Admin
 mac-srvr-admin    660/udp    # MacOS Server Admin
 doom              666/tcp    # doom Id Software
 doom              666/udp    # doom Id Software
-lanserver         637/tcp    #
-lanserver         637/udp    #
+acap              674/tcp    # ACAP server of Communigate (www.stalker.com)
 resvc             691/tcp    # The Microsoft Exchange 2000 Server Routing Service          
 elcsd             704/tcp    # errlog copy/server daemon
 elcsd             704/udp    # errlog copy/server daemon
@@ -1107,6 +1108,7 @@ supfilesrv        871/tcp    # SUP server
 rsync             873/tcp    # Rsync server ( http://rsync.samba.org )
 accessbuilder     888/tcp    # or Audio CD Database
 accessbuilder     888/udp    # 
+sun-manageconsole 898/tcp    # Solaris Management Console Java listener (Solaris 8 & 9)
 ftps-data         989/tcp    # ftp protocol, data, over TLS/SSL
 samba-swat        901/tcp    # Samba SWAT tool.  Also used by ISS RealSecure.
 oftep-rpc         950/tcp    # Often RPC.statd (on Redhat Linux)
