@@ -1,5 +1,10 @@
 # Nmap Changelog ($Id$)
 
+UNRELEASED:
+
+o Applied patch from Matt Selsky (selsky(a)columbia.edu) which helps
+  Nmap build with OpenSSL.
+
 Nmap 3.50
 
 o Integrated a ton of service fingerprints, increasing the number of
@@ -187,7 +192,7 @@ o Fixed the --with-openssl configure option for people who have
 o Made some portability changes for HP-UX and possibly other types of
   machines, thanks to a patch from Petter Reinholdtsen (pere(a)hungry.com)
 
-o Applied a patch from Matt Selsky (selsky@columbia.edu) which fixes
+o Applied a patch from Matt Selsky (selsky(a)columbia.edu) which fixes
   compilation on some Solaris boxes, and maybe others.  The error said
   "cannot compute sizeof (char)"
 
@@ -231,7 +236,7 @@ o Applied some updates to README-WIN32 sent in by Kirby Kuehl
   changes.  I am now including that with the Nmap Windows binary .zip
   distribution (and in mswin32/ of the source distro).
 
-o Applied a one-line patch from Dmitry V. Levin (ldv@altlinux.org)
+o Applied a one-line patch from Dmitry V. Levin (ldv(a)altlinux.org)
   which fixes a test Nmap does during compilation to see if an existing
   libpcap installation is recent enough.
 
@@ -257,7 +262,7 @@ o Applied a patch (with slight changes) from Brian Hatch
   negotiation doesn't have to be repeated when Nmap reconnects to the same
   between probes.
 
-o Applied a patch from Brian Hatch (bri@ifokr.org) which optimizes the
+o Applied a patch from Brian Hatch (bri(a)ifokr.org) which optimizes the
   requested SSL ciphers for speed rather than security.  The list was
   based on empirical evidence from substantial benchmarking he did with
   tests that resemble nmap-service-scanning.
@@ -293,7 +298,7 @@ o Added a new --version_trace option which causes Nmap to print out extensive
 
 o Fixed a port number printing bug that would cause Nmap service
   fingerprints to give a negative port number when the actual port was
-  above 32K.  Thanks to Seth Master (smaster@stanford.edu) for finding
+  above 32K.  Thanks to Seth Master (smaster(a)stanford.edu) for finding
   this.
 
 o Updated all the header text again to clarify our interpretation of

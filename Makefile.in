@@ -24,6 +24,7 @@ DEFS = @DEFS@ -DNMAP_VERSION=\"$(NMAP_VERSION)\" -DNMAP_NAME=\"$(NMAP_NAME)\" -D
 # Should only be enabled during debugging and not in any real release.
 # DEFS += -DMTRACE=1
 CXXFLAGS = @CXXFLAGS@ $(CCOPT) $(DEFS) $(INCLS)
+CPPFLAGS = @CPPFLAGS@
 # CFLAGS = $(CXXFLAGS)
 # CFLAGS = $(DEFS) $(INCLS)
 STATIC =
