@@ -1,5 +1,15 @@
 # Nmap Changelog
 
+-- Updated to latest version of rpc program number list, maintained by Eilon Gishri (eilon@aristo.tau.ac.il)
+
+-- Fixed a quoting bug in the Nmap man page found by 
+   Rasmus Andersson <rasmus@pole-position.org>
+
+-- Applied RPM spec file changes from "Benjamin Reed"
+   (ranger@befunk.com) which allows you to avoid building the frontend
+   by adding "--define frontend 0" to the build command (eg --rebuild,
+   --ba, etc).
+
 ** 2.54BETA22
 
 -- Eliminated usage of u_int32_t (was causing compilation errors on
