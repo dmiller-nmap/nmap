@@ -225,6 +225,7 @@ int group_end;
 int hostnum;
 int up_this_block = 0;
 int block_unaccounted = LOOKAHEAD;
+int discardtimesbefore = 0;
 int down_this_block = 0;
 int num_responses = 0;
 int block_tries = 0; /* How many tries this block has gone through */
@@ -232,7 +233,6 @@ int max_tries = 5; /* Maximum number of tries for a block */
 fd_set fd_r;
 fd_set fd_x;
 struct timeval s_timeout, begin_select;
-int delta;
 
 unsigned int elapsed_time;
 int res;
@@ -313,6 +313,7 @@ gettimeofday(&start, NULL);
  
  while(group_start < num_hosts) { /* while we have hosts left to scan */
    do { /* one block */
+     discardtimesbefore = -1;
      up_this_block = 0;
      down_this_block = 0;
      for(hostnum=group_start; hostnum <= group_end; hostnum++) {      
@@ -326,21 +327,24 @@ gettimeofday(&start, NULL);
 	 sock.sin_addr = hostbatch[hostnum].host;
 	 gettimeofday(&time[pingpkt.seq], NULL);
          if (!sd_blocking) { block_socket(sd); sd_blocking = 1; }
+	 gettimeofday(&t1, NULL);
 	 for(decoy=0; decoy < o.numdecoys; decoy++) {
 	   if (decoy == o.decoyturn) {
-	     gettimeofday(&t1, NULL);
 	     if ((res = sendto(sd,(char *) ping,8,0,(struct sockaddr *)&sock,
 			       sizeof(struct sockaddr))) != 8) {
 	       fprintf(stderr, "sendto in massping returned %d (should be 8)!\n", res);
 	       perror("sendto");
 	     }
-	     gettimeofday(&t2, NULL);
-	     printf("sendto took %lu microsecs\n", TIMEVAL_SUBTRACT(t2, t1));
-	     usleep(10000);
 	   } else {
 	     send_ip_raw( rawsd, &o.decoys[decoy], &(sock.sin_addr), IPPROTO_ICMP, ping, 8);
 	   }
-	 } 
+	 }
+	 gettimeofday(&t2, NULL);
+	 if (TIMEVAL_SUBTRACT(t2,t1) > 1000000) {
+	   discardtimesbefore = hostnum;
+	   if (o.debugging) 
+	     printf("Huge send delay: %lu microseconds\n", TIMEVAL_SUBTRACT(t2,t1));
+	 }
        }  
      } /* for() loop */
      /* OK, we have sent our ping packets ... now we wait for responses */
@@ -361,7 +365,8 @@ gettimeofday(&start, NULL);
 	   hostbatch[hostnum].source_ip.s_addr = response.ip.ip_dst.s_addr;
 	   if (o.debugging) printf("We got a ping packet back from %s: id = %d seq = %d checksum = %d\n", inet_ntoa(*(struct in_addr *)(&response.ip.ip_src.s_addr)), response.identifier, response.sequence, response.checksum);
 	   if (hostbatch[hostnum].host.s_addr == response.ip.ip_src.s_addr) {
-	     adjust_timeouts(time[response.sequence], &to);
+	     if (discardtimesbefore < response.sequence)
+	       adjust_timeouts(time[response.sequence], &to);
 	     /*	     if (!to.srtt) {
 	       to.srtt = TIMEVAL_SUBTRACT(end, time[response.sequence]);
 	       to.rttvar = MAX(5000, MIN(to.srtt, 500000));
@@ -403,7 +408,8 @@ gettimeofday(&start, NULL);
 	   if (o.debugging) printf("Got destination unreachable for %s\n", inet_ntoa(hostbatch[hostnum].host));
 	   /* Since this gives an idea of how long it takes to get an answer,
 	      we add it into our times */
-	   adjust_timeouts(time[ushorttmp], &to);
+	   if (discardtimesbefore < ushorttmp)
+	     adjust_timeouts(time[ushorttmp], &to);
 	   /*	   gettimeofday(&end, NULL);
 	   if (!to.srtt) {
 	     to.srtt = TIMEVAL_SUBTRACT(end, time[ushorttmp]);
