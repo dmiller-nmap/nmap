@@ -82,6 +82,20 @@
 
        <B>SCAN</B> <B>TYPES</B>
 
+       <B>-sS</B>    TCP SYN scan: This technique is often  referred  to
+              as  "half-open"  scanning, because you don't open a
+              full TCP connection. You send a SYN packet,  as  if
+              you  are  going  to  open a real connection and you
+              wait for a response. A SYN|ACK indicates  the  port
+              is  listening.  A  RST  is indicative of a non-lis­
+              tener.  If a SYN|ACK is received, a RST is  immedi­
+              ately  sent  to  tear down the connection (actually
+              our OS kernel does this for us). The primary advan­
+              tage to this scanning technique is that fewer sites
+              will log it.  Unfortunately you  need  root  privi­
+              leges  to  build these custom SYN packets.  This is
+              the default scan type for privileged users.
+
        <B>-sT</B>    TCP connect() scan: This is the most basic form  of
               TCP scanning. The connect() system call provided by
               your operating system is used to open a  connection
@@ -95,20 +109,8 @@
               This sort of scan is easily  detectable  as  target
               host logs will show a bunch of connection and error
               messages for the services which accept()  the  con­
-              nection just to have it immediately shutdown.
-
-       <B>-sS</B>    TCP  SYN  scan: This technique is often referred to
-              as "half-open" scanning, because you don't  open  a
-              full  TCP  connection. You send a SYN packet, as if
-              you are going to open a  real  connection  and  you
-              wait  for  a response. A SYN|ACK indicates the port
-              is listening. A RST is  indicative  of  a  non-lis­
-              tener.   If a SYN|ACK is received, a RST is immedi­
-              ately sent to tear down  the  connection  (actually
-              our OS kernel does this for us). The primary advan­
-              tage to this scanning technique is that fewer sites
-              will  log  it.   Unfortunately you need root privi­
-              leges to build these custom SYN packets.
+              nection just to have it immediately shutdown.  This
+              is the default scan type for unprivileged users.
 
        <B>-sF</B> <B>-sX</B> <B>-sN</B>
               Stealth FIN, Xmas Tree, or Null scan  modes:  There
@@ -474,8 +476,8 @@
        <B>-v</B>     Verbose mode.  This is a highly recommended  option
               and  it  gives  out  more information about what is
               going on.  You can use it twice for greater effect.
-              Use  <B>-d</B> a couple of times if you really want to get
-              crazy with scrolling the screen!
+              You  can  also  use <B>-d</B> a few of times if you really
+              want to get crazy with scrolling the screen!
 
        <B>-h</B>     This handy option display a quick reference  screen
               of  nmap  usage  options.  As you may have noticed,
@@ -674,14 +676,14 @@
               FTP-DATA (20) packets to come through and establish
               a connection.  Obviously this  completely  subverts
               the  security  advantages  of  the  firewall  since
-              intruders can just masquerade  as  FTP  or  DNS  by
-              modifying  their  source port.  Obviously for a UDP
-              scan you should try 53 first and TCP  scans  should
-              try 20 before 53.  Note that this is only a request
-              -- nmap will honor it only if and when it  is  able
-              to.  For example, you can't do TCP ISN sampling all
-              from  one  host:port  to  one  host:port,  so  nmap
-              changes the source port even if you used -g.
+              intruders can just masquerade as FTP or DNS by mod­
+              ifying their source port.  Obviously for a UDP scan
+              you should try 53 first and TCP scans should try 20
+              before  53.   Note  that  this is only a request --
+              nmap will honor it only if and when it is able  to.
+              For example, you can't do TCP ISN sampling all from
+              one host:port to one host:port, so nmap changes the
+              source port even if you used -g.
 
               Be  aware that there is a small performance penalty
               on some scans for  using  this  option,  because  I
@@ -740,10 +742,10 @@
               scans  <B>very</B>  slowly in the hopes of avoiding detec­
               tion by IDS systems.  It serializes all  scans  (no
               parallel  scanning)  and generally waits at least 5
-              minutes  between  sending   packets.    <B>Sneaky</B>   is
-              similar,  except  it  only waits 15 seconds between
-              sending packets.  <B>Polite</B> is meant to ease  load  on
-              the  network  and  reduce  the  chances of crashing
+              minutes between sending packets.  <B>Sneaky</B>  is  simi­
+              lar,  except it only waits 15 seconds between send­
+              ing packets.  <B>Polite</B> is meant to ease load  on  the
+              network   and   reduce   the  chances  of  crashing
               machines.  It serializes the probes  and  waits  <B>at</B>
               <B>least</B>  0.4  seconds  between  them.   <B>Normal</B> is the
               default Nmap  behaviour,  which  tries  to  run  as

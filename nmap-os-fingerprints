@@ -3444,7 +3444,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=F%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
 # Contributed by cod@dfw.net
-Fingerprint AS/400e 720 running OS/400 R4.4
+Fingerprint AS/400 running OS/400 R4.4
 TSeq(Class=TD%gcd=<6%SI=<1E)
 T1(DF=Y%W=2000%ACK=S++%Flags=AS%Ops=MNWNNT)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -4313,7 +4313,7 @@ T6(Resp=Y%DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=C0|A0|0%IPLEN=164%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
-Fingerprint Linux 2.1.19 - 2.2.19
+Fingerprint Linux 2.1.19 - 2.2.20
 TSeq(Class=RI%gcd=<8%SI=>10000%IPID=I%TS=100HZ)
 T1(DF=Y|N%W=3C0A|3F25|7B2F|7F53|7C38|B63%ACK=S++%Flags=AS%Ops=MENNTNW)
 T2(Resp=N)
@@ -5256,6 +5256,18 @@ T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=E0%IPLEN=164%RIPTL=134%RID=E%RIPCK=F%ULEN=134%DAT=E)
+
+# Contributed by "Craig, Scott" <SCraig@kmart.com>
+Fingerprint Nokia IP530 Network Appliance (IPSO 3.4-3.4.2)
+TSeq(Class=RI%gcd=<8%SI=<85DD6&>987%IPID=I%TS=2HZ)
+T1(DF=N%W=4000%ACK=S++%Flags=AS%Ops=MNWNNT)
+T2(Resp=N)
+T3(Resp=Y%DF=N%W=4000%ACK=S++%Flags=AS%Ops=MNWNNT)
+T4(DF=N%W=4000%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
+PU(DF=Y%TOS=E0%IPLEN=164%RIPTL=134%RID=%RIPCK=F%UCK=0%ULEN=134%DAT=E)
 
 # Contributed by Andrew Stothard, andys@telinco.net
 Fingerprint Nortel Networks CVX1800 RAS. Software version 2.02
@@ -7380,7 +7392,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(Resp=N)
 
 # Contributed by kribe@iname.com
-Fingerprint Hardware: Zyxel Prestige router
+Fingerprint Hardware: Zyxel Prestige router/modem
 T1(DF=N%W=0%ACK=S++%Flags=BAR%Ops=)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
 T3(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)

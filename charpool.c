@@ -76,14 +76,6 @@ static inline void cp_grow(void) {
     safe_malloc(currentcharpoolsz);
 }
 
-static inline void cp_align(void) {
-  int res;
-  if ((res = (nextchar - charpool[currentcharpool]) % ALIGN_ON)) {
-    nextchar += ALIGN_ON - res;
-  }
-  return;
-}
-
 void *cp_alloc(int sz) {
   char *p;
   int modulus;
@@ -91,7 +83,7 @@ void *cp_alloc(int sz) {
   if (!charpool_initialized) cp_init();
 
   if ((modulus = sz % ALIGN_ON))
-    sz += modulus;
+    sz += ALIGN_ON - modulus;
   
   if ((nextchar - charpool[currentcharpool]) + sz <= currentcharpoolsz) {
     p = nextchar;

@@ -208,7 +208,7 @@ void printportoutput(struct hoststruct *currenths, portlist *plist) {
 	  else snprintf(tmpbuf, sizeof(tmpbuf), "#%li", current->rpc_program);
 	  log_write(LOG_XML, "<service name=\"%s\" proto=\"rpc\" rpcnum=\"%li\" lowver=\"%i\" highver=\"%i\" method=\"detection\" conf=\"5\" />\n", tmpbuf, current->rpc_program, current->rpc_lowver, current->rpc_highver);
 	} else if (service) {
-	  log_write(LOG_XML, "<service name=\"%s\" method=\"table\" conf=\"3\"%s />\n", service->s_name, (o.rpcscan && current->rpc_status == RPC_STATUS_UNKNOWN)? "proto=\"rpc\"" : ""); 
+	  log_write(LOG_XML, "<service name=\"%s\" method=\"table\" conf=\"3\" %s />\n", service->s_name, (o.rpcscan && current->rpc_status == RPC_STATUS_UNKNOWN)? "proto=\"rpc\"" : ""); 
 	}
 	log_write(LOG_XML, "</port>\n");
       }

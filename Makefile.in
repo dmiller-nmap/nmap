@@ -1,4 +1,4 @@
-NMAP_VERSION = 2.54BETA36
+NMAP_VERSION = 2.54BETA37
 NMAP_NAME= nmap
 NMAP_URL= www.insecure.org/nmap/
 NMAP_PLATFORM=@host@
@@ -55,11 +55,11 @@ $(NBASEDIR)/libnbase.a: $(NBASEDIR)/Makefile
 #	@echo Configuring libpcap; cd $(LIBPCAPDIR); ./configure
 
 nmapfe/nmapfe: 
-	@echo "FAILURES HERE ARE OK -- THEY JUST MEAN YOU CANNOT USE nmapfe"
+#	@echo "FAILURES HERE ARE OK -- THEY JUST MEAN YOU CANNOT USE nmapfe"
 #	-rm -f nmapfe/Makefile
 #	-cd nmapfe; ./configure;
 	-cd nmapfe; test -f Makefile && $(MAKE) VERSION=$(NMAP_VERSION) STATIC=$(STATIC);
-	@echo "END OF SECTION WHERE FAILURES ARE OK"
+#	@echo "END OF SECTION WHERE FAILURES ARE OK"
 
 # This target is just for me ... don't you get any ideas --Fyodor
 distro: 

@@ -1,5 +1,54 @@
 # Nmap Changelog ($Id$)
 
+Nmap 2.54BETA37
+
+o Made SYN scan the default for priviliged (root) users.  This has far
+  better performance for Windows users due to their broken connect()
+  call, and is usually even preferred on UNIX because it is more
+  stealthy and less likely to crash applications listening on the
+  target host.
+
+o Fixed a problem noted by Ping Huang (pshuang@alum.mit.edu) relating
+  to -PI scans of a machine's own non-localhost interfaces (eg
+  scanning your ethernet address).
+
+o Applied patch from Patrice Goetghebeur (pgoetghebeur@mac.com) which
+  fixes PPP/SLIP support on Mac OS X.
+
+o Applied dozens of nmap-services portnumber mapping updates
+  researched and sent by palante@subterrain.net
+
+o Updated nmap-rpc to the latest version from Eilon Gishri
+  (eilon@aristo.tau.ac.il)
+
+o Fixed --resume option to better detect all of the previously scanned
+  hosts in an -oN file (bug report from Adam.Scott@predictive.com )
+
+o Adjusted random IP generator (for -iR) to account for newly
+  allocated ip space from
+  http://www.iana.org/assignments/ipv4-address-space as noted by Chad
+  Loder (cloder@acm.org)
+
+o Updated config.sub and config.guess to the versions in
+  automake-1.6.2 .
+
+o Applied patch from Markus A. Nonym (g17m0@lycos.com) which checks
+  for a recent version of GTK+ in ./configure before even trying to
+  build NmapFE (avoids the previous ugly compiler errors).
+
+o Applied patch from benkj@gmx.it which fixes misbehavior when Nmap
+  would receive EOF (including ^D) in interactive mode.
+
+o Fixed format string bugs (not the security-related kind) found by
+  Takehiro YONEKURA (yonekura@obliguard.com) and Kuk-hyeon Lee 
+  (errai@inzen.com)
+
+o Applied patch from Greg Steuck (greg-nmap-dev@nest.cx) which fixes
+  an alignment problem in charpool.c that could cause bus errors on
+  64-bit platforms.
+
+o Applied portability fix patch from Matt Christian (mattc@visi.com)
+
 Nmap 2.54BETA36
 
 o Fixed major connect scan problem introduced in BETA35

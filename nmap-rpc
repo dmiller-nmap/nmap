@@ -7,7 +7,7 @@
 # Tweaked a bit by Fyodor <fyodor@insecure.org>
 #
 # NOTE:  Eilon Gishri <eilon@aristo.tau.ac.il> has merged the nmap-rpc
-# with his massive rpc file (see comments below).  So as of 4/30/00,
+# with his massive rpc file (see comments below).  So as of 6/30/02,
 # this is an exact copy (except for these comments) of 
 # ftp://ftp.tau.ac.il/pub/users/eilon/rpc/rpc
 #
@@ -100,6 +100,7 @@ cmsd		100068	rpc.cmsd dtcalendar
 ypxfrd		100069	rpc.ypxfrd ypxfr
 bugtraqd	100071
 kerbd		100078
+rpc.operd	100080	opermsg		# Sun Online-Backup
 ttdbserverd     100083	rpc.ttdbserverd ttdbserverd ttdbserver tooltalk
 admind		100087
 autofsd		100099	autofsd
@@ -127,14 +128,15 @@ traffic		100123	na.traffic
 DNInode		100124	na.dni	DNIneT
 layers2		100131	na.layers2	# SunNet Manager
 nsm_addrand	100133			# Solaris's statd NSM
+ktkt_warnd	100134			# Kerberos warning daemon	
 etherif2	100135	na.etherif2	# SunNet Manager
 hostmem2	100136	na.hostmem2	# SunNet Manager
 iostat2		100137	na.iostat2	# SunNet Manager
 snmpv2		100138	na.snmpv2	# SNM Version 2.2.2
 sender		100139	cc_sender	# Cooperative Consoles
-amiserv		100146
-amiaux		100147
-ocfserv		100150
+amiserv		100146			# AMI Daemon
+amiaux		100147			# AMI Daemon
+ocfserv		100150			# OCF (Smart card) Daemon
 kcms_server	100221			# SunKCMS Profile Server
 nfs_acl		100227
 #
@@ -148,15 +150,18 @@ sadmind		100232			# Solstice
 ufsd		100233	ufsd
 gssd		100234	gss		# GSS Daemon
 cachefsd	100235	cachefs		# CacheFS Daemon
-SyMON           100244              # SUNWsymon
-pmfd            100248    rpc.pmfd  # SUNWcluster
+rpc.metamedd	100242			# SUNWmdm - Sun Cluster
+sm_symond	100244			# Solstice SyMON process controller
+rpc.pmfd	100248	pmfd		# Sun Cluster - process monitor server
 snmpXdmid	100249
+rpc.metacld	100281			# SUNWmdm - Sun Cluster
 nisd		100300	rpc.nisd
 nis_cache	100301
 nis_callback	100302
 nispasswd	100303	rpc.nispasswdd
 fnsypd          100304			# Federated Naming Service (FNS)
 rpc.pts         105004  Protoserver	# Advanced Printing Software
+swu_svr		120100			# Software Usage Monitoring daemon 
 nf_snmd		120126			# SunNet Manager
 nf_snmd		120127
 pcnfsd		150001	pcnfs
@@ -243,25 +248,26 @@ drdd		300434	drd
 ap_daemon       300473		# SUNWapu - Alternate Pathing (AP)
 cnxmond		300483		# cluster node monitor (Digital UNIX)
 cnxagentd	300484		# cluster agent (Digital UNIX)
+mcserv		300516
 cluinfod	300527		# cluster information server (Digital UNIX)
 dmispd		300598		# Sun Solstice Enterprise DMI Service Provider
 prpasswd	300632
 sfs		344444		# SFS - Self-Certifying File System
 prestoctl_svc	390100	presto	# Prestoserve control daemon
 #
-# Legato Networker
+# Legato NetWorker
 #
 rap		390101	rapla
 rapserv		390102	raprd
-nsrd		390103	nsr
-nsrmmd		390104	nsrmm
-nsrindexd	390105	nsrindex
-nsrmmdbd	390107	nsrmmdb
+nsrd		390103	nsr	 # NetWorker service
+nsrmmd		390104	nsrmm	 # NetWorker media mupltiplexor daemon
+nsrindexd	390105	nsrindex # NetWorker file index daemon
+nsrmmdbd	390107	nsrmmdb  # NetWorker media management database daemon
 nsrstat		390109
-nsrjb		390110	nsrjbd
-nsrexec		390113	nsrexecd
-lgtolmd         390115         # Legato license broker
-nsrnotd		390400
+nsrjb		390110	nsrjbd	 # NetWorker jukebox-control service
+nsrexec		390113	nsrexecd # NetWorker client execution service
+lgtolmd		390115		 # Legato license daemon
+nsrnotd		390400		 # NetWorker notary service
 #
 # Remedy AR System daemons
 #
@@ -270,6 +276,8 @@ ntserverd       390601  ntserverd
 ntclientd       390602  ntclientd
 aresclsrv       390603  aresclsrv
 arservtcd       390604  arservtcd
+# Remedy Flashboards daemons
+flashservd	390610	flashservd
 arflashbd       390619  arflashbd
 #
 arfastsrv       390620  arfastsrv
@@ -383,10 +391,17 @@ trif2xxx	391204
 dx		391205
 licd		391206
 #
-asedirector	395175  asedirector
-aseagent	395176  aseagent
-asehsm		395177  asehsm
-aselogger	395179  aselogger
+# Compaq TruCluster - Available Server Environment 
+#
+asedirector	395175  asedirector	# ASE Director Daemon
+aseagent	395176  aseagent	# ASE Agent Daemon
+asehsm		395177  asehsm		# Host Status Monitor Daemon
+aselogger	395179  aselogger	# Logger Daemon
+# BMC
+EnsignAgent	450000		# Ensign Agent
+#
+AdoIfServer 	1000002		# RHIC AdoIf Server (Accelerator Device Object)
+notifServer	2000004		# RHIC notifServer
 #
 retherif	20000000	na.retherif
 genagnt		20000001	na.genagnt
@@ -408,12 +423,15 @@ sas		28000230	# Spectrum Access Server    (10230/udp)
 #
 # The range 200100000-200199999 is reserved for NeXT services ???
 #
-netinfobind	200100001	nibindd # NeXT NetInfo
+netinfobind	200100001  nibindd	# NeXT NetInfo
+renderd		200100002		# NeXT renderd
 #
 SLSd_daemon	536870913	# HP Distributed Single Logical Screen
 uidd		536870915
+#
+vtsk		536870916	# SunVTS diagnostic kernel
+#
 userd		536870916
-# vtsk        536870916 # SUNWvts -- collision!
 bondd		536870917
 staticd		536870918
 curved		536870919
@@ -534,7 +552,9 @@ ndbserver98	536871042
 ndbserver99	536871043
 ndbserver100	536871044
 #
-fcagent         541414217   # SGI FibreVault Status/Configuration daemon
+fcagent		541414217	# SGI FibreVault Status/Configuration daemon
+#
+pnmd		591751041	# SunCluster - Public Network Management (PNM)
 #
 ugidd		545580417	rpc.ugidd
 #
@@ -550,13 +570,18 @@ inetray         555555560
 #
 des_crypt	600100029	freebsd-crypt	# FreeBSD
 fypxfrd		600100069	freebsd-ypxfrd	# FreeBSD
+rdbx		611319808
 bminrd		630474513	# MacroModel - BatchMin Network Server
 bwnfsd          788585389	# (PC)NFS server by Beame & Whiteside, Inc.
 dmispd		805306368	# Sun Solstice Enterprise DMI Service Provider
+rdict		805898569	# "Internetworking with TCP/IP Vol 3"
 piktc_svc	806422610	# PIKT: Problem Informant/Killer Tool 
 cfsd		824395111
+cns		912680550	# Controls Name Server
 fmproduct	1073741824  _Frame_RPC		# FrameMaker
 cfsd		1092830567
+rdb		1145324612	# Wind River Systems' VxWorks debug stub
+#
 dtcm		1289637086
 ttsession	1289637087	# Sun Solaris 7 (2.7) and up.
 ttsession	1342177279	# Sun Solaris upto 2.6

@@ -458,11 +458,11 @@ if (o.verbose && openport != (unsigned long) -1)
    if (si->ts_seqclass == TS_SEQ_UNKNOWN && si->responses >= 2) {
      avg_ts_hz = 0.0;
      for(i=0; i < si->responses - 1; i++) {
-       double hz;
+       double dhz;
 
-       hz = (double) ts_diffs[i] / (time_usec_diffs[i] / 1000000.0);
-       /*       printf("ts incremented by %d in %li usec -- %fHZ\n", ts_diffs[i], time_usec_diffs[i], hz); */
-       avg_ts_hz += hz / ( si->responses - 1);
+       dhz = (double) ts_diffs[i] / (time_usec_diffs[i] / 1000000.0);
+       /*       printf("ts incremented by %d in %li usec -- %fHZ\n", ts_diffs[i], time_usec_diffs[i], dhz); */
+       avg_ts_hz += dhz / ( si->responses - 1);
      }
 
      if (o.debugging)
@@ -1285,7 +1285,7 @@ FingerPrint *parse_single_fingerprint(char *fprint_orig) {
   int lineno = 0;
   char *p, *q;
   char *thisline, *nextline;
-  char *fprint = strdup(fprint_orig); // Make a copy we can futz with
+  char *fprint = strdup(fprint_orig); /* Make a copy we can futz with */
   FingerPrint *FP;
   FingerPrint *current; /* Since a fingerprint is really a linked list of
 			   FingerPrint structures */

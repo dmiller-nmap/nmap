@@ -1044,7 +1044,7 @@ if (!pd) fatal("NULL packet device passed to readip_pcap");
 #ifdef DLT_SLIP_BSDOS
  case DLT_SLIP_BSDOS:
 #endif
-#if (FREEBSD || OPENBSD || NETBSD || BSDI)
+#if (FREEBSD || OPENBSD || NETBSD || BSDI || MACOSX)
    offset = 16;
 #else
    offset = 24; /* Anyone use this??? */
@@ -1060,7 +1060,7 @@ if (!pd) fatal("NULL packet device passed to readip_pcap");
 #ifdef DLT_PPP_ETHER
  case DLT_PPP_ETHER:
 #endif
-#if (FREEBSD || OPENBSD || NETBSD || BSDI)
+#if (FREEBSD || OPENBSD || NETBSD || BSDI || MACOSX)
    offset = 4;
 #else
 #ifdef SOLARIS
@@ -1147,7 +1147,7 @@ void set_pcap_filter(struct hoststruct *target,
   va_end(ap);
   
   if (o.debugging)
-    log_write(LOG_STDOUT, "Packet capture filter: %s\n", buf);
+    log_write(LOG_STDOUT, "Packet capture filter (device %s): %s\n", target->device, buf);
   
   /* Due to apparent bug in libpcap */
   if (islocalhost(&(target->host)))

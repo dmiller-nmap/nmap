@@ -71,6 +71,18 @@ for a quick reference page listing all the options.
 .TP
 .B SCAN TYPES
 .TP
+.B \-sS
+TCP SYN scan: This technique is often referred to as "half-open"
+scanning, because you don't open a full TCP connection. You send a SYN
+packet, as if you are going to open a real connection and you wait for
+a response. A SYN|ACK indicates the port is listening. A RST is
+indicative of a non\-listener.  If a SYN|ACK is received, a RST is
+immediately sent to tear down the connection (actually our OS kernel
+does this for us). The primary advantage to this scanning technique is
+that fewer sites will log it.  Unfortunately you need root privileges
+to build these custom SYN packets.  This is the default scan type for
+privileged users.
+.TP
 .B \-sT 
 TCP connect() scan: This is the most basic form of TCP
 scanning. The connect() system call provided by your
@@ -81,23 +93,10 @@ reachable. One strong advantage to this technique is that
 you don't need any special privileges. Any user on most UNIX
 boxes is free to use this call.
 .Sp
-This sort of scan is easily detectable as target host logs
-will show a bunch of connection and error messages for the
-services which accept() the connection just to have it
-immediately shutdown.
-.TP
-.B \-sS
-TCP SYN scan: This technique is often referred to as
-"half-open" scanning, because you don't open a full TCP
-connection. You send a SYN packet, as if you are going to
-open a real connection and you wait for a response. A
-SYN|ACK indicates the port is listening. A RST is indicative
-of a non\-listener.  If a SYN|ACK is received, a RST is
-immediately sent to tear down the connection (actually our
-OS kernel does this for us). The primary advantage to this
-scanning technique is that fewer sites will log it.
-Unfortunately you need root privileges to build these custom
-SYN packets.
+This sort of scan is easily detectable as target host logs will show a
+bunch of connection and error messages for the services which accept()
+the connection just to have it immediately shutdown.  This is the
+default scan type for unprivileged users.
 .TP
 .B \-sF \-sX \-sN 
 Stealth FIN, Xmas Tree, or Null scan modes: There are times
@@ -448,9 +447,9 @@ variants.
 .B \-v
 Verbose mode.  This is a highly recommended option and it
 gives out more information about what is going on.  You can
-use it twice for greater effect.  Use
+use it twice for greater effect.  You can also use 
 .B \-d
-a couple of times if you really want to get crazy with
+a few of times if you really want to get crazy with
 scrolling the screen!
 .TP
 .B \-h

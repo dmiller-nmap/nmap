@@ -389,7 +389,7 @@ int nmap_main(int argc, char *argv[]) {
 	  o.decoyturn = o.numdecoys++;
 	} else {      
 	  if (o.numdecoys >= MAX_DECOYS -1)
-	    fatal("You are only allowed %d decoys (if you need more redefine MAX_DECOYS in nmap.h)");
+	    fatal("You are only allowed %d decoys (if you need more redefine MAX_DECOYS in nmap.h)", MAX_DECOYS);
 	  if (resolve(p, &o.decoys[o.numdecoys])) {
 	    o.numdecoys++;
 	  } else {
@@ -600,8 +600,10 @@ int nmap_main(int argc, char *argv[]) {
   /* Now we check the option sanity */
   /* Insure that at least one scantype is selected */
   if (!o.connectscan && !o.udpscan && !o.synscan && !o.windowscan && !o.idlescan && !o.finscan && !o.maimonscan &&  !o.nullscan && !o.xmasscan && !o.ackscan && !o.bouncescan && !o.pingscan && !o.ipprotscan && !o.listscan) {
-    o.connectscan++;
-    if (o.verbose) error("No tcp,udp, or ICMP scantype specified, assuming vanilla tcp connect() scan. Use -sP if you really don't want to portscan (and just want to see what hosts are up).");
+    if (o.isr00t)
+      o.synscan++;
+    else o.connectscan++;
+    if (o.verbose) error("No tcp,udp, or ICMP scantype specified, assuming %s scan. Use -sP if you really don't want to portscan (and just want to see what hosts are up).", o.synscan? "SYN Stealth" : "vanilla tcp connect()");
   }
 
   if (o.pingtype != PINGTYPE_NONE && o.spoofsource) {
@@ -972,7 +974,6 @@ int nmap_main(int argc, char *argv[]) {
 	o.decoys[o.decoyturn] = currenths->source_ip;
 	
 	/* Time for some actual scanning! */    
-	        /* Time for some actual scanning! */    
 	if (o.synscan) pos_scan(currenths, ports->tcp_ports, ports->tcp_count, SYN_SCAN);
 	if (o.windowscan) pos_scan(currenths, ports->tcp_ports, ports->tcp_count, WINDOW_SCAN);
 	if (o.connectscan) pos_scan(currenths, ports->tcp_ports, ports->tcp_count, CONNECT_SCAN);
@@ -1119,6 +1120,17 @@ int gather_logfile_resumption_state(char *fname, int *myargc, char ***myargv) {
     found = NULL;
     while((q = strstr(q, "\nInteresting ports on ")))
       found = q++;
+
+    /* There may be some later IPs of the form 'All [num] scanned ports on  ([ip]) are: state */
+    if (found) q = found;
+    if (q) {    
+      while((q = strstr(q, "\nAll "))) {
+	q+= 5;
+	while(isdigit(*q)) q++;
+	if (strncmp(q, " scanned ports on", 17) == 0)
+	  found = q;
+      }
+    }
 
     if (found) {    
       found = strchr(found, '(');

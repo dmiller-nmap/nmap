@@ -14,8 +14,8 @@ Nmap only exists for Win32 because of their hard work.
 
 *** Known Issues/Bugs ***
 
-== You cannot scan yourself (localhost).  This is currently a WinPcap
-   limitation.
+== You cannot scan yourself (localhost).  This is a Windows/WinPcap
+   limitation which we haven't yet found a way to workaround.
 
 == Nmap does not work under Windows ME .  This is a WinPcap
    limitation.
@@ -27,6 +27,12 @@ Nmap only exists for Win32 because of their hard work.
 == All interfaces (except localhost) should work under Windows 2000 as
    administrator.  If you have trouble under Win2K, try the
    --win_norawsock switch.
+
+== TCP connect() scan can be agonizingly slow.  You may have luck by
+   adding a new registy DWORD value to
+   HKML\SYSTEM\CurrentControlSet\Services\TcpIp\Parameters named
+   "MaxUserPort", with a large value like 65534).  See MS KB Q196271.
+
 
 == NmapFE (the GUI front end) has not yet been ported to Win32 .
 

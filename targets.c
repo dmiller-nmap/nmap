@@ -317,25 +317,24 @@ do {
 	/* We figure out the source IP/device IFF
 	   1) We are r00t AND
 	   2) We are doing tcp pingscan OR
-	   3) We are doing NO scan AND we are doing a raw-mode portscan or 
-	   osscan */
+	   3) We are doing a raw-mode portscan or osscan */
 	if (o.isr00t && 
 	    ((*pingtype & PINGTYPE_TCP) || 
-	     (*pingtype == PINGTYPE_NONE && 
-	      (o.synscan || o.finscan || o.xmasscan || o.nullscan || o.ipprotscan ||
-	       o.maimonscan || o.idlescan || o.ackscan || o.udpscan || o.osscan || o.windowscan)))) {
-	 device = routethrough(&(hs->hostbatch[hidx].host), &(hs->hostbatch[hidx].source_ip));
-	 if (!device) {
-	   if (*pingtype == PINGTYPE_NONE) {
-	     fatal("Could not determine what interface to route packets through, run again with -e <device>");
-	   } else {
-	     error("WARNING:  Could not determine what interface to route packets through to %s, changing ping scantype to ICMP ping only", inet_ntoa(hs->hostbatch[hidx].host));
-	     *pingtype = PINGTYPE_ICMP_PING;
-	   }
-	 } else {
-	   strcpy(hs->hostbatch[hidx].device, device);
-	 }
-	}  
+	     o.synscan || o.finscan || o.xmasscan || o.nullscan || 
+	     o.ipprotscan || o.maimonscan || o.idlescan || o.ackscan || 
+	     o.udpscan || o.osscan || o.windowscan)) {
+	  device = routethrough(&(hs->hostbatch[hidx].host), &(hs->hostbatch[hidx].source_ip));
+	  if (!device) {
+	    if (*pingtype == PINGTYPE_NONE) {
+	      fatal("Could not determine what interface to route packets through, run again with -e <device>");
+	    } else {
+	      error("WARNING:  Could not determine what interface to route packets through to %s, changing ping scantype to ICMP ping only", inet_ntoa(hs->hostbatch[hidx].host));
+	      *pingtype = PINGTYPE_ICMP_PING;
+	    }
+	  } else {
+	    strcpy(hs->hostbatch[hidx].device, device);
+	  }
+	}
       }
 
       /* In some cases, we can only allow hosts that use the same device

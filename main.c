@@ -151,7 +151,9 @@ int main(int argc, char *argv[], char *envp[]) {
   while(1) {
     printf("nmap> ");
     fflush(stdout);
-    fgets(command, sizeof(command), stdin);
+    if (fgets(command, sizeof(command), stdin) == NULL && feof(stdin)) {
+      fatal("EOF reached -- quitting");
+    }
     myargc = arg_parse(command, &myargv);
     if (myargc < 1) {
       printf("Bogus command -- press h <enter> for help\n");

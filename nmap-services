@@ -104,9 +104,9 @@ tacacs-ds         65/tcp     # TACACS-Database Service
 tacacs-ds         65/udp     # TACACS-Database Service
 sql*net           66/tcp     # Oracle SQL*NET
 sql*net           66/udp     # Oracle SQL*NET
-dhcp              67/tcp     # DHCP/Bootstrap Protocol Server
-dhcp              67/udp     # DHCP/Bootstrap Protocol Server
-dhcpclient        68/tcp     # DHCP/Bootstrap Protocol Client
+dhcpserver       67/tcp     # DHCP/Bootstrap Protocol Server
+dhcpserver       67/udp     # DHCP/Bootstrap Protocol Server
+dhcpclient       68/tcp     # DHCP/Bootstrap Protocol Client
 dhcpclient        68/udp     # DHCP/Bootstrap Protocol Client
 tftp              69/tcp     # Trivial File Transfer
 tftp              69/udp     # Trivial File Transfer
@@ -430,11 +430,11 @@ subntbcst_tftp    247/tcp    #
 subntbcst_tftp    247/udp    # 
 bhfhs             248/tcp    # 
 bhfhs             248/udp    # 
-rap               256/tcp    # 
+FW1-secureremote  256/tcp    # also "rap"
 rap               256/udp    # 
-set               257/tcp    # secure electronic transaction
+FW1-mc-fwmodule   257/tcp    # FW1 management console for communication w/modules and also secure electronic transaction (set) port
 set               257/udp    # secure electronic transaction
-yak-chat          258/tcp    # yak winsock personal chat
+Fw1-mc-gui        258/tcp    # also yak winsock personal chat
 yak-chat          258/udp    # yak winsock personal chat
 esro-gen          259/tcp    # efficient short remote operations
 firewall1-rdp     259/udp    # Firewall 1 proprietary RDP protocol http://www.inside-security.de/fw1_rdp_poc.html
@@ -447,7 +447,8 @@ arcisdms          262/udp    #
 hdap              263/tcp    # 
 hdap              263/udp    # 
 bgmp              264/tcp    # 
-bgmp              264/udp    # 
+FW1-or-bgmp       264/udp    # FW1 secureremote alternate
+maybeFW1          265/tcp
 http-mgmt         280/tcp    # 
 http-mgmt         280/udp    # 
 personal-link     281/tcp    # 
@@ -490,7 +491,7 @@ mftp              349/tcp    #
 mftp              349/udp    # 
 matip-type-a      350/tcp    # MATIP Type A
 matip-type-a      350/udp    # 
-matip-type-b      351/tcp    # MATIP Type B or bhoetty
+matip-type-b      351/tcp    # MATIP Type B or bhoetty also safetp
 matip-type-b      351/udp    # MATIP Type B or bhoetty
 dtag-ste-sb       352/tcp    # DTAG, or bhoedap4
 dtag-ste-sb       352/udp    # DTAG, or bhoedap4
@@ -518,8 +519,8 @@ rsvp_tunnel       363/tcp    #
 rsvp_tunnel       363/udp    # 
 aurora-cmgr       364/tcp    # 
 aurora-cmgr       364/udp    # 
-dtk               365/tcp    # Deception Tool Kit (lame -- see www.all.net) 
-dtk               365/udp    # Deception Tool Kit (lame -- see www.all.net)
+dtk               365/tcp    # Deception Tool Kit (www.all.net) 
+dtk               365/udp    # Deception Tool Kit (www.all.net)
 odmr              366/tcp    # 
 odmr              366/udp    # 
 mortgageware      367/tcp    # 
@@ -678,7 +679,7 @@ https             443/tcp    # secure http (SSL)
 https             443/udp    # 
 snpp              444/tcp    # Simple Network Paging Protocol
 snpp              444/udp    # Simple Network Paging Protocol
-microsoft-ds      445/tcp    # 
+microsoft-ds      445/tcp    # SMB directly over IP
 microsoft-ds      445/udp    # 
 ddm-rdb           446/tcp    # 
 ddm-rdb           446/udp    # 
@@ -1011,6 +1012,8 @@ pcnfs             640/udp    # PC-NFS DOS Authentication
 bwnfs             650/udp    # BW-NFS DOS Authentication
 doom              666/tcp    # doom Id Software
 doom              666/udp    # doom Id Software
+lanserver         637/tcp    #
+lanserver         637/udp    #
 resvc             691/tcp    # The Microsoft Exchange 2000 Server Routing Service          
 elcsd             704/tcp    # errlog copy/server daemon
 elcsd             704/udp    # errlog copy/server daemon
@@ -1124,9 +1127,12 @@ ufsd              1008/tcp   # ufsd		# UFS-aware server
 ufsd              1008/udp   # 
 sometimes-rpc1    1012/udp   # This is rstatd on my openBSD box
 kdm               1024/tcp   # K Display Manager (KDE version of xdm)
-listen            1025/tcp   # listener RFS remote_file_sharing
+NFS-or-IIS        1025/tcp   # IIS, NFS, or listener RFS remote_file_sharing
 blackjack         1025/udp   # network blackjack
-nterm             1026/tcp   # remote_login network_terminal
+LSA-or-nterm      1026/tcp   # nterm remote_login network_terminal
+IIS               1027/tcp
+ms-lsa            1028/udp   #
+ms-lsa            1029/tcp   #
 iad1              1030/tcp   # BBN IAD
 iad1              1030/udp   # BBN IAD
 iad2              1031/tcp   # BBN IAD
@@ -1134,6 +1140,7 @@ iad2              1031/udp   # BBN IAD
 iad3              1032/tcp   # BBN IAD
 iad3              1032/udp   # BBN IAD
 netinfo           1033/tcp   # Netinfo is apparently on many OS X boxes.
+java-or-OTGfileshare 1050/tcp # J2EE nameserver, also OTG, also called Disk/Application extender. Could also be MiniCommand backdoor OTGlicenseserv
 nim               1058/tcp   # 
 nim               1058/udp   # 
 nimreg            1059/tcp   # 
@@ -1516,6 +1523,7 @@ vpvc              1519/udp   # Virtual Places Video control
 atm-zip-office    1520/tcp   # atm zip office
 atm-zip-office    1520/udp   # atm zip office
 oracle            1521/tcp   # Oracle Database
+ncube-lm          1521/udp   # nCube License Manager
 rna-lm            1522/tcp   # Ricardo North America License Manager
 rna-lm            1522/udp   # Ricardo North America License Manager
 cichild-lm        1523/tcp   # 
@@ -1612,10 +1620,15 @@ netview-aix-11    1671/tcp   #
 netview-aix-11    1671/udp   # 
 netview-aix-12    1672/tcp   # 
 netview-aix-12    1672/udp   # 
+CarbonCopy        1680/tcp   #
+L2TP              1701/udp   #
+H.323/Q.931       1720/tcp   # Interactive media
 pptp              1723/tcp   # Point-to-point tunnelling protocol
 radius            1812/udp   # RADIUS authentication protocol (RFC 2138)
 radacct           1813/udp   # RADIUS accounting protocol (RFC 2139)
 pcm               1827/tcp   # PCM Agent (AutoSecure Policy Compliance Manager
+UPnP              1900/tcp   # Universal PnP
+UPnP              1900/udp   # Universal PnP
 licensedaemon     1986/tcp   # cisco license management
 licensedaemon     1986/udp   # cisco license management
 tr-rsrb-p1        1987/tcp   # cisco RSRB Priority 1 port
@@ -1734,6 +1747,7 @@ dls-monitor       2048/udp   #
 nfs               2049/tcp   # networked file system
 nfs               2049/udp   # networked file system
 distrib-net-losers 2064/tcp  # A group of lamers working on a silly closed-source client for solving the RSA cryptographic challenge.  This is the keyblock proxy port.
+knetd             2053/tcp   #
 dlsrpn            2065/tcp   # Data Link Switch Read Port Number
 dlsrpn            2065/udp   # Data Link Switch Read Port Number
 dlswpn            2067/tcp   # Data Link Switch Write Port Number
@@ -1792,6 +1806,7 @@ deslogin          3005/tcp   # encrypted symmetric telnet/login
 deslogind         3006/tcp   # 
 cfs               3049/tcp   # cryptographic file system (nfs) (proposed)
 cfs               3049/udp   # cryptographic file system (nfs)
+PowerChute        3052/tcp
 distrib-net-proxy 3064/tcp   # Stupid closed source distributed.net project proxy port
 sj3               3086/tcp   # SJ3 (kanji input)
 squid-http        3128/tcp   #
@@ -1800,16 +1815,19 @@ vmodem            3141/tcp   #
 vmodem            3141/udp   # 
 ccmail            3264/tcp   # cc:mail/lotus
 ccmail            3264/udp   # cc:mail/lotus
+globalcatLDAP     3268/tcp   # Global Catalog LDAP
+globalcatLDAPssl  3269/tcp   # Global Catalog LDAP over ssl
 mysql             3306/tcp   # mySQL
 dec-notes         3333/tcp   # DEC Notes
 dec-notes         3333/udp   # DEC Notes
-msrdp             3389/tcp   # Micro$oft Remote Display Protocol
+msdtc             3372/tcp   # MS distributed transaction coordinator
+ms-term-serv      3389/tcp   # Microsoft Remote Display Protocol
 bmap              3421/tcp   # Bull Apprise portmapper
 bmap              3421/udp   # Bull Apprise portmapper
 prsvp             3455/tcp   # RSVP Port
 prsvp             3455/udp   # RSVP Port
 vat               3456/tcp   # VAT default data
-vat               3456/udp   # VAT default data
+IISrpc-or-vat     3456/udp   # also VAT default data
 vat-control       3457/tcp   # VAT default control
 vat-control       3457/udp   # VAT default control
 track             3462/tcp   # software distribution
@@ -1821,6 +1839,11 @@ mapper-mapethd    3985/tcp   # MAPPER TCP/IP server
 mapper-mapethd    3985/udp   # MAPPER TCP/IP server
 mapper-ws_ethd    3986/tcp   # MAPPER workstation server
 mapper-ws_ethd    3986/udp   # MAPPER workstation server
+remoteanything    3996/udp   # neoworx remote-anything slave daemon
+remoteanything    3997/udp   # neoworx remote-anything master daemon
+remoteanything    3998/udp   # neoworx remote-anything reserved
+remoteanything    3999/tcp   # neoworx remote-anything slave file browser
+remoteanything    4000/tcp   # neoworx remote-anything slave remote control
 icq               4000/udp   # AOL ICQ instant messaging clent-server communication
 netcheque         4008/tcp   # NetCheque accounting
 netcheque         4008/udp   # NetCheque accounting
@@ -1845,7 +1868,10 @@ fax               4557/tcp   # FlexFax FAX transmission service
 hylafax           4559/tcp   # HylaFAX client-server protocol
 rfa               4672/tcp   # remote file access server
 rfa               4672/udp   # remote file access server
-fics              5000/tcp   # Free Internet Chess Server
+maybeveritas      4987/tcp   #
+maybeveritas      4998/tcp   #
+UPnP              5000/tcp   # Universal PnP, also Free Internet Chess Server
+UPnP              5000/udp   # also complex-main
 commplex-main     5000/udp   # 
 commplex-link     5001/tcp   # 
 commplex-link     5001/udp   # 
@@ -1894,6 +1920,7 @@ sdserv            5530/tcp   # ACE/Server services
 sdreport          5540/tcp   # ACE/Server services
 sdxauthd          5540/udp   # ACE/Server services
 sdadmind          5550/tcp   # ACE/Server services
+freeciv           5555/tcp   #
 rplay             5555/udp   # 
 pcanywheredata    5631/tcp   # 
 pcanywherestat    5632/tcp   # 
@@ -1934,6 +1961,8 @@ X11:7             6007/tcp   # X Window server
 X11:8             6008/tcp   # X Window server
 X11:9             6009/tcp   # X Window server
 arcserve          6050/tcp   # ARCserve agent
+VeritasBackupExec 6101/tcp   # Backup Exec UNIX and 95/98/ME Aent
+RETS-or-BackupExec 6103/tcp  # Backup Exec Agent Accelerator and Remote Agent also sql server and cisco works blue
 isdninfo          6105/tcp   # isdninfo
 isdninfo          6106/tcp   # i4lmond
 softcm            6110/tcp   # HP SoftBench CM
@@ -1958,6 +1987,9 @@ montage-lm        6147/udp   # Montage License Manager
 ricardo-lm        6148/tcp   # Ricardo North America License Manager
 ricardo-lm        6148/udp   # Ricardo North America License Manager
 gnutella          6346/tcp   # Gnutella file sharing protocol
+PowerChutePLUS    6547/tcp   #
+PowerChutePLUS    6548/tcp   #
+PowerChutePLUS    6549/udp   #
 netop-rc          6502/tcp   # NetOp Remote Control (by Danware Data A/S)
 netop-rc          6502/udp   # NetOp Remote Control (by Danware Data A/S)
 xdsxdm            6558/tcp   # 
@@ -1991,6 +2023,7 @@ afs3-rmtsys       7009/tcp   # remote cache manager service
 afs3-rmtsys       7009/udp   # remote cache manager service
 ups-onlinet       7010/tcp   # onlinet uninterruptable power supplies
 ups-onlinet       7010/udp   # onlinet uninterruptable power supplies
+realserver        7070/tcp
 font-service      7100/tcp   # X Font Service
 font-service      7100/udp   # X Font Service
 fodms             7200/tcp   # FODMS FLIP
@@ -2013,6 +2046,7 @@ seosload          8892/tcp   # From the new Computer Associates eTrust ACX
 zeus-admin        9090/tcp   # Zeus admin server
 jetdirect         9100/tcp   # HP JetDirect card
 DragonIDSConsole  9111/tcp   # Dragon IDS Console 
+ms-sql2000        9152/tcp   #
 man               9535/tcp   # 
 man               9535/udp   # 
 sd                9876/tcp   # Session Director
@@ -2028,6 +2062,26 @@ pksd              11371/tcp  # PGP Public Key Server
 cce4x             12000/tcp  # ClearCommerce Engine 4.x (www.clearcommerce.com)
 NetBus            12345/tcp  # NetBus backdoor trojan
 NetBus            12346/tcp  # NetBus backdoor trojan
+VeritasNetbackup  13701/tcp  # vmd           server
+VeritasNetbackup  13702/tcp  # ascd          server
+VeritasNetbackup  13705/tcp  # tl8cd         server
+VeritasNetbackup  13706/tcp  # odld          server
+VeritasNetbackup  13708/tcp  # vtlcd         server
+VeritasNetbackup  13709/tcp  # ts8d          server
+VeritasNetbackup  13710/tcp  # tc8d          server
+VeritasNetbackup  13711/tcp  #               server
+VeritasNetbackup  13712/tcp  # tc4d          server
+VeritasNetbackup  13713/tcp  # tl4d          server
+VeritasNetbackup  13714/tcp  # tsdd          server
+VeritasNetbackup  13715/tcp  # tshd          server
+VeritasNetbackup  13716/tcp  # tlmd          server
+VeritasNetbackup  13717/tcp  # tlhcd         server
+VeritasNetbackup  13718/tcp  # lmfcd         server
+VeritasNetbackup  13720/tcp  # bprd          server
+VeritasNetbackup  13721/tcp  # bpdbm         server
+VeritasNetbackup  13722/tcp  # bpjava-msvc   client
+VeritasNetbackup  13782/tcp  # bpcd          client
+VeritasNetbackup  13783/tcp  # vopied        client
 subseven          16959/tcp  # Subseven trojan
 isode-dua         17007/tcp  # 
 isode-dua         17007/udp  # 
@@ -2089,6 +2143,7 @@ coldfusion-auth   44443/tcp  # ColdFusion Advanced Security/Siteminder Authentic
 ciscopop          45000/udp  # Cisco Postoffice Protocol for Cisco Secure IDS
 dbbrowse          47557/tcp  # Databeam Corporation
 dbbrowse          47557/udp  # Databeam Corporation
+compaqdiag        49400/tcp  # Compaq Web-based management
 bo2k              54320/tcp  # Back Orifice 2K Default Port
 bo2k              54321/udp  # Back Orifice 2K Default Port
 netprowler-manager 61439/tcp

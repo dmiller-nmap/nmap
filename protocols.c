@@ -92,7 +92,7 @@ static int nmap_protocols_init() {
 	current; current = current->next) {
       if (protno == current->protoent->p_proto) {
 	if (o.debugging) {
-	  error("Protocol %d is duplicated in protocols file %s", ntohs(protno), proto, filename);
+	  error("Protocol %d is duplicated in protocols file %s", ntohs(protno), filename);
 	}
 	break;
       }
