@@ -1513,10 +1513,10 @@ int ip_is_reserved(struct in_addr *ip)
   char *ipc = (char *) &(ip->s_addr);
   unsigned char i1 = ipc[0], i2 = ipc[1], i3 = ipc[2], i4 = ipc[3];
 
-  /* 219-223/8 is IANA reserved */
+  /* 221-223/8 is IANA reserved */
   /* 224-239/8 is all multicast stuff */
   /* 240-255/8 is IANA reserved */
-  if (i1 >= 219)
+  if (i1 >= 221)
     return 1;
 
   /* 096-126/8 is IANA reserved */
