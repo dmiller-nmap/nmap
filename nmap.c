@@ -2016,7 +2016,7 @@ if (o.debugging || o.verbose)
 	    if (packet_trynum > 0 && current->trynum > 0) {
 	      /* The first packet was apparently lost, slow down */
 	      dropped++;
-	      if (freshportstried > 50 && ((double) dropped/freshportstried) > 0.25) {
+	      if (freshportstried > 50 && ((double) dropped/freshportstried) > 0.2) {
 		if (!senddelay) senddelay = 50000;
 		else senddelay = MIN(senddelay * 2, 1000000);
 		freshportstried = 0;
