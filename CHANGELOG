@@ -1,5 +1,11 @@
 # Nmap Changelog
 
+-- Applied some patches from Jay Freeman (saurik@saurik.com)
+   -- New --data_length option adds indicated number of random data to scans
+   -- Windows portability fixes
+
+** 2.54BETA16
+
 -- Upgraded to latest version of Winpcap ( 2.1-beta )
 
 -- Merged in Windows port code from Ryan Permeh ( ryan@eeye.com) and
