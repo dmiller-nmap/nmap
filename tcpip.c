@@ -364,7 +364,7 @@ bzero((char *) packet, sizeof(struct ip) + sizeof(struct udphdr_bsd));
 
 udp->uh_sport = htons(sport);
 udp->uh_dport = htons(dport);
-udp->uh_ulen = htons(datalen);
+udp->uh_ulen = BSDFIX(8 + datalen);
 /*udp->uh_sum = 0;*/
 
 /* Now for the ip header */
@@ -388,7 +388,7 @@ if (data)
 
 if (TCPIP_DEBUGGING > 1) {
   printf("Raw UDP packet creation completed!  Here it is:\n");
-  readudppacket(packet,BSDUFIX(ip->ip_len));
+  readudppacket(packet,1);
 }
 if (TCPIP_DEBUGGING > 1) 
 
