@@ -244,10 +244,10 @@ if (o.verbose && openport != -1)
      }
    }
    else {
-     printf("Insufficient responses for TCP sequencing (%d)\n", target->seq.responses);
+     nmap_log("Insufficient responses for TCP sequencing (%d), OS detection will be less reliable\n", target->seq.responses);
    }
  } else {
-   printf("Warning:  No ports found open on this machine, OS detection will be less reliable");
+   nmap_log("Warning:  No ports found open on this machine, OS detection will be MUCH less reliable\n");
  }
  current_port = o.magic_port + NUM_SEQ_SAMPLES +1;
  
