@@ -77,6 +77,7 @@ emptystring[0] = '\0'; /* It wouldn't be an emptystring w/o this ;) */
 signal(SIGINT, sigdie);
 signal(SIGTERM, sigdie);
 signal(SIGHUP, sigdie); 
+signal(SIGSEGV, sigdie); 
 
 if (argc < 2 ) printusage(argv[0]);
 
@@ -340,6 +341,8 @@ if (!o.max_sockets) {
   o.max_sockets = max_sd();
   if (!o.max_sockets)
     o.max_sockets = 60;
+  else if (o.max_sockets > 5)
+    o.max_sockets -= 4; /* To make up for misc. uncounted sockets */
   o.max_sockets = MIN(o.max_sockets, 125);
 }
 
@@ -2930,8 +2933,10 @@ do {
       /* Selected for writing, lets to the zero-byte-write test */
       res = send(current->sd[trynum], buf, 0, 0);
       if (res < 0 ) {
-	printf("Bad port %hi caught by 0-byte write: ", current->portno);
-	perror("");
+	if (o.debugging > 1) {
+		printf("Bad port %hi caught by 0-byte write: ", current->portno);
+	        perror("");
+        }
 	posportupdate(target, current, trynum, scan, ss, CONNECT_SCAN, PORT_CLOSED, pil, csi);
       }
       else {
