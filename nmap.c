@@ -1894,8 +1894,8 @@ while(!done) {
 	if (o.verbose || o.debugging)
 	  printf("Good port %d detected by fin_scan!\n", portno[i]);
 	addport(&target->ports, portno[i], IPPROTO_TCP, NULL);
-	/*	send_tcp_raw( rawsd, &target->source_ip, &target->host, MAGIC_PORT, portno[i], 0, 0, 
-		scanflags, 0, 0, 0); */
+	send_tcp_raw( rawsd, &target->source_ip, &target->host, MAGIC_PORT, portno[i], 0, 0, 
+		scanflags, 0, 0, 0); 
 	portno[i] = trynum[i] = 0;
       }
       else someleft = 1;
