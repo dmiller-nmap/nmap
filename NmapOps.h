@@ -182,6 +182,10 @@ class NmapOps {
   int maxHostGroupSz() { return max_host_group_sz; }
   void setMinHostGroupSz(unsigned int sz);
   void setMaxHostGroupSz(unsigned int sz);
+  unsigned int maxTCPScanDelay() { return max_tcp_scan_delay; }
+  unsigned int maxUDPScanDelay() { return max_udp_scan_delay; }
+  void setMaxTCPScanDelay(unsigned int delayMS) { max_tcp_scan_delay = delayMS; }
+  void setMaxUDPScanDelay(unsigned int delayMS) { max_udp_scan_delay = delayMS; }
 
   int max_ips_to_scan; // Used for Random input (-iR) to specify how 
                        // many IPs to try before stopping. 0 means unlimited.
@@ -189,7 +193,8 @@ class NmapOps {
   char *extra_payload;
   unsigned long host_timeout;
   /* Delay between probes, in milliseconds */
-  int scan_delay;
+  unsigned int scan_delay;
+
   int scanflags; /* if not -1, this value should dictate the TCP flags
 		    for the core portscaning routine (eg to change a
 		    FIN scan into a PSH scan.  Sort of a hack, but can
@@ -237,6 +242,8 @@ class NmapOps {
   int max_rtt_timeout;
   int min_rtt_timeout;
   int initial_rtt_timeout;
+  unsigned int max_tcp_scan_delay;
+  unsigned int max_udp_scan_delay;
   unsigned int min_host_group_sz;
   unsigned int max_host_group_sz;
   void Initialize();

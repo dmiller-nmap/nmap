@@ -200,6 +200,8 @@ void NmapOps::Initialize() {
   initial_rtt_timeout = INITIAL_RTT_TIMEOUT;
   min_host_group_sz = 1;
   max_host_group_sz = 100000; // don't want to be restrictive unles user sets
+  max_tcp_scan_delay = MAX_TCP_SCAN_DELAY;
+  max_udp_scan_delay = MAX_UDP_SCAN_DELAY;
   max_ips_to_scan = 0;
   extra_payload_length = 0;
   extra_payload = NULL;

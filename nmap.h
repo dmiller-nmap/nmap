@@ -307,6 +307,15 @@ void *realloc();
 				 trip */
 #endif
 
+/* Default maximum send delay between probes to the same host */
+#ifndef MAX_TCP_SCAN_DELAY
+#define MAX_TCP_SCAN_DELAY 1000
+#endif
+
+#ifndef MAX_UDP_SCAN_DELAY
+#define MAX_UDP_SCAN_DELAY 1000
+#endif
+
 /* We wait at least 100 ms for a response by default - while that
    seems aggressive, waiting too long can cause us to fail to detect
    drops until many probes later on extremely low-latency

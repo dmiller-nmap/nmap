@@ -186,7 +186,7 @@ void adjust_timeouts2(const struct timeval *sent,
 		    to->timeout);
 
   if (o.scan_delay)
-    to->timeout = MAX(to->timeout, o.scan_delay * 1000);
+    to->timeout = MAX((unsigned) to->timeout, o.scan_delay * 1000);
 
   if (o.debugging > 3) {
     log_write(LOG_STDOUT, "delta %ld ==> srtt: %d rttvar: %d to: %d\n", delta, to->srtt, to->rttvar, to->timeout);
@@ -222,7 +222,7 @@ void enforce_scan_delay(struct timeval *tv) {
 
   gettimeofday(&now, NULL);
   time_diff = TIMEVAL_MSEC_SUBTRACT(now, lastcall);
-  if (time_diff < o.scan_delay) {  
+  if (time_diff < (int) o.scan_delay) {  
     if (o.debugging > 1) {
       printf("Sleeping for %d milliseconds in enforce_scan_delay()\n", o.scan_delay - time_diff);
     }

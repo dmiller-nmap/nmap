@@ -253,6 +253,7 @@ int nmap_main(int argc, char *argv[]) {
       {"scanflags", required_argument, 0, 0},
       {"host_timeout", required_argument, 0, 0},
       {"scan_delay", required_argument, 0, 0},
+      {"max_scan_delay", required_argument, 0, 0},
       {"oA", required_argument, 0, 0},  
       {"oN", required_argument, 0, 0},
       {"oM", required_argument, 0, 0},  
@@ -396,8 +397,17 @@ int nmap_main(int argc, char *argv[]) {
 	o.scan_delay = atoi(optarg);
 	if (o.scan_delay <= 0) {
 	  fatal("scan_delay must be greater than 0");
-	}   
+	}
+	if (o.scan_delay > o.maxTCPScanDelay()) o.setMaxTCPScanDelay(o.scan_delay);
+	if (o.scan_delay > o.maxUDPScanDelay()) o.setMaxUDPScanDelay(o.scan_delay);
 	o.max_parallelism = 1;
+      } else if (strcmp(long_options[option_index].name, "max_scan_delay") == 0) {
+	unsigned int scand = atoi(optarg);
+	if (scand < 0) {
+	  fatal("max_scan_delay must be greater than 0");
+	}
+	o.setMaxTCPScanDelay(scand);
+	o.setMaxUDPScanDelay(scand);
       } else if (strcmp(long_options[option_index].name, "randomize_hosts") == 0
 		 || strcmp(long_options[option_index].name, "rH") == 0) {
 	o.randomize_hosts = 1;
@@ -702,12 +712,14 @@ int nmap_main(int argc, char *argv[]) {
 	o.setMinRttTimeout(100);
 	o.setMaxRttTimeout(1250);
 	o.setInitialRttTimeout(500);
+        o.setMaxTCPScanDelay(10);
       } else if (*optarg == '5' || (strcasecmp(optarg, "Insane") == 0)) {
 	o.timing_level = 5;
 	o.setMinRttTimeout(50);
 	o.setMaxRttTimeout(300);
 	o.setInitialRttTimeout(250);
 	o.host_timeout = 900000;
+        o.setMaxTCPScanDelay(5);
       } else {
 	fatal("Unknown timing mode (-T argment).  Use either \"Paranoid\", \"Sneaky\", \"Polite\", \"Normal\", \"Aggressive\", \"Insane\" or a number from 0 (Paranoid) to 5 (Insane)");
       }

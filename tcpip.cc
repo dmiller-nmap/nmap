@@ -2423,7 +2423,7 @@ int IPProbe::storePacket(u8 *ippacket, u32 len) {
   ipv4 = (struct ip *) packetbuf;
   assert(ipv4->ip_v == 4);
   assert(len >= 20);
-  assert(len == BSDUFIX(ipv4->ip_len));
+  assert(len == (u32) BSDUFIX(ipv4->ip_len));
   if (ipv4->ip_p == IPPROTO_TCP) {
     if (len >= (unsigned) ipv4->ip_hl * 4 + 20)
       tcp = (struct tcphdr *) ((u8 *) ipv4 + ipv4->ip_hl * 4);

@@ -124,6 +124,8 @@ distro:
 	mkdir /usr/tmp/nmap-$(NMAP_VERSION)
 # Make the RPM .spec file
 	sed -e s/\@VERSION\@/$(NMAP_VERSION)/g nmap.spec.in > nmap-$(NMAP_VERSION)-1.spec
+# Canonicalize and sort Nmap OS fingerprint DB
+	scripts/sort-prints nmap-os-fingerprints > nos && mv nos nmap-os-fingerprints
 	$(MAKE) clean
 	rm -f $(LIBPCAPDIR)/config.cache $(LIBPCAPDIR)/Makefile
 	unix2dos README-WIN32
@@ -238,6 +240,7 @@ web:
 	test x$(wroot) != x
 	cp -a CHANGELOG HACKING COPYING COPYING.OpenSSL INSTALL $(DATAFILES) README-WIN32 mswin32/nmap_performance.reg $(wroot)/nmap/data
 	cd docs && cp -a nmap_manpage*.html nmap*.1 xnmap.1 nmap.usage.txt nmap.dtd $(wroot)/nmap/data/
+	scripts/sort-prints.pl nmap-os-fingerprints > nos && mv nos nmap-os-fingerprints
 	scripts/produceosclasschoosebox.pl nmap-os-fingerprints > $(wroot)/nmap/data/os-classes.txt
 	find $(wroot)/nmap/data/ -type f -exec chmod 644 '{}' \;
 

@@ -1,5 +1,52 @@
 # Nmap Changelog ($Id$)
 
+Nmap 3.75
+
+o Implemented a huge OS fingerprint database update.  The number of
+  signatures have increased more than 20% to 1,353 and many of the
+  existing ones are much improved.  Notable updates include the fourth
+  edition of Bell Lab's Plan9, Grandstream's BugeTone 101 IP Phone,
+  and Bart's Network Boot Disk 2.7 (which runs MS-DOS).  Oh, and Linux
+  kernels up to 2.6.8, dozens of new Windows fingerprints including XP
+  SP2, the latest Longhorn warez, and many modified Xboxes, OpenBSD
+  3.6, NetBSD up to 2.0RC4, Apple's AirPort Express WAP and OS X 10.3.3
+  (Panther) release, Novell Netware 6.5, FreeBSD 5.3-BETA, a bunch of
+  Linksys and D-Link consumer junk, the latest Cisco IOS 12.2
+  releases, a ton of miscellaneous broadband routers and printers, and
+  much more.
+
+o Updated nmap-mac-prefixes with the latest OUIs from the IEEE.
+  [ http://standards.ieee.org/regauth/oui/oui.txt ]
+
+o Updated nmap-protocols with the latest IP protocols from IANA 
+  [ http://www.iana.org/assignments/protocol-numbers ]
+
+o Added a few new Nmap version detection signatures thanks to a patch
+  from Martin Maèok (martin.macok(a)underground.cz).
+
+o Fixed a crash problem in the Windows version of Nmap, thanks to a
+  patch from Ganga Bhavani GBhavani(a)everdreamcorp.com).
+
+o Fixed Windows service scan crashes that occur with the error message
+  "Unexpected nsock_loop error. Error code 10022 (Unknown error)".  It
+  turns out that Windows does not allow select() calls with all three
+  FD sets empty.  Lame.  The Linux select() man page even suggests
+  calling "select with all three sets empty, n zero, and a non-null
+  timeout as a fairly portable way to sleep with subsecond precision."
+  Thanks to Gisle Vanem (giva(a)bgnett.no) for debugging help.
+
+o Added --max_scan_delay parameter.  Nmap will sometimes increase the
+  delay itself when it detects many dropped packets.  For example,
+  Solaris systems tend to respond with only one ICMP port unreachable
+  packet per second during a UDP scan.  So Nmap will try to detect
+  this and lower its rate of UDP probes to one per second.  This can
+  provide more accurate results while reducing network congestion, but
+  it can slow the scans down substantially.  By default (with no -T
+  options specified), Nmap allows this delay to grow to one second per
+  probe.  This option allows you to set a lower or higher maximum.
+  The -T4 and -T5 scan modes now limit the maximum scan delay for TCP
+  scans to 10 and 5 ms, respectively.
+
 o Fixed a bug that prevented RPC scan (-sR) from working for UDP ports
   unless service detection (-sV) was used.  -sV is still usually a
   better approach than -sR, as the latter ONLY handles RPC.  Thanks to
@@ -7,17 +54,11 @@ o Fixed a bug that prevented RPC scan (-sR) from working for UDP ports
   sending a patch.
 
 o Fixed nmap_fetchfile() to better find custom versions of data files
-  such as nmap-services.  Note that the implicitly read directory should
-  be ~/.nmap rather than ~/nmap .  So you may have to move any
+  such as nmap-services.  Note that the implicitly read directory
+  should be ~/.nmap rather than ~/nmap .  So you may have to move any
   customized files you now have in ~/nmap .  Thanks to nnposter
-  nnposter(a)users.sourceforge.net for reporting the problem and sending
-  a patch.
-
-o Updated nmap-mac-prefixes with the latest OUIs from the IEEE.
-  [ http://standards.ieee.org/regauth/oui/oui.txt ]
-
-o Updated nmap-protocols with the latest IP protocols from IANA 
-  [ http://www.iana.org/assignments/protocol-numbers ]
+  (nnposter(a)users.sourceforge.net) for reporting the problem and
+  sending a patch.
 
 o Changed XML output so that the MAC address [address] element comes
   right after the IPv4/IPv6 [address] element.  Apparently this is
@@ -26,10 +67,7 @@ o Changed XML output so that the MAC address [address] element comes
   (adam.morgan(a)Q1Labs.com) and Florian Ebner
   (Florian.Ebner(a)e-bros.de) for the problem reports.
 
-o Fixed a crash problem in the Windows version of Nmap, thanks to a
-  patch from Ganga Bhavani GBhavani(a)everdreamcorp.com).
-
-o Fixed an error in the Nmap RPM spec file reported by Pascal TROUVIN
+o Fixed an error in the Nmap RPM spec file reported by Pascal Trouvin
   (pascal.trouvin(a)wanadoo.fr)
 
 o Fixed a timing problem in which a specified large --send_delay would
@@ -41,25 +79,32 @@ o Fixed a timing problem with sneaky and paranoid modes (-T1 and -T0)
   hit other ports when scanning certain firewalled hosts.  Thanks to
   Curtis Doty (Curtis(a)GreenKey.net) for reporting the problem.
 
+o Fixed a bug in the build system that caused most Nmap subdirectories
+  to be configured twice.  Changing the variable holding the name of
+  subdirs from $subdirs to $nmap_cfg_subdirs resolved the problem --
+  configure must have been using that variable name for its own internal
+  operations.  Anyway, this should reduce compile time significantly.
+
+o Made a trivial change to nsock/src/nsock_event.c to work around a "a
+  bug in GCC 3.3.1 on FreeBSD/sparc64".  I found the patch by digging
+  around the FreeBSD ports tree repository.  It would be nice if the
+  FreeBSD Nmap port maintainers would report such things to me, rather
+  than fixing it in their own Nmap tree and then applying the patch to
+  every future version.  On the other hand, they deserve some sort of
+  "most up-to-date" award.  I stuck Nmap 3.71-PRE1 in the dist
+  directory for a few people to test, and made no announcement or
+  direct link.  The FreeBSD crew found it and upgraded anyway :).  The
+  gcc-workaround patch was apparently submitted to the FreeBSD folks
+  by Marius Strobl (marius(a)alchemy.franken.de).
+
 o Fixed (I hope) an OS detection timing issue which would in some
   cases lead to the warning that "insufficient responses for TCP
   sequencing (3), OS detection may be less accurate."  Thanks to Adam
   Kerrison (adam(a)tideway.com) for reporting the problem.
 
-o Added a few new Nmap version detection signatures thanks to a patch
-  from Martin Maèok (martin.macok(a)underground.cz).
-
 o Modified the warning given when files such as nmap-services exist in
   both the compiled in NMAPDATADIR and the current working directory.
   That message should now only appear once and is more clear.
-
-o Fixed Windows service scan crashes that occur with the error message
-  "Unexpected nsock_loop error. Error code 10022 (Unknown error)".  It
-  turns out that Windows does not allow select() calls with all three
-  FD sets empty.  Lame.  The Linux select() man page even suggests
-  calling "select with all three sets empty, n zero, and a non-null
-  timeout as a fairly portable way to sleep with subsecond precision."
-  Thanks to Gisle Vanem (giva(a)bgnett.no) for debugging help.
 
 o Fixed ping scan subsystem to work a little bit better when
   --scan_delay (or some of the slower -T templates which include a scan

@@ -880,8 +880,21 @@ Specifies the
 .B minimum
 amount of time Nmap must wait between probes.  This is
 mostly useful to reduce network load or to slow the scan way
-down to sneak under IDS thresholds.
+down to sneak under IDS thresholds.  Nmap will sometimes increase the
+delay itself when it detects many dropped packets.  For example,
+Solaris systems tend to respond with only one ICMP port unreachable
+packet per second during a UDP scan.  So Nmap will try to detect this
+and lower its rate of UDP probes to one per second.
 .TP
+.B --max_scan_delay <milliseconds>
+As noted above, Nmap will sometimes enforce a special delay between
+sending packets.  This can provide more accurate results while
+reducing network congestion, but it can slow the scans down
+substantially.  By default (with no -T options specified), Nmap allows
+this delay to grow to one second per probe.  This option allows you to
+set a lower or higher maximum.  Even if you set it to zero, Nmap will
+have some delay between packet sends so that it can wait for responses
+and avoid having too many outstanding probes in parallel.
 
 .SH TARGET SPECIFICATION
 Everything that isn't an option (or option argument) in nmap

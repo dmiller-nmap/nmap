@@ -1282,9 +1282,11 @@ void HostScanStats::getTiming(struct ultra_timing_vals *tmng) {
   /* Boost the scan delay for this host, usually because too many packet
      drops were detected. */
 void HostScanStats::boostScanDelay() {
+  unsigned int maxAllowed = (USI->tcp_scan)? o.maxTCPScanDelay() : o.maxUDPScanDelay();
   if (sdn.delayms == 0)
     sdn.delayms = (USI->udp_scan)? 50 : 5; // In many cases, a pcap wait takes a minimum of 80ms, so this matters little :(
   else sdn.delayms = MIN(sdn.delayms * 2, MAX(sdn.delayms, 1000));
+  sdn.delayms = MIN(sdn.delayms, maxAllowed); 
   sdn.last_boost = USI->now;
   sdn.droppedRespSinceDelayChanged = 0;
   sdn.goodRespSinceDelayChanged = 0;
