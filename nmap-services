@@ -1918,6 +1918,8 @@ X11:6             6006/tcp   # X Window server
 X11:7             6007/tcp   # X Window server
 X11:8             6008/tcp   # X Window server
 X11:9             6009/tcp   # X Window server
+isdninfo          6105/tcp   # isdninfo
+isdninfo          6106/tcp   # i4lmond
 softcm            6110/tcp   # HP SoftBench CM
 softcm            6110/udp   # HP SoftBench CM
 spc               6111/tcp   # HP SoftBench Sub-Process Control
