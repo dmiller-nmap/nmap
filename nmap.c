@@ -658,7 +658,7 @@ int nmap_main(int argc, char *argv[]) {
 	case 'L':  o.listscan = 1; o.pingtype = PINGTYPE_NONE; break;
 	case 'M':  o.maimonscan = 1; break;
 	case 'N':  o.nullscan = 1; break;
-	case 'O':  o.ipprotscan = 1;break;
+	case 'O':  o.ipprotscan = 1; break;
 	case 'P':  o.pingscan = 1; break;
 	case 'R':  o.rpcscan = 1; break;
 	case 'S':  o.synscan = 1; break;	  
