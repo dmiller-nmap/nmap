@@ -1,6 +1,6 @@
 
 /***********************************************************************
- * nmap.c -- Currently handles some of Nmap's port scanning            *
+ * nmap.cc -- Currently handles some of Nmap's port scanning           *
  * features as well as the command line user interface.  Note that the *
  * actual main() function is in main.c                                 *
  *                                                                     *
