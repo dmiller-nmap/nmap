@@ -269,14 +269,15 @@ for(;;) {
 
     /* Update the new packet sequence nr. and checksum */
     pingpkt.seq = ++seq;
-    if (seq > 0 ) { /* Don't increment the very first packet */
-      if (ping[2] != 0) ping[2]--; /* Shit, now not using NBO is hitting the fan ;) */
-      else if (ping[1] != 255) { 
+    /*    if (seq > 0 ) {*/ /* Don't increment the very first packet */
+    /*      if (ping[2] != 0) ping[2]--; *//* Shit, now not using NBO is hitting the fan ;) */
+      /*      else if (ping[1] != 255) { 
 	ping[2] = 255;
 	ping[1]--;
       }
       else ping[2] = ping[3] = 255;
-    }
+      }*/
+    pingpkt.checksum = in_cksum((unsigned short *) ping, 8);
 
     /* If (we don't know whether the host is up yet) ... */
     if (!(hostbatch[seq%num_hosts].flags & HOST_UP) && !hostbatch[seq%num_hosts].wierd_responses && !(hostbatch[seq%num_hosts].flags & HOST_DOWN)) {  
