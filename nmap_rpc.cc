@@ -315,7 +315,7 @@ int rpc_are_we_done(char *msg, int msg_len, Target *target,
     return 1;
   }
   if (ntohl(rpc_pack->type_msg) != RPC_MSG_REPLY) {
-    error("Strange -- RPC type is %d shoulb be RPC_MSG_REPLY (1)", ntohl(rpc_pack->type_msg));
+    error("Strange -- RPC type is %li shoulb be RPC_MSG_REPLY (1)", ntohl(rpc_pack->type_msg));
     return 0;
   }
   if (ntohl(rpc_pack->auth_flavor) != 0 /* AUTH_NULL */ ||
@@ -510,7 +510,7 @@ unsigned long current_msg_len;
        /* This is suspiciously small -- I'm assuming this is not the first
 	  part of a valid RPC packet */
        if (o.debugging > 1) {
-	 printf("Port %hu/%s labelled NON_RPC because tcp_readlen is %d (should be at least 28)\n", rsi->rpc_current_port->portno, (rsi->rpc_current_port->proto == IPPROTO_TCP)? "TCP" : "UDP", tcp_readlen);
+	 printf("Port %hu/%s labelled NON_RPC because tcp_readlen is %d (should be at least 28)\n", rsi->rpc_current_port->portno, (rsi->rpc_current_port->proto == IPPROTO_TCP)? "TCP" : "UDP", (int) tcp_readlen);
        }
        ss->numqueries_outstanding = 0;
        rsi->rpc_status = RPC_STATUS_NOT_RPC;
@@ -521,7 +521,7 @@ unsigned long current_msg_len;
 						     
      if (current_msg_len > tcp_readlen - 4) {
        if (o.debugging > 1) {
-	 printf("Port %hu/%s labelled NON_RPC because current_msg_len is %li while tcp_readlen is %d\n", rsi->rpc_current_port->portno, (rsi->rpc_current_port->proto == IPPROTO_TCP)? "TCP" : "UDP", current_msg_len, tcp_readlen);
+	 printf("Port %hu/%s labelled NON_RPC because current_msg_len is %li while tcp_readlen is %d\n", rsi->rpc_current_port->portno, (rsi->rpc_current_port->proto == IPPROTO_TCP)? "TCP" : "UDP", current_msg_len, (int) tcp_readlen);
        }
        ss->numqueries_outstanding = 0;
        rsi->rpc_status = RPC_STATUS_NOT_RPC;

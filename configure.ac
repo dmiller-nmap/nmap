@@ -19,6 +19,7 @@ dnl use config.h instad of -D macros
 AC_CONFIG_HEADER(config.h)
 
 dnl Checks for programs.
+AC_PROG_CC
 AC_PROG_CXX
  if test -n "$GCC"; then
       CXXFLAGS="$CXXFLAGS -Wall "

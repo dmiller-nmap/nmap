@@ -1534,7 +1534,7 @@ char *grab_next_host_spec(FILE *inputfd, int argc, char **fakeargv) {
 	return host_spec;
       } else if (host_spec_index < sizeof(host_spec) / sizeof(char) -1) {
 	host_spec[host_spec_index++] = (char) ch;
-      } else fatal("One of the host_specifications from your input file is too long (> %d chars)", sizeof(host_spec));
+      } else fatal("One of the host_specifications from your input file is too long (> %d chars)", (int) sizeof(host_spec));
     }
     host_spec[host_spec_index] = '\0';
   }

@@ -119,7 +119,7 @@ void adjust_timeouts2(const struct timeval *sent,
 
   if (to->srtt < 0 || to->rttvar < 0 || to->timeout < 0 || delta < -50000000 || 
       sent->tv_sec == 0 || received->tv_sec == 0 ) {
-    fatal("Serious time computation problem in adjust_timeout ... received = (%ld, %ld) sent=(%ld,%ld) delta = %ld srtt = %d rttvar = %d to = %d", received->tv_sec, received->tv_usec, sent->tv_sec, sent->tv_usec, delta, to->srtt, to->rttvar, to->timeout);
+    fatal("Serious time computation problem in adjust_timeout ... received = (%ld, %ld) sent=(%ld,%ld) delta = %ld srtt = %d rttvar = %d to = %d", (long) received->tv_sec, (long)received->tv_usec, (long) sent->tv_sec, (long) sent->tv_usec, delta, to->srtt, to->rttvar, to->timeout);
   }
 }
 

@@ -1,6 +1,17 @@
 # Nmap Changelog ($Id$)
 
-Nmap 3.23
+Nmap 3.26
+
+o Fixed Mac OS X Compilation (at least on most of the machines
+  tested).  You will probably need to type 
+  "./configure CPP=/usr/bin/cpp" instead of simply "./configure".  If
+  you still have trouble, drop me an email.  Thanks to everyone who
+  provided or offered shell accounts!
+
+o Fixed a segmentation fault several people reported that was
+  introduced in 3.23.
+
+Nmap 3.25
 
 o I added UDP-based "ping" scanning.  The -PU option can take an
   optional portlist like the TCP "ping" options (-PS, -PA), but it sends

@@ -679,7 +679,7 @@ int idlescan_countopen2(struct idle_proxy_info *proxy,
 
   if ((openports > 0) && (openports <= numports)) {
     /* Yeah, we found open ports... lets adjust the timing ... */
-    if (o.debugging > 2) error("idlescan_countopen2:  found %d open ports (out of %d) in %lu usecs", openports, numports, TIMEVAL_SUBTRACT(latestchange, start));
+    if (o.debugging > 2) error("idlescan_countopen2:  found %d open ports (out of %d) in %lu usecs", openports, numports, (unsigned long) TIMEVAL_SUBTRACT(latestchange, start));
     if (sent_time) *sent_time = start;
     if (rcv_time) *rcv_time = latestchange;
   }
