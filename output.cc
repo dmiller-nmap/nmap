@@ -1,13 +1,13 @@
 
-/***********************************************************************
- * output.cc -- Handles the Nmap output system.  This currently        *
- * involves console-style human readable output, XML output,           *
- * Script |<iddi3 output, and the legacy greppable output (used to be  *
- * called "machine readable").  I expect that future output forms      *
- * (such as HTML) may be created by a different program, library, or   *
- * script using the XML output.                                        *
- *                                                                     *
- ***********************************************************************
+/***************************************************************************
+ * output.cc -- Handles the Nmap output system.  This currently involves   *
+ * console-style human readable output, XML output, Script |<iddi3         *
+ * output, and the legacy greppable output (used to be called "machine     *
+ * readable").  I expect that future output forms (such as HTML) may be    *
+ * created by a different program, library, or script using the XML        *
+ * output.                                                                 *
+ *                                                                         *
+ ***********************IMPORTANT NMAP LICENSE TERMS************************
  *  The Nmap Security Scanner is (C) 1995-2001 Insecure.Com LLC. This  *
  *  program is free software; you can redistribute it and/or modify    *
  *  it under the terms of the GNU General Public License as published  *
@@ -44,7 +44,7 @@
  *  General Public License for more details (                          *
  *  http://www.gnu.org/copyleft/gpl.html ).                            *
  *                                                                     *
- ***********************************************************************/
+ ***************************************************************************/
 
 /* $Id$ */
 

@@ -1,10 +1,10 @@
 
-/***********************************************************************
- * Target.cc -- The Target class encapsulates much of the information  *
- * Nmap has about a host.  Results (such as ping, OS scan, etc) are    *
- * stored in this class as they are determined.                        *
- *                                                                     *
- ***********************************************************************
+/***************************************************************************
+ * Target.cc -- The Target class encapsulates much of the information Nmap *
+ * has about a host.  Results (such as ping, OS scan, etc) are stored in   *
+ * this class as they are determined.                                      *
+ *                                                                         *
+ ***********************IMPORTANT NMAP LICENSE TERMS************************
  *  The Nmap Security Scanner is (C) 1995-2002 Insecure.Com LLC. This  *
  *  program is free software; you can redistribute it and/or modify    *
  *  it under the terms of the GNU General Public License as published  *
@@ -41,7 +41,7 @@
  *  General Public License for more details (                          *
  *  http://www.gnu.org/copyleft/gpl.html ).                            *
  *                                                                     *
- ***********************************************************************/
+ ***************************************************************************/
 
 /* $Id$ */
 

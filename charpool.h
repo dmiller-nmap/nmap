@@ -1,9 +1,9 @@
 
-/***********************************************************************
- * charpool.h -- Handles Nmap's "character pool" memory allocation     *
- * system.                                                             *
- *                                                                     *
- ***********************************************************************
+/***************************************************************************
+ * charpool.h -- Handles Nmap's "character pool" memory allocation         *
+ * system.                                                                 *
+ *                                                                         *
+ ***********************IMPORTANT NMAP LICENSE TERMS************************
  *  The Nmap Security Scanner is (C) 1995-2001 Insecure.Com LLC. This  *
  *  program is free software; you can redistribute it and/or modify    *
  *  it under the terms of the GNU General Public License as published  *
@@ -40,7 +40,7 @@
  *  General Public License for more details (                          *
  *  http://www.gnu.org/copyleft/gpl.html ).                            *
  *                                                                     *
- ***********************************************************************/
+ ***************************************************************************/
 
 /* $Id$ */
 

@@ -1,10 +1,11 @@
-/***********************************************************************
- * fingermatch.cc -- A relatively simple utility for determining        *
- * whether a given Nmap fingerprint matches (or comes close to         *
- * matching) any of the fingerprints in a collection such as the       *
- * nmap-os-fingerprints file that ships with Nmap.                     *
- *                                                                     *
- ***********************************************************************
+
+/***************************************************************************
+ * fingermatch.cc -- A relatively simple utility for determining whether a *
+ * given Nmap fingerprint matches (or comes close to matching) any of the  *
+ * fingerprints in a collection such as the nmap-os-fingerprints file that *
+ * ships with Nmap.                                                        *
+ *                                                                         *
+ ***********************IMPORTANT NMAP LICENSE TERMS************************
  *  The Nmap Security Scanner is (C) 1995-2001 Insecure.Com LLC. This  *
  *  program is free software; you can redistribute it and/or modify    *
  *  it under the terms of the GNU General Public License as published  *
@@ -41,7 +42,7 @@
  *  General Public License for more details (                          *
  *  http://www.gnu.org/copyleft/gpl.html ).                            *
  *                                                                     *
- ***********************************************************************/
+ ***************************************************************************/
 
 /* $Id$ */
 

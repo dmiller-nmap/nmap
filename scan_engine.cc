@@ -1,11 +1,10 @@
 
-/***********************************************************************
- * scanengine.cc -- Includes much of the "engine" functions for        *
- * scanning, such as pos_scan and super_scan.  It also includes        *
- * dependant functions such as those for collectiong SYN/connect scan  *
- * responses.                                                          *
- *                                                                     *
- ***********************************************************************
+/***************************************************************************
+ * scanengine.cc -- Includes much of the "engine" functions for scanning,  *
+ * such as pos_scan and super_scan.  It also includes dependant functions  *
+ * such as those for collectiong SYN/connect scan responses.               *
+ *                                                                         *
+ ***********************IMPORTANT NMAP LICENSE TERMS************************
  *  The Nmap Security Scanner is (C) 1995-2001 Insecure.Com LLC. This  *
  *  program is free software; you can redistribute it and/or modify    *
  *  it under the terms of the GNU General Public License as published  *
@@ -42,7 +41,7 @@
  *  General Public License for more details (                          *
  *  http://www.gnu.org/copyleft/gpl.html ).                            *
  *                                                                     *
- ***********************************************************************/
+ ***************************************************************************/
 
 /* $Id$ */
 

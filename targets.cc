@@ -1,10 +1,10 @@
 
-/***********************************************************************
- * targets.cc -- Functions relating to "ping scanning" as well as      *
- * determining the exact IPs to hit based on CIDR and other input      *
- * formats.                                                            *
- *                                                                     *
- ***********************************************************************
+/***************************************************************************
+ * targets.cc -- Functions relating to "ping scanning" as well as          *
+ * determining the exact IPs to hit based on CIDR and other input          *
+ * formats.                                                                *
+ *                                                                         *
+ ***********************IMPORTANT NMAP LICENSE TERMS************************
  *  The Nmap Security Scanner is (C) 1995-2001 Insecure.Com LLC. This  *
  *  program is free software; you can redistribute it and/or modify    *
  *  it under the terms of the GNU General Public License as published  *
@@ -41,7 +41,7 @@
  *  General Public License for more details (                          *
  *  http://www.gnu.org/copyleft/gpl.html ).                            *
  *                                                                     *
- ***********************************************************************/
+ ***************************************************************************/
 
 /* $Id$ */
 

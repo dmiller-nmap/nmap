@@ -1,13 +1,13 @@
 
-/***********************************************************************
- * idle_scan.cc -- Includes the function specific to "Idle Scan"       *
- * support (-sI).  This is an extraordinarily cool scan type that      *
- * can allow for completely blind scanning (eg no packets sent to the  *
- * target from your own IP address) and can also be used to penetrate  *
- * firewalls and scope out router ACLs.  This is one of the "advanced" *
- * scans meant for epxerienced Nmap users.                             *
- *                                                                     *
- ***********************************************************************
+/***************************************************************************
+ * idle_scan.cc -- Includes the function specific to "Idle Scan" support   *
+ * (-sI).  This is an extraordinarily cool scan type that can allow for    *
+ * completely blind scanning (eg no packets sent to the target from your   *
+ * own IP address) and can also be used to penetrate firewalls and scope   *
+ * out router ACLs.  This is one of the "advanced" scans meant for         *
+ * epxerienced Nmap users.                                                 *
+ *                                                                         *
+ ***********************IMPORTANT NMAP LICENSE TERMS************************
  *  The Nmap Security Scanner is (C) 1995-2001 Insecure.Com LLC. This  *
  *  program is free software; you can redistribute it and/or modify    *
  *  it under the terms of the GNU General Public License as published  *
@@ -44,7 +44,7 @@
  *  General Public License for more details (                          *
  *  http://www.gnu.org/copyleft/gpl.html ).                            *
  *                                                                     *
- ***********************************************************************/
+ ***************************************************************************/
 
 /* $Id$ */
 

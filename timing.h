@@ -1,12 +1,11 @@
 
-/***********************************************************************
- * timing.h -- Functions related to computing scan timing (such as     *
- * keeping track of and adjusting smoothed round trip times,           *
- * statistical deviations, timeout values, etc.  Various user options  *
- * (such as the timing policy (-T)) also play a role in these          *
- * calculations                                                        *
- *                                                                     *
- ***********************************************************************
+/***************************************************************************
+ * timing.h -- Functions related to computing scan timing (such as keeping *
+ * track of and adjusting smoothed round trip times, statistical           *
+ * deviations, timeout values, etc.  Various user options (such as the     *
+ * timing policy (-T)) also play a role in these calculations.             *
+ *                                                                         *
+ ***********************IMPORTANT NMAP LICENSE TERMS************************
  *  The Nmap Security Scanner is (C) 1995-2001 Insecure.Com LLC. This  *
  *  program is free software; you can redistribute it and/or modify    *
  *  it under the terms of the GNU General Public License as published  *
@@ -43,7 +42,7 @@
  *  General Public License for more details (                          *
  *  http://www.gnu.org/copyleft/gpl.html ).                            *
  *                                                                     *
- ***********************************************************************/
+ ***************************************************************************/
 
 /* $Id$ */
 

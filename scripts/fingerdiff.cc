@@ -1,10 +1,11 @@
-/***********************************************************************
- * fingerdiff.c -- A relatively simple utility for determining the     *
- * differences between a "reference" fingerprint (which can have       *
- * expressions as attributes) and an observed fingerprint (no          *
- * expressions).                                                       *
- *                                                                     *
- ***********************************************************************
+
+/***************************************************************************
+ * fingerdiff.c -- A relatively simple utility for determining the         *
+ * differences between a "reference" fingerprint (which can have           *
+ * expressions as attributes) and an observed fingerprint (no              *
+ * expressions).                                                           *
+ *                                                                         *
+ ***********************IMPORTANT NMAP LICENSE TERMS************************
  *  The Nmap Security Scanner is (C) 1995-2001 Insecure.Com LLC. This  *
  *  program is free software; you can redistribute it and/or modify    *
  *  it under the terms of the GNU General Public License as published  *
@@ -41,7 +42,7 @@
  *  General Public License for more details (                          *
  *  http://www.gnu.org/copyleft/gpl.html ).                            *
  *                                                                     *
- ***********************************************************************/
+ ***************************************************************************/
 
 /* $Id$ */
 

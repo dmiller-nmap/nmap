@@ -1,11 +1,11 @@
 
-/***********************************************************************
- * nmap_winconfig.h -- Since the Windows port is currently eschewing   *
- * autoconf-style configure scripts, nmap_winconfig.h contains the     *
- * platform-specific definitions for Windows and is used as a          *
- * replacement for config.h                                            *
- *                                                                     *
- ***********************************************************************
+/***************************************************************************
+ * nmap_winconfig.h -- Since the Windows port is currently eschewing       *
+ * autoconf-style configure scripts, nmap_winconfig.h contains the         *
+ * platform-specific definitions for Windows and is used as a replacement  *
+ * for config.h                                                            *
+ *                                                                         *
+ ***********************IMPORTANT NMAP LICENSE TERMS************************
  *  The Nmap Security Scanner is (C) 1995-2001 Insecure.Com LLC. This  *
  *  program is free software; you can redistribute it and/or modify    *
  *  it under the terms of the GNU General Public License as published  *
@@ -42,7 +42,7 @@
  *  General Public License for more details (                          *
  *  http://www.gnu.org/copyleft/gpl.html ).                            *
  *                                                                     *
- ***********************************************************************/
+ ***************************************************************************/
 
 /* $Id$ */
 

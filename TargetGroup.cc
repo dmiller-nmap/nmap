@@ -1,11 +1,11 @@
 
-/***********************************************************************
- * TargetGroup.cc -- The "TargetGroup" class holds a group of IP       *
- * addresses, such as those from a '/16' or '10.*.*.*' specification.  *
- * It also has a trivial HostGroupState class which handles a bunch    *
- * of expressions that go into TargetGroup classes.                    *
- *                                                                     *
- ***********************************************************************
+/***************************************************************************
+ * TargetGroup.cc -- The "TargetGroup" class holds a group of IP           *
+ * addresses, such as those from a '/16' or '10.*.*.*' specification.  It  *
+ * also has a trivial HostGroupState class which handles a bunch of        *
+ * expressions that go into TargetGroup classes.                           *
+ *                                                                         *
+ ***********************IMPORTANT NMAP LICENSE TERMS************************
  *  The Nmap Security Scanner is (C) 1995-2002 Insecure.Com LLC. This  *
  *  program is free software; you can redistribute it and/or modify    *
  *  it under the terms of the GNU General Public License as published  *
@@ -42,7 +42,7 @@
  *  General Public License for more details (                          *
  *  http://www.gnu.org/copyleft/gpl.html ).                            *
  *                                                                     *
- ***********************************************************************/
+ ***************************************************************************/
 
 /* $Id$ */
 

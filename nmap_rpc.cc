@@ -1,11 +1,11 @@
 
-/***********************************************************************
- * rpc.cc -- Functions related to the RPCGrind (-sR) facility of Nmap. *
- * This includes reading the nmap-rpc services file and sending rpc    *
- * queries and interpreting responses.  The actual scan engine used    *
- * for rpc grinding is pos_scan (which is not in this file)            *
- *                                                                     *
- ***********************************************************************
+/***************************************************************************
+ * rpc.cc -- Functions related to the RPCGrind (-sR) facility of Nmap.     *
+ * This includes reading the nmap-rpc services file and sending rpc        *
+ * queries and interpreting responses.  The actual scan engine used for    *
+ * rpc grinding is pos_scan (which is not in this file)                    *
+ *                                                                         *
+ ***********************IMPORTANT NMAP LICENSE TERMS************************
  *  The Nmap Security Scanner is (C) 1995-2001 Insecure.Com LLC. This  *
  *  program is free software; you can redistribute it and/or modify    *
  *  it under the terms of the GNU General Public License as published  *
@@ -42,7 +42,7 @@
  *  General Public License for more details (                          *
  *  http://www.gnu.org/copyleft/gpl.html ).                            *
  *                                                                     *
- ***********************************************************************/
+ ***************************************************************************/
 
 /* $Id$ */
 

@@ -1,9 +1,9 @@
 
-/***********************************************************************
- * nmap_amigaos.h -- Handles various compilation issues for the Amiga  *
- * port done by Diego Casorran (dcr8520@amiga.org)                     *
- *                                                                     *
- ***********************************************************************
+/***************************************************************************
+ * nmap_amigaos.h -- Handles various compilation issues for the Amiga port *
+ * done by Diego Casorran (dcr8520@amiga.org)                              *
+ *                                                                         *
+ ***********************IMPORTANT NMAP LICENSE TERMS************************
  *  The Nmap Security Scanner is (C) 1995-2001 Insecure.Com LLC. This  *
  *  program is free software; you can redistribute it and/or modify    *
  *  it under the terms of the GNU General Public License as published  *
@@ -40,7 +40,7 @@
  *  General Public License for more details (                          *
  *  http://www.gnu.org/copyleft/gpl.html ).                            *
  *                                                                     *
- ***********************************************************************/
+ ***************************************************************************/
 
 /* $Id$ */
 
