@@ -163,7 +163,7 @@ struct udphdr_bsd {
          u_int16_t uh_sum;             /* udp checksum */
 };
 #else
-typedef udphdr udphdr_bsd;
+typedef struct udphdr udphdr_bsd;
 #endif
 
 
