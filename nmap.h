@@ -119,7 +119,7 @@ void *realloc();
 /* #define to zero if you don't want to	ignore hosts of the form 
    xxx.xxx.xxx.{0,255} (usually network and broadcast addresses) */
 #define IGNORE_ZERO_AND_255_HOSTS 0
-#define VERSION "1.60"
+#define VERSION "1.60-Beta"
 #ifndef DEBUGGING
 #define DEBUGGING 0
 #endif

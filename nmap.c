@@ -530,30 +530,35 @@ return realloc(ports, portindex * sizeof(unsigned short));
 }
 
 void printusage(char *name) {
-printf("nmap V. %s usage: %s [options] [hostname[/mask] . . .]\n\
-options (none are required, most can be combined):\n\
-   -t tcp connect() port scan\n\
-   -s tcp SYN stealth port scan (must be root)\n\
-   -U Uriel Maimon (P49-15) style FIN stealth scan.\n\
-   -P ping \"scan\". Find which hosts on specified network(s) are up.\n\
+printf("nmap V. %s usage: nmap [Scan Type(s)] [Options] <host or net #1 ... [#N]>\n\
+Scan types\n\
+   -sT tcp connect() port scan\n\
+   -sS tcp SYN stealth port scan (must be root)\n\
+   -sF,-SX, -sN Stealth FIN, Xmas, or Null scan (only works against UNIX).\n\
+   -sP ping \"scan\". Find which hosts on specified network(s) are up but don't \n\
+       port scan them\n\
+   -sU UDP port scan, must be r00t\n\
    -b <ftp_relay_host> ftp \"bounce attack\" port scan\n\
-   -u UDP port scan, will use MUCH better version if you are root\n\
-   -l Do the lamer UDP scan even if root.  Less accurate.\n\
-   -f use tiny fragmented packets for SYN or FIN scan.\n\
-   -D Don't ping hosts (needed to scan www.microsoft.com and others)\n\
+Options (none are required, most can be combined):\n\
+   -f use tiny fragmented packets for SYN, FIN, Xmas, or NULL scan.\n\
+   -P0 Don't ping hosts (needed to scan www.microsoft.com and others)\n\
+   -PT Use \"TCP Ping\" to see what hosts are up (for normal and ping scans).\n\
+   -PT80 Use \"TCP Ping\" scan with probe destination port of 80 (or whatever).\n\
+   -PI Use ICMP ping packet to determines hosts that are up (default for root users)\n\
    -i Get identd (rfc 1413) info on listening TCP processes.\n\
    -p <range> ports: ex: \'-p 23\' will only try port 23 of the host(s)\n\
-                  \'-p 20-30,63000-\' scans 20-30 and 63000-65535 default: 1-1024\n\
+                  \'-p 20-30,63000-\' scans 20-30 and 63000-65535. default: 1-1024\n\
+   -D <decoy_host> Make it appear that a scan is also coming from decoy_host.  Even\n\
+      if the target detects the scan, they won't know who is scanning them.\n\
    -F fast scan. Only scans ports in /etc/services, a la strobe(1).\n\
    -n Don't DNS resolve anything unless we have to (makes ping scans faster)\n\
-   -L <num> Number of pings to perform in parallel.  Your default is: %d\n\
    -o <logfile> Output scan logs to <logfile>.\n\
+   -g <portnumber> Sets the source port used for scans.  20 and 53 are good choices.\n\
+   -L <num> Number of pings to perform in parallel.  Your default is: %d\n\
    -R Try to resolve all hosts, even down ones (can take a lot of time)\n\
    -r do NOT randomize target port scanning order.\n\
-   -S If you want to specify the source address of SYN or FYN scan.\n", VERSION, name, LOOKAHEAD);
-
-
-if (!o.allowall) printf("-A Allow scanning .0 and .255 addresses" );
+   -S <your_IP> If you want to specify the source address of SYN or FYN scan.\n", VERSION, LOOKAHEAD);
+if (!o.allowall) printf("   -A Allow scanning .0 and .255 addresses" );
 printf("   -T <seconds> Set the ping and tcp connect() timeout.\n\
    -v Verbose.  Its use is recommended.  Use twice for greater effect.\n\
    -h help, print this junk.  Also see http://www.insecure.org/nmap/\n\
@@ -563,7 +568,7 @@ printf("   -T <seconds> Set the ping and tcp connect() timeout.\n\
 printf("   -e <devicename>. Send packets on interface <devicename> (eth0,ppp0,etc.).\n"); 
 printf("   -q quash argv to something benign, currently set to \"%s\". (deprecated)\n", FAKE_ARGV);
 printf("Hostnames specified as internet hostname or IP address.  Optional '/mask' \
-specifies subnet. cert.org/24 or 192.88.209.5/24 or 192.88.209.0-255 scan CERT's Class C.\n");
+specifies subnet. cert.org/24 or 192.88.209.5/24 or 192.88.209.0-255 or '128.88.209.*' scan CERT's Class C.\n");
 exit(0);
 }
 
