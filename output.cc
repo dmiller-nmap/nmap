@@ -124,7 +124,7 @@ void printportoutput(Target *currenths, portlist *plist) {
   protoarrays[1] = plist->udp_ports;
   current = NULL;
   if (o.ipprotscan) {
-    for (portno = 1; portno < 256; portno++) {
+    for (portno = 0; portno < 256; portno++) {
       if (!plist->ip_prots[portno]) continue;
       current = plist->ip_prots[portno];
       if (current->state != plist->ignored_port_state) {
@@ -144,7 +144,7 @@ void printportoutput(Target *currenths, portlist *plist) {
       }
     }
   } else {
-   for(portno = 1; portno < 65536; portno++) {
+   for(portno = 0; portno < 65536; portno++) {
     for(protocount = 0; protocount < 2; protocount++) {
       if (protoarrays[protocount] && protoarrays[protocount][portno]) 
 	current = protoarrays[protocount][portno];

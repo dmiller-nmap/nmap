@@ -1,5 +1,22 @@
 # Nmap Changelog ($Id$)
 
+o I added support for a brand new "port" that many of you may have
+  never scanned before!  UDP & TCP "port 0" (and IP protocol 0) are now
+  permitted if you specify 0 explicitly.  An argument like "-p -40"
+  would still scan ports 1-40.  Unlike ports, protocol 0 IS now scanned
+  by default.  This now works for ping probes too (e.g., -PS, -PA).
+
+o Applied patch from Stephen Bishop (sbishop@idsec.co.uk) which
+  prevends certain false-positive responses when Nmap raw TCP ping scans
+  are being run in parallel.
+
+o To emphasize the highly professional nature of Nmap, I changed all
+  instances of "fucked up" in error message text into "b0rked".
+
+o I made the maximum number of allowed routes and interfaces allowed
+  on the scanning machine dynamic rather than hardcoded #defines of 1024
+  and 128.  You never know -- some wacko probably has that many :).
+
 Nmap 3.15BETA1
 
 o Integrated the largest OS fingerprint DB updates ever! Thanks to

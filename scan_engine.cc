@@ -1111,7 +1111,7 @@ void bounce_scan(Target *target, u16 *portarray, int numports,
   if (o.verbose || o.debugging)
     log_write(LOG_STDOUT, "Initiating TCP ftp bounce scan against %s\n",
 	    target->NameIP(hostname, sizeof(hostname)));
-  for(i=0; portarray[i]; i++) {
+  for(i=0; i < numports; i++) {
 
     /* Check for timeout */
     if (o.host_timeout) {
@@ -1161,7 +1161,7 @@ void bounce_scan(Target *target, u16 *portarray, int numports,
 	  }
 	  else {
 	    fprintf(stderr, "Your ftp bounce server doesn't allow priviliged ports, skipping them.\n");
-	    while(portarray[i] && portarray[i] < 1024) i++;
+	    while(i < numports && portarray[i] < 1024) i++;
 	    if (!portarray[i]) {
 	      fprintf(stderr, "And you didn't want to scan any unpriviliged ports.  Giving up.\n");
 	      /*	  close(sd);

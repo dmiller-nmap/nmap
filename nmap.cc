@@ -474,7 +474,7 @@ int nmap_main(int argc, char *argv[]) {
 	o.pingtype |= (PINGTYPE_TCP|PINGTYPE_TCP_USE_SYN);
 	if (isdigit((int) *(optarg+1)))
 	  {
-	    o.num_ping_synprobes = numberlist2array(optarg+1, o.ping_synprobes, sizeof(o.ping_synprobes), &proberr, 1);
+	    o.num_ping_synprobes = numberlist2array(optarg+1, o.ping_synprobes, sizeof(o.ping_synprobes), &proberr);
 	    if (o.num_ping_synprobes < 0) {
 	      fatal("Bogus argument to -PS: %s", proberr);
 	    }
@@ -487,7 +487,7 @@ int nmap_main(int argc, char *argv[]) {
       else if (*optarg == 'T' || *optarg == 'A') {
 	o.pingtype |= (PINGTYPE_TCP|PINGTYPE_TCP_USE_ACK);
 	if (isdigit((int) *(optarg+1))) {
-	  o.num_ping_ackprobes = numberlist2array(optarg+1, o.ping_ackprobes, sizeof(o.ping_ackprobes), &proberr, 1);
+	  o.num_ping_ackprobes = numberlist2array(optarg+1, o.ping_ackprobes, sizeof(o.ping_ackprobes), &proberr);
 	  if (o.num_ping_ackprobes < 0) {
 	    fatal("Bogus argument to -PB: %s", proberr);
 	  }
@@ -500,7 +500,7 @@ int nmap_main(int argc, char *argv[]) {
       else if (*optarg == 'B') {
 	o.pingtype = (PINGTYPE_TCP|PINGTYPE_TCP_USE_ACK|PINGTYPE_ICMP_PING);
 	if (isdigit((int) *(optarg+1))) {
-	  o.num_ping_ackprobes = numberlist2array(optarg+1, o.ping_ackprobes, sizeof(o.ping_ackprobes), &proberr, 1);
+	  o.num_ping_ackprobes = numberlist2array(optarg+1, o.ping_ackprobes, sizeof(o.ping_ackprobes), &proberr);
 	  if (o.num_ping_ackprobes < 0) {
 	    fatal("Bogus argument to -PB: %s", proberr);
 	  }
@@ -1126,8 +1126,11 @@ struct scan_lists *getpts(char *origexpr) {
     }
     else if (isdigit((int) *current_range)) {
       rangestart = strtol(current_range, &endptr, 10);
-      if (rangestart <= 0 || rangestart > 65535) {
-	fatal("Ports to be scanned must be between 1 and 65535 inclusive");
+      if (rangestart < 0 || rangestart > 65535) {
+	fatal("Ports to be scanned must be between 0 and 65535 inclusive");
+      }
+      if (rangestart == 0) {
+	error("WARNING:  Scanning \"port 0\" is supported, but unusual.");
       }
       current_range = endptr;
       while(isspace((int) *current_range)) current_range++;
@@ -1145,8 +1148,8 @@ struct scan_lists *getpts(char *origexpr) {
 	rangeend = 65535;
       } else if (isdigit((int) *current_range)) {
 	rangeend = strtol(current_range, &endptr, 10);
-	if (rangeend <= 0 || rangeend > 65535) {
-	  fatal("Ports to be scanned must be between 1 and 65535 inclusive");
+	if (rangeend < 0 || rangeend > 65535) {
+	  fatal("Ports to be scanned must be between 0 and 65535 inclusive");
 	}
 	current_range = endptr;
       } else {
@@ -1190,13 +1193,13 @@ struct scan_lists *getpts(char *origexpr) {
   ports = (struct scan_lists *) safe_zalloc(sizeof(struct scan_lists));
 
   if (tcpportcount) {
-    ports->tcp_ports = (unsigned short *)safe_zalloc((tcpportcount + 1) * sizeof(unsigned short));
+    ports->tcp_ports = (unsigned short *)safe_zalloc(tcpportcount * sizeof(unsigned short));
   }
   if (udpportcount) {
-    ports->udp_ports = (unsigned short *)safe_zalloc((udpportcount + 1) * sizeof(unsigned short));
+    ports->udp_ports = (unsigned short *)safe_zalloc(udpportcount * sizeof(unsigned short));
   }
   if (protcount) {
-    ports->prots = (unsigned short *)safe_zalloc((protcount + 1) * sizeof(unsigned short));
+    ports->prots = (unsigned short *)safe_zalloc(protcount * sizeof(unsigned short));
   }
   ports->tcp_count = tcpportcount;
   ports->udp_count = udpportcount;
@@ -1214,14 +1217,6 @@ struct scan_lists *getpts(char *origexpr) {
       ports->prots[protcount++] = i;
   }
 
-  /* Someday I am going to make sure this isn't neccessary and then I
-     will start allowing (invalid) port 0 scans */
-  if (tcpportcount)
-    ports->tcp_ports[ports->tcp_count] = 0; 
-  if (udpportcount)
-    ports->udp_ports[ports->udp_count] = 0; 
-  if (protcount)
-    ports->prots[ports->prot_count] = 0; 
   return ports;
 }
 
