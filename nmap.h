@@ -165,8 +165,13 @@ void *realloc();
 #define HOST_FIREWALLED 4 
 #define HOST_BROADCAST 8 /* use the wierd_responses member of hoststruct instead */
 /* struct port stuff */
-#define PORT_CLOSED 0;
-#define PORT_OPEN 1
+#define PORT_UNKNOWN 0
+#define PORT_CLOSED 1
+#define PORT_OPEN 2
+#define PORT_FIREWALLED 4
+#define PORT_TESTING 8
+#define PORT_FRESH 16
+ 
 #define CONF_NONE 0
 #define CONF_LOW 1
 #define CONF_HIGH 2
@@ -211,6 +216,7 @@ portlist tcp_scan(struct hoststruct *target, unsigned short *portarray,         
 portlist syn_scan(struct hoststruct *target, unsigned short *portarray);
 portlist fin_scan(struct hoststruct *target, unsigned short *portarray);
 portlist super_scan(struct hoststruct *target, unsigned short *portarray, stype scantype);
+portlist pos_scan(struct hoststruct *target, unsigned short *portarray, stype scantype);
 portlist udp_scan(struct hoststruct *target, unsigned short *portarray);
 portlist lamer_udp_scan(struct hoststruct *target,unsigned short *portarray);
 portlist bounce_scan(struct hoststruct *target, unsigned short *portarray,
@@ -223,13 +229,30 @@ int getidentinfoz(struct in_addr target, int localport, int remoteport,
 		  char *owner);
 int parse_bounce(struct ftpinfo *ftp, char *url);
 int ftp_anon_connect(struct ftpinfo *ftp);
+/* Does the appropriate stuff when the port we are looking at is found
+   to be open trynum is the try number that was successful */
+void goodposport(struct hoststruct *target, struct portinfo *current, 
+		 int trynum, struct portinfo *scan,
+		 struct scanstats *ss ,stype scantype, 
+		 struct portinfo **testinglist);
+void badposport(struct hoststruct *target, struct portinfo *current, 
+		 int trynum, struct portinfo *scan,
+		 struct scanstats *ss ,stype scantype, 
+		struct portinfo **testinglist);
 
+void get_syn_results(struct hoststruct *target, struct portinfo *scan,
+		     struct scanstats *ss, struct portinfo *openports, 
+		     struct portinfo *firewalled, 
+		     struct portinfo **testinglist, int *portlookup,
+		     pcap_t *pd, unsigned long *sequences);
+void adjust_timeouts(struct timeval sent, struct timeout_info *to);
 /* port manipulators */
 unsigned short *getpts(char *expr); /* someone stole the name getports()! */
 unsigned short *getfastports(int tcpscan, int udpscan);
 int addport(portlist *ports, unsigned short portno, unsigned short protocol,
-	    char *owner);
+	    char *owner, int state);
 int deleteport(portlist *ports, unsigned short portno, unsigned short protocol);
+struct port *lookupport(portlist ports, unsigned short portno, unsigned short protocol);
 void printandfreeports(portlist ports);
 int shortfry(unsigned short *ports);
 
@@ -244,7 +267,7 @@ int max_sd();
 /* RAW packet building/dissasembling stuff */
 int isup(struct in_addr target);
 int send_small_fragz(int sd, struct in_addr *source, struct in_addr *victim,
-		     int sport, int dport, int flags);
+		     unsigned long seq, int sport, int dport, int flags);
 int listen_icmp(int icmpsock, unsigned short outports[],
 		unsigned short numtries[], int *num_out,
 		struct in_addr target, portlist *ports);

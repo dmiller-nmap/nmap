@@ -354,6 +354,7 @@ group_end = MIN(group_start + group_size -1, num_hosts -1);
 	     if (!to.srtt) {
 	       to.srtt = TIMEVAL_SUBTRACT(end, time[response.sequence]);
 	       to.rttvar = MAX(5000, MIN(to.srtt, 500000));
+	       to.timeout = to.srtt + (to.rttvar << 2);
 	     } else {	     
 	       delta = TIMEVAL_SUBTRACT(end, time[response.sequence]) - to.srtt;
 	       printf("ping --adj to (delta %d) changing srtt %d rttvar %d timeout %d to ", delta, to.srtt, to.rttvar, to.timeout);
@@ -430,9 +431,11 @@ group_end = MIN(group_start + group_size -1, num_hosts -1);
        elapsed_time = TIMEVAL_SUBTRACT(end, begin_select);
      } while( elapsed_time < to.timeout);
      /* try again if a new box was found but some are still unaccounted for and
-	we haven't run out of retries */
+	we haven't run out of retries.  Also retry if the block is extremely
+        small.
+     */
      dropthistry = 0;
-   } while (up_this_block > 0 && block_unaccounted > 0 && ++block_tries < max_tries);
+   } while ((up_this_block > 0 || group_end - group_start <= 3) && block_unaccounted > 0 && ++block_tries < max_tries);
 
    printf("Finished block: srtt: %d rttvar: %d timeout: %d block_tries: %d up_this_block: %d down_this_block: %d\n", to.srtt, to.rttvar, to.timeout, block_tries, up_this_block, down_this_block);
 

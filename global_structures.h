@@ -10,6 +10,30 @@ typedef struct port {
   struct port *next;
 } port;
 
+ struct portinfo {
+   unsigned short portno;
+   short trynum;
+   int sd[3]; /* Socket descriptors for connect_scan */
+   struct timeval sent[3]; 
+   int state;
+   int next; /* not struct portinfo * for historical reasons */
+   int prev;
+  };
+
+/* The runtime statistics used to decide how fast to proced and how
+   many ports we can try at once */
+struct scanstats {
+  int packet_incr;
+  double fallback_percent;
+  int numqueries_outstanding; /* How many unexpired queries are on the 'net
+				 right now? */
+  double numqueries_ideal; /* How many do we WANT to be on the 'net right now? */
+  int max_width; /* What is the MOST we will tolerate at once */
+  int ports_left;
+  int changed; /* Has anything changed since last round? */
+  int alreadydecreasedqueries;
+};
+
 struct ftpinfo {
   char user[64];
   char pass[256]; /* methinks you're paranoid if you need this much space */
@@ -116,3 +140,14 @@ typedef port *portlist;
 typedef enum { SYN_SCAN, FIN_SCAN, XMAS_SCAN, UDP_SCAN, CONNECT_SCAN, NULL_SCAN, MAIMON_SCAN } stype;
 
 #endif /*GLOBAL_STRUCTURES_H */
+
+
+
+
+
+
+
+
+
+
+
