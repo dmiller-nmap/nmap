@@ -75,7 +75,7 @@
 #undef BSDI
 #undef IRIX
 #undef NETBSD
-
+#undef MACOSX
 
 #endif /* CONFIG_H */
 

@@ -1,5 +1,16 @@
 # Nmap Changelog
 
+** 2.54BETA24
+
+-- Fixed compilation problems on MacOS X publis release.  Thanks to
+   Nicolas Dawson (nizcolas@myrealbox.com) for securing an account for
+   me.
+
+-- On the suggestion of the ever-helpful LaMont Jones (lamont@hp.com),
+   I obtained the newest config.guess/config.sub from
+   http://subversions.gnu.org/cgi-bin/cvsweb/config and made
+   libpcap/nbase use symlinks rather than copeis of the file
+
 -- Applied patch from LaMont Jones (lamont@hp.com) which makes Nmap
    compatable with gcc 3.0 (apparently printf() is a macro in that
    version)
@@ -18,7 +29,8 @@
    for some (SGI) compilers.  Problem noted by Artur 
    Niederstebruch (artur@sgi.com)
 
--- Updated to latest version of rpc program number list, maintained by Eilon Gishri (eilon@aristo.tau.ac.il)
+-- Updated to latest version of rpc program number list, maintained by
+   Eilon Gishri (eilon@aristo.tau.ac.il)
 
 -- Fixed a quoting bug in the Nmap man page found by 
    Rasmus Andersson <rasmus@pole-position.org>

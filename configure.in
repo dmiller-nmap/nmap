@@ -96,11 +96,19 @@ case "$host" in
   *-bsdi*)
     AC_DEFINE(BSDI)
     ;;
+  *-apple-darwin*)
+    macosx=yes
+    AC_DEFINE(MACOSX)
+    ;;
 esac
 
 dnl Checks for libraries.
 dnl AC_CHECK_LIB(m, pow)
-AC_CHECK_LIB(m, main)
+dnl on Mac OSX the math library seems to contain unwanted getopt cruft
+if test xx$macosx = xx; then
+  AC_CHECK_LIB(m, main)
+fi
+
 
 dnl If any socket libraries needed
 AC_CHECK_FUNC(gethostent, , AC_CHECK_LIB(nsl, gethostent))

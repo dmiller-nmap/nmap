@@ -52,7 +52,7 @@ CFLAGS="$RPM_OPT_FLAGS" ./configure --prefix=%{prefix}
 make 
 
 %install
-rm -rf $RPM_BUILD_ROOT
+[ "$RPM_BUILD_ROOT" != "/" ] && rm -rf $RPM_BUILD_ROOT
 
 make prefix=$RPM_BUILD_ROOT%{prefix} install
 
@@ -73,7 +73,7 @@ rm -f ${prefix}/bin/xnmap
 %endif
 
 %clean
-rm -rf $RPM_BUILD_ROOT
+[ "$RPM_BUILD_ROOT" != "/" ] && rm -rf $RPM_BUILD_ROOT
 
 %files 
 %defattr(-,root,root)
@@ -99,6 +99,10 @@ rm -rf $RPM_BUILD_ROOT
 %endif
 
 %changelog
+
+* Fri Jun 01 2001 GOMEZ Henri (hgomez@slib.fr)
+- Patch which checks that $RPM_BUILD_ROOT is not "/" before rm'ing it.
+
 * Tue Mar 06 2001 Ben Reed <ben@opennms.org>
 - changed spec to handle not building the frontend
 
