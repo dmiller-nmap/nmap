@@ -42,6 +42,7 @@ case "$host" in
     AC_DEFINE(SOLARIS)
     ;;
   *-linux*)
+    linux=yes
     AC_DEFINE(LINUX)
     AC_DEFINE(PCAP_TIMEOUT_IGNORED)  # libpcap doesn't even LOOK at
                                      # the timeout you give it under Linux
@@ -61,6 +62,9 @@ fi
 
 dnl Check whether libpcap is already available
 AC_CHECK_LIB(pcap, pcap_datalink, have_libpcap=yes, have_libpcap=no)
+if test $linux = yes; then
+  have_libpcap = no
+fi
 if test $have_libpcap = yes; then
   AC_MSG_CHECKING(if libpcap version is recent enough)
   AC_TRY_RUN([

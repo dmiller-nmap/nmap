@@ -91,6 +91,7 @@ depend:
 
 install: all
 	$(INSTALL) $(TARGET) $(bindir)/$(TARGET)
+	$(INSTALL) $(TARGET).1 $(mandir)/man1/$(TARGET).1
 
 uninstall:
 	rm -f $(bindir)/$(TARGET)
