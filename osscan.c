@@ -350,7 +350,7 @@ if (o.verbose && openport != -1)
 
  printf("DONE!  Here is the FingerPrint:\n%s\n", fp2ascii(FP)); 
  close(rawsd);
- close(pd);
+ pcap_close(pd);
  return FP;
 }
 
