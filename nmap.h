@@ -149,6 +149,9 @@ void *realloc();
 #define MAX_TIMEOUTS MAX_SOCKETS   /* How many timed out connection attempts 
 				      in a row before we decide the host is 
 				      dead? */
+#define MAX_DECOYS 128 /* How many decoys are allowed? */
+
+
 
 /* DO NOT change stuff after this point */
 #define UC(b)   (((int)b)&0xff)
@@ -235,7 +238,7 @@ struct ops /* someone took struct options, <grrr> */ {
   int number_of_ports;
   int max_sockets;
   int isr00t;
-  struct in_addr decoys[64];
+  struct in_addr decoys[MAX_DECOYS];
   int numdecoys;
   int decoyturn;
   int identscan;

@@ -57,12 +57,14 @@ while((arg = getopt(argc,fakeargv,"Ab:D:de:FfhiL:lM:Nno:P::p:qrRS:s:T:tUuw:Vv"))
       fprintf(stderr, "Your argument to -b is fucked up. Use the normal url style:  user:pass@server:port or just use server and use default anon login\n  Use -h for help\n");
     }
     break;
-  case 'D': 
+  case 'D':
+    if (o.numdecoys >= MAX_DECOYS -1)
+      fatal("You are only allowed %d decoys (if you need more redefine MAX_DECOYS in nmap.h)");
     if (resolve(optarg, &o.decoys[o.numdecoys])) {
       o.numdecoys++;
     } else {
     fatal("Failed to resolve decoy host: %s (must be hostname or IP address", optarg);
-    }    
+    }
     break;
   case 'd': o.debugging++; break;
   case 'e': strncpy(o.device, optarg,63); o.device[63] = '\0'; break;
@@ -1749,7 +1751,7 @@ struct tcphdr *tcp = NULL;
 unsigned short portno[MAX_SOCKETS_ALLOWED];
 unsigned short trynum[MAX_SOCKETS_ALLOWED];
 struct sockaddr_in stranger;
-
+int decoy=0;
 
 timeout = (target->rtt)? target->rtt + 10000 : 1e5;
 
@@ -1816,12 +1818,14 @@ while(!done) {
       portno[i] = portarray[j++];
     }
     if (portno[i]) {
-    if (o.fragscan)
-      send_small_fragz(rawsd, &target->source_ip, &target->host, MAGIC_PORT, portno[i], scanflags);
-    else send_tcp_raw(rawsd, &target->source_ip , &target->host, MAGIC_PORT, 
-		      portno[i], 0, 0, scanflags, 0, 0, 0);
-    usleep(10000); /* *WE* normally do not need this, but the target 
-		      lamer often does */
+      for(decoy=0; decoy < o.numdecoys; decoy++) {
+	if (o.fragscan)
+	  send_small_fragz(rawsd, &o.decoys[decoy], &target->host, MAGIC_PORT, portno[i], scanflags);
+	else send_tcp_raw(rawsd, &o.decoys[decoy], &target->host, MAGIC_PORT, 
+			  portno[i], 0, 0, scanflags, 0, 0, 0);
+	usleep(10000); /* *WE* normally do not need this, but the target 
+			  lamer often does */
+      }
     }
   }
 
@@ -1890,8 +1894,8 @@ while(!done) {
 	if (o.verbose || o.debugging)
 	  printf("Good port %d detected by fin_scan!\n", portno[i]);
 	addport(&target->ports, portno[i], IPPROTO_TCP, NULL);
-	send_tcp_raw( rawsd, &target->source_ip, &target->host, MAGIC_PORT, portno[i], 0, 0, 
-		      scanflags, 0, 0, 0);
+	/*	send_tcp_raw( rawsd, &target->source_ip, &target->host, MAGIC_PORT, portno[i], 0, 0, 
+		scanflags, 0, 0, 0); */
 	portno[i] = trynum[i] = 0;
       }
       else someleft = 1;
