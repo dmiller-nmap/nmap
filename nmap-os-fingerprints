@@ -67,7 +67,17 @@ T5(DF=N&W=0&ACK=S++&Flags=AR&Ops=)
 T6(DF=N&W=0&ACK=O&Flags=R&Ops=)
 T7(DF=N&W=0&ACK=S&Flags=AR&Ops=)
 
-FingerPrint  FreeBSD 2.2.6-RELEASE
+FingerPrint  Cisco 7513 Router
+TSeq(Class=RI&gcd=<5&SI=<50000)
+T1(DF=N&W=10C0&ACK=S++&Flags=AS&Ops=M)
+T2(DF=N&W=0&ACK=O&Flags=AR&Ops=)
+T3(DF=N&W=10C0&ACK=S++&Flags=AS&Ops=M)
+T4(DF=N&W=0&ACK=O&Flags=R&Ops=)
+T5(DF=N&W=0&ACK=S++&Flags=AR&Ops=)
+T6(DF=N&W=0&ACK=O&Flags=R&Ops=)
+T7(DF=N&W=0&ACK=S&Flags=AR&Ops=)
+
+FingerPrint  FreeBSD 2.2.6 - 2.2.7
 TSeq(Class=RI&gcd=<5)
 T1(DF=Y&W=403D&ACK=S++&Flags=AS&Ops=MNWNNT)
 T2(Resp=N)
@@ -206,15 +216,4 @@ T4(DF=N&W=0&Flags=R&Ops=)
 T5(DF=N&W=0&ACK=S++&Flags=AR&Ops=)
 T6(DF=N&W=0&Flags=R&Ops=)
 T7(DF=N&W=0&ACK=S++&Flags=AR&Ops=)
-
-
-
-
-
-
-
-
-
-
-
 

@@ -88,6 +88,7 @@ void *realloc();
 #include <netinet/ip_icmp.h> 
 #include <arpa/inet.h>
 #include <math.h>
+#include <assert.h>
 #include <sys/time.h> 
 #ifndef __FAVOR_BSD
 #define __FAVOR_BSD
@@ -232,21 +233,17 @@ int parse_bounce(struct ftpinfo *ftp, char *url);
 int ftp_anon_connect(struct ftpinfo *ftp);
 /* Does the appropriate stuff when the port we are looking at is found
    to be open trynum is the try number that was successful */
-void goodposport(struct hoststruct *target, struct portinfo *current, 
-		 int trynum, struct portinfo *scan,
-		 struct scanstats *ss ,stype scantype, 
-		 struct portinfo **testinglist);
-void badposport(struct hoststruct *target, struct portinfo *current, 
-		 int trynum, struct portinfo *scan,
-		 struct scanstats *ss ,stype scantype, 
-		struct portinfo **testinglist);
 void posportupdate(struct hoststruct *target, struct portinfo *current, 
-		 int trynum, struct portinfo *scan,
-		 struct scanstats *ss ,stype scantype, int newstate,
-		 struct portinfolist *pil);
+		   int trynum, struct portinfo *scan,
+		   struct scanstats *ss ,stype scantype, int newstate,
+		   struct portinfolist *pil, struct connectsockinfo *csi);
 void get_syn_results(struct hoststruct *target, struct portinfo *scan,
 		     struct scanstats *ss, struct portinfolist *pil, 
 		     int *portlookup, pcap_t *pd, unsigned long *sequences);
+int get_connect_results(struct hoststruct *target, struct portinfo *scan, 
+			 struct scanstats *ss, struct portinfolist *pil, 
+			 int *portlookup, unsigned long *sequences, 
+			 struct connectsockinfo *csi);
 __inline__ void adjust_timeouts(struct timeval sent, struct timeout_info *to);
 /* port manipulators */
 unsigned short *getpts(char *expr); /* someone stole the name getports()! */

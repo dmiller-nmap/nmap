@@ -92,8 +92,12 @@ if (hostbatch[0].host.s_addr && (o.pingtype == icmp ))
   massping(hostbatch, i, pingtimeout);
 else if (hostbatch[0].host.s_addr && (o.pingtype == tcp))
   masstcpping(hostbatch, i, pingtimeout);
-else for(i=0; hostbatch[i].host.s_addr; i++) 
-	hostbatch[i].flags |= HOST_UP; /*hostbatch[i].up = 1;*/
+else for(i=0; hostbatch[i].host.s_addr; i++)  {
+  hostbatch[i].to.srtt = -1;
+  hostbatch[i].to.rttvar = -1;
+  hostbatch[i].to.timeout = 6000000;
+  hostbatch[i].flags |= HOST_UP; /*hostbatch[i].up = 1;*/
+}
 
 } while(i != 0 && !hostbatch[0].host.s_addr);  /* Loop now unneeded */
 return &hostbatch[0];
@@ -367,20 +371,6 @@ gettimeofday(&start, NULL);
 	   if (hostbatch[hostnum].host.s_addr == response.ip.ip_src.s_addr) {
 	     if (discardtimesbefore < response.sequence)
 	       adjust_timeouts(time[response.sequence], &to);
-	     /*	     if (!to.srtt) {
-	       to.srtt = TIMEVAL_SUBTRACT(end, time[response.sequence]);
-	       to.rttvar = MAX(5000, MIN(to.srtt, 500000));
-	       to.timeout = to.srtt + (to.rttvar << 2);
-	     } else {	     
-	       delta = TIMEVAL_SUBTRACT(end, time[response.sequence]) - to.srtt;
-	       if (o.debugging > 1)
-		 printf("ping --adj to (delta %d) changing srtt %d rttvar %d timeout %d to ", delta, to.srtt, to.rttvar, to.timeout);
-	       to.srtt += delta >> 3;
-	       to.rttvar += (ABS(delta) - to.rttvar) >> 2;
-	       to.timeout = to.srtt + (to.rttvar << 2);
-	       if (o.debugging > 1)
-		 printf(" %d %d %d\n", to.srtt, to.rttvar, to.timeout);
-		 }*/
 	     hostbatch[hostnum].to = to;
 	     if (!(hostbatch[hostnum].flags & HOST_UP)) {	  
 	       if (hostnum >= group_start) {	       
@@ -410,20 +400,7 @@ gettimeofday(&start, NULL);
 	      we add it into our times */
 	   if (discardtimesbefore < ushorttmp)
 	     adjust_timeouts(time[ushorttmp], &to);
-	   /*	   gettimeofday(&end, NULL);
-	   if (!to.srtt) {
-	     to.srtt = TIMEVAL_SUBTRACT(end, time[ushorttmp]);
-	     to.rttvar = MAX(5000, MIN(to.srtt, 500000));
-	   } else {	   
-	     delta = TIMEVAL_SUBTRACT(end, time[ushorttmp]) - to.srtt;
-	     if (o.debugging > 1)
-	       printf("Dest unreach (delta %d) changing srtt %d rttvar %d timeout %d to ", delta, to.srtt, to.rttvar, to.timeout);
-	     to.srtt += delta >> 3;
-	     to.rttvar += (ABS(delta) - to.rttvar) >> 2;
-	     to.timeout = to.srtt + (to.rttvar << 2);
-	     if (o.debugging > 1)
-	       printf(" %d %d %d\n", to.srtt, to.rttvar, to.timeout);
-	       }*/
+
 	   if (!(hostbatch[hostnum].flags & HOST_DOWN) &&
 	       !(hostbatch[hostnum].flags & HOST_UP)) {	   
 	     hostbatch[hostnum].flags |= HOST_DOWN;

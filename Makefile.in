@@ -11,7 +11,7 @@ CC = @CC@
 CCOPT = 
 LIBPCAPDIR = @libpcapdir@
 INCLS = -I. -I$(LIBPCAPDIR)
-VERSION = 1.60-Beta2
+VERSION = 2.0-Beta1
 DEFS = @DEFS@ -DVERSION=\"$(VERSION)\" -DLIBDIR=\"$(libdir)\"
 #CFLAGS = @CFLAGS@ $(CCOPT) $(DEFS) $(INCLS)
 CFLAGS = -g -Wall $(DEFS) $(INCLS)
@@ -65,6 +65,7 @@ distro:
 	rm -f $(LIBPCAPDIR)/config.cache $(LIBPCAPDIR)/Makefile
 	cp -ra nmap.c targets.c nmap.h \
 	tcpip.c tcpip.h error.c error.h utils.c utils.h inet_aton.c \
+        global_structures.h  osscan.h osscan.c nmap-os-fingerprints \
 	configure.in config.h.in Makefile.in configure install-sh config.guess \
 	config.sub INSTALL docs  COPYING \
         $(LIBPCAPDIR) /usr/tmp/nmap-$(VERSION)

@@ -132,7 +132,7 @@ while((arg = getopt(argc,fakeargv,"Ab:D:de:Ffg:hIi:L:M:NnOo:P::p:qrRS:s:T:w:Vv")
   case 'P': 
     if (*optarg == '\0' || *optarg == 'I')
       o.pingtype = icmp;
-    else if (*optarg == '0' || *optarg == 'N' || *optarg == 'D')
+    else if (*optarg == '0' || *optarg == 'N' || *optarg == 'D')      
       o.pingtype = none;
     else if (*optarg == 'T') {
       o.pingtype = tcp;
@@ -360,16 +360,16 @@ if (currenths->flags & HOST_UP && !currenths->source_ip.s_addr && ( o.synscan ||
  if (o.device[0]) { strcpy(currenths->device, o.device); }
 
 /* Figure out what link-layer device (interface) to use (ie eth0, ppp0, etc) */
-if (!o.device[0] && currenths->flags & HOST_UP && (o.nullscan || o.xmasscan || o.udpscan || o.finscan || o.maimonscan ||  o.synscan) && !ipaddr2devname( currenths->device, &currenths->source_ip))
+if (!o.device[0] && currenths->flags & HOST_UP && (o.nullscan || o.xmasscan || o.udpscan || o.finscan || o.maimonscan ||  o.synscan || o.osscan) && !ipaddr2devname( currenths->device, &currenths->source_ip))
   fatal("Could not figure out what device to send the packet out on!  You might possibly want to try -S (but this is probably a bigger problem).  If you are trying to sp00f the source of a SYN/FIN scan with -S <fakeip>, then you must use -e eth0 (or other devicename) to tell us what interface to use.\n");
 /* Set up the decoy */
 o.decoys[o.decoyturn] = currenths->source_ip;
 
     /* Time for some actual scanning! */    
     if (currenths->flags & HOST_UP) {
-      if (o.connectscan) tcp_scan(currenths, ports, o.ptime);
-      
+
       if (o.synscan) pos_scan(currenths, ports, SYN_SCAN);
+      if (o.connectscan) pos_scan(currenths, ports, CONNECT_SCAN);      
       
       if (o.finscan) super_scan(currenths, ports, FIN_SCAN);
       if (o.xmasscan) super_scan(currenths, ports, XMAS_SCAN);
@@ -381,12 +381,6 @@ o.decoys[o.decoyturn] = currenths->source_ip;
 	if (ftp.sd <= 0) ftp_anon_connect(&ftp);
 	if (ftp.sd > 0) bounce_scan(currenths, ports, &ftp);
       }
-      /*      if (o.udpscan) {
-	if (!o.isr00t || o.lamerscan) 
-	  lamer_udp_scan(currenths, ports);
-
-	else udp_scan(currenths, ports);
-	}*/
       
       if (o.osscan) {
 	os_scan(currenths);
@@ -425,8 +419,6 @@ o.decoys[o.decoyturn] = currenths->source_ip;
 	} else {
 	  nmap_log("No OS matches for this host.  TCP fingerprint:\n%s\n\n", fp2ascii(currenths->FP));
 	}
-
-
       }
     }
     fflush(stdout);
@@ -975,7 +967,7 @@ char *seqclass2ascii(int class) {
   case SEQ_64K:
     return "64K rule";
   case SEQ_TD:
-    return "trivial time dependence";
+    return "trivial time dependency";
   case SEQ_i800:
     return "increments by 800";
   case SEQ_RI:
@@ -2266,17 +2258,16 @@ portlist pos_scan(struct hoststruct *target, unsigned short *portarray, stype sc
   int rawsd;
   char myname[513];
   int scanflags = 0;
-
   int victim;
   int senddelay = 0;
-
-  pcap_t *pd;
+  pcap_t *pd = NULL;
   struct bpf_program fcode;
   char err0r[PCAP_ERRBUF_SIZE];
   char filter[512];
   char *p;
   int tries = 0;
   int  res;
+  int connecterror = 0;
   unsigned int localnet, netmask;
   int starttime;
   struct hostent *myhostent = NULL;
@@ -2286,6 +2277,7 @@ portlist pos_scan(struct hoststruct *target, unsigned short *portarray, stype sc
   int portlookup[65536]; /* Indexes port number -> scan[] index */
   int decoy;
   struct timeval now;
+  struct connectsockinfo csi;
   unsigned long sequences[3]; /* for various reasons we use 3 seperate
 				 ones rather than simply incrementing from
 				 a base */
@@ -2300,10 +2292,15 @@ portlist pos_scan(struct hoststruct *target, unsigned short *portarray, stype sc
 
   bzero(&pil, sizeof(pil));
 
+  FD_ZERO(&csi.fds_read);
+  FD_ZERO(&csi.fds_write);
+  FD_ZERO(&csi.fds_except);
+
   if (scantype == SYN_SCAN)
     ss.max_width = 150;
   else ss.max_width = o.max_sockets;
   memset(portlookup, 255, 65536 * sizeof(int)); /* 0xffffffff better always be (int) -1 */
+  bzero(csi.socklookup, sizeof(csi.socklookup));
   scan = safe_malloc(o.numports * sizeof(struct portinfo));
   
   /* Initialize our portlist (scan) */
@@ -2319,9 +2316,7 @@ portlist pos_scan(struct hoststruct *target, unsigned short *portarray, stype sc
   }
 
   current = fresh = pil.testinglist = &scan[0]; /* fresh == unscanned ports, testinglist is a list of all ports that haven't been determined to be closed yet */
-
-
-    
+   
   /* Init our raw socket */
   if (scantype == SYN_SCAN) {  
     if ((rawsd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) < 0 )
@@ -2428,7 +2423,11 @@ portlist pos_scan(struct hoststruct *target, unsigned short *portarray, stype sc
 	      else {
 		/* close the appropriate sd for each try */
 		for(i=0; i <= current->trynum; i++) {
-		  if (current->sd[i] >= 0) {		  
+		  if (current->sd[i] >= 0) {
+		    csi.socklookup[current->sd[i]] = NULL;
+		    FD_CLR(current->sd[i], &csi.fds_read);
+		    FD_CLR(current->sd[i], &csi.fds_write);
+		    FD_CLR(current->sd[i], &csi.fds_except);
 		    close(current->sd[i]);
 		    current->sd[i] = -1;
 		    ss.numqueries_outstanding--;
@@ -2455,12 +2454,16 @@ portlist pos_scan(struct hoststruct *target, unsigned short *portarray, stype sc
 		if (ss.numqueries_outstanding >= ss.max_width) {		
 		  victim = -1;
 		  for(i=0; i < current->trynum; i++)
-		    if (current->sd[i] < 0) {
+		    if (current->sd[i] >= 0) {
 		      victim = i;
 		      break;
 		    }
 		  if (victim == -1) 
 		    fatal("Illegal situation in pos_scan -- please report to fyodor@dhp.com");
+		  csi.socklookup[current->sd[victim]] = NULL;
+		  FD_CLR(current->sd[victim], &csi.fds_read);
+		  FD_CLR(current->sd[victim], &csi.fds_write);
+		  FD_CLR(current->sd[victim], &csi.fds_except);
 		  close(current->sd[victim]);
 		  current->sd[victim] = -1;
 		} else {
@@ -2468,14 +2471,36 @@ portlist pos_scan(struct hoststruct *target, unsigned short *portarray, stype sc
 		}
 		res = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 		if (res == -1) pfatal("Socket troubles in pos_scan 143");
+		csi.socklookup[res] = current;
 		unblock_socket(res);
 		init_socket(res);
 		sock.sin_port = htons(current->portno);
-		current->sd[current->trynum] = res;
-		
+		current->sd[current->trynum] = res;		
 		res =  connect(res,(struct sockaddr *)&sock,sizeof(struct sockaddr));
 		if (res != -1) {
-		  posportupdate(target, current, current->trynum, scan, &ss, scantype, PORT_OPEN, &pil);
+		  posportupdate(target, current, current->trynum, scan, &ss, scantype, PORT_OPEN, &pil, &csi);
+		} else {
+		  switch(errno) {
+		  case EINPROGRESS: /* The one I always see */
+		  case EAGAIN:
+		    /* GOOD REASON FOR THIS????block_socket(sockets[current_socket]); */
+		    if (csi.maxsd < current->sd[current->trynum])
+		      csi.maxsd = current->sd[current->trynum];
+		    FD_SET( current->sd[current->trynum], &csi.fds_write);
+		    FD_SET( current->sd[current->trynum], &csi.fds_read);
+		    FD_SET( current->sd[current->trynum], &csi.fds_except);
+		    break;
+		  default:
+		    if (!connecterror) {	
+		      connecterror++;
+		      printf("Strange error from connect (%d):", errno);
+		      fflush(stdout);
+		      perror(""); /*falling through intentionally*/
+		    }
+		  case ECONNREFUSED:
+		    posportupdate(target, current, current->trynum, scan, &ss, scantype, PORT_CLOSED, &pil, &csi);
+		    break;
+		  }  		  
 		}
 	      }
 	      if (senddelay) usleep(senddelay);
@@ -2502,18 +2527,39 @@ portlist pos_scan(struct hoststruct *target, unsigned short *portarray, stype sc
 	      if (senddelay) usleep(senddelay);
 	    }
 	  } else { /* CONNECT SCAN */
-	    
 	    res = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-	    if (res == -1) pfatal("Socket troubles in pos_scan 143");
+	    if (res == -1) pfatal("Socket troubles in pos_scan 11234");
+	    csi.socklookup[res] = current;
 	    unblock_socket(res);
 	    init_socket(res);
 	    sock.sin_port = htons(current->portno);
-	    current->sd[current->trynum] = res;
-	    
+	    current->sd[current->trynum] = res;		
 	    res =  connect(res,(struct sockaddr *)&sock,sizeof(struct sockaddr));
 	    if (res != -1) {
-	      posportupdate(target, current, current->trynum, scan,&ss, scantype, PORT_OPEN, &pil);
-	    }
+	      posportupdate(target, current, current->trynum, scan, &ss, scantype, PORT_OPEN, &pil, &csi);
+	    } else {
+	      switch(errno) {
+	      case EINPROGRESS: /* The one I always see */
+	      case EAGAIN:
+		/* GOOD REASON FOR THIS????block_socket(sockets[current_socket]); */
+		if (csi.maxsd < current->sd[current->trynum])
+		  csi.maxsd = current->sd[current->trynum];
+		FD_SET( current->sd[current->trynum], &csi.fds_write);
+		FD_SET( current->sd[current->trynum], &csi.fds_read);
+		FD_SET( current->sd[current->trynum], &csi.fds_except);
+		break;
+	      default:
+		if (!connecterror) {	
+		  connecterror++;
+		  printf("Strange error from connect (%d):", errno);
+		  fflush(stdout);
+		  perror(""); /*falling through intentionally*/
+		}
+	      case ECONNREFUSED:
+		posportupdate(target, current, current->trynum, scan, &ss, scantype, PORT_CLOSED, &pil, &csi);
+		break;
+	      }  		  
+	    }	    
 	  }
 	  if (senddelay) usleep(senddelay);
 	}
@@ -2525,7 +2571,7 @@ portlist pos_scan(struct hoststruct *target, unsigned short *portarray, stype sc
       if (scantype == SYN_SCAN)
 	get_syn_results(target, scan, &ss, &pil, portlookup, pd, sequences);
       else {
-	/*	get_connect_results(target, scan, ss, openports);*/
+	get_connect_results(target, scan, &ss, &pil, portlookup, sequences, &csi);
       }
     }
 
@@ -2566,17 +2612,17 @@ portlist pos_scan(struct hoststruct *target, unsigned short *portarray, stype sc
   } while(pil.testinglist && tries < 20);
 
   if (tries == 20) {
-    error("WARNING: GAVE UP ON SYN SCAN AFTER 20 RETRIES");
+    error("WARNING: GAVE UP ON SCAN AFTER 20 RETRIES");
   }
 
   if (o.verbose)
-    printf("The SYN scan took %ld seconds to scan %d ports.\n", 
-	   (long) time(NULL) - starttime, o.numports);
+    printf("The %s scan took %ld seconds to scan %d ports.\n", (scantype == SYN_SCAN)? "SYN" : "TCP connect",  (long) time(NULL) - starttime, o.numports);
   
     free(scan);
     if (rawsd >= 0) 
       close(rawsd);
-    pcap_close(pd);
+    if (pd)
+      pcap_close(pd);
     return target->ports;
 }
 
@@ -2585,9 +2631,9 @@ portlist pos_scan(struct hoststruct *target, unsigned short *portarray, stype sc
    I USE CURRENT->STATE TO DETERMINE WHETHER THE PORT IS OPEN
    OR FIREWALLED */
 void posportupdate(struct hoststruct *target, struct portinfo *current, 
-		 int trynum, struct portinfo *scan,
-		 struct scanstats *ss ,stype scantype, int newstate,
-		 struct portinfolist *pil) {
+		   int trynum, struct portinfo *scan,
+		   struct scanstats *ss ,stype scantype, int newstate,
+		   struct portinfolist *pil, struct connectsockinfo *csi) {
 static int tryident = -1;
 static struct hoststruct *lasttarget = NULL;
 struct sockaddr_in mysock;
@@ -2597,7 +2643,7 @@ char owner[1024];
 if (tryident == -1 || target != lasttarget) 
   tryident = o.identscan;
 lasttarget = target;
-
+owner[0] = '\0';
 if (current->state != PORT_OPEN && current->state != PORT_CLOSED &&
     current->state != PORT_FIREWALLED && current->state != PORT_TESTING) {
   if (o.debugging) error("Whacked packet to port %hi passed to posportupdate with state %d\n", current->portno, current->state);
@@ -2605,13 +2651,8 @@ if (current->state != PORT_OPEN && current->state != PORT_CLOSED &&
 }
 
 /* Lets do the timing stuff */
-  if (o.debugging > 1) 
-    printf("Got packet (trynum %d, packetnum %d), srtt %d rttvar %d timeout %d ->", current->trynum, trynum, target->to.srtt, target->to.rttvar, target->to.timeout);
-if (trynum > -1) 
-  adjust_timeouts(current->sent[trynum], &(target->to));
-
- if (o.debugging > 1) 
-    printf(" srtt %d rttvar %d timeout %d\n", target->to.srtt, target->to.rttvar, target->to.timeout);
+ if (trynum > -1) 
+   adjust_timeouts(current->sent[trynum], &(target->to));
 
 
 /* If a non-zero trynum finds a port that hasn't been discovered, the
@@ -2647,6 +2688,12 @@ switch(current->state) {
    else {
      for(i=0; i <= current->trynum; i++)
        if (current->sd[i] > -1) {
+	 csi->socklookup[current->sd[i]] = NULL;
+	 FD_CLR(current->sd[i], &(csi->fds_read));
+	 FD_CLR(current->sd[i], &(csi->fds_write));
+	 FD_CLR(current->sd[i], &(csi->fds_except));
+	 if (current->sd[i] == csi->maxsd)
+	   csi->maxsd--;
 	 close(current->sd[i]);
 	 current->sd[i] = -1;
 	 ss->numqueries_outstanding--;
@@ -2671,7 +2718,7 @@ switch(current->state) {
 } 
  current->state = newstate;
  if (newstate == PORT_OPEN || newstate == PORT_FIREWALLED) {
-   if (o.verbose) printf("Adding TCP port %hi (state %d).\n", current->portno, current->state);
+   if (o.verbose) printf("Adding TCP port %hi (state %s).\n", current->portno, (current->state == PORT_OPEN)? "Open" : "Firewalled");
    if (newstate == PORT_OPEN && scantype == CONNECT_SCAN && tryident) {
      if (getsockname(current->sd[trynum], (SA *) &mysock,
 		     &sockaddr_in_len )) {
@@ -2716,6 +2763,118 @@ __inline__ void adjust_timeouts(struct timeval sent, struct timeout_info *to) {
     printf("delta %d ==> srtt: %d rttvar: %d to: %d\n", delta, to->srtt, to->rttvar, to->timeout);
   }
 }
+
+
+int get_connect_results(struct hoststruct *target, struct portinfo *scan, 
+			 struct scanstats *ss, struct portinfolist *pil, 
+			 int *portlookup, unsigned long *sequences, 
+			 struct connectsockinfo *csi) {
+fd_set fds_rtmp, fds_wtmp, fds_xtmp;
+int selectres;
+int selectedfound;
+struct timeval timeout;
+int i, sd;
+int res;
+int trynum;
+char buf[2048];
+struct portinfo *current = NULL;
+
+do {
+  fds_rtmp = csi->fds_read;
+  fds_wtmp = csi->fds_write;
+  fds_xtmp = csi->fds_except;
+  timeout.tv_sec = 0;
+  timeout.tv_usec = 20000;
+  selectedfound = 0;
+  selectres = select(csi->maxsd+1, &fds_rtmp, &fds_wtmp, &fds_xtmp, &timeout);
+  for(sd=0; selectedfound < selectres && sd <= csi->maxsd; sd++) {
+    current = csi->socklookup[sd];
+    if (!current) continue;
+    trynum = -1;
+    if  (FD_ISSET(sd, &fds_rtmp)  || FD_ISSET(sd, &fds_wtmp) || 
+	 FD_ISSET(sd, &fds_xtmp)) {
+      /*      current = csi->socklookup[i];*/
+      for(i=0; i < 3; i++)
+	if (current->sd[i] == sd) {	
+	  trynum = i;
+	  break;
+	}
+      /*      assert(current != NULL);*/
+      assert(trynum != -1);
+    } else continue;
+    if (o.debugging > 1 && current != NULL)
+      printf("portnumber %d selected for", current->portno);
+    if (FD_ISSET(sd, &fds_rtmp)) {
+      if (o.debugging > 1) printf(" READ");
+      selectedfound++;
+    }
+    if (FD_ISSET(sd, &fds_wtmp)) {
+      if (o.debugging > 1) printf(" WRITE");
+      selectedfound++;
+    }
+    if (FD_ISSET(sd, &fds_xtmp)) {
+      if (o.debugging > 1) printf(" EXCEPT");
+      selectedfound++;
+    }
+    if (o.debugging > 1 && current != NULL)
+      printf("\n");
+
+    if (FD_ISSET(sd, &fds_rtmp)) {
+      /* Well, it selected for read ... SO LETS READ IT! */
+      res = read(current->sd[trynum], buf, sizeof(buf));
+      if (res == -1) {
+	switch(errno) {
+	case ECONNREFUSED:
+	  /*	case EAGAIN:*/
+	  posportupdate(target, current, trynum, scan, ss, CONNECT_SCAN, PORT_CLOSED, pil, csi);
+	  break;
+	case EHOSTUNREACH:
+	  /* It could be the host is down, or it could be firewalled.  We
+	     will go on the safe side & assume port is closed ... on second
+	  thought, lets go firewalled! and see if it causes any trouble */
+	  posportupdate(target, current, trynum, scan, ss, CONNECT_SCAN, PORT_FIREWALLED, pil, csi);
+	  break;
+	case ENETDOWN:
+	case ENETUNREACH:
+	case ENETRESET:
+	case ECONNABORTED:
+	case ETIMEDOUT:
+	case EHOSTDOWN:
+	  sprintf(buf, "Strange read error from %s -- bailing scan", inet_ntoa(target->host));
+	  perror(buf);
+	  return -1;
+	  break;
+	default:
+	  sprintf(buf, "Strange read error from %s", inet_ntoa(target->host));
+	  perror(buf);
+	  break;
+	}
+      } else { 
+	posportupdate(target, current, trynum, scan, ss, CONNECT_SCAN, PORT_OPEN, pil, csi);
+      }
+    } else if (FD_ISSET(sd, &fds_wtmp)) {
+      /* Selected for writing, lets to the zero-byte-write test */
+      res = send(current->sd[trynum], buf, 0, 0);
+      if (res < 0 ) {
+	printf("Bad port %hi caught by 0-byte write: ", current->portno);
+	perror("");
+	posportupdate(target, current, trynum, scan, ss, CONNECT_SCAN, PORT_CLOSED, pil, csi);
+      }
+      else {
+	posportupdate(target, current, trynum, scan, ss, CONNECT_SCAN, PORT_OPEN, pil, csi);
+      }
+    } else {
+      printf("Hmmm ... port %hi selected for except-only ... assuming closed\n", current->portno);
+      posportupdate(target, current, trynum, scan, ss, CONNECT_SCAN, PORT_CLOSED, pil, csi);
+    }
+  }
+} while(ss->numqueries_outstanding > 0 && selectres > 0);
+
+ 
+
+return 0;
+}
+
 
 void get_syn_results(struct hoststruct *target, struct portinfo *scan,
 		     struct scanstats *ss, struct portinfolist *pil, 
@@ -2817,7 +2976,7 @@ unsigned short *data;
 	/* OK, now we manipulate the port lists and adjust the time */
 	if (current) {
 	  posportupdate(target, current, trynum, scan, ss, SYN_SCAN, newstate,
-			pil);
+			pil, NULL);
 	  current = NULL;
 	  trynum = -1;
 	  newstate = PORT_UNKNOWN;
