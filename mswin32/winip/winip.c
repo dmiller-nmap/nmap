@@ -36,9 +36,13 @@ If used outside nmap in a GPL'ed app, just copy them from wintcpip.c.
 
 */
 
+#include "nmap.h"
 #include "..\tcpip.h"
 #include "winip.h"
-#include <delayimp.h>
+
+#ifdef _MSC_VER
+# include <delayimp.h>
+#endif
 
 #undef socket
 #undef sendto
@@ -46,13 +50,16 @@ If used outside nmap in a GPL'ed app, just copy them from wintcpip.c.
 
 #define	IP_HDRINCL		2 /* header is included with data */
 
+#ifdef _MSC_VER
 #define DLI_ERROR VcppException(ERROR_SEVERITY_ERROR, ERROR_MOD_NOT_FOUND)
+#endif
 
 extern struct ops o;
 
 int pcap_avail = 0;
 int rawsock_avail = 0;
 int winbug = 0;
+extern int iphlp_avail, net_avail;
 
 /*   internal functions   */
 static void winip_cleanup(void);
@@ -61,8 +68,10 @@ static void winip_test(int needraw);
 static void winip_list_interfaces();
 
 /*   delay-load hooks only for troubleshooting   */
+#ifdef _MSC_VER
 static int dli_done = 0;
 static FARPROC WINAPI winip_dli_fail_hook(unsigned code, PDelayLoadInfo info);
+#endif
 
 //	The tables
 
@@ -98,6 +107,24 @@ struct winops wo;
 
 //	Free this on cleanup
 static IPNODE *ipblock;
+
+//	Fix for MinGW
+//	MinGW support
+#ifndef _MSC_VER
+typedef struct _OSVERSIONINFOEXA {
+    DWORD dwOSVersionInfoSize;
+    DWORD dwMajorVersion;
+    DWORD dwMinorVersion;
+    DWORD dwBuildNumber;
+    DWORD dwPlatformId;
+    CHAR   szCSDVersion[ 128 ];
+    WORD   wServicePackMajor;
+    WORD   wServicePackMinor;
+    WORD   wSuiteMask;
+    BYTE  wProductType;
+    BYTE  wReserved;
+} OSVERSIONINFOEXA, *POSVERSIONINFOEXA, *LPOSVERSIONINFOEXA, OSVERSIONINFOEX, *POSVERSIONINFOEX;
+#endif // _MSC_VER
 
 void winip_barf(const char *msg)
 {
@@ -138,7 +165,13 @@ void winip_postopt_init()
 		return;
 	inited = 2;
 
+#ifdef _MSC_VER
+#if _MSC_VER >= 1300
+	__pfnDliFailureHook2 = winip_dli_fail_hook;
+#else
 	__pfnDliFailureHook = winip_dli_fail_hook;
+#endif
+#endif
 
 	werd = MAKEWORD( 2, 2 );
 	if( (WSAStartup(werd, &data)) !=0 )
@@ -156,7 +189,7 @@ void winip_postopt_init()
 		ver.wServicePackMinor = 0;
 	}
 
-	//	Test for win_noiphlpapi
+/*	//	Test for win_noiphlpapi
 	if(wo.noiphlpapi)
 	{
 		if(wo.trace) printf("***WinIP***  testing absence of iphlpapi\n");
@@ -164,39 +197,44 @@ void winip_postopt_init()
 		inited = 3;
 		if(wo.listinterfaces) winip_barf(0);
 		return;
-	}
+	}*/
 
 	//	Read the size
 	if(wo.trace) printf("***WinIP***  trying to initialize tables\n");
-	__try { nRes = GetIfTable(pTable, &cb, TRUE); }
-	__except(GetExceptionCode() == DLI_ERROR)
+	nRes = GetIfTableSafe(pTable, &cb, TRUE);
+
+	if(!net_avail)
 	{
-		//	we have no iphlpapi.dll
+		//	we have neither iphlpapi.dll nor inetmib1.dll
 		o.isr00t = 0;
 		inited = 3;
-		if(wo.trace) printf("***WinIP***  no iphlpapi\n");
+		if(wo.trace) printf("***WinIP***  neither iphlpapi nor inetmib1 is available\n");
 		if(wo.listinterfaces) winip_barf(0);
 		return;
 	}
+
+	if(!iphlp_avail && wo.trace)
+		printf("***WinIP***  no iphlpapi; using inetmib1 instead\n");
+
 	if(nRes != NO_ERROR && nRes != ERROR_INSUFFICIENT_BUFFER
 		&& nRes != ERROR_BUFFER_OVERFLOW)
 		fatal("failed to get size of interface table\n");
 
 	//	Read the data
 	pTable = (PMIB_IFTABLE)_alloca(cb + sizeof(MIB_IFROW));
-	nRes = GetIfTable(pTable, &cb, TRUE);
+	nRes = GetIfTableSafe(pTable, &cb, TRUE);
 	if(nRes != NO_ERROR)
 		fatal("failed to read interface table -- try again\n");
 	numifs = pTable->dwNumEntries;
 
 	cb = 0;
-	nRes = GetIpAddrTable(pIp, &cb, FALSE);
+	nRes = GetIpAddrTableSafe(pIp, &cb, FALSE);
 	if(nRes != NO_ERROR && nRes != ERROR_INSUFFICIENT_BUFFER)
 		fatal("failed to get size of IP address table\n");
 
 	//	Read the data
 	pIp = (PMIB_IPADDRTABLE)_alloca(cb + sizeof(MIB_IPADDRROW));
-	nRes = GetIpAddrTable(pIp, &cb, FALSE);
+	nRes = GetIpAddrTableSafe(pIp, &cb, FALSE);
 	if(nRes != NO_ERROR)
 		fatal("failed to read IP address table\n");
 
@@ -211,7 +249,6 @@ void winip_postopt_init()
 	//	Fill in the table
 	for(i = 0; i < numifs; i++)
 	{
-		struct in_addr addr;
 		int ift;
 		int j;
 
@@ -251,7 +288,9 @@ void winip_postopt_init()
 	if(wo.trace) printf("***WinIP***  tables seem to be filled in correctly\n");
 
 	//	Try to initialize winpcap
+#ifdef _MSC_VER
 	__try
+#endif
 	{
 		ULONG len = sizeof(pcaplist);
 
@@ -259,21 +298,38 @@ void winip_postopt_init()
 		{
 			if(o.debugging > 1 && wo.trace)
 				printf("***WinIP***  winpcap support disabled\n");
-			__leave;
 		}
-
-		pcap_avail = 1;
-		if(wo.trace) printf("***WinIP***  trying to initialize winpcap 2.1\n");
-		PacketGetAdapterNames(pcaplist, &len);
-		if(o.debugging > 1 || wo.trace)
-			printf("***WinIP***  winpcap is present\n");
+		else
+		{
+			pcap_avail = 1;
+			if(wo.trace) printf("***WinIP***  trying to initialize winpcap 2.1\n");
+			PacketGetAdapterNames(pcaplist, &len);
+			if(o.debugging > 1 || wo.trace)
+				printf("***WinIP***  winpcap is present\n");
+		}
 	}
+#ifdef _MSC_VER
 	__except(GetExceptionCode() == DLI_ERROR)
 	{
 		pcap_avail = 0;
 		if(o.debugging > 1 || wo.trace)
 			printf("***WinIP***  winpcap is not present\n");
 	}
+#endif
+
+	//	Check for a wpcap.dll (so we don't crash on old winpcap
+	//	But only with VC++.NET, since old versions do not
+	//	provide this functionality :(
+#if defined(_MSC_VER) && _MSC_VER >= 1300
+	if(pcap_avail)
+	{
+		if(FAILED(__HrLoadAllImportsForDll("wpcap.dll")))
+		{
+			if(wo.trace) printf("***WinIP*** your winpcap is too old\n");
+			pcap_avail = 0;
+		}
+	}
+#endif
 
 	//	Do we have rawsock?
 	if(wo.forcerawsock ||
@@ -363,7 +419,9 @@ void winip_postopt_init()
 		&& ver.dwMajorVersion < 5) wo.nt4route = 1;
 
 	//	Mark load as complete so that dli errors are handled
+#ifdef _MSC_VER
 	dli_done = 1;
+#endif
 }
 
 static void winip_test(int needraw)
@@ -612,7 +670,7 @@ char *routethrough(struct in_addr *dest, struct in_addr *source)
 	{
 		static int warned = 0;
 		if(!warned)
-			printf("routethrough: failing due to lack of iphlpapi.dll\n");
+			printf("routethrough: failing due to lack of any raw support\n");
 		warned = 1;
 	}
 
@@ -723,6 +781,7 @@ int Sendto(char *functionname, int sd, const unsigned char *packet, int len,
 
 int win32_socket(int af, int type, int proto)
 {
+	SOCKET s;
 	winip_test(0);
 
 	if(type == SOCK_RAW && proto == IPPROTO_RAW && !rawsock_avail)
@@ -735,7 +794,12 @@ int win32_socket(int af, int type, int proto)
 	if(o.debugging > 1 && type == SOCK_RAW && proto == IPPROTO_RAW)
 		printf("Opening a real raw socket\n");
 
-	return socket(af, type, proto);
+	s = socket(af, type, proto);
+
+	//	Do this here to save a little time
+	sethdrinclude(s);
+
+	return s;
 }
 
 void win32_pcap_close(pcap_t *pd)
@@ -827,6 +891,7 @@ void set_pcap_filter(struct hoststruct *target,
 		fatal("Failed to set the pcap filter: %s\n", pcap_geterr(pd));
 }
 
+#ifdef _MSC_VER
 static FARPROC WINAPI winip_dli_fail_hook(unsigned code, PDelayLoadInfo info)
 {
 	if(wo.trace)
@@ -862,7 +927,8 @@ static FARPROC WINAPI winip_dli_fail_hook(unsigned code, PDelayLoadInfo info)
 			printf(" failed to load dll: %s\n", info->szDll);
 			if(!stricmp(info->szDll, "wpcap.dll"))
 				printf(" this is most likely because you have"
-				" winpcap 2.0 (2.1 beta is required)\n");
+				" winpcap 2.0 (2.1 or later is required)\n"
+				"Get it from http://netgroup-serv.polito.it/winpcap\n");
 			break;
 
 		case dliFailGetProc:
@@ -881,3 +947,4 @@ static FARPROC WINAPI winip_dli_fail_hook(unsigned code, PDelayLoadInfo info)
 
 	return 0;
 }
+#endif // _MSC_VER

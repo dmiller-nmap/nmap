@@ -40,9 +40,6 @@
  * @(#) $Header$ (LBL)
  */
 
-/* Ensure that this evil file is not accidently called from UNIX (which causes major trouble because some of the DLT_* definitions are different */
-
-
 #ifndef BPF_MAJOR_VERSION
 
 /* BSD style release date */
@@ -50,12 +47,7 @@
 
 #ifdef WIN32 
 #include <gnuc.h>
-#include <winsock.h>
-#else
-/* Ensure that this evil file is not accidently called from UNIX
-   (which causes major trouble because some of the DLT_* definitions
-   are different */
-#error "Detected attempt to include mswin32/NET/Bpf.h in UNIX compilation!"
+#include <winsock2.h>
 #endif
 
 typedef	int bpf_int32;
@@ -273,6 +265,10 @@ struct bpf_insn {
 #define BPF_STMT(code, k) { (u_short)(code), 0, 0, k }
 #define BPF_JUMP(code, k, jt, jf) { (u_short)(code), jt, jf, k }
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifdef KERNEL
 extern u_int bpf_filter();
 extern void bpfattach();
@@ -282,6 +278,10 @@ extern void bpf_mtap();
 #if __STDC__
 extern u_int bpf_filter(struct bpf_insn *, u_char *, u_int, u_int);
 #endif
+#endif
+
+#ifdef __cplusplus
+}
 #endif
 
 /*

@@ -3,6 +3,9 @@
 
 #define _INC_ERRNO  /* supress errno.h */
 
+//	Supress winsock.h
+#define _WINSOCKAPI_
+
 #include "nbase.h"
 #include <windows.h>
 #include <string.h>

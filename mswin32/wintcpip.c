@@ -9,6 +9,9 @@
 #include "../tcpip.h"
 #include "winip\winip.h"
 
+//	Note: we cheat with the timeouts here
+#include "pcap-int.h"
+
 extern struct ops o;
 
 void nmapwin_init();
@@ -22,9 +25,8 @@ int if2nameindex(int ifi);
 //	All of these are modified from, but
 //	based on, ryan@eeye.com's wintcpip.c
 
-int send_ip_raw( int sd, struct in_addr *source, 
-		  struct in_addr *victim, unsigned char proto,
-		  char *data, unsigned short datalen) 
+int send_ip_raw( int sd, struct in_addr *source, struct in_addr *victim, 
+	u8 proto, u8 *data, u16 datalen)
 {
 	char *packet = safe_malloc(sizeof(struct ip) + datalen);
 	struct ip *ip = (struct ip *) packet;
@@ -40,10 +42,9 @@ int send_ip_raw( int sd, struct in_addr *source,
 		return -1;
 	}
 	if (!myttl) myttl = (get_random_uint() % 23) + 37;
-	/* It was a tough decision whether to do this here for every packet
-	or let the calling function deal with it.  In the end I grudgingly decided
-	to do it here and potentially waste a couple microseconds... */
-	sethdrinclude(sd); 
+
+	//	No sethdrinclude since it is implied by the WinIP library
+
 	/* if they didn't give a source address, fill in our first address */
 	if (!source) 
 	{
@@ -93,12 +94,10 @@ int send_ip_raw( int sd, struct in_addr *source,
 	return res;
 }
 
-int send_tcp_raw( int sd, struct in_addr *source, 
-		  struct in_addr *victim, unsigned short sport, 
-		  unsigned short dport, unsigned int seq,
-		  unsigned int ack, unsigned char flags,
-		  unsigned short window, char *options, int optlen,
-		  char *data, unsigned short datalen) 
+int send_tcp_raw( int sd, struct in_addr *source, struct in_addr *victim, 
+		  u16 sport, u16 dport, u32 seq, u32 ack, u8 flags,
+		  u16 window, u8 *options, int optlen, char *data, 
+		  u16 datalen)
 {
 
 	struct pseudo_header 
@@ -139,10 +138,7 @@ int send_tcp_raw( int sd, struct in_addr *source,
 
 	if (!myttl) myttl = (get_random_uint() % 23) + 37;
 
-	/* It was a tough decision whether to do this here for every packet
-	or let the calling function deal with it.  In the end I grudgingly decided
-	to do it here and potentially waste a couple microseconds... */
-	sethdrinclude(sd); 
+	//	No sethdrinclude since it is implied by the WinIP library
 
 	/* if they didn't give a source address, fill in our first address */
 	if (!source) 
@@ -230,9 +226,8 @@ int send_tcp_raw( int sd, struct in_addr *source,
 	return res;
 }
 
-int send_udp_raw( int sd, struct in_addr *source, 
-		  struct in_addr *victim, unsigned short sport, 
-		  unsigned short dport, char *data, unsigned short datalen) 
+int send_udp_raw( int sd, struct in_addr *source, struct in_addr *victim, 
+		  u16 sport, u16 dport, u8 *data, u16 datalen) 
 {
 
 	char *packet = safe_malloc(sizeof(struct ip) + sizeof(udphdr_bsd) + datalen);
@@ -260,10 +255,9 @@ int send_udp_raw( int sd, struct in_addr *source,
 		return -1;
 	}
 	if (!myttl) myttl = (get_random_uint() % 23) + 37;
-	/* It was a tough decision whether to do this here for every packet
-	or let the calling function deal with it.  In the end I grudgingly decided
-	to do it here and potentially waste a couple microseconds... */
-	sethdrinclude(sd); 
+
+	//	No sethdrinclude since it is implied by the WinIP library
+
 	/* if they didn't give a source address, fill in our first address */
 	if (!source) 
 	{
@@ -327,7 +321,7 @@ int send_udp_raw( int sd, struct in_addr *source,
 /* Much of this is swiped from my send_tcp_raw function above, which 
    doesn't support fragmentation */
 int send_small_fragz(int sd, struct in_addr *source, struct in_addr *victim,
-		     unsigned long seq, int sport, int dport, int flags)
+		     u32 seq, u16 sport, u16 dport, int flags)
 {
 	struct pseudo_header 
 	{ 
@@ -373,7 +367,8 @@ int send_small_fragz(int sd, struct in_addr *source, struct in_addr *victim,
 #endif
 	}
 	
-	sethdrinclude(sd);
+	//	No sethdrinclude since it is implied by the WinIP library
+
 	/*Why do we have to fill out this damn thing? This is a raw packet, after all */
 	sock.sin_family = AF_INET;
 	sock.sin_port = htons(dport);
@@ -581,7 +576,6 @@ int readudppacket(unsigned char *packet, int readdata)
 	return 0;
 }
 
-//	BUGBUG:  Make it use GetTickCount() to improve speed slightly
 char *readip_pcap_real(pcap_t *pd, unsigned int *len, long to_usec) 
 {
 	int offset = -1;
@@ -589,7 +583,8 @@ char *readip_pcap_real(pcap_t *pd, unsigned int *len, long to_usec)
 	char *p;
 	int datalink;
 	int timedout = 0;
-	struct timeval tv_start, tv_end;
+	DWORD begin = GetTickCount();
+	long to_left;
 
 	if (!pd) fatal("NULL packet device passed to readip_pcap_real");
 
@@ -625,29 +620,26 @@ char *readip_pcap_real(pcap_t *pd, unsigned int *len, long to_usec)
 			fatal("Unknown datalink type (%d)", datalink);
 	}
 
-	if (to_usec > 0) 
-	{
-		gettimeofday(&tv_start, NULL);
-	}
+	//	Switch to msec
+	to_usec = (to_usec + 999) / 1000;
+	to_left = to_usec;
+
+	begin = GetTickCount();
+
 	do 
 	{
+		//	Set the timeout (BUGBUG: this is cheating)
+		PacketSetReadTimeout(pd->adapter, to_left);
+
+		//	Do the read
 		p = (char *) pcap_next(pd, &head);
 		if (p) p += offset;
 		if (!p || (*p & 0x40) != 0x40) 
 		{
 			/* Should we timeout? */
-			if (to_usec == 0) 
-			{
-				timedout = 1;
-			} 
-			else if (to_usec > 0) 
-			{
-				gettimeofday(&tv_end, NULL);
-				if (TIMEVAL_SUBTRACT(tv_end, tv_start) >= to_usec) 
-				{
-					timedout = 1;     
-				}
-			}
+			to_left = to_usec - (GetTickCount() - begin);
+			if (to_usec == 0) timedout = 1;
+			else if ( to_left <= 0 ) timedout = 1;
 		}
 	} while(!timedout && (!p || (*p & 0x40) != 0x40)); /* Go until we get IPv4 packet */
 	if (timedout) 
@@ -661,11 +653,9 @@ char *readip_pcap_real(pcap_t *pd, unsigned int *len, long to_usec)
 
 
 //	The decoy helpers
-int send_tcp_raw_decoys( int sd, struct in_addr *victim, unsigned short sport, 
-			 unsigned short dport, unsigned int seq,
-			 unsigned int ack, unsigned char flags,
-			 unsigned short window, char *options, int optlen,
-			 char *data, unsigned short datalen) 
+int send_tcp_raw_decoys( int sd, struct in_addr *victim, u16 sport, 
+			 u16 dport, u32 seq, u32 ack, u8 flags, u16 window, 
+                         u8 *options, int optlen, u8 *data, u16 datalen) 
 {
 	int decoy;
 	for(decoy = 0; decoy < o.numdecoys; decoy++) 
@@ -675,8 +665,8 @@ int send_tcp_raw_decoys( int sd, struct in_addr *victim, unsigned short sport,
 	return 0;
 }
 
-int send_udp_raw_decoys( int sd, struct in_addr *victim, unsigned short sport, 
-		  unsigned short dport, char *data, unsigned short datalen) 
+int send_udp_raw_decoys( int sd, struct in_addr *victim, u16 sport, 
+			 u16 dport, u8 *data, u16 datalen) 
 {
 	int decoy;
   
@@ -687,8 +677,9 @@ int send_udp_raw_decoys( int sd, struct in_addr *victim, unsigned short sport,
 	return 0;
 }
 
-int send_small_fragz_decoys(int sd, struct in_addr *victim, unsigned long seq, 
-			    int sport, int dport, int flags) {
+int send_small_fragz_decoys(int sd, struct in_addr *victim, u32 seq, 
+			    u16 sport, u16 dport, int flags)
+{
 	int decoy;
 
 	for(decoy = 0; decoy < o.numdecoys; decoy++)
@@ -698,8 +689,8 @@ int send_small_fragz_decoys(int sd, struct in_addr *victim, unsigned long seq,
 	return 0;
 }
 
-int send_ip_raw_decoys( int sd, struct in_addr *victim, unsigned char proto,
-			char *data, unsigned short datalen) 
+int send_ip_raw_decoys( int sd, struct in_addr *victim, u8 proto,
+			u8 *data, u16 datalen) 
 {
 	int decoy;
 	for(decoy = 0; decoy < o.numdecoys; decoy++)
@@ -741,6 +732,10 @@ pcap_t *my_real_pcap_open_live(char *device, int snaplen, int promisc, int to_ms
           "*BSD:  If you are getting device not configured, you need to recompile your kernel with Berkeley Packet Filter support.  If you are getting No such file or directory, try creating the device (eg cd /dev; MAKEDEV <device>; or use mknod).\n"
           "SOLARIS:  If you are trying to scan localhost and getting '/dev/lo0: No such file or directory', complain to Sun.  I don't think Solaris can support advanced localhost scans.  You can probably use \"-P0 -sT localhost\" though.\n\n", err0r);
 	}
+
+	//	This should help
+	pcap_setmintocopy(pt, 1);
+
 	return pt;
 }
 

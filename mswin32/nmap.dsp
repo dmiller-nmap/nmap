@@ -50,7 +50,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib iphlpapi.lib wpcap.lib packet.lib delayimp.lib /nologo /subsystem:console /machine:I386 /force /libpath:"winip" /libpath:"lib" /libpath:"..\nbase" /delayload:packet.dll /delay:nobind /opt:nowin98 /delayload:iphlpapi.dll /delayload:wpcap.dll
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib iphlpapi.lib delayimp.lib wpcap.lib packet.lib /nologo /subsystem:console /machine:I386 /libpath:"winip" /libpath:"lib" /libpath:"..\nbase" /delayload:packet.dll /delay:nobind /opt:nowin98 /delayload:iphlpapi.dll /delayload:wpcap.dll
 # SUBTRACT LINK32 /pdb:none
 
 !ELSEIF  "$(CFG)" == "nmap - Win32 Debug"
@@ -75,7 +75,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib iphlpapi.lib wpcap.lib packet.lib delayimp.lib /nologo /subsystem:console /profile /debug /machine:I386 /force /libpath:"winip" /libpath:"lib" /libpath:"..\nbase" /delayload:packet.dll /delay:nobind /delayload:wpcap.dll
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib iphlpapi.lib delayimp.lib wpcap.lib packet.lib /nologo /subsystem:console /profile /debug /machine:I386 /libpath:"winip" /libpath:"lib" /libpath:"..\nbase" /delayload:packet.dll /delay:nobind /delayload:wpcap.dll /delayload:iphlpapi.dll
 
 !ENDIF 
 
@@ -91,6 +91,10 @@ LINK32=link.exe
 # PROP Default_Filter ""
 # Begin Source File
 
+SOURCE=.\winip\MibAccess.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\nmap.rc
 # End Source File
 # Begin Source File
@@ -100,6 +104,15 @@ SOURCE=.\winip\pcapsend.c
 # Begin Source File
 
 SOURCE=.\winip\rawrecv.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\winip\snmp95.cpp
+# ADD CPP /GX-
+# End Source File
+# Begin Source File
+
+SOURCE=.\winip\snmpapi.cpp
 # End Source File
 # Begin Source File
 
@@ -220,6 +233,10 @@ SOURCE=.\NET\Bpf.h
 # Begin Source File
 
 SOURCE=.\winip\iphlpapi.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\winip\MibAccess.h
 # End Source File
 # Begin Source File
 
@@ -358,11 +375,12 @@ SOURCE="..\nmap-os-fingerprints"
 
 # PROP Ignore_Default_Tool 1
 # Begin Custom Build - Copying $(InputName) to output directory...
+TargetDir=.\Release
 InputPath="..\nmap-os-fingerprints"
 InputName=nmap-os-fingerprints
 
-"Release\$(InputName)" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	copy /y $(InputPath) Release\$(InputName) > nul
+"$(TargetDir)\$(InputName)" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	copy /y "$(InputPath)" "$(TargetDir)\$(InputName)" > nul
 
 # End Custom Build
 
@@ -370,11 +388,12 @@ InputName=nmap-os-fingerprints
 
 # PROP Ignore_Default_Tool 1
 # Begin Custom Build - Copying $(InputName) to output directory...
+TargetDir=.\Debug
 InputPath="..\nmap-os-fingerprints"
 InputName=nmap-os-fingerprints
 
-"Debug\$(InputName)" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	copy /y $(InputPath) Debug\$(InputName) > nul
+"$(TargetDir)\$(InputName)" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	copy /y "$(InputPath)" "$(TargetDir)\$(InputName)" > nul
 
 # End Custom Build
 
@@ -389,11 +408,12 @@ SOURCE="..\nmap-protocols"
 
 # PROP Ignore_Default_Tool 1
 # Begin Custom Build - Copying $(InputName) to output directory...
+TargetDir=.\Release
 InputPath="..\nmap-protocols"
 InputName=nmap-protocols
 
-"Release\$(InputName)" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	copy /y $(InputPath) Release\$(InputName) > nul
+"$(TargetDir)\$(InputName)" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	copy /y "$(InputPath)" "$(TargetDir)\$(InputName)" > nul
 
 # End Custom Build
 
@@ -401,11 +421,12 @@ InputName=nmap-protocols
 
 # PROP Ignore_Default_Tool 1
 # Begin Custom Build - Copying $(InputName) to output directory...
+TargetDir=.\Debug
 InputPath="..\nmap-protocols"
 InputName=nmap-protocols
 
-"Debug\$(InputName)" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	copy /y $(InputPath) Debug\$(InputName) > nul
+"$(TargetDir)\$(InputName)" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	copy /y "$(InputPath)" "$(TargetDir)\$(InputName)" > nul
 
 # End Custom Build
 
@@ -420,11 +441,12 @@ SOURCE="..\nmap-rpc"
 
 # PROP Ignore_Default_Tool 1
 # Begin Custom Build - Copying $(InputName) to output directory...
+TargetDir=.\Release
 InputPath="..\nmap-rpc"
 InputName=nmap-rpc
 
-"Release\$(InputName)" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	copy /y $(InputPath) Release\$(InputName) > nul
+"$(TargetDir)\$(InputName)" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	copy /y "$(InputPath)" "$(TargetDir)\$(InputName)" > nul
 
 # End Custom Build
 
@@ -432,11 +454,12 @@ InputName=nmap-rpc
 
 # PROP Ignore_Default_Tool 1
 # Begin Custom Build - Copying $(InputName) to output directory...
+TargetDir=.\Debug
 InputPath="..\nmap-rpc"
 InputName=nmap-rpc
 
-"Debug\$(InputName)" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	copy /y $(InputPath) Debug\$(InputName) > nul
+"$(TargetDir)\$(InputName)" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	copy /y "$(InputPath)" "$(TargetDir)\$(InputName)" > nul
 
 # End Custom Build
 
@@ -451,11 +474,12 @@ SOURCE="..\nmap-services"
 
 # PROP Ignore_Default_Tool 1
 # Begin Custom Build - Copying $(InputName) to output directory...
+TargetDir=.\Release
 InputPath="..\nmap-services"
 InputName=nmap-services
 
-"Release\$(InputName)" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	copy /y $(InputPath) Release\$(InputName) > nul
+"$(TargetDir)\$(InputName)" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	copy /y "$(InputPath)" "$(TargetDir)\$(InputName)" > nul
 
 # End Custom Build
 
@@ -463,11 +487,12 @@ InputName=nmap-services
 
 # PROP Ignore_Default_Tool 1
 # Begin Custom Build - Copying $(InputName) to output directory...
+TargetDir=.\Debug
 InputPath="..\nmap-services"
 InputName=nmap-services
 
-"Debug\$(InputName)" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	copy /y $(InputPath) Debug\$(InputName) > nul
+"$(TargetDir)\$(InputName)" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	copy /y "$(InputPath)" "$(TargetDir)\$(InputName)" > nul
 
 # End Custom Build
 

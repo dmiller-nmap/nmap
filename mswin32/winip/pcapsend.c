@@ -319,6 +319,10 @@ static DWORD WINAPI SendThreadProc(LPVOID unused0)
   4. wait for 250ms or hEvWakeup
   */
 
+#ifdef _MSC_VER
+__try {
+#endif
+
 	while(!killthread)
 	{
 		int nRes;
@@ -444,6 +448,11 @@ static DWORD WINAPI SendThreadProc(LPVOID unused0)
 		//	yah yah I know...  but i'm too lazy to fix this
 		WaitForSingleObject(hEvWakeup, POLLINTERVAL);
 	}
+
+#ifdef _MSC_VER
+} __except(printf("\n\n***** ERROR IN SEND THREAD *****\n\n"),
+		   EXCEPTION_CONTINUE_SEARCH) {}
+#endif
 
 	return 0;
 }
@@ -803,7 +812,7 @@ void pcapsend_init()
 	pcapsend_inited = 1;
 
 	if(o.debugging > 1)
-		printf("Initializing winpcap send support\n");
+		printf("Initializing winpcap send support...");
 
 	for(i = 0; i < SENDQUEUE_LEN; i++)
 	{
@@ -826,7 +835,7 @@ void pcapsend_init()
 	//	allocate the ARP cache
 	arpalloclen = 0;
 	pArpTable = (PMIB_IPNETTABLE)&i;
-	nRes = GetIpNetTable(pArpTable, &arpalloclen, FALSE);
+	nRes = GetIpNetTableSafe(pArpTable, &arpalloclen, FALSE);
 	if(arpalloclen == 0)
 	{
 		if(o.debugging)
@@ -842,7 +851,7 @@ void pcapsend_init()
 		pcapsend_inited = 0;
 		fatal("out of memory\n");
 	}
-	nRes = GetIpNetTable(pArpTable, &arpalloclen, TRUE);
+	nRes = GetIpNetTableSafe(pArpTable, &arpalloclen, TRUE);
 
 	if(nRes != NO_ERROR)
 	{
@@ -862,6 +871,9 @@ void pcapsend_init()
 	atexit(pcapsend_cleanup);
 
 	pcapsend_inited = 1;
+
+	if(o.debugging > 1)
+		printf(" Done\n");
 }
 
 //	the name cache
@@ -938,7 +950,6 @@ tryagain:
 	{
 		DWORD source = 0;
 		DWORD nRes;
-		int ni;
 
 		if(ifi != -1)
 		{
@@ -971,12 +982,12 @@ tryagain:
 		int bestmask, bestmetric;
 		int nRes, i;
 
-		nRes = GetIpForwardTable(pTable, &cb, FALSE);
+		nRes = GetIpForwardTableSafe(pTable, &cb, FALSE);
 		if(cb == 0) return (nRes ? nRes : -1);
 
 		cb += sizeof(MIB_IPFORWARDROW);
 		pTable = (PMIB_IPFORWARDTABLE)_alloca(cb);
-		nRes = GetIpForwardTable(pTable, &cb, FALSE);
+		nRes = GetIpForwardTableSafe(pTable, &cb, FALSE);
 		if(nRes != NO_ERROR) return nRes;
 
 		if(pTable->dwNumEntries < 1) return -1;
@@ -989,9 +1000,13 @@ tryagain:
 
 			if(winif != -1 && pTable->table[i].dwForwardIfIndex != winif) continue;
 
-			if(bestmatch == -1 || (pTable->table[i].dwForwardMask > bestmatch)
-				|| (pTable->table[i].dwForwardMask == bestmatch
-				&& pTable->table[i].dwForwardMetric1 < bestmetric))
+/*			if(bestmatch == -1 || (pTable->table[i].dwForwardMask > bestmask)
+				|| (pTable->table[i].dwForwardMask == bestmask
+				&& pTable->table[i].dwForwardMetric1 < bestmetric))*/
+			if(bestmatch == -1 || (pTable->table[i].dwForwardMetric1 > bestmetric)
+				|| (pTable->table[i].dwForwardMetric1 == bestmetric
+				&& pTable->table[i].dwForwardMask > bestmask))
+
 			{
 				bestmatch = i;
 				bestmask = pTable->table[i].dwForwardMask;
@@ -1051,16 +1066,14 @@ pass1:
 		arprefresh = 0;
 
 readarp:
-		nRes = GetIpNetTable(pArpTable, &len, TRUE);
+		nRes = GetIpNetTableSafe(pArpTable, &len, TRUE);
 
 		if(nRes == ERROR_MORE_DATA)
 			len += 2 * sizeof(MIB_IPNETROW);	//	give the benefit of the doubt
 
 		if(len == arpalloclen && nRes != NO_ERROR)
 		{
-			//	it dies ?!?
-			if(o.debugging)
-				printf("ARP failure (%d) in sendthread -- trying kludge3 :(\n", nRes);
+			//	Windows bug -- just assume the table is empty
 			pArpTable->dwNumEntries = 0;
 			LeaveCriticalSection(&csArpTable);
 			return -1;
@@ -1091,7 +1104,7 @@ pass0:
 			if(pArpTable->table[i].dwIndex != winif)
 			{
 				fatal("lookupip: found ip on wrong interface\n"
-					"e-mail luto@mailandnews.com if you think this should have worked\n");
+					"e-mail amluto@hotmail.com if you think this should have worked\n");
 			}
 
 			LeaveCriticalSection(&csArpTable);

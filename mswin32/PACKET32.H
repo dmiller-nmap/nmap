@@ -42,6 +42,9 @@
 #define	 pBIOCQUERYOID 2147483652
 #define	 pATTACHPROCESS 7117
 #define	 pDETACHPROCESS 7118
+#define  pBIOCEVNAME 7415
+
+#define  pBIOCSTIMEZONE 7471
 
 //Network type structure
 
@@ -94,9 +97,8 @@ typedef struct _ADAPTER  {
 						   HANDLE hFile;
                            TCHAR  SymbolicLink[MAX_LINK_NAME_LENGTH];
 						   int NumWrites;
-						   PUCHAR SharedBuffer;
-						   UINT SharedBufferDim;
-						   UINT SharedBufferPos;						
+						   HANDLE ReadEvent;
+						   UINT ReadTimeOut;
 						 }  ADAPTER, *LPADAPTER;
 
 typedef struct _PACKET {  

@@ -27,6 +27,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "winip.h"
 
 #ifndef SIO_RCVALL
+#define IOC_VENDOR 0x18000000
 #define SIO_RCVALL _WSAIOW(IOC_VENDOR, 1)
 #endif
 
@@ -101,27 +102,24 @@ char *rawrecv_readip(pcap_t *pd, unsigned int *len, long to_usec)
 {
 	int rcvlen;
 	DWORD time1, time2;
+	fd_set fds;
+	TIMEVAL tv;
 
 	if(-2 != (long)pd)
 		fatal("rawrecv_readip: called with non-rawrecv handle\n");
 
-	if(to_usec)
-	{
-		to_usec /= 1000;
-		if(!to_usec) to_usec++;
-	}
-
 begin:
-	if(to_usec)
-	{
-		block_socket(s);
-		setsockopt(s, SOL_SOCKET, SO_RCVTIMEO, (char*)&to_usec, sizeof(to_usec));
-	}
-	else unblock_socket(s);	//	time out immediately
 
+	//	Note: I could use SO_RCVTIMEO but I don't trust it...
 	time1 = GetTickCount();
+	FD_ZERO(&fds);
+	FD_SET(s, &fds);
+	tv.tv_usec = to_usec % 1000000;
+	tv.tv_sec = to_usec / 1000000;
+	if(0 == select(0, &fds, 0, 0, &tv)) return 0;
 	rcvlen = recv(s, buf, sizeof(buf), 0);
 	time2 = GetTickCount() + 10;
+
 	if(rcvlen > 0)
 	{
 		if(rcvlen >= sizeof(struct ip) && filter(buf, rcvlen))
@@ -131,7 +129,7 @@ begin:
 		}
 		else
 		{
-			to_usec -= (time2 - time1);
+			to_usec -= 1000 * (time2 - time1);
 			if(to_usec < 0)
 			{
 				if(len) *len = 0;

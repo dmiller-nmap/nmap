@@ -2151,6 +2151,10 @@ int nmap_fetchfile(char *filename_returned, int bufferlen, char *file) {
      next we try ~user/nmap/file
      then we try NMAPDATADIR/file <--NMAPDATADIR 
      finally we try ./file
+
+	 -- or on Windows --
+
+	 $NMAPDIR -> nmap.exe directory -> NMAPDATADIR -> .
   */
   if ((dirptr = getenv("NMAPDIR"))) {
     res = snprintf(filename_returned, bufferlen, "%s/%s", dirptr, file);
@@ -2179,6 +2183,22 @@ int nmap_fetchfile(char *filename_returned, int bufferlen, char *file) {
 	}
       }
     }
+  }
+#else
+  if (!foundsomething) { /* Try the nMap directory */
+	  char fnbuf[MAX_PATH];
+	  int i;
+	  res = GetModuleFileName(GetModuleHandle(0), fnbuf, 1024);
+      if(!res) fatal("GetModuleFileName failed (!)\n");
+	  //	Strip it
+	  for(i = res - 1; i >= 0 && fnbuf[i] != '/' && fnbuf[i] != '\\'; i--);
+	  if(i >= 0) // we found it
+		  fnbuf[i] = 0;
+	  res = snprintf(filename_returned, bufferlen, "%s/%s", fnbuf, file);
+	  if(res > 0 && res < bufferlen) {
+		  if (fileexistsandisreadable(filename_returned))
+            foundsomething = 1;
+      }
   }
 #endif
   if (!foundsomething) {

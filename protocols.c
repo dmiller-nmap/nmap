@@ -169,7 +169,7 @@ struct scan_lists *getfastprots(void) {
   char usedprots[256];
   struct protocol_list *current;
   int bucket;
-  int protsneeded;
+  int protsneeded = 0;
 
   if (!protocols_initialized)
     if (nmap_protocols_init() == -1)

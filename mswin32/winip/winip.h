@@ -64,6 +64,8 @@ frame-relay(32)
 
   */
 
+#include <pcap.h>
+
 #define IF_other 1
 #define IF_regular1822 2
 #define IF_hdh1822 3
@@ -98,7 +100,15 @@ frame-relay(32)
 #define IF_frame_relay 32
 
 #include <windows.h>
-#include "packet.h"
+
+#ifndef EXTERNC
+# ifdef __cplusplus
+#  define EXTERNC extern "C"
+# else
+#  define EXTERNC extern
+# endif
+#endif
+
 
 //	change to <iphlpapi.h> if you have the SDK
 #include "iphlpapi.h"
@@ -108,11 +118,15 @@ struct winops {
 	int norawsock, nopcap, forcerawsock, listinterfaces, nt4route, noiphlpapi, trace;
 };
 
-extern struct winops wo;
+EXTERNC struct winops wo;
 
 /* Sets a pcap filter function -- makes SOCK_RAW reads easier */
 typedef int (*PFILTERFN)(const char *packet, int len); /* 1 to keep */
-void set_pcap_filter(struct hoststruct *target, pcap_t *pd, PFILTERFN filter, char *bpf, ...);
+
+//	Makes gcc happy
+//	One wonders why VC doesn't complain...
+struct hoststruct;
+EXTERNC void set_pcap_filter(struct hoststruct *target, pcap_t *pd, PFILTERFN filter, char *bpf, ...);
 
 
 typedef struct _IPNODE {
@@ -136,39 +150,45 @@ typedef struct _WINIP_IF {
 } WINIP_IF;
 
 /*   (exported) functions   */
-void winip_init();
-void winip_postopt_init();
-void winip_barf(const char *msg);
-int winip_corruption_possible();
+EXTERNC void winip_init();
+EXTERNC void winip_postopt_init();
+EXTERNC void winip_barf(const char *msg);
+EXTERNC int winip_corruption_possible();
 
 //	name translation
-int name2ifi(const char *name);
-const char *ifi2name(int ifi);
-int ifi2winif(int ifi);
-int winif2ifi(int winif);
-int ifi2ipaddr(int ifi, struct in_addr *addr);
-int ipaddr2ifi(DWORD ip);
-const WINIP_IF* ifi2ifentry(int ifi);
+EXTERNC int name2ifi(const char *name);
+EXTERNC const char *ifi2name(int ifi);
+EXTERNC int ifi2winif(int ifi);
+EXTERNC int winif2ifi(int winif);
+EXTERNC int ifi2ipaddr(int ifi, struct in_addr *addr);
+EXTERNC int ipaddr2ifi(DWORD ip);
+EXTERNC const WINIP_IF* ifi2ifentry(int ifi);
 
 //extern int pcap_avail;
 //extern int rawsock_avail;
 
-int get_best_route(DWORD dest, PMIB_IPFORWARDROW r);
+EXTERNC int get_best_route(DWORD dest, PMIB_IPFORWARDROW r);
 
 
 
 //	pcapsend interface
-void pcapsend_init();
-pcap_t *my_real_pcap_open_live(char *device, int snaplen, int promisc, int to_ms);
-int pcapsendraw(const char *packet, int len, 
-	   struct sockaddr *to, int tolen);
+EXTERNC void pcapsend_init();
+EXTERNC pcap_t *my_real_pcap_open_live(char *device, int snaplen, int promisc, int to_ms);
+EXTERNC int pcapsendraw(const char *packet, int len, 
+						struct sockaddr *to, int tolen);
 
 //	rawrecv interface
-pcap_t *rawrecv_open(const char *dev);
-void rawrecv_close(pcap_t *pd);
-char *rawrecv_readip(pcap_t *pd, unsigned int *len, long to_usec);
-void rawrecv_setfilter(pcap_t *pd, PFILTERFN filterfn);
-char *readip_pcap_real(pcap_t *pd, unsigned int *len, long to_usec);
+EXTERNC pcap_t *rawrecv_open(const char *dev);
+EXTERNC void rawrecv_close(pcap_t *pd);
+EXTERNC char *rawrecv_readip(pcap_t *pd, unsigned int *len, long to_usec);
+EXTERNC void rawrecv_setfilter(pcap_t *pd, PFILTERFN filterfn);
+EXTERNC char *readip_pcap_real(pcap_t *pd, unsigned int *len, long to_usec);
+
+//	Win95 support
+EXTERNC DWORD GetIfTableSafe(PMIB_IFTABLE, DWORD*, BOOL);
+EXTERNC DWORD GetIpAddrTableSafe(PMIB_IPADDRTABLE, DWORD*, BOOL);
+EXTERNC DWORD GetIpNetTableSafe(PMIB_IPNETTABLE, DWORD*, BOOL);
+EXTERNC DWORD GetIpForwardTableSafe(PMIB_IPFORWARDTABLE, DWORD*, BOOL);
 
 #endif
 

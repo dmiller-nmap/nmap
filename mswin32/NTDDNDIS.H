@@ -1398,4 +1398,3 @@ typedef struct _WW_MBX_TEMPDEFAULTLIST {
 
 #endif				// WIRELESS_WAN
 #endif				// _NTDDNDIS_
-

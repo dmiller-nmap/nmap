@@ -157,6 +157,8 @@ char	*bpf_image(struct bpf_insn *, int);
 int pcap_setbuff(pcap_t *p, int dim);
 int pcap_setmode(pcap_t *p, int mode);
 int pcap_sendpacket(pcap_t *p, u_char *buf, int size);
+int pcap_setmintocopy(pcap_t *p, int size);
+HANDLE pcap_getevent(pcap_t *p);
 
 #ifdef __cplusplus
 }
@@ -164,8 +166,6 @@ int pcap_sendpacket(pcap_t *p, u_char *buf, int size);
 
 #define MODE_CAPT 0
 #define MODE_STAT 1
-
-
 
 #endif
 #endif

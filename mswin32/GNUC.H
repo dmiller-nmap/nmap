@@ -1,8 +1,7 @@
 /* @(#) $Header$ (LBL) */
 
-#ifndef __cplusplus 
-
 /* Define __P() macro, if necessary */
+
 #ifndef __P
 #if __STDC__
 #define __P(protos) protos
@@ -12,10 +11,12 @@
 #endif
 
 /* inline foo */
+#ifndef __cplusplus
 #ifdef __GNUC__
 #define inline __inline
 #else
 #define inline
+#endif
 #endif
 
 /*
@@ -42,6 +43,4 @@
 #ifndef __attribute__
 #define __attribute__(args)
 #endif
-#endif
-
 #endif

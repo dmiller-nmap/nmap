@@ -19,6 +19,16 @@ Proposed changes should be discussed on nmap-dev if nmap-related
 or you could e-mail me and maybe I'll set up a list for general
 development or use.
 
+Note: snmpapi.cpp and MibAccess.* are based on sources from
+codeguru.com.  They are for win95 support, and are not needed
+if snmp95.cpp is modified to do nothing.
+
+You still need WinSock2 to run on Win95.  Get it at: (one line)
+http://www.microsoft.com/Windows95/downloads/contents
+/WUAdminTools/S_WUNetworkingTools/W95Sockets2/Default.asp
+
+Get winpcap from http://netgroup-serv.polito.it/winpcap
+
 
 My PGP key is:
 
@@ -62,6 +72,7 @@ yOZTzqpgXw==
 
 Version history:
 0.1:  first public release (in nmap)
+0.2:  adds windows 95 support
 
 
 Known issues:
@@ -94,3 +105,7 @@ iphlpapi.c
 iphlpapi.def
 iphlpapi.bat
 iphlpapi.h
+snmp95.cpp
+snmpapi.cpp
+MibAccess.cpp
+MibAccess.h

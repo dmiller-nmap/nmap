@@ -1,5 +1,11 @@
 # Nmap Changelog ($Id$)
 
+-- Merged in a number of Windows fixes/updates from Andy Lutomirski
+   (Luto@myrealbox.com)
+
+-- Merged in fixes/updates (mostly to the Windows functionality) from
+   Matt Hargett (matt@use.net)
+
 -- Documented the --append_output option which tells Nmap to append 
    scan results to any output files you have specified rather than 
    overwriting the files.
