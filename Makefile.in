@@ -78,6 +78,8 @@ distro:
 	nroff -man docs/nmap.1 | man2html -nodepage -title 'Nmap network security scanner man page' >! docs/nmap_manpage.html
 	nroff -man docs/nmap_spanish.1 | man2html -nodepage -title 'Nmap network security scanner man page (Spanish translation)' >! docs/nmap_manpage-es.html
 	nroff -Tlatin1 -man docs/nmap_lithuanian.1 | man2html -nodepage -title 'Nmap network security scanner man page (Lithuanian translation)' >! docs/nmap_manpage-lt.html
+	# We need a content-type for the Lithuanian version
+	sr '<HEAD>' '<HEAD><META http-equiv="Content-Type" content="text/html; charset="windows-1257">' docs/nmap_manpage-lt.html
 	rm -rf /usr/tmp/nmap-$(NMAP_VERSION)
 	mkdir /usr/tmp/nmap-$(NMAP_VERSION)
 # Make the RPM .spec file
