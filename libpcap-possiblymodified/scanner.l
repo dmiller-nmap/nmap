@@ -21,7 +21,7 @@
  */
 
 #ifndef lint
-static const char rcsid[] =
+static const char rcsid[] _U_ =
     "@(#) $Header$ (LBL)";
 #endif
 
@@ -36,8 +36,17 @@ static const char rcsid[] =
 
 #include "gencode.h"
 #ifdef INET6
+#ifdef WIN32
+#include <pcap-stdinc.h>
+
+#ifdef __MINGW32__
+#include "IP6_misc.h"
+#endif
+#else /* WIN32 */
 #include <sys/socket.h>	/* for "struct sockaddr" in "struct addrinfo" */
 #include <netdb.h>	/* for "struct addrinfo" */
+#endif /* WIN32 */
+
 /* Workaround for AIX 4.3 */
 #if !defined(AI_NUMERICHOST)
 #define AI_NUMERICHOST 0x04
@@ -72,11 +81,11 @@ N		([0-9]+|(0X|0x)[0-9A-Fa-f]+)
 B		([0-9A-Fa-f][0-9A-Fa-f]?)
 W		([0-9A-Fa-f][0-9A-Fa-f]?[0-9A-Fa-f]?[0-9A-Fa-f]?)
 
-%a 15000
+%a 16000
 %o 19000
 %e 6000
 %k 4000
-%p 21000
+%p 25000
 %n 2000
 
 V680		{W}:{W}:{W}:{W}:{W}:{W}:{W}:{W}
@@ -162,7 +171,7 @@ dst		return DST;
 src		return SRC;
 
 link|ether|ppp|slip  return LINK;
-fddi|tr		return LINK;
+fddi|tr|wlan	return LINK;
 arp		return ARP;
 rarp		return RARP;
 ip		return IP;
@@ -205,6 +214,14 @@ esis		return ESIS;
 es-is		return ESIS;
 isis		return ISIS;
 is-is		return ISIS;
+l1              return L1;
+l2              return L2;
+iih             return IIH;
+lsp             return LSP;
+snp             return SNP;
+csnp            return CSNP;
+psnp            return PSNP;
+
 clnp		return CLNP;
 
 stp		return STP;
@@ -215,7 +232,7 @@ netbeui		return NETBEUI;
 
 host		return HOST;
 net		return NET;
-mask		return MASK;
+mask		return NETMASK;
 port		return PORT;
 proto		return PROTO;
 protochain	{
@@ -230,7 +247,7 @@ gateway		return GATEWAY;
 
 less		return LESS;
 greater		return GREATER;
-byte		return BYTE;
+byte		return CBYTE;
 broadcast	return TK_BROADCAST;
 multicast	return TK_MULTICAST;
 
@@ -244,7 +261,29 @@ outbound	return OUTBOUND;
 
 vlan		return VLAN;
 
-[ \n\t]			;
+lane		return LANE;
+llc		return LLC;
+metac		return METAC;
+bcc		return BCC;
+oam		return OAM;
+oamf4		return OAMF4;
+oamf4ec		return OAMF4EC;
+oamf4sc		return OAMF4SC;
+sc		return SC;
+ilmic		return ILMIC;
+vpi		return VPI;
+vci		return VCI;
+connectmsg	return CONNECTMSG;
+metaconnect	return METACONNECT;
+
+on|ifname	return PF_IFNAME;
+rset|ruleset	return PF_RSET;
+rnr|rulenum	return PF_RNR;
+srnr|subrulenum	return PF_SRNR;
+reason		return PF_REASON;
+action		return PF_ACTION;
+
+[ \r\n\t]		;
 [+\-*/:\[\]!<>()&|=]	return yytext[0];
 ">="			return GEQ;
 "<="			return LEQ;
@@ -268,7 +307,7 @@ ${B}			{ yylval.e = pcap_ether_aton(((char *)yytext)+1);
 			  if (getaddrinfo(yytext, NULL, &hints, &res))
 				bpf_error("bogus IPv6 address %s", yytext);
 			  else {
-				yylval.e = sdup((char *)yytext); return HID6;
+				yylval.s = sdup((char *)yytext); return HID6;
 			  }
 #else
 			  bpf_error("IPv6 address %s not supported", yytext);

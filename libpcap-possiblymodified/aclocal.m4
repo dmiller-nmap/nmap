@@ -460,6 +460,31 @@ AC_DEFUN(AC_LBL_SOCKADDR_SA_LEN,
     fi])
 
 dnl
+dnl Checks to see if there's a sockaddr_storage structure
+dnl
+dnl usage:
+dnl
+dnl	AC_LBL_SOCKADDR_STORAGE
+dnl
+dnl results:
+dnl
+dnl	HAVE_SOCKADDR_STORAGE (defined)
+dnl
+AC_DEFUN(AC_LBL_SOCKADDR_STORAGE,
+    [AC_MSG_CHECKING(if sockaddr_storage struct exists)
+    AC_CACHE_VAL(ac_cv_lbl_has_sockaddr_storage,
+	AC_TRY_COMPILE([
+#	include <sys/types.h>
+#	include <sys/socket.h>],
+	[u_int i = sizeof (struct sockaddr_storage)],
+	ac_cv_lbl_has_sockaddr_storage=yes,
+	ac_cv_lbl_has_sockaddr_storage=no))
+    AC_MSG_RESULT($ac_cv_lbl_has_sockaddr_storage)
+    if test $ac_cv_lbl_has_sockaddr_storage = yes ; then
+	    AC_DEFINE(HAVE_SOCKADDR_STORAGE,1,[if struct sockaddr_storage exists])
+    fi])
+
+dnl
 dnl Checks to see if the dl_hp_ppa_info_t struct has the HP-UX 11.00
 dnl dl_module_id_1 member
 dnl
@@ -564,8 +589,39 @@ AC_DEFUN(AC_LBL_UNALIGNED_ACCESS,
     AC_CACHE_VAL(ac_cv_lbl_unaligned_fail,
 	[case "$host_cpu" in
 
+	#
+	# These are CPU types where:
+	#
+	#	the CPU faults on an unaligned access, but at least some
+	#	OSes that support that CPU catch the fault and simulate
+	#	the unaligned access (e.g., Alpha/{Digital,Tru64} UNIX) -
+	#	the simulation is slow, so we don't want to use it;
+	#
+	#	the CPU, I infer (from the old
+	#
 	# XXX: should also check that they don't do weird things (like on arm)
-	alpha*|arm*|hp*|mips*|sparc*|ia64)
+	#
+	#	comment) doesn't fault on unaligned accesses, but doesn't
+	#	do a normal unaligned fetch, either (e.g., presumably, ARM);
+	#
+	#	for whatever reason, the test program doesn't work
+	#	(this has been claimed to be the case for several of those
+	#	CPUs - I don't know what the problem is; the problem
+	#	was reported as "the test program dumps core" for SuperH,
+	#	but that's what the test program is *supposed* to do -
+	#	it dumps core before it writes anything, so the test
+	#	for an empty output file should find an empty output
+	#	file and conclude that unaligned accesses don't work).
+	#
+	# This run-time test won't work if you're cross-compiling, so
+	# in order to support cross-compiling for a particular CPU,
+	# we have to wire in the list of CPU types anyway, as far as
+	# I know, so perhaps we should just have a set of CPUs on
+	# which we know it doesn't work, a set of CPUs on which we
+	# know it does work, and have the script just fail on other
+	# cpu types and update it when such a failure occurs.
+	#
+	alpha*|arm*|hp*|mips*|sh*|sparc*|ia64|nv1)
 		ac_cv_lbl_unaligned_fail=yes
 		;;
 
@@ -808,6 +864,9 @@ ac_cv___attribute__=yes,
 ac_cv___attribute__=no)])
 if test "$ac_cv___attribute__" = "yes"; then
   AC_DEFINE(HAVE___ATTRIBUTE__, 1, [define if your compiler has __attribute__])
+  V_DEFS="$V_DEFS -D_U_=\"__attribute__((unused))\""
+else
+  V_DEFS="$V_DEFS -D_U_=\"\""
 fi
 AC_MSG_RESULT($ac_cv___attribute__)
 ])

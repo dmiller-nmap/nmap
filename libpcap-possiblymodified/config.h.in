@@ -14,11 +14,17 @@
 /* Define if you have the ether_hostton function.  */
 #undef HAVE_ETHER_HOSTTON
 
+/* Define if you have the snprintf function.  */
+#undef HAVE_SNPRINTF
+
 /* Define if you have the strerror function.  */
 #undef HAVE_STRERROR
 
 /* Define if you have the strlcpy function.  */
 #undef HAVE_STRLCPY
+
+/* Define if you have the vsnprintf function.  */
+#undef HAVE_VSNPRINTF
 
 /* Define if you have the <ifaddrs.h> header file.  */
 #undef HAVE_IFADDRS_H
@@ -83,6 +89,9 @@
 /* define if you have a /proc/net/dev */
 #undef HAVE_PROC_NET_DEV
 
+/* define if you have a DAG API */
+#undef HAVE_DAG_API
+
 /* define on AIX to get certain functions */
 #undef _SUN
 
@@ -103,6 +112,9 @@
 
 /* if struct sockaddr has sa_len */
 #undef HAVE_SOCKADDR_SA_LEN
+
+/* if struct sockaddr_storage exists */
+#undef HAVE_SOCKADDR_STORAGE
 
 /* if ppa_info_t_dl_module_id exists */
 #undef HAVE_HP_PPA_INFO_T_DL_MODULE_ID_1

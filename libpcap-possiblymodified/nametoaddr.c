@@ -23,7 +23,7 @@
  */
 
 #ifndef lint
-static const char rcsid[] =
+static const char rcsid[] _U_ =
     "@(#) $Header$ (LBL)";
 #endif
 
@@ -31,12 +31,27 @@ static const char rcsid[] =
 #include "config.h"
 #endif
 
+#ifdef WIN32
+#include <pcap-stdinc.h>
+
+#else /* WIN32 */
+
 #include <sys/param.h>
 #include <sys/types.h>				/* concession to AIX */
 #include <sys/socket.h>
 #include <sys/time.h>
 
 #include <netinet/in.h>
+#endif /* WIN32 */
+
+/*
+ * XXX - why was this included even on UNIX?
+ */
+#ifdef __MINGW32__
+#include "IP6_misc.h"
+#endif
+
+#ifndef WIN32
 #ifdef HAVE_ETHER_HOSTTON
 #ifdef HAVE_NETINET_IF_ETHER_H
 struct mbuf;		/* Squelch compiler warnings on some platforms for */
@@ -47,6 +62,7 @@ struct rtentry;		/* declarations in <net/if.h> */
 #endif /* HAVE_ETHER_HOSTTON */
 #include <arpa/inet.h>
 #include <netdb.h>
+#endif /* WIN32 */
 
 #include <ctype.h>
 #include <errno.h>
@@ -123,12 +139,19 @@ pcap_nametoaddrinfo(const char *name)
 bpf_u_int32
 pcap_nametonetaddr(const char *name)
 {
+#ifndef WIN32
 	struct netent *np;
 
 	if ((np = getnetbyname(name)) != NULL)
 		return np->n_net;
 	else
 		return 0;
+#else
+	/*
+	 * There's no "getnetbyname()" on Windows.
+	 */
+	return 0;
+#endif
 }
 
 /*
@@ -140,36 +163,38 @@ int
 pcap_nametoport(const char *name, int *port, int *proto)
 {
 	struct servent *sp;
-	char *other;
+	int tcp_port = -1;
+	int udp_port = -1;
 
-	sp = getservbyname(name, (char *)0);
-	if (sp != NULL) {
-		NTOHS(sp->s_port);
-		*port = sp->s_port;
-		*proto = pcap_nametoproto(sp->s_proto);
-		/*
-		 * We need to check /etc/services for ambiguous entries.
-		 * If we find the ambiguous entry, and it has the
-		 * same port number, change the proto to PROTO_UNDEF
-		 * so both TCP and UDP will be checked.
-		 */
-		if (*proto == IPPROTO_TCP)
-			other = "udp";
-		else
-			other = "tcp";
-
-		sp = getservbyname(name, other);
-		if (sp != 0) {
-			NTOHS(sp->s_port);
+	/*
+	 * We need to check /etc/services for ambiguous entries.
+	 * If we find the ambiguous entry, and it has the
+	 * same port number, change the proto to PROTO_UNDEF
+	 * so both TCP and UDP will be checked.
+	 */
+	sp = getservbyname(name, "tcp");
+	if (sp != NULL) tcp_port = ntohs(sp->s_port);
+	sp = getservbyname(name, "udp");
+	if (sp != NULL) udp_port = ntohs(sp->s_port);
+	if (tcp_port >= 0) {
+		*port = tcp_port;
+		*proto = IPPROTO_TCP;
+		if (udp_port >= 0) {
+			if (udp_port == tcp_port)
+				*proto = PROTO_UNDEF;
 #ifdef notdef
-			if (*port != sp->s_port)
+			else
 				/* Can't handle ambiguous names that refer
 				   to different port numbers. */
 				warning("ambiguous port %s in /etc/services",
 					name);
 #endif
-			*proto = PROTO_UNDEF;
 		}
+		return 1;
+	}
+	if (udp_port >= 0) {
+		*port = udp_port;
+		*proto = IPPROTO_UDP;
 		return 1;
 	}
 #if defined(ultrix) || defined(__osf__)
@@ -340,7 +365,7 @@ pcap_ether_hostton(const char *name)
 		return (NULL);
 	else
 		rewind(fp);
-	
+
 	while ((ep = pcap_next_etherent(fp)) != NULL) {
 		if (strcmp(ep->name, name) == 0) {
 			ap = (u_char *)malloc(6);
@@ -364,7 +389,8 @@ pcap_ether_hostton(const char *name)
  * "const char *", so no matter how we declare it here, it'll fail to
  * compile on one of 3.x or 4.x).
  */
-#if !defined(sgi) && !defined(__NetBSD__) && !defined(__FreeBSD__)
+#if !defined(sgi) && !defined(__NetBSD__) && !defined(__FreeBSD__) && \
+       !defined(_UNICOSMP)
 extern int ether_hostton(char *, struct ether_addr *);
 #endif
 

@@ -20,7 +20,7 @@
  */
 
 #ifndef lint
-static const char rcsid[] =
+static const char rcsid[] _U_ =
     "@(#) $Header$ (LBL)";
 #endif
 
