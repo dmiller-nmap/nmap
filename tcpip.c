@@ -19,6 +19,30 @@ setsockopt(sd, IPPROTO_IP, IP_HDRINCL, (void *) &one, sizeof(one));
 #endif
 }
 
+/* Tests whether a packet sent to  IP is LIKELY to route 
+ through the kernel localhost interface */
+int islocalhost(struct in_addr *addr) {
+char dev[128];
+  /* If it is 0.0.0.0 or starts with 127.0.0.1 then it is 
+     probably localhost */
+  if ((addr->s_addr & htonl(0xFF000000)) == htonl(0x7F000000))
+    return 1;
+
+  if (!addr->s_addr)
+    return 1;
+
+  /* If it is the same addy as a local interface, then it is
+     probably localhost */
+
+  if (ipaddr2devname(dev, addr) != -1)
+    return 1;
+
+  /* OK, so to a first approximation, this addy is probably not
+     localhost */
+  return 0;
+}
+
+
 /* Standard swiped internet checksum routine */
 inline unsigned short in_cksum(unsigned short *ptr,int nbytes) {
 
@@ -118,7 +142,8 @@ if (optlen % 4) {
   fatal("send_tcp_raw called with an option length argument of %d which is illegal because it is not divisible by 4", optlen);
 }
 
-if (!myttl)  myttl = (time(NULL) % 14) + 51;
+
+if (!myttl) myttl = (get_random_uint() % 23) + 37;
 
 /* It was a tough decision whether to do this here for every packet
    or let the calling function deal with it.  In the end I grudgingly decided
@@ -156,9 +181,12 @@ pseudo->length = htons(sizeof(struct tcphdr) + optlen + datalen);
 
 tcp->th_sport = htons(sport);
 tcp->th_dport = htons(dport);
-if (seq)
+if (seq) {
   tcp->th_seq = htonl(seq);
-else if (flags & TH_SYN) tcp->th_seq = rand() + rand();
+}
+else if (flags & TH_SYN) {
+  get_random_bytes(&(tcp->th_seq), 4);
+}
 
 if (ack)
   tcp->th_ack = htonl(ack);
@@ -192,7 +220,7 @@ bzero(packet, sizeof(struct ip));
 ip->ip_v = 4;
 ip->ip_hl = 5;
 ip->ip_len = BSDFIX(sizeof(struct ip) + sizeof(struct tcphdr) + optlen + datalen);
-ip->ip_id = rand();
+get_random_bytes(&(ip->ip_id), 2);
 ip->ip_ttl = myttl;
 ip->ip_p = IPPROTO_TCP;
 ip->ip_src.s_addr = source->s_addr;
@@ -378,7 +406,8 @@ if ( !victim || !sport || !dport || sd < 0) {
   return -1;
 }
 
-if (!myttl)  myttl = (time(NULL) % 14) + 51;
+
+if (!myttl) myttl = (get_random_uint() % 23) + 37;
 
 /* It was a tough decision whether to do this here for every packet
    or let the calling function deal with it.  In the end I grudgingly decided
@@ -437,7 +466,7 @@ bzero(pseudo, 12);
 ip->ip_v = 4;
 ip->ip_hl = 5;
 ip->ip_len = BSDFIX(sizeof(struct ip) + sizeof(udphdr_bsd) + datalen);
-ip->ip_id = rand();
+get_random_bytes(&(ip->ip_id), 2);
 ip->ip_ttl = myttl;
 ip->ip_p = IPPROTO_UDP;
 ip->ip_src.s_addr = source->s_addr;
@@ -482,7 +511,7 @@ if ( !victim || sd < 0) {
   return -1;
 }
 
-if (!myttl)  myttl = (time(NULL) % 14) + 51;
+if (!myttl) myttl = (get_random_uint() % 23) + 37;
 
 /* It was a tough decision whether to do this here for every packet
    or let the calling function deal with it.  In the end I grudgingly decided
@@ -518,7 +547,7 @@ bzero((char *) packet, sizeof(struct ip));
 ip->ip_v = 4;
 ip->ip_hl = 5;
 ip->ip_len = BSDFIX(sizeof(struct ip) + datalen);
-ip->ip_id = rand();
+get_random_bytes(&(ip->ip_id), 2);
 ip->ip_ttl = myttl;
 ip->ip_p = proto;
 ip->ip_src.s_addr = source->s_addr;
@@ -571,9 +600,8 @@ int data_offset, ihl, *intptr;
 int done = 0;
 
   /* Get us some unreserved port numbers */
-  do {
-    p1 = rand();
-  } while (p1 < 5000);
+  get_random_bytes(&p1, 2);
+  if (p1 < 5000) p1 += 5000;
 
   if (!getuid()) {
     if ((sd2 = socket(AF_INET, SOCK_PACKET, htons(ETH_P_ALL))) == -1)
@@ -651,9 +679,8 @@ int getsourceip(struct in_addr *src, struct in_addr *dst) {
   int socklen = sizeof(struct sockaddr_in);
   unsigned short p1;
 
-  do {
-    p1 = rand();
-  } while (p1 < 5000);
+  get_random_bytes(&p1, 2);
+  if (p1 < 5000) p1 += 5000;
 
   if ((sd = socket(AF_INET, SOCK_DGRAM, 0)) == -1)
     {perror("Socket troubles"); return 0;}
@@ -739,9 +766,26 @@ if (!lastpcap || pd != lastpcap) {
     fatal("Cannot obtain datalink information: %s", pcap_geterr(pd));
   switch(datalink) {
   case DLT_EN10MB: offset = 14; break;
+  case DLT_IEEE802: offset = 22; break;
   case DLT_NULL: offset = 4; break;
-  case DLT_SLIP: 
-  case DLT_PPP: offset = 24; break;
+  case DLT_SLIP:
+#if (FREEBSD || OPENBSD || NETBSD || BSDI)
+    offset = 16;
+#else
+    offset = 24; /* Anyone use this??? */
+#endif
+    break;
+  case DLT_PPP: 
+#if (FREEBSD || OPENBSD || NETBSD || BSDI)
+    offset = 4;
+#else
+#ifdef SOLARIS
+    offset = 8;
+#else
+    offset = 24; /* Anyone use this? */
+#endif /* ifdef solaris */
+#endif /* if freebsd || openbsd || netbsd || bsdi */
+    break;
   case DLT_RAW: offset = 0; break;
   default: fatal("Unknown datalink type (%d)", datalink);
   }
@@ -779,6 +823,7 @@ if (!lastpcap || pd != lastpcap) {
     fatal("Cannot obtain datalink information: %s", pcap_geterr(pd));
   switch(datalink) {
   case DLT_EN10MB: offset = 14; break;
+  case DLT_IEEE802: offset = 22; break;
   case DLT_NULL: offset = 4; break;
   case DLT_SLIP:
   case DLT_PPP: offset = 24; break;
@@ -997,16 +1042,29 @@ char *routethrough(struct in_addr *dest, struct in_addr *source) {
   }
   /* WHEW, that takes care of initializing, now we have the easy job of 
      finding which route matches */
-    if (technique == procroutetechnique) {    
-      for(i=0; i < numroutes; i++) {  
-	if ((dest->s_addr & myroutes[i].mask) == myroutes[i].dest) {
-	  if (source) {
-	    source->s_addr = myroutes[i].dev->addr.s_addr;
-	  }
-	  return myroutes[i].dev->name;      
-	}
+  if (islocalhost(dest)) {
+    if (source)
+      source->s_addr = htonl(0x7F000001);
+    /* Now we find the localhost interface name, assuming 127.0.0.1 is
+       localhost (it damn well better be!)... */
+    for(i=0; i < numinterfaces; i++) {    
+      if (mydevs[i].addr.s_addr == htonl(0x7F000001)) {
+	return mydevs[i].name;
       }
-    } else if (technique == connectsockettechnique) {
+    }
+    return NULL;
+  }
+
+  if (technique == procroutetechnique) {    
+    for(i=0; i < numroutes; i++) {  
+      if ((dest->s_addr & myroutes[i].mask) == myroutes[i].dest) {
+	if (source) {
+	  source->s_addr = myroutes[i].dev->addr.s_addr;
+	}
+	return myroutes[i].dev->name;      
+      }
+    }
+  } else if (technique == connectsockettechnique) {
       if (!getsourceip(&addy, dest))
 	return NULL;
       if (!addy.s_addr)  {  /* Solaris 2.4 */

@@ -5,7 +5,7 @@ bindir = @bindir@
 sbindir = @sbindir@
 mandir = @mandir@
 srcdir = @srcdir@
-libdir = @libdir@
+libdir = @libdir@/nmap
 
 CC = @CC@
 CCOPT = 
@@ -14,19 +14,21 @@ INCLS = -I. -I$(LIBPCAPDIR)
 DEFS = @DEFS@ -DVERSION=\"$(VERSION)\" -DLIBDIR=\"$(libdir)\"
 CFLAGS = @CFLAGS@ $(CCOPT) $(DEFS) $(INCLS)
 # CFLAGS = -g -Wall $(DEFS) $(INCLS)
-LDFLAGS = @LDFLAGS@
+STATIC = 
+LDFLAGS = @LDFLAGS@ $(STATIC)
 LIBS =  @LIBS@ -lpcap -lm
 INSTALL = @INSTALL@
 MAKEDEPEND = @MAKEDEPEND@
-VERSION = 2.01
+RPMTDIR=$(HOME)/rpmdir
+VERSION = 2.05
 
 TARGET = nmap
 
-SRCS = nmap.c targets.c tcpip.c error.c utils.c osscan.c @COMPAT_SRCS@
+SRCS = nmap.c targets.c tcpip.c error.c utils.c osscan.c charpool.c services.c @COMPAT_SRCS@
 
-OBJS = nmap.o targets.o tcpip.o error.o utils.o osscan.o @COMPAT_OBJS@
+OBJS = nmap.o targets.o tcpip.o error.o utils.o osscan.o charpool.o services.o @COMPAT_OBJS@
 
-DEPS = nmap.h error.h targets.h osscan.h tcpip.h utils.h global_structures.h
+DEPS = nmap.h error.h targets.h osscan.h tcpip.h utils.h global_structures.h charpool.h services.h
 
 all: $(TARGET)
 
@@ -61,16 +63,23 @@ distro:
 	nroff -man docs/nmap.1 | man2html -title 'Nmap network security scanner man page' > docs/nmap_manpage.html
 	rm -rf /usr/tmp/nmap-$(VERSION)
 	mkdir /usr/tmp/nmap-$(VERSION)
+# Make the RPM .spec file
+	sed -e s/\@VERSION\@/$(VERSION)/g nmap.spec.in > nmap-$(VERSION)-1.spec
 	$(MAKE) clean
 	rm -f $(LIBPCAPDIR)/config.cache $(LIBPCAPDIR)/Makefile
-	cp -ra nmap.c targets.c targets.h nmap.h \
-	tcpip.c tcpip.h error.c error.h utils.c utils.h inet_aton.c \
-        global_structures.h  osscan.h osscan.c nmap-os-fingerprints \
-	configure.in config.h.in Makefile.in configure install-sh config.guess \
-	config.sub INSTALL docs  COPYING \
+	cp -ra $(SRCS) $(DEPS) inet_aton.c nmap-os-fingerprints \
+	configure.in config.h.in Makefile.in configure install-sh \
+        config.guess nmap-$(VERSION)-1.spec config.sub INSTALL docs \
+	COPYING CHANGELOG \
         $(LIBPCAPDIR) /usr/tmp/nmap-$(VERSION)
+# Kill the CVS crap
+	find /usr/tmp/nmap-$(VERSION) -type d -name CVS | xargs rm -rf
 	cd /usr/tmp; \
 	tar czf nmap-$(VERSION).tgz nmap-$(VERSION)
+# Make the actual RPM
+	rpm -ta /usr/tmp/nmap-$(VERSION).tgz
+	cp -f $(RPMTDIR)/RPMS/i386/nmap-$(VERSION)-1.i386.rpm /usr/tmp
+	cp -f $(RPMTDIR)/SRPMS/nmap-$(VERSION)-1.src.rpm /usr/tmp
 	rm -rf /usr/tmp/nmap-$(VERSION)
 
 # For distributing the binary
@@ -97,6 +106,9 @@ depend:
 	$(MAKEDEPEND) $(INCLS) -s "# DO NOT DELETE" -- $(DEFS) -- $(SRCS)
 
 install: all
+	./install-sh -d $(bindir) 
+	./install-sh -d $(mandir) 
+	./install-sh -d $(libdir)
 	$(INSTALL) $(TARGET) $(bindir)/$(TARGET)
 	$(INSTALL) docs/$(TARGET).1 $(mandir)/man1/$(TARGET).1
 	$(INSTALL) nmap-os-fingerprints  $(libdir)/nmap-os-fingerprints

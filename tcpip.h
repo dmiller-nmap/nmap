@@ -125,7 +125,7 @@ void *realloc();
 #endif
 
 #ifndef BSDFIX
-#if FREEBSD || BSDI
+#if FREEBSD || BSDI || NETBSD
 #define BSDFIX(x) x
 #define BSDUFIX(x) x
 #else
@@ -316,6 +316,7 @@ int getsourceip(struct in_addr *src, struct in_addr *dst);
    to dst should be sent to.  Interface name is dynamically
    assigned and thus should be freed */
 char *getsourceif(struct in_addr *src, struct in_addr *dst);
+int islocalhost(struct in_addr *addr);
 int unblock_socket(int sd);
 inline int Sendto(char *functionname, int sd, char *packet, int len, 
 	   unsigned int flags, struct sockaddr *to, int tolen);

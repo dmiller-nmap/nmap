@@ -23,7 +23,7 @@ int current_port = 0;
 int testsleft;
 int testno;
 int  timeout;
-unsigned long sequence_base = rand() + rand();
+unsigned long sequence_base;
 unsigned int openport;
 int bytes;
 unsigned int closedport;
@@ -42,7 +42,7 @@ int ossofttimeout, oshardtimeout;
 
 /* Init our fingerprint tests to each be NULL */
 bzero(FPtests, sizeof(FPtests)); 
-
+get_random_bytes(&sequence_base, sizeof(unsigned long));
 /* Init our raw socket */
  if ((rawsd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) < 0 )
    pfatal("socket trobles in get_fingerprint");
@@ -80,7 +80,7 @@ if (pcap_lookupnet(target->device, &localnet, &netmask, err0r) < 0)
 sprintf(filter, "(icmp and dst host %s) or (tcp and src host %s and dst host %s)", inet_ntoa(target->source_ip), p, inet_ntoa(target->source_ip));
  free(p);
  /* Due to apparent bug in libpcap */
- if (target->source_ip.s_addr == htonl(0x7F000001))
+ if (islocalhost(&(target->source_ip)))
    filter[0] = '\0';
  if (o.debugging)
    printf("Packet capture filter: %s\n", filter);
@@ -101,7 +101,7 @@ sprintf(filter, "(icmp and dst host %s) or (tcp and src host %s and dst host %s)
    }
  }
  
-closedport = (rand() % 14781) + 30000;
+closedport = (get_random_uint() % 14781) + 30000;
 
 if (o.verbose && openport != -1)
   printf("For OSScan assuming that port %d is open and port %d is closed and neither are firewalled\n", openport, closedport);
@@ -495,15 +495,16 @@ struct AVal *fingerprint_iptcppacket(struct ip *ip, int mss, unsigned long syn) 
   return AVs;
 }
 
-FingerPrint **match_fingerprint(FingerPrint *FP) {
-  static FingerPrint *matches[10];
-  int max_matches = 6;
-  int matches_found = 0;
+FingerPrint **match_fingerprint(FingerPrint *FP, int *matches_found) {
+  static FingerPrint *matches[15];
+  int max_matches = 14;
   FingerPrint *current_os;
   FingerPrint *current_test;
   struct AVal *tst;
   int match = 1;
-  int i;
+  int i,j;
+
+  *matches_found = 0;
 
   if (!FP) {
     matches[0] = NULL;
@@ -523,14 +524,22 @@ FingerPrint **match_fingerprint(FingerPrint *FP) {
       }
     if (match) {
       /* Yeah, we found a match! */
-      if (matches_found >= max_matches -1) {
+      if ((*matches_found) >= max_matches -1) {
 	matches[0] = NULL;
+	*matches_found = ETOOMANYMATCHES;
 	return matches;
       }
-      matches[matches_found++] = current_os;
+      /* Lets make sure we haven't found a match with this exact
+	 name before */
+      for(j=0; j < *matches_found; j++) {
+	if (strcmp(current_os->OS_name, matches[j]->OS_name) == 0)
+	  break;
+      }
+      if (j == *matches_found)
+	matches[(*matches_found)++] = current_os;
     }
   }
-  matches[matches_found] = NULL;
+  matches[(*matches_found)] = NULL;
   return matches;
 }
 
@@ -635,6 +644,7 @@ return;
 
 int os_scan(struct hoststruct *target) {
 FingerPrint **FP_matches[3];
+int FP_nummatches[3];
 struct seq_info si[3];
 int try;
 int i;
@@ -643,7 +653,7 @@ bzero(si, sizeof(si));
 
  for(try=0; try < 3; try++) {
   target->FPs[try] = get_fingerprint(target, &si[try]); 
-  FP_matches[try] = match_fingerprint(target->FPs[try]);
+  FP_matches[try] = match_fingerprint(target->FPs[try], &(FP_nummatches[try]));
   if (FP_matches[try][0]) 
     break;
   if (try < 2)
@@ -671,10 +681,16 @@ bzero(si, sizeof(si));
  } else  {
    /* Uh-oh, we were NEVER able to match, lets take
       the first fingerprint */
-   target->goodFP = -1;
+   for(try=0; try < 3; try++) {   
+     if (FP_nummatches[try] == 0) {   
+       target->goodFP = ENOMATCHESATALL;
+       break;
+     }
+   }
+   if (try == 3) target->goodFP = ETOOMANYMATCHES;
  }
 
- if (target->goodFP >= 0)
+ if (target->goodFP > 0)
    target->FP_matches = FP_matches[target->goodFP];
  else target->FP_matches = FP_matches[0];
  return 1;
@@ -750,7 +766,11 @@ if (!FP) return "(None)";
 if(*(FP->OS_name)) {
   int len = 0;
   len = sprintf(str, "FingerPrint  %s\n", FP->OS_name);
+#ifdef SPRINTF_RETURNS_STRING
+  p += strlen(p);
+#else
   p += len;
+#endif
 }
 
 for(current = FP; current ; current = current->next) {
@@ -827,7 +847,7 @@ while(fgets(line, sizeof(line), fp)) {
 
  fparse:
 
-  if (strncmp(line, "FingerPrint", 11)) {
+  if (strncasecmp(line, "FingerPrint", 11)) {
     printf("Parse error on line %d of nmap_os_fingerprints file: %s\n", lineno, line);
     continue;
   }
@@ -843,6 +863,8 @@ while(fgets(line, sizeof(line), fp)) {
   while(*p && *p != '\n' && *p != '#') {
     *q++ = *p++;
   }
+
+  q--;
 
   /* Now let us back up through any ending spaces */
   while(isspace((int)*q)) 
@@ -956,10 +978,10 @@ struct pseudo_udp_hdr {
   unsigned short length;
 } *pseudo = (struct pseudo_udp_hdr *) ((char *)udp - 12) ;
 
-if (!patternbyte) patternbyte = (rand() % 60) + 65;
+if (!patternbyte) patternbyte = (get_random_uint() % 60) + 65;
 memset(data, patternbyte, datalen);
 
-while(!id) id = rand();
+while(!id) id = get_random_uint();
 
 /* check that required fields are there and not too silly */
 if ( !victim || !sport || !dport || sd < 0) {
@@ -1136,7 +1158,7 @@ current_testno++;
 
 /* This next test doesn't work on Solaris because the lamers
    overwrite our ip_id */
-#ifndef SOLARIS
+#if !defined(SOLARIS) && !defined(SUNOS)
 /* Now lets see how they treated the ID we sent ... */
 AVs[current_testno].attribute = "RID";
 if (ntohs(ip2->ip_id) == 0)

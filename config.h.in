@@ -48,12 +48,16 @@
 
 #undef STUPID_SOLARIS_CHECKSUM_BUG
 
+#undef SPRINTF_RETURNS_STRING
+
 #undef LINUX
 #undef FREEBSD
 #undef OPENBSD
 #undef SOLARIS
+#undef SUNOS
 #undef BSDI
 #undef IRIX
+#undef NETBSD
 
 
 

@@ -83,7 +83,7 @@ emptystring[0] = '\0'; /* It wouldn't be an emptystring w/o this ;) */
 if (argc < 2 ) printusage(argv[0]);
 
 /* OK, lets parse these args! */
-while((arg = getopt(argc,fakeargv,"Ab:D:de:Ffg:hIi:M:m:NnOo:P::p:qRrS:s:T:Vv")) != EOF) {
+while((arg = getopt(argc,fakeargv,"Ab:D:de:Ffg:hIi:M:m:NnOo:P:p:qRrS:s:T:Vv")) != EOF) {
   switch(arg) {
   case 'A': o.allowall++; break;
   case 'b': 
@@ -139,7 +139,7 @@ while((arg = getopt(argc,fakeargv,"Ab:D:de:Ffg:hIi:M:m:NnOo:P::p:qRrS:s:T:Vv")) 
     } else {    
       inputfd = fopen(optarg, "r");
       if (!inputfd) {
-	fatal("Failed to open input file %s for writing", optarg);
+	fatal("Failed to open input file %s for reading", optarg);
       }  
       printf("Reading target specifications from FILE: %s\n", optarg);
     }
@@ -148,7 +148,7 @@ while((arg = getopt(argc,fakeargv,"Ab:D:de:Ffg:hIi:M:m:NnOo:P::p:qRrS:s:T:Vv")) 
     o.max_sockets = atoi(optarg); 
     if (o.max_sockets < 1) fatal("Argument to -M must be at least 1!");
     if (o.max_sockets > MAX_SOCKETS_ALLOWED) {
-      printf("Warning: You are limited to MAX_SOCKETS_ALLOWD (%d) paralell sockets.  If you really need more, change the #define and recompile.\n", MAX_SOCKETS_ALLOWED);
+      printf("Warning: You are limited to MAX_SOCKETS_ALLOWED (%d) parallel sockets.  If you really need more, change the #define and recompile.\n", MAX_SOCKETS_ALLOWED);
       o.max_sockets = MAX_SOCKETS_ALLOWED;
     }
     break;
@@ -202,7 +202,7 @@ while((arg = getopt(argc,fakeargv,"Ab:D:de:Ffg:hIi:M:m:NnOo:P::p:qRrS:s:T:Vv")) 
     break;
   case 'p': 
     if (ports)
-      fatal("Only 1 -p option allowed, seperate multiple ranges with commas.");
+      fatal("Only 1 -p option allowed, separate multiple ranges with commas.");
     ports = getpts(optarg); break;
     if (!ports)
       fatal("Your port specification string is not parseable");
@@ -260,6 +260,22 @@ if (o.pingtype == PINGTYPE_UNKNOWN) {
   else o.pingtype = PINGTYPE_TCP;
 }
 
+
+/* Now we check the option sanity */
+/* Insure that at least one scantype is selected */
+if (!o.connectscan && !o.udpscan && !o.synscan && !o.finscan && !o.maimonscan &&  !o.nullscan && !o.xmasscan && !o.bouncescan && !o.pingscan) {
+  o.connectscan++;
+  if (o.verbose) error("No scantype specified, assuming vanilla tcp connect() scan. Use -sP if you really don't want to portscan (and just want to see what hosts are up).");
+}
+
+if (o.pingtype != PINGTYPE_NONE && o.spoofsource) {
+  error("WARNING:  If -S is being used to fake your source address, you may also have to use -e <iface> and -P0 .  If you are using it to specify your real source address, you can ignore this warning.");
+}
+
+if (o.connectscan && o.spoofsource) {
+  error("WARNING:  -S will not affect the source address used in a connect() scan.  Use -sS or another raw scan if you want to use the specified source address for the port scanning stage of nmap");
+}
+
 if (fastscan && ports) {
   fatal("You can specify fast scan (-F) or explicitly select individual ports (-p), but not both");
 } else if (fastscan) {
@@ -283,13 +299,6 @@ if (!ports) {
 /* Default dest port for tcp probe */
 if (!o.tcp_probe_port) o.tcp_probe_port = 80;
 
-
-/* Now we check the option sanity */
-/* Insure that at least one scantype is selected */
-if (!o.connectscan && !o.udpscan && !o.synscan && !o.finscan && !o.maimonscan &&  !o.nullscan && !o.xmasscan && !o.bouncescan && !o.pingscan) {
-  o.connectscan++;
-  if (o.verbose) error("No scantype specified, assuming vanilla tcp connect() scan. Use -sP if you really don't want to portscan (and just want to see what hosts are up).");
-}
 
 if (o.pingscan && (o.connectscan || o.udpscan || o.synscan || o.finscan || o.maimonscan ||  o.nullscan || o.xmasscan || o.bouncescan)) {
   fatal("Ping scan is not valid with any other scan types (the other ones all include a ping scan");
@@ -343,14 +352,14 @@ if (o.identscan && !o.connectscan) {
 if (o.osscan && o.bouncescan)
   error("Combining bounce scan with OS scan seems silly, but I will let you do whatever you want!");
 
-#if !defined(LINUX) && !defined(OPENBSD) && !defined(FREEBSD)
+#if !defined(LINUX) && !defined(OPENBSD) && !defined(FREEBSD) && !defined(NETBSD)
  if (o.fragscan) {
-   fprintf(stderr, "Warning: Packet fragmentation selected on non-linux, non freebsd, non-openbsd host.  This may or may not work.\n");
+   fprintf(stderr, "Warning: Packet fragmentation selected on a host other than Linux, OpenBSD, FreeBSD, or NetBSD.  This may or may not work.\n");
  }
 #endif
 
 if (o.max_sockets > MAX_SOCKETS_ALLOWED) {
-   printf("Warning: You are limited to MAX_SOCKETS_ALLOWD (%d) paralell sockets.  If you really need more, change the #define and recompile.\n", MAX_SOCKETS_ALLOWED);
+   error("Warning: You are limited to MAX_SOCKETS_ALLOWED (%d) parallel sockets.  If you really need more, change the #define and recompile.\n", MAX_SOCKETS_ALLOWED);
    o.max_sockets = MAX_SOCKETS_ALLOWED;
 }
 
@@ -358,9 +367,13 @@ if (o.osscan && o.pingscan) {
   fatal("WARNING:  OS Scan is unreliable with a ping scan.  You need to use a scan type along with it, such as -sS, -sT, -sF, etc instead of -sP");
 }
 
+if (o.magic_port_set && o.connectscan) {
+  error("WARNING:  -g is incompatible with the default connect() scan (-sT).  Use a raw scan such as -sS if you want to set the source port.");
+}
+
 /* Set up our array of decoys! */
 if (o.decoyturn == -1) {
-  o.decoyturn = (o.numdecoys == 0)?  0 : rand() % o.numdecoys; 
+  o.decoyturn = (o.numdecoys == 0)?  0 : get_random_uint() % o.numdecoys; 
   o.numdecoys++;
   for(i=o.numdecoys-1; i > o.decoyturn; i--)
     o.decoys[i] = o.decoys[i-1];
@@ -478,7 +491,7 @@ if (!o.pingscan) {
 else {
   if (currenths->flags & HOST_UP) {  
     nmap_log("Host %s (%s) appears to be up.\n", currenths->name, inet_ntoa(currenths->host));    
-    nmap_machine_log("Host: %s (%s) Status: Up\n", inet_ntoa(currenths->host), currenths->name);
+    nmap_machine_log("Host: %s (%s)\tStatus: Up\n", inet_ntoa(currenths->host), currenths->name);
   }
   else 
     if (o.verbose || o.debugging || resolve_all) {    
@@ -490,7 +503,7 @@ else {
 
  if (currenths->wierd_responses) {  
    nmap_log("Host  %s (%s) seems to be a subnet broadcast address (returned %d extra pings).  Skipping host.\n",  currenths->name, inet_ntoa(currenths->host), currenths->wierd_responses);
-   nmap_machine_log("Host: %s (%s) Status: Smurf (%d responses)\n",  inet_ntoa(currenths->host), currenths->name, currenths->wierd_responses);
+   nmap_machine_log("Host: %s (%s)\tStatus: Smurf (%d responses)\n",  inet_ntoa(currenths->host), currenths->name, currenths->wierd_responses);
  }
  
  /* The !currenths->wierd_responses was commented out after I found
@@ -540,7 +553,7 @@ else {
    if (!currenths->ports && !o.pingscan) {
      nmap_log("No ports open for host %s (%s)\n", currenths->name,
 	      inet_ntoa(currenths->host));
-     nmap_machine_log("Host: %s (%s) Status: Up", 
+     nmap_machine_log("Host: %s (%s)\tStatus: Up", 
 		      inet_ntoa(currenths->host), currenths->name);
    }
    if (currenths->ports) {
@@ -554,10 +567,10 @@ else {
    if (o.osscan) {
      if (currenths->seq.responses > 3) {
        nmap_log("%s", seqreport(&(currenths->seq)));
-       nmap_machine_log(" Seq Index: %d", currenths->seq.index);
+       nmap_machine_log("\tSeq Index: %d", currenths->seq.index);
      }
      if (currenths->FP_matches[0]) {
-       nmap_machine_log(" OS: %s",  currenths->FP_matches[0]->OS_name);
+       nmap_machine_log("\tOS: %s",  currenths->FP_matches[0]->OS_name);
        i = 1;
        while(currenths->FP_matches[i]) {
 	 nmap_machine_log("|%s", currenths->FP_matches[i]->OS_name);
@@ -581,7 +594,14 @@ else {
        }
        nmap_log("\n");
      } else {
-       nmap_log("No OS matches for this host.  TCP fingerprints:\n%s\n\n", mergeFPs(currenths->FPs, currenths->numFPs));
+       if (currenths->goodFP == ENOMATCHESATALL) {       
+	 nmap_log("No OS matches for host (see http://www.insecure.org/cgi-bin/nmap-submit.cgi).\nTCP/IP fingerprint:\n%s\n\n", mergeFPs(currenths->FPs, currenths->numFPs));
+       } else if (currenths->goodFP == ETOOMANYMATCHES) {
+	 nmap_log("Too many fingerprints match this host for me to give an accurate OS guess\n");
+	 if (o.debugging || o.verbose) {
+	   nmap_log("TCP/IP fingerprint:\n%s\n\n",  mergeFPs(currenths->FPs, currenths->numFPs));
+	 }
+       }
      }
      for(i=0; i < currenths->numFPs; i++)
        freeFingerPrint(currenths->FPs[i]);
@@ -608,7 +628,7 @@ o.isr00t = !(geteuid());
 o.debugging = DEBUGGING;
 o.verbose = DEBUGGING;
 /*o.max_sockets = MAX_SOCKETS;*/
-o.magic_port = 33000 + (rand() % 31000);
+o.magic_port = 33000 + (get_random_uint() % 31000);
 #ifdef IGNORE_ZERO_AND_255_HOSTS
 o.allowall = !(IGNORE_ZERO_AND_255_HOSTS);
 #endif
@@ -710,9 +730,13 @@ while((p = strchr(expr,','))) {
   }
   if (o.debugging)
     printf("The first port is %d, and the last one is %d\n", start, end);
-  if (start < 1 || start > end) fatal("Your port specifications are illegal!");
-  for(j=start; j <= end; j++) 
-    ports[i++] = j;
+  if (start < 1 || start > end || end > 65535) 
+    fatal("Your port specifications are illegal!");
+  for(j=start; j <= end; j++)  {  
+    if (i < 65536)
+      ports[i++] = j;
+    else fatal("Too many ports specified");
+  }  
   expr = p + 1;
 }
 if (*expr == '-') {
@@ -726,99 +750,19 @@ else {
 }
 if (o.debugging)
   printf("The first port is %d, and the last one is %d\n", start, end);
-if (start < 1 || start > end) fatal("Your port specifications are illegal!");
-for(j=start; j <= end; j++) 
-  ports[i++] = j;
+if (start < 1 || start > end || end > 65535) 
+  fatal("Your port specifications are illegal!");
+for(j=start; j <= end; j++)  {
+  if (i < 65536)
+    ports[i++] = j;
+  else fatal("Too many ports specified");
+}
 o.numports = i;
+/* ports[i++] = j;*/
 ports[i++] = 0;
-tmp = realloc(ports, i * sizeof(short));
-  free(mem);
-  return tmp;
-}
-
-/* Be default we do all ports 1-1024 as well as any higher ports
-   that are in /etc/services. */
-unsigned short *getdefaultports(int tcpscan, int udpscan) {
-  int portindex = 0, res;
-  unsigned int portno = 0;
-  unsigned short *ports;
-  char usedports[65536];
-  char proto[10];
-  char line[201];
-  FILE *fp;
-  ports = safe_malloc(65535 * sizeof(unsigned short));
-  proto[0] = '\0';
-  bzero(usedports, sizeof(usedports));
-  usedports[0] = 1; /* We do not allow scanning this "port" */
-  for(portindex = 1; portindex < 1025; portindex++)
-    ports[portindex-1] = portindex;
-
-  portindex--;
-  if (!(fp = fopen("/etc/services", "r"))) {
-    error("We can't open /etc/services for reading!  Using just ports 1-1024\n");
-    perror("fopen");
-  } else {  
-    while(fgets(line, 200, fp)) {
-      res = sscanf(line, "%*s %u/%s", &portno, proto);
-      if (portno < 1025 || portno > 65535) 
-	continue;
-      if (res == 2 && !usedports[portno]) { 
-	if (tcpscan && proto[0] == 't') {	
-	  ports[portindex++] = portno;
-	  usedports[portno] = 1;
-	}
-	else if (udpscan && proto[0] == 'u') {	
-	  ports[portindex++] = portno;
-	  usedports[portno] = 1;
-	}
-      }
-    }
-    fclose(fp);
-  }
-  
-
-o.numports = portindex;
-ports[portindex++] = 0;
-return realloc(ports, portindex * sizeof(unsigned short));
-}
-
-unsigned short *getfastports(int tcpscan, int udpscan) {
-  int portindex = 0, res;
-  unsigned int portno = 0;
-  unsigned short *ports;
-  char proto[10];
-  char usedports[65536];
-  char line[201];
-  FILE *fp;
-  ports = safe_malloc(65535 * sizeof(unsigned short));
-  bzero(usedports, sizeof(usedports));  
-  usedports[0] = 1; /* We do not allow scanning this "port" */
-
-  proto[0] = '\0';
-  if (!(fp = fopen("/etc/services", "r"))) {
-    printf("We can't open /etc/services for reading!  Fix your system or don't use -f\n");
-    perror("fopen");
-    exit(1);
-  }
-  
-  while(fgets(line, 200, fp)) {
-    res = sscanf(line, "%*s %u/%s", &portno, proto);
-    if (res == 2 && !usedports[portno]) { 
-      if (tcpscan && proto[0] == 't') {      
-	ports[portindex++] = portno;
-	usedports[portno] = 1;
-      }
-      else if (udpscan && proto[0] == 'u') {      
-	ports[portindex++] = portno;
-	usedports[portno] = 1;
-      }
-    }
-  }
-
-fclose(fp);
-o.numports = portindex;
-ports[portindex++] = 0;
-return realloc(ports, portindex * sizeof(unsigned short));
+tmp = realloc(ports, o.numports * sizeof(short));
+ free(mem);
+ return tmp;
 }
 
 void printusage(char *name) {
@@ -883,7 +827,11 @@ int len;
    p += 18;
    for(i=0; i < seq->responses; i++) {
      len = sprintf(p, "%lX ", seq->seqs[i]);
+#ifdef SPRINTF_RETURNS_STRING
+     p += strlen(p);
+#else
      p += len;
+#endif
    }
    *--p = '\n';
    strcat(report, tmp);
@@ -1098,13 +1046,13 @@ void printandfreeports(portlist ports) {
   
   nmap_log("Port    State       Protocol  Service");
   nmap_log("%s", (o.identscan)?"         Owner\n":"\n");
-  nmap_machine_log(" Ports: ");
+  nmap_machine_log("\tPorts: ");
   while(current != NULL) {
     if (!first) nmap_machine_log(", ");
     else first = 0;
     strcpy(protocol,(current->proto == IPPROTO_TCP)? "tcp": "udp");
     state = statenum2str(current->state);
-    service = getservbyport(htons(current->portno), protocol);
+    service = nmap_getservbyport(htons(current->portno), protocol);
     nmap_log("%-8d%-12s%-11s%-16s%s\n", current->portno, state, protocol,
 	     (service)? service->s_name: "unknown",
 	     (current->owner)? current->owner : "");
@@ -1336,7 +1284,7 @@ unsigned short tmp;
 int i;
 
 for(i=0; i < o.numports; i++) {
-  num = rand() % (o.numports);
+  num = get_random_uint() % (o.numports);
   tmp = ports[i];
   ports[i] = ports[num];
   ports[num] = tmp;
@@ -1395,7 +1343,7 @@ pseudo->length = htons(sizeof(struct tcphdr));
 
 tcp->th_sport = htons(sport);
 tcp->th_dport = htons(dport);
-tcp->th_seq = (seq)? htonl(seq) : rand() + rand();
+tcp->th_seq = (seq)? htonl(seq) : get_random_uint();
 
 tcp->th_off = 5 /*words*/;
 tcp->th_flags = flags;
@@ -1413,7 +1361,7 @@ ip->ip_hl = 5;
 /*RFC 791 allows 8 octet frags, but I get "operation not permitted" (EPERM)
   when I try that.  */
 ip->ip_len = BSDFIX(sizeof(struct ip) + 16);
-id = ip->ip_id = rand();
+id = ip->ip_id = get_random_uint();
 ip->ip_off = BSDFIX(MORE_FRAGMENTS);
 ip->ip_ttl = myttl;
 ip->ip_p = IPPROTO_TCP;
@@ -1550,7 +1498,8 @@ portlist super_scan(struct hoststruct *target, unsigned short *portarray, stype 
   /* Init our raw socket */
   if ((rawsd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) < 0 )
     pfatal("socket troubles in super_scan");
-
+  broadcast_socket(rawsd); /* This isn't pretty, but I don't have much of a
+			      choice */
   /* No reason to do this since we don't receive on this socket,
      and it can cause ENOBUF errors if socket transmit buffers
      overflow 
@@ -1582,7 +1531,7 @@ p = strdup(inet_ntoa(target->host));
 sprintf(filter, "(icmp and dst host %s) or (tcp and src host %s and dst host %s and ( dst port %d or dst port %d))", inet_ntoa(target->source_ip), p, inet_ntoa(target->source_ip), o.magic_port , o.magic_port + 1);
  free(p);
  /* Due to apparent bug in libpcap */
- if (target->source_ip.s_addr == htonl(0x7F000001))
+ if (islocalhost(&(target->source_ip)))
    filter[0] = '\0';
 
  if (o.debugging)
@@ -1917,7 +1866,7 @@ portlist pos_scan(struct hoststruct *target, unsigned short *portarray, stype sc
   int decoy;
   struct timeval now;
   struct connectsockinfo csi;
-  unsigned long sequences[3]; /* for various reasons we use 3 seperate
+  unsigned long sequences[3]; /* for various reasons we use 3 separate
 				 ones rather than simply incrementing from
 				 a base */
   int i;
@@ -1972,9 +1921,7 @@ portlist pos_scan(struct hoststruct *target, unsigned short *portarray, stype sc
     
 
     /* Init ISNs */
-    sequences[0] = rand() + rand();
-    sequences[1] = rand() + rand();
-    sequences[2] = rand() + rand();
+    get_random_bytes(sequences, sizeof(sequences));
 
     /* Do we have a correct source address? */
     if (!target->source_ip.s_addr) {
@@ -2003,7 +1950,7 @@ portlist pos_scan(struct hoststruct *target, unsigned short *portarray, stype sc
     free(p);
 
     /* Due to apparent bug in libpcap */
-    if (target->source_ip.s_addr == htonl(0x7F000001))
+    if (islocalhost(&(target->source_ip)))
       filter[0] = '\0';
 
     if (o.debugging)
@@ -2532,7 +2479,9 @@ do {
       }
     } else if (FD_ISSET(sd, &fds_wtmp)) {
       /* Selected for writing, lets to the zero-byte-write test */
+#if !OPENBSD
       res = send(current->sd[trynum], buf, 0, 0);
+#endif
       if (res < 0 ) {
 	if (o.debugging > 1) {
 		printf("Bad port %hu caught by 0-byte write: ", current->portno);
@@ -2624,9 +2573,9 @@ unsigned short *data;
 	  /*	    printf("Caught ICMP packet:\n");
 		    hdump(icmp, ntohs(ip->ip_len) - sizeof(struct ip)); */
 	  if (icmp->icmp_type == 3) {
-	    if (icmp->icmp_code != 2 && icmp->icmp_code != 3 &&
-		icmp->icmp_code != 13) {
-	      error("Unexpected ICMP type/code 3/%d unreachable packet:");
+	    if (icmp->icmp_code != 1 && icmp->icmp_code != 2 && 
+		icmp->icmp_code != 3 && icmp->icmp_code != 13) {
+	      error("Unexpected ICMP type/code 3/%d unreachable packet:", icmp->icmp_code);
 	      hdump((unsigned char *)icmp, ntohs(ip->ip_len) - sizeof(struct ip));
 	      continue;
 	    }
@@ -3021,4 +2970,87 @@ void sigdie(int signo) {
  exit(1);
 }
 
+int nmap_fetchfile(char *filename_returned, int bufferlen, char *file) {
+char *dirptr;
+int res;
+int foundsomething = 0;
+struct passwd *pw;
+char dot_buffer[512];
+static int warningcount = 0;
 
+  /* First we try $NMAPDIR/file
+     next we try ~user/nmap/file
+     then we try LIBDIR/nmap/file <--LIBDIR 
+     finally we try ./file
+  */
+  if ((dirptr = getenv("NMAPDIR"))) {
+    res = snprintf(filename_returned, bufferlen, "%s/%s", dirptr, file);
+    if (res > 0 && res < bufferlen) {
+      if (fileexistsandisreadable(filename_returned))
+	foundsomething = 1;
+    }
+  }
+  if (!foundsomething) {
+    pw = getpwuid(getuid());
+    if (pw) {
+      res = snprintf(filename_returned, bufferlen, "%s/.nmap/%s", pw->pw_dir, file);
+      if (res > 0 && res < bufferlen) {
+	if (fileexistsandisreadable(filename_returned))
+	  foundsomething = 1;
+      }
+    }
+    if (!foundsomething && getuid() != geteuid()) {
+      pw = getpwuid(geteuid());
+      if (pw) {
+	res = snprintf(filename_returned, bufferlen, "%s/nmap/%s", pw->pw_dir, file);
+	if (res > 0 && res < bufferlen) {
+	  if (fileexistsandisreadable(filename_returned))
+	    foundsomething = 1;
+	}
+      }
+    }
+  }
+  if (!foundsomething) {
+    res = snprintf(filename_returned, bufferlen, "%s/%s", LIBDIR, file);
+    if (res > 0 && res < bufferlen) {
+      if (fileexistsandisreadable(filename_returned))
+	foundsomething = 1;
+    }
+  }
+  if (foundsomething && (*filename_returned != '.')) {    
+    res = snprintf(dot_buffer, sizeof(dot_buffer), "./%s", file);
+    if (res > 0 && res < bufferlen) {
+      if (fileexistsandisreadable(dot_buffer)) {
+	if (warningcount++ < 5)
+	  error("WARNING!  The following files exist and are readable: %s and %s.  I am choosing %s for security reasons.  set NMAPDIR=. to give priority to files in your local directory", filename_returned, dot_buffer, filename_returned);
+      }
+    }
+  }
+
+  if (!foundsomething) {
+    res = snprintf(filename_returned, bufferlen, "./%s", file);
+    if (res > 0 && res < bufferlen) {
+      if (fileexistsandisreadable(filename_returned))
+	foundsomething = 1;
+    }
+  }
+
+  if (!foundsomething) {
+    filename_returned[0] = '\0';
+    return -1;
+  }
+
+  if (o.debugging > 1)
+    error("Fetchfile found %s\n", filename_returned);
+
+  return 0;
+
+}
+
+int fileexistsandisreadable(char *pathname) {
+FILE *fp;
+  /* We check this the easy way! */
+  fp = fopen(pathname, "r");
+  if (fp) fclose(fp);
+  return (fp == NULL)? 0 : 1;
+}

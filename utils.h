@@ -6,6 +6,8 @@
 #include <ctype.h>
 #include <sys/types.h>
 #include <netinet/in.h>
+#include <sys/time.h>
+#include <unistd.h>
 #include "config.h"
 
 #if TIME_WITH_SYS_TIME
@@ -53,6 +55,9 @@ char *strcasestr(char *haystack, char *pneedle);
 void hdump(unsigned char *packet, int len);
 void lamont_hdump(unsigned char *bp, int length);
 void Strncpy(char *dest, const char *src, size_t n);
+int get_random_bytes(void *buf, int numbytes);
+int get_random_int();
+unsigned int get_random_uint();
 #ifndef HAVE_USLEEP
 #ifdef HAVE_NANOSLEEP
 void usleep(unsigned long usec);

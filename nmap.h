@@ -88,6 +88,7 @@ void *realloc();
 #include <signal.h> 
 #include <signal.h>
 #include <stdarg.h>
+#include <pwd.h>
 #ifndef NETINET_IN_SYSTEM_H  /* why the HELL does OpenBSD not do this? */
 #include <netinet/in_systm.h> /* defines n_long needed for netinet/ip.h */
 #define NETINET_IN_SYSTEM_H
@@ -210,7 +211,7 @@ void *realloc();
 #endif
 
 #ifndef BSDFIX
-#if FREEBSD || BSDI
+#if FREEBSD || BSDI || NETBSD
 #define BSDFIX(x) x
 #define BSDUFIX(x) x
 #else
@@ -224,6 +225,7 @@ void *realloc();
 #include "global_structures.h"
 #include "error.h"
 #include "utils.h"
+#include "services.h"
 
 /***********************STRUCTURES**********************************/
 
@@ -263,8 +265,6 @@ int get_connect_results(struct hoststruct *target, struct portinfo *scan,
 inline void adjust_timeouts(struct timeval sent, struct timeout_info *to);
 /* port manipulators */
 unsigned short *getpts(char *expr); /* someone stole the name getports()! */
-unsigned short *getfastports(int tcpscan, int udpscan);
-unsigned short *getdefaultports(int tcpscan, int udpscan);
 int addport(portlist *ports, unsigned short portno, unsigned short protocol,
 	    char *owner, int state);
 int deleteport(portlist *ports, unsigned short portno, unsigned short protocol);
@@ -304,6 +304,8 @@ void sigdie(int signo);
 char *seqreport(struct seq_info *seq);
 char *seqclass2ascii(int clas);
 void invertfirewalled(portlist *pl, unsigned short *ports);
+int nmap_fetchfile(char *filename_returned, int bufferlen, char *file);
+int fileexistsandisreadable(char *pathname);
 /* From glibc 2.0.6 because Solaris doesn't seem to have this function */
 #ifndef HAVE_INET_ATON
 int inet_aton(register const char *, struct in_addr *);

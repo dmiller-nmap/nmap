@@ -148,7 +148,8 @@ addy[0] = r = hostexp;
 /* First we break the expression up into the four parts of the IP address
    + the optional '/mask' */
 target_net = strtok(hostexp, "/");
-targets->netmask = (int) (s = strtok(NULL,""))? atoi(s) : 32;
+s = strtok(NULL, "");    /* find the end of the token from hostexp */
+targets->netmask  = ( s ) ? atoi(s) : 32;
 if ((int) targets->netmask < 0 || targets->netmask > 32) {
   printf("Illegal netmask value (%d), must be /0 - /32 .  Assuming /32 (one host)\n", targets->netmask);
   targets->netmask = 32;
@@ -248,7 +249,6 @@ else {
 }
 
 
-
 void massping(struct hoststruct *hostbatch, int num_hosts, int pingtimeout) {
 static struct timeout_info to = { 0,0,0};
 static int gsize = LOOKAHEAD;
@@ -313,7 +313,7 @@ if (o.pingtype & PINGTYPE_TCP) {
 
 time = safe_malloc(sizeof(struct timeval) * ((pt.max_tries) * num_hosts));
 bzero(time, sizeof(struct timeval) * pt.max_tries * num_hosts);
-id = (unsigned short) rand();
+id = (unsigned short) get_random_uint();
 
 if (ptech.connecttcpscan) 
   max_block_size = MIN(50, o.max_sockets);
@@ -370,7 +370,6 @@ if (ptech.rawicmpscan || ptech.rawtcpscan) {
      16 bytes of the TCP header
      ---
    = 104 byte snaplen */
-  
   if (!(pd = pcap_open_live(hostbatch[0].device, 104, o.spoofsource, 20,
 			    err0r)))
     fatal("pcap_open_live: %s", err0r);
@@ -383,7 +382,7 @@ if (ptech.rawicmpscan || ptech.rawtcpscan) {
 	  sportbase + 4);
 
   /* Due to apparent bug in libpcap */
-  if (hostbatch[0].source_ip.s_addr == htonl(0x7F000001))
+  if (islocalhost(&(hostbatch[0].source_ip)))
     filter[0] = '\0';
 
   if (o.debugging)
@@ -571,7 +570,7 @@ if (o.magic_port_set) sportbase = o.magic_port;
 else sportbase = o.magic_port + 20;
 trynum = seq % pt->max_tries;
 
- myseq = (rand() << 19) + (seq << 3) + 3; /* Response better end in 011 or 100 */
+ myseq = (get_random_uint() << 19) + (seq << 3) + 3; /* Response better end in 011 or 100 */
  memcpy((char *)&(o.decoys[o.decoyturn]), (char *)&target->source_ip, sizeof(struct in_addr));
  for (decoy = 0; decoy < o.numdecoys; decoy++) {
    if (o.pingtype & PINGTYPE_TCP_USE_SYN) {   
@@ -962,7 +961,7 @@ while(pt->block_unaccounted > 0 && !timeout) {
 	    break;
 	}
 	if (hostnum < 0) {	
-	  if (o.debugging) 
+	  if (o.debugging > 1) 
 	    error("Warning, unexpacted packet from machine %s", inet_ntoa(ip->ip_src));
 	  continue;
 	}	

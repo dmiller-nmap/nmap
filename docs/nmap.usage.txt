@@ -1,6 +1,6 @@
 
-Starting nmap V. 2.01 by Fyodor (fyodor@dhp.com, www.insecure.org/nmap/)
-nmap V. 2.01 usage: nmap [Scan Type(s)] [Options] <host or net #1 ... [#N]>
+Starting nmap V. 2.04 by Fyodor (fyodor@dhp.com, www.insecure.org/nmap/)
+nmap V. 2.04 usage: nmap [Scan Type(s)] [Options] <host or net #1 ... [#N]>
 Scan types
    -sT tcp connect() port scan
    -sS tcp SYN stealth port scan (must be root)

@@ -34,7 +34,7 @@
 
        Significant effort has been put into decent  <I>nmap</I>  perfor-
        mance  for  non-root  users.  Unfortunately, many critical
-       kernal interfaces (such as raw sockets) require root priv-
+       kernel interfaces (such as raw sockets) require root priv-
        ileges.  <I>nmap</I> should be run as root whenever possible.
 
 
@@ -114,7 +114,7 @@
               microsoft.com block  echo  request  packets.   Thus
               nmap can also send a TCP ack packet to (by default)
               port 80.  If we get an RST back,  that  machine  is
-              up.   A  thirt  technique  involves  sending  a SYN
+              up.   A  third  technique  involves  sending  a SYN
               packet and waiting for a RST  or  a  SYN/ACK.   For
               non-root users, a connect() method is used.
               ICMP and  ACK  techniques  in  parallel.   You  can
@@ -140,7 +140,7 @@
               doesn't matter that 111 is blocked by the firewall.
               But can you find which of the more than 30,000 high
               ports it is listening on? With a  UDP  scanner  you
-              can!   There  is  also the cDc Back Orfice backdoor
+              can!   There  is also the cDc Back Orifice backdoor
               program which hides on a configurable UDP  port  on
               Windows  machines.    Not  to mention the many com-
               monly vulnerable services that utilize UDP such  as
@@ -486,7 +486,7 @@
        running.  This requires root privileges because of the SYN
        scan and the OS detection.
 
-       <B>nmap</B> <B>-sX</B> <B>-p</B> <B>22,53,110,143</B> <B>128.210.*.1-127</B>
+       <B>nmap</B> <B>-sX</B> <B>-p</B> <B>22,53,110,143,4564</B> <B>128.210.*.1-127</B>
 
        Sends an Xmas tree scan to the first half of each  of  the
        255  possible  8  bit  subnets  in  the  128.210 class 'B'
@@ -533,7 +533,7 @@
        The   newest   version   of  <I>nmap</I>  can  be  obtained  from
        <I>http://www.insecure.org/nmap</I>
 
-       <I>nmap</I> is (C)  1997,1998  by  Fyodor  (fyodor@dhp.com,  fyo-
+       <I>nmap</I> is (C) 1997,1998,1999 by Fyodor (fyodor@dhp.com, fyo-
        dor@insecure.org)
 
        This  program  is  free  software; you can redistribute it
