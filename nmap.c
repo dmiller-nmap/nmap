@@ -1503,9 +1503,9 @@ void printportoutput(struct hoststruct *currenths, portlist *plist) {
 
   if (numignoredports == plist->numports) {
     log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,
-              "%s %d scanned ports on %s (%s) %s: %s\n",
+              "%s %d scanned %s on %s (%s) %s: %s\n",
 	      (numignoredports == 1)? "The" : "All", numignoredports,
-	      currenths->name, 
+	      (numignoredports == 1)? "port" : "ports", currenths->name, 
 	      inet_ntoa(currenths->host), 
 	      (numignoredports == 1)? "is" : "are", 
 	      statenum2str(currenths->ports.ignored_port_state));
