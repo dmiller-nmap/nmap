@@ -14,7 +14,7 @@ DEFS = @DEFS@
 CFLAGS = @CFLAGS@ $(CCOPT) $(DEFS) $(INCLS)
 LDFLAGS = @LDFLAGS@
 LIBS =  @LIBS@ -lpcap
-VERSION = 1.60
+VERSION = 1.60-Beta
 INSTALL = @INSTALL@
 MAKEDEPEND = @MAKEDEPEND@
 
@@ -46,7 +46,7 @@ distro:
 	autoconf
 	rm -f config.cache
 	./configure
-	cd $(LIBPCAPDIR); ./configure
+	cd $(LIBPCAPDIR) && ./configure
 	$(MAKE) clean
 	$(MAKE) static
 	$(MAKE)
@@ -59,13 +59,11 @@ distro:
 	mkdir /usr/tmp/nmap-$(VERSION)
 	$(MAKE) clean
 	rm -f $(LIBPCAPDIR)/config.cache $(LIBPCAPDIR)/Makefile
-	cp -r nmap.c targets.c nmap.h \
+	cp -ra nmap.c targets.c nmap.h \
 	tcpip.c tcpip.h error.c error.h utils.c utils.h inet_aton.c \
 	configure.in config.h.in Makefile.in configure install-sh config.guess \
-	config.sub INSTALL docs/README docs/copying.html COPYING \
-	docs/nmap_doc.html docs/nmap.usage.txt docs/nmap.1 \
-	docs/nmap_manpage.html $(LIBPCAPDIR) \
-	/usr/tmp/nmap-$(VERSION)
+	config.sub INSTALL docs  COPYING \
+        $(LIBPCAPDIR) /usr/tmp/nmap-$(VERSION)
 	cd /usr/tmp; \
 	tar czf nmap-$(VERSION).tar.gz nmap-$(VERSION)
 	rm -rf /usr/tmp/nmap-$(VERSION)
