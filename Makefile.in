@@ -7,25 +7,29 @@ srcdir = @srcdir@
 
 CC = @CC@
 CCOPT = 
-INCLS = -I. 
+LIBPCAPDIR = @libpcapdir@
+INCLS = -I. -I$(LIBPCAPDIR)
 DEFS = @DEFS@
-
 CFLAGS = @CFLAGS@ -Wall $(CCOPT) $(DEFS) $(INCLS)
 LDFLAGS = @LDFLAGS@
-LIBS = @LIBS@
-
+LIBS = -L./$(LIBPCAPDIR) @LIBS@ -lpcap
+VERSION = 1.49-UNRELEASED
 INSTALL = @INSTALL@
 MAKEDEPEND = @MAKEDEPEND@
 
 TARGET = nmap
 
-SRCS = nmap.c targets.c @COMPAT_SRCS@
+SRCS = nmap.c targets.c tcpip.c error.c utils.c @COMPAT_SRCS@
 
-OBJS = nmap.o targets.o @COMPAT_OBJS@
+OBJS = nmap.o targets.o tcpip.o error.o utils.o @COMPAT_OBJS@
 
 all: $(TARGET)
 
 $(TARGET): $(OBJS)
+	@echo Compiling libpcap 
+#	$(MAKE) -C $(LIBPCAPDIR) #not all hosts have this :( ...
+	cd $(LIBPCAPDIR);  $(MAKE)
+	@echo Compiling nmap
 	rm -f $@
 	$(CC) -o $@ $(OBJS) $(LIBS)
 
@@ -38,15 +42,43 @@ nmap_debug.o: nmap.c nmap.h
 ci: checkin
 
 checkin: 
-	ci -u Makefile nmap.c targets.c nmap.h inet_aton.c configure.in config.h.in Makefile.in configure install-sh config.guess config.sub
+	ci -u Makefile nmap.c targets.c nmap.h tcpip.c tcpip.h error.c error.h utils.c utils.h inet_aton.c configure.in config.h.in Makefile.in configure install-sh config.guess config.sub
+
+# This target is just for me ... don't you get any ideas --Fyodor
+distro: 
+	autoconf
+	rm -f config.cache
+	./configure
+	$(MAKE) clean
+	$(MAKE) static
+	$(MAKE)
+	./nmap -h >& /dev/null    #Make sure nmap exists
+	rm -f docs/nmap.usage.txt	
+	./nmap -h > docs/nmap.usage.txt 
+	rm -rf /usr/tmp/nmap-$(VERSION)
+	mkdir /usr/tmp/nmap-$(VERSION)
+	$(MAKE) clean
+	cp -r Makefile nmap.c targets.c nmap.h \
+	tcpip.c tcpip.h error.c error.h utils.c utils.h inet_aton.c \
+	configure.in config.h.in Makefile.in configure install-sh config.guess \
+	config.sub INSTALL bg/purple.gif docs/README docs/copying.html \
+	docs/nmap_doc.html docs/nmap.usage.txt $(LIBPCAPDIR) \
+	/usr/tmp/nmap-$(VERSION)
+	cd /usr/tmp; \
+	tar czf nmap.$(VERSION).tar.gz nmap-$(VERSION)
+	rm -rf /usr/tmp/nmap-$(VERSION)
+#	cp nmap$(VERSION).tar.gz ~/public_html/dhp/nmap	
 
 # For distributing the binary
-static: nmap.c targets.c nmap.h Makefile
-	gcc -Wall -O2 -static -o nmap nmap.c targets.c -lm
-	strip nmap
+static: 
+	cd $(LIBPCAPDIR); $(MAKE)
+	$(CC) $(CFLAGS) -static $(LDFLAGS) -o nmap.linux.bin  $(SRCS) $(LIBS)
+	strip nmap.linux.bin
 
 clean:
 	rm -f $(OBJS) $(TARGET)
+#	$(MAKE) -C $(LIBPCAPDIR) clean
+	cd $(LIBPCAPDIR); $(MAKE) clean
 
 distclean: clean
 	rm -f Makefile Makefile.bak config.h stamp-h stamp-h.in \

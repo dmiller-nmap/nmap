@@ -3,6 +3,8 @@
 
 /************************INCLUDES**********************************/
 
+#include <unistd.h>
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -51,6 +53,9 @@ void *realloc();
 #ifndef __USE_BSD
 #define __USE_BSD
 #endif
+#ifndef __BSD_SOURCE
+#define __BSD_SOURCE
+#endif
 
 /* BSDI needs this to insure the correct struct ip */
 #undef _IP_VHL
@@ -65,15 +70,20 @@ void *realloc();
 #include <sys/socket.h> 
 #include <sys/stat.h>
 #include <netinet/in.h>
-#include <unistd.h>
 #include <errno.h>
 #include <netdb.h>
 #include <time.h>
 #include <fcntl.h>
 #include <signal.h> 
 #include <signal.h>
+#ifndef NETINET_IN_SYSTEM_H  /* why the HELL does OpenBSD not do this? */
 #include <netinet/in_systm.h> /* defines n_long needed for netinet/ip.h */
+#define NETINET_IN_SYSTEM_H
+#endif
+#ifndef NETINET_IP_H  /* why the HELL does OpenBSD not do this? */
 #include <netinet/ip.h> 
+#define NETINET_IP_H
+#endif
 #include <netinet/ip_icmp.h> 
 #include <arpa/inet.h>
 #include <math.h>
@@ -81,25 +91,43 @@ void *realloc();
 #ifndef __FAVOR_BSD
 #define __FAVOR_BSD
 #endif
+#ifndef NETINET_TCP_H  /* why the HELL does OpenBSD not do this? */
 #include <netinet/tcp.h>          /*#include <netinet/ip_tcp.h>*/
+#define NETINET_TCP_H
+#endif
 #include <sys/resource.h>
 /*#include <net/if_arp.h> *//* defines struct arphdr needed for if_ether.h */
-#include <net/if.h>     /* defines struct ifnet needed for if_ether.h */
-#include <netinet/if_ether.h> 
+#ifndef NET_IF_H  /* why the HELL does OpenBSD not do this? */
+#include <net/if.h>
+#define NET_IF_H
+#endif
+#if HAVE_NETINET_IF_ETHER_H 
+#ifndef NETINET_IF_ETHER_H
+#include <netinet/if_ether.h>
+#define NETINET_IF_ETHER_H
+#endif /* NETINET_IF_ETHER_H */
+#endif /* HAVE_NETINET_IF_ETHER_H */
 
-/************************DEFINES************************************/
+#include "tcpip.h"
+#include "error.h"
+#include "utils.h"
+
+/*******  DEFINES  ************/
 
 /* User configurable #defines: */
 /* #define to zero if you don't want to	ignore hosts of the form 
    xxx.xxx.xxx.{0,255} (usually network and broadcast addresses) */
 #define IGNORE_ZERO_AND_255_HOSTS 0
-#define VERSION "1.49"
+#define VERSION "1.49-UNRELEASED"
 #ifndef DEBUGGING
 #define DEBUGGING 0
 #endif
 /* Default number of ports in parallel.  Doesn't always involve actual 
    sockets.  Can also adjust with the -M command line option.  */
 #define MAX_SOCKETS 36 
+/* As an optimisation we limit the maximum value of MAX_SOCKETS to a very
+   high value (avoids dynamic memmory allocation */
+#define MAX_SOCKETS_ALLOWED 1025
 /* How many hosts do we ping in parallel to see if they are up? */
 #define LOOKAHEAD 50
 /* If reads of a UDP port keep returning EAGAIN (errno 13), do we want to 
@@ -117,15 +145,16 @@ void *realloc();
 #define FTPPASS "-wwwuser@"
 #define FTP_RETRIES 2 /* How many times should we relogin if we lose control
                          connection? */
-#define MAX_TIMEOUTS 70   /* How many timed out connection attempts in a row
-			      before we decide the host is dead? */
+#define MAX_TIMEOUTS MAX_SOCKETS   /* How many timed out connection attempts 
+				      in a row before we decide the host is 
+				      dead? */
 
 /* DO NOT change stuff after this point */
 #define UC(b)   (((int)b)&0xff)
 #define MORE_FRAGMENTS 8192 /*NOT a user serviceable parameter*/
 #define SA    struct sockaddr  /*Ubertechnique from R. Stevens */
-#define fatal(x) { fprintf(stderr, "%s\n", x); exit(-1); }
-#define error(x) fprintf(stderr, "%s\n", x);
+/*#define fatal(x) { fprintf(stderr, "%s\n", x); exit(-1); }
+  #define error(x) fprintf(stderr, "%s\n", x);*/
 /* hoststruct->flags stuff */
 #define HOST_UP 1
 #define HOST_DOWN 2 
@@ -187,6 +216,7 @@ struct hoststruct {
   int wierd_responses; /* echo responses from other addresses, Ie a network broadcast address */
   unsigned int flags; /* HOST_UP, HOST_DOWN, HOST_FIREWALLED, HOST_BROADCAST (instead of HOST_BROADCAST use wierd_responses */
   unsigned long rtt; /* microseconds */
+  char device[64]; /* The device we transmit on */
 };
 
 struct ops /* someone took struct options, <grrr> */ {
@@ -231,7 +261,7 @@ int getidentinfoz(struct in_addr target, int localport, int remoteport,
 		  char *owner);
 int parse_bounce(struct ftpinfo *ftp, char *url);
 int ftp_anon_connect(struct ftpinfo *ftp);
-int getsourceip(struct hoststruct *target);
+
 /* port manipulators */
 unsigned short *getpts(char *expr); /* someone stole the name getports()! */
 unsigned short *getfastports(int tcpscan, int udpscan);
@@ -250,17 +280,9 @@ int recvtime(int sd, char *buf, int len, int seconds);
 void max_rcvbuf(int sd);
 int max_sd();
 /* RAW packet building/dissasembling stuff */
-int send_tcp_raw( int sd, struct in_addr *source, 
-		  struct in_addr *victim, unsigned short sport, 
-		  unsigned short dport, unsigned long seq,
-		  unsigned long ack, unsigned char flags,
-		  unsigned short window, char *data,
-		  unsigned short datalen);
 int isup(struct in_addr target);
-unsigned short in_cksum(unsigned short *ptr,int nbytes);
 int send_small_fragz(int sd, struct in_addr *source, struct in_addr *victim,
 		     int sport, int dport, int flags);
-int readtcppacket(char *packet, int readdata);
 int listen_icmp(int icmpsock, unsigned short outports[],
 		unsigned short numtries[], int *num_out,
 		struct in_addr target, portlist *ports);
@@ -276,4 +298,6 @@ void options_init();
 int inet_aton(register const char *, struct in_addr *);
 #endif
 #endif /* NMAP_H */
+
+
 

@@ -253,6 +253,7 @@ if (sizeof(struct ppkt) != 8)
   fatal("Your native data type sizes are too screwed up for this to work.");
 
 sd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
+/*sethdrinclude(sd);*/
 bzero((char *)&sock,sizeof(struct sockaddr_in));
 sock.sin_family=AF_INET;
 gettimeofday(&start, NULL);

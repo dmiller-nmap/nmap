@@ -15,9 +15,26 @@
 
 #undef HAVE_SYS_PARAM_H
 
+#undef HAVE_SYS_SOCKIO_H
+
 #undef BSD_NETWORKING
 
 #undef HAVE_SNPRINTF
 
 #undef IN_ADDR_DEEPSTRUCT
+
+#undef HAVE_NETINET_IN_SYSTEM_H
+
+#undef HAVE_SOCKADDR_SA_LEN
+
+#undef HAVE_NETINET_IF_ETHER_H
+
+#undef HAVE_STRUCT_ICMP
+
+#undef HAVE_IP_IP_SUM
+
+#undef LINUX
+
+#undef SOLARIS
+
 

@@ -12,7 +12,8 @@ short quashargv = 0, pingscan = 0, lamerscan = 0;
 int lookahead = LOOKAHEAD;
 short bouncescan = 0;
 unsigned short *ports = NULL;
-#ifdef IN_ADDR_DEEPSTRUCT
+char myname[MAXHOSTNAMELEN + 1];
+#if (defined(IN_ADDR_DEEPSTRUCT) || defined( SOLARIS))
 /* Note that struct in_addr in solaris is 3 levels deep just to store an
  * unsigned int! */
 struct ftpinfo ftp = { FTPUSER, FTPPASS, "",  { { { 0 } } } , 21, 0};
@@ -24,7 +25,8 @@ struct in_addr *source=NULL;
 char **fakeargv = (char **) safe_malloc(sizeof(char *) * (argc + 1));
 struct hoststruct *currenths;
 char emptystring[1];
-
+int sourceaddrwarning = 0; /* Have we warned them yet about unguessable
+			      source addresses? */
 /* argv faking silliness */
 for(i=0; i < argc; i++) {
   fakeargv[i] = safe_malloc(strlen(argv[i]) + 1);
@@ -57,7 +59,13 @@ while((arg = getopt(argc,fakeargv,"Ab:DdFfhiL:lM:NnPp:qrRS:sT:tUuw:Vv")) != EOF)
   case 'i': o.identscan++; break;
   case 'L': lookahead = atoi(optarg); break;
   case 'l': lamerscan++; udpscan++; break;
-  case 'M': o.max_sockets = atoi(optarg); break;
+  case 'M': 
+    o.max_sockets = atoi(optarg); 
+    if (o.max_sockets > MAX_SOCKETS_ALLOWED) {
+      printf("Warning: You are limited to MAX_SOCKETS_ALLOWD (%d) paralell sockets.  If you really need more, change the #define and recompile.\n", MAX_SOCKETS_ALLOWED);
+      o.max_sockets = MAX_SOCKETS_ALLOWED;
+    }
+    break;
   case 'n': o.noresolve++; break;
   case 'N': o.force++; break;
   case 'P': pingscan++; break;
@@ -85,7 +93,7 @@ while((arg = getopt(argc,fakeargv,"Ab:DdFfhiL:lM:NnPp:qrRS:sT:tUuw:Vv")) != EOF)
     printf("\nnmap V. %s by Fyodor (fyodor@dhp.com, www.dhp.com/~fyodor/nmap/)\n", VERSION); 
     exit(0);
     break;
-  case 'v': o.verbose++;
+  case 'v': o.verbose++; break;
   }
 }
 
@@ -108,6 +116,10 @@ if (!tcpscan && !udpscan && !o.synscan && !o.finscan && !bouncescan && !pingscan
 if (fastscan && ports)
   fatal("You can use -F (fastscan) OR -p for explicit port specification.\
   Not both!\n");
+}
+if (o.max_sockets > MAX_SOCKETS_ALLOWED) {
+   printf("Warning: You are limited to MAX_SOCKETS_ALLOWD (%d) paralell sockets.  If you really need more, change the #define and recompile.\n", MAX_SOCKETS_ALLOWED);
+   o.max_sockets = MAX_SOCKETS_ALLOWED;
 }
 if (pingscan && o.dontping)
 /* If he wants to bounce of an ftp site, that site better damn well be reachable! */
@@ -190,8 +202,18 @@ else {
     printf("Host  %s (%s) seems to be a subnet broadcast address (returned %d extra pings)\n",  currenths->name, inet_ntoa(currenths->host), currenths->wierd_responses);
 }
 if (currenths->flags & HOST_UP && !currenths->source_ip.s_addr && ( o.synscan || o.finscan)) {
-  getsourceip(currenths);
+  if (gethostname(myname, MAXHOSTNAMELEN) || 
+      !(target = gethostbyname(myname)))
+    fatal("Your system is fucked up.  Cannot get hostname!\n"); 
+  memcpy(&currenths->source_ip, target->h_addr_list[0], sizeof(struct in_addr));
+  if (! sourceaddrwarning) {
+    printf("We could not determine for sure which interface to use, so we are guessing %s .  If this is wrong, use -S\n", inet_ntoa(currenths->source_ip));
+    sourceaddrwarning = 1;
+  }
 }
+
+if ((o.finscan || o.synscan) && !ipaddr2devname( currenths->device, &currenths->source_ip))
+  fatal("Could not figure out what device to send the packet out on!  You might possibly want to try -S (but this is probably a bigger problem)\n");
 
     /* Time for some actual scanning! */    
     if (currenths->flags & HOST_UP) {
@@ -243,51 +265,6 @@ o.max_sockets = MAX_SOCKETS;
 o.allowall = !(IGNORE_ZERO_AND_255_HOSTS);
 #endif
 o.ptime = PING_TIMEOUT;
-}
-
-
-__inline__ unsigned short in_cksum(unsigned short *ptr,int nbytes) {
-
-register long           sum;            /* assumes long == 32 bits */
-u_short                 oddbyte;
-register u_short        answer;         /* assumes u_short == 16 bits */
-
-/*
- * Our algorithm is simple, using a 32-bit accumulator (sum),
- * we add sequential 16-bit words to it, and at the end, fold back
- * all the carry bits from the top 16 bits into the lower 16 bits.
- */
-
-sum = 0;
-while (nbytes > 1)  {
-sum += *ptr++;
-nbytes -= 2;
-}
-
-/* mop up an odd byte, if necessary */
-if (nbytes == 1) {
-oddbyte = 0;            /* make sure top half is zero */
-*((u_char *) &oddbyte) = *(u_char *)ptr;   /* one byte only */
-sum += oddbyte;
-}
-
-/*
- * Add back carry outs from top 16 bits to low 16 bits.
- */
-
-sum  = (sum >> 16) + (sum & 0xffff);    /* add high-16 to low-16 */
-sum += (sum >> 16);                     /* add carry */
-answer = ~sum;          /* ones-complement, then truncate to 16 bits */
-return(answer);
-}
-
-__inline__ int unblock_socket(int sd) {
-int options;
-/*Unblock our socket to prevent recvfrom from blocking forever 
-  on certain target ports. */
-options = O_NONBLOCK | fcntl(sd, F_GETFL);
-fcntl(sd, F_SETFL, options);
-return 1;
 }
 
 __inline__ void max_rcvbuf(int sd) {
@@ -464,7 +441,7 @@ options (none are required, most can be combined):\n\
    -h help, print this junk.  Also see http://www.dhp.com/~fyodor/nmap/\n\
    -S If you want to specify the source address of SYN or FYN scan.\n", name, LOOKAHEAD);
 if (!o.allowall) printf("-A Allow scanning .0 and .255 addresses" );
-printf("-T <seconds> Set the ping and tcp connect() timeout.\n\
+printf("   -T <seconds> Set the ping and tcp connect() timeout.\n\
    -V Print version number and exit.\n\
    -v Verbose.  Its use is recommended.  Use twice for greater effect.\n\
    -w <n> delay.  n microsecond delay. Not recommended unless needed.\n\
@@ -473,7 +450,7 @@ printf("-T <seconds> Set the ping and tcp connect() timeout.\n\
 Hostnames specified as internet hostname or IP address.  Optional '/mask' \
 specifies subnet. cert.org/24 or 192.88.209.5/24 scan CERT's Class C.\n",
         FAKE_ARGV);
-exit(1);
+exit(0);
 }
 
 portlist tcp_scan(struct hoststruct *target, unsigned short *portarray, int timeout) {
@@ -482,12 +459,12 @@ int starttime, current_out = 0, res , deadindex = 0, i=0, j=0, k=0, max=0;
 struct sockaddr_in sock, stranger, mysock;
 int sockaddr_in_len = sizeof(struct sockaddr_in);
 int seconds, seconds2;  /* Store time temporarily for timeout purposes */
-int *sockets = safe_malloc(sizeof(int) * o.max_sockets);  /* All socket descriptors */
-int *deadstack = safe_malloc(sizeof(int) * o.max_sockets); /* Stack of dead descriptors (indexes to sockets[] */
-unsigned short *portno = safe_malloc(sizeof(unsigned short) * o.max_sockets); /* port numbers of sd's, parallel to sockets[] */
-int *times = safe_malloc(sizeof(int) * o.max_sockets); /* initial connect() times of sd's, parallel to sockets[].  For timeout information. */
-int *retrystack = safe_malloc(sizeof(int) * o.max_sockets); /* sd's that need to be retried */
-int *retries = safe_malloc(sizeof(int) * 65535); /* nr. or retries for this port */
+int sockets[MAX_SOCKETS_ALLOWED];   /* All socket descriptors */
+int deadstack[MAX_SOCKETS_ALLOWED]; /* Stack of dead descriptors (indexes to sockets[] */
+unsigned short portno[MAX_SOCKETS_ALLOWED];  /* port numbers of sd's, parallel to sockets[] */
+int times[MAX_SOCKETS_ALLOWED]; /* initial connect() times of sd's, parallel to sockets[].  For timeout information. */
+int retrystack[MAX_SOCKETS_ALLOWED]; /* sd's that need to be retried */
+static int retries[65535]; /* nr. or retries for this port */
 int retryindex = -1;
 int numretries = 2; /* How many retries before we give up on a connection */
 char owner[513], buf[65536]; 
@@ -542,7 +519,8 @@ while(portarray[j] || retryindex >= 0 || current_out != 0) {
     sock.sin_port = htons(portno[current_socket]);
     times[current_socket] = seconds;
     if ((res = connect(sockets[current_socket],(struct sockaddr *)&sock,sizeof(struct sockaddr)))!=-1) {
-      printf("successful connection in non-blocking mode!$\n");
+	/* This can happen on localhost, successful connection immediately
+           in non-blocking mode */
       if (o.debugging || o.verbose)
 	printf("Adding TCP port %hi due to successful connection.\n", 
 	       portno[current_socket]);
@@ -860,17 +838,6 @@ int deleteport(portlist *ports, unsigned short portno,
   return 0; /* success */
 }
 
-
-void *safe_malloc(int size)
-{
-  void *mymem;
-  if (size < 0)
-    fatal("Tried to malloc negative amount of memmory!!!");
-  if ((mymem = malloc(size)) == NULL)
-    fatal("Malloc Failed! Probably out of space.");
-  return mymem;
-}
-
 void printandfreeports(portlist ports) {
   char protocol[4];
   struct servent *service;
@@ -897,8 +864,8 @@ void printandfreeports(portlist ports) {
 portlist udp_scan(struct hoststruct *target, unsigned short *portarray) {
   int icmpsock, udpsock, tmp, done=0, retries, bytes = 0, res,  num_out = 0;
   int i=0,j=0, k=0, icmperrlimittime, max_tries = UDP_MAX_PORT_RETRIES;
-  unsigned short *outports = safe_malloc(sizeof(unsigned short) * o.max_sockets);
-  unsigned short *numtries = safe_malloc(sizeof(unsigned short) * o.max_sockets);
+  unsigned short outports[MAX_SOCKETS_ALLOWED];
+  unsigned short numtries[MAX_SOCKETS_ALLOWED];
   struct sockaddr_in her;
   char senddata[] = "blah\n";
   unsigned long starttime, sleeptime;
@@ -1082,9 +1049,9 @@ int listen_icmp(int icmpsock,  unsigned short outports[],
    are r00t */
 portlist lamer_udp_scan(struct hoststruct *target, unsigned short *portarray) {
 int sockaddr_in_size = sizeof(struct sockaddr_in),i=0,j=0,k=0, bytes;
-int *sockets = safe_malloc(sizeof(int) * o.max_sockets);
-int *trynum = safe_malloc(sizeof(int) * o.max_sockets);
-unsigned short *portno = safe_malloc(sizeof(unsigned short) * o.max_sockets);
+int sockets[MAX_SOCKETS_ALLOWED];
+int trynum[MAX_SOCKETS_ALLOWED];
+unsigned short portno[MAX_SOCKETS_ALLOWED];
 int last_open = 0;
 char response[1024];
 struct sockaddr_in her, stranger;
@@ -1203,47 +1170,6 @@ if (o.debugging)
   printf("UDP scanned %d ports in %ld seconds with %d parallel sockets\n",
 	 o.numports, (long) time(NULL) - starttime, o.max_sockets);
 return target->ports;
-}
-
-
-int getsourceip(struct hoststruct *target) {
-  int sd;
-  struct sockaddr_in sock;
-  int socklen = sizeof(struct sockaddr_in);
-  if ((sd = socket(AF_INET, SOCK_DGRAM, 0)) == -1)
-    {perror("Socket troubles"); return 0;}
-  sock.sin_family = AF_INET;
-  sock.sin_addr = target->host;
-  sock.sin_port = htons(MAGIC_PORT);
-  if (connect(sd, (struct sockaddr *) &sock, sizeof(struct sockaddr_in)) == -1)
-    { perror("UDP connect()");
-    close(sd);
-    return 0;
-    }
-  bzero( (char * )&sock, sizeof(struct sockaddr_in));
-  if (getsockname(sd, (SA *)&sock, &socklen) == -1) {
-    perror("getsockname");
-    close(sd);
-    return 0;
-  }
-  if (sock.sin_addr.s_addr == target->host.s_addr) {
-    /* could be valid, but only if we are sending to ourself */
-    /* Its probably an error so I'm returning 0 */
-    /* Linux has the very bad habit of doing this */
-    close(sd);
-    return 0;
-  }
-  if (sock.sin_addr.s_addr) {
-    target->source_ip = sock.sin_addr;
-    if (o.debugging) printf("getsourceip: %s routes through interface %s\n", inet_ntoa(target->host), inet_ntoa(target->source_ip));
-  }
-  else {
-    if (o.debugging) printf("failted to obtain your IP address\n");
-    close(sd);
-    return 0;
-  }
-  close(sd);
-  return 1;
 }
 
 
@@ -1367,35 +1293,41 @@ else {
 return 1;
 }
 
+/* SYN scan, we now use libpcap instead of the non-portable Linux technique
+   of using recvfrom() to read TCP packets from a RAW socket */
 portlist syn_scan(struct hoststruct *target, unsigned short *portarray) {
-int i=0, j=0, received, bytes, starttime;
-struct sockaddr_in from;
-int fromsize = sizeof(struct sockaddr_in);
-int *sockets = safe_malloc(sizeof(int) * o.max_sockets);
+int i=0, j=0, bytes, starttime;
+int sockets[MAX_SOCKETS_ALLOWED];
 struct timeval tv,start,end;
 unsigned int elapsed_time;
-char packet[65535];
-struct ip *ip = (struct ip *) packet;
-struct tcphdr *tcp = (struct tcphdr *) (packet + sizeof(struct ip));
+/*char packet[65535];*/
+struct ip *ip = NULL; /* = (struct ip *) packet;*/
+struct tcphdr *tcp = NULL; /*(struct tcphdr *) (packet + sizeof(struct ip));*/
 fd_set fd_read, fd_write;
-int res;
-struct hostent *myhostent;
+struct hostent *myhostent = NULL;
 char myname[MAXHOSTNAMELEN + 1];
 short magic_port_NBO;
 int packets_out;
-
+pcap_t *pd;
+struct bpf_program fcode;
+char filter[512];
+unsigned int localnet, netmask;
+char *p = NULL;
+char err0r[PCAP_ERRBUF_SIZE];
 magic_port_NBO = htons(MAGIC_PORT);
 
 FD_ZERO(&fd_read);
 FD_ZERO(&fd_write);
 
-if ((received = socket(AF_INET, SOCK_RAW,  IPPROTO_TCP)) < 0 )
-  perror("socket troubles in syn_scan");
+
+
+/*if ((received = socket(AF_INET, SOCK_RAW,  IPPROTO_TCP)) < 0 )
+  perror("socket troubles in syn_scan");*/
 /*if ((received = socket(AF_INET, SOCK_PACKET,  htons(ETH_P_IP))) < 0 )
   perror("socket troubles in syn_scan");*/
-unblock_socket(received);
-max_rcvbuf(received); /* does nothing for linux */
-FD_SET(received, &fd_read);
+/*unblock_socket(received);*/
+/*(max_rcvbuf(received);*/ /* does nothing for linux */
+/*FD_SET(received, &fd_read);*/
 
 if (!target->source_ip.s_addr) {
   if (gethostname(myname, MAXHOSTNAMELEN) || 
@@ -1406,6 +1338,25 @@ if (!target->source_ip.s_addr) {
     printf("We skillfully deduced that your address is %s\n", 
 	   inet_ntoa(target->source_ip));
 }
+
+/* Now for the pcap opening nonsense ... */
+if (!(pd = pcap_open_live(target->device, 40, 0, 0, err0r)))
+  fatal("pcap_open_live: %s", err0r);
+if (pcap_lookupnet(target->device, &localnet, &netmask, err0r) < 0)
+  fatal("Failed to lookup device subnet/netmask: %s", err0r);
+p = strdup(inet_ntoa(target->host));
+#ifdef HAVE_SNPRINTF
+snprintf(filter, sizeof(filter), "tcp and src host %s and dst host %s and dst port %d", p, inet_ntoa(target->source_ip), MAGIC_PORT );
+#else
+sprintf(filter, "tcp and src host %s and dst host %s and dst port %d", p, inet_ntoa(target->source_ip), MAGIC_PORT );
+#endif
+free(p);
+if (o.debugging)
+  printf("Packet capture filter: %s\n", filter);
+if (pcap_compile(pd, &fcode, filter, 0, netmask) < 0)
+  fatal("Error compiling our pcap filter: %s\n", pcap_geterr(pd));
+if (pcap_setfilter(pd, &fcode) < 0 )
+  fatal("Failed to set the pcap filter: %s\n", pcap_geterr(pd));
 
 starttime = time(NULL);
 
@@ -1427,34 +1378,36 @@ do {
   do {
     tv.tv_sec = o.ptime;
     tv.tv_usec = 0;
-    FD_SET(received, &fd_read);
-    if ((res = select(received + 1, &fd_read, NULL, NULL, &tv)) < 0)
+    /*    FD_SET(received, &fd_read);*/
+    /*    if ((res = select(received + 1, &fd_read, NULL, NULL, &tv)) < 0)
       perror("select problems in syn_scan");
-    else /*if (res > 0)*/ {
-      while  ((bytes = recvfrom(received, packet, 65535, 0, 
+      else*/ /*if (res > 0)*//* {*/
+      /* Linux-Specific ... LAME
+            while  ((bytes = recvfrom(received, packet, 65535, 0, 
 				(struct sockaddr *)&from, &fromsize)) > 0 ) {
-
+      */
+      while (( ip = (struct ip*) readip_pcap(pd, &bytes, 1))) {
+	tcp = (struct tcphdr *) (((char *)ip) + (4 * ip->ip_hl));
 	if (ip->ip_src.s_addr == target->host.s_addr && tcp->th_sport != magic_port_NBO
 	    && tcp->th_dport == magic_port_NBO) {
-
+	  
 	  packets_out--;
 	  if (tcp->th_flags & TH_RST) {
 	    if (o.debugging > 1) printf("Nothing open on port %d\n",
-				      ntohs(tcp->th_sport));
+					ntohs(tcp->th_sport));
 	  }
 	  else /*if (tcp->th_flags & TH_SYN && tcp->th_flags & TH_ACK)*/ {
 	    if (o.debugging || o.verbose) {	  
 	      printf("Possible catch on port %d!  Here it is:\n", 
 		     ntohs(tcp->th_sport));
-	      readtcppacket(packet,1);
+	      readtcppacket((char *)ip,1);
 	    }
 	    addport(&target->ports, ntohs(tcp->th_sport), IPPROTO_TCP, NULL); 	    
 	  }
 	}
       }
-    }
-    gettimeofday(&end, NULL);
-    elapsed_time = (end.tv_sec - start.tv_sec) * 1e6 + end.tv_usec - start.tv_usec;
+  gettimeofday(&end, NULL);
+  elapsed_time = (end.tv_sec - start.tv_sec) * 1e6 + end.tv_usec - start.tv_usec;
   } while ( packets_out && elapsed_time < 1e6 * (double) o.ptime / 3 );
   /*for(i=0; i < o.max_sockets && portarray[j]; i++) close(sockets[i]);*/
     for(; i >= 0; i--) close(sockets[i]);
@@ -1463,191 +1416,9 @@ do {
 if (o.debugging || o.verbose)
   printf("The TCP SYN scan took %ld seconds to scan %d ports.\n",
 	 (long) time(NULL) - starttime, o.numports);
-close(received);
+/*close(received);*/
+pcap_close(pd);
 return target->ports;
-}
-
-
-int send_tcp_raw( int sd, struct in_addr *source, 
-		  struct in_addr *victim, unsigned short sport, 
-		  unsigned short dport, unsigned long seq,
-		  unsigned long ack, unsigned char flags,
-		  unsigned short window, char *data, 
-		  unsigned short datalen) 
-{
-
-struct pseudo_header { 
-  /*for computing TCP checksum, see TCP/IP Illustrated p. 145 */
-  unsigned long s_addy;
-  unsigned long d_addr;
-  char zer0;
-  unsigned char protocol;
-  unsigned short length;
-};
-
-char *packet = safe_malloc(sizeof(struct ip) + sizeof(struct tcphdr) + datalen);
-struct ip *ip = (struct ip *) packet;
-struct tcphdr *tcp = (struct tcphdr *) (packet + sizeof(struct ip));
-struct pseudo_header *pseudo =  (struct pseudo_header *) (packet + sizeof(struct ip) - sizeof(struct pseudo_header)); 
-
- /*With these placement we get data and some field alignment so we aren't
-   wasting too much in computing the checksum */
-int res;
-struct sockaddr_in sock;
-char myname[MAXHOSTNAMELEN + 1];
-struct hostent *myhostent;
-int source_malloced = 0;
-
-/* check that required fields are there and not too silly */
-if ( !victim || !sport || !dport || sd < 0) {
-  fprintf(stderr, "send_tcp_raw: One or more of your parameters suck!\n");
-  return -1;
-}
-
-/* if they didn't give a source address, fill in our first address */
-if (!source) {
-  source_malloced = 1;
-  source = safe_malloc(sizeof(struct in_addr));
-  if (gethostname(myname, MAXHOSTNAMELEN) || 
-      !(myhostent = gethostbyname(myname)))
-    fatal("Your system is fucked up.\n"); 
-  memcpy(source, myhostent->h_addr_list[0], sizeof(struct in_addr));
-  if (o.debugging > 1)
-    printf("We skillfully deduced that your address is %s\n", 
-	   inet_ntoa(*source));
-}
-
-
-/*do we even have to fill out this damn thing?  This is a raw packet, 
-  after all */
-sock.sin_family = AF_INET;
-sock.sin_port = htons(dport);
-sock.sin_addr.s_addr = victim->s_addr;
-
-
-bzero((char *) packet, sizeof(struct ip) + sizeof(struct tcphdr));
-
-pseudo->s_addy = source->s_addr;
-pseudo->d_addr = victim->s_addr;
-pseudo->protocol = IPPROTO_TCP;
-pseudo->length = htons(sizeof(struct tcphdr) + datalen);
-
-tcp->th_sport = htons(sport);
-tcp->th_dport = htons(dport);
-if (seq)
-  tcp->th_seq = htonl(seq);
-else if (flags & TH_SYN) tcp->th_seq = rand() + rand();
-
-if (ack)
-  tcp->th_ack = htonl(ack);
-/*else if (flags & TH_ACK)
-  tcp->th_ack = rand() + rand();*/
-
-tcp->th_off = 5 /*words*/;
-tcp->th_flags = flags;
-
-if (window)
-  tcp->th_win = htons(window);
-else tcp->th_win = htons(2048); /* Who cares */
-
-tcp->th_sum = in_cksum((unsigned short *)pseudo, sizeof(struct tcphdr) + 
-		       sizeof(struct pseudo_header) + datalen);
-
-/* Now for the ip header */
-
-bzero(packet, sizeof(struct ip)); 
-ip->ip_v = 4;
-ip->ip_hl = 5;
-ip->ip_len = htons(sizeof(struct ip) + sizeof(struct tcphdr) + datalen);
-ip->ip_id = rand();
-ip->ip_ttl = 255;
-ip->ip_p = IPPROTO_TCP;
-ip->ip_src.s_addr = source->s_addr;
-ip->ip_dst.s_addr= victim->s_addr;
-ip->ip_sum = in_cksum((unsigned short *)ip, sizeof(struct ip));
-
- /* We should probably copy the data over too */
-if (data)
-  memcpy(packet + sizeof(struct ip) + sizeof(struct tcphdr), data, datalen);
-
-if (o.debugging > 1) {
-printf("Raw TCP packet creation completed!  Here it is:\n");
-
-readtcppacket(packet,ntohs(ip->ip_len));
-}
-if (o.debugging > 1) 
-
-  printf("\nTrying sendto(%d , packet, %d, 0 , %s , %d)\n",
-	 sd, ntohs(ip->ip_len), inet_ntoa(*victim),
-	 sizeof(struct sockaddr_in));
-if ((res = sendto(sd, packet, ntohs(ip->ip_len), 0,
-		  (struct sockaddr *)&sock, (int) sizeof(struct sockaddr_in))) == -1)
-  {
-    perror("sendto in send_tcp_raw");
-    if (source_malloced) free(source);
-    return -1;
-  }
-if (o.debugging > 1) printf("successfully sent %d bytes of raw_tcp!\n", res);
-
-if (source_malloced) free(source);
-return res;
-}
-
-/* A simple program I wrote to help in debugging, shows the important fields
-   of a TCP packet*/
-int readtcppacket(char *packet, int readdata) {
-
-struct ip *ip = (struct ip *) packet;
-struct tcphdr *tcp = (struct tcphdr *) (packet + sizeof(struct ip));
-char *data = packet +  sizeof(struct ip) + sizeof(struct tcphdr);
-int tot_len;
-struct in_addr bullshit, bullshit2;
-char sourcehost[16];
-int i;
-int realfrag = 0;
-
-if (!packet) {
-  fprintf(stderr, "readtcppacket: packet is NULL!\n");
-  return -1;
-    }
-
-bullshit.s_addr = ip->ip_src.s_addr; bullshit2.s_addr = ip->ip_dst.s_addr;
-/* this is gay */
-realfrag = ntohs(ip->ip_off) & 8191 /* 2^13 - 1 */;
-tot_len = ntohs(ip->ip_len);
-strncpy(sourcehost, inet_ntoa(bullshit), 16);
-i =  4 * (ntohs(ip->ip_hl) + ntohs(tcp->th_off));
-if (ip->ip_p== IPPROTO_TCP) {
-  if (realfrag) 
-    printf("Packet is fragmented, offset field: %u\n", realfrag);
-  else {
-    printf("TCP packet: %s:%d -> %s:%d (total: %d bytes)\n", sourcehost, 
-	   ntohs(tcp->th_sport), inet_ntoa(bullshit2), 
-	   ntohs(tcp->th_dport), tot_len);
-    printf("Flags: ");
-    if (!tcp->th_flags) printf("(none)");
-    if (tcp->th_flags & TH_RST) printf("RST ");
-    if (tcp->th_flags & TH_SYN) printf("SYN ");
-    if (tcp->th_flags & TH_ACK) printf("ACK ");
-    if (tcp->th_flags & TH_PUSH) printf("PSH ");
-    if (tcp->th_flags & TH_FIN) printf("FIN ");
-    if (tcp->th_flags & TH_URG) printf("URG ");
-    printf("\n");
-
-    printf("ttl: %hi ", ip->ip_ttl);
-
-    if (tcp->th_flags & (TH_SYN | TH_ACK)) printf("Seq: %lu\tAck: %lu\n", 
-						  (unsigned long) ntohl(tcp->th_seq), (unsigned long) ntohl(tcp->th_ack));
-    else if (tcp->th_flags & TH_SYN) printf("Seq: %lu\n", (unsigned long) ntohl(tcp->th_seq));
-    else if (tcp->th_flags & TH_ACK) printf("Ack: %lu\n", (unsigned long) ntohl(tcp->th_ack));
-  }
-}
-if (readdata && i < tot_len) {
-printf("Data portion:\n");
-while(i < tot_len)  printf("%2X%c", data[i], (++i%16)? ' ' : '\n');
-printf("\n");
-}
-return 0;
 }
 
 /* We don't exactly need real crypto here (thank god!)\n"*/
@@ -1692,6 +1463,11 @@ int res;
 struct sockaddr_in sock;
 int id;
 
+/* It was a tough decision whether to do this here for every packet
+   or let the calling function deal with it.  In the end I grudgingly decided
+   to do it here and potentially waste a couple microseconds... */
+sethdrinclude(sd);
+
 /*Why do we have to fill out this damn thing? This is a raw packet, after all */
 sock.sin_family = AF_INET;
 sock.sin_port = htons(dport);
@@ -1731,8 +1507,9 @@ ip->ip_ttl = 255;
 ip->ip_p = IPPROTO_TCP;
 ip->ip_src.s_addr = source->s_addr;
 ip->ip_dst.s_addr = victim->s_addr;
+#if HAVE_IP_IP_SUM
 ip->ip_sum= in_cksum((unsigned short *)ip, sizeof(struct ip));
-
+#endif
 if (o.debugging > 1) {
   printf("Raw TCP packet fragment #1 creation completed!  Here it is:\n");
   hdump(packet,20);
@@ -1741,6 +1518,9 @@ if (o.debugging > 1)
   printf("\nTrying sendto(%d , packet, %d, 0 , %s , %d)\n",
 	 sd, ntohs(ip->ip_len), inet_ntoa(*victim),
 	 (int) sizeof(struct sockaddr_in));
+/* Lets save this and send it AFTER we send the second one, just to be
+   cute ;) */
+
 if ((res = sendto(sd, packet, ntohs(ip->ip_len), 0, 
 		  (struct sockaddr *)&sock, sizeof(struct sockaddr_in))) == -1)
   {
@@ -1761,8 +1541,9 @@ ip2->ip_ttl = 255;
 ip2->ip_p = IPPROTO_TCP;
 ip2->ip_src.s_addr = source->s_addr;
 ip2->ip_dst.s_addr= victim->s_addr;
+#if HAVE_IP_IP_SUM
 ip2->ip_sum = in_cksum((unsigned short *)ip2, sizeof(struct ip));
-
+#endif
 if (o.debugging > 1) {
   printf("Raw TCP packet fragment creation completed!  Here it is:\n");
   hdump(packet,20);
@@ -1775,45 +1556,32 @@ if ((res = sendto(sd, (void *)ip2, ntohs(ip2->ip_len), 0,
 		  (struct sockaddr *)&sock, (int) sizeof(struct sockaddr_in))) == -1)
 
   {
-    perror("sendto in send_tcp_raw");
+    perror("sendto in send_tcp_raw frag #2");
     return -1;
   }
+
 return 1;
 }
 
-/* Hex dump */
-void hdump(unsigned char *packet, int len) {
-unsigned int i=0, j=0;
-
-printf("Here it is:\n");
-
-for(i=0; i < len; i++){
-  j = (unsigned) (packet[i]);
-  printf("%-2X ", j);
-  if (!((i+1)%16))
-    printf("\n");
-  else if (!((i+1)%4))
-    printf("  ");
-}
-printf("\n");
-}
-
-
 portlist fin_scan(struct hoststruct *target, unsigned short *portarray) {
 
-int rawsd, tcpsd;
+int rawsd;
 int done = 0, badport, starttime, someleft, i, j=0, retries=2;
 int waiting_period = retries, sockaddr_in_size = sizeof(struct sockaddr_in);
 int bytes, dupesinarow = 0;
 unsigned long timeout;
-struct hostent *myhostent;
+struct hostent *myhostent = NULL;
 char response[65535], myname[513];
-
-struct ip *ip = (struct ip *) response;
-
-struct tcphdr *tcp;
-unsigned short *portno = safe_malloc(sizeof(unsigned short) * o.max_sockets);
-unsigned short *trynum = safe_malloc(sizeof(unsigned short) * o.max_sockets);
+pcap_t *pd;
+struct bpf_program fcode;
+char filter[512];
+unsigned int localnet, netmask;
+char *p = NULL;
+char err0r[PCAP_ERRBUF_SIZE];
+struct ip *ip = NULL; /*(struct ip *) response;*/
+struct tcphdr *tcp = NULL;
+unsigned short portno[MAX_SOCKETS_ALLOWED];
+unsigned short trynum[MAX_SOCKETS_ALLOWED];
 struct sockaddr_in stranger;
 
 
@@ -1838,13 +1606,33 @@ if (!target->source_ip.s_addr) {
 	   inet_ntoa(target->source_ip));
 }
 
+/* Now for the pcap opening nonsense ... */
+if (!(pd = pcap_open_live(target->device, 40, 0, 0, err0r)))
+  fatal("pcap_open_live: %s", err0r);
+if (pcap_lookupnet(target->device, &localnet, &netmask, err0r) < 0)
+  fatal("Failed to lookup device subnet/netmask: %s", err0r);
+p = strdup(inet_ntoa(target->host));
+#ifdef HAVE_SNPRINTF
+snprintf(filter, sizeof(filter), "tcp and src host %s and dst host %s and dst port %d", p, inet_ntoa(target->source_ip), MAGIC_PORT );
+#else
+sprintf(filter, "tcp and src host %s and dst host %s and dst port %d", p, inet_ntoa(target->source_ip), MAGIC_PORT );
+#endif
+free(p);
+if (o.debugging)
+  printf("Packet capture filter: %s\n", filter);
+if (pcap_compile(pd, &fcode, filter, 0, netmask) < 0)
+  fatal("Error compiling our pcap filter: %s\n", pcap_geterr(pd));
+if (pcap_setfilter(pd, &fcode) < 0 )
+  fatal("Failed to set the pcap filter: %s\n", pcap_geterr(pd));
+
+
 if ((rawsd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) < 0 )
   perror("socket trobles in fin_scan");
 
-if ((tcpsd = socket(AF_INET, SOCK_RAW, IPPROTO_TCP)) < 0 )
-  perror("socket trobles in fin_scan");
+/*if ((tcpsd = socket(AF_INET, SOCK_RAW, IPPROTO_TCP)) < 0 )
+  perror("socket trobles in fin_scan");*/
 
-unblock_socket(tcpsd);
+/*unblock_socket(tcpsd);*/
 while(!done) {
   for(i=0; i <  o.max_sockets; i++) {
     if (!portno[i] && portarray[j]) {
@@ -1862,12 +1650,12 @@ while(!done) {
 
   usleep(timeout);
   dupesinarow = 0;
-  while ((bytes = recvfrom(tcpsd, response, 65535, 0, (struct sockaddr *)
-			   &stranger, &sockaddr_in_size)) > 0) 
-
+  /* NOT PORTABLE, USING libpcap INSTEAD */
+  /*while ((bytes = recvfrom(tcpsd, response, 65535, 0, (struct sockaddr *)
+    &stranger, &sockaddr_in_size)) > 0) */
+  while(( ip = (struct ip*) readip_pcap(pd, &bytes,1)))
     if (ip->ip_src.s_addr == target->host.s_addr) {
-      tcp = (struct tcphdr *) (response + 4 * ip->ip_hl);
-
+      tcp = (struct tcphdr *) (((char *) ip) + 4 * ip->ip_hl);
       if (tcp->th_flags & TH_RST) {
 	badport = ntohs(tcp->th_sport);
 	if (o.debugging > 1) printf("Nothing open on port %d\n", badport);
@@ -1931,7 +1719,8 @@ while(!done) {
 if (o.debugging || o.verbose)
   printf("The TCP stealth FIN scan took %ld seconds to scan %d ports.\n", 
 	 (long) time(NULL) - starttime, o.numports);
-close(tcpsd);
+/*close(tcpsd);*/
+pcap_close(pd);
 close(rawsd);
 return target->ports;
 }
