@@ -2,10 +2,10 @@
 
 Nmap 2.54BETA37
 
-o Made SYN scan the default for priviliged (root) users.  This has far
-  better performance for Windows users due to their broken connect()
-  call, and is usually even preferred on UNIX because it is more
-  stealthy and less likely to crash applications listening on the
+o Made SYN scan the default for privileged (root) users.  This offers
+  far better performance for Windows users due to their broken
+  connect() call, and is usually even preferred on UNIX because it is
+  more stealthy and less likely to crash applications listening on the
   target host.
 
 o Fixed a problem noted by Ping Huang (pshuang@alum.mit.edu) relating
