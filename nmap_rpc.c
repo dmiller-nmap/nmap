@@ -49,7 +49,7 @@
 
 #include "nmap_rpc.h"
 
-extern struct ops o;
+extern NmapOps o;
 static int services_initialized = 0;
 static struct rpc_info ri;
 static int udp_rpc_socket = -1;

@@ -61,7 +61,7 @@
 #include <unistd.h>
 #endif
 
-extern struct ops o;
+extern NmapOps o;
 
 /*  predefined filters -- I need to kill these globals at some pont. */
 extern unsigned long flt_dsthost, flt_srchost;
@@ -151,6 +151,23 @@ sum  = (sum >> 16) + (sum & 0xffff);    /* add high-16 to low-16 */
 sum += (sum >> 16);                     /* add carry */
 answer = ~sum;          /* ones-complement, then truncate to 16 bits */
 return(answer);
+}
+
+/* Converts an IP address given in a sockaddr_storage to an IPv4 or
+   IPv6 IP address string.  Since a static buffer is returned, this is
+   not thread-safe and can only be used once in calls like printf() 
+*/
+const char *inet_socktop(struct sockaddr_storage *ss) {
+  static char buf[INET6_ADDRSTRLEN];
+  struct sockaddr_in *sin = (struct sockaddr_in *) ss;
+  struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *) ss;
+  
+  if (inet_ntop(sin->sin_family, (sin->sin_family == AF_INET)? 
+                (char *) &sin->sin_addr : (char *) &sin6->sin6_addr, 
+		buf, sizeof(buf)) == NULL) {
+    fatal("Failed to convert target address to presentation format in inet_socktop!?!  Error: %s", strerror(errno));
+  }
+  return buf;
 }
 
 /* Tries to resolve the given name (or literal IP) into a sockaddr

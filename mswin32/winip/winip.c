@@ -54,7 +54,7 @@ If used outside nmap in a GPL'ed app, just copy them from wintcpip.c.
 #define DLI_ERROR VcppException(ERROR_SEVERITY_ERROR, ERROR_MOD_NOT_FOUND)
 #endif
 
-extern struct ops o;
+extern NmapOps o;
 
 int pcap_avail = 0;
 int rawsock_avail = 0;

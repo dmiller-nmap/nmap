@@ -50,7 +50,7 @@
 #include "timing.h"
 #include "osscan.h"
 
-extern struct ops o;
+extern NmapOps o;
 
 Targets::Targets() {
   Initialize();
@@ -372,7 +372,8 @@ void Target::Initialize() {
   timedout = 0;
   device[0] = '\0';
   bzero(&targetsock, sizeof(targetsock));
-  targetsocklen = 0;
+  bzero(&sourcesock, sizeof(sourcesock));
+  targetsocklen = sourcesocklen = 0;
   targetipstring[0] = '\0';
 }
 
@@ -463,6 +464,45 @@ const struct in_addr *Target::v4hostip() {
   }
   return NULL;
 }
+
+ /* The source address used to reach the target */
+int Target::SourceSockAddr(struct sockaddr_storage *ss, size_t *ss_len) {
+  if (sourcesocklen <= 0)
+    return 1;
+  assert(sourcesocklen <= sizeof(*ss));
+  if (ss)
+    memcpy(ss, &sourcesock, sourcesocklen);
+  if (ss_len)
+    *ss_len = sourcesocklen;
+  return 0;
+}
+
+/* Note that it is OK to pass in a sockaddr_in or sockaddr_in6 casted
+     to sockaddr_storage */
+void Target::setSourceSockAddr(struct sockaddr_storage *ss, size_t ss_len) {
+  assert(ss_len > 0 && ss_len <= sizeof(*ss));
+  memcpy(&sourcesock, ss, ss_len);
+  sourcesocklen = ss_len;
+}
+
+// Returns IPv4 host address or {0} if unavailable.
+struct in_addr Target::v4source() {
+  const struct in_addr *addy = v4sourceip();
+  struct in_addr in;
+  if (addy) return *addy;
+  in.s_addr = 0;
+  return in;
+}
+
+// Returns IPv4 host address or NULL if unavailable.
+const struct in_addr *Target::v4sourceip() {
+  struct sockaddr_in *sin = (struct sockaddr_in *) &sourcesock;
+  if (sin->sin_family == AF_INET) {
+    return &(sin->sin_addr);
+  }
+  return NULL;
+}
+
 
   /* You can set to NULL to erase a name or if it failed to resolve -- or 
      just don't call this if it fails to resolve */
@@ -653,20 +693,29 @@ do {
       hs->hostbatch[hidx]->setTargetSockAddr(&ss, sslen);
 
       /* Lets figure out what device this IP uses ... */
-      if (o.source) {
-	hs->hostbatch[hidx]->source_ip.s_addr = o.source->s_addr;
+      if (o.spoofsource) {
+	o.SourceSockAddr(&ss, &sslen);
+	hs->hostbatch[hidx]->setSourceSockAddr(&ss, sslen);
 	strcpy(hs->hostbatch[hidx]->device, o.device);
       } else {
 	/* We figure out the source IP/device IFF
 	   1) We are r00t AND
 	   2) We are doing tcp pingscan OR
 	   3) We are doing a raw-mode portscan or osscan */
-	if (o.isr00t && o.af == AF_INET && 
+	if (o.isr00t && o.af() == AF_INET && 
 	    ((*pingtype & PINGTYPE_TCP) || 
 	     o.synscan || o.finscan || o.xmasscan || o.nullscan || 
 	     o.ipprotscan || o.maimonscan || o.idlescan || o.ackscan || 
 	     o.udpscan || o.osscan || o.windowscan)) {
-	  device = routethrough(hs->hostbatch[hidx]->v4hostip(), &(hs->hostbatch[hidx]->source_ip));
+	  struct sockaddr_in *sin = (struct sockaddr_in *) &ss;
+	  sslen = sizeof(*sin);
+	  sin->sin_family = AF_INET;
+#if HAVE_SOCKADDR_SA_LEN
+	  tmpsock.sin_len = sslen;
+#endif
+	  device = routethrough(hs->hostbatch[hidx]->v4hostip(), 
+				&(sin->sin_addr));
+	  hs->hostbatch[hidx]->setSourceSockAddr(&ss, sslen);
 	  if (!device) {
 	    if (*pingtype == PINGTYPE_NONE) {
 	      fatal("Could not determine what interface to route packets through, run again with -e <device>");
@@ -682,7 +731,7 @@ do {
 
       /* In some cases, we can only allow hosts that use the same device
 	 in a group. */
-      if (o.isr00t && hidx > 0 && *hs->hostbatch[hidx]->device && hs->hostbatch[hidx]->source_ip.s_addr != hs->hostbatch[0]->source_ip.s_addr) {
+      if (o.af() == AF_INET && o.isr00t && hidx > 0 && *hs->hostbatch[hidx]->device && hs->hostbatch[hidx]->v4source().s_addr != hs->hostbatch[0]->v4source().s_addr) {
 	/* Cancel everything!  This guy must go in the next group and we are
 	   outtof here */
 	hs->current_expression.return_last_host();
@@ -695,7 +744,7 @@ do {
   if (hs->current_batch_sz < hs->max_batch_sz &&
       hs->next_expression < hs->num_expressions) {
     /* We are going to have to plop in another expression. */
-    while(hs->current_expression.parse_expr(hs->target_expressions[hs->next_expression++], o.af) != 0) 
+    while(hs->current_expression.parse_expr(hs->target_expressions[hs->next_expression++], o.af()) != 0) 
       if (hs->next_expression >= hs->num_expressions)
 	break;
   } else break;
@@ -715,7 +764,7 @@ if (hs->randomize) {
 /* Finally we do the mass ping (if required) */
  if ((*pingtype & 
       (PINGTYPE_ICMP_PING|PINGTYPE_ICMP_MASK|PINGTYPE_ICMP_TS) ) || 
-     ((!o.isr00t || o.af == AF_INET6 || hs->hostbatch[0]->v4host().s_addr) && 
+     ((!o.isr00t || o.af() == AF_INET6 || hs->hostbatch[0]->v4host().s_addr) && 
       (*pingtype != PINGTYPE_NONE))) 
    massping(hs->hostbatch, hs->current_batch_sz, ports, *pingtype);
  else for(i=0; i < hs->current_batch_sz; i++)  {
@@ -780,12 +829,12 @@ else sportbase = o.magic_port + 20;
 
 /* What kind of scans are we doing? */
  if ((pingtype & (PINGTYPE_ICMP_PING|PINGTYPE_ICMP_MASK|PINGTYPE_ICMP_TS)) && 
-     hostbatch[0]->source_ip.s_addr) 
+     hostbatch[0]->v4source().s_addr) 
   ptech.rawicmpscan = 1;
 else if (pingtype & (PINGTYPE_ICMP_PING|PINGTYPE_ICMP_MASK|PINGTYPE_ICMP_TS)) 
   ptech.icmpscan = 1;
 if (pingtype & PINGTYPE_TCP) {
-  if (o.isr00t && o.af == AF_INET)
+  if (o.isr00t && o.af() == AF_INET)
     ptech.rawtcpscan = 1;
   else ptech.connecttcpscan = 1;
 }
@@ -853,13 +902,14 @@ if (ptech.rawicmpscan || ptech.rawtcpscan) {
    = 104 byte snaplen */
   pd = my_pcap_open_live(hostbatch[0]->device, 104, o.spoofsource, 20);
 
-  flt_dsthost = hostbatch[0]->source_ip.s_addr;
+  flt_dsthost = hostbatch[0]->v4source().s_addr;
   flt_baseport = sportbase;
 
   snprintf(filter, sizeof(filter), "(icmp and dst host %s) or (tcp and dst host %s and ( dst port %d or dst port %d or dst port %d or dst port %d or dst port %d))", 
-	  inet_ntoa(hostbatch[0]->source_ip),inet_ntoa(hostbatch[0]->source_ip),
-	  sportbase , sportbase + 1, sportbase + 2, sportbase + 3, 
-	  sportbase + 4);
+	   inet_ntoa(hostbatch[0]->v4source()),
+	   inet_ntoa(hostbatch[0]->v4source()),
+	   sportbase , sportbase + 1, sportbase + 2, sportbase + 3, 
+	   sportbase + 4);
 
   set_pcap_filter(hostbatch[0], pd, flt_icmptcp_5port, filter); 
 }
@@ -996,7 +1046,7 @@ int sendconnecttcpquery(Target *hostbatch[], struct tcpqueryinfo *tqi,
     
   /* Since we know we now have a free s0cket, lets take it */
   assert(tqi->sockets[seq] == -1);
-  tqi->sockets[seq] =  socket(o.af, SOCK_STREAM, IPPROTO_TCP);
+  tqi->sockets[seq] =  socket(o.af(), SOCK_STREAM, IPPROTO_TCP);
   if (tqi->sockets[seq] == -1) 
     fatal("Socket creation in sendconnecttcpquery");
   tqi->maxsd = MAX(tqi->maxsd, tqi->sockets[seq]);
@@ -1048,7 +1098,7 @@ else sportbase = o.magic_port + 20;
 trynum = seq % pt->max_tries;
 
  myseq = (get_random_uint() << 19) + (seq << 3) + 3; /* Response better end in 011 or 100 */
- memcpy((char *)&(o.decoys[o.decoyturn]), (char *)&target->source_ip, sizeof(struct in_addr));
+ o.decoys[o.decoyturn].s_addr = target->v4source().s_addr;
  if (pingtype & PINGTYPE_TCP_USE_SYN) {   
    send_tcp_raw_decoys( rawsd, target->v4hostip(), sportbase + trynum, o.tcp_probe_port, myseq, myack, TH_SYN, 0, NULL, 0, o.extra_payload, 
 			o.extra_payload_length);
@@ -1118,7 +1168,7 @@ if (ptech.icmpscan) {
   sock.sin_family= AF_INET;
   sock.sin_addr = target->v4host();
   
-  memcpy((char *) &(o.decoys[o.decoyturn]), (char *)&target->source_ip, sizeof(struct in_addr));
+  o.decoys[o.decoyturn].s_addr = target->v4source().s_addr;
 }
 
  for (decoy = 0; decoy < o.numdecoys; decoy++) {
@@ -1374,8 +1424,17 @@ while(pt->block_unaccounted > 0 && !timeout) {
 	  error("Ping sequence %d leads to hostnum %d which is beyond the end of this group (%d)", ping->seq, hostnum, pt->group_end);
 	continue;
       }
-      if (!hostbatch[hostnum]->source_ip.s_addr)
-	hostbatch[hostnum]->source_ip.s_addr = ip->ip_dst.s_addr;
+      if (!hostbatch[hostnum]->v4sourceip()) {      	
+	struct sockaddr_in sin;
+	bzero(&sin, sizeof(sin));
+	sin.sin_family = AF_INET;
+	sin.sin_addr.s_addr = ip->ip_dst.s_addr;
+#if HAVE_SOCKADDR_SA_LEN
+	tmpsock.sin_len = sizeof(sin);
+#endif
+	hostbatch[hostnum]->setSourceSockAddr((struct sockaddr_storage *) &sin,
+					      sizeof(sin));
+      }
       if (o.debugging) 
 	log_write(LOG_STDOUT, "We got a ping packet back from %s: id = %d seq = %d checksum = %d\n", inet_ntoa(ip->ip_src), ping->id, ping->seq, ping->checksum);
       if (hostbatch[hostnum]->v4host().s_addr == ip->ip_src.s_addr) {

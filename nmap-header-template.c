@@ -3,7 +3,7 @@
  * .c -- *
  *                                                                     *
  ***********************************************************************
- *  The Nmap Security Scanner is (C) 1995-2001 Insecure.Com LLC. This  *
+ *  The Nmap Security Scanner is (C) 1995-2002 Insecure.Com LLC. This  *
  *  program is free software; you can redistribute it and/or modify    *
  *  it under the terms of the GNU General Public License as published  *
  *  by the Free Software Foundation; Version 2.  This guarantees your  *

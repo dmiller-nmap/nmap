@@ -52,7 +52,7 @@
 #include "timing.h"
 
 /* global options */
-extern struct ops o;  /* option structure */
+extern NmapOps o;  /* option structure */
 extern char **environ;
 
 int main(int argc, char *argv[], char *envp[]) {
@@ -87,9 +87,6 @@ int main(int argc, char *argv[], char *envp[]) {
   gettimeofday(&tv, NULL);
   srand((tv.tv_sec ^ tv.tv_usec) ^ getpid());
 
-  /* initialize our options */
-  options_init();
-
   /* Trap these sigs for cleanup */
 #if HAVE_SIGNAL
   signal(SIGINT, sigdie);
@@ -112,7 +109,6 @@ int main(int argc, char *argv[], char *envp[]) {
     if (myargc < 1) {
       fatal("NMAP_ARG variable could not be parsed");
     }
-    options_init();
     ret = nmap_main(myargc, myargv);
     arg_parse_free(myargv);
     return ret;
@@ -132,7 +128,6 @@ int main(int argc, char *argv[], char *envp[]) {
   }
 
   if (!interactivemode) {
-    options_init();
     if (argc == 3 && strcmp("--resume", argv[1]) == 0) {
       /* OK, they want to resume an aborted scan given the log file specified.
 	 Lets gather our state from the log file */
@@ -173,7 +168,7 @@ int main(int argc, char *argv[], char *envp[]) {
       exit(0);
     } else if (strcasecmp(myargv[0], "n") == 0 ||
 	       strcasecmp(myargv[0], "nmap") == 0) {
-      options_init();
+      o.ReInit();
       o.interactivemode = 1;
       nmap_main(myargc, myargv);
     } else if (*myargv[0] == '!') {

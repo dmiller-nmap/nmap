@@ -49,7 +49,7 @@
 
 #include "timing.h"
 
-extern struct ops o;
+extern NmapOps o;
 
 /* Adjust our timeout values based on the time the latest probe took for a 
    response.  We update our RTT averages, etc. */

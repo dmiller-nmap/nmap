@@ -31,7 +31,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #define SIO_RCVALL _WSAIOW(IOC_VENDOR, 1)
 #endif
 
-extern struct ops o;
+extern NmapOps o;
 
 static int nullfilter(const char *packet, int len)
 {

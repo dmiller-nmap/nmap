@@ -353,7 +353,11 @@ struct icmp
 #define SA struct sockaddr
 
 /* Prototypes */
-
+/* Converts an IP address given in a sockaddr_storage to an IPv4 or
+   IPv6 IP address string.  Since a static buffer is returned, this is
+   not thread-safe and can only be used once in calls like printf() 
+*/
+const char *inet_socktop(struct sockaddr_storage *ss);
 /* Tries to resolve the given name (or literal IP) into a sockaddr
    structure.  The af should be PF_INET (for IPv4) or PF_INET6.  Returns 0
    if hostname cannot be resolved.  It is OK to pass in a sockaddr_in or 

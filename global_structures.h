@@ -4,7 +4,7 @@
  * components.                                                         *
  *                                                                     *
  ***********************************************************************
- *  The Nmap Security Scanner is (C) 1995-2001 Insecure.Com LLC. This  *
+ *  The Nmap Security Scanner is (C) 1995-2002 Insecure.Com LLC. This  *
  *  program is free software; you can redistribute it and/or modify    *
  *  it under the terms of the GNU General Public License as published  *
  *  by the Free Software Foundation; Version 2.  This guarantees your  *
@@ -219,11 +219,18 @@ class Target {
   /* Note that it is OK to pass in a sockaddr_in or sockaddr_in6 casted
      to sockaddr_storage */
   void setTargetSockAddr(struct sockaddr_storage *ss, size_t ss_len);
-  struct in_addr v4host(); // Returns IPv4 host address or {0} if unavailable.
+  // Returns IPv4 target host address or {0} if unavailable.
+  struct in_addr v4host();
   const struct in_addr *v4hostip();
+  /* The source address used to reach the target */
+  int SourceSockAddr(struct sockaddr_storage *ss, size_t *ss_len);
+  /* Note that it is OK to pass in a sockaddr_in or sockaddr_in6 casted
+     to sockaddr_storage */
+  void setSourceSockAddr(struct sockaddr_storage *ss, size_t ss_len);
+  struct in_addr v4source();
+  const struct in_addr *v4sourceip();
   /* The IPv4 or IPv6 literal string for the target host */
   const char *targetipstr() { return targetipstring; }
-  struct in_addr source_ip;
   /* Give the name from the last setHostName() call, which should be
    the name obtained from reverse-resolution (PTR query) of the IP (v4
    or v6).  If the name has not been set, or was set to NULL, an empty
@@ -270,8 +277,8 @@ class Target {
   void FreeInternal(); // Free memory allocated inside this object
  // Creates a "presentation" formatted string out of the IPv4/IPv6 address
   void GenerateIPString();
-  struct sockaddr_storage targetsock;
-  size_t targetsocklen;
+  struct sockaddr_storage targetsock, sourcesock;
+  size_t targetsocklen, sourcesocklen;
   char targetipstring[INET6_ADDRSTRLEN];
 };
 
@@ -299,15 +306,27 @@ class HostGroupState {
   Targets current_expression; /* For batch chunking -- targets in queue */
 };
 
-struct ops /* someone took struct options, <grrr> */ {
-  int af; /*  Address family:  AF_INET or AF_INET6 */  
-  int pf; /* Protocol family: PF_INET or PF_INET6 -- remember to set this
-	     whenever you set af */
+class NmapOps {
+ public:
+  NmapOps();
+  void ReInit(); // Reinitialize the class to default state
+  void setaf(int af) { addressfamily = af; }
+  int af() { return addressfamily; }
+  // no setpf() because it is based on setaf() values
+  int pf() { return (af() == AF_INET)? PF_INET : PF_INET6; }
+  /* Returns 0 for success, nonzero if no source has been set or any other
+     failure */
+  int SourceSockAddr(struct sockaddr_storage *ss, size_t *ss_len);
+  /* Note that it is OK to pass in a sockaddr_in or sockaddr_in6 casted
+     to sockaddr_storage */
+  void setSourceSockAddr(struct sockaddr_storage *ss, size_t ss_len);
+  struct in_addr v4source();
+  const struct in_addr *v4sourceip();
+  int isr00t;
   int debugging;
   int verbose;
   int randomize_hosts;
   int spoofsource; /* -S used */
-  struct in_addr *source;
   char device[64];
   int interactivemode;
   int host_group_sz;
@@ -321,6 +340,7 @@ struct ops /* someone took struct options, <grrr> */ {
   int max_parallelism;
   int max_rtt_timeout;
   int min_rtt_timeout;
+  int initial_rtt_timeout;
   int extra_payload_length; /* These two are for --data_length op */
   char *extra_payload;
   unsigned long host_timeout;
@@ -329,13 +349,13 @@ struct ops /* someone took struct options, <grrr> */ {
 		    for the core portscaning routine (eg to change a
 		    FIN scan into a PSH scan.  Sort of a hack, but can
 		    be very useful sometimes. */
-  int initial_rtt_timeout;
+
   struct in_addr resume_ip; /* The last IP in the log file if user 
 			       requested --restore .  Otherwise 
 			       restore_ip.s_addr == 0.  Also 
 			       target_struct_get will eventually set it 
 			       to 0. */
-  int isr00t;
+
   struct in_addr decoys[MAX_DECOYS];
   int osscan_limit; /* Skip OS Scan if no open or no closed TCP ports */
   int osscan_guess;   /* Be more aggressive in guessing OS type */
@@ -366,6 +386,11 @@ struct ops /* someone took struct options, <grrr> */ {
   int append_output; /* Append to any output files rather than overwrite */
   FILE *logfd[LOG_TYPES];
   FILE *nmap_stdout; /* Nmap standard output */
+ private:
+  void Initialize();
+  int addressfamily; /*  Address family:  AF_INET or AF_INET6 */  
+  struct sockaddr_storage sourcesock;
+  size_t sourcesocklen;
 };
   
 

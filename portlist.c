@@ -53,7 +53,7 @@
 #include <strings.h>
 #endif /* HAVE_STRINGS_H */
 
-extern struct ops o;  /* option structure */
+extern NmapOps o;  /* option structure */
 static struct port *freeportlist = NULL;
 
 /* gawd, my next project will be in c++ so I don't have to deal with

@@ -410,7 +410,6 @@ int nmap_main(int argc, char *argv[]);
 void *safe_malloc(int size);
 char *grab_next_host_spec(FILE *inputfd, int argc, char **fakeargv);
 int parse_targets(struct targets *targets, char *h);
-void options_init();
 char *statenum2str(int state);
 char *scantype2str(stype scantype);
 void sigdie(int signo);

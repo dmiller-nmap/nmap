@@ -61,7 +61,7 @@
 # endif
 #endif
 
-extern struct ops o;
+extern NmapOps o;
 /*  predefined filters -- I need to kill these globals at some pont. */
 extern unsigned long flt_dsthost, flt_srchost;
 extern unsigned short flt_baseport;
@@ -79,9 +79,7 @@ struct tcphdr *tcp;
 struct icmp *icmp;
 struct timeval t1,t2;
 int i;
-struct hostent *myhostent = NULL;
 pcap_t *pd = NULL;
-char myname[513];
 int rawsd;
 int tries = 0;
 int newcatches;
@@ -126,16 +124,6 @@ get_random_bytes(&sequence_base, sizeof(unsigned int));
  unblock_socket(rawsd);
  broadcast_socket(rawsd);
 
- /* Do we have a correct source address? */
- if (!target->source_ip.s_addr) {
-   if (gethostname(myname, MAXHOSTNAMELEN) != 0 ||
-       !((myhostent = gethostbyname(myname))))
-     fatal("Cannot get hostname!  Try using -S <my_IP_address> or -e <interface to scan through>\n");
-   memcpy(&target->source_ip, myhostent->h_addr_list[0], sizeof(struct in_addr));
-   if (o.debugging || o.verbose)
-     log_write(LOG_STDOUT, "We skillfully deduced that your address is %s\n",
-	    inet_ntoa(target->source_ip));
- }
  /* Now for the pcap opening nonsense ... */
  /* Note that the snaplen is 152 = 64 byte max IPhdr + 24 byte max link_layer
   * header + 64 byte max TCP header.  Had to up it for UDP test
@@ -150,9 +138,9 @@ if (o.debugging)
    log_write(LOG_STDOUT, "Wait time is %dms\n", (ossofttimeout +500)/1000);
 
  flt_srchost = target->v4host().s_addr;
- flt_dsthost = target->source_ip.s_addr;
+ flt_dsthost = target->v4source().s_addr;
 
-snprintf(filter, sizeof(filter), "dst host %s and (icmp or (tcp and src host %s))", inet_ntoa(target->source_ip), target->targetipstr());
+snprintf(filter, sizeof(filter), "dst host %s and (icmp or (tcp and src host %s))", inet_ntoa(target->v4source()), target->targetipstr());
  
  set_pcap_filter(target, pd, flt_icmptcp, filter);
  target->osscan_performed = 1; /* Let Nmap know that we did try an OS scan */

@@ -54,7 +54,7 @@
 /* global options */
 extern char *optarg;
 extern int optind;
-struct ops o;  /* option structure */
+NmapOps o;  /* option structure */
 
 /* parse the --scanflags argument.  It can be a number >=0 or a string consisting of TCP flag names like "URGPSHFIN".  Returns -1 if the argument is invalid. */
 static int parse_scanflags(char *arg) {
@@ -164,6 +164,8 @@ int nmap_main(int argc, char *argv[]) {
   char hostname[MAXHOSTNAMELEN + 1] = "";
   time_t timep;
   char mytime[128];
+  struct sockaddr_storage ss;
+  size_t sslen;
   int option_index;
   struct option long_options[] =
   {
@@ -211,23 +213,6 @@ int nmap_main(int argc, char *argv[]) {
 #endif
     {0, 0, 0, 0}
   };
-
-#ifdef ROUTETHROUGHTEST
-  /* Routethrough stuff -- kill later */
-  {
-    char *dev;
-    struct in_addr dest;
-    struct in_addr source;
-    if (!resolve(argv[1], &dest))
-      fatal("Failed to resolve %s\n", argv[1]);
-    dev = routethrough(&dest, &source);
-    if (dev)
-      log_write(LOG_STDOUT, "%s routes through device %s using IP address %s\n", argv[1], dev, inet_ntoa(source));
-    else log_write(LOG_STDOUT, "Could not determine which device to route through for %s!!!\n", argv[1]);
-
-    exit(0);
-  }
-#endif
 
   /* argv faking silliness */
   fakeargv = (char **) safe_malloc(sizeof(char *) * (argc + 1));
@@ -375,8 +360,7 @@ int nmap_main(int argc, char *argv[]) {
       }
       break;
     case '6':
-      o.af = AF_INET6;
-      o.pf = PF_INET6;
+      o.setaf(AF_INET6);
       break;
     case 'b': 
       o.bouncescan++;
@@ -507,10 +491,11 @@ int nmap_main(int argc, char *argv[]) {
     case 'S': 
       if (o.spoofsource)
 	fatal("You can only use the source option once!  Use -D <decoy1> -D <decoy2> etc. for decoys\n");
-      o.source = (struct in_addr *) safe_malloc(sizeof(struct in_addr));
+      if (resolve(optarg, &ss, &sslen, o.af()) == 0) {
+	fatal("Failed to resolve/decode supposed %s source address %s. Note that if you are using IPv6, the -6 argument must come before -S", (o.af() == AF_INET)? "IPv4" : "IPv6");
+      }
+      o.setSourceSockAddr(&ss, sslen);
       o.spoofsource = 1;
-      if (!resolve(optarg, o.source))
-	fatal("Failed to resolve source address, try dotted decimal IP address\n");
       break;
     case 's': 
       if (!*optarg) {
@@ -585,7 +570,7 @@ int nmap_main(int argc, char *argv[]) {
 #endif
 
   if (o.pingtype == PINGTYPE_UNKNOWN) {
-    if (o.isr00t && o.af == AF_INET) o.pingtype = PINGTYPE_TCP|PINGTYPE_TCP_USE_ACK|PINGTYPE_ICMP_PING;
+    if (o.isr00t && o.af() == AF_INET) o.pingtype = PINGTYPE_TCP|PINGTYPE_TCP_USE_ACK|PINGTYPE_ICMP_PING;
     else o.pingtype = PINGTYPE_TCP; // if nonr00t or IPv6
   }
 
@@ -606,10 +591,10 @@ int nmap_main(int argc, char *argv[]) {
   /* Now we check the option sanity */
   /* Insure that at least one scantype is selected */
   if (!o.connectscan && !o.udpscan && !o.synscan && !o.windowscan && !o.idlescan && !o.finscan && !o.maimonscan &&  !o.nullscan && !o.xmasscan && !o.ackscan && !o.bouncescan && !o.pingscan && !o.ipprotscan && !o.listscan) {
-    if (o.isr00t)
+    if (o.isr00t && o.af() == AF_INET)
       o.synscan++;
     else o.connectscan++;
-    if (o.verbose) error("No tcp,udp, or ICMP scantype specified, assuming %s scan. Use -sP if you really don't want to portscan (and just want to see what hosts are up).", o.synscan? "SYN Stealth" : "vanilla tcp connect()");
+    if (o.verbose) error("No tcp, udp, or ICMP scantype specified, assuming %s scan. Use -sP if you really don't want to portscan (and just want to see what hosts are up).", o.synscan? "SYN Stealth" : "vanilla tcp connect()");
   }
 
   if (o.pingtype != PINGTYPE_NONE && o.spoofsource) {
@@ -802,17 +787,23 @@ int nmap_main(int argc, char *argv[]) {
    * --None have been specified AND
    * --We are root and doing tcp ping OR
    * --We are doing a raw sock scan and NOT pinging anyone */
-  if (o.source && !*o.device) {
-    if (ipaddr2devname(o.device, o.source) != 0) {
+  if (o.af() == AF_INET && o.v4sourceip() && !*o.device) {
+    if (ipaddr2devname(o.device, o.v4sourceip()) != 0) {
       fatal("Could not figure out what device to send the packet out on with the source address you gave me!  If you are trying to sp00f your scan, this is normal, just give the -e eth0 or -e ppp0 or whatever.  Otherwise you can still use -e, but I find it kindof fishy.");
     }
   }
 
-  if (*o.device && !o.source) {
-    o.source = (struct in_addr *) safe_malloc(sizeof(struct in_addr)); 
-    if (devname2ipaddr(o.device, o.source) == -1) {
+  if (o.af() == AF_INET && *o.device && !o.v4sourceip()) {
+    struct sockaddr_in tmpsock;
+    bzero(&tmpsock, sizeof(tmpsock));
+    if (devname2ipaddr(o.device, &(tmpsock.sin_addr)) == -1) {
       fatal("I cannot figure out what source address to use for device %s, does it even exist?", o.device);
     }
+    tmpsock.sin_family = AF_INET;
+#if HAVE_SOCKADDR_SA_LEN
+    tmpsock.sin_len = sizeof(tmpsock);
+#endif
+    o.setSourceSockAddr((struct sockaddr_storage *) &tmpsock, sizeof(tmpsock));
   }
 
 
@@ -940,17 +931,19 @@ int nmap_main(int argc, char *argv[]) {
       
       /* Lookup the IP */
       if (((currenths->flags & HOST_UP) || resolve_all) && !o.noresolve) {
-	struct sockaddr_storage sock;
-	size_t socklen;
-	if (currenths->TargetSockAddr(&sock, &socklen) != 0)
+	if (currenths->TargetSockAddr(&ss, &sslen) != 0)
 	  fatal("Failed to get target socket address.");
-	if (getnameinfo((struct sockaddr *)&sock, socklen, hostname, 
+	if (getnameinfo((struct sockaddr *)&ss, sslen, hostname, 
 			sizeof(hostname), NULL, 0, NI_NAMEREQD) == 0) {
 	  currenths->setHostName(hostname);
 	}
       }
 
-      if (o.source) memcpy(&currenths->source_ip, o.source, sizeof(struct in_addr));
+      if (o.spoofsource) {
+	o.SourceSockAddr(&ss, &sslen);
+	currenths->setSourceSockAddr(&ss, sslen);
+      }
+
       log_write(LOG_XML, "<host>");
       write_host_status(currenths, resolve_all);
       
@@ -963,22 +956,28 @@ int nmap_main(int argc, char *argv[]) {
       if (currenths->flags & HOST_UP /*&& !currenths->wierd_responses*/ &&
 	  !o.pingscan && !o.listscan) {
 	
-	if (currenths->flags & HOST_UP && !currenths->source_ip.s_addr && ( o.windowscan || o.synscan || o.idlescan || o.finscan || o.maimonscan || o.udpscan || o.nullscan || o.xmasscan || o.ackscan || o.ipprotscan )) {
-	  if (gethostname(myname, MAXHOSTNAMELEN) || 
-	      !(target = gethostbyname(myname)))
-	    fatal("Cannot get hostname!  Try using -S <my_IP_address> or -e <interface to scan through>\n"); 
-	  memcpy(&currenths->source_ip, target->h_addr_list[0], sizeof(struct in_addr));
-	  if (! sourceaddrwarning) {
-	    fprintf(stderr, "WARNING:  We could not determine for sure which interface to use, so we are guessing %s .  If this is wrong, use -S <my_IP_address>.\n", inet_ntoa(currenths->source_ip));
-	    sourceaddrwarning = 1;
+	if ((currenths->flags & HOST_UP) && o.af() == AF_INET && currenths->SourceSockAddr(NULL, NULL) != 0 && ( o.windowscan || o.synscan || o.idlescan || o.finscan || o.maimonscan || o.udpscan || o.nullscan || o.xmasscan || o.ackscan || o.ipprotscan || o.osscan)) {
+	  if (o.SourceSockAddr(&ss, &sslen) == 0) {
+	    currenths->setSourceSockAddr(&ss, sslen);
+	  } else {	  
+	    if (gethostname(myname, MAXHOSTNAMELEN) || 
+		resolve(myname, &ss, &sslen, o.af()) == 0)
+	      fatal("Cannot get hostname!  Try using -S <my_IP_address> or -e <interface to scan through>\n"); 
+	    
+	    o.setSourceSockAddr(&ss, sslen);
+	    currenths->setSourceSockAddr(&ss, sslen);
+	    if (! sourceaddrwarning) {
+	      fprintf(stderr, "WARNING:  We could not determine for sure which interface to use, so we are guessing %s .  If this is wrong, use -S <my_IP_address>.\n", inet_socktop(&ss));
+	      sourceaddrwarning = 1;
+	    }
 	  }
 	}
 	
 	/* Figure out what link-layer device (interface) to use (ie eth0, ppp0, etc) */
-	if (!*currenths->device && currenths->flags & HOST_UP && (o.nullscan || o.xmasscan || o.ackscan || o.udpscan || o.idlescan || o.finscan || o.maimonscan ||  o.synscan || o.osscan || o.windowscan || o.ipprotscan) && (ipaddr2devname( currenths->device, &currenths->source_ip) != 0))
+	if (!*currenths->device && currenths->flags & HOST_UP && (o.nullscan || o.xmasscan || o.ackscan || o.udpscan || o.idlescan || o.finscan || o.maimonscan ||  o.synscan || o.osscan || o.windowscan || o.ipprotscan) && (ipaddr2devname( currenths->device, currenths->v4sourceip()) != 0))
 	  fatal("Could not figure out what device to send the packet out on!  You might possibly want to try -S (but this is probably a bigger problem).  If you are trying to sp00f the source of a SYN/FIN scan with -S <fakeip>, then you must use -e eth0 (or other devicename) to tell us what interface to use.\n");
 	/* Set up the decoy */
-	o.decoys[o.decoyturn] = currenths->source_ip;
+	o.decoys[o.decoyturn] = currenths->v4source();
 	
 	/* Time for some actual scanning! */    
 	if (o.synscan) pos_scan(currenths, ports->tcp_ports, ports->tcp_count, SYN_SCAN);
@@ -1161,42 +1160,14 @@ int gather_logfile_resumption_state(char *fname, int *myargc, char ***myargv) {
   return 0;
 }
 
-void options_init() {
-
-  bzero( (char *) &o, sizeof(struct ops));
-#ifndef WIN32
-  o.isr00t = !(geteuid());
-#else
-  winip_init();	/* wrapper for all win32 initialization */
-#endif
-  o.af = AF_INET;
-  o.pf = PF_INET;
-  o.debugging = DEBUGGING;
-  o.verbose = DEBUGGING;
-  /*o.max_parallelism = MAX_SOCKETS;*/
-  o.magic_port = 33000 + (get_random_uint() % 31000);
-  o.pingtype = PINGTYPE_UNKNOWN;
-  o.decoyturn = -1;
-  o.nmap_stdout = stdout;
-  o.host_group_sz = HOST_GROUP_SZ;
-  o.min_rtt_timeout = MIN_RTT_TIMEOUT;
-  o.max_rtt_timeout = MAX_RTT_TIMEOUT;
-  o.initial_rtt_timeout = INITIAL_RTT_TIMEOUT;
-  o.host_timeout = HOST_TIMEOUT;
-  o.scan_delay = 0;
-  o.scanflags = -1;
-  o.extra_payload_length = 0;
-  o.extra_payload = NULL;
-  o.tcp_probe_port = DEFAULT_TCP_PROBE_PORT;
-}
-
 /* We set the socket lingering so we will RST connection instead of wasting
    bandwidth with the four step close  */
 void init_socket(int sd) {
   struct linger l;
   int res;
   static int bind_failed=0;
-  struct sockaddr_in sin;
+  struct sockaddr_storage ss;
+  size_t sslen;
 
   l.l_onoff = 1;
   l.l_linger = 0;
@@ -1208,13 +1179,11 @@ void init_socket(int sd) {
     }
   if (o.spoofsource && !bind_failed)
     {
-      bzero(&sin,sizeof(sin));
-      sin.sin_family=AF_INET;
-      memcpy(&sin.sin_addr,o.source,sizeof(sin.sin_addr));
-      res=bind(sd,(struct sockaddr*)&sin,sizeof(sin));
+      o.SourceSockAddr(&ss, &sslen);
+      res=bind(sd, (struct sockaddr*)&ss, sslen);
       if (res<0)
 	{
-	  fprintf(stderr, "init_socket: Problem binding source address (%s), errno :%d\n", inet_ntoa(sin.sin_addr), errno);
+	  fprintf(stderr, "init_socket: Problem binding source address (%s), errno :%d\n", inet_socktop(&ss), errno);
 	  perror("bind");
 	  bind_failed=1;
 	}

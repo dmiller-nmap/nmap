@@ -49,7 +49,7 @@
 #include "scan_engine.h"
 #include "timing.h"
 
-extern struct ops o;
+extern NmapOps o;
 
 /*  predefined filters -- I need to kill these globals at some pont. */
 extern unsigned long flt_dsthost, flt_srchost;
@@ -283,8 +283,8 @@ static int get_connect_results(Target *target,
 	      } else {
 		s_in = (struct sockaddr_in *) &sin;
 		s_in6 = (struct sockaddr_in6 *) &sin;
-		if ((o.af == AF_INET && 
-		    current->portno != ntohs(s_in->sin_port)) || (o.af == AF_INET6 && current->portno != ntohs(s_in6->sin6_port))) {
+		if ((o.af() == AF_INET && 
+		    current->portno != ntohs(s_in->sin_port)) || (o.af() == AF_INET6 && current->portno != ntohs(s_in6->sin6_port))) {
 		  error("Mismatch!!!! we think we have port %hu but we really have a different one", current->portno);
 		}
 	      }
@@ -294,7 +294,7 @@ static int get_connect_results(Target *target,
 	      }
 	      s_in = (struct sockaddr_in *) &sout;
 	      s_in6 = (struct sockaddr_in6 *) &sout;
-	      if ((o.af == AF_INET && htons(s_in->sin_port) == current->portno) || (o.af == AF_INET6 && htons(s_in6->sin6_port) == current->portno)) {
+	      if ((o.af() == AF_INET && htons(s_in->sin_port) == current->portno) || (o.af() == AF_INET6 && htons(s_in6->sin6_port) == current->portno)) {
 		/* Linux 2.2 bug can lead to bogus successful connect()ions
 		   in this case -- we treat the port as bogus even though it
 		   is POSSIBLE that this is a real connection */
@@ -403,7 +403,7 @@ static void get_syn_results(Target *target, struct portinfo *scan,
       newport = ntohs(tcp->th_sport);
       /* In case we are scanning localhost and see outgoing packets */
       /* If only one of SYN, ACK flags are set, we skip it */
-      if (ip->ip_src.s_addr == target->source_ip.s_addr && ((tcp->th_flags == TH_ACK) || (tcp->th_flags == TH_SYN))) {
+      if (ip->ip_src.s_addr == target->v4source().s_addr && ((tcp->th_flags == TH_ACK) || (tcp->th_flags == TH_SYN))) {
 	continue;
       }
       if (portlookup[newport] < 0 || scan[portlookup[newport]].state == PORT_FRESH) {
@@ -534,7 +534,6 @@ void pos_scan(Target *target, u16 *portarray, int numports, stype scantype) {
   int initial_packet_width;  /* How many scan packets in parallel (to start with) */
   struct scanstats ss;
   int rawsd = -1;
-  char myname[513];
   int scanflags = 0;
   int victim;
   int senddelay = 0;
@@ -545,7 +544,6 @@ void pos_scan(Target *target, u16 *portarray, int numports, stype scantype) {
   int  res;
   int connecterror = 0;
   int starttime;
-  struct hostent *myhostent = NULL;
   struct sockaddr_storage sock;
   struct sockaddr_in *sin = (struct sockaddr_in *) &sock;
   struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *) &sock;
@@ -651,17 +649,6 @@ void pos_scan(Target *target, u16 *portarray, int numports, stype scantype) {
     /* Init ISNs */
     get_random_bytes(sequences, sizeof(sequences));
 
-    /* Do we have a correct source address? */
-    if (!target->source_ip.s_addr) {
-      if (gethostname(myname, MAXHOSTNAMELEN) != 0 ||
-	  !((myhostent = gethostbyname(myname))))
-	fatal("Cannot get hostname!  Try using -S <my_IP_address> or -e <interface to scan through>\n"); 
-      memcpy(&target->source_ip, myhostent->h_addr_list[0], sizeof(struct in_addr));
-      if (o.debugging || o.verbose) 
-	log_write(LOG_STDOUT, "We skillfully deduced that your address is %s\n",
-		inet_ntoa(target->source_ip));
-    }
-    
     /* Now for the pcap opening nonsense ...
        Note that the snaplen is 100 = 64 byte max IPhdr + 24 byte max 
        link_layer header + first 12 bytes of TCP header.
@@ -670,9 +657,9 @@ void pos_scan(Target *target, u16 *portarray, int numports, stype scantype) {
     pd = my_pcap_open_live(target->device, 100,  (o.spoofsource)? 1 : 0, 20);
     
     flt_srchost = target->v4host().s_addr;
-    flt_dsthost = target->source_ip.s_addr;
+    flt_dsthost = target->v4source().s_addr;
 
-    snprintf(filter, sizeof(filter), "dst host %s and (icmp or (tcp and src host %s))", inet_ntoa(target->source_ip), target->targetipstr());
+    snprintf(filter, sizeof(filter), "dst host %s and (icmp or (tcp and src host %s))", inet_ntoa(target->v4source()), target->targetipstr());
 
     set_pcap_filter(target, pd, flt_icmptcp, filter);
 
@@ -865,7 +852,7 @@ void pos_scan(Target *target, u16 *portarray, int numports, stype scantype) {
 		  } else {
 		    ss.numqueries_outstanding++;
 		  }
-		  res = socket(o.af, SOCK_STREAM, IPPROTO_TCP);
+		  res = socket(o.af(), SOCK_STREAM, IPPROTO_TCP);
 		  if (res == -1) pfatal("Socket troubles in pos_scan 143");
 		  csi.socklookup[res] = current;
 		  unblock_socket(res);
@@ -938,7 +925,7 @@ void pos_scan(Target *target, u16 *portarray, int numports, stype scantype) {
 		break;
 	      }
 	    } else { /* CONNECT SCAN */
-	      res = socket(o.af, SOCK_STREAM, IPPROTO_TCP);
+	      res = socket(o.af(), SOCK_STREAM, IPPROTO_TCP);
 	      if (res == -1) pfatal("Socket troubles in pos_scan 11234");
 #ifdef WIN32
 	      if(res > 2047)
@@ -1230,7 +1217,6 @@ void super_scan(Target *target, u16 *portarray, int numports,
   int packet_incr = 4; /* How much we increase the parallel packets by each round */
   double fallback_percent = 0.7;
   int rawsd;
-  char myname[513];
   int scanflags = 0;
 
   int dropped = 0;  /* These three are for UDP squelching */
@@ -1250,7 +1236,6 @@ void super_scan(Target *target, u16 *portarray, int numports,
   int starttime;
   u16 newport;
   int newstate = 999; /* This ought to break something if used illegally */
-  struct hostent *myhostent = NULL;
   struct portinfo *scan, *openlist, *current, *testinglist, *next;
   int portlookup[65536]; /* Indexes port number -> scan[] index */
   struct timeval now, end;
@@ -1313,30 +1298,18 @@ void super_scan(Target *target, u16 *portarray, int numports,
      unblock_socket(rawsd);
   */
 
-  /* Do we have a correct source address? */
-  if (!target->source_ip.s_addr) {
-    if (gethostname(myname, MAXHOSTNAMELEN) != 0 ||
-	!((myhostent = gethostbyname(myname))))
-      fatal("Cannot get hostname!  Try using -S <my_IP_address> or -e <interface to scan through>\n"); 
-    memcpy(&target->source_ip, myhostent->h_addr_list[0], sizeof(struct in_addr));
-    if (o.debugging || o.verbose) 
-      log_write(LOG_STDOUT, "We skillfully deduced that your address is %s\n",
-	      inet_ntoa(target->source_ip));
-  }
-
   /* Now for the pcap opening nonsense ... */
   /* Note that the snaplen is 92 = 64 byte max IPhdr + 24 byte max link_layer
    * header + 4 bytes of TCP port info.
    */
-
   pd = my_pcap_open_live(target->device, 92,  (o.spoofsource)? 1 : 0, 10);
 
 
   flt_srchost = target->v4host().s_addr;
-  flt_dsthost = target->source_ip.s_addr;
+  flt_dsthost = target->v4source().s_addr;
   flt_baseport = o.magic_port;
 
-  snprintf(filter, sizeof(filter), "(icmp and dst host %s) or (tcp and src host %s and dst host %s and ( dst port %d or dst port %d))", inet_ntoa(target->source_ip), target->targetipstr(), inet_ntoa(target->source_ip), o.magic_port , o.magic_port + 1);
+  snprintf(filter, sizeof(filter), "(icmp and dst host %s) or (tcp and src host %s and dst host %s and ( dst port %d or dst port %d))", inet_ntoa(target->v4source()), target->targetipstr(), inet_ntoa(target->v4source()), o.magic_port , o.magic_port + 1);
 
   set_pcap_filter(target, pd, flt_icmptcp_2port, filter);
 

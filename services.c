@@ -47,7 +47,7 @@
 
 #include "services.h"
 
-extern struct ops o;
+extern NmapOps o;
 static int services_initialized = 0;
 static int numtcpports = 0;
 static int numudpports = 0;

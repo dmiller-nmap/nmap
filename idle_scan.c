@@ -65,7 +65,7 @@
 #pragma warning(disable: 4244)
 #endif
 
-extern struct ops o;
+extern NmapOps o;
 
 /*  predefined filters -- I need to kill these globals at some point. */
 extern unsigned long flt_dsthost, flt_srchost;
@@ -131,7 +131,7 @@ int ipid_proxy_probe(struct idle_proxy_info *proxy, int *probes_sent,
     gettimeofday(&tv_sent[tries], NULL);
 
     /* Time to send the pr0be!*/
-    send_tcp_raw(proxy->rawsd, &(proxy->host.source_ip), 
+    send_tcp_raw(proxy->rawsd, proxy->host.v4sourceip(), 
 		 proxy->host.v4hostip(), base_port + tries, proxy->probe_port, 
 		 seq_base + (packet_send_count++ * 500) + 1, ack, 
 		 TH_SYN|TH_ACK, 0, 
@@ -264,20 +264,29 @@ void initialize_idleproxy(struct idle_proxy_info *proxy, char *proxyName,
   } else proxy->probe_port = o.tcp_probe_port;
 
   proxy->host.setHostName(name);
-  if (resolve(name, &ss, &sslen, o.pf) == 0) {
+  if (resolve(name, &ss, &sslen, o.pf()) == 0) {
     fatal("Could not resolve idlescan zombie host: %s", name);
   }
   proxy->host.setTargetSockAddr(&ss, sslen);
 
   /* Lets figure out the appropriate source address to use when sending
      the pr0bez */
-  if (o.source && o.source->s_addr) {
-    proxy->host.source_ip.s_addr = o.source->s_addr;
-    Strncpy(proxy->host.device, o.device, sizeof(proxy->host.device));
+  if (o.spoofsource) {
+    o.SourceSockAddr(&ss, &sslen);
+    proxy->host.setSourceSockAddr(&ss, sslen);
+    Strncpy(proxy->host.device, o.device, sizeof(proxy->host.device));    
   } else {
-    dev = routethrough(proxy->host.v4hostip(), &(proxy->host.source_ip));  
+    struct sockaddr_in *sin = (struct sockaddr_in *)&ss;
+    sslen = sizeof(*sin);
+    bzero(&sin, sslen);
+    dev = routethrough(proxy->host.v4hostip(), &(sin->sin_addr));  
     if (!dev) fatal("Unable to find appropriate source address and device interface to use when sending packets to %s", proxyName);
     Strncpy(proxy->host.device, dev, sizeof(proxy->host.device));
+    sin->sin_family = AF_INET;
+#if HAVE_SOCKADDR_SA_LEN
+    sin->sin_len = sslen;
+#endif
+    proxy->host.setSourceSockAddr((struct sockaddr_storage *) sin, sslen);
   }
   /* Now lets send some probes to check IPID algorithm ... */
   /* First we need a raw socket ... */
@@ -293,7 +302,7 @@ void initialize_idleproxy(struct idle_proxy_info *proxy, char *proxyName,
   proxy->pd = my_pcap_open_live(proxy->host.device, 152,  (o.spoofsource)? 1 : 0, 50);
 
   p = strdup(proxy->host.targetipstr());
-  q = strdup(inet_ntoa(proxy->host.source_ip));
+  q = strdup(inet_ntoa(proxy->host.v4source()));
   snprintf(filter, sizeof(filter), "tcp and src host %s and dst host %s and src port %hu", p, q, proxy->probe_port);
  free(p); 
  free(q);
@@ -301,7 +310,7 @@ void initialize_idleproxy(struct idle_proxy_info *proxy, char *proxyName,
 /* Windows nonsense -- I am not sure why this is needed, but I should
    get rid of it at sometime */
 
- flt_srchost = proxy->host.source_ip.s_addr;
+ flt_srchost = proxy->host.v4source().s_addr;
  flt_dsthost = proxy->host.v4host().s_addr;
 
  sequence_base = get_random_u32();
@@ -318,7 +327,7 @@ void initialize_idleproxy(struct idle_proxy_info *proxy, char *proxyName,
        a response with the exact request for timing purposes.  So I
        think I'll use TH_SYN, although it is a tough call. */
     /* We can't use decoys 'cause that would screw up the IPIDs */
-    send_tcp_raw(proxy->rawsd, &(proxy->host.source_ip), 
+    send_tcp_raw(proxy->rawsd, proxy->host.v4sourceip(), 
 		 proxy->host.v4hostip(), 
 		 o.magic_port + probes_sent + 1, proxy->probe_port, 
 		 sequence_base + probes_sent + 1, 0, TH_SYN|TH_ACK, 

@@ -12,7 +12,7 @@
 //	Note: we cheat with the timeouts here
 #include "pcap-int.h"
 
-extern struct ops o;
+extern NmapOps o;
 
 void nmapwin_init();
 void nmapwin_cleanup();

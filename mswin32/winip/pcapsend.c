@@ -106,7 +106,7 @@ static CRITICAL_SECTION csAdapter, csQueue, csFailCache, csArpCache, csArpTable;
 static HANDLE hEvWakeup, hThread, hSemQueue;
 static killthread = 0;
 
-extern struct ops o;
+extern NmapOps o;
 
 /* Standard swiped internet checksum routine */
 inline unsigned short in_cksum(unsigned short *ptr,int nbytes) 

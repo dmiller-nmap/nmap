@@ -51,7 +51,7 @@
 #include "output.h"
 #include "osscan.h"
 
-extern struct ops o;
+extern NmapOps o;
 static char *logtypes[LOG_TYPES]=LOG_NAMES;
 
 /* Prints the familiar Nmap tabular output showing the "interesting"
@@ -477,7 +477,7 @@ void output_xml_scaninfo_records(struct scan_lists *scanlist) {
    into the XML log */
 static void write_xml_initial_hostinfo(Target *currenths,
 				  const char *status) {
-  log_write(LOG_XML, "<status state=\"%s\" />\n<address addr=\"%s\" addrtype=\"%s\" />\n", status,currenths->targetipstr(), (o.af == AF_INET)? "ipv4" : "ipv6");
+  log_write(LOG_XML, "<status state=\"%s\" />\n<address addr=\"%s\" addrtype=\"%s\" />\n", status,currenths->targetipstr(), (o.af() == AF_INET)? "ipv4" : "ipv6");
   if (*currenths->HostName()) {
     log_write(LOG_XML, "<hostnames><hostname name=\"%s\" type=\"PTR\" /></hostnames>\n", currenths->HostName());
   } else /* If machine is up, put blank hostname so front ends know that

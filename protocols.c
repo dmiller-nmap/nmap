@@ -47,7 +47,7 @@
 
 #include "protocols.h"
 
-extern struct ops o;
+extern NmapOps o;
 static int protocols_initialized = 0;
 static int numipprots = 0;
 static struct protocol_list *protocol_table[PROTOCOL_TABLE_SIZE];
