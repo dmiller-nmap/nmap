@@ -50,7 +50,7 @@ int pid;
 int pid2;
 int pipes[2];
 int count = 0;
-char buf[9024];
+char buf[9024] = "hello";
 char buf2[9024] = "hello";
 int verb = 0;
 int append = 0;
