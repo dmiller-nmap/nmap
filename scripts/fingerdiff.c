@@ -49,38 +49,39 @@
 #include "nmap.h"
 #include "osscan.h"
 
-void usage() {
-  printf("\nUsage: fingerdiff does not accept any arguments.\n"
-	 "\n");
+void usage(char *err_fmt, ...) {
+  va_list  ap;
+
+  if (err_fmt) {
+    va_start(ap, err_fmt);
+    fflush(stdout);
+    vfprintf(stderr, err_fmt, ap);
+    fprintf(stderr, "\n");
+    va_end(ap);
+  }
+  printf("\nUsage: Use fingerdiff w/o any arguments to read the reference\n"
+         " FP front stdin, or give filename:lineno to read it from\n"
+         " nmap-os-fingerprints.\n\n");
   exit(1);
 }
 
-int main(int argc, char *argv[]) {
-  FingerPrint *referenceFP;
-  FingerPrint *observedFP;
-  double accuracy;
-  char referenceFPString[2048];
-  char observedFPString[2048];
-  int printlen = 0;
-  char line[512];
+/* Returns -1 (or exits) for failure */
+int readFP(FILE *filep, char *newFP, int newFPsz ) {
+  char line[512], lasttestname[64];
   int linelen;
-  char lasttestname[32];
   int lastlinelen = 0;
-  char *p;
+  int printlen = 0;
   int adjusted = 0; /* Flags if we have adjusted the entered fingerprint */
+  char *p;
 
-  if (argc != 1)
-    usage();
+  if (newFPsz < 50) return -1;
+  
+  newFP[0] = lasttestname[0] = '\0';
 
-  referenceFPString[0] = observedFPString[0] = '\0';
-
-  printf("STEP ONE: Enter the **REFERENCE FINGERPRINT**, followed by a blank or single-dot line:\n");
-
-  lasttestname[0] = '\0';
-  printlen = lastlinelen = 0;
-  while(fgets(line, sizeof(line), stdin)) {
+  while((fgets(line, sizeof(line), filep))) {
     if (*line == '\n' || *line == '.')
       break;
+    
     linelen = strlen(line);
     /* Check if it is a duplicate testname */
     if (*line == '#')
@@ -95,42 +96,97 @@ int main(int argc, char *argv[]) {
 	/* The new one is longer (and thus probably better) -- clobber the last
 	   line */
 	printlen -= lastlinelen;
-	referenceFPString[printlen] = '\0';
+	newFP[printlen] = '\0';
       }
       Strncpy(lasttestname, line, sizeof(lasttestname));
       lastlinelen = linelen;
       *p = '(';
     } else {
-      /* The only legitimate non-comment line that doesn't have a ( is the 
-	 initial Fingerprint line */
+      /* The only legitimate non-comment line that doesn't have a ( is the      	   initial Fingerprint line */
       if (strncmp(line, "Fingerprint ", 12) != 0) {
 	printf("Warning: Bogus line skipped\n");
 	continue;
       }
     }
-    if (printlen + linelen >= sizeof(referenceFPString) - 5)
+    if (printlen + linelen >= newFPsz - 5)
       fatal("Overflow!");
-    strcpy(referenceFPString + printlen, line);
+    strcpy(newFP + printlen, line);
     printlen += linelen;
   }
-
+  
   if (adjusted) {
     printf("\n**WARNING**: Adjusted fingerprint due to duplicated tests (we only look at the first).  Results are based on this adjusted fingerprint:\n%s\n",
-	   referenceFPString);
+	   newFP);
   }
-
+  
   /* Now we validate that all elements are present */
-  p = referenceFPString;
+  p = newFP;
   if (!strstr(p, "TSeq(") || !strstr(p, "T1(") || !strstr(p, "T2(") || 
       !strstr(p, "T3(") || !strstr(p, "T4(") || !strstr(p, "T5(") || 
       !strstr(p, "T6(") || !strstr(p, "T7(") || !strstr(p, "PU(")) {
     /* This ought to get my attention :) */
     printf("\n"
-         "******************************************************************\n"
-         "***WARNING: Reference Fingerprint is missing at least 1 element***\n"
-         "******************************************************************\n"
+	 "********************************************************\n"
+         "***WARNING: Fingerprint is missing at least 1 element***\n"
+         "********************************************************\n"
 	  );
 
+  }
+  if (printlen < 1)
+    return -1;
+  return 0;
+}
+
+int main(int argc, char *argv[]) {
+  FingerPrint *referenceFP;
+  FingerPrint *observedFP;
+  double accuracy;
+  char sourcefile[MAXPATHLEN];
+  int sourceline=-1;
+  char referenceFPString[2048];
+  char observedFPString[2048];
+  char line[512];
+  char *p, *endptr;
+  int i;
+  int done=0;
+  FILE *fp;
+
+  if (argc < 1 || argc > 2)
+    usage(NULL);
+
+  referenceFPString[0] = observedFPString[0] = '\0';
+
+  if (argc == 2) {
+    Strncpy(sourcefile, argv[1], sizeof(sourcefile));
+    p = strchr(sourcefile, ':');
+    if (!p) usage("Filename must be followed by a colon and then line number");
+    *p++ = '\0';
+    if (!*p) usage(NULL);
+    sourceline = strtol(p, &endptr, 10);
+    if (*endptr) {
+      error("could not parse line number (trailing garbage?)");
+    }
+    fp = fopen(sourcefile, "r");
+    done = 0; i = 1;
+    while(i < sourceline) {
+      if (fgets(line, sizeof(line), fp) == NULL)
+	usage("Failed to read to line %d of %s", sourceline, sourcefile);
+      i++;
+    }
+
+
+
+    if (readFP(fp, referenceFPString, sizeof(referenceFPString)) == -1)
+      usage("Failed to read in supposed fingerprint in %s line %d\n", sourcefile, sourceline);
+    fclose(fp);
+    printf("STEP ONE: Reading REFERENCE FINGERPRINT from %s line %d ... DONE\n"
+	   ,sourcefile, sourceline);    
+  } else {
+  
+    printf("STEP ONE: Enter the **REFERENCE FINGERPRINT**, followed by a blank or single-dot line:\n");
+
+    if (readFP(stdin, referenceFPString, sizeof(referenceFPString)) == -1)
+      usage("Failed to read in supposed fingerprint from stdin\n");    
   }
 
   referenceFP = parse_single_fingerprint(referenceFPString);
@@ -139,68 +195,14 @@ int main(int argc, char *argv[]) {
 
   printf("STEP TWO: Enter the **OBSERVED FINGERPRINT**, followed by a blank or single-dot line:\n");
 
-  lasttestname[0] = '\0';
-  printlen = 0;
-  while(fgets(line, sizeof(line), stdin)) {
-    if (*line == '\n' || *line == '.')
-      break;
-    linelen = strlen(line);
-    /* Check if it is a duplicate testname */
-    if (*line == '#')
-      continue;
-    p = strchr(line, '(');
-    if (p) {
-      *p = '\0';
-      if (strcmp(line, lasttestname) == 0) {
-	adjusted = 1;
-	if (lastlinelen >= linelen)
-	  continue;
-	/* The new one is longer (and thus probably better) -- clobber the last
-	   line */
-	printlen -= lastlinelen;
-	referenceFPString[printlen] = '\0';
-      }
-      Strncpy(lasttestname, line, sizeof(lasttestname));
-      lastlinelen = linelen;
-      *p = '(';
-    } else {
-      /* The only legitimate non-comment line that doesn't have a ( is the 
-	 initial Fingerprint line */
-      if (strncmp(line, "Fingerprint ", 12) != 0) {
-	printf("Warning: Bogus line skipped\n");
-	continue;
-      }
-    }
-    if (printlen + linelen >= sizeof(observedFPString) - 5)
-      fatal("Overflow!");
-    strcpy(observedFPString + printlen, line);
-    printlen += linelen;
-  }
 
-  if (adjusted) {
-    printf("\n**WARNING**: Adjusted fingerprint due to duplicated tests (we only look at the first).  Results are based on this adjusted fingerprint:\n%s\n",
-	   observedFPString);
-  }
+  if (readFP(stdin, observedFPString, sizeof(observedFPString)) == -1)
+    usage("Failed to read in supposed observed fingerprint from stdin\n");
 
-  /* Now we validate that all elements are present */
-  p = observedFPString;
-  if (!strstr(p, "TSeq(") || !strstr(p, "T1(") || !strstr(p, "T2(") || 
-      !strstr(p, "T3(") || !strstr(p, "T4(") || !strstr(p, "T5(") || 
-      !strstr(p, "T6(") || !strstr(p, "T7(") || !strstr(p, "PU(")) {
-    /* This ought to get my attention :) */
-    printf("\n"
-         "*****************************************************************\n"
-         "***WARNING: Observed Fingerprint is missing at least 1 element***\n"
-         "*****************************************************************\n"
-	  );
-
-  }
   observedFP = parse_single_fingerprint(observedFPString);
   if (!observedFP) fatal("Sorry -- failed to parse the so-called reference fingerprint you entered");
 
   /* OK, now I've got the fingerprints -- I just need to compare them ... */
-
-
   accuracy = compare_fingerprints(referenceFP, observedFP, 1);
   if (accuracy == 1)
     printf("PERFECT MATCH!\n");
