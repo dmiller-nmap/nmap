@@ -34,6 +34,11 @@
 # include "config.h"
 #endif
 
+//	modified for nmap for windows
+#ifdef WIN32
+#include "mswin32\winclude.h"
+#endif
+
 #if !defined __STDC__ || !__STDC__
 /* This is a separate conditional since some stdc systems
    reject `defined (const)'.  */

@@ -49,6 +49,8 @@
 #define TARGETS_H
 
 #include "config.h"
+
+#ifndef WIN32
 /* This contains pretty much everythign we need ... */
 #include <sys/time.h>
 #include <unistd.h>
@@ -57,6 +59,7 @@
 #include <sys/param.h> /* Defines MAXHOSTNAMELEN on BSD*/
 #endif
 
+#endif
 
 #include "nmap.h"
 #include "global_structures.h"

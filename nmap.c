@@ -270,7 +270,11 @@ int main(int argc, char *argv[], char *envp[]) {
 	if (o.debugging) error("About to exec %s", nmappath);
 	/* Kill stdout & stderr */
 	if (!o.debugging) {	
+#ifndef WIN32
 	  fd = open("/dev/null", O_WRONLY);
+#else
+	  fd = _open("NUL", O_WRONLY);
+#endif
 	  if (fd != -1) {
 	    dup2(fd, STDOUT_FILENO);
 	    dup2(fd, STDERR_FILENO);
@@ -402,6 +406,9 @@ int nmap_main(int argc, char *argv[]) {
     {"vv", no_argument, 0, 0},
     {"append_output", no_argument, 0, 0},
     {"noninteractive", no_argument, 0, 0},
+#ifdef WIN32
+	WIN32_EXTRA_LONGOPT_LIST
+#endif
     {0, 0, 0, 0}
   };
 
@@ -453,6 +460,9 @@ int nmap_main(int argc, char *argv[]) {
 	if (o.host_timeout <= 200) {
 	  fatal("host_timeout is given in milliseconds and must be greater than 200");
 	}
+#ifdef WIN32
+	WIN32_EXTRA_LONGOPT_IMP
+#endif
       } else if (strcmp(long_options[option_index].name, "append_output") == 0) {
 	o.append_output = 1;
       } else if (strcmp(long_options[option_index].name, "noninteractive") == 0) {
@@ -706,6 +716,10 @@ int nmap_main(int argc, char *argv[]) {
     }
   }
 
+#ifdef WIN32
+  winip_postopt_init();
+#endif
+
   if (!o.debugging)
     signal(SIGSEGV, sigdie); 
 
@@ -785,26 +799,48 @@ int nmap_main(int argc, char *argv[]) {
   /* We start with stuff users should not do if they are not root */
   if (!o.isr00t) {
 
+#ifndef WIN32	/*	Win32 has perfectly fine ICMP socket support */
     if (o.pingtype & PINGTYPE_ICMP) {
       error("Warning:  You are not root -- using TCP pingscan rather than ICMP");
       o.pingtype = PINGTYPE_TCP;
     }
+#endif
 
     if (o.finscan || o.windowscan || o.synscan || o.maimonscan || o.nullscan || o.xmasscan || o.ackscan
 	|| o.udpscan || o.ipprotscan) {
-      fatal("You requested a scan type which requires r00t privileges, and you do not have them.\n");
+#ifndef WIN32
+      fatal
+#else
+      winip_barf
+#endif
+      ("You requested a scan type which requires r00t privileges, and you do not have them.\n");
     }
   
     if (o.numdecoys > 0) {
-      fatal("Sorry, but you've got to be r00t to use decoys, boy!");
+#ifndef WIN32
+      fatal
+#else
+      winip_barf
+#endif
+      ("Sorry, but you've got to be r00t to use decoys, boy!");
     }
   
     if (o.fragscan) {
-      fatal("Sorry, but fragscan requires r00t privileges\n");
+#ifndef WIN32
+      fatal
+#else
+      winip_barf
+#endif
+      ("Sorry, but fragscan requires r00t privileges\n");
     }
 
     if (o.osscan) {
-      fatal("TCP/IP fingerprinting (for OS scan) requires root privileges which you do not appear to possess.  Sorry, dude.\n");
+#ifndef WIN32
+      fatal
+#else
+      winip_barf
+#endif
+      ("TCP/IP fingerprinting (for OS scan) requires root privileges which you do not appear to possess.  Sorry, dude.\n");
     }
   }
 
@@ -1202,7 +1238,11 @@ int gather_logfile_resumption_state(char *fname, int *myargc, char ***myargv) {
 void options_init() {
 
   bzero( (char *) &o, sizeof(struct ops));
+#ifndef WIN32
   o.isr00t = !(geteuid());
+#else
+  winip_init();	//	wrapper for all win32 initialization
+#endif
   o.debugging = DEBUGGING;
   o.verbose = DEBUGGING;
   /*o.max_parallelism = MAX_SOCKETS;*/
@@ -1365,6 +1405,9 @@ void printusage(char *name, int rc) {
 	 "  -iL <inputfile> Get targets from file; Use '-' for stdin\n"
 	 "* -S <your_IP>/-e <devicename> Specify source address or network interface\n"
 	 "  --interactive Go into interactive mode (then press h for help)\n"
+#ifdef WIN32
+	 "  --win_help Windows-specific features\n"
+#endif
 	 "Example: nmap -v -sS -O www.my.com 192.168.0.0/16 '192.88-90.*.*'\n"
 	 "SEE THE MAN PAGE FOR MANY MORE OPTIONS, DESCRIPTIONS, AND EXAMPLES \n", NMAP_VERSION);
   exit(rc);
@@ -1527,6 +1570,8 @@ int check_ident_port(struct in_addr target) {
   sock.sin_family = AF_INET;
   sock.sin_addr.s_addr = target.s_addr;
   sock.sin_port = htons(113); /*should use getservbyname(3), yeah, yeah */
+  FD_ZERO(&fds_read);
+  FD_ZERO(&fds_write);
   FD_SET(sd, &fds_read);
   FD_SET(sd, &fds_write);
   res = connect(sd, (struct sockaddr *) &sock, sizeof(struct sockaddr_in));
@@ -1754,6 +1799,8 @@ int ftp_anon_connect(struct ftpinfo *ftp) {
   return sd;
 }
 
+#ifndef WIN32
+
 void reaper(int signo) {
   int status;
   pid_t pid;
@@ -1792,6 +1839,8 @@ void sigdie(int signo) {
   exit(1);
 }
 
+#endif
+
 int nmap_fetchfile(char *filename_returned, int bufferlen, char *file) {
   char *dirptr;
   int res;
@@ -1812,6 +1861,7 @@ int nmap_fetchfile(char *filename_returned, int bufferlen, char *file) {
 	foundsomething = 1;
     }
   }
+#ifndef WIN32
   if (!foundsomething) {
     pw = getpwuid(getuid());
     if (pw) {
@@ -1832,6 +1882,7 @@ int nmap_fetchfile(char *filename_returned, int bufferlen, char *file) {
       }
     }
   }
+#endif
   if (!foundsomething) {
     res = snprintf(filename_returned, bufferlen, "%s/%s", NMAPDATADIR, file);
     if (res > 0 && res < bufferlen) {

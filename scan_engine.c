@@ -52,6 +52,9 @@
 
 extern struct ops o;
 
+/*  predefined filters -- I need to kill these globals at some pont. */
+extern unsigned long flt_dsthost, flt_srchost, flt_baseport;
+
 
 /* Does the appropriate stuff when the port we are looking at is found
    to be open trynum is the try number that was successful 
@@ -308,6 +311,8 @@ static int get_connect_results(struct hoststruct *target,
 	  posportupdate(target, current, trynum, scan, ss, CONNECT_SCAN, PORT_CLOSED, pil, csi);
 	  break;
 	case EHOSTUNREACH:
+	case ETIMEDOUT:
+	case EHOSTDOWN:
 	  /* It could be the host is down, or it could be firewalled.  We
 	     will go on the safe side & assume port is closed ... on second
 	     thought, lets go firewalled! and see if it causes any trouble */
@@ -317,8 +322,6 @@ static int get_connect_results(struct hoststruct *target,
 	case ENETUNREACH:
 	case ENETRESET:
 	case ECONNABORTED:
-	case ETIMEDOUT:
-	case EHOSTDOWN:
 	  snprintf(buf, sizeof(buf), "Strange SO_ERROR from connection to %s (%d) -- bailing scan", inet_ntoa(target->host), optval);
 	  perror(buf);
 	  return -1;
@@ -532,15 +535,12 @@ void pos_scan(struct hoststruct *target, unsigned short *portarray, stype scanty
   int victim;
   int senddelay = 0;
   pcap_t *pd = NULL;
-  struct bpf_program fcode;
-  char err0r[PCAP_ERRBUF_SIZE];
   char filter[512];
   char *p;
   unsigned int ack_number = 0;
   int tries = 0;
   int  res;
   int connecterror = 0;
-  unsigned int localnet, netmask;
   int starttime;
   struct hostent *myhostent = NULL;
   struct sockaddr_in sock;
@@ -660,22 +660,15 @@ void pos_scan(struct hoststruct *target, unsigned short *portarray, stype scanty
     
     pd = my_pcap_open_live(target->device, 100,  (o.spoofsource)? 1 : 0, 20);
     
-    if (pcap_lookupnet(target->device, &localnet, &netmask, err0r) < 0)
-      fatal("Failed to lookup device subnet/netmask: %s", err0r);
+    flt_srchost = target->host.s_addr;
+    flt_dsthost = target->source_ip.s_addr;
+
     p = strdup(inet_ntoa(target->host));
     snprintf(filter, sizeof(filter), "(icmp and dst host %s) or (tcp and src host %s and dst host %s)", inet_ntoa(target->source_ip), p, inet_ntoa(target->source_ip));
     free(p);
 
-    /* Due to apparent bug in libpcap */
-    if (islocalhost(&(target->host)))
-      filter[0] = '\0';
-     
-    if (o.debugging)
-      log_write(LOG_STDOUT, "Packet capture filter: %s\n", filter);
-    if (pcap_compile(pd, &fcode, filter, 0, netmask) < 0)
-      fatal("Error compiling our pcap filter (\"%s\"): %s\n", filter, pcap_geterr(pd));
-    if (pcap_setfilter(pd, &fcode) < 0 )
-      fatal("Failed to set the pcap filter: %s\n", pcap_geterr(pd));
+    set_pcap_filter(target, pd, flt_icmptcp, filter);
+
     if (scantype == SYN_SCAN)
       scanflags = TH_SYN;
     else
@@ -934,6 +927,10 @@ void pos_scan(struct hoststruct *target, unsigned short *portarray, stype scanty
 	    } else { /* CONNECT SCAN */
 	      res = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	      if (res == -1) pfatal("Socket troubles in pos_scan 11234");
+#ifdef WIN32
+	      if(res > 2047)
+		    fatal("got sd > 2047 in pos_scan\n");
+#endif
 	      csi.socklookup[res] = current;
 	      unblock_socket(res);
 	      init_socket(res);
@@ -1227,8 +1224,6 @@ void super_scan(struct hoststruct *target, unsigned short *portarray,
   unsigned int bytes;
   struct ip *ip, *ip2;
   struct tcphdr *tcp;
-  struct bpf_program fcode;
-  char err0r[PCAP_ERRBUF_SIZE];
   char filter[512];
   char *p;
   int changed = 0;  /* Have we found new ports (or rejected earlier "found" ones) this round? */
@@ -1237,7 +1232,6 @@ void super_scan(struct hoststruct *target, unsigned short *portarray,
   int max_width; /* No more packets than this at once, pleeze */
   int tries = 0;
   int tmp = 0;
-  unsigned int localnet, netmask;
   int starttime;
   unsigned short newport;
   int newstate = 999; /* This ought to break something if used illegally */
@@ -1319,22 +1313,17 @@ void super_scan(struct hoststruct *target, unsigned short *portarray,
 
   pd = my_pcap_open_live(target->device, 92,  (o.spoofsource)? 1 : 0, 10);
 
-  if (pcap_lookupnet(target->device, &localnet, &netmask, err0r) < 0)
-    fatal("Failed to lookup device subnet/netmask: %s", err0r);
+
+  flt_srchost = target->host.s_addr;
+  flt_dsthost = target->source_ip.s_addr;
+  flt_baseport = o.magic_port;
+
   p = strdup(inet_ntoa(target->host));
   snprintf(filter, sizeof(filter), "(icmp and dst host %s) or (tcp and src host %s and dst host %s and ( dst port %d or dst port %d))", inet_ntoa(target->source_ip), p, inet_ntoa(target->source_ip), o.magic_port , o.magic_port + 1);
   free(p);
-  /* Due to apparent bug in libpcap */
-  if (islocalhost(&(target->host)))
-    filter[0] = '\0';
 
-  if (o.debugging)
-    log_write(LOG_STDOUT, "Packet capture filter: %s\n", filter);
-  if (pcap_compile(pd, &fcode, filter, 0, netmask) < 0)
-    fatal("Error compiling our pcap filter (\"%s\"): %s\n", filter, pcap_geterr(pd));
-  if (pcap_setfilter(pd, &fcode) < 0 )
-    fatal("Failed to set the pcap filter: %s\n", pcap_geterr(pd));
- 
+  set_pcap_filter(target, pd, flt_icmptcp_2port, filter);
+
   if (scantype == XMAS_SCAN) scanflags = TH_FIN|TH_URG|TH_PUSH;
   else if (scantype == NULL_SCAN) scanflags = 0;
   else if (scantype == FIN_SCAN) scanflags = TH_FIN;

@@ -51,6 +51,9 @@
 
 extern struct ops o;
 
+/*  predefined filters -- I need to kill these globals at some pont. */
+extern unsigned long flt_dsthost, flt_srchost, flt_baseport;
+
 void sethdrinclude(int sd) {
 #ifdef IP_HDRINCL
 int one = 1;
@@ -1088,6 +1091,88 @@ if (!pd) fatal("NULL packet device passed to readip_pcap");
  return p;
 }
 
+#ifndef WIN32
+ 
+/* Set a pcap filter */
+void set_pcap_filter(struct hoststruct *target,
+		     pcap_t *pd, PFILTERFN filter, char *bpf, ...)
+{
+  va_list ap;
+  char buf[512];
+  struct bpf_program fcode;
+  unsigned int localnet, netmask;
+  char err0r[256];
+  
+  if (pcap_lookupnet(target->device, &localnet, &netmask, err0r) < 0)
+    fatal("Failed to lookup device subnet/netmask: %s", err0r);
+  
+  va_start(ap, bpf);
+  vsprintf(buf, bpf, ap);
+  va_end(ap);
+  
+  if (o.debugging)
+    log_write(LOG_STDOUT, "Packet capture filter: %s\n", buf);
+  
+  /* Due to apparent bug in libpcap */
+  if (islocalhost(&(target->host)))
+    buf[0] = '\0';
+  
+  if (pcap_compile(pd, &fcode, buf, 0, netmask) < 0)
+    fatal("Error compiling our pcap filter: %s\n", pcap_geterr(pd));
+  if (pcap_setfilter(pd, &fcode) < 0 )
+    fatal("Failed to set the pcap filter: %s\n", pcap_geterr(pd));
+}
+
+#endif
+
+/* This is ugly :(.  We need to get rid of these at some poitn */
+unsigned long flt_dsthost, flt_srchost, flt_baseport;
+
+int flt_icmptcp(const char *packet, int len)
+{
+  struct ip* ip = (struct ip*)packet;
+  if(ip->ip_dst.s_addr != flt_dsthost) return 0;
+  if(ip->ip_p == IPPROTO_ICMP) return 1;
+  if(ip->ip_src.s_addr != flt_srchost) return 0;
+  if(ip->ip_p == IPPROTO_TCP) return 1;
+  return 0;
+}
+
+int flt_icmptcp_2port(const char *packet, int len)
+{
+  struct ip* ip = (struct ip*)packet;
+  if(ip->ip_dst.s_addr != flt_dsthost) return 0;
+  if(ip->ip_p == IPPROTO_ICMP) return 1;
+  if(ip->ip_src.s_addr != flt_srchost) return 0;
+  if(ip->ip_p == IPPROTO_TCP)
+    {
+      struct tcphdr* tcp = (struct tcphdr *) (((char *) ip) + 4 * ip->ip_hl);
+      if(len < 4 * ip->ip_hl + 4) return 0;
+      if(tcp->th_dport == flt_baseport || tcp->th_dport == flt_baseport + 1)
+	return 1;
+    }
+  
+  return 0;
+}
+
+int flt_icmptcp_5port(const char *packet, int len)
+{
+  struct ip* ip = (struct ip*)packet;
+  if(ip->ip_dst.s_addr != flt_dsthost) return 0;
+  if(ip->ip_p == IPPROTO_ICMP) return 1;
+  if(ip->ip_p == IPPROTO_TCP)
+    {
+      struct tcphdr* tcp = (struct tcphdr *) (((char *) ip) + 4 * ip->ip_hl);
+      if(len < 4 * ip->ip_hl + 4) return 0;
+      if(tcp->th_dport >= flt_baseport
+	 && tcp->th_dport <= flt_baseport + 4) return 1;
+    }
+  
+  return 0;
+}
+
+
+
 int ipaddr2devname( char *dev, struct in_addr *addr ) {
 struct interface_info *mydevs;
 int numdevs;
@@ -1364,17 +1449,20 @@ void max_rcvbuf(int sd) {
   int optval = 524288 /*2^19*/;
   NET_SIZE_T optlen = sizeof(int);
 
+#ifndef WIN32
   if (setsockopt(sd, SOL_SOCKET, SO_RCVBUF, (const char *) &optval, optlen))
     if (o.debugging) perror("Problem setting large socket recieve buffer");
   if (o.debugging) {
     getsockopt(sd, SOL_SOCKET, SO_RCVBUF,(char *) &optval, &optlen);
     log_write(LOG_STDOUT, "Our buffer size is now %d\n", optval);
   }
+#endif /* WIN32 */
 }
 
 /* Maximize the open file descriptor limit for this process go up to the
    max allowed  */
 int max_sd() {
+#ifndef WIN32
   struct rlimit r;
   static int maxfds = -1;
 
@@ -1408,20 +1496,31 @@ int max_sd() {
     else return 0;
   }
 #endif
+#endif /* WIN32 */
   return 0;
 }
 
 /* Convert a socket to blocking mode */
 int block_socket(int sd) {
+#ifdef WIN32
+  unsigned long options=0;
+  if(sd == 501) return 1;
+  ioctlsocket(sd, FIONBIO, (unsigned long *)&options);
+#else
   int options;
   options = (~O_NONBLOCK) & fcntl(sd, F_GETFL);
   fcntl(sd, F_SETFL, options);
+#endif
+
   return 1;
 }
 
 /* Give broadcast permission to a socket */
 void broadcast_socket(int sd) {
   int one = 1;
+#ifdef WIN32
+  if(sd == 501) return;
+#endif
   if (setsockopt(sd, SOL_SOCKET, SO_BROADCAST, (const char *)&one, sizeof(int)) != 0) {
     fprintf(stderr, "Failed to secure socket broadcasting permission\n");
     perror("setsockopt");

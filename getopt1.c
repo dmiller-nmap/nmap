@@ -24,6 +24,11 @@
 #include "config.h"
 #endif
 
+//	modified for nmap for windows
+#ifdef WIN32
+#include "mswin32\winclude.h"
+#endif
+
 #include "getopt.h"
 
 #if !defined __STDC__ || !__STDC__

@@ -52,6 +52,9 @@
 
 extern struct ops o;
 
+/*  predefined filters -- I need to kill these globals at some pont. */
+extern unsigned long flt_dsthost, flt_srchost, flt_baseport;
+
 /* Fills up the hostgroup_state structure passed in (which must point
    to valid memory).  Lookahead is the number of hosts that can be
    checked (such as ping scanned) in advance.  Randomize causes each
@@ -207,7 +210,7 @@ do {
 	if (o.isr00t && 
 	    ((o.pingtype & PINGTYPE_TCP) || 
 	     (o.pingtype == PINGTYPE_NONE && 
-	      (o.synscan || o.finscan || o.xmasscan || o.nullscan || 
+	      (o.synscan || o.finscan || o.xmasscan || o.nullscan || o.ipprotscan ||
 	       o.maimonscan || o.ackscan || o.udpscan || o.osscan || o.windowscan)))) {
 	 device = routethrough(&(hs->hostbatch[hidx].host), &(hs->hostbatch[hidx].source_ip));
 	 if (!device) {
@@ -403,7 +406,6 @@ struct timeval begin_select;
 struct pingtech ptech;
 struct tcpqueryinfo tqi;
 int max_block_size = 40;
-char err0r[PCAP_ERRBUF_SIZE];
 struct ppkt {
   unsigned char type;
   unsigned char code;
@@ -421,9 +423,7 @@ struct timeval *time;
 struct timeval start, end, t1, t2;
 unsigned short id;
 pcap_t *pd = NULL;
-struct bpf_program fcode;
 char filter[512];
-unsigned int localnet, netmask;
 unsigned short sportbase;
 int max_width = 0;
 
@@ -507,7 +507,6 @@ if (o.numdecoys > 1 || ptech.rawtcpscan || ptech.rawicmpscan) {
   if ((rawpingsd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) < 0 )
     pfatal("socket trobles in massping");
   broadcast_socket(rawpingsd);
-
 }
  else { rawsd = -1; rawpingsd = -1; }
 
@@ -521,24 +520,15 @@ if (ptech.rawicmpscan || ptech.rawtcpscan) {
    = 104 byte snaplen */
   pd = my_pcap_open_live(hostbatch[0].device, 104, o.spoofsource, 20);
 
-  if (pcap_lookupnet(hostbatch[0].device, &localnet, &netmask, err0r) < 0)
-    fatal("Failed to lookup device subnet/netmask: %s", err0r);
+  flt_dsthost = hostbatch[0].source_ip.s_addr;
+  flt_baseport = sportbase;
+
   snprintf(filter, sizeof(filter), "(icmp and dst host %s) or (tcp and dst host %s and ( dst port %d or dst port %d or dst port %d or dst port %d or dst port %d))", 
 	  inet_ntoa(hostbatch[0].source_ip),inet_ntoa(hostbatch[0].source_ip),
 	  sportbase , sportbase + 1, sportbase + 2, sportbase + 3, 
 	  sportbase + 4);
 
-  /* Due to apparent bug in libpcap */
-  if (islocalhost(&(hostbatch[0].host)))
-    filter[0] = '\0';
-
-  if (o.debugging)
-    log_write(LOG_STDOUT, "Packet capture filter: %s\n", filter);
-  if (pcap_compile(pd, &fcode, filter, 0, netmask) < 0)
-    fatal("Error compiling our pcap filter (\"%s\"): %s\n", filter, pcap_geterr(pd));
-  if (pcap_setfilter(pd, &fcode) < 0 )
-    fatal("Failed to set the pcap filter: %s\n", pcap_geterr(pd));
-  
+  set_pcap_filter(hostbatch, pd, flt_icmptcp_5port, filter); 
 }
 
  if (ptech.rawicmpscan + ptech.icmpscan + ptech.connecttcpscan +
@@ -833,6 +823,9 @@ while(pt->block_unaccounted) {
 	      switch(errno) {
 	      case ECONNREFUSED:
 	      case EAGAIN:
+#ifdef WIN32
+//		  case WSAENOTCONN:	//	needed?  this fails around here on my system
+#endif
 		if (errno == EAGAIN && o.verbose) {
 		  log_write(LOG_STDOUT, "Machine %s MIGHT actually be listening on probe port %d\n", inet_ntoa(hostbatch[hostindex].host), o.tcp_probe_port);
 		}

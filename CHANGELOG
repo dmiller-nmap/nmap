@@ -1,5 +1,10 @@
 # Nmap Changelog
 
+-- Took out C++ compiler test from nbase configure script.  It was
+   inserted accidently, but I found it interesting that only 2 people
+   complained about this causing them problems.  I guess most everyone
+   already has C++ compilers.
+
 -- Applied patch from Steve Bleazard (steve@bleazard.com) which fixed
    bug in internal Smoothed Round Trim Time calculations.
 

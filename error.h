@@ -46,6 +46,11 @@
 
 #ifndef ERROR_H
 #define ERROR_H
+
+#ifdef WIN32
+#include "mswin32\winclude.h"
+#endif
+
 #include <stdarg.h>
 #include <stdio.h>
 #include <unistd.h>

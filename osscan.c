@@ -52,6 +52,9 @@
 #include "timing.h"
 
 extern struct ops o;
+/*  predefined filters -- I need to kill these globals at some pont. */
+extern unsigned long flt_dsthost, flt_srchost, flt_baseport;
+
 
 FingerPrint *get_fingerprint(struct hoststruct *target, struct seq_info *si, 
 			     unsigned short *portarray) {
@@ -65,7 +68,6 @@ struct icmp *icmp;
 struct timeval t1,t2;
 int i;
 struct hostent *myhostent = NULL;
-unsigned int localnet, netmask;
 pcap_t *pd;
 char myname[513];
 int rawsd;
@@ -82,8 +84,6 @@ unsigned int closedport = 31337;
 struct port *tport = NULL;
 char *p;
 int decoy;
-struct bpf_program fcode;
-char err0r[PCAP_ERRBUF_SIZE];
 char filter[512];
 double seq_inc_sum = 0;
 unsigned int  seq_avg_inc = 0;
@@ -128,22 +128,15 @@ oshardtimeout = MAX(500000, 5 * target->to.timeout);
 if (o.debugging)
    log_write(LOG_STDOUT, "Wait time is %dms\n", (ossofttimeout +500)/1000);
 
-if (pcap_lookupnet(target->device, &localnet, &netmask, err0r) < 0)
-  fatal("Failed to lookup device subnet/netmask: %s", err0r);
+ flt_srchost = target->host.s_addr;
+ flt_dsthost = target->source_ip.s_addr;
+
  p = strdup(inet_ntoa(target->host));
 
 snprintf(filter, sizeof(filter), "(icmp and dst host %s) or (tcp and src host %s and dst host %s)", inet_ntoa(target->source_ip), p, inet_ntoa(target->source_ip));
  free(p);
- /* Due to apparent bug in libpcap */
- if (islocalhost(&(target->host)))
-   filter[0] = '\0';
- if (o.debugging)
-   log_write(LOG_STDOUT, "Packet capture filter: %s\n", filter);
- if (pcap_compile(pd, &fcode, filter, 0, netmask) < 0)
-   fatal("Error compiling our pcap filter (\"%s\"): %s\n", filter, pcap_geterr(pd));
- if (pcap_setfilter(pd, &fcode) < 0 )
-   fatal("Failed to set the pcap filter: %s\n", pcap_geterr(pd));
-
+ 
+ set_pcap_filter(target, pd, flt_icmptcp, filter);
  target->osscan_performed = 1; /* Let Nmap know that we did try an OS scan */
 
  /* Lets find an open port to used */

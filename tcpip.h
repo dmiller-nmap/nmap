@@ -56,6 +56,10 @@
 
 
 
+#ifdef WIN32
+#include "mswin32\winclude.h"
+#else
+
 #ifdef STDC_HEADERS
 #include <stdlib.h>
 #else
@@ -164,6 +168,7 @@ extern "C" {
 #if HAVE_SYS_SOCKIO_H
 #include <sys/sockio.h>  /* SIOCGIFCONF for Solaris */
 #endif
+#endif /* WIN32 */
 
 #include "nbase.h"
 #include "error.h"
@@ -400,7 +405,7 @@ int getsourceip(struct in_addr *src, struct in_addr *dst);
 char *getsourceif(struct in_addr *src, struct in_addr *dst);
 int islocalhost(struct in_addr *addr);
 int unblock_socket(int sd);
-inline int Sendto(char *functionname, int sd, unsigned char *packet, int len, 
+int Sendto(char *functionname, int sd, unsigned char *packet, int len, 
 	   unsigned int flags, struct sockaddr *to, int tolen);
 /* Standard swiped internet checksum routine */
 unsigned short in_cksum(unsigned short *ptr,int nbytes);

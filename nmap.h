@@ -51,6 +51,9 @@
 
 /************************INCLUDES**********************************/
 
+#ifdef WIN32
+#include "mswin32\winclude.h"
+#endif
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -83,6 +86,8 @@ void *realloc();
 
 #include <ctype.h>
 #include <sys/types.h>
+
+#ifndef WIN32	//	from nmapNT -- seems to work
 
 #include <sys/wait.h>
 
@@ -371,11 +376,21 @@ int fileexistsandisreadable(char *pathname);
 int check_firewallmode(struct hoststruct *target, struct scanstats *ss);
 int gather_logfile_resumption_state(char *fname, int *myargc, char ***myargv);
 
+#endif // WIN32
 
 /* From glibc 2.0.6 because Solaris doesn't seem to have this function */
 #ifndef HAVE_INET_ATON
 int inet_aton(register const char *, struct in_addr *);
 #endif
+
+/* Sets a pcap filter function -- makes SOCK_RAW reads easier */
+typedef int (*PFILTERFN)(const char *packet, int len); /* 1 to keep */
+void set_pcap_filter(struct hoststruct *target, pcap_t *pd, PFILTERFN filter, char *bpf, ...);
+
+int flt_icmptcp(const char *packet, int len);
+int flt_icmptcp_2port(const char *packet, int len);
+int flt_icmptcp_5port(const char *packet, int len);
+
 #endif /* NMAP_H */
 
 

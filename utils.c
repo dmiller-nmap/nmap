@@ -473,6 +473,8 @@ void arg_parse_free(char **argv) {
    an munmap(ptr, length) when finished with it.  openflags should 
    be O_RDONLY or O_RDWR, or O_WRONLY
 */
+
+#ifndef WIN32
 char *mmapfile(char *fname, int *length, int openflags) {
   struct stat st;
   int fd;
@@ -510,3 +512,5 @@ char *mmapfile(char *fname, int *length, int openflags) {
   *length = st.st_size;
   return fileptr;
 }
+
+#endif

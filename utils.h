@@ -46,6 +46,10 @@
 
 #ifndef UTILS_H
 #define UTILS_H
+
+#ifdef WIN32
+#include "mswin32\winclude.h"
+#else
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -59,6 +63,7 @@
 #include <assert.h>
 #include <sys/mman.h>
 #include "config.h"
+#endif
 
 #if TIME_WITH_SYS_TIME
 # include <sys/time.h>
