@@ -196,6 +196,7 @@ int nmap_main(int argc, char *argv[]) {
     {"randomize_hosts", no_argument, 0, 0},
     {"osscan_limit", no_argument, 0, 0}, /* skip OSScan if no open ports */
     {"osscan_guess", no_argument, 0, 0}, /* More guessing flexability */
+    {"packet_trace", no_argument, 0, 0}, /* Display all packets sent/rcv */
     {"fuzzy", no_argument, 0, 0}, /* Alias for osscan_guess */
     {"data_length", required_argument, 0, 0},
     {"rH", no_argument, 0, 0},
@@ -301,6 +302,8 @@ int nmap_main(int argc, char *argv[]) {
       } else if (strcmp(long_options[option_index].name, "osscan_guess")  == 0
                  || strcmp(long_options[option_index].name, "fuzzy") == 0) {
 	o.osscan_guess = 1;
+      } else if (strcmp(long_options[option_index].name, "packet_trace") == 0) {
+	o.setPacketTrace(true);
       } else if (strcmp(long_options[option_index].name, "initial_rtt_timeout") == 0) {
 	o.initial_rtt_timeout = atoi(optarg);
 	if (o.initial_rtt_timeout <= 0) {
@@ -1124,8 +1127,8 @@ struct scan_lists *getpts(char *origexpr) {
 	if (range_type & SCAN_PROTOCOLS && rangestart < 256)
 	  protcount++;
 	porttbl[rangestart] |= range_type;
-	rangestart++;
       }
+      rangestart++;
     }
     
     /* Find the next range */

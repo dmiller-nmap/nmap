@@ -214,13 +214,23 @@ extern "C" {
 
 #define MORE_FRAGMENTS 8192 /*NOT a user serviceable parameter*/
 
+/* Used for tracing all packets sent or received (eg the
+   --packet_trace option) */
+class PacketTrace {
+ public:
+  /*  static const int SEND=1;
+      static const int RCV=2; */
+  enum pdirection { SENT=1, RCVD=2 };
+  /* Takes an IP PACKET and prints it if packet tracing is
+     enabled.  'packet' must point to the IPv4 header. The direction
+     must be PacketTrace.SEND or PacketTrace.RCV */
+  static void trace(pdirection pdir, const u8 *packet, u32 len);
+};
+
 struct interface_info {
     char name[64];
     struct in_addr addr;
 };
-
-
-
 
 #ifndef HAVE_STRUCT_IP
 #define HAVE_STRUCT_IP
@@ -410,10 +420,12 @@ int send_ip_raw_decoys( int sd, const struct in_addr *victim, u8 proto,
    So a valid pcap_t will always be returned. */
 pcap_t *my_pcap_open_live(char *device, int snaplen, int promisc, int to_ms);
 
+/* Shows the most important fields of an IP packet (including dissecting TCP/UDP headers.  packet should point to the beginning of the IP header  */
+void readippacket(const u8 *packet, int readdata);
 /* A simple function I wrote to help in debugging, shows the important fields
    of a TCP packet*/
-int readtcppacket(unsigned char *packet, int readdata);
-int readudppacket(unsigned char *packet, int readdata);
+int readtcppacket(const u8 *packet, int readdata);
+int readudppacket(const u8 *packet, int readdata);
 /* Convert an IP address to the device (IE ppp0 eth0) using that address */
 int ipaddr2devname( char *dev, const struct in_addr *addr );
 /* And vice versa */

@@ -77,6 +77,15 @@ setsockopt(sd, IPPROTO_IP, IP_HDRINCL, (const char *) &one, sizeof(one));
 }
 #endif /* WIN32 */
 
+  /* Takes an IP PACKET and prints it if packet tracing is
+     enabled.  'packet' must point to the IPv4 header. The direction
+     must be PacketTrace.SEND or PacketTrace.RCV */
+void PacketTrace::trace(pdirection pdir, const u8 *packet, u32 len) {
+
+  if (!o.packetTrace()) return;
+  readippacket(packet, len);
+  return;
+}
 
 /* Converts an IP address given in a sockaddr_storage to an IPv4 or
    IPv6 IP address string.  Since a static buffer is returned, this is
@@ -411,19 +420,35 @@ do {
   retries++;
 } while( res == -1);
 
+ PacketTrace::trace(PacketTrace::SENT, packet, len); 
+
 if (TCPIP_DEBUGGING > 1)
   log_write(LOG_STDOUT, "successfully sent %d bytes of raw_tcp!\n", res);
 
 return res;
 }
 
+void readippacket(const u8 *packet, int readdata) {
+  struct ip *ip = (struct ip *) packet;
+  switch(ip->ip_p) {
+  case IPPROTO_UDP:
+    readudppacket(packet, readdata);
+    break;
+    /* Should add ICMP here at some point */
+  default:
+    readtcppacket(packet, readdata);
+    break;
+  }
+
+}
+
 /* A simple function I wrote to help in debugging, shows the important fields
    of a TCP packet*/
-int readtcppacket(unsigned char *packet, int readdata) {
+int readtcppacket(const u8 *packet, int readdata) {
 
 struct ip *ip = (struct ip *) packet;
 struct tcphdr *tcp = (struct tcphdr *) (packet + sizeof(struct ip));
-unsigned char *data = packet +  sizeof(struct ip) + sizeof(struct tcphdr);
+const unsigned char *data = packet +  sizeof(struct ip) + sizeof(struct tcphdr);
 int tot_len;
 struct in_addr bullshit, bullshit2;
 char sourcehost[16];
@@ -479,11 +504,11 @@ return 0;
 
 /* A simple function I wrote to help in debugging, shows the important fields
    of a UDP packet*/
-int readudppacket(unsigned char *packet, int readdata) {
+int readudppacket(const u8 *packet, int readdata) {
 
 struct ip *ip = (struct ip *) packet;
 udphdr_bsd *udp = (udphdr_bsd *) (packet + sizeof(struct ip));
-unsigned char *data = packet +  sizeof(struct ip) + sizeof(udphdr_bsd);
+const unsigned char *data = packet +  sizeof(struct ip) + sizeof(udphdr_bsd);
 int tot_len;
 struct in_addr bullshit, bullshit2;
 char sourcehost[16];
@@ -1095,6 +1120,7 @@ if (!pd) fatal("NULL packet device passed to readip_pcap");
 /* New packet capture device, need to recompute offset */
  if ( (datalink = pcap_datalink(pd)) < 0)
    fatal("Cannot obtain datalink information: %s", pcap_geterr(pd));
+
  switch(datalink) {
  case DLT_EN10MB: offset = 14; break;
  case DLT_IEEE802: offset = 22; break;

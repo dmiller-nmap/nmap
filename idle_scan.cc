@@ -279,7 +279,7 @@ void initialize_idleproxy(struct idle_proxy_info *proxy, char *proxyName,
   } else {
     struct sockaddr_in *sin = (struct sockaddr_in *)&ss;
     sslen = sizeof(*sin);
-    bzero(&sin, sslen);
+    bzero(sin, sslen);
     dev = routethrough(proxy->host.v4hostip(), &(sin->sin_addr));  
     if (!dev) fatal("Unable to find appropriate source address and device interface to use when sending packets to %s", proxyName);
     Strncpy(proxy->host.device, dev, sizeof(proxy->host.device));

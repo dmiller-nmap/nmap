@@ -70,6 +70,10 @@ class NmapOps {
 		             user). */
   int isr00t;
   int debugging;
+  bool packetTrace() { return (debugging > 3)? true : pTrace;  }
+  // Note that packetTrace may turn on at high debug levels even if
+  // setPacketTrace(false) has been called
+  void setPacketTrace(bool pt) { pTrace = pt;  }
   int verbose;
   int randomize_hosts;
   int spoofsource; /* -S used */
@@ -137,5 +141,6 @@ class NmapOps {
   int addressfamily; /*  Address family:  AF_INET or AF_INET6 */  
   struct sockaddr_storage sourcesock;
   size_t sourcesocklen;
+  bool pTrace; // Whether packet tracing has been enabled
 };
   

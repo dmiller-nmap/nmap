@@ -1,6 +1,18 @@
 # Nmap Changelog ($Id$)
 
+o Add nmap --packet_trace option which shows ALL raw packets Nmap sends
+or receives.  Should be turned on automatically at debuglevel 3.
+
+o Fixed a segmentation fault in Idlescan (-sI).
+
+o Fixed an infinite loop caused by invalid port arguments.  Problem
+  noted by fejed (fejed@uddf.net).
+
 Nmap 3.10ALPHA2
+
+o Fixed compilation and IPv6 support on FreeBSD (tested on
+  4.6-STABLE).  Thanks to Niels Heinen (niels.heinen@ubizen.com) for
+  suggestions.
 
 o Made some portability changes based on suggestions by Josef 'Jupp'
   Schugt (jupp@gmx.de)
@@ -47,8 +59,8 @@ o Woohoo! :)
 Nmap 2.99RC2
 
 o Fixed an important memory initialization bug which was causing
-crashes on Mac OS X (and possibly other platforms).  The problem was
-located by Pieter ten Pierick (P.tenPierick@chello.nl)
+  crashes on Mac OS X (and possibly other platforms).  The problem was
+  located by Pieter ten Pierick (P.tenPierick@chello.nl)
 
 o Various minor bugfixes/cleanup
 
@@ -255,11 +267,11 @@ o Included a bunch of fixes (mostly to prevent compiler warnings) from
 Nmap 2.54BETA30
 
 o Added a Document Type Definition (DTD) for the Nmap XML output
-   format (-oX) to the docs directory.  This allows validating parsers
-   to check nmap XML output files for correctness.  It is also useful
-   for application programmers to understand the XML output structure.
-   The DTD was written by William McVey (wam@cisco.com) of Cisco Secure 
-   Consulting Services ( http://www.cisco.com/go/securityconsulting ).
+  format (-oX) to the docs directory.  This allows validating parsers
+  to check nmap XML output files for correctness.  It is also useful
+  for application programmers to understand the XML output structure.
+  The DTD was written by William McVey (wam@cisco.com) of Cisco Secure 
+  Consulting Services ( http://www.cisco.com/go/securityconsulting ).
 
 o Merged in a number of Windows fixes/updates from Andy Lutomirski
   (Luto@myrealbox.com)

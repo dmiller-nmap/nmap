@@ -39,7 +39,7 @@ of course).
 The result of running nmap is usually a list of interesting
 ports on the machine(s) being scanned (if any).  Nmap always
 gives the port's "well known" service name (if any), number,
-state, and protocol.  The state is either 'open',
+state, and protocol.  The state is either \'open\',
 \'filtered\', or \'unfiltered\'.  Open means that the target
 machine will accept() connections on that port.  Filtered
 means that a firewall, filter, or other network obstacle is
@@ -269,7 +269,7 @@ found open and then floods them with SunRPC program NULL
 commands in an attempt to determine whether they are RPC
 ports, and if so, what program and version number they serve
 up.  Thus you can effectively obtain the same info as
-'rpcinfo -p' even if the target's portmapper is behind a
+\'rpcinfo -p\' even if the target's portmapper is behind a
 firewall (or protected by TCP wrappers).  Decoys do not
 currently work with RPC scan, at some point I may add decoy
 support for UDP RPC scans.
@@ -301,7 +301,7 @@ ftp server allows reading from and writing to some directory
 (such as /incoming), you can send arbitrary data to ports
 that you do find open (nmap doesn't do this for you though).
 .Sp
-The argument passed to the 'b' option is the host you want
+The argument passed to the \'b\' option is the host you want
 to use as a proxy, in standard URL notation.  The format is:
 .I username:password@server:port.  
 Everything but 
@@ -379,7 +379,7 @@ This option activates remote host identification via TCP/IP
 fingerprinting.  In other words, it uses a bunch of
 techniques to detect subtleties in the underlying operating
 system network stack of the computers you are scanning.  It
-uses this information to create a 'fingerprint' which it
+uses this information to create a \'fingerprint\' which it
 compares with its database of known OS fingerprints (the
 nmap-os-fingerprints file) to decide what type of system you
 are scanning.
@@ -463,7 +463,7 @@ scrolling the screen!
 .B \-h
 This handy option display a quick reference screen of nmap
 usage options.  As you may have noticed, this man page is
-not exactly a 'quick reference' :)
+not exactly a \'quick reference\' :)
 .TP
 .B \-oN <logfilename>
 This logs the results of your scans in a normal
@@ -543,7 +543,7 @@ to find some web servers to look at.
 .TP
 .B \-p <port ranges>
 This option specifies what ports you want to specify. For
-example '-p 23' will only try port 23 of the target host(s).
+example \'-p 23\' will only try port 23 of the target host(s).
 \'\-p 20-30,139,60000-\' scans ports between 20 and 30, port
 139, and all ports greater than 60000.  The default is to
 scan all ports between 1 and 1024 as well as any ports
@@ -577,11 +577,11 @@ mechanisms, it is generally an extremely effective technique
 for hiding your IP address.
 .Sp
 Separate each decoy host with commas, and you can optionally
-use 'ME' as one of the decoys to represent the position you
-want your IP address to be used.  If your put 'ME' in the
+use \'ME\' as one of the decoys to represent the position you
+want your IP address to be used.  If your put \'ME\' in the
 6th position or later, some common port scan detectors (such
 as Solar Designer's excellent scanlogd) are unlikeley to
-show your IP address at all.  If you don't use 'ME', nmap
+show your IP address at all.  If you don't use \'ME\', nmap
 will put you in a random position.
 .Sp
 Note that the hosts you use as decoys should be up or you
@@ -782,27 +782,27 @@ is treated as a target host specification.  The simplest
 case is listing single hostnames or IP addresses on the
 command line.  If you want to scan a subnet of IP addresses,
 you can append
-.B '/mask' 
+.B \'/mask\' 
 to the hostname
 or IP address. 
 .B mask 
 must be between 0 (scan the whole internet) and 32 (scan the
-single host specified).  Use /24 to scan a class 'C' address
-and /16 for a class 'B'.
+single host specified).  Use /24 to scan a class \'C\' address
+and /16 for a class \'B\'.
 .Sp
 Nmap also has a more powerful notation which lets you
 specify an IP address using lists/ranges for each element.
-Thus you can scan the whole class 'B' network 192.168.*.* by
-specifying '192.168.*.*' or '192.168.0-255.0-255' or even
-\'192.168.1-50,51-255.1,2,3,4,5-255'.  And of course you can
-use the mask notation: '192.168.0.0/16'.  These are all
-equivalent.  If you use asterisks ('*'), remember that most
+Thus you can scan the whole class \'B\' network 192.168.*.* by
+specifying \'192.168.*.*\' or \'192.168.0-255.0-255\' or even
+\'192.168.1-50,51-255.1,2,3,4,5-255\'.  And of course you can
+use the mask notation: \'192.168.0.0/16\'.  These are all
+equivalent.  If you use asterisks (\'*\'), remember that most
 shells require you to escape them with back slashes or
 protect them with quotes.
 .Sp
 Another interesting thing to do is slice the Internet the
 other way.  Instead of scanning all the hosts in a class
-'B', scan '*.*.5.6-7' to scan every IP address that ends in
+\'B\', scan \'*.*.5.6-7\' to scan every IP address that ends in
 .5.6 or .5.7 Pick your own numbers.  For more information on
 specifying hosts to scan, see the
 .I examples
@@ -830,7 +830,7 @@ target.example.com .  The \-v means turn on verbose mode.
 .B nmap -sS -O target.example.com/24
 .Sp
 Launches a stealth SYN scan against each machine that is up
-out of the 255 machines on class 'C' where
+out of the 255 machines on class \'C\' where
 target.example.com resides.  It also tries to determine what
 operating system is running on each host that is up and
 running.  This requires root privileges because of the SYN
@@ -839,13 +839,13 @@ scan and the OS detection.
 .B nmap -sX -p 22,53,110,143,4564 "198.116.*.1-127"
 .Sp
 Sends an Xmas tree scan to the first half of each of the 255
-possible 8 bit subnets in the 198.116 class 'B' address
+possible 8 bit subnets in the 198.116 class \'B\' address
 space.  We are testing whether the systems run sshd, DNS,
 pop3d, imapd, or port 4564.  Note that Xmas scan doesn't
 work on Microsoft boxes due to their deficient TCP stack.
 Same goes with CISCO, IRIX, HP/UX, and BSDI boxes.
 .Sp
-.B nmap -v --randomize_hosts -p 80 '*.*.2.3-5'
+.B nmap -v --randomize_hosts -p 80 \'*.*.2.3-5\'
 .Sp
 Rather than focus on a specific IP range, it is sometimes
 interesting to slice up the entire Internet and scan a small
@@ -853,11 +853,11 @@ sample from each slice.  This command finds all web servers
 on machines with IP addresses ending in .2.3, .2.4, or .2.5
 .  If you are root you might as well add -sS.  Also you will
 find more interesting machines starting at 127. so you might
-want to use '127-222' instead of the first asterisks because
+want to use \'127-222\' instead of the first asterisks because
 that section has a greater density of interesting machines
 (IMHO).
 .Sp
-.B host -l company.com | cut '-d ' -f 4 | ./nmap -v -iL -
+.B host -l company.com | cut \'-d \' -f 4 | ./nmap -v -iL -
 .Sp
 Do a DNS zone transfer to find the hosts in company.com and
 then feed the IP addresses to

@@ -134,6 +134,7 @@ void NmapOps::Initialize() {
   force = append_output = 0;
   bzero(logfd, sizeof(FILE *) * LOG_TYPES);
   nmap_stdout = stdout;
+  pTrace = false;
 }
 
 bool NmapOps::TCPScan() {

@@ -213,7 +213,7 @@ do {
 	  sslen = sizeof(*sin);
 	  sin->sin_family = AF_INET;
 #if HAVE_SOCKADDR_SA_LEN
-	  tmpsock.sin_len = sslen;
+	  sin->sin_len = sslen;
 #endif
 	  device = routethrough(hs->hostbatch[hidx]->v4hostip(), 
 				&(sin->sin_addr));
@@ -936,7 +936,7 @@ while(pt->block_unaccounted > 0 && !timeout) {
 	sin.sin_family = AF_INET;
 	sin.sin_addr.s_addr = ip->ip_dst.s_addr;
 #if HAVE_SOCKADDR_SA_LEN
-	tmpsock.sin_len = sizeof(sin);
+	sin.sin_len = sizeof(sin);
 #endif
 	hostbatch[hostnum]->setSourceSockAddr((struct sockaddr_storage *) &sin,
 					      sizeof(sin));

@@ -1804,8 +1804,8 @@ listen            2766/tcp   # System V listener port
 www-dev           2784/tcp   # world wide web - development
 www-dev           2784/udp   # world wide web - development
 iss-realsec       2998/tcp   # ISS RealSecure IDS Remote Console Admin port
-ppp               3000/tcp   # User-level ppp daemon
-nessusd           3001/tcp   # Nessus Security Scanner (www.nessus.org) Daemon
+ppp               3000/tcp   # User-level ppp daemon, or chili!soft asp
+nessusd           3001/tcp   # Nessus Security Scanner (www.nessus.org) Daemon or chili!soft asp
 deslogin          3005/tcp   # encrypted symmetric telnet/login
 deslogind         3006/tcp   # 
 cfs               3049/tcp   # cryptographic file system (nfs) (proposed)
@@ -1876,7 +1876,6 @@ maybeveritas      4987/tcp   #
 maybeveritas      4998/tcp   #
 UPnP              5000/tcp   # Universal PnP, also Free Internet Chess Server
 UPnP              5000/udp   # also complex-main
-commplex-main     5000/udp   # 
 commplex-link     5001/tcp   # 
 commplex-link     5001/udp   # 
 rfe               5002/tcp   # Radio Free Ethernet
@@ -1887,6 +1886,9 @@ telelpathattack   5011/tcp   #
 telelpathattack   5011/udp   # 
 mmcc              5050/tcp   # multimedia conference control tool
 mmcc              5050/udp   # multimedia conference control tool
+admd              5100/tcp   # (chili!soft asp admin port)
+admdog            5101/tcp   # (chili!soft asp)
+admeng            5102/tcp   # (chili!soft asp)
 rmonitor_secure   5145/tcp   # 
 rmonitor_secure   5145/udp   # 
 aol               5190/tcp   # America-Online.  Also can be used by ICQ
