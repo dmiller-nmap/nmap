@@ -1903,7 +1903,7 @@ if (o.debugging || o.verbose)
 			       current->portno, 0, 0, scanflags, 0, 0, 0);
 		else send_udp_raw(rawsd, &o.decoys[decoy], &target->host, i,
 				  current->portno, NULL ,0);	      
-		if (scantype == UDP_SCAN) usleep(senddelay);
+		if (scantype == UDP_SCAN && senddelay) usleep(senddelay);
 		/*usleep(10000);*/ /* *WE* normally do not need this, but the target 
 		  lamer often does */
 	      }
@@ -1929,7 +1929,7 @@ if (o.debugging || o.verbose)
 			   current->portno, 0, 0, scanflags, 0, 0, 0);
 	    else send_udp_raw(rawsd, &o.decoys[decoy], &target->host, o.magic_port,
 			      current->portno, NULL, 0);
-	    	    if (scantype == UDP_SCAN) usleep(senddelay);
+	    	    if (scantype == UDP_SCAN && scanddelay) usleep(senddelay);
 	    /*usleep(10000);*/ /* *WE* normally do not need this, but the target 
 	      lamer often does */
 	  }
@@ -2012,7 +2012,7 @@ if (o.debugging || o.verbose)
 	    to.srtt += delta >> 3;
 	    to.rttvar += (ABS(delta) - to.rttvar) >> 2;
 	    to.timeout = to.srtt + (to.rttvar << 2);
-	    if (o.debugging > 1) printf("srtt %d rttvar %d timeout %d\n",  to.srtt, to.rttvar, to.timeout);
+	    if (o.debugging > 1) printf("srtt %d rttvar %d timeout %d senddelay %d\n",  to.srtt, to.rttvar, to.timeout, senddelay);
 	    if (packet_trynum > 0 && current->trynum > 0) {
 	      /* The first packet was apparently lost, slow down */
 	      dropped++;
