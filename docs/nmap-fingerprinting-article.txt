@@ -1,7 +1,7 @@
 
 
 	 Remote OS detection via TCP/IP Stack FingerPrinting
-	    by Fyodor <fyodor@dhp.com> (www.insecure.org)
+	    by Fyodor <fyodor@insecure.org> (www.insecure.org)
 			   October 18, 1998
 
 
@@ -610,7 +610,7 @@ machines not reachable through the Internet.
 Thanks to Richard Stallman for writing GNU Emacs.  This article would
 not be so well word-wrapped if I was using vi or cat and ^D.
 
-Questions and comments can be sent to fyodor@DHP.com (if that doesn't
+Questions and comments can be sent to fyodor@insecure.org (if that doesn't
 work for some reason, use fyodor@insecure.org).  Nmap can be obtained
 from http://www.insecure.org/nmap .
 

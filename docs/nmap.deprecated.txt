@@ -4,7 +4,7 @@
                                      xx of xx                     
 
                             The Art of Port Scanning
-                           by Fyodor (fyodor@dhp.com)
+                           by Fyodor (fyodor@insecure.org)
 
 
 
@@ -338,7 +338,7 @@ It also eliminates all other arguments, so you won't look too suspicious in
 
  -h for an options summary.
 
-Also look for http://www.dhp.com/~fyodor/nmap/, which is the web site I plan to
+Also look for http://www.insecure.org/nmap/, which is the web site I plan to
 put future versions and more information on.  In fact, you would be well
 advised to check there right now.
 
@@ -368,4 +368,4 @@ And finally, we get to ...
 
 This should compile fine on any Linux box with 'gcc -O6 -o nmap nmap.c -lm'.
 It is distrubuted under the terms of the GNU GENERAL PUBLIC LICENSE.  If you
-have problems or comments, feel free to mail me (fyodor@dhp.com).
+have problems or comments, feel free to mail me (fyodor@insecure.org).

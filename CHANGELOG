@@ -1,5 +1,12 @@
 # Nmap Changelog
 
+-- Updated Lithuanian translation of man page based on a newer version sent 
+   by Aurimas Mikalauskas (inner@crazy.lt)
+
+-- Killed carriage returns in nmap.c and nmapfe.c, which caused problems
+   for some (SGI) compilers.  Problem noted by Artur 
+   Niederstebruch (artur@sgi.com)
+
 -- Updated to latest version of rpc program number list, maintained by Eilon Gishri (eilon@aristo.tau.ac.il)
 
 -- Fixed a quoting bug in the Nmap man page found by 

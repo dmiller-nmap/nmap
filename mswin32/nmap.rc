@@ -75,7 +75,7 @@ BEGIN
             VALUE "FileDescription", "nMap ('nuff said)\0"
             VALUE "FileVersion", "2.53\0"
             VALUE "InternalName", "nMap\0"
-            VALUE "LegalCopyright", "Copyright (c) fyodor@dhp.com\0"
+            VALUE "LegalCopyright", "Copyright (c) fyodor@insecure.org\0"
             VALUE "LegalTrademarks", "\0"
             VALUE "OriginalFilename", "nMap.exe\0"
             VALUE "PrivateBuild", "\0"

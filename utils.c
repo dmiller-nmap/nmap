@@ -78,7 +78,7 @@ printf("\n");
 }
 
 /* A better version of hdump, from Lamont Granquist.  Modified slightly
-   by Fyodor (fyodor@DHP.com) */
+   by Fyodor (fyodor@insecure.org) */
 void lamont_hdump(unsigned char *bp, unsigned int length) {
 
   /* stolen from tcpdump, then kludged extensively */

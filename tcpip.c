@@ -1411,7 +1411,7 @@ char *routethrough(struct in_addr *dest, struct in_addr *source) {
 	    fatal("Failed to find interface %s mentioned in /proc/net/route\n", iface);
 	  numroutes++;
 	  if (numroutes == ROUTETHROUGH_MAXROUTES)
-	    fatal("My God!  You seem to have WAY to many routes!\n");
+	    fatal("My God!  You seem to have WAY too many routes!\n");
       }
       fclose(routez);
     } else {

@@ -1668,11 +1668,11 @@ int check_ident_port(struct in_addr target) {
       if (res < 0) goto failure;
       goto success;
     } else if (FD_ISSET(sd, &fds_read)) {
-      fprintf(stderr, "I have never seen this type of socket selectable for read only.  Please let me know how you did it and what OS you are running (fyodor@dhp.com).\n");
+      fprintf(stderr, "I have never seen this type of socket selectable for read only.  Please let me know how you did it and what OS you are running (fyodor@insecure.org).\n");
       goto success;
     }
     else {
-      fprintf(stderr, "Wow, select blatantly lied to us!  Please let fyodor know what OS you are running (fyodor@dhp.com).\n");
+      fprintf(stderr, "Wow, select blatantly lied to us!  Please let fyodor know what OS you are running (fyodor@insecure.org).\n");
       goto failure;
     } 
   }

@@ -1,14 +1,14 @@
 # Nmap OS FingerPrint List.  If you add stuff to this, please send the
 # fingerprints or (even better) the OS name and IP address to
-# fyodor@DHP.com .  Actually the best thing to do now is to
+# fyodor@insecure.org .  Actually the best thing to do now is to
 # use the fingerprint CGI at:  http://www.insecure.org/cgi-bin/nmap-submit.cgi
 
 # By submitting fingerprints you are transfering any and all copyright
 # interest in the data to Fyodor so that he can modify it, relicense it,
 # incorporate it into programs, etc.
 
-# This collection of fingerprint data is (C) 1998,1999 by
-# Fyodor (fyodor@dhp.com, fyodor@insecure.org ).
+# This collection of fingerprint data is (C) 1998-2001 by
+# Fyodor (fyodor@insecure.org ).
 # The usage license for this file is the same as that for which
 # you acquired nmap (probably the GNU General Public License)
 
@@ -2225,7 +2225,7 @@ T7(Resp=N)
 PU(Resp=N)
 
 # Contributed by Evil Bifrost <bifrost@dis.org>
-Fingerprint Nokia IPSO 3.2-fcs4 releng 783
+Fingerprint Nokia IPSO 3.2-3.2.1 releng 783-849
 TSeq(Class=RI%gcd=<6%SI=<77DC6&>1319)
 T1(DF=N%W=4000%ACK=O|S++%Flags=A|AS%Ops=NNT|MNWNNT)
 T2(Resp=N)
@@ -4492,7 +4492,7 @@ PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 # Contributed by marco@tecnogi.com
 # With more info provided by Theo De Raadt
 # OpenBSD 2.6
-Fingerprint OpenBSD 2.6-2.7
+Fingerprint OpenBSD 2.6-2.8
 TSeq(Class=RI%gcd=<6%SI=<1869F6&>3E6B)
 T1(DF=N%W=403D%ACK=S++%Flags=AS%Ops=MNWNNT)
 T2(Resp=N)
@@ -4504,7 +4504,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=134|3401%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 # Contributed by Grant Bayley gbayley@ausmac.net
-Fingerprint OpenBSD 2.6-2.7
+Fingerprint OpenBSD 2.6-2.8
 TSeq(Class=RI%gcd=<6%SI=<AD084&>1B9B)
 T1(DF=N%W=807A%ACK=S++%Flags=AS%Ops=MNWNNT)
 T2(Resp=N)

@@ -4,7 +4,7 @@
 # To join nmap-hackers send mail to nmap-hackers-subscribe@insecure.org
 # Nmap is available from http://www.insecure.org/nmap/
 # All the rpc services we could find as of Feb22, 1999
-# Tweaked a bit by Fyodor <fyodor@dhp.com>
+# Tweaked a bit by Fyodor <fyodor@insecure.org>
 #
 # NOTE:  Eilon Gishri <eilon@aristo.tau.ac.il> has merged the nmap-rpc
 # with his massive rpc file (see comments below).  So as of 4/30/00,
