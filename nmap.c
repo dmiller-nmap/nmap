@@ -1794,10 +1794,9 @@ portlist super_scan(struct hoststruct *target, unsigned short *portarray, stype 
     int prev;
   } *scan, *openlist, *current, *fresh, *testinglist, *next;
   int portlookup[65536]; /* Indexes port number -> scan[] index */
-  int next_unused_port = 0;
   int decoy;
   struct timeval now;
-  int i,j;
+  int i;
   unsigned short *data;
   int packet_trynum =0;
   int windowdecrease = 0; /* Has the window been decreased this round yet? */
@@ -2027,7 +2026,7 @@ if (o.debugging || o.verbose)
 	    /* Update our records */
 	    delta = TIMEVAL_SUBTRACT(now,current->sent[packet_trynum]) - to.srtt;
 	    if (o.debugging > 1) printf("Got packet (trynum %d, packetnum %d), delta %d srtt %d rttvar %d timeout %d ->", current->trynum, packet_trynum, delta, to.srtt, to.rttvar, to.timeout);
-	    numqueries_ideal = MIN(numqueries_ideal + (4/numqueries_ideal), max_width);
+	    numqueries_ideal = MIN(numqueries_ideal + (packet_incr/numqueries_ideal), max_width);
 	    to.srtt += delta >> 3;
 	    to.rttvar += (ABS(delta) - to.rttvar) >> 2;
 	    to.timeout = to.srtt + (to.rttvar << 2);
