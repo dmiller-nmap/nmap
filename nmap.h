@@ -76,6 +76,7 @@ void *realloc();
 #include <fcntl.h>
 #include <signal.h> 
 #include <signal.h>
+#include <stdarg.h>
 #ifndef NETINET_IN_SYSTEM_H  /* why the HELL does OpenBSD not do this? */
 #include <netinet/in_systm.h> /* defines n_long needed for netinet/ip.h */
 #define NETINET_IN_SYSTEM_H
@@ -222,6 +223,7 @@ struct hoststruct {
 struct ops /* someone took struct options, <grrr> */ {
   int debugging;
   int verbose;
+  int spoofsource; /* -S used */
   int number_of_ports;
   int max_sockets;
   int isr00t;
@@ -234,8 +236,11 @@ struct ops /* someone took struct options, <grrr> */ {
   int fragscan;
   int synscan;
   int finscan;
+  int udpscan;
+  int lamerscan;
   int noresolve;
   int force;
+  int logfd; /* Output log file descriptor */
 };
   
 typedef port *portlist;
@@ -293,11 +298,14 @@ void *safe_malloc(int size);
 int parse_targets(struct targets *targets, char *h);
 struct hoststruct *nexthost(char *hostexp, int lookahead, int pingtimeout);
 void options_init();
+void nmap_log(char *fmt, ...);
 /* From glibc 2.0.6 because Solaris doesn't seem to have this function */
 #ifndef HAVE_INET_ATON
 int inet_aton(register const char *, struct in_addr *);
 #endif
 #endif /* NMAP_H */
+
+
 
 
 

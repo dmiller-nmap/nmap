@@ -7,8 +7,8 @@ struct ops o;  /* option structure */
 
 int main(int argc, char *argv[]) {
 int i, j, arg, argvlen;
-short fastscan=0, tcpscan=0, udpscan=0, randomize=0, resolve_all=0;
-short quashargv = 0, pingscan = 0, lamerscan = 0;
+short fastscan=0, tcpscan=0, randomize=1, resolve_all=0;
+short quashargv = 0, pingscan = 0;
 int lookahead = LOOKAHEAD;
 short bouncescan = 0;
 unsigned short *ports = NULL;
@@ -41,7 +41,7 @@ emptystring[0] = '\0'; /* It wouldn't be an emptystring w/o this ;) */
 if (argc < 2 ) printusage(argv[0]);
 
 /* OK, lets parse these args! */
-while((arg = getopt(argc,fakeargv,"Ab:DdFfhiL:lM:NnPp:qrRS:sT:tUuw:Vv")) != EOF) {
+while((arg = getopt(argc,fakeargv,"Ab:DdFfhiL:lM:Nno:Pp:qrRS:sT:tUuw:Vv")) != EOF) {
   switch(arg) {
   case 'A': o.allowall++; break;
   case 'b': 
@@ -58,7 +58,7 @@ while((arg = getopt(argc,fakeargv,"Ab:DdFfhiL:lM:NnPp:qrRS:sT:tUuw:Vv")) != EOF)
   case '?': printusage(argv[0]);
   case 'i': o.identscan++; break;
   case 'L': lookahead = atoi(optarg); break;
-  case 'l': lamerscan++; udpscan++; break;
+  case 'l': o.lamerscan++; o.udpscan++; break;
   case 'M': 
     o.max_sockets = atoi(optarg); 
     if (o.max_sockets > MAX_SOCKETS_ALLOWED) {
@@ -68,25 +68,35 @@ while((arg = getopt(argc,fakeargv,"Ab:DdFfhiL:lM:NnPp:qrRS:sT:tUuw:Vv")) != EOF)
     break;
   case 'n': o.noresolve++; break;
   case 'N': o.force++; break;
+  case 'o': 
+    if (o.outputfd) fatal("Only one log filename allowed");
+    o.outputfd = fopen(optarg, "w");
+    if (!o.logfd) 
+      fatal("Failed to open output file %s for writing", optarg);
+    break;
   case 'P': pingscan++; break;
   case 'p': 
     if (ports)
       fatal("Only 1 -p option allowed, seperate multiple ranges with commas.");
     ports = getpts(optarg); break;
   case 'R': resolve_all++; break;
-  case 'r': randomize++; break;
+  case 'r': 
+    randomize = 0;
+    printf("Warning: Randomize syntax has been changed, -r now requests that ports NOT be randomized\n");
+    break;
   case 's': o.synscan++; break;
   case 'S': 
-    if (source)
+    if (o.spoofsource)
       fatal("You can only use the source option once!\n");
     source = safe_malloc(sizeof(struct in_addr));
+    o.spoofsource = 1;
     if (!resolve(optarg, source))
       fatal("Failed to resolve source address, try dotted decimal of check for type\n");
     break;
   case 'T': o.ptime = atoi(optarg); break;
   case 't': tcpscan++; break;
   case 'U': o.finscan++; break;
-  case 'u': udpscan++; break;
+  case 'u': o.udpscan++; break;
   case 'q': quashargv++; break;
   case 'w': o.wait = atoi(optarg); break;
   case 'V': 
@@ -110,9 +120,11 @@ if (tcpscan && (o.synscan || o.finscan))
 if ((o.fragscan && !o.synscan && !o.finscan)) {
   printf("Specified -f but don't know whether to fragment SYN (-s) scan or FIN (-U) scan.  Doing fragmented SYN scan\n");
 }
+if (o.udpscan || o.lamerscan) 
+  printf("Warning: udp scan is not always 100% accurate, I will be rewriting it\n");
 if ((o.synscan || o.finscan || o.fragscan || pingscan) && !o.isr00t)
   fatal("Options specified require r00t privileges.  You don't have them!");
-if (!tcpscan && !udpscan && !o.synscan && !o.finscan && !bouncescan && !pingscan) {
+if (!tcpscan && !o.udpscan && !o.synscan && !o.finscan && !bouncescan && !pingscan) {
   tcpscan++;
   if (o.verbose) error("No scantype specified, assuming vanilla tcp connect()\
  scan. Use -P if you really don't want to portscan (and just want to ping).");
@@ -123,9 +135,6 @@ if (fastscan && ports)
 if (o.max_sockets > MAX_SOCKETS_ALLOWED) {
    printf("Warning: You are limited to MAX_SOCKETS_ALLOWD (%d) paralell sockets.  If you really need more, change the #define and recompile.\n", MAX_SOCKETS_ALLOWED);
    o.max_sockets = MAX_SOCKETS_ALLOWED;
-}
-if (pingscan && o.dontping) {
-  fatal("Ummm ...\"pingscan\" and don't-ping (-D) are INCOMPATIBLE options.  Sorry.\n");
 }
 
 /* If he wants to bounce off of an ftp site, that site better damn well be reachable! */
@@ -142,9 +151,15 @@ if (bouncescan) {
     printf("Resolved ftp bounce attack proxy to %s (%s).\n", 
 	   ftp.server_name, inet_ntoa(ftp.server)); 
 }
-
 fflush(stdout);
 
+/* If no log file (-o) requested use stdout */
+if (!o.logfd) o.logfd = stdout;
+else {
+  /* Brief info incase they forget what was scanned */
+  fprintf(o.logfd, "# Log of: ");
+  for (
+}
 printf("\nStarting nmap V. %s by Fyodor (fyodor@dhp.com, www.dhp.com/~fyodor/nmap/)\n", VERSION);
 /* I seriously doubt anyone likes this "feature"
 if (!o.verbose) 
@@ -152,7 +167,7 @@ if (!o.verbose)
   */
 if (fastscan)
   ports = getfastports(o.synscan|tcpscan|o.fragscan|o.finscan|bouncescan,
-                       udpscan|lamerscan);
+                       o.udpscan|o.lamerscan);
 if (!ports && !pingscan) ports = getpts("1-1024");
 
 
@@ -235,8 +250,8 @@ if (currenths->flags & HOST_UP && (o.finscan || o.synscan) && !ipaddr2devname( c
 	if (ftp.sd <= 0) ftp_anon_connect(&ftp);
 	if (ftp.sd > 0) bounce_scan(currenths, ports, &ftp);
 	  }
-      if (udpscan) {
-	if (!o.isr00t || lamerscan) 
+      if (o.udpscan) {
+	if (!o.isr00t || o.lamerscan) 
 	  lamer_udp_scan(currenths, ports);
 
 	else udp_scan(currenths, ports);
@@ -427,7 +442,7 @@ return realloc(ports, portindex * sizeof(unsigned short));
 }
 
 void printusage(char *name) {
-printf("%s [options] [hostname[/mask] . . .]\n\
+printf("nmap V. %s usage: %s [options] [hostname[/mask] . . .]\n\
 options (none are required, most can be combined):\n\
    -t tcp connect() port scan\n\
    -s tcp SYN stealth port scan (must be root)\n\
@@ -445,19 +460,18 @@ options (none are required, most can be combined):\n\
    -F fast scan. Only scans ports in /etc/services, a la strobe(1).\n\
    -L <num> Number of pings to perform in parallel.  Your default is: %d\n\
    -R Try to resolve all hosts, even down ones (can take a lot of time)\n\
-   -r randomize target port scanning order.\n\
+   -r do NOT randomize target port scanning order.\n\
    -h help, print this junk.  Also see http://www.dhp.com/~fyodor/nmap/\n\
-   -S If you want to specify the source address of SYN or FYN scan.\n", name, LOOKAHEAD);
+   -S If you want to specify the source address of SYN or FYN scan.\n", VERSION, name, LOOKAHEAD);
 if (!o.allowall) printf("-A Allow scanning .0 and .255 addresses" );
 printf("   -T <seconds> Set the ping and tcp connect() timeout.\n\
    -V Print version number and exit.\n\
    -v Verbose.  Its use is recommended.  Use twice for greater effect.\n\
    -w <n> delay.  n microsecond delay. Not recommended unless needed.\n\
-   -M <n> maximum number of parallel sockets.  Larger isn't always better.\n\
-   -q quash argv to something benign, currently set to \"%s\".\n\
-Hostnames specified as internet hostname or IP address.  Optional '/mask' \
-specifies subnet. cert.org/24 or 192.88.209.5/24 scan CERT's Class C.\n",
-        FAKE_ARGV);
+   -M <n> maximum number of parallel sockets.  Larger isn't always better.\n");
+printf("   -q quash argv to something benign, currently set to \"%s\". (deprecated)\n", FAKE_ARGV);
+printf("Hostnames specified as internet hostname or IP address.  Optional '/mask' \
+specifies subnet. cert.org/24 or 192.88.209.5/24 or 192.88.209.0-255 scan CERT's Class C.\n");
 exit(0);
 }
 
@@ -1403,7 +1417,7 @@ if (!target->source_ip.s_addr) {
  * apparently requires that for some unknown reason(!).  I'd like to
  * get out of promisc. if we can figure out the problem.
  */
-if (!(pd = pcap_open_live(target->device, 92, 0, 1500, err0r)))
+if (!(pd = pcap_open_live(target->device, 92, (o.spoofsource)? 1 : 0, 1500, err0r)))
   fatal("pcap_open_live: %s", err0r);
 if (pcap_lookupnet(target->device, &localnet, &netmask, err0r) < 0)
   fatal("Failed to lookup device subnet/netmask: %s", err0r);
@@ -1685,7 +1699,7 @@ if (!target->source_ip.s_addr) {
  * get out of promisc. if we can figure out the problem.
  */
 
-if (!(pd = pcap_open_live(target->device, 92, 0, 1500, err0r)))
+if (!(pd = pcap_open_live(target->device, 92,  (o.spoofsource)? 1 : 0, 1500, err0r)))
   fatal("pcap_open_live: %s", err0r);
 
 if (pcap_lookupnet(target->device, &localnet, &netmask, err0r) < 0)
@@ -1933,11 +1947,12 @@ int retriesleft = FTP_RETRIES;
 char recvbuf[2048]; 
 char targetstr[20];
 char command[512];
+unsigned short portno,p1,p2;
 
 #ifndef HAVE_SNPRINTF
-sprintf(targetstr, "%d,%d,%d,%d,0,", UC(t[0]), UC(t[1]), UC(t[2]), UC(t[3]));
+sprintf(targetstr, "%d,%d,%d,%d,", UC(t[0]), UC(t[1]), UC(t[2]), UC(t[3]));
 #else
-  snprintf(targetstr, 20, "%d,%d,%d,%d,0,", UC(t[0]), UC(t[1]), UC(t[2]), UC(t[3]));
+  snprintf(targetstr, 20, "%d,%d,%d,%d,", UC(t[0]), UC(t[1]), UC(t[2]), UC(t[3]));
 #endif
 
 starttime = time(NULL);
@@ -1945,11 +1960,15 @@ if (o.verbose || o.debugging)
   printf("Initiating TCP ftp bounce scan against %s (%s)\n",
 	 target->name,  inet_ntoa(target->host));
 for(i=0; portarray[i]; i++) {
+  portno = htons(portarray[i]);
+  p1 = ((char *) &portno)[0];
+  p2 = ((char *) &portno)[1];
 #ifndef HAVE_SNPRINTF
-  sprintf(command, "PORT %s%i\r\n", targetstr, portarray[i]);
+  sprintf(command, "PORT %s%i,%i\r\n", targetstr, p1,p2);
 #else
-  snprintf(command, 512, "PORT %s%i\r\n", targetstr, portarray[i]);
+  snprintf(command, 512, "PORT %s%i,%i\r\n", targetstr, p1,p2);
 #endif
+  if (o.debugging) printf("Attempting command: %s", command);
   if (send(sd, command, strlen(command), 0) < 0 ) {
     perror("send in bounce_scan");
     if (retriesleft) {
@@ -2074,4 +2093,21 @@ ftp->user[63] = ftp->pass[255] = ftp->server_name[MAXHOSTNAMELEN] = 0;
 
 return 1;
 }
+
+void nmap_log(char *fmt, ...) {
+va_list  ap;
+va_start(ap, fmt);
+if (!o.logfile || o.logfile == stdout || o.verbose || o.debugging) {
+  vfprintf(stdout, fmt, ap);
+  fflush(stdout);
+}
+if (o.logfile && o.logfile != stdout) {
+  vfprintf(o.logfile, fmt, ap);
+}
+va_end(ap);
+return;
+}
+
+
+
 
