@@ -59,7 +59,7 @@
 using namespace std;
 
 /**********************  DEFINES/ENUMS ***********************************/
-#define DEFAULT_SERVICEWAITMS 7500
+#define DEFAULT_SERVICEWAITMS 5000
 #define DEFAULT_CONNECT_TIMEOUT 5000
 #define SERVICEMATCH_REGEX 1
 // #define SERVICEMATCH_STATIC 2 -- no longer supported
@@ -95,7 +95,7 @@ class ServiceProbeMatch {
 // "softmatch" in nmap-service-probes.  The line number that the text
 // is provided so that it can be reported in error messages.  This
 // function will abort the program if there is a syntax problem.
-  void InitMatch(const char *matchtext, int lineno); 
+  void InitMatch(const char *matchtext, int lineno);
 
   // If the buf (of length buflen) match the regex in this
   // ServiceProbeMatch, returns the details of the match (service
@@ -108,7 +108,11 @@ class ServiceProbeMatch {
   const struct MatchDetails *testMatch(const u8 *buf, int buflen);
 // Returns the service name this matches
   const char *getName() { return servicename; }
+  // The Line number where this match string was defined.  Returns
+  // -1 if unknown.
+  int getLineNo() { return deflineno; }
  private:
+  int deflineno; // The line number where this match is defined.
   bool isInitialized; // Has InitMatch yet been called?
   char *servicename;
   int matchtype; // SERVICEMATCH_REGEX or SERVICESCAN_STATIC

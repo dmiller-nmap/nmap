@@ -838,7 +838,7 @@ pseudo->length = htons(sizeof(udphdr_bsd) + datalen);
 
 /* OK, now we should be able to compute a valid checksum */
 #if STUPID_SOLARIS_CHECKSUM_BUG
- udp->uh_sum = sizeof(struct udphdr) + datalen;
+ udp->uh_sum = sizeof(struct udphdr_bsd) + datalen;
 #else
 udp->uh_sum = in_cksum((unsigned short *)pseudo, 20 /* pseudo + UDP headers */ + datalen);
 #endif

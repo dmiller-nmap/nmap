@@ -1,4 +1,4 @@
-# Nmap OS Fingerprint List.
+# Nmap OS Fingerprint List. -*- mode: fundamental; -*-
 # $Id$ 
 #
 # Contributions to this database are welcome.  If Nmap obtains a new
@@ -7155,7 +7155,7 @@ T6(Resp=Y%DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=C0|A0|0%IPLEN=164%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
-Fingerprint Linux 2.1.19 - 2.2.20
+Fingerprint Linux 2.1.19 - 2.2.25
 Class Linux | Linux | 2.1.X | general purpose
 Class Linux | Linux | 2.2.X | general purpose
 TSeq(Class=RI%gcd=<8%SI=>10000%IPID=I%TS=100HZ)

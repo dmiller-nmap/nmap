@@ -181,10 +181,10 @@ void printportoutput(Target *currenths, PortList *plist) {
   portcol = colno++;
   statecol = colno++;
   servicecol = colno++;
-  if (o.servicescan || o.rpcscan)
-    versioncol = colno++;
   if (o.identscan)
     ownercol = colno++;
+  if (o.servicescan || o.rpcscan)
+    versioncol = colno++;
 
   numrows = plist->state_counts[PORT_CLOSED] + 
     plist->state_counts[PORT_OPEN] + plist->state_counts[PORT_FIREWALLED] + 
@@ -296,7 +296,7 @@ void printportoutput(Target *currenths, PortList *plist) {
 	Tbl->addItem(rowno, servicecol, true, serviceinfo);
 	if (current->owner)
 	  Tbl->addItem(rowno, ownercol, true, current->owner);
-	if (sd.fullversion)
+	if (*sd.fullversion)
 	  Tbl->addItem(rowno, versioncol, true, sd.fullversion);
 
 	log_write(LOG_MACHINE,"%d/%s/%s/%s/%s/%s//", current->portno, state, 

@@ -163,6 +163,7 @@ void end_svcprobe(nsock_pool nsp, enum serviceprobestate probe_state, ServiceGro
 int launchSomeServiceProbes(nsock_pool nsp, ServiceGroup *SG);
 
 ServiceProbeMatch::ServiceProbeMatch() {
+  deflineno = -1;
   servicename = NULL;
   matchstr = NULL;
   product_template = version_template = info_template = NULL;
@@ -207,6 +208,7 @@ void ServiceProbeMatch::InitMatch(const char *matchtext, int lineno) {
     fatal("ServiceProbeMatch::InitMatch: no matchtext passed in (line %d of nmap-service-probes)", lineno);
   isInitialized = true;
 
+  deflineno = lineno;
   while(isspace(*matchtext)) matchtext++;
 
   // first we find whether this is a "soft" or normal match
@@ -221,7 +223,7 @@ void ServiceProbeMatch::InitMatch(const char *matchtext, int lineno) {
 
   // next comes the service name
   p = strchr(matchtext, ' ');
-  if (!p) fatal("ServiceProbeMatch::InitMatch: parse error on line %d of nmap-service-probes", lineno);
+  if (!p) fatal("ServiceProbeMatch::InitMatch: parse error on line %d of nmap-service-probes: could not find service name", lineno);
 
   servicename = (char *) safe_malloc(p - matchtext + 1);
   memcpy(servicename, matchtext, p - matchtext);
@@ -238,13 +240,13 @@ void ServiceProbeMatch::InitMatch(const char *matchtext, int lineno) {
   while(isspace(*matchtext)) matchtext++;
   if (*matchtext == 'm') {
     if (!*(matchtext+1))
-      fatal("ServiceProbeMatch::InitMatch: parse error on line %d of nmap-service-probes", lineno);
+      fatal("ServiceProbeMatch::InitMatch: parse error on line %d of nmap-service-probes: matchtext must begin with 'm'", lineno);
     matchtype = SERVICEMATCH_REGEX;
     delimchar = *(++matchtext);
     ++matchtext;
     // find the end of the regex
     p = strchr(matchtext, delimchar);
-    if (!p) fatal("ServiceProbeMatch::InitMatch: parse error on line %d of nmap-service-probes", lineno);
+    if (!p) fatal("ServiceProbeMatch::InitMatch: parse error on line %d of nmap-service-probes: could not find end delimiter for regex", lineno);
     matchstrlen = p - matchtext;
     matchstr = (char *) safe_malloc(matchstrlen + 1);
     memcpy(matchstr, matchtext, matchstrlen);
@@ -281,7 +283,7 @@ void ServiceProbeMatch::InitMatch(const char *matchtext, int lineno) {
       fatal("ServiceProbeMatch::InitMatch: failed to pcre_study regexp on line %d of nmap-service-probes: %s\n", lineno, pcre_errptr);
   } else {
     /* Invalid matchtext */
-    fatal("ServiceProbeMatch::InitMatch: parse error on line %d of nmap-service-probes", lineno);
+    fatal("ServiceProbeMatch::InitMatch: parse error on line %d of nmap-service-probes: match string must begin with 'm'", lineno);
   }
 
   /* OK!  Now we look for the optional version-detection
@@ -378,8 +380,7 @@ const struct MatchDetails *ServiceProbeMatch::testMatch(const u8 *buf, int bufle
   } else {
     // Yeah!  Match apparently succeeded.
     // Now lets get the version number if available
-    i = getVersionStr(buf, buflen, ovector, rc, product, sizeof(product), version, sizeof(version), info, sizeof(info));
-    assert (i == 0);
+    i = getVersionStr(buf, buflen, ovector, rc, product, sizeof(product), version, sizeof(version), info, sizeof(info));    
     if (*product) MD_return.product = product;
     if (*version) MD_return.version = version;
     if (*info) MD_return.info = info;
@@ -473,24 +474,40 @@ int ServiceProbeMatch::getVersionStr(const u8 *subject, int subjectlen,
   if (productlen > 0) *product = '\0';
   if (versionlen > 0) *version = '\0';
   if (infolen > 0) *info = '\0';
+  int retval = 0;
 
   // Now lets get this started!  We begin with the product name
   if (product_template) {
     rc = dotmplsubst(subject, subjectlen, ovector, nummatches, product_template, product, productlen);
-    if (rc != 0) return rc; // Prob. bogus nmap-service-probes line
+    if (rc != 0) {
+      error("Warning: Servicescan failed to fill product_template (subjectlen: %d). Too long? Match string was line %d: v/%s/%s/%s", subjectlen, deflineno, (product_template)? product_template : "",
+	    (version_template)? version_template : "", (info_template)? info_template : "");
+      if (productlen > 0) *product = '\0';
+      retval = -1;
+    }
   }
 
   if (version_template) {
     rc = dotmplsubst(subject, subjectlen, ovector, nummatches, version_template, version, versionlen);
-    if (rc != 0) return rc; // Prob. bogus nmap-service-probes line
+    if (rc != 0) {
+      error("Warning: Servicescan failed to fill version_template (subjectlen: %d). Too long? Match string was line %d: v/%s/%s/%s", subjectlen, deflineno, (product_template)? product_template : "",
+	    (version_template)? version_template : "", (info_template)? info_template : "");
+      if (versionlen > 0) *version = '\0';
+      retval = -1;
+    }
   }
 
   if (info_template) {
     rc = dotmplsubst(subject, subjectlen, ovector, nummatches, info_template, info, infolen);
-    if (rc != 0) return rc; // Prob. bogus nmap-service-probes line
+    if (rc != 0) {
+      error("Warning: Servicescan failed to fill info_template (subjectlen: %d). Too long? Match string was line %d: v/%s/%s/%s", subjectlen, deflineno, (product_template)? product_template : "",
+	    (version_template)? version_template : "", (info_template)? info_template : "");
+      if (infolen > 0) *info = '\0';
+      retval = -1;
+    }
   }
   
-  return 0;
+  return retval;
 }
 
 
@@ -529,7 +546,7 @@ void ServiceProbe::setProbeDetails(char *pd, int lineno) {
   char delimiter;
 
   if (!pd || !*pd)
-    fatal("Parse error on line %d of nmap-services-probes", lineno);
+    fatal("Parse error on line %d of nmap-services-probes: no arguments found!", lineno);
 
   // First the protocol
   if (strncmp(pd, "TCP ", 4) == 0)
@@ -540,9 +557,9 @@ void ServiceProbe::setProbeDetails(char *pd, int lineno) {
   pd += 4;
 
   // Next the service name
-  if (!isalnum(*pd)) fatal("Parse error on line %d of nmap-services-probes", lineno);
+  if (!isalnum(*pd)) fatal("Parse error on line %d of nmap-services-probes - bad probe name", lineno);
   p = strchr(pd, ' ');
-  if (!p) fatal("Parse error on line %d of nmap-services-probes", lineno);
+  if (!p) fatal("Parse error on line %d of nmap-services-probes - nothing after probe name", lineno);
   len = p - pd;
   probename = (char *) safe_malloc(len + 1);
   memcpy(probename, pd, len);
@@ -551,10 +568,10 @@ void ServiceProbe::setProbeDetails(char *pd, int lineno) {
   // Now for the probe itself
   pd = p+1;
 
-  if (*pd != 'q') fatal("Parse error on line %d of nmap-services-probes", lineno);
+  if (*pd != 'q') fatal("Parse error on line %d of nmap-services-probes - probe string must begin with 'q'", lineno);
   delimiter = *(++pd);
   p = strchr(++pd, delimiter);
-  if (!p) fatal("Parse error on line %d of nmap-services-probes", lineno);
+  if (!p) fatal("Parse error on line %d of nmap-services-probes -- no ending delimiter for probe string", lineno);
   *p = '\0';
   if (!cstring_unescape(pd, &len)) {
     fatal("Parse error on line %d of nmap-services-probes: bad probe string escaping", lineno);
@@ -671,7 +688,7 @@ void ServiceProbe::addMatch(const char *match, int lineno) {
 // Parses the given nmap-service-probes file into the AP class
 void parse_nmap_service_probe_file(AllProbes *AP, char *filename) {
   ServiceProbe *newProbe;
-  char line[512];
+  char line[2048];
   int lineno = 0;
   FILE *fp;
 
@@ -689,7 +706,7 @@ void parse_nmap_service_probe_file(AllProbes *AP, char *filename) {
   anotherprobe:
   
     if (strncmp(line, "Probe ", 6) != 0)
-      fatal("Parse error on line %d of nmap-service-probes file: %s", lineno, filename);
+      fatal("Parse error on line %d of nmap-service-probes file: %s -- line was expected to begin with \"Probe \"", lineno, filename);
     
     newProbe = new ServiceProbe();
     newProbe->setProbeDetails(line + 6, lineno);
@@ -717,7 +734,7 @@ void parse_nmap_service_probe_file(AllProbes *AP, char *filename) {
 	newProbe->totalwaitms = waitms;
       } else if (strncmp(line, "match ", 6) == 0 || strncmp(line, "softmatch ", 10) == 0) {
 	newProbe->addMatch(line, lineno);
-      } else fatal("Parse error on line %d of nmap-service-probes file: %s", lineno, filename);
+      } else fatal("Parse error on line %d of nmap-service-probes file: %s -- unknown directive", lineno, filename);
     }
   }
 

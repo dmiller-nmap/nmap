@@ -386,7 +386,7 @@ int Send(int sd, const void *msg, size_t len, int flags) {
       sentlen += res;
   } while(sentlen < len && (res != -1 || socket_errno() == EINTR));
 
-  return (res < 0)? -1 : len;
+  return (res < 0)? -1 : (int) len;
 }
 
 // Write data to a file descriptor, keep retrying until an error or the full length
@@ -404,7 +404,7 @@ ssize_t Write(int fd, const void *buf, size_t count) {
       len += res;
   } while(len < count && (res != -1 || socket_errno() == EINTR));
 
-  return (res == -1)? -1 : count;
+  return (res == -1)? -1 : (int) count;
 }
 
 

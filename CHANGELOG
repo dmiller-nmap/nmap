@@ -1,5 +1,29 @@
 # Nmap Changelog ($Id$)
 
+o Fixed a problem reported by Solar Designer and MadHat (
+  madhat@unspecific.com ) where Nmap would bail when certain Apache
+  version/info responses were particularly long.  It could happen in
+  other cases as well.  Now Nmap just prints a warning.
+
+o Fixed some portability issues reported by Solar Designer 
+  ( solar@openwall.com )
+
+o Integrated Novell Netware NCP and MS Terminal Server probes from
+  Simple Nomad (thegnome@nmrc.org).
+
+o Fixed a segfault found by Solar Designer that could occur when
+  scanning certain "evil" services.
+
+Nmap 3.40PVT12
+
+o I added probes for SSL (session startup request) and microsoft-ds
+  (SMB Negociate Protocol request).
+
+o I changed the default read timeout for a service probe from 7.5s to 5s.
+
+o Fixed a one-character bug that broke many scans when -sV was NOT
+  given.  Thanks to Blue Boar (BlueBoar@thievco.com) for the report.
+
 Nmap 3.40PVT11
 
 o Integrated many more services thanks to submissions from Simple
@@ -31,11 +55,13 @@ o SCO Corporation of Lindon, Utah (formerly Caldera) has lately taken
   to an extortion campaign of demanding license fees from Linux users
   for code that they themselves knowingly distributed under the terms
   of the GNU GPL.  They have also refused to accept the GPL, claiming
-  that some preposterous theory of theirs makes it invalid.  In
-  response to these blatant violations, and in accordance with section
-  4 of the GPL, we hereby terminate SCO's rights to redistribute any
-  versions of Nmap in any of their products, including (without
-  limitation) OpenLinux, OpenServer, and UNIXWare.
+  that some preposterous theory of theirs makes it invalid.  Meanwhile
+  they have distributed GPL-licensed Nmap in (at least) their
+  "Supplemental Open Source CD".  In response to these blatant
+  violations, and in accordance with section 4 of the GPL, we hereby
+  terminate SCO's rights to redistribute any versions of Nmap in any
+  of their products, including (without limitation) OpenLinux,
+  Skunkware, OpenServer, and UNIXWare.
 
 Nmap 3.40PVT10
 

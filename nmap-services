@@ -1,6 +1,7 @@
-# This list of services is from the
-# Nmap security scanner ( http://www.insecure.org/nmap/ )
+# Well known service port numbers -*- mode: fundamental; -*-
+# From the Nmap security scanner ( http://www.insecure.org/nmap/ )
 #
+# $Id$
 # For a HUGE list of services (including these and others), 
 # see http://www.graffiti.com/services
 tcpmux            1/tcp      # TCP Port Service Multiplexer [rfc-1078]
@@ -238,8 +239,8 @@ statsrv           133/tcp    # Statistics Service
 statsrv           133/udp    # Statistics Service
 ingres-net        134/tcp    # INGRES-NET Service
 ingres-net        134/udp    # INGRES-NET Service
-loc-srv           135/tcp    # NCS local location broker
-loc-srv           135/udp    # Location Service
+msrpc             135/tcp    # Microsoft RPC services
+msrpc             135/udp    # Microsoft RPC services
 profile           136/tcp    # PROFILE Naming System
 profile           136/udp    # PROFILE Naming System
 netbios-ns        137/tcp    # NETBIOS Name Service

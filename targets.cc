@@ -988,7 +988,7 @@ int get_ping_results(int sd, pcap_t *pd, Target *hostbatch[], int pingtype,
   } *ping = NULL, *ping2 = NULL;
   char response[16536]; 
   struct tcphdr *tcp;
-  struct udphdr *udp;
+  struct udphdr_bsd *udp;
   struct ip *ip, *ip2;
   u32 hostnum = 0xFFFFFF; /* This ought to crash us if it is used uninitialized */
   int tm;
@@ -1321,7 +1321,7 @@ int get_ping_results(int sd, pcap_t *pd, Target *hostbatch[], int pingtype,
 	if (!ptech->rawudpscan) {
 	  continue;
 	}
-	udp = (struct udphdr *) (((char *) ip) + 4 * ip->ip_hl);
+	udp = (struct udphdr_bsd *) (((char *) ip) + 4 * ip->ip_hl);
 	newport = ntohs(udp->uh_sport);
 
 	trynum = ntohs(udp->uh_dport) - sportbase;

@@ -1,4 +1,4 @@
-# Nmap service detection probe list
+# Nmap service detection probe list -*- mode: fundamental; -*-
 # $Id$ 
 #
 # This is a database of custom probes and expected responses that the
@@ -87,10 +87,13 @@ match daytime m|^[0-3]\d [A-Z][A-Z][A-Z] 20\d\d \d\d:\d\d:\d\d \S+\r\n|
 match daytime m|^[A-Z][a-z]{2} [A-Z][a-z]{2} +\d{1,2} +\d\d:\d\d:\d\d 20\d\d\r\n|
 # Solaris 9
 match daytime m|^[A-Z][a-z]{2} [A-Z][a-z]{2} +\d{1,2} +\d\d:\d\d:\d\d 20\d\d\n\r| v/Sun Solaris daytime///
+# Windows daytime
+match daytime m|^\d\d:\d\d:\d\d [AP]M \d+/\d+/200\d\n$| v/Microsoft Windows US daytime///
 
 match time m|^[\xc0-\xc5]...$|
 match chargen m|^!"#\$%\&'\(\)\*\+,-\./0123456789:;<=>\?\@ABCDEFGHIJKLMNOPQRSTUVWXYZ\[\\\]\^_`abcdefgh\r\n"#\$%\&'\(\)\*\+,-\./0123456789:;<=>\?\@ABCDEF| v/Linux chargen///
-match chargen m|^\ !"#\$%&'\(\)\*\+,-\./0123456789:;<=>\?@ABCDEFGHIJKLMNOPQRSTUVWXYZ\[\\\]\^_| v/Sun Solaris chargen///
+# Sun Solaris 9; Windows
+match chargen m|^\ !"#\$%&'\(\)\*\+,-\./0123456789:;<=>\?@ABCDEFGHIJKLMNOPQRSTUVWXYZ\[\\\]\^_|
 
 match ftp m/^220.*Microsoft FTP Service \(Version (\d[^)]+)/ v/Microsoft ftpd/$1//
 # This lame version doesn't give a version number
@@ -106,6 +109,7 @@ match ftp m/^220[- ].*FTP server \(Version (wu-[-.\w]+)/s v/WU-FTPD/$1//
 match ftp m/^220 ProFTPD (\d\S+) Server/ v/ProFTPD/$1//
 match ftp m/^220.*ProFTP[dD].*Server ready/ v/ProFTPD///
 match ftp m/^220.*NcFTPd Server / v/NcFTPd///
+match ftp m/^220.*FTP server \(SunOS 5\.([789])\) ready/ v/Sun Solaris $1 ftpd///
 match ftp m/^220.*FTP server \(SunOS (\S+)\) ready/ v/Sun SunOS ftpd/$1//
 match ftp m/^220-[-.\w]+ IBM FTP.*(V\d+R\d+)/ v|IBM OS/390 ftpd|$1||
 match ftp m/^220 VxWorks \((\d[^)]+)\) FTP server ready/ v/VxWorks ftpd/$1//
@@ -324,14 +328,15 @@ match http m|^HTTP/1.1 \d\d\d .*\r\nServer: Lotus-Domino/0\r\n| v/Lotus Domino h
 # what the telnetd on this device said).
 match http m|^HTTP/1.1 302 Document Follows\r\nLocation: /hag/pages/home.ssi\r\n\r\n$| v/GlobespanVirata httpd//on broadband router/
 match http m|^HTTP/1.0 200 OK\r\nServer:HTTP/1.0\r\n.*<title>Hewlett Packard</title>|s v/HP Jetdirect httpd///
+match http m|^HTTP/1\.0 \d{3}.*\r\nServer: CompaqHTTPServer/([\.\w]+)\r\n|s v/Compaq Insight Manager/$1//
 softmatch http m|^HTTP/1.[01] \d\d\d|
 
 match http-proxy m|^HTTP/1\.0 400 Bad Request\r\nServer: Squid/([-.\w]+)\r\n| v/Squid webproxy/$1//
 # TightVNC 1.2.6
 match vnc-http m|^HTTP/1.0 200 OK\n\n<HTML>\n  <HEAD><TITLE>TightVNC desktop \[[-.\w]+\]| v/TightVNC///
 match rtsp m|^RTSP/1.0 400 Bad Request\r\nServer: DSS/([-.\w]+) \[(v\d+)]-(\w+)\r\n| v/DarwinStreamingServer/$1/$2 on $3/
-# "NetKit 0.09 with local mods"
-match ident m|^0 , 0 : ERROR : X-INVALID-REQUEST\r\n$| v/Linux netkit identd///
+# pidentd 2.81
+match ident m|^0 , 0 : ERROR : X-INVALID-REQUEST\r\n$| v/pidentd///
 match netbios-ssn m/^\x83\0\0\x01\x82|\x8f$/
 # spamd 2.20-1woody
 match spamd m|^SPAMD/1\.0 76 Bad header line: GET / HTTP/1\.0\r\r\n| v/SpamAssassin spamd///
@@ -351,6 +356,22 @@ match pop3s m|^-ERR \[SYS/PERM\] Fatal error: tls_start_servertls\(\) failed\r\n
 match postgres m|^EFATAL:  invalid length of startup packet\n\0$| v/Postgresql///
 # Netware 6 NetWare/IP
 match netwareip m|^\xfb\xff\xfe\xff\xfb\xff\xfe\xff\xfb\xff\xfe\xff$| v|Novell Netware/IP|||
+
+# This probe sends an RPC "Null command" to the port for service
+# 100000 (portmapper).
+# Some of these numbers are abitrary (such as ID).  I could consider
+# adding an \R escape in the string logic to provide a random byte.
+# This would make IDS detection and such a bit harder.  On the other
+# hand, that would make the response a little harder to recognize too.
+Probe TCP RPCCheck q|\x80\0\0\x28\x72\xFE\x1D\x13\0\0\0\0\0\0\0\x02\0\x01\x86\xA0\0\x01\x97\x7C\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0|
+ports 111,4045,32750-32810,38978
+match rpc m|^\x80\0\0\x18\x72\xFE\x1D\x13\0\0\0\x01\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x01|
+match rpc m|^\x80\0\0\x20\x72\xFE\x1D\x13\0\0\0\x01\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x02|
+
+Probe UDP RPCCheck q|\x72\xFE\x1D\x13\0\0\0\0\0\0\0\x02\0\x01\x86\xA0\0\x01\x97\x7C\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0|
+ports 111,4045,32750-32810,38978
+match rpc m|^\x72\xFE\x1D\x13\0\0\0\x01\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x01|
+match rpc m|^\x72\xFE\x1D\x13\0\0\0\x01\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x02|
 
 Probe UDP DNSVersionBindReq q|\0\x06\x01\0\0\x01\0\0\0\0\0\0\x07version\x04bind\0\0\x10\0\x03|
 ports 53
@@ -379,7 +400,7 @@ Probe UDP DNSStatusRequest q|\0\0\x10\0\0\0\0\0\0\0\0\0|
 ports 53,135
 match domain m|^\0\0\x90\x04\0\0\0\0\0\0\0\0|
 # This one below came from 2 tested Windows XP boxes
-match ms-win-messenger m|^\x04\x06\0\0\x10\0\0\0\0\0\0\0|
+match msrpc m|^\x04\x06\0\0\x10\0\0\0\0\0\0\0|
 
 # DNS Server status request: http://www.crynwr.com/crynwr/rfc1035/rfc1035.html
 Probe TCP DNSStatusRequest q|\0\x0C\0\0\x10\0\0\0\0\0\0\0\0\0|
@@ -409,45 +430,11 @@ match netbios-ns m|\x80\xf0\x84\0\0\0\0\x01\0\0\0\0 CKAAAAAAAAAAAAAAAAAAAAAAAAAA
 match netbios-ns m|\x80\xf0\x84\0\0\0\0\x01\0\0\0\0 CKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\0\0!\0\x01\0\0\0\0...(\w{1,15}) *\0\x04\0(\w{1,15}) *\0\x84\0\w{1,15} *\x03\x04\0\w{1,15} *\x04\0(\w{1,15}) *\x03\x04\0\w{1,15} *\x1e\x84\0| v/Microsoft Windows XP netbios-ssn//host: $1 workgroup: $2 user: $3/
 match netbios-ns m|\x80\xf0\x84\0\0\0\0\x01\0\0\0\0 CKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\0\0!\0\x01\0\0\0\0...(\w{1,15}) *\0\x04\0(\w{1,15}) *\0\x84\0\w{1,15} *\x03\x04\0\w{1,15} *\x04\0\w{1,15} *\x1e\x84\0| v/Microsoft Windows XP netbios-ssn//host: $1 workgroup: $2/
 
-# This probe sends an RPC "Null command" to the port for service
-# 100000 (portmapper).
-# Some of these numbers are abitrary (such as ID).  I could consider
-# adding an \R escape in the string logic to provide a random byte.
-# This would make IDS detection and such a bit harder.  On the other
-# hand, that would make the response a little harder to recognize too.
-Probe TCP RPCCheck q|\x80\0\0\x28\x72\xFE\x1D\x13\0\0\0\0\0\0\0\x02\0\x01\x86\xA0\0\x01\x97\x7C\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0|
-ports 111,4045,32750-32810,38978
-match rpc m|^\x80\0\0\x18\x72\xFE\x1D\x13\0\0\0\x01\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x01|
-match rpc m|^\x80\0\0\x20\x72\xFE\x1D\x13\0\0\0\x01\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x02|
-
-Probe UDP RPCCheck q|\x72\xFE\x1D\x13\0\0\0\0\0\0\0\x02\0\x01\x86\xA0\0\x01\x97\x7C\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0|
-ports 111,4045,32750-32810,38978
-match rpc m|^\x72\xFE\x1D\x13\0\0\0\x01\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x01|
-match rpc m|^\x72\xFE\x1D\x13\0\0\0\x01\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x02|
 
 Probe UDP Help q|help\r\n\r\n|
 ports 7
 match echo m|^help\r\n\r\n$|
 match chargen m|@ABCDEFGHIJKLMNOPQRSTUVWXYZ|
-
-# ftp://ftp.rfc-editor.org/in-notes/rfc1179.txt
-Probe TCP LPDString q|\x01default\n|
-ports 515
-match printer m|^\0$|
-match printer m|^default: unknown printer\n$| v/Solaris lpd///
-# Redhat Linux 7.3 LPRng-3.8.9
-match printer m|^\x01no connect permissions\n$| v/LPRng///
-
-# From xlsclients
-Probe TCP X11Probe q|\x6C\0\x0B\0\0\0\0\0\0\0\0\0|
-ports 6000-6020,7100
-match X11 m|^\0\x2D\x0B\0\0\0\x0C\0| v///access denied/
-# I think the below means access denied (no authentication protocol 
-# specified?) or is it a problem w/my probe that I should fix?
-match X11 m|^\0\x16\x0b\0\0\0\x06\0No protocol specified\x0a..$|s v///access denied/
-match X11 m|^\x01\0\x0b\0\0\0.\0...\x02\0\0.*The XFree86 Project, Inc|s v/XFree86//open/
-match X11 m|^\x01\0\x0b\0\0\0\x4C\0\xA0\xE0\x63\x02\0\0| v///open/
-match font-service m|^\0\0\x02\0\0\0\0\0\0\0\0\0\x06\0\0\0\0@\x0c\0p\x17\0\0X Consortium\x01\n\x01\0\x05\0\0\0....\0\0\0\0\0\0\0\0$|s v/Sun Solaris fs.auto///
 
 Probe TCP Help q|HELP\r\n|
 ports 7,25,2401
@@ -461,12 +448,63 @@ match smtp m|^502 ESMTP command error\r\n$| v/Courier smtpd///
 match smtp m|^220 [-.\w]+ ESMTP Sendmail ([^;]{3,50})| v/Sendmail smtpd/$1//
 match smtp m|^214-2\.0\.0 This is sendmail version ([-.\w]+)\r\n214-2\.0\.0 Topics:\r\n214-2\.0\.0| v/Sendmail smtpd/$1//
 # CVSD (cvs chrooting service for pserver) cvsd 0.9.18
-match cvspserver m|^cvs \[pserver aborted\]: bad auth protocol start: HELP\r\n\n$| v/cvsd/0.9.18//
+# CVS 1.11.5 pserver
+match cvspserver m|^cvs \[pserver aborted\]: bad auth protocol start: HELP\r\n\n$| v/cvs pserver///
 # Concurrent Versions System (CVS) 1.10.7 (client/server)
 match cvspserver m|^cvs-pserver \[pserver aborted\]: bad auth protocol start: HELP\r\n\n| v/cvs pserver///
 
+Probe TCP SSLSessionReq q|\x16\x03\0\0S\x01\0\0O\x03\0?G\xd7\xf7\xba,\xee\xea\xb2`~\xf3\0\xfd\x82{\xb9\xd5\x96\xc8w\x9b\xe6\xc4\xdb<=\xdbo\xef\x10n\0\0(\0\x16\0\x13\0\x0a\0f\0\x05\0\x04\0e\0d\0c\0b\0a\0`\0\x15\0\x12\0\x09\0\x14\0\x11\0\x08\0\x06\0\x03\x01\0|
+ports 443
+# OpenSSL/0.9.7aa
+match ssl m|^\x16\x03\0\0J\x02\0\0F\x03\0\?| v/OpenSSL///
+# Microsoft-IIS/5.0
+match ssl m|^\x16\x03\0..\x02\0\0F\x03\0\?|s v/Microsoft IIS SSL///
+
+#Probe TCP SSLSessionReq q|\x80\x67\x01\x03\x01\0\x4e\0\0\0\x10\x01\0\x80\x03\0\x80\x07\0\xc0\x06\0\x40\x02\0\x80\x04\0\x80\0\0\x39\0\0\x38\0\0\x35\0\0\x33\0\0\x32\0\0\x04\0\0\x05\0\0\x2f\0\0\x16\0\0\x13\0\xfe\xff\0\0\x0a\0\0\x15\0\0\x12\0\xfe\xfe\0\0\x09\0\0\x64\0\0\x62\0\0\x03\0\0\x06\xc8\xd5\x5a\x76\x5c\x0a\x7d\x9e\x9d\x47\xcd\x7d\xce\x4a\x06\x9a|
+#ports 443
+
+Probe UDP Sqlping q|\x02|
+ports 1434
+
+# SMB Negociate Protocol
+Probe TCP SMBProgNeg q|\0\0\0\xa4\xff\x53\x4d\x42\x72\0\0\0\0\x08\x01\x40\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x40\x06\0\0\x01\0\0\x81\0\x02PC NETWORK PROGRAM 1.0\0\x02MICROSOFT NETWORKS 1.03\0\x02MICROSOFT NETWORKS 3.0\0\x02LANMAN1.0\0\x02LM1.2X002\0\x02Samba\0\x02NT LANMAN 1.0\0\x02NT LM 0.12\0|
+ports 135,445
+# Windows XP SP1
+match microsoft-ds m|^\0\0\0.\xffSMBr\0\0\0\0\x88\x01@\0\0\0\0\0\0\0\0\0\0\0\0\0\0@\x06\0\0\x01\0\x11\x07\0\x03\n\0\x01\0\x04\x11\0\0\0\0\x01\0\0\0\0\0\xfd\xe3\0\0| v/Microsoft Windows XP microsoft-ds///
+# Microsoft Windows XP SP1
+match msrpc m|^\x05\0\r\x03\x10\0\0\0\x18\0\0\0\0\x08\x01@\x04\0\x01\x05\0\0\0\0$| v/Microsoft Windows XP msrpc///
+# Microsoft Windows 2000
+match microsoft-ds m|^\0\0\0.\xffSMBr\0\0\0\0\x88\x01@\0\0\0\0\0\0\0\0\0\0\0\0\0\0@\x06\0\0\x01\0\x11\x07\0\x032\0\x01\0\x04A\0\0\0\0\x01\0\0\0\0\0\xfd\xf3\0\0| v/Microsoft Windows 2000 microsoft-ds///
+# Microsoft Windows 2003
+match microsoft-ds m|^\0\0\0.\xffSMBr\0\0\0\0\x88\x01@\0\0\0\0\0\0\0\0\0\0\0\0\0\0@\x06\0\0\x01\0\x11\x07\0\x032\0\x01\0\x04A\0\0\0\0\x01\0\0\0\0\0\xfd\xf3\x01\0| v/Microsoft Windows 2003 microsoft-ds///
+
+# From xlsclients
+Probe TCP X11Probe q|\x6C\0\x0B\0\0\0\0\0\0\0\0\0|
+ports 6000-6020,7100
+match X11 m|^\0\x2D\x0B\0\0\0\x0C\0| v///access denied/
+# I think the below means access denied (no authentication protocol 
+# specified?) or is it a problem w/my probe that I should fix?
+match X11 m|^\0\x16\x0b\0\0\0\x06\0No protocol specified\x0a..$|s v///access denied/
+match X11 m|^\x01\0\x0b\0\0\0.\0...\x02\0\0.*The XFree86 Project, Inc|s v/XFree86//open/
+match X11 m|^\x01\0\x0b\0\0\0\x4C\0\xA0\xE0\x63\x02\0\0| v///open/
+match font-service m|^\0\0\x02\0\0\0\0\0\0\0\0\0\x06\0\0\0\0@\x0c\0p\x17\0\0X Consortium\x01\n\x01\0\x05\0\0\0....\0\0\0\0\0\0\0\0$|s v/Sun Solaris fs.auto///
+
+# ftp://ftp.rfc-editor.org/in-notes/rfc1179.txt
+Probe TCP LPDString q|\x01default\n|
+ports 515
+match printer m|^\0$|
+match printer m|^default: unknown printer\n$| v/Solaris lpd///
+# Redhat Linux 7.3 LPRng-3.8.9
+match printer m|^\x01no connect permissions\n$| v/LPRng///
+
+# Ldap bind request, version 2, null DN, AUTH_TYPE simple, null password
+Probe TCP LDAPBindReq q|\x30\x0c\x02\x01\x01\x60\x07\x02\x01\x02\x04\0\x80\0|
+# OpenLDAP 2.0.15 on RH Linux 7.3
+match ldap m|^0%\x02\x01\x01a \n\x010\x04\0\x04\x19anonymous bind disallowed$| v/OpenLDAP///
+ports 389
+
 Probe TCP LANDesk-RC q|\x54\x4e\x4d\x50\x04\0\0\0\x54\x4e\x4d\x45\0\0\x04\0|
-ports 1761-1764
+ports 1761
 # With Host and User currently logged in
 match landesk-rc m|^TNMP.\0\0\0TNME.\0\0\0USER.\x08\x04\0\x08\0.{9}\0R\0\x03\0W\0\xff\xff\0\0\0\xfd..\0\0\0\0\x02\0\0\0\0\x01\x04\0\0\0\0\0...\0\xb5\x01\xbb\0Desktop\x20Manager\x20(\d\.\d)\0\x02\x04\x01\x02\x01\0\0\W+(\w+)\0(\w+)\0\0$| v/LANDesk RC/$1/Host: $2 User: $3)/
 # With just hostname
@@ -477,11 +515,12 @@ match landesk-rc m|^TNMP.\0\0\0TNME.\0\0\0USER.\x08\x04\0\x08\0.{9}\0R\0\x03\0W\
 match landesk-rc m|^TNMP.\0\0\0TNME.\0\0\0USER.\x08\x04\0\x08\0.{9}\0R\0\x03\0W\0\xff\xff\0\0\0\xfd..\0\0\0\0\x02\0\0\0\0\x01\x04\0\0\0\0\0...\0\xb5\x01\xbb\0Desktop\x20Manager\x20(\d\.\d)\0\x02\x04\x01\x02\x01\0\0\W+([\w\d\.\:]+)\W+(\w+)\0(\w+)\0\0$| v/LANDesk RC/$1/Host: $3 Controler: $2/
 match landesk-rc m|^TNMP\x16\0\0\0TNME\x80\0\xfe\xff..([\w\d\.]+):(\d)$| v/LANDesk RC//Busy, From $1 on port 176$2/
 
-# Ldap bind request, version 2, null DN, AUTH_TYPE simple, null password
-Probe TCP LDAPBindReq q|\x30\x0c\x02\x01\x01\x60\x07\x02\x01\x02\x04\0\x80\0|
-# OpenLDAP 2.0.15 on RH Linux 7.3
-match ldap m|^0%\x02\x01\x01a \n\x010\x04\0\x04\x19anonymous bind disallowed$| v/OpenLDAP///
-ports 389
+Probe TCP TerminalServer q|\x03\0\0\x0b\x06\xe0\0\0\0\0\0|
+ports 3389
 
-Probe UDP Sqlping q|\x02|
-ports 1434
+# Netware Create Connection Service request
+Probe TCP NCP q|\x44\x6d\x64\x54\0\0\0\x17\0\0\0\x01\0\0\0\0\x11\x11\0\xff\x01\xff\x13|
+ports 524
+# Netware 5 and 6
+# NCP "OK" reply
+match ncp m|^\x74\x4e\x63\x50\0\0\0\x10\x33\x33| v/Novell Netware NCP///

@@ -1,3 +1,4 @@
+# Known RPC numbers Nmap uses for RPC grinding -*- mode: fundamental; -*-
 # $Id$
 # This was created by Vik Bajaj <vbajaj@sas.upenn.edu> with help
 # from various members of the nmap-hackers list.  
