@@ -1743,7 +1743,7 @@ portlist super_scan(struct hoststruct *target, unsigned short *portarray, stype 
 
   int dropped = 0;  /* These three are for UDP squelching */
   int freshportstried = 0;
-  int senddelay = 500000;
+  int senddelay = 0;
 
   pcap_t *pd;
   int bytes;
