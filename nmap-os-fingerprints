@@ -1217,7 +1217,7 @@ T7(Resp=N)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 # Contributed by william.frogge@sus.com
-Fingerprint NT Server 4.0 SP5 running Checkpoint Firewall-1
+Fingerprint NT Server 4.0 SP4-SP5 running Checkpoint Firewall-1
 TSeq(Class=TD%gcd=<8%SI=<154)
 T1(DF=Y%W=2017%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -2518,20 +2518,6 @@ T6(Resp=Y%DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=0%UCK=E%ULEN=134%DAT=E)
 
-# Interesting ... here the Don't Fragment Bit is always yes
-# While in the next one it is always no
-# HP-UX XXX B.11.00 U 9000/800
-Fingerprint HP-UX B.11.00  # Thanks to root@knightmare.cc  
-TSeq(Class=RI%gcd=<9%SI=>3FFF)
-T1(DF=Y%W=8000%ACK=S++%Flags=AS%Ops=MEWNNNT)
-T2(Resp=Y%DF=Y%W=0%ACK=S%Flags=AR%Ops=)
-T3(Resp=Y%DF=Y%W=8000%ACK=S++%Flags=AS%Ops=MEWNNNT)
-T4(DF=Y%W=0%ACK=O%Flags=R%Ops=)
-T5(DF=Y%W=0%ACK=S++%Flags=AR%Ops=)
-T6(DF=Y%W=0%ACK=O%Flags=R%Ops=)
-T7(DF=Y%W=0%ACK=S%Flags=AR%Ops=)
-PU(DF=Y%TOS=0%IPLEN=70%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
-
 # This is a wierd one
 # Thanks to Simon <seva@null.cc.uic.edu>
 Fingerprint HP-UX 11.00
@@ -3332,7 +3318,7 @@ T7(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=C0|A0|0%IPLEN=164%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 # Contributed by Brad Tarver <btarver@idlemind.net>
-Fingerprint Linux 2.2.13 SMP
+Fingerprint Linux 2.2.5 - 2.2.13 SMP
 TSeq(Class=RI%gcd=<6%SI=<D49FAE&>2203C)
 T1(DF=Y%W=212%ACK=S++%Flags=AS%Ops=ME)
 T2(Resp=N)
@@ -3521,6 +3507,18 @@ T7(DF=Y%W=0%ACK=S%Flags=AR%Ops=)
 #T6(Resp=Y%DF=Y%W=0%ACK=O%Flags=R%Ops=)
 #T7(Resp=Y%DF=Y%W=0%ACK=S%Flags=AR%Ops=)
 #PU(Resp=Y%DF=Y%TOS=0%IPLEN=70%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
+
+# Contributed by Lynda L. True <shrdlu@hazel.sdd.TRW.COM>
+Fingerprint Apple MacOS 9.04 (Powermac or G4)
+TSeq(Class=RI%gcd=<9%SI=>3FFF)
+T1(DF=Y%W=8000%ACK=S++%Flags=AS%Ops=MEWNNNT)
+T2(Resp=Y%DF=Y%W=0%ACK=S%Flags=AR%Ops=)
+T3(Resp=Y%DF=Y%W=8000%ACK=S++%Flags=AS%Ops=MEWNNNT)
+T4(DF=Y%W=0%ACK=O%Flags=R%Ops=)
+T5(DF=Y%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=Y%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=Y%W=0%ACK=S%Flags=AR%Ops=)
+PU(DF=Y%TOS=0%IPLEN=70%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 # Contributed by Marcus Mueller <marcus.mueller@pixelpark.com>
 Fingerprint MacOS X Server 1.2 (ppc)
