@@ -32,8 +32,8 @@ bzero((char *) hostbatch, (lookahead + 1) * sizeof(struct hoststruct));
 do {
   if (targets.maskformat) {
     for(i = 0; i < lookahead && targets.currentaddr.s_addr <= targets.end.s_addr; i++) {
-      if (!o.allowall && (!(targets.currentaddr.s_addr % 256) 
-			 || targets.currentaddr.s_addr % 256 == 255))
+      if (!o.allowall && ((!(targets.currentaddr.s_addr % 256) 
+			 || targets.currentaddr.s_addr % 256 == 255)))
 	{
 	  struct in_addr iii;
 	  iii.s_addr = htonl(targets.currentaddr.s_addr);
