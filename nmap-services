@@ -2059,6 +2059,7 @@ sometimes-rpc25   32786/tcp  # Sometimes an RPC port (mountd)
 sometimes-rpc26   32786/udp  # Sometimes an RPC port
 sometimes-rpc27   32787/tcp  # Sometimes an RPC port dmispd (DMI Service Provider)
 sometimes-rpc28   32787/udp  # Sometimes an RPC port
+sygatefw          39213/udp  # Sygate Firewall management port version 3.0 build 521 and above
 reachout          43188/tcp
 coldfusion-auth   44442/tcp  # ColdFusion Advanced Security/Siteminder Authentication Port (by Allaire/Netegrity)
 coldfusion-auth   44443/tcp  # ColdFusion Advanced Security/Siteminder Authentication Port (by Allaire/Netegrity)

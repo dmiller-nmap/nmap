@@ -67,7 +67,7 @@ void printportoutput(struct hoststruct *currenths, portlist *plist) {
   char tmpbuf[64];
   char *state;
   char serviceinfo[64];
-  char *name;
+  char *name=NULL;
   int first = 1;
   struct servent *service;
   struct protoent *proto;

@@ -94,7 +94,12 @@ distro:
 	configure.in config.h.in nmap_winconfig.h Makefile.in configure \
         $(SHTOOL) install-sh config.guess nmap-$(NMAP_VERSION)-1.spec \
         config.sub INSTALL README-WIN32 COPYING CHANGELOG HACKING \
-	$(LIBPCAPDIR) mswin32 /usr/tmp/nmap-$(NMAP_VERSION)
+	$(LIBPCAPDIR) /usr/tmp/nmap-$(NMAP_VERSION)
+	$(SHTOOL) mkdir /usr/tmp/nmap-$(NMAP_VERSION)/mswin32
+	cd mswin32; cp *.h *.H ARPA NET NETINET RPC icon1.ico \
+                    ifaddrlist.h lib libpcap-note.txt nmap.dsp \
+                    nmap.dsw nmap.rc winip \
+                    /usr/tmp/nmap-$(NMAP_VERSION)/mswin32
 	$(SHTOOL) mkdir /usr/tmp/nmap-$(NMAP_VERSION)/docs
 	cd docs; cp README copying.html nmap-fingerprinting-article.txt \
                     nmap.1 nmap.deprecated.txt nmap.usage.txt nmap_doc.html \
@@ -137,7 +142,7 @@ clean: @PCAP_CLEAN@ nmapfe_clean nbase_clean my_clean
 my_clean:
 	rm -f $(OBJS) $(TARGET) config.cache
 pcap_clean:
-	cd $(LIBPCAPDIR); $(MAKE) clean
+	cd $(LIBPCAPDIR); $(MAKE) distclean
 nmapfe_clean:
 	cd nmapfe; $(MAKE) clean
 nbase_clean:

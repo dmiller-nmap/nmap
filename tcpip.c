@@ -1122,58 +1122,6 @@ if (!pd) fatal("NULL packet device passed to readip_pcap");
  return alignedbuf;
 }
 
- 
-/* Examines the given tcp packet and obtains the TCP timestamp option
-   information if available.  Note that the CALLER must ensure that
-   "tcp" contains a valid header (in particular the th_off must be the
-   true packet length and tcp must contain it).  If a valid timestamp
-   option is found in the header, nonzero is returned and the
-   'timestamp' and 'echots' parameters are filled in with the
-   appropriate value (if non-null).  Otherwise 0 is returned and the
-   parameters (if non-null) are filled with 0.  Remember that the
-   correct way to check for errors is to look at the return value
-   since a zero ts or echots could possibly be valid. */
-int gettcpopt_ts(struct tcphdr *tcp, u_int32_t *timestamp, u_int32_t *echots) {
-
-  unsigned char *p;
-  int len = 0;
-  int op;
-  int oplen;
-
-  /* first we find where the tcp options start ... */
-  p = ((unsigned char *)tcp) + 20;
-  len = 4 * tcp->th_off - 20;
-  while(len > 0 && *p != 0 /* TCPOPT_EOL */) {
-    op = *p++;
-    if (op == 0 /* TCPOPT_EOL */) break;
-    if (op == 1 /* TCPOPT_NOP */) { len--; continue; }
-    oplen = *p++;
-    if (oplen < 2) break; /* No infinite loops, please */
-    if (oplen > len) break; /* Not enough space */
-    if (op == 8 /* TCPOPT_TIMESTAMP */ && oplen == 10) {
-      /* Legitimate ts option */
-      if (timestamp) { 
-	memcpy((char *) timestamp, p, 4); 
-	*timestamp = ntohl(*timestamp); 
-      }
-      p += 4;
-      if (echots) { 
-	memcpy((char *) echots, p, 4);
-	*echots = ntohl(*echots);
-      }
-      return 1;
-    }
-    len -= oplen;
-    p += oplen - 2;
-  }
-
-  /* Didn't find anything */
-if (timestamp) *timestamp = 0;
-if (echots) *echots = 0;
-return 0;
-}
-
-
 /* Set a pcap filter */
 void set_pcap_filter(struct hoststruct *target,
 		     pcap_t *pd, PFILTERFN filter, char *bpf, ...)
@@ -1670,6 +1618,58 @@ unsigned long calculate_sleep(struct in_addr target) {
     return 0;
   return (end.tv_sec - begin.tv_sec) * 1000000 + (end.tv_usec - begin.tv_usec);
 }
+
+
+/* Examines the given tcp packet and obtains the TCP timestamp option
+   information if available.  Note that the CALLER must ensure that
+   "tcp" contains a valid header (in particular the th_off must be the
+   true packet length and tcp must contain it).  If a valid timestamp
+   option is found in the header, nonzero is returned and the
+   'timestamp' and 'echots' parameters are filled in with the
+   appropriate value (if non-null).  Otherwise 0 is returned and the
+   parameters (if non-null) are filled with 0.  Remember that the
+   correct way to check for errors is to look at the return value
+   since a zero ts or echots could possibly be valid. */
+int gettcpopt_ts(struct tcphdr *tcp, u_int32_t *timestamp, u_int32_t *echots) {
+
+  unsigned char *p;
+  int len = 0;
+  int op;
+  int oplen;
+
+  /* first we find where the tcp options start ... */
+  p = ((unsigned char *)tcp) + 20;
+  len = 4 * tcp->th_off - 20;
+  while(len > 0 && *p != 0 /* TCPOPT_EOL */) {
+    op = *p++;
+    if (op == 0 /* TCPOPT_EOL */) break;
+    if (op == 1 /* TCPOPT_NOP */) { len--; continue; }
+    oplen = *p++;
+    if (oplen < 2) break; /* No infinite loops, please */
+    if (oplen > len) break; /* Not enough space */
+    if (op == 8 /* TCPOPT_TIMESTAMP */ && oplen == 10) {
+      /* Legitimate ts option */
+      if (timestamp) { 
+	memcpy((char *) timestamp, p, 4); 
+	*timestamp = ntohl(*timestamp); 
+      }
+      p += 4;
+      if (echots) { 
+	memcpy((char *) echots, p, 4);
+	*echots = ntohl(*echots);
+      }
+      return 1;
+    }
+    len -= oplen;
+    p += oplen - 2;
+  }
+
+  /* Didn't find anything */
+if (timestamp) *timestamp = 0;
+if (echots) *echots = 0;
+return 0;
+}
+
 
 
 
