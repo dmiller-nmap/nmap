@@ -1,4 +1,4 @@
-NMAP_VERSION = 3.40PVT12
+NMAP_VERSION = 3.40PVT13
 NMAP_NAME= nmap
 NMAP_URL= http://www.insecure.org/nmap/
 NMAP_PLATFORM=@host@
@@ -193,7 +193,8 @@ distro:
                             install-sh Makefile.in netutils.c netutils.h \
                             nsock_config.h.in nsock_connect.c nsock_core.c \
                             nsock_event.c nsock_internal.h nsock_iod.c \
-                            nsock_pool.c nsock_read.c nsock_timers.c \
+                            nsock_pool.c nsock_read.c nsock_ssl.h \
+                            nsock_ssl.c nsock_timers.c \
                             nsock_write.c utils.c utils.h \
                             /usr/tmp/nmap-$(NMAP_VERSION)/nsock/src/
 

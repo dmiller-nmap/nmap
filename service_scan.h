@@ -61,6 +61,7 @@ using namespace std;
 /**********************  DEFINES/ENUMS ***********************************/
 #define DEFAULT_SERVICEWAITMS 5000
 #define DEFAULT_CONNECT_TIMEOUT 5000
+#define DEFAULT_CONNECT_SSL_TIMEOUT 8000  // includes connect() + ssl negotiation
 #define SERVICEMATCH_REGEX 1
 // #define SERVICEMATCH_STATIC 2 -- no longer supported
 

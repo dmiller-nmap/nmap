@@ -78,6 +78,8 @@ enum serviceprobestate {
 
 enum service_detection_type { SERVICE_DETECTION_TABLE, SERVICE_DETECTION_PROBED };
 
+enum service_tunnel_type { SERVICE_TUNNEL_NONE, SERVICE_TUNNEL_SSL };
+
 struct serviceDeductions {
   const char *name; // will be NULL if can't determine
   // Confidence is a number from 0 (least confident) to 10 (most
@@ -88,6 +90,8 @@ struct serviceDeductions {
   const char *product;
   const char *version;
   const char *extrainfo;
+  // SERVICE_TUNNEL_NONE or SERVICE_TUNNEL_SSL
+  enum service_tunnel_type service_tunnel; 
   // This is the combined version of the three fields above.  It will be 
   // zero length if unavailable.
   char fullversion[128];
@@ -125,9 +129,12 @@ class Port {
   // 'reasonable' length if neccessary, and cleaning up any unprinable
   // chars. (these tests are to avoid annoying DOS (or other) attacks
   // by malicious services).  The fingerprint should be NULL unless
-  // one is available and the user should submit it.
+  // one is available and the user should submit it.  tunnel must be
+  // SERVICE_TUNNEL_NULL (normal) or SERVICE_TUNNEL_SSL (means ssl was
+  // detected and we tried to tunnel through it ).
   void setServiceProbeResults(enum serviceprobestate sres, const char *sname,
-			      const char *product, const char *version, 
+			      enum service_tunnel_type tunnel, const char *product, 
+			      const char *version, 
 			      const char *extrainfo, const char *fingerprint);
 
   /* Sets the results of an RPC scan.  if rpc_status is not
@@ -162,8 +169,9 @@ class Port {
   char *serviceprobe_product; 
   char *serviceprobe_version; 
   char *serviceprobe_extrainfo; 
+  enum service_tunnel_type serviceprobe_tunnel;
   // A fingerprint that the user can submit if the service wasn't recognized
-  char *serviceprobe_fp; 
+  char *serviceprobe_fp;
 
 };
 

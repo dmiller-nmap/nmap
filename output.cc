@@ -103,12 +103,56 @@ static int getServiceXMLBuf(struct serviceDeductions *sd, char *xmlbuf,
   } else rpcbuf[0] = '\0';
 
   snprintf(xmlbuf, xmlbuflen, 
-	   "<service name=\"%s\"%s method=\"%s\" conf=\"%d\"%s />", sd->name, 
+	   "<service name=\"%s\"%s %smethod=\"%s\" conf=\"%d\"%s />", sd->name, 
 	   versionxmlstring.c_str(), 
 	   (sd->dtype == SERVICE_DETECTION_TABLE)? "table" : "probed", 
+	   (sd->service_tunnel == SERVICE_TUNNEL_SSL)? "tunnel=\"ssl\" " : "",
 	   sd->name_confidence, rpcbuf);
 
   return 0;
+}
+
+/* Fills in namebuf (as long as there is space in buflen) with the
+   Name nmap normal output will use to describe the port.  This takes
+   into account to confidence level, any SSH tunneling, etc.  Truncates
+   namebuf to 0 length if there is no room.*/
+static void getNmapServiceName(struct serviceDeductions *sd, int state, 
+			       char *namebuf, int buflen) {
+  char *dst = namebuf;
+  int lenremaining = buflen;
+  int len;
+
+  if (buflen < 1) return;
+
+  if (sd->service_tunnel == SERVICE_TUNNEL_SSL) {
+    if (lenremaining < 5) goto overflow;
+    strncpy(dst, "ssl/", lenremaining);
+    dst += 4;
+    lenremaining -= 4;
+  } else if (o.servicescan && sd->name && state == PORT_OPEN && 
+	     sd->name_confidence <= 5) {
+    if (lenremaining < 2) goto overflow;
+    *dst = '?';
+    dst += 1;
+    lenremaining += 1;
+  }
+
+  if (sd->name && (sd->service_tunnel != SERVICE_TUNNEL_SSL || 
+		   sd->dtype == SERVICE_DETECTION_PROBED)) {
+    len = snprintf(dst, lenremaining, "%s", sd->name);
+  } else {
+    len = snprintf(dst, lenremaining, "%s", "unknown");
+  }
+  if (len > lenremaining || len < 0) goto overflow;
+  dst += len;
+  lenremaining -= len;
+
+  if (lenremaining < 1) goto overflow;
+  *dst = '\0';
+  return;
+
+ overflow:
+  *namebuf = '\0';  
 }
 
 /* Prints the familiar Nmap tabular output showing the "interesting"
@@ -287,9 +331,8 @@ void printportoutput(Target *currenths, PortList *plist) {
 	  }
 	  snprintf(serviceinfo, sizeof(serviceinfo), "%s%s%s", (sd.name)? sd.name : ((*rpcinfo)? "" : "unknown"), (sd.name)? " " : "",  rpcinfo);
 	} else {
-	  snprintf(serviceinfo, sizeof(serviceinfo), "%s%s", (sd.name)? sd.name : "unknown",
-		   (o.servicescan && sd.name && current->state == PORT_OPEN && sd.name_confidence <= 5)? "?" : "");
-	  strcpy(rpcmachineinfo, "");
+	  getNmapServiceName(&sd, current->state, serviceinfo, sizeof(serviceinfo));
+	  rpcmachineinfo[0] = '\0';
 	}
 	Tbl->addItem(rowno, portcol, true, portinfo);
 	Tbl->addItem(rowno, statecol, false, state);

@@ -1,6 +1,6 @@
-# Makefile.in -- Used by configure to create a Makefile.  This file is
-# so bloated because it was originally created with automake. It has
-# been hand edited since then.
+# Makefile.in -*- mode: fundamental; -*- Used by configure to create a
+# Makefile.  This file is so bloated because it was originally created
+# with automake. It has been hand edited since then.
 
 SHELL = /bin/sh
 

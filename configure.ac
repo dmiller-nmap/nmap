@@ -1,5 +1,4 @@
-
-# Require autoconf 2.13
+# Require autoconf 2.13 -*- mode: fundamental; -*-
 AC_PREREQ(2.13)
 
 dnl Process this file with autoconf to produce a configure script.

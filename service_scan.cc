@@ -76,10 +76,13 @@ class ServiceNFO {
 public:
   ServiceNFO(AllProbes *AP);
   ~ServiceNFO();
-  // If a service response to a given probeName, this function adds the resonse the the
-  // fingerprint for that service.  The fingerprint can be printed when nothing matches the
-  // service.  You can obtain the fingerprint (if any) via getServiceFingerprint();
-  void addToServiceFingerprint(const char *probeName, const u8 *resp, int resplen);
+
+  // If a service response to a given probeName, this function adds
+  // the resonse the the fingerprint for that service.  The
+  // fingerprint can be printed when nothing matches the service.  You
+  // can obtain the fingerprint (if any) via getServiceFingerprint();
+  void addToServiceFingerprint(const char *probeName, const u8 *resp, 
+			       int resplen);
 
   // Get the service fingerprint.  It is NULL if there is none, such
   // as if there was a match before any other probes were finished (or
@@ -99,6 +102,7 @@ public:
   char product_matched[80];
   char version_matched[80];
   char extrainfo_matched[80];
+  enum service_tunnel_type tunnel; /* SERVICE_TUNNEL_NONE, SERVICE_TUNNEL_SSL */
   // if a match was found (see above), this tells whether it was a "soft"
   // or hard match.  It is always false if no match has been found.
   bool softMatchFound;
@@ -109,7 +113,11 @@ public:
   // that!  If newresp is true, the old response info will be lost and
   // invalidated.  Otherwise it remains as if it had been received by
   // the current probe (useful after a NULL probe).
-  ServiceProbe *nextProbe(bool newresp); 
+  ServiceProbe *nextProbe(bool newresp);
+  // Resets the probes back to the first one. One case where this is useful is
+  // when SSL is detected -- we redo all probes through SSL.  If freeFP, any
+  // service fingerprint is freed too.
+  void resetProbes(bool freefp);
   // Number of milliseconds left to complete the present probe, or 0 if
   // the probe is already expired.  Timeval can omitted, it is just there 
   // as an optimization in case you have it handy.
@@ -800,7 +808,7 @@ AllProbes::~AllProbes() {
 ServiceProbe *AllProbes::getProbeByName(const char *name, int proto) {
   vector<ServiceProbe *>::iterator vi;
 
-  if (proto== IPPROTO_TCP && nullProbe && strcmp(nullProbe->getName(), name) == 0)
+  if (proto == IPPROTO_TCP && nullProbe && strcmp(nullProbe->getName(), name) == 0)
     return nullProbe;
 
   for(vi = probes.begin(); vi != probes.end(); vi++) {
@@ -823,6 +831,7 @@ ServiceNFO::ServiceNFO(AllProbes *newAP) {
   currentresplen = 0;
   port = NULL;
   product_matched[0] = version_matched[0] = extrainfo_matched[0] = '\0';
+  tunnel = SERVICE_TUNNEL_NONE;
   softMatchFound = false;
   servicefplen = servicefpalloc = 0;
   servicefp = NULL;
@@ -1046,6 +1055,24 @@ bool dropdown = false;
  return NULL;
 }
 
+  // Resets the probes back to the first one. One case where this is useful is
+  // when SSL is detected -- we redo all probes through SSL.  If freeFP, any
+  // service fingerprint is freed too.
+void ServiceNFO::resetProbes(bool freefp) {
+
+  if (currentresp) free(currentresp);
+
+  if (freefp) {
+    if (servicefp) { free(servicefp); servicefp = NULL; }
+    servicefplen = 0;
+  }
+
+  currentresp = NULL; currentresplen = 0;
+
+  probe_state = PROBESTATE_INITIAL;
+}
+
+
 int ServiceNFO::currentprobe_timemsleft(const struct timeval *now) {
   int timeused, timeleft;
 
@@ -1143,6 +1170,7 @@ ServiceGroup::~ServiceGroup() {
 // You would do this, for example, if the other side has closed the connection.
 static void startNextProbe(nsock_pool nsp, nsock_iod nsi, ServiceGroup *SG, 
 			   ServiceNFO *svc, bool alwaysrestart) {
+  bool isInitial = svc->probe_state == PROBESTATE_INITIAL;
   ServiceProbe *probe = svc->currentProbe();
 
   if (!alwaysrestart && probe->isNullProbe()) {
@@ -1163,7 +1191,8 @@ static void startNextProbe(nsock_pool nsp, nsock_iod nsi, ServiceGroup *SG,
     // The finisehd probe was not a NULL probe.  So we close the
     // connection, and if further probes are available, we launch the
     // next one.
-    probe = svc->nextProbe(true);
+    if (!isInitial)
+      probe = svc->nextProbe(true); // if was initial, currentProbe() returned the right one to execute.
     if (probe) {
       // For a TCP probe, we start by requesting a new connection to the target
       if (svc->proto == IPPROTO_TCP) {
@@ -1171,10 +1200,16 @@ static void startNextProbe(nsock_pool nsp, nsock_iod nsi, ServiceGroup *SG,
 	if ((svc->niod = nsi_new(nsp, svc)) == NULL) {
 	  fatal("Failed to allocate Nsock I/O descriptor in startNextProbe()");
 	}
-
-	nsock_connect_tcp(nsp, svc->niod, servicescan_connect_handler, 
-			  DEFAULT_CONNECT_TIMEOUT, svc, svc->target->v4host(),
-			  svc->portno);
+	if (svc->tunnel == SERVICE_TUNNEL_NONE) {
+	  nsock_connect_tcp(nsp, svc->niod, servicescan_connect_handler, 
+			    DEFAULT_CONNECT_TIMEOUT, svc, svc->target->v4host(),
+			    svc->portno);
+	} else {
+	  assert(svc->tunnel == SERVICE_TUNNEL_SSL);
+	  nsock_connect_ssl(nsp, svc->niod, servicescan_connect_handler, 
+			    DEFAULT_CONNECT_SSL_TIMEOUT, svc, 
+			    svc->target->v4host(), svc->portno);
+	}
       } else {
 	assert(svc->proto == IPPROTO_UDP);
 	/* Can maintain the same UDP "connection" */
@@ -1193,8 +1228,40 @@ static void startNextProbe(nsock_pool nsp, nsock_iod nsi, ServiceGroup *SG,
   return;
 }
 
-// A simple helper function to cancel further work on a service and set it to the given probe_state
-// pass NULL for nsi if you don't want it to be deleted (for example, if you already have done so).
+/* Sometimes the normal service scan will detect a
+   tunneling/encryption protocol such as SSL.  Instead of just
+   reporting "ssl", we can make an SSL connection and try to determine
+   the service that is really sitting behind the SSL.  This function
+   will take a service that has just been detected (hard match only),
+   and see if we can dig deeper through tunneling.  Nonzero is
+   returned if we can do more.  Otherwise 0 is returned and the caller
+   should end the service with its successful match */
+static int scanThroughTunnel(nsock_pool nsp, nsock_iod nsi, ServiceGroup *SG, 
+			     ServiceNFO *svc) {
+
+  if (svc->tunnel != SERVICE_TUNNEL_NONE) {
+    // Another tunnel type has already been tried.  Let's not go recursive.
+    return 0;
+  }
+
+  if (svc->proto != IPPROTO_TCP || 
+      !svc->probe_matched || strcmp(svc->probe_matched, "ssl") != 0)
+    return 0; // Not SSL
+
+  // Alright!  We are going to start the tests over using SSL
+  // printf("DBG: Found SSL service on %s:%hi - starting SSL scan\n", svc->target->NameIP(), svc->portno);
+  svc->tunnel = SERVICE_TUNNEL_SSL;
+  svc->probe_matched = NULL;
+  svc->product_matched[0] = svc->version_matched[0] = svc->extrainfo_matched[0] = '\0';
+  svc->softMatchFound = false;
+   svc->resetProbes(true);
+  startNextProbe(nsp, nsi, SG, svc, true);
+  return 1;
+}
+
+// A simple helper function to cancel further work on a service and
+// set it to the given probe_state pass NULL for nsi if you don't want
+// it to be deleted (for example, if you already have done so).
 void end_svcprobe(nsock_pool nsp, enum serviceprobestate probe_state, ServiceGroup *SG, ServiceNFO *svc, nsock_iod nsi) {
   list<ServiceNFO *>::iterator member;
 
@@ -1220,7 +1287,7 @@ void servicescan_connect_handler(nsock_pool nsp, nsock_event nse, void *mydata) 
   ServiceProbe *probe = svc->currentProbe();
   ServiceGroup *SG = (ServiceGroup *) nsp_getud(nsp);
 
-  assert(type == NSE_TYPE_CONNECT);
+  assert(type == NSE_TYPE_CONNECT || type == NSE_TYPE_CONNECT_SSL);
 
   if (status == NSE_STATUS_SUCCESS) {
     // Yeah!  Connection made to the port.  Send the appropriate probe
@@ -1313,14 +1380,15 @@ void servicescan_read_handler(nsock_pool nsp, nsock_event nse, void *mydata) {
       if (MD->isSoft && svc->probe_matched) {
 	if (strcmp(svc->probe_matched, MD->serviceName) != 0)
 	  error("WARNING:  service %s:%hi had allready soft-matched %s, but now soft-matched %s; ignoring second value\n", svc->target->NameIP(), svc->portno, svc->probe_matched, MD->serviceName);
-	// No error if its the same - that happens frequently.  For example, if we read
-	// more data for the same probe response it will probably still match.
+	// No error if its the same - that happens frequently.  For
+	// example, if we read more data for the same probe response
+	// it will probably still match.
       } else {
 	if (o.debugging > 1)
 	  if (MD->product || MD->version || MD->info)
-	    printf("Service scan match: %s:%hi is %s.  Version: |%s|%s|%s|\n", svc->target->NameIP(), svc->portno, MD->serviceName, (MD->product)? MD->product : "", (MD->version)? MD->version : "", (MD->info)? MD->info : "");
+	    printf("Service scan match: %s:%hi is %s%s.  Version: |%s|%s|%s|\n", svc->target->NameIP(), svc->portno, (svc->tunnel == SERVICE_TUNNEL_SSL)? "SSL/" : "", MD->serviceName, (MD->product)? MD->product : "", (MD->version)? MD->version : "", (MD->info)? MD->info : "");
 	  else
-	    printf("Service scan %s match: %s:%hi is %s\n", (MD->isSoft)? "soft" : "hard", svc->target->NameIP(), svc->portno, MD->serviceName);
+	    printf("Service scan %s match: %s:%hi is %s%s\n", (MD->isSoft)? "soft" : "hard", svc->target->NameIP(), svc->portno, (svc->tunnel == SERVICE_TUNNEL_SSL)? "SSL/" : "", MD->serviceName);
 	svc->probe_matched = MD->serviceName;
 	if (MD->product)
 	  Strncpy(svc->product_matched, MD->product, sizeof(svc->product_matched));
@@ -1329,16 +1397,22 @@ void servicescan_read_handler(nsock_pool nsp, nsock_event nse, void *mydata) {
 	if (MD->info) 
 	  Strncpy(svc->extrainfo_matched, MD->info, sizeof(svc->extrainfo_matched));
 	svc->softMatchFound = MD->isSoft;
-	if (!svc->softMatchFound)
-	  end_svcprobe(nsp, PROBESTATE_FINISHED_HARDMATCHED, SG, svc, nsi);
+	if (!svc->softMatchFound) {
+	  // We might be able to continue scan through a tunnel protocol 
+	  // like SSL
+	  if (scanThroughTunnel(nsp, nsi, SG, svc) == 0) 
+	    end_svcprobe(nsp, PROBESTATE_FINISHED_HARDMATCHED, SG, svc, nsi);
+	}
       }
     }
 
     if (!MD || !MD->serviceName || MD->isSoft) {
       // Didn't match... maybe reading more until timeout will help
-      // TODO: For efficiency I should be able to test if enough data has been
-      // received rather than always waiting for the reading to timeout.  For now I'll limit it
-      // to 4096 bytes just to avoid reading megs from services like chargen.  But better approach is needed.
+      // TODO: For efficiency I should be able to test if enough data
+      // has been received rather than always waiting for the reading
+      // to timeout.  For now I'll limit it to 4096 bytes just to
+      // avoid reading megs from services like chargen.  But better
+      // approach is needed.
       if (svc->currentprobe_timemsleft() > 0 && readstrlen < 4096) { 
 	nsock_read(nsp, nsi, servicescan_read_handler, svc->currentprobe_timemsleft(), svc);
       } else {
@@ -1399,6 +1473,11 @@ void servicescan_read_handler(nsock_pool nsp, nsock_event nse, void *mydata) {
       // something else nasty during the scan.  Shrug.  I'll give up on this port
       end_svcprobe(nsp, PROBESTATE_INCOMPLETE, SG, svc, nsi);
       break;
+    case EIO:
+      // Usually an SSL error of some sort (those are presently
+      // hardcoded to EIO).  I'll just try the next probe.
+      startNextProbe(nsp, nsi, SG, svc, true);
+      break;
     default:
       fatal("Unexpected error in NSE_TYPE_READ callback.  Error code: %d (%s)", err,
 	    strerror(err));
@@ -1427,7 +1506,8 @@ list<ServiceNFO *>::iterator svc;
  for(svc = SG->services_finished.begin(); svc != SG->services_finished.end(); svc++) {
    if ((*svc)->probe_state == PROBESTATE_FINISHED_HARDMATCHED) {
      (*svc)->port->setServiceProbeResults((*svc)->probe_state, 
-					  (*svc)->probe_matched, 
+					  (*svc)->probe_matched,
+					  (*svc)->tunnel,
 					  *(*svc)->product_matched? (*svc)->product_matched : NULL, 
 					  *(*svc)->version_matched? (*svc)->version_matched : NULL, 
 					  *(*svc)->extrainfo_matched? (*svc)->extrainfo_matched : NULL, 
@@ -1435,14 +1515,15 @@ list<ServiceNFO *>::iterator svc;
 
    } else if ((*svc)->probe_state == PROBESTATE_FINISHED_SOFTMATCHED) {
     (*svc)->port->setServiceProbeResults((*svc)->probe_state, 
-					  (*svc)->probe_matched, 
+					  (*svc)->probe_matched,
+					 (*svc)->tunnel,
 					  NULL, NULL, NULL, 
 					 (*svc)->getServiceFingerprint(NULL));
 
    }  else if ((*svc)->probe_state == PROBESTATE_FINISHED_NOMATCH) {
      if ((*svc)->getServiceFingerprint(NULL))
        (*svc)->port->setServiceProbeResults((*svc)->probe_state, NULL,
-					    NULL, NULL, NULL, 
+					    (*svc)->tunnel, NULL, NULL, NULL, 
 					    (*svc)->getServiceFingerprint(NULL));
    }
  }

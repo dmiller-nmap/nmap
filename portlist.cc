@@ -66,6 +66,7 @@ Port::Port() {
   serviceprobe_results = PROBESTATE_INITIAL;
   serviceprobe_service = NULL;
   serviceprobe_product = serviceprobe_version = serviceprobe_extrainfo = NULL;
+  serviceprobe_tunnel = SERVICE_TUNNEL_NONE;
   serviceprobe_fp = NULL;
 }
 
@@ -133,7 +134,7 @@ int Port::getServiceDeductions(struct serviceDeductions *sd) {
   assert(sd);
   memset(sd, 0, sizeof(struct serviceDeductions));
   sd->service_fp = serviceprobe_fp;
-
+  sd->service_tunnel = serviceprobe_tunnel;
   sd->rpc_status = rpc_status;
   sd->rpc_program = rpc_program;
   sd->rpc_lowver = rpc_lowver;
@@ -182,23 +183,28 @@ int Port::getServiceDeductions(struct serviceDeductions *sd) {
 }
 
 
-  // sname should be NULL if sres is not
-  // PROBESTATE_FINISHED_MATCHED. product,version, and/or extrainfo
-  // will be NULL if unavailable. Note that this function makes its
-  // own copy of sname and product/version/extrainfo.  This function
-  // also takes care of truncating the version strings to a
-  // 'reasonable' length if neccessary, and cleaning up any unprinable
-  // chars. (these tests are to avoid annoying DOS (or other) attacks
-  // by malicious services).  The fingerprint should be NULL unless
-  // one is available and the user should submit it.
-  void Port::setServiceProbeResults(enum serviceprobestate sres, 
-				    const char *sname,
-				    const char *product, const char *version, 
-				    const char *extrainfo, 
-				    const char *fingerprint) {
+// sname should be NULL if sres is not
+// PROBESTATE_FINISHED_MATCHED. product,version, and/or extrainfo
+// will be NULL if unavailable. Note that this function makes its
+// own copy of sname and product/version/extrainfo.  This function
+// also takes care of truncating the version strings to a
+// 'reasonable' length if neccessary, and cleaning up any unprinable
+// chars. (these tests are to avoid annoying DOS (or other) attacks
+// by malicious services).  The fingerprint should be NULL unless
+// one is available and the user should submit it.  tunnel must be
+// SERVICE_TUNNEL_NULL (normal) or SERVICE_TUNNEL_SSL (means ssl was
+// detected and we tried to tunnel through it ).
+void Port::setServiceProbeResults(enum serviceprobestate sres, 
+				  const char *sname,	
+				  enum service_tunnel_type tunnel, 
+				  const char *product, const char *version, 
+				  const char *extrainfo,
+				  const char *fingerprint) {
+
   int slen;
   serviceprobe_results = sres;
   unsigned char *p;
+  serviceprobe_tunnel = tunnel;
   if (sname) serviceprobe_service = strdup(sname);
   if (fingerprint) serviceprobe_fp = strdup(fingerprint);
 
