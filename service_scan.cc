@@ -1303,6 +1303,11 @@ int service_scan(Target *targets[], int num_targets) {
   // Now I convert the targets into a new ServiceGroup
   SG = new ServiceGroup(targets, num_targets, AP);
 
+  if (SG->services_remaining.size() == 0) {
+    delete SG;
+    return 1;
+  }
+
   starttime = time(NULL);
   if (o.verbose) {
     struct tm *tm = localtime(&starttime);
@@ -1327,15 +1332,16 @@ int service_scan(Target *targets[], int num_targets) {
   if (!o.host_timeout)
     timeout= -1;
   else 
-    timeout = TIMEVAL_MSEC_SUBTRACT(now, targets[0]->host_timeout);
+    timeout = TIMEVAL_MSEC_SUBTRACT(targets[0]->host_timeout, now);
     
-  if (timeout >= 0 && timeout < 500) { // half a second or less just won't cut it
+  if (timeout != -1 && timeout < 500) { // half a second or less just won't cut it
     targets[0]->timedout = 1;
   } else {
     // OK!  Lets start our main loop!
     looprc = nsock_loop(nsp, timeout);
     if (looprc == NSOCK_LOOP_ERROR) {
-      pfatal("nsock_loop returned error when trying to do service scan");
+      int err = nsp_geterrorcode(nsp);
+      fatal("Unexpected nsock_loop error.  Error code %d (%s)", err, strerror(err));
     } else if (looprc == NSOCK_LOOP_TIMEOUT) {
       targets[0]->timedout = 1;
     } // else we succeeded!  Should we do something in that case?

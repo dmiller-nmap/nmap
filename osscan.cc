@@ -1142,11 +1142,6 @@ int bestaccidx;
    }
  }
 
- // Now we redo the match, since target->FPR has various data (such as
- // target->FPR->numFPs) which is not in FP_matches[bestaccidx].  This is
- // kinda ugly.
- match_fingerprint(target->FPR->FPs[itry], target->FPR, 
-		     o.reference_FPs, OSSCAN_GUESS_THRESHOLD);
 
  for(i=0; i < target->FPR->numFPs; i++) {
    if (i == bestaccidx)
@@ -1162,6 +1157,14 @@ int bestaccidx;
  } 
 
  target->FPR->goodFP = bestaccidx;
+
+ // Now we redo the match, since target->FPR has various data (such as
+ // target->FPR->numFPs) which is not in FP_matches[bestaccidx].  This is
+ // kinda ugly.
+ if (target->FPR->goodFP >= 0)
+   match_fingerprint(target->FPR->FPs[target->FPR->goodFP], target->FPR, 
+		     o.reference_FPs, OSSCAN_GUESS_THRESHOLD);
+
  
  return 1;
 }

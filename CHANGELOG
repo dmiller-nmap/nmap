@@ -1,11 +1,17 @@
 # Nmap Changelog ($Id$)
 
+Nmap 3.40BETA3
+
 o Nmap now prints a "service fingerprint" for services that it is
   unable to match despite returning data.  The web submission page it
   references is not yet available.
 
 o Service detection now does RPC grinding on ports it detects to be
   running RPC.
+
+o Fixed a bug that would cause Nmap to quit with an nsock error when
+  --host_timeout was used (or when -T5 was used, which sets it
+  implicitly).
 
 o Fixed a bug that would cause Nmap to fail to print the OS
   fingerprint in certain cases.  Thanks to Ste Jones

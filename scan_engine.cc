@@ -632,7 +632,10 @@ void pos_scan(Target *target, u16 *portarray, int numports, stype scantype) {
   if (target->timedout)
     return;
 
-  if (! numports && scantype != RPC_SCAN) return; /* nothing to scan for */
+  if (!numports && scantype != RPC_SCAN) return; /* nothing to scan for */
+
+  if (scantype == RPC_SCAN && target->ports.state_counts[PORT_OPEN] == 0)
+    return; // RPC Scan only works against already known-open ports
 
   /* If it is a SYN scan and we have already figured out the states
      of all the TCP ports, might as well skip the scan (this can happen
