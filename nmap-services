@@ -437,7 +437,7 @@ set               257/udp    # secure electronic transaction
 yak-chat          258/tcp    # yak winsock personal chat
 yak-chat          258/udp    # yak winsock personal chat
 esro-gen          259/tcp    # efficient short remote operations
-esro-gen          259/udp    # efficient short remote operations
+firewall1-rdp     259/udp    # Firewall 1 proprietary RDP protocol http://www.inside-security.de/fw1_rdp_poc.html
 openport          260/tcp    # 
 openport          260/udp    # 
 nsiiops           261/tcp    # iiop name service over tls/ssl
@@ -1133,6 +1133,7 @@ iad2              1031/tcp   # BBN IAD
 iad2              1031/udp   # BBN IAD
 iad3              1032/tcp   # BBN IAD
 iad3              1032/udp   # BBN IAD
+netinfo           1033/tcp   # Netinfo is apparently on many OS X boxes.
 nim               1058/tcp   # 
 nim               1058/udp   # 
 nimreg            1059/tcp   # 
@@ -2000,7 +2001,7 @@ cucme-1           7648/udp   # cucme live video/audio server
 cucme-2           7649/udp   # cucme live video/audio server
 cucme-3           7650/udp   # cucme live video/audio server
 cucme-4           7651/udp   # cucme live video/audio server
-jserv             8007/tcp   # Apache JServ Protocol 1.x
+ajp12             8007/tcp   # Apache JServ Protocol 1.x
 ajp13             8009/tcp   # Apache JServ Protocol 1.3
 http-proxy        8080/tcp   # Common HTTP proxy/second web server port
 blackice-icecap   8081/tcp   # ICECap user console
