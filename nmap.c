@@ -55,7 +55,7 @@ signal(SIGHUP, sigdie);
 if (argc < 2 ) printusage(argv[0]);
 
 /* OK, lets parse these args! */
-while((arg = getopt(argc,fakeargv,"Ab:D:de:FfhiL:lM:Nno:P::p:qrRS:s:T:tUuw:Vv")) != EOF) {
+while((arg = getopt(argc,fakeargv,"Ab:D:de:Ffg:hiL:lM:Nno:P::p:qrRS:s:T:w:Vv")) != EOF) {
   switch(arg) {
   case 'A': o.allowall++; break;
   case 'b': 
@@ -77,6 +77,11 @@ while((arg = getopt(argc,fakeargv,"Ab:D:de:FfhiL:lM:Nno:P::p:qrRS:s:T:tUuw:Vv"))
   case 'e': strncpy(o.device, optarg,63); o.device[63] = '\0'; break;
   case 'F': fastscan++; break;
   case 'f': o.fragscan++; break;
+  case 'g': 
+    o.magic_port = atoi(optarg);
+    o.magic_port_set = 1;
+    if (!o.magic_port) fatal("-g needs nonzero argument");
+    break;    
   case 'h': 
   case '?': printusage(argv[0]);
   case 'i': o.identscan++; break;
@@ -1305,12 +1310,12 @@ if ((sd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) == -1)
 
 sock.sin_family = AF_INET;
 sock.sin_addr.s_addr = target.s_addr;
-sock.sin_port = htons(MAGIC_PORT);
+sock.sin_port = htons(o.magic_port);
 
 gettimeofday(&begin, NULL);
 if ((res = connect(sd, (struct sockaddr *) &sock, 
 		   sizeof(struct sockaddr_in))) != -1)
-  printf("You might want to change MAGIC_PORT in the include file, it seems to be listening on the target host!\n");
+  printf("You might want to use a different value of -g (or change o.magic_port in the include file), as it seems to be listening on the target host!\n");
 close(sd);
 gettimeofday(&end, NULL);
 if (end.tv_sec - begin.tv_sec > 5 ) /*uh-oh!*/
@@ -1470,7 +1475,7 @@ int tmpsocket;
 unsigned int localnet, netmask;
 char *p = NULL;
 char err0r[PCAP_ERRBUF_SIZE];
-magic_port_NBO = htons(MAGIC_PORT);
+magic_port_NBO = htons(o.magic_port);
 
 FD_ZERO(&fd_read);
 FD_ZERO(&fd_write);
@@ -1506,9 +1511,9 @@ if (pcap_lookupnet(target->device, &localnet, &netmask, err0r) < 0)
   fatal("Failed to lookup device subnet/netmask: %s", err0r);
 p = strdup(inet_ntoa(target->host));
 #ifdef HAVE_SNPRINTF
-snprintf(filter, sizeof(filter), "tcp and src host %s and dst host %s and dst port %d", p, inet_ntoa(target->source_ip), MAGIC_PORT );
+snprintf(filter, sizeof(filter), "tcp and src host %s and dst host %s and dst port %d", p, inet_ntoa(target->source_ip), o.magic_port );
 #else
-sprintf(filter, "tcp and src host %s and dst host %s and dst port %d", p, inet_ntoa(target->source_ip), MAGIC_PORT );
+sprintf(filter, "tcp and src host %s and dst host %s and dst port %d", p, inet_ntoa(target->source_ip), o.magic_port );
 #endif
 free(p);
 if (o.debugging)
@@ -1531,9 +1536,9 @@ do {
 	    perror("decoy socket trobles in syn_scan");
 	} else tmpsocket = sockets[i];
 	if (o.fragscan)
-	  send_small_fragz(tmpsocket, &o.decoys[decoy], &target->host, MAGIC_PORT,
+	  send_small_fragz(tmpsocket, &o.decoys[decoy], &target->host, o.magic_port,
 			   portarray[j], TH_SYN);
-	else send_tcp_raw(tmpsocket, &o.decoys[decoy] , &target->host, MAGIC_PORT, 
+	else send_tcp_raw(tmpsocket, &o.decoys[decoy] , &target->host, o.magic_port, 
 			  portarray[j],0,0,TH_SYN,0,0,0);
 	if (decoy != o.decoyturn) close(tmpsocket);
 	usleep(10000);
@@ -2145,9 +2150,9 @@ if (pcap_lookupnet(target->device, &localnet, &netmask, err0r) < 0)
   fatal("Failed to lookup device subnet/netmask: %s", err0r);
 p = strdup(inet_ntoa(target->host));
 #ifdef HAVE_SNPRINTF
-snprintf(filter, sizeof(filter), "tcp and src host %s and dst host %s and dst port %d", p, inet_ntoa(target->source_ip), MAGIC_PORT );
+snprintf(filter, sizeof(filter), "tcp and src host %s and dst host %s and dst port %d", p, inet_ntoa(target->source_ip), o.magic_port );
 #else
-sprintf(filter, "tcp and src host %s and dst host %s and dst port %d", p, inet_ntoa(target->source_ip), MAGIC_PORT );
+sprintf(filter, "tcp and src host %s and dst host %s and dst port %d", p, inet_ntoa(target->source_ip), o.magic_port );
 #endif
 free(p);
 if (o.debugging)
@@ -2173,8 +2178,8 @@ while(!done) {
     if (portno[i]) {
       for(decoy=0; decoy < o.numdecoys; decoy++) {
 	if (o.fragscan)
-	  send_small_fragz(rawsd, &o.decoys[decoy], &target->host, MAGIC_PORT, portno[i], scanflags);
-	else send_tcp_raw(rawsd, &o.decoys[decoy], &target->host, MAGIC_PORT, 
+	  send_small_fragz(rawsd, &o.decoys[decoy], &target->host, o.magic_port, portno[i], scanflags);
+	else send_tcp_raw(rawsd, &o.decoys[decoy], &target->host, o.magic_port, 
 			  portno[i], 0, 0, scanflags, 0, 0, 0);
 	usleep(10000); /* *WE* normally do not need this, but the target 
 			  lamer often does */
@@ -2243,7 +2248,7 @@ while(!done) {
 	if (o.verbose || o.debugging)
 	  printf("Good port %d detected by fin_scan!\n", portno[i]);
 	addport(&target->ports, portno[i], IPPROTO_TCP, NULL);
-	send_tcp_raw( rawsd, &target->source_ip, &target->host, MAGIC_PORT, portno[i], 0, 0, 
+	send_tcp_raw( rawsd, &target->source_ip, &target->host, o.magic_port, portno[i], 0, 0, 
 		scanflags, 0, 0, 0); 
 	portno[i] = trynum[i] = 0;
       }

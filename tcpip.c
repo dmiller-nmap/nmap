@@ -694,7 +694,7 @@ int getsourceip(struct in_addr *src, struct in_addr *dst) {
     {perror("Socket troubles"); return 0;}
   sock.sin_family = AF_INET;
   sock.sin_addr = *dst;
-  sock.sin_port = htons(MAGIC_PORT);
+  sock.sin_port = htons(o.magic_port);
   if (connect(sd, (struct sockaddr *) &sock, sizeof(struct sockaddr_in)) == -1)
     { perror("UDP connect()");
     close(sd);
