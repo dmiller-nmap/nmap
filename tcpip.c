@@ -412,9 +412,12 @@ if (ip->ip_p== IPPROTO_TCP) {
   }
 }
 if (readdata && i < tot_len) {
-printf("Data portion:\n");
-while(i < tot_len)  printf("%2X%c", data[i], (++i%16)? ' ' : '\n');
-printf("\n");
+  printf("Data portion:\n");
+  while(i < tot_len)  {
+    printf("%2X%c", data[i], ((i+1) %16)? ' ' : '\n');
+    i++;
+  }
+  printf("\n");
 }
 return 0;
 }
@@ -456,7 +459,10 @@ if (ip->ip_p== IPPROTO_UDP) {
 }
  if (readdata && i < tot_len) {
    printf("Data portion:\n");
-   while(i < tot_len)  printf("%2X%c", data[i], (++i%16)? ' ' : '\n');
+   while(i < tot_len)  {
+     printf("%2X%c", data[i], ((i+1)%16)? ' ' : '\n');
+     i++;
+   }
    printf("\n");
  }
  return 0;

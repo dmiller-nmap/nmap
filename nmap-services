@@ -2062,7 +2062,7 @@ amandaidx         10082/tcp  # Amanda indexing
 amidxtape         10083/tcp  # Amanda tape indexing
 pksd              11371/tcp  # PGP Public Key Server
 cce4x             12000/tcp  # ClearCommerce Engine 4.x (www.clearcommerce.com)
-NetBus            12345/tcp  # NetBus backdoor trojan
+NetBus            12345/tcp  # NetBus backdoor trojan or Trend Micro Office Scan
 NetBus            12346/tcp  # NetBus backdoor trojan
 VeritasNetbackup  13701/tcp  # vmd           server
 VeritasNetbackup  13702/tcp  # ascd          server

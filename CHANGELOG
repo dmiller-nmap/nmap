@@ -1,5 +1,8 @@
 # Nmap Changelog ($Id$)
 
+o Fixed an debug statement C ambiguity discovered by Kronos
+  (kronos@kronoz.cjb.net)
+
 Nmap 3.00
 
 o Woohoo! :)
