@@ -770,6 +770,7 @@ do {
   else {
     /* timed out */ 
     *len=0;
+    printf("leaving\n");
     return NULL;
   }
 } while(!p || (*p & 0x40) != 0x40); /* Go until we get IPv4 packet */
