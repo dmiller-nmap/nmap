@@ -1737,7 +1737,7 @@ if (!target->source_ip.s_addr) {
 if (!(pd = pcap_open_live(target->device, 92, (o.spoofsource)? 1 : 0, 1000, err0r)))
   fatal("pcap_open_live in syn_scan: %s", err0r);
 if (pcap_lookupnet(target->device, &localnet, &netmask, err0r) < 0)
-  fatal("Failed to lookup device subnet/netmask: %s", err0r);
+  fatal("Failed to lookup device (%s) subnet/netmask: %s", target->device, err0r);
 p = strdup(inet_ntoa(target->host));
 sprintf(filter, "tcp and src host %s and dst host %s and dst port %d", p, inet_ntoa(target->source_ip), o.magic_port );
 free(p);
