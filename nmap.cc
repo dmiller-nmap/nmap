@@ -315,7 +315,7 @@ int nmap_main(int argc, char *argv[]) {
       } else if (strcmp(long_options[option_index].name, "randomize_hosts") == 0
 		 || strcmp(long_options[option_index].name, "rH") == 0) {
 	o.randomize_hosts = 1;
-	o.host_group_sz = 2048;
+	o.host_group_sz = HOST_GROUP_SZ * 4;
       } else if (strcmp(long_options[option_index].name, "osscan_limit")  == 0) {
 	o.osscan_limit = 1;
       } else if (strcmp(long_options[option_index].name, "osscan_guess")  == 0

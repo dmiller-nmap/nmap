@@ -1,4 +1,4 @@
-NMAP_VERSION = 3.21CSW
+NMAP_VERSION = 3.22
 NMAP_NAME= nmap
 NMAP_URL= www.insecure.org/nmap/
 NMAP_PLATFORM=@host@
@@ -44,7 +44,8 @@ OBJS = main.o nmap.o targets.o tcpip.o nmap_error.o utils.o idle_scan.o osscan.o
 
 DEPS = nmap.h nmap_error.h targets.h idle_scan.h osscan.h output.h scan_engine.h timing.h tcpip.h utils.h global_structures.h charpool.h services.h protocols.h nmap_rpc.h portlist.h NmapOps.h TargetGroup.h Target.h
 
-%.o : %.cc
+# %.o : %.cc -- nope this is a GNU extension
+.cc.o:
 	$(CXX) -c $(CPPFLAGS) $(CXXFLAGS) $< -o $@
 
 all: $(TARGET) $(TARGETNMAPFE)

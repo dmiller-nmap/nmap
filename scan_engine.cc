@@ -297,8 +297,12 @@ static int get_connect_results(Target *target,
 	      } else {
 		s_in = (struct sockaddr_in *) &sin;
 		s_in6 = (struct sockaddr_in6 *) &sin;
-		if ((o.af() == AF_INET && 
-		    current->portno != ntohs(s_in->sin_port)) || (o.af() == AF_INET6 && current->portno != ntohs(s_in6->sin6_port))) {
+		if ((o.af() == AF_INET &&
+		    current->portno != ntohs(s_in->sin_port))
+#ifdef HAVE_IPV6
+		    || (o.af() == AF_INET6 && current->portno != ntohs(s_in6->sin6_port))
+#endif
+) {
 		  error("Mismatch!!!! we think we have port %hu but we really have a different one", (u16) current->portno);
 		}
 	      }
@@ -308,7 +312,11 @@ static int get_connect_results(Target *target,
 	      }
 	      s_in = (struct sockaddr_in *) &sout;
 	      s_in6 = (struct sockaddr_in6 *) &sout;
-	      if ((o.af() == AF_INET && htons(s_in->sin_port) == current->portno) || (o.af() == AF_INET6 && htons(s_in6->sin6_port) == current->portno)) {
+	      if ((o.af() == AF_INET && htons(s_in->sin_port) == current->portno) 
+#ifdef HAVE_IPV6
+|| (o.af() == AF_INET6 && htons(s_in6->sin6_port) == current->portno)
+#endif
+) {
 		/* Linux 2.2 bug can lead to bogus successful connect()ions
 		   in this case -- we treat the port as bogus even though it
 		   is POSSIBLE that this is a real connection */
@@ -757,7 +765,7 @@ void pos_scan(Target *target, u16 *portarray, int numports, stype scantype) {
   if (o.debugging || o.verbose) {
     struct tm *tm = localtime(&starttime);
     assert(tm);
-    log_write(LOG_STDOUT, "Initiating %s against %s at %0d:%0d\n", scantype2str(scantype), target->NameIP(hostname, sizeof(hostname)), tm->tm_hour, tm->tm_min);
+    log_write(LOG_STDOUT, "Initiating %s against %s at %02d:%02d\n", scantype2str(scantype), target->NameIP(hostname, sizeof(hostname)), tm->tm_hour, tm->tm_min);
   }
 
   do {
@@ -1174,7 +1182,7 @@ void bounce_scan(Target *target, u16 *portarray, int numports,
   if (o.verbose || o.debugging) {
     struct tm *tm = localtime(&starttime);
     assert(tm);
-    log_write(LOG_STDOUT, "Initiating TCP ftp bounce scan against %s at %0d:%0d\n", target->NameIP(hostname, sizeof(hostname)), tm->tm_hour, tm->tm_min );
+    log_write(LOG_STDOUT, "Initiating TCP ftp bounce scan against %s at %02d:%02d\n", target->NameIP(hostname, sizeof(hostname)), tm->tm_hour, tm->tm_min );
   }
   for(i=0; i < numports; i++) {
 
@@ -1406,7 +1414,7 @@ void super_scan(Target *target, u16 *portarray, int numports,
   if (o.debugging || o.verbose) {
     struct tm *tm = localtime(&starttime);
     assert(tm);
-    log_write(LOG_STDOUT, "Initiating %s against %s at %0d:%0d\n", scantype2str(scantype), target->NameIP(hostname, sizeof(hostname)), tm->tm_hour, tm->tm_min);
+    log_write(LOG_STDOUT, "Initiating %s against %s at %02d:%02d\n", scantype2str(scantype), target->NameIP(hostname, sizeof(hostname)), tm->tm_hour, tm->tm_min);
   }
 
   do {

@@ -7,12 +7,26 @@ o I added UDP-based "ping" scanning.  The -PU option can take an
   open).  This one is likely to work best against closed ports, since
   many open ports don't respond to empty requests.
 
+o Fixed (I hope) problem where Nmap would abort, complaining that
+  "Assertion `pt->down_this_block > 0' failed".  Thanks to
+  ray@24hoursecurity.org and mugz@x-mafia.com for reporting and
+  helping me debug this problem.
+
+o Fixed a GCC dependency reported by Ayamura Kikuchi
+  (ayamura@keio.net)
+
 o Fixed an "assertion failure" which would cause Nmap to exit when you
   specify a --max_rtt_timeout below 3000.  Thanks to Tammy Rathbun
   (rathbun2@llnl.gov) and Jan Roger Wilkens (jrw@proseq.net) for
   reporting this.
 
-o Fixed a GCC dependency reported by Ayamura KIKUCHI (ayamura@keio.net)
+o Fixed bug that caused Nmap to ignore certain RST responses when you
+  do both -PS and -PA.
+
+o Modified ping scan to work better when many instances of Nmap are
+  executed concurrently.
+
+o Fixed a portability problem that caused BSD Make to bail out.
 
 o Fixed a divide by zero error caused when nonroot users (on UNIX)
   explicitly request ICMP pings (which require root privileges).  Now it
@@ -34,7 +48,13 @@ o Removed superfluous "addport" line in the XML output (patch from Max
   Schubert (nmap@webwizarddesign.com)).
 
 o Fixed an assertion failure crash related to combining port 0 scans
-and OS scan.  Thanks to A.Jones@mvv.de for reporting this.
+  and OS scan.  Thanks to A.Jones@mvv.de for reporting this.
+
+o Fixed some compilation problems on systems without IPv6 support --
+  patch sent by Jochen Erwied (Jochen.Erwied@mbs-software.info)
+
+o Applied patch from Jochen Erwied (Jochen.Erwied@mbs-software.info)
+  which fixes the format strings used for printing certain timestamps.
 
 Nmap 3.20
 
@@ -1221,7 +1241,6 @@ state name in machine parseable logs.  It used to looke like:
    versions of Nmap supported it (noted by George Kurtz).
 
 ** Version 2.3BETA17
-
 
 -- Added ACK scanning.  This scan technique (which van Houser and
    others have been bugging me to add for years :), is great for
