@@ -290,7 +290,7 @@ void NmapOps::ValidateOptions() {
     error("WARNING:  -g is incompatible with the default connect() scan (-sT).  Use a raw scan such as -sS if you want to set the source port.");
   }
 
-  if (min_parallelism > max_parallelism) {
+  if (max_parallelism && min_parallelism && (min_parallelism > max_parallelism)) {
     fatal("--min_parallelism must be less than or equal to --max_parallelism");
   }
   

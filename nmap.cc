@@ -253,6 +253,12 @@ int nmap_main(int argc, char *argv[]) {
 	if (o.scanflags < 0) {
 	  fatal("--scanflags option must be a number between 0 and 255 (inclusive) or a string like \"URGPSHFIN\".");
 	}
+      } else if (strcmp(long_options[option_index].name, "min_parallelism") == 0 ) {
+	o.min_parallelism = atoi(optarg); 
+	if (o.min_parallelism < 1) fatal("Argument to --min_parallelism must be at least 1!");
+	if (o.min_parallelism > 100) {
+	  error("Warning: Your --min_parallelism option is absurdly high! Don't complain to Fyodor if all hell breaks loose!");
+	}
       } else if (strcmp(long_options[option_index].name, "host_timeout") == 0) {
 	o.host_timeout = strtoul(optarg, NULL, 10);
 	if (o.host_timeout <= 200) {
@@ -263,12 +269,6 @@ int nmap_main(int argc, char *argv[]) {
 	wo.listinterfaces = 1; 
       } else if (strcmp(long_options[option_index].name, "win_norawsock") == 0 ) { 
 	wo.norawsock = 1; 
-      } else if (strcmp(long_options[option_index].name, "min_parallelism") == 0 ) {
-	o.min_parallelism = atoi(optarg); 
-	if (o.min_parallelism < 1) fatal("Argument to --min_parallelism must be at least 1!");
-	if (o.min_parallelism > 100) {
-	  error("Warning: Your --min_parallelism option is absurdly high! Don't complain to Fyodor if all hell breaks loose!");
-	}
       } else if (strcmp(long_options[option_index].name, "win_forcerawsock") == 0 ) { 
 	wo.forcerawsock = 1; 
       } else if (strcmp(long_options[option_index].name, "win_nopcap") == 0 ) { 
