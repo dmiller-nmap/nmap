@@ -67,7 +67,8 @@ rm -rf $RPM_BUILD_ROOT
 %doc docs/README docs/copying.html docs/nmap-fingerprinting-article.txt
 %doc docs/nmap.deprecated.txt docs/nmap.usage.txt docs/nmap_doc.html
 %doc docs/nmap_manpage.html docs/nmap_manpage-es.html
-%doc docs/nmap_manpage-fr.html docs/nmap_manpage-lt.html
+%doc docs/nmap_manpage-fr.html docs/nmap_manpage-lt.html 
+%doc docs/nmap_manpage-ru.html
 %{prefix}/bin/nmap
 %{prefix}/share/nmap
 %{prefix}/man/man1/nmap.1.gz

@@ -94,7 +94,8 @@ distro:
 	cd docs; cp README copying.html nmap-fingerprinting-article.txt \
                     nmap.1 nmap.deprecated.txt nmap.usage.txt nmap_doc.html \
                     nmap_manpage-es.html nmap_manpage-fr.html \
-                    nmap_manpage-lt.html nmap_manpage.html \
+                    nmap_manpage-lt.html nmap_manpage-ru.html \
+	            nmap_manpage.html \
                     nmap_spanish.1 nmap_lithuanian.1 nmapfe.1 xnmap.1 \
                     /usr/tmp/nmap-$(NMAP_VERSION)/docs
 	$(SHTOOL) mkdir /usr/tmp/nmap-$(NMAP_VERSION)/nmapfe
