@@ -122,6 +122,11 @@ void *realloc();
 #define BSDUFIX(x) ntohs(x)
 #endif
 
+/* Bogus TCP flag!!!  Krad! */
+#define TH_BOGUS 64
+#define TH_BOG 64
+
+
 #ifndef HAVE_STRUCT_IP
 #define HAVE_STRUCT_IP
 

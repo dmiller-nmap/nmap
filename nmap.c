@@ -1,4 +1,5 @@
 #include "nmap.h"
+#include "osscan.h"
 
 /* global options */
 extern char *optarg;
@@ -61,7 +62,7 @@ signal(SIGHUP, sigdie);
 if (argc < 2 ) printusage(argv[0]);
 
 /* OK, lets parse these args! */
-while((arg = getopt(argc,fakeargv,"Ab:D:de:Ffg:hIi:L:M:Nno:P::p:qrRS:s:T:w:Vv")) != EOF) {
+while((arg = getopt(argc,fakeargv,"Ab:D:de:Ffg:hIi:L:M:NnOo:P::p:qrRS:s:T:w:Vv")) != EOF) {
   switch(arg) {
   case 'A': o.allowall++; break;
   case 'b': 
@@ -79,7 +80,7 @@ while((arg = getopt(argc,fakeargv,"Ab:D:de:Ffg:hIi:L:M:Nno:P::p:qrRS:s:T:w:Vv"))
     fatal("Failed to resolve decoy host: %s (must be hostname or IP address", optarg);
     }
     break;
-  case 'd': o.debugging++; break;
+  case 'd': o.debugging++; o.verbose++; break;
   case 'e': strncpy(o.device, optarg,63); o.device[63] = '\0'; break;
   case 'F': fastscan++; break;
   case 'f': o.fragscan++; break;
@@ -118,6 +119,10 @@ while((arg = getopt(argc,fakeargv,"Ab:D:de:Ffg:hIi:L:M:Nno:P::p:qrRS:s:T:w:Vv"))
     break;
   case 'n': o.noresolve++; break;
   case 'N': o.force++; break;
+  case 'O': 
+    o.osscan++; 
+    o.reference_FPs = parse_fingerprint_reference_file();
+    break;
   case 'o': 
     if (o.logfd) fatal("Only one log filename allowed");
     o.logfd = fopen(optarg, "w");
@@ -161,7 +166,10 @@ while((arg = getopt(argc,fakeargv,"Ab:D:de:Ffg:hIi:L:M:Nno:P::p:qrRS:s:T:w:Vv"))
 	case 'P':  o.pingscan++;break;
 	case 'S':  o.synscan++;break;
 	case 'T':  o.connectscan++;break;
-	case 'U':  o.udpscan++;break;
+	case 'U':  
+	  printf("WARNING:  -sU is now UDP scan -- for TCP FIN scan use -sF\n");
+	  o.udpscan++;
+	  break;
 	case 'X':  o.xmasscan++;break;
 	default:  error("Scantype %c not supported\n",*p); printusage(argv[0]); break;
 	}
@@ -292,6 +300,11 @@ starttime = time(NULL);
 while((host_spec = grab_next_host_spec(inputfd, argc, fakeargv))) {
   while((currenths = nexthost(host_spec, lookahead, o.ptime)) && currenths->host.s_addr) {
     numhosts_scanned++;
+    /* Ugly temporary hack to init timeout info */
+    currenths->to.srtt = (currenths->rtt > 0)? 4 * currenths->rtt : 1000000;
+    currenths->to.rttvar = (currenths->rtt > 0)? currenths->rtt / 2 : 1000000;
+    currenths->to.timeout = currenths->to.srtt + 4 * currenths->to.rttvar;
+
     /*    printf("Nexthost() returned: %s\n", inet_ntoa(currenths->host));*/
     target = NULL;
     if (((currenths->flags & HOST_UP) || resolve_all) && !o.noresolve)
@@ -361,13 +374,17 @@ o.decoys[o.decoyturn] = currenths->source_ip;
       if (bouncescan) {
 	if (ftp.sd <= 0) ftp_anon_connect(&ftp);
 	if (ftp.sd > 0) bounce_scan(currenths, ports, &ftp);
-	  }
+      }
       /*      if (o.udpscan) {
 	if (!o.isr00t || o.lamerscan) 
 	  lamer_udp_scan(currenths, ports);
 
 	else udp_scan(currenths, ports);
 	}*/
+      
+      if (o.osscan) {
+	os_scan(currenths);
+      }
     
       if (!currenths->ports && !o.pingscan) {
 	nmap_log("No ports open for host %s (%s)\n", currenths->name,
@@ -923,6 +940,8 @@ if (*ports) {
     current = *ports;
     current->portno = portno;
     current->proto = protocol;
+    current->confidence = CONF_HIGH;
+    current->state = PORT_OPEN;
     if (owner && *owner) {
       len = strlen(owner);
       current->owner = malloc(sizeof(char) * (len + 1));
@@ -946,6 +965,8 @@ if (*ports) {
     tmp = current->next;
     tmp->portno = portno;
     tmp->proto = protocol;
+    tmp->confidence = CONF_HIGH;
+    tmp->state = PORT_OPEN;
     if (owner && *owner) {
       len = strlen(owner);
       tmp->owner = malloc(sizeof(char) * (len + 1));
@@ -960,6 +981,8 @@ else { /* Case 3, list is null */
   tmp = *ports;
   tmp->portno = portno;
   tmp->proto = protocol;
+  tmp->confidence = CONF_HIGH;
+  tmp->state = PORT_OPEN;
   if (owner && *owner) {
     len = strlen(owner);
     tmp->owner = safe_malloc(sizeof(char) * (len + 1));
@@ -1830,11 +1853,6 @@ portlist super_scan(struct hoststruct *target, unsigned short *portarray, stype 
   int starttime, delta;
   unsigned short newport;
   struct hostent *myhostent = NULL;
-  struct timeout_info {
-    int srtt; /* Smoothed rtt estimate (microseconds) */
-    int rttvar; /* Rout trip time variance */
-    int timeout; /* Current timeout threshold (microseconds) */
-  } to;
 
   struct f00 {
     unsigned short portno;
@@ -1857,9 +1875,11 @@ portlist super_scan(struct hoststruct *target, unsigned short *portarray, stype 
   scan = safe_malloc(o.numports * sizeof(struct f00));
 
   /* Initialize timeout info */
-  to.srtt = (target->rtt > 0)? 4 * target->rtt : 1000000;
-  to.rttvar = (target->rtt > 0)? target->rtt / 2 : 1000000;
-  to.timeout = to.srtt + 4 * to.rttvar;
+  /*
+  target->to.srtt = (target->rtt > 0)? 4 * target->rtt : 1000000;
+  target->to.rttvar = (target->rtt > 0)? target->rtt / 2 : 1000000;
+  target->to.timeout = target->to.srtt + 4 * target->to.rttvar;
+  */
 
   /* Initialize our portlist (scan) */
   for(i = 0; i < o.numports; i++) {
@@ -1904,7 +1924,7 @@ if (!(pd = pcap_open_live(target->device, 92,  (o.spoofsource)? 1 : 0, 20, err0r
 if (pcap_lookupnet(target->device, &localnet, &netmask, err0r) < 0)
   fatal("Failed to lookup device subnet/netmask: %s", err0r);
 p = strdup(inet_ntoa(target->host));
-sprintf(filter, "(icmp and src host %s and dst host %s) or (tcp and src host %s and dst host %s and ( dst port %d or dst port %d))", p, inet_ntoa(target->source_ip), p, inet_ntoa(target->source_ip), o.magic_port , o.magic_port + 1);
+sprintf(filter, "(icmp and dst host %s) or (tcp and src host %s and dst host %s and ( dst port %d or dst port %d))", inet_ntoa(target->source_ip), p, inet_ntoa(target->source_ip), o.magic_port , o.magic_port + 1);
  free(p);
  if (o.debugging)
    printf("Packet capture filter: %s\n", filter);
@@ -1936,7 +1956,7 @@ if (o.debugging || o.verbose)
       for( current = testinglist; current ; current = next) {
 	next = (current->next > -1)? &scan[current->next] : NULL;
 	if (current->state == port_testing) {
-	  if ( TIMEVAL_SUBTRACT(now, current->sent[current->trynum]) > to.timeout) {
+	  if ( TIMEVAL_SUBTRACT(now, current->sent[current->trynum]) > target->to.timeout) {
 	    if (current->trynum > 0) {
 	      /* We consider this port valid, move it to open list */
 	      if (o.debugging > 1) { printf("Moving port %hi to the open list\n", current->portno); }
@@ -2072,18 +2092,18 @@ if (o.debugging || o.verbose)
 	  }
 	  gettimeofday(&now, NULL);
 	  if (current->state == port_closed && (packet_trynum < 0)) {
-	    to.rttvar *= 1.2;
-	    if (o.debugging) { printf("Late packet, couldn't figure out sendno so we do varianceincrease to %d\n", to.rttvar); 
+	    target->to.rttvar *= 1.2;
+	    if (o.debugging) { printf("Late packet, couldn't figure out sendno so we do varianceincrease to %d\n", target->to.rttvar); 
 	    }
 	  } else if (packet_trynum > -1) {		
 	    /* Update our records */
-	    delta = TIMEVAL_SUBTRACT(now,current->sent[packet_trynum]) - to.srtt;
-	    if (o.debugging > 1) printf("Got packet (trynum %d, packetnum %d), delta %d srtt %d rttvar %d timeout %d ->", current->trynum, packet_trynum, delta, to.srtt, to.rttvar, to.timeout);
+	    delta = TIMEVAL_SUBTRACT(now,current->sent[packet_trynum]) - target->to.srtt;
+	    if (o.debugging > 1) printf("Got packet (trynum %d, packetnum %d), delta %d srtt %d rttvar %d timeout %d ->", current->trynum, packet_trynum, delta, target->to.srtt, target->to.rttvar, target->to.timeout);
 	    numqueries_ideal = MIN(numqueries_ideal + (packet_incr/numqueries_ideal), max_width);
-	    to.srtt += delta >> 3;
-	    to.rttvar += (ABS(delta) - to.rttvar) >> 2;
-	    to.timeout = to.srtt + (to.rttvar << 2);
-	    if (o.debugging > 1) printf("srtt %d rttvar %d timeout %d senddelay %d dropped %d freshportstried %d\n",  to.srtt, to.rttvar, to.timeout, senddelay, dropped, freshportstried);
+	    target->to.srtt += delta >> 3;
+	    target->to.rttvar += (ABS(delta) - target->to.rttvar) >> 2;
+	    target->to.timeout = target->to.srtt + (target->to.rttvar << 2);
+	    if (o.debugging > 1) printf("srtt %d rttvar %d timeout %d senddelay %d dropped %d freshportstried %d\n",  target->to.srtt, target->to.rttvar, target->to.timeout, senddelay, dropped, freshportstried);
 	    if (packet_trynum > 0 && current->trynum > 0) {
 	      /* The first packet was apparently lost, slow down */
 	      dropped++;

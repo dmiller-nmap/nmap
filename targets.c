@@ -215,6 +215,7 @@ else {
 }
 
 
+
 void massping(struct hoststruct *hostbatch, int num_hosts, int pingtimeout) {
 int num_responses = 0;
 int i=0;

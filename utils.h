@@ -13,6 +13,9 @@
 #ifndef ABS
 #define ABS(x) (((x) >= 0)?(x):(-x)) 
 #endif
+#ifndef MOD_DIFF
+#define MOD_DIFF(a,b) (unsigned long) (MIN((unsigned long)(a) - (unsigned long ) (b), (unsigned long )(b) - (unsigned long) (a)))
+#endif
 #ifndef FALSE
 #define FALSE 0
 #endif
