@@ -49,18 +49,7 @@
 
 #include "tcpip.h"
 
-/* Globals */
-int jumpok = 0;
-static jmp_buf jmp_env;
-
 extern struct ops o;
-
-/* Sig_ALRM handler */
-void sig_alarm(int signo) {
-if (jumpok)
-  longjmp(jmp_env, 1);
-return;
-}
 
 void sethdrinclude(int sd) {
 #ifdef IP_HDRINCL

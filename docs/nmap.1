@@ -408,15 +408,31 @@ This logs the results of your scans in a normal
 .B human readable 
 form into the file you specify as an argument.
 .TP
-.B \-oM <logfilename>
+.B \-oX <logfilename>
+This logs the results of your scans in
+.B XML
+form into the file you specify as an argument.  This allows programs
+to easily capture and interpret Nmap results.  You can give the
+argument \'-\' (without quotes) to shoot output into stdout (for shell
+pipelines, etc).  In this case normal output will be suppressed.
+Watch out for error messages if you use this (they will still go to
+stderr).  Also note that \'-v\' may cause some extra information to
+be printed.
+.TP
+.B \-oG <logfilename>
 This logs the results of your scans in a
-.B machine parseable
-form into the file you specify as an argument.  You can give
-the argument \'-\' (without quotes) to shoot output into
-stdout (for shell pipelines, etc).  In this case normal
-output will be suppressed.  Watch out for error messages if
-you use this (they will still go to stderr).  Also note that \'-v\'
-will cause some extra information to be printed.
+.B grepable
+form into the file you specify as an argument.  This simple format
+provides all the information on one line (so you can easily grep for
+port or OS information and see all the IPs.  This used to be the
+preferred mechanism for programs to interact with Nmap, but now we
+recommend XML output (-oX instead).  This simple format may not
+contain as much information as the other formats.  You can give the
+argument \'-\' (without quotes) to shoot output into stdout (for shell
+pipelines, etc).  In this case normal output will be suppressed.
+Watch out for error messages if you use this (they will still go to
+stderr).  Also note that \'-v\' will cause some extra information to
+be printed.
 .TP
 .B \-oS <logfilename>
 thIs l0gz th3 r3suLtS of YouR ScanZ iN a

@@ -1,8 +1,21 @@
 # Nmap Changelog
 
+** Version 2.54BETA6
+
+-- Added XML output (-oX).  Hopefully this will help those of you
+   writing Nmap front ends and other tools that utilize Nmap.  The
+   "machine-readable" output has been renamed "grepable" (-oG) to
+   emphasize that XML is now the preferred machine-readable output
+   format.  But don't worry if your tool uses -oM , that format (and
+   the deprecated -oM flag) won't go away any time soon (if ever).
+
 -- Applied patch from Stefan Rapp <s.rapp@hrz.uni-dortmund.de> which fixes
    a variable argument integer promotion problem in the new snprintf 
    compatability file.
+
+-- Reorganized output-related routines so that they now reside in
+   output.c & output.h.  Let me know if I accidently screwed up the
+   behavior of any scan types in the process.
 
 ** Version 2.54BETA5
 

@@ -309,7 +309,7 @@
    int numhosts_scanned = 0;
    char **host_exp_group;
    int num_host_exp_groups = 0;
-   char *machinefilename = NULL, *kiddiefilename = NULL, *normalfilename = NULL;
+   char *machinefilename = NULL, *kiddiefilename = NULL, *normalfilename = NULL, *xmlfilename = NULL;
    struct hostgroup_state hstate;
    int numhosts_up = 0;
    int starttime;
@@ -346,8 +346,10 @@
      {"initial_rtt_timeout", required_argument, 0, 0},
      {"oN", required_argument, 0, 0},
      {"oM", required_argument, 0, 0},  
+     {"oG", required_argument, 0, 0},  
      {"oS", required_argument, 0, 0},
      {"oH", required_argument, 0, 0},  
+     {"oX", required_argument, 0, 0},  
      {"iL", required_argument, 0, 0},  
      {"iR", no_argument, 0, 0},  
      {"initial_rtt_timeout", required_argument, 0, 0},
@@ -434,13 +436,17 @@
 	 }   
        } else if (strcmp(long_options[option_index].name, "oN") == 0) {
 	 normalfilename = optarg;
-       } else if (strcmp(long_options[option_index].name, "oM") == 0) {
+       } else if (strcmp(long_options[option_index].name, "oG") == 0 ||
+		  strcmp(long_options[option_index].name, "oM") == 0) {
 	 machinefilename = optarg;
        } else if (strcmp(long_options[option_index].name, "oS") == 0) {
 	 kiddiefilename = optarg;
        } else if (strcmp(long_options[option_index].name, "oH") == 0) {
 	 fatal("HTML output is not yet supported");
-       } else if (strcmp(long_options[option_index].name, "iL") == 0) {
+       } else if (strcmp(long_options[option_index].name, "oX") == 0) {
+	 xmlfilename = optarg;
+       } 
+       else if (strcmp(long_options[option_index].name, "iL") == 0) {
 	 if (inputfd) {
 	   fatal("Only one input filename allowed");
 	 }
@@ -677,6 +683,8 @@
     log_open(LOG_MACHINE, o.append_output, machinefilename);
   if (kiddiefilename)
     log_open(LOG_SKID, o.append_output, kiddiefilename);
+  if (xmlfilename)
+    log_open(LOG_XML, o.append_output, xmlfilename);
 
   /* Now we check the option sanity */
   /* Insure that at least one scantype is selected */
@@ -852,15 +860,30 @@
   }
   fflush(stdout);
 
-    timep = time(NULL);
+  timep = time(NULL);
+  
+  /* Brief info incase they forget what was scanned */
+  Strncpy(mytime, ctime(&timep), sizeof(mytime));
+  chomp(mytime);
+  log_write(LOG_XML, "<?xml version=\"1.0\" ?>\n<!-- ");
+  log_write(LOG_NORMAL|LOG_MACHINE, "# ");
+  log_write(LOG_NORMAL|LOG_MACHINE|LOG_XML, "%s (V. %s) scan initiated %s as: ", NMAP_NAME, NMAP_VERSION, mytime);
+  
 
-    /* Brief info incase they forget what was scanned */
-    Strncpy(mytime, ctime(&timep), sizeof(mytime));
-    chomp(mytime);
-  log_write(LOG_NORMAL|LOG_MACHINE, "# %s (V. %s) scan initiated %s as: ", NMAP_NAME, NMAP_VERSION, mytime);
+  for(i=0; i < argc; i++) log_write(LOG_NORMAL|LOG_MACHINE|LOG_XML,"%s ", fakeargv[i]);
+  log_write(LOG_XML, "-->");
+  log_write(LOG_NORMAL|LOG_MACHINE|LOG_XML,"\n");  
 
-  for(i=0; i < argc; i++) log_write(LOG_NORMAL|LOG_MACHINE,"%s ", fakeargv[i]);
-  log_write(LOG_NORMAL|LOG_MACHINE,"\n");  
+  log_write(LOG_XML, "<nmaprun scanner=\"nmap\" args=\"");
+  for(i=0; i < argc; i++) 
+    log_write(LOG_XML, (i == argc-1)? "%s\" " : "%s ", fakeargv[i]);
+
+  log_write(LOG_XML, "start=\"%d\" version=\"%s\" xmloutputversion=\"1.0\">\n",
+	    timep, NMAP_VERSION);
+
+  output_xml_scaninfo_records(ports, o.numports);
+  log_write(LOG_XML, "<verbose level=\"%d\" />\n<debugging level=\"%d\" />\n",
+	    o.verbose, o.debugging);
 
   /* Before we randomize the ports scanned, lets output them to machine 
      parseable output */
@@ -907,6 +930,7 @@
     }
     if (num_host_exp_groups == 0)
       break;
+
     hostgroup_state_init(&hstate, o.host_group_sz, o.randomize_hosts, 
 			 host_exp_group, num_host_exp_groups);
   
@@ -914,19 +938,19 @@
       numhosts_scanned++;
       if (currenths->flags & HOST_UP && !o.listscan) 
 	numhosts_up++;
-
+      
       /* Set timeout info */
       currenths->timedout = 0;
       if (o.host_timeout) {
 	gettimeofday(&currenths->host_timeout, NULL);
-
+	
 	/* Must go through all this to avoid int overflow */
 	currenths->host_timeout.tv_sec += o.host_timeout / 1000;
 	currenths->host_timeout.tv_usec += (o.host_timeout % 1000) * 1000;
 	currenths->host_timeout.tv_sec += currenths->host_timeout.tv_usec / 1000000;
 	currenths->host_timeout.tv_usec %= 1000000;
       }
-    
+      
       /*    printf("Nexthost() returned: %s\n", inet_ntoa(currenths->host));*/
       target = NULL;
       if (((currenths->flags & HOST_UP) || resolve_all) && !o.noresolve)
@@ -937,60 +961,20 @@
       else {
 	currenths->name = emptystring;
       }
-
+      
       if (o.source) memcpy(&currenths->source_ip, o.source, sizeof(struct in_addr));
-      if (o.listscan) {
-	log_write(LOG_STDOUT|LOG_NORMAL|LOG_SKID, "Host %s (%s) not scanned\n", currenths->name, inet_ntoa(currenths->host));
-	log_write(LOG_MACHINE, "Host: %s (%s)\tStatus: Unknown\n", inet_ntoa(currenths->host), currenths->name);
-      } else if (!o.pingscan) {
-	if (o.pingtype != PINGTYPE_NONE && o.verbose && 
-	    !currenths->wierd_responses) {
-	  if (currenths->flags & HOST_UP) 
-	    log_write(LOG_STDOUT, "Host %s (%s) appears to be up ... good.\n", currenths->name, inet_ntoa(currenths->host));
-	  else  {  
-	    if (resolve_all) {	  
-	      log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Host %s (%s) appears to be down, skipping it.\n", currenths->name, inet_ntoa(currenths->host));
-	    }
-	    else {
-	      log_write(LOG_STDOUT,"Host %s (%s) appears to be down, skipping it.\n", currenths->name, inet_ntoa(currenths->host));
-	    }
-	    log_write(LOG_MACHINE, "Host: %s (%s)\tStatus: Down\n", inet_ntoa(currenths->host), currenths->name);
-	  }
-	}
-      }
-      else {
-	if (!currenths->wierd_responses) {	
-	  if (currenths->flags & HOST_UP) {  
-	    log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Host %s (%s) appears to be up.\n", currenths->name, inet_ntoa(currenths->host));
-	    log_write(LOG_MACHINE,"Host: %s (%s)\tStatus: Up\n", inet_ntoa(currenths->host), currenths->name);
-	  }
-	  else 
-	    if (o.verbose || o.debugging || resolve_all) {    
-	      if (resolve_all)
-		log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Host %s (%s) appears to be down.\n", currenths->name, inet_ntoa(currenths->host));
-	      else log_write(LOG_STDOUT,"Host %s (%s) appears to be down.\n", currenths->name, inet_ntoa(currenths->host));
-	      log_write(LOG_MACHINE, "Host: %s (%s)\tStatus: Down\n", inet_ntoa(currenths->host), currenths->name);
-	    }
-	}
-      }
-
-      if (currenths->wierd_responses) {  
-	if (!(currenths->flags & HOST_UP))
-	  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Host  %s (%s) seems to be a subnet broadcast address (returned %d extra pings).  Skipping host.\n",  currenths->name, inet_ntoa(currenths->host), currenths->wierd_responses);
-	else
-	  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Host  %s (%s) seems to be a subnet broadcast address (returned %d extra pings).  Still scanning it due to positive ping response from its own IP.\n",  currenths->name, inet_ntoa(currenths->host), currenths->wierd_responses);
-	log_write(LOG_MACHINE,"Host: %s (%s)\tStatus: Smurf (%d responses)\n",  inet_ntoa(currenths->host), currenths->name, currenths->wierd_responses);
-      }
- 
+      log_write(LOG_XML, "<host>");
+      write_host_status(currenths, resolve_all);
+      
       /* The !currenths->wierd_responses was commented out after I found
 	 a smurf address which DID allow port scanninng and you could even
 	 telnetthere.  wierd :0 
 	 IGNORE THAT COMMENT!  The check is back again ... for now 
 	 NOPE -- gone again */
-    
+      
       if (currenths->flags & HOST_UP /*&& !currenths->wierd_responses*/ &&
 	  !o.pingscan && !o.listscan) {
-   
+	
 	if (currenths->flags & HOST_UP && !currenths->source_ip.s_addr && ( o.windowscan || o.synscan || o.finscan || o.maimonscan || o.udpscan || o.nullscan || o.xmasscan || o.ackscan || o.ipprotscan )) {
 	  if (gethostname(myname, MAXHOSTNAMELEN) || 
 	      !(target = gethostbyname(myname)))
@@ -1001,129 +985,64 @@
 	    sourceaddrwarning = 1;
 	  }
 	}
-   
+	
 	/* Figure out what link-layer device (interface) to use (ie eth0, ppp0, etc) */
 	if (!*currenths->device && currenths->flags & HOST_UP && (o.nullscan || o.xmasscan || o.ackscan || o.udpscan || o.finscan || o.maimonscan ||  o.synscan || o.osscan || o.windowscan || o.ipprotscan) && (ipaddr2devname( currenths->device, &currenths->source_ip) != 0))
 	  fatal("Could not figure out what device to send the packet out on!  You might possibly want to try -S (but this is probably a bigger problem).  If you are trying to sp00f the source of a SYN/FIN scan with -S <fakeip>, then you must use -e eth0 (or other devicename) to tell us what interface to use.\n");
 	/* Set up the decoy */
 	o.decoys[o.decoyturn] = currenths->source_ip;
-   
+	
 	/* Time for some actual scanning! */    
 	if (o.synscan) pos_scan(currenths, ports, SYN_SCAN);
 	if (o.windowscan) pos_scan(currenths, ports, WINDOW_SCAN);
 	if (o.connectscan) pos_scan(currenths, ports, CONNECT_SCAN);      
 	if (o.ackscan) pos_scan(currenths, ports, ACK_SCAN);
-
+	
 	if (o.finscan) super_scan(currenths, ports, FIN_SCAN);
 	if (o.xmasscan) super_scan(currenths, ports, XMAS_SCAN);
 	if (o.nullscan) super_scan(currenths, ports, NULL_SCAN);
 	if (o.maimonscan) super_scan(currenths, ports, MAIMON_SCAN);
 	if (o.udpscan) super_scan(currenths, ports, UDP_SCAN);
 	if (o.ipprotscan) super_scan(currenths, ports, IPPROT_SCAN);
-   
+	
 	if (o.bouncescan) {
 	  if (ftp.sd <= 0) ftp_anon_connect(&ftp);
 	  if (ftp.sd > 0) bounce_scan(currenths, ports, &ftp);
 	}
-
+	
 	/* This scantype must be after any TCP or UDP scans ... */
 	if (o.rpcscan)  pos_scan(currenths, ports, RPC_SCAN);
-
-
+	
+	
 	if (o.osscan) {
 	  os_scan(currenths, ports);
 	}
-
+	
 	if (currenths->timedout) {
 	  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Skipping host  %s (%s) due to host timeout\n", currenths->name,
-		   inet_ntoa(currenths->host));
+		    inet_ntoa(currenths->host));
 	  log_write(LOG_MACHINE,"Host: %s (%s)\tStatus: Timeout", 
-			   inet_ntoa(currenths->host), currenths->name);
-	}
-	else if (!o.pingscan && !o.listscan) {
+		    inet_ntoa(currenths->host), currenths->name);
+	} else {
 	  assignignoredportstate(&currenths->ports);
 	  printportoutput(currenths, &currenths->ports);
 	  resetportlist(&currenths->ports);
-	  
-	  if (currenths->osscan_performed) {
-	    if (currenths->seq.responses > 3) {
-	      log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"%s", seqreport(&(currenths->seq)));
-	      log_write(LOG_MACHINE,"\tSeq Index: %d", currenths->seq.index);
-	    }
-	    if (currenths->FPR.overall_results == OSSCAN_SUCCESS) {
-	      if (currenths->FPR.num_perfect_matches > 0) {
-		log_write(LOG_MACHINE,"\tOS: %s",  currenths->FPR.prints[0]->OS_name);
-		i = 1;
-		while(currenths->FPR.accuracy[i] == 1 ) {
-		  log_write(LOG_MACHINE,"|%s", currenths->FPR.prints[i]->OS_name);
-		  i++;
-		}
+	  printosscanoutput(currenths);
 
-		if (currenths->FPR.num_perfect_matches == 1)
-		  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,
-			    "Remote operating system guess: %s", 
-			    currenths->FPR.prints[0]->OS_name);
-		else {
-		  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,
-			    "Remote OS guesses: %s", 
-			    currenths->FPR.prints[0]->OS_name);
-		  i = 1;
-		  while(currenths->FPR.accuracy[i] == 1) {
-		    log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,", %s", 
-			      currenths->FPR.prints[i]->OS_name);
-		    i++;
-		  }
-		}
-	      } else {
-		if (o.osscan_guess && currenths->FPR.num_matches > 0) {
-		  /* Print the best guesses available */
-		  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Aggressive OS guesses: %s (%d%%)", currenths->FPR.prints[0]->OS_name, (int) (currenths->FPR.accuracy[0] * 100));
-		  for(i=1; i < 10 && currenths->FPR.num_matches > i &&
-			currenths->FPR.accuracy[i] > 
-			currenths->FPR.accuracy[0] - 0.10; i++) {
-		    log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,", %s (%d%%)", currenths->FPR.prints[i]->OS_name, (int) (currenths->FPR.accuracy[i] * 100));
-		  }
-		  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT, "\n");
-		}
-		if (o.scan_delay < 500 && currenths->osscan_openport > 0 &&
-		    currenths->osscan_closedport > 0 ) {
-		  log_write(LOG_NORMAL|LOG_SKID_NOXLT|LOG_STDOUT,"No exact OS matches for host (If you know what OS is running on it, see http://www.insecure.org/cgi-bin/nmap-submit.cgi).\nTCP/IP fingerprint:\n%s\n\n", mergeFPs(currenths->FPs, currenths->numFPs, currenths->osscan_openport, currenths->osscan_closedport));
-		} else {
-		  log_write(LOG_NORMAL|LOG_SKID_NOXLT|LOG_STDOUT,"No exact OS matches for host (test conditions non-ideal).\nTCP/IP fingerprint:\n%s\n\n", mergeFPs(currenths->FPs, currenths->numFPs, currenths->osscan_openport, currenths->osscan_closedport));
-		}
-	      }
-	      
-	      log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"\n");	  
-	      if (currenths->goodFP >= 0 && (o.debugging || o.verbose > 1) && currenths->FPR.num_perfect_matches > 0 ) {
-		log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"OS Fingerprint:\n%s\n", fp2ascii(currenths->FPs[currenths->goodFP]));
-	      }
-	      log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"\n");
-	    } else if (currenths->FPR.overall_results == OSSCAN_NOMATCHES) {
-	      if (o.scan_delay < 500  && currenths->osscan_openport > 0 &&
-		  currenths->osscan_closedport > 0 ) {
-		log_write(LOG_NORMAL|LOG_SKID_NOXLT|LOG_STDOUT,"No OS matches for host (If you know what OS is running on it, see http://www.insecure.org/cgi-bin/nmap-submit.cgi).\nTCP/IP fingerprint:\n%s\n\n", mergeFPs(currenths->FPs, currenths->numFPs, currenths->osscan_openport, currenths->osscan_closedport));
-	      } else {
-		log_write(LOG_NORMAL|LOG_SKID_NOXLT|LOG_STDOUT,"No OS matches for host (test conditions non-ideal).\nTCP/IP fingerprint:\n%s\n\n", mergeFPs(currenths->FPs, currenths->numFPs, currenths->osscan_openport, currenths->osscan_closedport));
-	      }
-	    } else if (currenths->FPR.overall_results == OSSCAN_TOOMANYMATCHES)
-	      {
-		log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Too many fingerprints match this host for me to give an accurate OS guess\n");
-		if (o.debugging || o.verbose) {
-		  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"TCP/IP fingerprint:\n%s\n\n",  mergeFPs(currenths->FPs, currenths->numFPs, currenths->osscan_openport, currenths->osscan_closedport));
-		}
-	      } else { assert(0); }
-	      
-	    for(i=0; i < currenths->numFPs; i++) {
-	      freeFingerPrint(currenths->FPs[i]);
-	      currenths->FPs[i] = NULL;
-	    }
-	    currenths->numFPs = 0;
+	  /* should be moved to some sort of freecurrenths function */
+	  for(i=0; i < currenths->numFPs; i++) {
+	    freeFingerPrint(currenths->FPs[i]);
+	    currenths->FPs[i] = NULL;
 	  }
-	}
+	  currenths->numFPs = 0;
+ 
+	}      
 
 	if (o.debugging) log_write(LOG_STDOUT, "Final times for host: srtt: %d rttvar: %d  to: %d\n", currenths->to.srtt, currenths->to.rttvar, currenths->to.timeout);
 	log_write(LOG_MACHINE,"\n");
       }
+      log_write(LOG_XML, "</host>\n");
+  
       log_flush_all();
       if (*currenths->name) free(currenths->name);
     }
@@ -1133,20 +1052,8 @@
     num_host_exp_groups = 0;
   }
   free(host_exp_group);
-  timep = time(NULL);
-  i = timep - starttime;
-  if (numhosts_scanned == 0)
-    fprintf(stderr, "WARNING: No targets were specified, so 0 hosts scanned.\n");
-  if (numhosts_scanned == 1 && numhosts_up == 0 && !o.listscan)
-    log_write(LOG_STDOUT, "Note: Host seems down. If it is really up, but blocking our ping probes, try -P0\n");
-  log_write(LOG_STDOUT|LOG_SKID, "Nmap run completed -- %d %s (%d %s up) scanned in %d %s\n", numhosts_scanned, (numhosts_scanned == 1)? "IP address" : "IP addresses", numhosts_up, (numhosts_up == 1)? "host" : "hosts",  i, (i == 1)? "second": "seconds");
 
-
-  Strncpy(mytime, ctime(&timep), sizeof(mytime));
-  chomp(mytime);
-  
-  log_write(LOG_NORMAL|LOG_MACHINE, "# Nmap run completed at %s -- %d %s (%d %s up) scanned in %d %s\n", mytime, numhosts_scanned, (numhosts_scanned == 1)? "IP address" : "IP addresses", numhosts_up, (numhosts_up == 1)? "host" : "hosts",  i, (i == 1)? "second": "seconds");
-
+  printfinaloutput(numhosts_scanned, numhosts_up, starttime);
 
   /* Free fake argv */
   for(i=0; i < argc; i++)
@@ -1477,7 +1384,7 @@ void printusage(char *name, int rc) {
 	 "* -Ddecoy_host1,decoy2[,...] Hide scan using many decoys\n"
 	 "  -T <Paranoid|Sneaky|Polite|Normal|Aggressive|Insane> General timing policy\n"
 	 "  -n/-R Never do DNS resolution/Always resolve [default: sometimes resolve]\n"
-	 "  -oN/-oM <logfile> Output normal/machine parsable scan logs to <logfile>\n"
+	 "  -oN/-oX/-oG <logfile> Output normal/XML/grepable scan logs to <logfile>\n"
 	 "  -iL <inputfile> Get targets from file; Use '-' for stdin\n"
 	 "* -S <your_IP>/-e <devicename> Specify source address or network interface\n"
 	 "  --interactive Go into interactive mode (then press h for help)\n"
@@ -1497,7 +1404,7 @@ x             -- Exit Nmap\n\
 f [--spoof <fakeargs>] [--nmap_path <path>] <nmap args>\n\
 -- Executes nmap in the background (results are NOT\n\
 printed to the screen).  You should generally specify a\n\
-file for results (with -oM or -oN).  If you specify\n\
+file for results (with -oX, -oG, or -oN).  If you specify\n\
 fakeargs with --spoof, Nmap will try to make those\n\
 appear in ps listings.  If you wish to execute a special\n\
 version of Nmap, specify --nmap_path.\n\
@@ -1514,7 +1421,7 @@ char *seqreport(struct seq_info *seq) {
   char *p;
   int i;
 
-  snprintf(report, sizeof(report), "TCP Sequence Prediction: Class=%s\n                         Difficulty=%d (%s)\n", seqclass2ascii(seq->seqclass), seq->index, (seq->index < 10)? "Trivial joke" : (seq->index < 80)? "Easy" : (seq->index < 3000)? "Medium" : (seq->index < 5000)? "Formidable" : (seq->index < 100000)? "Worthy challenge" : "Good luck!");
+  snprintf(report, sizeof(report), "TCP Sequence Prediction: Class=%s\n                         Difficulty=%d (%s)\n", seqclass2ascii(seq->seqclass), seq->index, seqidx2difficultystr(seq->index));
   if (o.verbose) {
     tmp[0] = '\n';
     tmp[1] = '\0'; 
@@ -1528,6 +1435,12 @@ char *seqreport(struct seq_info *seq) {
     strcat(report, tmp);
   }
   return report;
+}
+
+/* Convert a TCP sequence prediction difficulty index like 1264386
+   into a difficulty string like "Worthy Challenge */
+const char *seqidx2difficultystr(unsigned long idx) {
+  return  (idx < 10)? "Trivial joke" : (idx < 80)? "Easy" : (idx < 3000)? "Medium" : (idx < 5000)? "Formidable" : (idx < 100000)? "Worthy challenge" : "Good luck!";
 }
 
 char *seqclass2ascii(int seqclass) {
@@ -1616,143 +1529,6 @@ char *statenum2str(int state) {
   return "unknown";
 }
 
-
-void printportoutput(struct hoststruct *currenths, portlist *plist) {
-  char protocol[4];
-  char rpcinfo[64];
-  char rpcmachineinfo[64];
-  char portinfo[64];
-  char *state;
-  char serviceinfo[64];
-  char *name;
-  int first = 1;
-  struct servent *service;
-  struct protoent *proto;
-  struct port *current;
-  int numignoredports;
-  int portno, protocount;
-  struct port **protoarrays[2];
-
-  numignoredports = plist->state_counts[plist->ignored_port_state];
-
-  assert(numignoredports <= plist->numports);
-
-  if (numignoredports == plist->numports) {
-    log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,
-              "%s %d scanned %s on %s (%s) %s: %s\n",
-	      (numignoredports == 1)? "The" : "All", numignoredports,
-	      (numignoredports == 1)? "port" : "ports", currenths->name, 
-	      inet_ntoa(currenths->host), 
-	      (numignoredports == 1)? "is" : "are", 
-	      statenum2str(currenths->ports.ignored_port_state));
-    log_write(LOG_MACHINE,"Host: %s (%s)\tStatus: Up", 
-	      inet_ntoa(currenths->host), currenths->name);
-    return;
-  }
-
-  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Interesting %s on %s (%s):\n",
-	    (o.ipprotscan)? "protocols" : "ports", currenths->name, 
-	    inet_ntoa(currenths->host));
-  log_write(LOG_MACHINE,"Host: %s (%s)", inet_ntoa(currenths->host), 
-	    currenths->name);
-  
-  if (numignoredports > 0) {
-    log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"(The %d %s%s scanned but not shown below %s in state: %s)\n", numignoredports, o.ipprotscan?"protocol":"port", (numignoredports == 1)? "" : "s", (numignoredports == 1)? "is" : "are", statenum2str(plist->ignored_port_state));
-  }
-
-  if (o.ipprotscan) {
-    log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Protocol   State       Name");
-  } else if (!o.rpcscan) {  
-    log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Port       State       Service");
-  } else {
-    log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Port       State       Service (RPC)");
-  }
-  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"%s", (o.identscan)? ((o.rpcscan)? "           Owner\n" : "                 Owner\n") :"\n");
-  log_write(LOG_MACHINE,"\t%s: ", (o.ipprotscan)? "Protocols" : "Ports" );
-  
-  protoarrays[0] = plist->tcp_ports;
-  protoarrays[1] = plist->udp_ports;
-  current = NULL;
-  if (o.ipprotscan) {
-    for (portno = 1; portno < 256; portno++) {
-      if (!plist->ip_prots[portno]) continue;
-      current = plist->ip_prots[portno];
-      if (current->state != plist->ignored_port_state) {
-	if (!first) log_write(LOG_MACHINE,", ");
-	else first = 0;
-	state = statenum2str(current->state);
-	proto = nmap_getprotbynum(htons(current->portno));
-	snprintf(portinfo, sizeof(portinfo), "%-24s",
-		 proto?proto->p_name: "unknown");
-	log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"%-11d%-12s%-24s\n", portno, state, portinfo);
-	log_write(LOG_MACHINE,"%d/%s/%s/", current->portno, state, 
-		  (proto)? proto->p_name : "");
-      }
-    }
-  } else {
-   for(portno = 1; portno < 65536; portno++) {
-    for(protocount = 0; protocount < 2; protocount++) {
-      if (protoarrays[protocount] && protoarrays[protocount][portno]) 
-	current = protoarrays[protocount][portno];
-      else continue;
-      
-      if (current->state != plist->ignored_port_state) {    
-	if (!first) log_write(LOG_MACHINE,", ");
-	else first = 0;
-	strcpy(protocol,(current->proto == IPPROTO_TCP)? "tcp": "udp");
-	snprintf(portinfo, sizeof(portinfo), "%d/%s", current->portno, protocol);
-	state = statenum2str(current->state);
-	service = nmap_getservbyport(htons(current->portno), protocol);
-	
-	if (o.rpcscan) {
-	  switch(current->rpc_status) {
-	  case RPC_STATUS_UNTESTED:
-	    rpcinfo[0] = '\0';
-	    strcpy(rpcmachineinfo, "");
-	    break;
-	  case RPC_STATUS_UNKNOWN:
-	    strcpy(rpcinfo, "(RPC (Unknown Prog #))");
-	    strcpy(rpcmachineinfo, "R");
-	    break;
-	  case RPC_STATUS_NOT_RPC:
-	    rpcinfo[0] = '\0';
-	    strcpy(rpcmachineinfo, "N");
-	    break;
-	  case RPC_STATUS_GOOD_PROG:
-	    name = nmap_getrpcnamebynum(current->rpc_program);
-	    snprintf(rpcmachineinfo, sizeof(rpcmachineinfo), "(%s:%li*%i-%i)", (name)? name : "", current->rpc_program, current->rpc_lowver, current->rpc_highver);
-	    if (!name) {
-	      snprintf(rpcinfo, sizeof(rpcinfo), "(#%li (unknown) V%i-%i)", current->rpc_program, current->rpc_lowver, current->rpc_highver);
-	    } else {
-	      if (current->rpc_lowver == current->rpc_highver) {
-		snprintf(rpcinfo, sizeof(rpcinfo), "(%s V%i)", name, current->rpc_lowver);
-	      } else 
-		snprintf(rpcinfo, sizeof(rpcinfo), "(%s V%i-%i)", name, current->rpc_lowver, current->rpc_highver);
-	    }
-	    break;
-	  default:
-	    fatal("Unknown rpc_status %d", current->rpc_status);
-	    break;
-	  }
-	  snprintf(serviceinfo, sizeof(serviceinfo), "%s%s%s", (service)? service->s_name : ((*rpcinfo)? "" : "unknown"), (service)? " " : "",  rpcinfo);
-	} else {
-	  Strncpy(serviceinfo, (service)? service->s_name : "unknown" , sizeof(serviceinfo));
-	  strcpy(rpcmachineinfo, "");
-	}
-	log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"%-11s%-12s%-24s", portinfo, state, serviceinfo);
-	log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"%s\n", (current->owner)? current->owner : "");
-	
-	log_write(LOG_MACHINE,"%d/%s/%s/%s/%s/%s//", current->portno, state, 
-		  protocol, (current->owner)? current->owner : "",
-		  (service)? service->s_name: "", rpcmachineinfo);    
-	
-      }
-    }
-   }
-  }
-  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"\n");
-  log_write(LOG_MACHINE, "\tIgnored State: %s (%d)", statenum2str(plist->ignored_port_state), plist->state_counts[plist->ignored_port_state]);
-}
 
 /* This attempts to calculate the round trip time (rtt) to a host by timing a
    connect() to a port which isn't listening.  A better approach is to time a
@@ -3851,130 +3627,6 @@ int parse_bounce(struct ftpinfo *ftp, char *url) {
   return 1;
 }
 
-char *logtypes[LOG_TYPES]={"normal","machine","HTML","$cR1pT |<1dd13"};
-
-int log_open(int logt, int append, char *filename)
-{
-  int i=0;
-  if (logt<=0 || logt>LOG_MASK) return -1;
-  while ((logt&1)==0) { i++; logt>>=1; }
-  if (o.logfd[i]) fatal("Only one %s output filename allowed",logtypes[i]);
-  if (*filename == '-' && *(filename + 1) == '\0')
-    {
-      o.logfd[i]=stdout;
-      o.nmap_stdout = fopen("/dev/null", "w");
-      if (!o.nmap_stdout)
-	fatal("Could not assign /dev/null to stdout for writing");
-  }
-  else
-    {
-      if (o.append_output)
-	o.logfd[i] = fopen(filename, "a");
-      else
-	o.logfd[i] = fopen(filename, "w");
-      if (!o.logfd[i])
-	fatal("Failed to open %s output file %s for writing", logtypes[i], filename);
-    }
-  return 1;
-}
-
-void skid_output(char *s)
-{
-  int i;
-  for (i=0;s[i];i++)
-    if (rand()%2==0)
-      /* Substitutions commented out are not known to me, but maybe look nice */
-      switch(s[i])
-	{
-	case 'A': s[i]='4'; break;
-	  /*	case 'B': s[i]='8'; break;
-	 	case 'b': s[i]='6'; break;
-	        case 'c': s[i]='k'; break;
-	        case 'C': s[i]='K'; break; */
-	case 'e':
-	case 'E': s[i]='3'; break;
-	case 'i':
-	case 'I': s[i]="!|1"[rand()%3]; break;
-	  /*      case 'k': s[i]='c'; break;
-	        case 'K': s[i]='C'; break;*/
-	case 'o':
-	case 'O': s[i]='0'; break;
-	case 's':
-	case 'S': 
-	  if (s[i+1] && !isalnum((int) s[i+1])) 
-	    s[i] = 'z';
-	  else s[i] = '$';
-	  break;
-	case 'z': s[i]='s'; break;
-	case 'Z': s[i]='S'; break;
-	}  
-    else
-      {
-	if (s[i]>='A' && s[i]<='Z' && (rand()%3==0)) s[i]+='a'-'A';
-	else if (s[i]>='a' && s[i]<='z' && (rand()%3==0)) s[i]-='a'-'A';
-      }
-}
-
-void log_write(int logt, const char *fmt, ...)
-{
-  va_list  ap;
-  int i,l=logt,skid=1;
-  char buffer[1000];
-
-  va_start(ap, fmt);
-  if (l & LOG_STDOUT) {
-    vfprintf(o.nmap_stdout, fmt, ap);
-    l-=LOG_STDOUT;
-  }
-  if (l & LOG_SKID_NOXLT) { skid=0; l -= LOG_SKID_NOXLT; l |= LOG_SKID; }
-  if (l<0 || l>LOG_MASK) return;
-  for (i=0;l;l>>=1,i++)
-    {
-      if (!o.logfd[i] || !(l&1)) continue;
-      vsnprintf(buffer,sizeof(buffer)-1,fmt,ap);
-      if (skid && ((1<<i)&LOG_SKID)) skid_output(buffer);
-      fwrite(buffer,1,strlen(buffer),o.logfd[i]);
-    }
-  va_end(ap);
-}
-
-void log_close(int logt)
-{
-  int i;
-  if (logt<0 || logt>LOG_MASK) return;
-  for (i=0;logt;logt>>=1,i++) if (o.logfd[i] && (logt&1)) fclose(o.logfd[i]);
-}
-
-void log_flush(int logt) {
-  int i;
-
-  if (logt & LOG_STDOUT) {
-    fflush(o.nmap_stdout);
-    logt -= LOG_STDOUT;
-  }
-  if (logt & LOG_SKID_NOXLT)
-    fatal("You are not allowed to log_flush() with LOG_SKID_NOXLT");
-
-  if (logt<0 || logt>LOG_MASK) return;
-
-  for (i=0;logt;logt>>=1,i++)
-    {
-      if (!o.logfd[i] || !(logt&1)) continue;
-      fflush(o.logfd[i]);
-    }
-
-}
-
-void log_flush_all() {
-  int fileno;
-
-  for(fileno = 0; fileno < LOG_TYPES; fileno++) {
-    if (o.logfd[fileno]) fflush(o.logfd[fileno]);
-  }
-  fflush(stdout);
-  fflush(stderr);
-}
-
 void reaper(int signo) {
   int status;
   pid_t pid;
@@ -4098,44 +3750,6 @@ int fileexistsandisreadable(char *pathname) {
   return (fp == NULL)? 0 : 1;
 }
 
-/* The items in ports should be
-   in sequential order for space savings and easier to read output */
-void output_rangelist_given_ports_to_machine_output(unsigned short *ports,
-						    int numports) {
-int i, previous_port = -2, range_start = -2, port;
-char outpbuf[128];
 
- for(i=0; i <= numports; i++) {
-   port = (i < numports)? ports[i] : 0xABCDE;
-   if (port != previous_port + 1) {
-     outpbuf[0] = '\0';
-     if (range_start != previous_port && range_start != -2)
-       sprintf(outpbuf, "-%hi", previous_port);
-     if (port != 0xABCDE) {
-       if (range_start != -2)
-	 strcat(outpbuf, ",");
-       sprintf(outpbuf + strlen(outpbuf), "%hi", port);
-     }
-     log_write(LOG_MACHINE, "%s", outpbuf);
-     range_start = port;
-   }
-   previous_port = port;
- }
-}
 
-/* Output the list of ports scanned to the top of machine parseable
-   logs (in a comment, unfortunately).  The items in ports should be
-   in sequential order for space savings and easier to read output */
-void output_ports_to_machine_parseable_output(unsigned short *ports, 
-					      int numports, int tcpscan, 
-					      int udpscan) {
-  int tcpportsscanned = (tcpscan)? numports : 0;
-  int udpportsscanned = (udpscan)? numports : 0;
- log_write(LOG_MACHINE, "# Ports scanned: TCP(%d;", tcpportsscanned);
- if (tcpportsscanned)
-   output_rangelist_given_ports_to_machine_output(ports, tcpportsscanned);
- log_write(LOG_MACHINE, ") UDP(%d;", udpportsscanned);
- if (udpportsscanned)
-   output_rangelist_given_ports_to_machine_output(ports, udpportsscanned);
- log_write(LOG_MACHINE, ")\n");
-}
+

@@ -261,8 +261,8 @@ struct ops /* someone took struct options, <grrr> */ {
   int allowall;
   int numports;
   int ackscan;
-  int connectscan;
   int bouncescan;
+  int connectscan;
   int rpcscan;
   int nullscan;
   int xmasscan;

@@ -305,18 +305,9 @@ void *realloc();
   #define NET_SIZE_T int
 #endif
 
-#define LOG_TYPES 4
-#define LOG_MASK 15
-#define LOG_NORMAL 1
-#define LOG_MACHINE 2
-#define LOG_HTML 4
-#define LOG_SKID 8
-#define LOG_STDOUT 1024
-#define LOG_SKID_NOXLT 2048
-
-#define LOG_NAMES {"normal", "machine", "HTML", "$Cr!pT |<!dd!3"}
 /********************** LOCAL INCLUDES *****************************/
 
+#include "output.h"
 #include "portlist.h"
 #include "tcpip.h"
 #include "global_structures.h"
@@ -370,8 +361,6 @@ inline void adjust_timeouts(struct timeval sent, struct timeout_info *to);
 /* port manipulators */
 unsigned short *getpts(char *expr); /* someone stole the name getports()! */
 
-void printportoutput(struct hoststruct *currenths, portlist *plist);
-
 /* socket manipulation functions */
 void init_socket(int sd);
 int block_socket(int sd);
@@ -379,7 +368,6 @@ void broadcast_socket(int sd);
 int recvtime(int sd, char *buf, int len, int seconds);
 void max_rcvbuf(int sd);
 int max_sd();
-int log_open(int logt, int append, char *filename);
 /* RAW packet building/dissasembling stuff */
 int isup(struct in_addr target);
 int listen_icmp(int icmpsock, unsigned short outports[],
@@ -394,38 +382,21 @@ void *safe_malloc(int size);
 char *grab_next_host_spec(FILE *inputfd, int argc, char **fakeargv);
 int parse_targets(struct targets *targets, char *h);
 void options_init();
-void nmap_log(char *fmt, ...);
-void nmap_machine_log(char *fmt, ...);
 char *statenum2str(int state);
 char *scantype2str(stype scantype);
 void sigdie(int signo);
 void reaper(int signo);
 char *seqreport(struct seq_info *seq);
 char *seqclass2ascii(int clas);
+/* Convert a TCP sequence prediction difficulty index like 1264386
+   into a difficulty string like "Worthy Challenge */
+const char *seqidx2difficultystr(unsigned long idx);
 int nmap_fetchfile(char *filename_returned, int bufferlen, char *file);
 int fileexistsandisreadable(char *pathname);
 void enforce_scan_delay(struct timeval *tv);
 int check_firewallmode(struct hoststruct *target, struct scanstats *ss);
 int gather_logfile_resumption_state(char *fname, int *myargc, char ***myargv);
 
-/* The items in ports should be
-   in sequential order for space savings and easier to read output */
-void output_rangelist_given_ports_to_machine_output(unsigned short *ports,
-						    int numports);
-/* Output the list of ports scanned to the top of machine parseable
-   logs (in a comment, unfortunately).  The items in ports should be
-   in sequential order for space savings and easier to read output */
-void output_ports_to_machine_parseable_output(unsigned short *ports, 
-					      int numports, int tcpscan, 
-					      int udpscan);
-void output_prots_to_machine_parseable_output(unsigned short *ports, 
-					      int numports);
-
-void log_write(int logt, const char *fmt, ...);
-void log_close(int logt);
-void log_flush(int logt);
-void log_flush_all();
-void skid_output(char *s);
 
 /* From glibc 2.0.6 because Solaris doesn't seem to have this function */
 #ifndef HAVE_INET_ATON
