@@ -100,7 +100,7 @@ static void posportupdate(Target *target, struct portinfo *current,
 	ss->numqueries_ideal *= ss->fallback_percent; /* We need to act 
 							 forcefully on what 
 							 little info we have */
-      if (ss->numqueries_ideal < 1.0) ss->numqueries_ideal = 1.0;
+      ss->numqueries_ideal = MAX(ss->min_width, ss->numqueries_ideal);
     }
   }
 
@@ -612,8 +612,11 @@ void pos_scan(Target *target, u16 *portarray, int numports, stype scantype) {
     }
   }
 
-  if (initial_packet_width > ss.max_width)
-    initial_packet_width = ss.max_width;
+  if (o.min_parallelism) {
+    ss.min_width = o.min_parallelism;
+  } else ss.min_width = 1;
+
+  initial_packet_width = box(ss.min_width, ss.max_width, initial_packet_width);
   ss.numqueries_ideal = initial_packet_width;
 
   memset(portlookup, 255, sizeof(portlookup)); /* 0xffffffff better always be (int) -1 */

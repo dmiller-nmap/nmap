@@ -104,7 +104,10 @@ struct scanstats {
   int numqueries_outstanding; /* How many unexpired queries are on the 'net
 				 right now? */
   double numqueries_ideal; /* How many do we WANT to be on the 'net right now? */
-  int max_width; /* What is the MOST we will tolerate at once */
+  int max_width; /* What is the MOST we will tolerate at once.  Can be 
+		    modified via --max_parallelism */
+  int min_width; /* We must always allow at least this many at once.  Can 
+		    be modified via --min_parallelism*/
   int ports_left;
   int changed; /* Has anything changed since last round? */
   int alreadydecreasedqueries;

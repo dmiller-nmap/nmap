@@ -11,6 +11,12 @@ o Added --packet_trace option, which tells Nmap to display all of the
 
 o Fixed a segmentation fault in Idlescan (-sI).
 
+o Added --min_parallelism option, which can make scans more aggressive
+  (faster).  It is basically the opposite of --max_parallelism (-M).
+  Reliability can be lost if you don't know what you are doing.  Only
+  Idlescan is supported right now, but the other scan types are coming
+  shortly.
+
 o Made Idlescan timing more conservative when -P0 is specified to
   improve accuracy.
 
