@@ -932,7 +932,14 @@ if (ptech.icmpscan) {
 	We should just considering the host down rather than ignoring
 	the error */
      if ((res = sendto(sd,(char *) ping,icmplen,0,(struct sockaddr *)&sock,
-		       sizeof(struct sockaddr))) != icmplen && errno != EHOSTUNREACH ) {
+		       sizeof(struct sockaddr))) != icmplen && 
+		       errno != EHOSTUNREACH 
+#ifdef WIN32
+        // Windows (correctly) returns this if we scan an address that is
+        // known to be nonsensical (e.g. myip & mysubnetmask)
+	&& errno != WSAEADDRNOTAVAIL
+#endif 
+		       ) {
        fprintf(stderr, "sendto in sendpingquery returned %d (should be 8)!\n", res);
        perror("sendto");
      }

@@ -641,7 +641,7 @@ void pos_scan(struct hoststruct *target, u16 *portarray, int numports, stype sca
 
     /* Do we have a correct source address? */
     if (!target->source_ip.s_addr) {
-      if (gethostname(myname, MAXHOSTNAMELEN) != 0 && 
+      if (gethostname(myname, MAXHOSTNAMELEN) != 0 ||
 	  !((myhostent = gethostbyname(myname))))
 	fatal("Cannot get hostname!  Try using -S <my_IP_address> or -e <interface to scan through>\n"); 
       memcpy(&target->source_ip, myhostent->h_addr_list[0], sizeof(struct in_addr));
@@ -1299,7 +1299,7 @@ void super_scan(struct hoststruct *target, u16 *portarray, int numports,
 
   /* Do we have a correct source address? */
   if (!target->source_ip.s_addr) {
-    if (gethostname(myname, MAXHOSTNAMELEN) != 0 && 
+    if (gethostname(myname, MAXHOSTNAMELEN) != 0 ||
 	!((myhostent = gethostbyname(myname))))
       fatal("Cannot get hostname!  Try using -S <my_IP_address> or -e <interface to scan through>\n"); 
     memcpy(&target->source_ip, myhostent->h_addr_list[0], sizeof(struct in_addr));

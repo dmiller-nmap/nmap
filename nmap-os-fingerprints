@@ -3526,8 +3526,8 @@ T7(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(Resp=Y%DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 # Contributed by foo@porto.bmb.uga.edu
-Fingerprint Irix 6.5 IP30
-TSeq(Class=RI%gcd=<144%SI=<E06&>8%IPID=I%TS=2HZ)
+Fingerprint Irix 6.5-6.5.12f IP19/IP30
+TSeq(Class=RI%gcd=<144%SI=<FFFF&>8%IPID=I%TS=2HZ)
 T1(DF=N%W=C000%ACK=S++%Flags=AS%Ops=MNWNNTNNM)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
 T3(Resp=Y%DF=N%W=C000%ACK=O%Flags=A%Ops=NNT)
@@ -6251,7 +6251,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(Resp=N)
 
 # Contributed by Wes Mills <wesmills@wyvern.org>
-Fingerprint Windows 2000 Professional, Build 2183 (RC3)
+Fingerprint Windows 2000 Professional or MS WinXP Pro
 TSeq(Class=RI%gcd=<20%SI=<E92A&>240)
 T1(DF=Y%W=FAF0|7FFF%ACK=S++%Flags=AS%Ops=MNWNNT)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)

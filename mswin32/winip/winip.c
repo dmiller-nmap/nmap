@@ -781,25 +781,25 @@ int Sendto(char *functionname, int sd, const unsigned char *packet, int len,
 
 int win32_socket(int af, int type, int proto)
 {
-	SOCKET s;
-	winip_test(0);
+ SOCKET s;
+ winip_test(0);
 
-	if(type == SOCK_RAW && proto == IPPROTO_RAW && !rawsock_avail)
-	{
-		winip_test(1);
-		pcapsend_init();
-		return 501;
-	}
+ if(type == SOCK_RAW && proto == IPPROTO_RAW && !rawsock_avail)
+ {
+  winip_test(1);
+  pcapsend_init();
+  return 501;
+ }
 
-	if(o.debugging > 1 && type == SOCK_RAW && proto == IPPROTO_RAW)
-		printf("Opening a real raw socket\n");
+ if(o.debugging > 1 && type == SOCK_RAW && proto == IPPROTO_RAW)
+  printf("Opening a real raw socket\n");
 
-	s = socket(af, type, proto);
+ s = socket(af, type, proto);
 
-	//	Do this here to save a little time
-	sethdrinclude(s);
+ // Do this here to save a little time
+ if(type == SOCK_RAW && proto == IPPROTO_RAW) sethdrinclude(s);
 
-	return s;
+ return s;
 }
 
 void win32_pcap_close(pcap_t *pd)

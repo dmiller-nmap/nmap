@@ -1162,8 +1162,8 @@ void set_pcap_filter(struct hoststruct *target,
 #endif /* WIN32 */
 
 /* This is ugly :(.  We need to get rid of these at some point */
-unsigned long flt_dsthost, flt_srchost;	//	_net_ order
-unsigned short flt_baseport;	//	_host_ order
+unsigned long flt_dsthost, flt_srchost;	/* _net_ order */
+unsigned short flt_baseport;	/*	_host_ order */
 
 int flt_icmptcp(const char *packet, int len)
 {

@@ -1,5 +1,18 @@
 # Nmap Changelog ($Id$)
 
+Nmap 2.54BETA32
+
+o Applied Windows pinging fix and from Andy Lutomirski
+  (Luto@myrealbox.com)
+
+o Applied a few more Windows fixes from Andy.
+
+o Fixed a flaw in several error-checking statements noted by Giacomo
+  Cariello (jwk@bug.it)
+
+o Applied Win32 compilation fixes sent by Kirby Kuehl (kkuehl@cisco.com)
+  and jens.vogt@bluewin.ch
+
 Nmap 2.54BETA31
 
 o Added ICMP Timestamp and Netmask ping types (-PP and -PM).  These
@@ -11,7 +24,7 @@ o Documented the --data_length option and made it work with all the
 
 o Added check for strings.h before including it in portlist.c .  This
   fixes a compilation problem on some versions of Windows.  Problem
-  first noted by "Michael Vorin" <mvorin@hotmail.com>
+  first noted by Michael Vorin (mvorin@hotmail.com)
 
 o Applied patch from Andy Lutomirski (Luto@myrealbox.com) which fixes
   a crash on some Windows platforms when timeouts occur.
@@ -33,8 +46,8 @@ o Fix bug noted by Chris V (iselldrugstokidsonline@yahoo.com) in which
   said, Nmap should never segfault just because of bogus options.
 
 o Fixed problem noted by Maximiliano (emax25@arnet.com.ar) where Nmap
-  would get stuck in a (nearly) infinate loop when you try to "resume"
-  an random host (-iR) scan.
+  would get stuck in a (nearly) infinite loop when you try to "resume"
+  a random host (-iR) scan.
 
 o Included a number of fingerprint updates, but I still have many more
   web submissions to go through.  Also made some nmap-services

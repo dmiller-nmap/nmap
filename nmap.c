@@ -1398,7 +1398,7 @@ void options_init() {
 #ifndef WIN32
   o.isr00t = !(geteuid());
 #else
-  winip_init();	//	wrapper for all win32 initialization
+  winip_init();	/* wrapper for all win32 initialization */
 #endif
   o.debugging = DEBUGGING;
   o.verbose = DEBUGGING;
@@ -2247,9 +2247,9 @@ int nmap_fetchfile(char *filename_returned, int bufferlen, char *file) {
 	  int i;
 	  res = GetModuleFileName(GetModuleHandle(0), fnbuf, 1024);
       if(!res) fatal("GetModuleFileName failed (!)\n");
-	  //	Strip it
+	  /*	Strip it */
 	  for(i = res - 1; i >= 0 && fnbuf[i] != '/' && fnbuf[i] != '\\'; i--);
-	  if(i >= 0) // we found it
+	  if(i >= 0) /* we found it */
 		  fnbuf[i] = 0;
 	  res = snprintf(filename_returned, bufferlen, "%s/%s", fnbuf, file);
 	  if(res > 0 && res < bufferlen) {
