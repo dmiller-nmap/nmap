@@ -210,14 +210,15 @@ int Targets::parse_expr(const char * const target_expr, int af) {
     bzero(&hints, sizeof(hints));
     hints.ai_family = PF_INET6;
     rc = getaddrinfo(hostexp, NULL, &hints, &result);
-    if (!rc) {
+    if (rc != 0) {
       fprintf(stderr, "Failed to resolve given IPv6 hostname/IP: %s.  Note that you can't use '/mask' or '[1-4,7,100-]' style ranges for IPv6.  Error cod %d: %s\n", hostexp, rc, gai_strerror(rc));
       free(hostexp);
       if (result) freeaddrinfo(result);
       return 1;
-    }    
-    assert(result->ai_addrlen == 16);
-    memcpy(ip6.s6_addr, result->ai_addr, 16);
+    }
+    assert(result->ai_addrlen == sizeof(struct sockaddr_in6));
+    struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *) result->ai_addr;
+    memcpy(ip6.s6_addr, sin6->sin6_addr.s6_addr, 16);
     ipsleft = 1;
     freeaddrinfo(result);
   }
@@ -300,7 +301,6 @@ int Targets::get_next_host(struct sockaddr_storage *ss, size_t *sslen) {
   } else {
     assert(targets_type == IPV6_ADDRESS);
     assert(ipsleft == 1);
-    ipsleft = 0;
     bzero(sin6, sizeof(struct sockaddr_in6));
     sin6->sin6_family = AF_INET6;
 #ifdef SIN_LEN

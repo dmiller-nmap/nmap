@@ -163,38 +163,18 @@ int resolve(char *hostname, struct sockaddr_storage *ss, size_t *sslen,
 
   struct addrinfo hints;
   struct addrinfo *result;
-
-
   int rc;
 
   assert(ss);
   assert(sslen);
-
   bzero(&hints, sizeof(hints));
   hints.ai_family = pf;
   rc = getaddrinfo(hostname, NULL, &hints, &result);
-  if (!rc)
+  if (rc != 0)
     return 0;
-  if (pf == PF_INET) {
-    struct sockaddr_in *sin = (struct sockaddr_in *) ss;
-    sin->sin_family = AF_INET;
-    *sslen = sizeof(struct sockaddr_in);
-#if HAVE_SOCKADDR_SA_LEN
-    sin->sa_len = *sslen;
-#endif
-    assert(result->ai_addrlen == 4);
-    memcpy(&(sin->sin_addr), result->ai_addr, 4);
-  } 
-  else {
-    struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *) ss;
-    sin6->sin6_family = AF_INET6;
-    *sslen = sizeof(struct sockaddr_in6);
-#ifdef SIN_LEN
-    sin->sin6_len = *sslen;
-#endif
-    assert(result->ai_addrlen == 16);
-    memcpy(&(sin6->sin6_addr), result->ai_addr, 16);
-  }
+  assert(result->ai_addrlen > 0 && result->ai_addrlen <= sizeof(struct sockaddr_storage));
+  *sslen = result->ai_addrlen;
+  memcpy(ss, result->ai_addr, *sslen);
   freeaddrinfo(result);
   return 1;
 }
