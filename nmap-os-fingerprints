@@ -2095,7 +2095,7 @@ T7(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=F%RIPCK=F%UCK=0%ULEN=134%DAT=E)
 
 Fingerprint Canon GP 160 PF printer
-Class Cannon | embedded || printer
+Class Canon | embedded || printer
 TSeq(Class=TD%gcd=<C04%SI=<1E%IPID=I%TS=U)
 T1(DF=N%W=C00%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=400%ACK=S%Flags=AR%Ops=WNMETL)
@@ -2107,7 +2107,7 @@ T7(DF=N%W=400%ACK=S++%Flags=AR%Ops=WNMETL)
 PU(Resp=N)
 
 Fingerprint Canon IR6000 printer
-Class Cannon | embedded || printer
+Class Canon | embedded || printer
 TSeq(Class=64K%IPID=I%TS=U)
 T1(DF=N%W=4000%ACK=S++%Flags=AS%Ops=MNW)
 T2(Resp=N)
@@ -2119,7 +2119,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E|F%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
 Fingerprint Canon photocopier/fax/scanner/printer GP30F
-Class Cannon | embedded || printer
+Class Canon | embedded || printer
 TSeq(Class=TD%gcd=600%SI=0)
 T1(Resp=Y%DF=N%W=C00%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -2165,7 +2165,7 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(Resp=N)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
-Fingerprint Checkpoint Firewall-1 on NT Server 4.0 SP4-SP5
+Fingerprint Checkpoint Firewall-1 on Windows NT 4.0 Server SP4-SP5
 Class Checkpoint | Windows | NT/2K/XP | firewall
 TSeq(Class=TD%gcd=<8%SI=<154)
 T1(DF=Y%W=2017%ACK=S++%Flags=AS%Ops=M)
@@ -2728,7 +2728,7 @@ PU(Resp=N|Y)
 
 Fingerprint Cisco IOS 11.3 - 12.0(11)
 Class Cisco | IOS | 11.X | router
-Class Cisco | IOS | 21.X | router
+Class Cisco | IOS | 12.X | router
 TSeq(Class=TD|RI%gcd=<6)
 T1(DF=N%W=1020%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -10899,8 +10899,9 @@ T6(Resp=Y%DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
-Fingerprint Windows for Workgroups 3.11 / TCP/IP-32 3.11b stack or Win98
+Fingerprint Windows for Workgroups 3.11 / TCP/IP-32 3.11b stack or Windows 98
 Class Microsoft | Windows | 3.X | general purpose
+Class Microsoft | Windows | 95/98/ME | general purpose
 TSeq(Class=TD%gcd=<F%SI=<F)
 T1(DF=Y%W=2017%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -10937,7 +10938,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=164%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 # Windows NT 3.51 SP5
-Fingerprint Microsoft Windows NT 3.51 SP5, NT4 or 95/98/98SE
+Fingerprint Microsoft Windows NT 3.51 SP5, NT 4.0 or 95/98/98SE
 Class Microsoft | Windows | 95/98/ME | general purpose
 Class Microsoft | Windows | NT/2K/XP | general purpose
 TSeq(Class=TD|RI%gcd=1|2|3|4|5|A|14|1E|28|5A%SI=<1F4%IPID=BI|RPI|RD%TS=U|0)
@@ -10952,7 +10953,7 @@ PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E|F%ULEN=134%DAT=E)
 
 # Microsoft Windows 98 4.10.2222.A
 # "Windows 98 Second Edition, patched up to date" (1/25/03)
-Fingerprint Microsoft Windows 98 SE
+Fingerprint Microsoft Windows 98SE
 Class Microsoft | Windows | 95/98/ME | general purpose
 TSeq(Class=TD%gcd=<A%SI=<46%IPID=RPI|RD|BI%TS=U)
 T1(DF=Y%W=D780|EBC0%ACK=S++%Flags=AS%Ops=MNW)
@@ -10965,7 +10966,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 # Windows 98 Second Edition (build 2222)
-Fingerprint Microsoft Windows 98 SE
+Fingerprint Microsoft Windows 98SE
 Class Microsoft | Windows | 95/98/ME | general purpose
 TSeq(Class=TD%gcd=<6%SI=<46%IPID=RPI|RD|BI%TS=U)
 T1(DF=Y%W=D780|EBC0%ACK=S++%Flags=AS%Ops=MNW)
@@ -10977,7 +10978,7 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
-Fingerprint Microsoft PocketPC  3.0.11171 running on Compaq iPAQ 3870 Pocket PC
+Fingerprint Microsoft PocketPC 3.0.11171 running on Compaq iPAQ 3870 Pocket PC
 Class Microsoft | Windows | PocketPC/CE | PDA
 TSeq(Class=TD%gcd=<6%SI=<104%IPID=BI)
 T1(DF=Y%W=8000%ACK=S++%Flags=AS%Ops=MNWNNT)
@@ -10989,7 +10990,7 @@ T6(DF=N%W=0%ACK=S++%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=40%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
-Fingerprint Microsoft Windows 95 4.00.950 B (IE 5 5.00 2314.1003)
+Fingerprint Microsoft Windows 95 4.00.950B (IE 5 5.00 2314.1003)
 Class Microsoft | Windows | 95/98/ME | general purpose
 TSeq(Class=TD%gcd=<14%SI=<32%IPID=BI)
 T1(DF=Y%W=2017%ACK=S++%Flags=AS%Ops=MNWNNT)
@@ -11012,7 +11013,7 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(Resp=N|Y)
 
-Fingerprint Microsfot Windows 98 SE with security patch A
+Fingerprint Microsfot Windows 98SE with security patch A
 Class Microsoft | Windows | 95/98/ME | general purpose
 TSeq(Class=TD%gcd=<6%SI=<AA%IPID=BI%TS=U)
 T1(DF=N%W=FFFF%ACK=S++%Flags=AS%Ops=M)
@@ -11024,7 +11025,7 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
-Fingerprint Microsoft Windows 98, version 4.10.1998
+Fingerprint Microsoft Windows 98 4.10.1998
 Class Microsoft | Windows | 95/98/ME | general purpose
 TSeq(Class=TD%gcd=<6%SI=<78%IPID=BI%TS=U)
 T1(DF=Y%W=10C0%ACK=S++%Flags=AS%Ops=M)
@@ -11036,7 +11037,7 @@ T6(DF=N%W=0%ACK=S|O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
-Fingerprint Windows 98 SP2
+Fingerprint Microsoft Windows 98 SP2
 Class Microsoft | Windows | 95/98/ME | general purpose
 TSeq(Class=TD%gcd=<6%SI=<32%IPID=BI%TS=U)
 T1(DF=Y%W=270F%ACK=S++%Flags=AS%Ops=M)
@@ -11048,7 +11049,7 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
-Fingerprint Microsoft Windows 98 SE, version 4.10.2222 A
+Fingerprint Microsoft Windows 98SE 4.10.2222A
 Class Microsoft | Windows | 95/98/ME | general purpose
 TSeq(Class=TD%gcd=<6%SI=<1E%IPID=BI%TS=U)
 T1(DF=Y%W=FFFF%ACK=S++%Flags=AS%Ops=M)
@@ -11060,7 +11061,7 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
-Fingerprint Microsoft Windows NT 4 SP3
+Fingerprint Microsoft Windows NT 4.0 SP3
 Class Microsoft | Windows | NT/2K/XP | general purpose
 TSeq(Class=TD|RI%gcd=<18%SI=<2A00DA&>6B73)
 T1(DF=Y%W=7FFF|2017%ACK=S++%Flags=AS%Ops=M|MNWNNT)
@@ -11072,7 +11073,7 @@ T6(DF=N%W=0%ACK=O|S++%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
-Fingerprint Microsoft Windows NT 4 SP3
+Fingerprint Microsoft Windows NT 4.0 SP3
 Class Microsoft | Windows | NT/2K/XP | general purpose
 TSeq(Class=TD%gcd=<F4%SI=<3C%IPID=BI%TS=U)
 T1(DF=Y%W=2017%ACK=S++%Flags=AS%Ops=M)
@@ -11084,7 +11085,7 @@ T6(DF=N%W=0%ACK=S++%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
-Fingerprint Microsoft Windows 95/98/NT4 or PocketPC
+Fingerprint Microsoft Windows 95/98/NT 4.0 or PocketPC
 Class Microsoft | Windows | 95/98/ME | general purpose
 Class Microsoft | Windows | PocketPC/CE | PDA
 TSeq(Class=TD|RI%gcd=1|2|3|4|5|8|A|14|1E|28|5A|17C%SI=<1F4)
@@ -11111,7 +11112,7 @@ PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 # Microsoft Windows NT4 Workstation SP6a
 # windows nt4 swith service pack 6
-Fingerprint Microsoft Windows NT4 Workstation SP6a
+Fingerprint Microsoft Windows NT 4.0 Workstation SP6a
 Class Microsoft | Windows | NT/2K/XP | general purpose
 TSeq(Class=RI%gcd=<A%SI=<1A66C&>112%IPID=RPI|BI%TS=U)
 T1(DF=Y%W=4470|7210|AC00%ACK=S++%Flags=AS%Ops=M)
@@ -11136,7 +11137,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 # Windows NT Version 4.0 (Build 1381 - Service Pack 6), Revised Service Pack 6a
-Fingerprint Microsoft Windows NT4 Workstation SP6a
+Fingerprint Microsoft Windows NT 4.0 Workstation SP6a
 Class Microsoft | Windows | NT/2K/XP | general purpose
 TSeq(Class=TD%gcd=<8%SI=<46%IPID=RPI|RD|BI%TS=U)
 T1(DF=Y%W=7210%ACK=S++%Flags=AS%Ops=M)
@@ -11148,7 +11149,7 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
-Fingerprint Microsoft Windows NT4 Workstation SP6a
+Fingerprint Microsoft Windows NT 4.0 Workstation SP6a
 Class Microsoft | Windows | NT/2K/XP | general purpose
 TSeq(Class=TD%gcd=<6%SI=<46%IPID=BI%TS=U)
 T1(DF=Y%W=FC00%ACK=S++%Flags=AS%Ops=M)
@@ -11221,7 +11222,7 @@ T6(DF=N%W=0%ACK=S++%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
-Fingerprint Microsoft Windows 98 w/ Service Pack 1
+Fingerprint Microsoft Windows 98 SP1
 Class Microsoft | Windows | 95/98/ME | general purpose
 TSeq(Class=TD%gcd=<5%SI=<20)
 T1(DF=Y%W=FFFF%ACK=S++%Flags=AS%Ops=M)
@@ -11298,8 +11299,8 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(Resp=N)
 PU(DF=N%TOS=0%IPLEN=B0%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
-# Microsoft  Windows 2003 Server Enterprise Edition (Trial Version downloaded from microsoft as at 06/03
-Fingerprint Microsoft Windows 2003 Server Enterprise Edition
+# Microsoft Windows Server 2003 Enterprise Edition (Trial Version downloaded from microsoft as at 06/03
+Fingerprint Microsoft Windows Server 2003 Enterprise Edition
 Class Microsoft | Windows | 2003/.NET | general purpose
 TSeq(Class=TR%gcd=<6%IPID=I)
 T1(DF=Y%W=402E%ACK=S++%Flags=AS%Ops=MNWNNT)
@@ -11311,8 +11312,8 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(Resp=N)
 PU(DF=N%TOS=0%IPLEN=B0%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
-# Windows 2003 Server, build 3790
-Fingerprint Microsoft Windows 2003 Server
+# Windows Server 2003, build 3790
+Fingerprint Microsoft Windows Server 2003
 Class Microsoft | Windows | 2003/.NET | general purpose
 TSeq(Class=TR%gcd=<6)
 T1(DF=Y%W=FFFF%ACK=S++%Flags=AS%Ops=MNWNNT)
@@ -11338,7 +11339,7 @@ PU(DF=N%TOS=0%IPLEN=B0%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 # Fingerprint Windows XP Pro with all current updates to May 2002
 # Windows 2000 Version 5.0 Build (2195: Service Pack 3)
 #  Windows 2000 Advanced Server sp3
-Fingerprint Microsoft Windows Millennium Edition (Me), Win 2000 profressional or Advanced Server, or WinXP
+Fingerprint Microsoft Windows Millennium Edition (Me), Windows 2000 Professional or Advanced Server, or Windows XP
 Class Microsoft | Windows | 95/98/ME | general purpose
 Class Microsoft | Windows | NT/2K/XP | general purpose
 TSeq(Class=RI%gcd=<6%SI=<FFFFF&>49C%IPID=I%TS=0)
@@ -11377,7 +11378,7 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
-Fingerprint Microsoft Windows 2000 server SP2
+Fingerprint Microsoft Windows 2000 Server SP2
 Class Microsoft | Windows | NT/2K/XP | general purpose
 TSeq(Class=RI%gcd=<6%SI=<25224&>22C%IPID=I)
 T1(DF=Y%W=5B4|B68%ACK=S++%Flags=AS%Ops=MNNT)
@@ -11390,7 +11391,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 # Windows (XP Pro) version 5.1 (numero 260.xpsp2.030422-1633:service pack 1)
-Fingerprint Microsoft Windows 2000 server SP3 or XP Pro SP1
+Fingerprint Microsoft Windows 2000 Server SP3 or Windows XP Professional SP1
 Class Microsoft | Windows | NT/2K/XP | general purpose
 TSeq(Class=RI%gcd=<6%SI=<24F5E&>47E%IPID=I%TS=U)
 T1(DF=Y%W=16D0|B680|FAF0|FF3C%ACK=S++%Flags=AS%Ops=MNW)
@@ -11415,7 +11416,7 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=28%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
-Fingerprint Microsoft Windows 2000 server SP3
+Fingerprint Microsoft Windows 2000 Server SP3
 Class Microsoft | Windows | NT/2K/XP | general purpose
 TSeq(Class=RI%gcd=<8%SI=<255BC&>24F%IPID=I)
 T1(DF=N%W=402E%ACK=S++%Flags=AS%Ops=MNWNNT)
@@ -11489,7 +11490,7 @@ PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 # Microsoft Windows 2000 Pro SP2
 # Microsoft  Windows XP Pro SP1
-Fingerprint Microsoft Windows 2000 Pro SP2 / Windows XP SP1
+Fingerprint Microsoft Windows 2000 Professional SP2 or Windows XP SP1
 Class Microsoft | Windows | NT/2K/XP | general purpose
 TSeq(Class=RI%gcd=<6%SI=<270D8&>3E9%IPID=I)
 T1(DF=Y%W=FD80%ACK=S++%Flags=AS%Ops=MNWNNT)
@@ -11551,7 +11552,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 # windows 2000 professional build 2195 service pack 3
-Fingerprint Microsoft Windows 2000 Pro SP3
+Fingerprint Microsoft Windows 2000 Professional SP3
 Class Microsoft | Windows | NT/2K/XP | general purpose
 TSeq(Class=RI%gcd=<6%SI=<1BB0C&>2DC%IPID=I%TS=U)
 T1(DF=Y%W=9448%ACK=S++%Flags=AS%Ops=M)
@@ -11588,7 +11589,7 @@ T6(DF=N%W=400|C00%ACK=S%Flags=AR%Ops=WNMETL)
 T7(DF=N%W=400|C00%ACK=S++%Flags=AR%Ops=WNMETL)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E|F%RIPCK=E%UCK=F%ULEN=134%DAT=E)
 
-Fingerprint WinME
+Fingerprint Microsoft Windows Millennium Edition (Me)
 Class Microsoft | Windows | 95/98/ME | general purpose
 TSeq(Class=RI%gcd=<6%SI=<249A0&>3B6%IPID=I)
 T1(DF=Y%W=E920%ACK=S++%Flags=AS%Ops=MNWNNT)
@@ -11638,7 +11639,7 @@ T6(DF=N%W=0%ACK=O%Flags=AR%Ops=)
 T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
-Fingerprint Microsoft Windows XP Pro or Windows 2000 Pro SP2+
+Fingerprint Microsoft Windows XP Professional or Windows 2000 Professional SP2+
 Class Microsoft | Windows | NT/2K/XP | general purpose
 TSeq(Class=RI%gcd=<16%SI=<25AEE&>6B%IPID=I)
 T1(DF=N%W=402E|7D78|FAF0%ACK=S++|O%Flags=AS|A%Ops=MNWNNT|NNT)
@@ -11664,7 +11665,7 @@ PU(DF=N%TOS=80%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=F%ULEN=134%DAT=E)
 
 #  Microsoft Windows 2000 with service pack 3
 # Microsoft Windows XP Pro with SP1 and latest Windows Update patches as of February 1st, 2003
-Fingerprint Microsoft Windows 2000/XP/ME
+Fingerprint Microsoft Windows Millennium Edition (Me), Windows 2000, or Windows XP
 Class Microsoft | Windows | NT/2K/XP | general purpose
 Class Microsoft | Windows | 95/98/ME | general purpose
 TSeq(Class=RI%gcd=<20%SI=<E92A&>240)
@@ -11677,7 +11678,7 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
-Fingerprint Microsoft Windows2000 Professional RC1/W2K Advance Server Beta3
+Fingerprint Microsoft Windows 2000 Professional RC1 or Windows 2000 Advanced Server Beta3
 Class Microsoft | Windows | NT/2K/XP | general purpose
 TSeq(Class=RI%gcd=<8%SI=<27D922&>65EE)
 T1(DF=Y%W=402E|2017%ACK=S++%Flags=AS%Ops=MNWNNT)
@@ -11754,7 +11755,7 @@ PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 # windows xp pro WITHOUT ANY service packs
 # windows xp sp1
-Fingerprint Microsoft Windows XP Pro
+Fingerprint Microsoft Windows XP Professional
 Class Microsoft | Windows | NT/2K/XP | general purpose
 TSeq(Class=RI%gcd=<6%SI=<2EBEE&>45E%IPID=I%TS=U)
 T1(DF=Y%W=F424%ACK=S++%Flags=AS%Ops=MNW)
@@ -11778,7 +11779,7 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
-Fingerprint Microsoft Windows XP Pro SP1
+Fingerprint Microsoft Windows XP Professional SP1
 Class Microsoft | Windows | NT/2K/XP | general purpose
 TSeq(Class=RI%gcd=<6%SI=<9A6AA&>18A0%IPID=I%TS=U)
 T1(DF=Y%W=8820%ACK=S++|O%Flags=AS|A%Ops=M|)
@@ -11791,7 +11792,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 # Windows XP Pro Version 5.1 (Build 2600.xpsp2.030422-1633: Service Pack1)
-Fingerprint Microsoft Windows XP Pro SP1
+Fingerprint Microsoft Windows XP Professional SP1
 Class Microsoft | Windows | NT/2K/XP | general purpose
 TSeq(Class=RI%gcd=<6%SI=<63826&>D28%IPID=I%TS=U)
 T1(DF=Y%W=AE4C%ACK=S++%Flags=AS%Ops=MNW)
@@ -11805,7 +11806,7 @@ PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 # Microsoft Windows XP Pro SP1
 # Microsoft Windows2000 advaned Server with Service pack3
-Fingerprint Microsoft Windows XP Pro SP1 or Windows 2000 AS SP3
+Fingerprint Microsoft Windows XP Professional SP1 or Windows 2000 Advanced Server SP3
 Class Microsoft | Windows | NT/2K/XP | general purpose
 TSeq(Class=RI%gcd=<8%SI=<272A4&>31E%IPID=I%TS=U)
 T1(DF=N%W=2000|4000%ACK=S++%Flags=AS%Ops=M)
@@ -11817,7 +11818,7 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0|5C%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
-Fingerprint Microsoft Windows XP Pro Version 5.1 Build 2600
+Fingerprint Microsoft Windows XP Professional Version 5.1 Build 2600
 Class Microsoft | Windows | NT/2K/XP | general purpose
 TSeq(Class=RI%gcd=<6%SI=<32578&>18D%IPID=I)
 T1(DF=Y%W=FFF0%ACK=S++%Flags=AS%Ops=MNWNNT)
@@ -11833,7 +11834,7 @@ PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=F%ULEN=134%DAT=E)
 # Windows 2000 Advanced Server with SP3
 # Microsoft Windows 2000 Server version 5.0 build 2195 Service Pack 3
 # Windows 2000 SP3
-Fingerprint Microsoft Windows XP Pro SP1 or Windows 2000 SP3
+Fingerprint Microsoft Windows XP Professional SP1 or Windows 2000 SP3
 Class Microsoft | Windows | NT/2K/XP | general purpose
 TSeq(Class=RI%gcd=<6%SI=<57472&>68D%IPID=I)
 T1(DF=N|Y%W=0|FFF0%ACK=S++%Flags=AR|AS%Ops=|MNWNNT)
@@ -11845,7 +11846,7 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
-Fingerprint Microsoft Windows XP Pro SP1
+Fingerprint Microsoft Windows XP Professional SP1
 Class Microsoft | Windows | NT/2K/XP | general purpose
 TSeq(Class=RI%gcd=<6%SI=<14686&>1A0%IPID=I)
 T1(DF=Y%W=FAF0%ACK=S++%Flags=AS%Ops=MNWNNT)
@@ -11858,7 +11859,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 # Windows Xp Pro service pack 1 version 5.1 - Build  2600
-Fingerprint Microsoft Windows XP Pro SP1
+Fingerprint Microsoft Windows XP Professional SP1
 Class Microsoft | Windows | NT/2K/XP | general purpose
 TSeq(Class=RI%gcd=<6%SI=<3316C&>33B%IPID=I)
 T1(DF=Y%W=6270%ACK=S++%Flags=AS%Ops=MNWNNT)
