@@ -1040,7 +1040,7 @@ void printosscanoutput(Target *currenths) {
       {
 	log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Too many fingerprints match this host to give specific OS details\n");
 	if (o.debugging || o.verbose) {
-	  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"TCP/IP fingerprint:\n%s\n\n",  mergeFPs(currenths->FPR->FPs, currenths->FPR->numFPs, currenths->FPR->osscan_opentcpport, currenths->FPR->osscan_closedtcpport));
+	  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"TCP/IP fingerprint:\n%s",  mergeFPs(currenths->FPR->FPs, currenths->FPR->numFPs, currenths->FPR->osscan_opentcpport, currenths->FPR->osscan_closedtcpport));
 	}
       } else { assert(0); }
     

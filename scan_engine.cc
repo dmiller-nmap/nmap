@@ -129,6 +129,10 @@ struct ultra_timing_vals {
   int ccthresh; /* The threshold after which mode is changed from QUICK_START
 		   to CONGESTION_CONTROL */
   int num_updates; /* Number of updates to this utv (generally packet receipts ) */
+  /* Last time values were adjusted for a drop (you usually only want
+     to adjust again based on probes sent after that adjustment so a
+     sudden batch of drops doesn't destroy timing.  Init to now */
+  struct timeval last_drop; 
 };
 
 class ConnectProbe {
@@ -270,10 +274,9 @@ public:
    true. */
   bool sendOK(struct timeval *when); 
 
-/* Returns the soonest timeout out of the probes in this host, or the
-   send delay timeout, if that is the bottle neck.  Returns true if
-   their is a valid nextTimeout, false if there isn't (because no
-   active probes) */
+/* If there are pending probe timeouts, fills in when with the time of
+   the earliest one and returns true.  Otherwise returns false and
+   puts now in when. */
   bool HostScanStats::nextTimeout(struct timeval *when);
   UltraScanInfo *USI; /* The USI which contains this HSS */
 
@@ -436,10 +439,14 @@ extern void CloseLibs(void);
 /* Whether this is storing timing stats for a whole group or an
    individual host */
 enum ultra_timing_type { TIMING_HOST, TIMING_GROUP };
+/* Initialize the ultra_timing_vals structure timing.  The utt must be
+   TIMING_HOST or TIMING_GROUP.  If you happen to have the current
+   time handy, pass it as now, otherwise pass NULL */
 static void init_ultra_timing_vals(ultra_timing_vals *timing, 
-			    enum ultra_timing_type utt, 
-			    int num_hosts_in_group, 
-			    struct ultra_scan_performance_vars *perf);
+				   enum ultra_timing_type utt, 
+				   int num_hosts_in_group, 
+				   struct ultra_scan_performance_vars *perf,
+				   struct timeval *now);
 /* Adjust various timing variables based on pcket receipt.  Pass
    rcvdtime = NULL if you have given up on a probe and want to count
    this as a DROPPED PACKET */
@@ -553,7 +560,7 @@ GroupScanStats::GroupScanStats(UltraScanInfo *UltraSI) {
   memset(&latestip, 0, sizeof(latestip));
   memset(&timeout, 0, sizeof(timeout));
   USI = UltraSI;
-  init_ultra_timing_vals(&timing, TIMING_GROUP, USI->numIncompleteHosts(), &(USI->perf));
+  init_ultra_timing_vals(&timing, TIMING_GROUP, USI->numIncompleteHosts(), &(USI->perf), &USI->now);
   initialize_timeout_info(&to);
   num_probes_active = 0;
   numtargets = USI->numIncompleteHosts(); // They are all incomplete at the beginning
@@ -629,7 +636,7 @@ HostScanStats::HostScanStats(Target *t, UltraScanInfo *UltraSI) {
   ports_finished = 0;
   numprobes_sent = 0;
   numpings_sent = 0;
-  init_ultra_timing_vals(&timing, TIMING_HOST, 1, &(USI->perf));
+  init_ultra_timing_vals(&timing, TIMING_HOST, 1, &(USI->perf), &USI->now);
   bench_tryno = 0;
   memset(&sdn, 0, sizeof(sdn));
   sdn.last_boost = USI->now;
@@ -641,18 +648,16 @@ HostScanStats::HostScanStats(Target *t, UltraScanInfo *UltraSI) {
 
 HostScanStats::~HostScanStats() {
   list<UltraProbe *>::iterator probeI, next;
+
+/* Move any hosts from the bench to probes_outstanding for easier deletion  */
+  clearBench(); 
   for(probeI = probes_outstanding.begin(); probeI != probes_outstanding.end(); 
       probeI = next) {
     next = probeI;
     next++;
     destroyOutstandingProbe(probeI);
   }
-  for(probeI = probe_bench.begin(); probeI != probe_bench.end(); 
-      probeI = next) {
-    next = probeI;
-    next++;
-    destroyOutstandingProbe(probeI);
-  }
+  assert(probe_bench.empty());
 }
 
 /* How long I am currently willing to wait for a probe response before
@@ -764,16 +769,13 @@ bool HostScanStats::sendOK(struct timeval *when) {
   return false;
 }
 
-/* Returns the soonest timeout out of the probes in this host.
-   Returns true if their is a valid nextTimeout, false if there isn't
-   (because no active probes) */
+/* If there are pending probe timeouts, fills in when with the time of
+   the earliest one and returns true.  Otherwise returns false and
+   puts now in when. */
 bool HostScanStats::nextTimeout(struct timeval *when) {
   struct timeval probe_to, earliest_to;
   list<UltraProbe *>::iterator probeI;
   bool firstgood = true;
-  struct timeval sendTime;
-  unsigned long tdiff;
-  struct ultra_timing_vals tmng;
 
   assert(when);
   memset(&probe_to, 0, sizeof(probe_to));
@@ -782,30 +784,9 @@ bool HostScanStats::nextTimeout(struct timeval *when) {
   for(probeI = probes_outstanding.begin(); probeI != probes_outstanding.end();
       probeI++) {
     if (!(*probeI)->timedout) {
-      TIMEVAL_MSEC_ADD(probe_to, (*probeI)->sent, probeTimeout() / 1000);
+      TIMEVAL_ADD(probe_to, (*probeI)->sent, probeTimeout());
       if (firstgood || TIMEVAL_SUBTRACT(probe_to, earliest_to) < 0) {
 	earliest_to = probe_to;
-	firstgood = false;
-      }
-    }
-  }
-
-  if (sdn.delayms) {    
-    TIMEVAL_MSEC_ADD(sendTime, lastprobe_sent, sdn.delayms);
-    if (TIMEVAL_MSEC_SUBTRACT(sendTime, USI->now) < 0)
-      sendTime = USI->now;
-    tdiff = TIMEVAL_MSEC_SUBTRACT(earliest_to, sendTime);
-    
-    /* Timeouts previous to the sendTime requirement are pointless,
-       and those later than sendTime are not needed if we can send a
-       new packet at sendTime */
-    if (firstgood || tdiff > 0) {
-      earliest_to = sendTime;
-      firstgood = false;
-    } else {
-      getTiming(&tmng);
-      if (tdiff < 0 && tmng.cwnd < num_probes_active + .5) {
-	earliest_to = sendTime;
 	firstgood = false;
       }
     }
@@ -902,18 +883,18 @@ static void init_perf_values(struct ultra_scan_performance_vars *perf) {
   memset(perf, 0, sizeof(*perf));
   /* TODO: I should revisit these values for tuning.  They should probably
      at least be affected by -T. */
-  perf->low_cwnd = 1;
-  perf->host_initial_cwnd = 10;
-  perf->group_initial_cwnd = 10;
-  perf->max_cwnd = 300;
+  perf->low_cwnd = o.min_parallelism;
+  perf->max_cwnd = o.max_parallelism? o.max_parallelism : 300;
+  perf->group_initial_cwnd = box(o.min_parallelism, perf->max_cwnd, 10);
+  perf->host_initial_cwnd = perf->group_initial_cwnd;
   perf->quick_incr = 1;
   perf->cc_incr = 1;
   perf->initial_ccthresh = 50;
   perf->ping_magnifier = 3;
   perf->pingtime = 5000000;
   perf->group_drop_cwnd_divisor = 2.0;
-  perf->group_drop_ccthresh_divisor = 2.0;
-  perf->host_drop_ccthresh_divisor = 2.0;
+  perf->group_drop_ccthresh_divisor = (o.timing_level < 4)? 2.0 : 1.5;
+  perf->host_drop_ccthresh_divisor = (o.timing_level < 4)? 2.0 : 1.5;
   perf->tryno_cap = 12;
 }
 
@@ -1002,29 +983,37 @@ bool UltraScanInfo::sendOK(struct timeval *when) {
 
   if (!ggood) {
     if (when) {
-      // Can't do anything until global is OK
-      TIMEVAL_MSEC_ADD(*when, now, 1000); 
+      TIMEVAL_MSEC_ADD(lowhtime, now, 1000); 
+      // Can't do anything until global is OK - means packet receipt
+      // or probe timeout.
+      for(host = incompleteHosts.begin(); host != incompleteHosts.end(); 
+	  host++) {
+	if ((*host)->nextTimeout(&tmptv)) {
+	  if (TIMEVAL_SUBTRACT(tmptv, lowhtime) < 0)
+	    lowhtime = tmptv;
+	}
+      }
+      *when = lowhtime;
     }
-    return false;
+  } else {
+    for(host = incompleteHosts.begin(); host != incompleteHosts.end(); host++) {
+      thisHostGood = (*host)->sendOK(&tmptv);
+      if (ggood && thisHostGood) {
+	lowhtime = tmptv;
+	hgood = true;
+	foundgood = true;
+	break;
+      }
+      
+      if (!foundgood || TIMEVAL_SUBTRACT(lowhtime, tmptv) > 0) {
+	lowhtime = tmptv;
+	foundgood = true;
+      }
+    }
+    
+    assert(foundgood);
   }
   
-  for(host = incompleteHosts.begin(); host != incompleteHosts.end(); host++) {
-    thisHostGood = (*host)->sendOK(&tmptv);
-    if (ggood && thisHostGood) {
-      lowhtime = tmptv;
-      hgood = true;
-      foundgood = true;
-      break;
-    }
-
-    if (!foundgood || TIMEVAL_SUBTRACT(lowhtime, tmptv) > 0) {
-      lowhtime = tmptv;
-      foundgood = true;
-    }
-  }
-
-  assert(foundgood);
-
   if (TIMEVAL_MSEC_SUBTRACT(lowhtime, now) < 0)
     lowhtime = now;
 
@@ -1117,13 +1106,20 @@ int determineScanGroupSize(int hosts_scanned_so_far,
   return groupsize;
 }
 
+/* Initialize the ultra_timing_vals structure timing.  The utt must be
+   TIMING_HOST or TIMING_GROUP.  If you happen to have the current
+   time handy, pass it as now, otherwise pass NULL */
 static void init_ultra_timing_vals(ultra_timing_vals *timing, 
 				   enum ultra_timing_type utt, 
 				   int num_hosts_in_group, 
-				   struct ultra_scan_performance_vars *perf) {
+				   struct ultra_scan_performance_vars *perf,
+				   struct timeval *now) {
   timing->cwnd = (utt == TIMING_HOST)? perf->host_initial_cwnd : perf->group_initial_cwnd;
   timing->ccthresh = perf->initial_ccthresh; /* Will be reduced if any packets are dropped anyway */
   timing->num_updates = 0;
+  if (now)
+    timing->last_drop = *now;
+  else gettimeofday(&timing->last_drop, NULL);
 }
 
 
@@ -1364,11 +1360,17 @@ void ultrascan_adjust_times(UltraScanInfo *USI, HostScanStats *hss,
     /* A previous probe must have been lost ... */
     if (o.debugging > 1)
       printf("Ultrascan DROPPED %sprobe packet to %s:%hi detected\n", probe->isPing()? "PING " : "", hss->target->targetipstr(), probe->portno());
-    hss->timing.cwnd = USI->perf.low_cwnd;
-    hss->timing.ccthresh = (int) MAX(hss->num_probes_active / USI->perf.host_drop_ccthresh_divisor, 2);
-    USI->gstats->timing.cwnd = MAX(USI->perf.low_cwnd, USI->gstats->timing.cwnd / USI->perf.group_drop_cwnd_divisor);
-    USI->gstats->timing.ccthresh = (int) MAX(USI->gstats->num_probes_active / USI->perf.group_drop_ccthresh_divisor, 2);
-
+    // Drops often come in big batches, but we only want one decrease per batch.
+    if (TIMEVAL_SUBTRACT(probe->sent, hss->timing.last_drop) > 0) {
+      hss->timing.cwnd = USI->perf.low_cwnd;
+      hss->timing.ccthresh = (int) MAX(hss->num_probes_active / USI->perf.host_drop_ccthresh_divisor, 2);
+      hss->timing.last_drop = USI->now;
+    }
+    if (TIMEVAL_SUBTRACT(probe->sent, USI->gstats->timing.last_drop) > 0) {
+      USI->gstats->timing.cwnd = MAX(USI->perf.low_cwnd, USI->gstats->timing.cwnd / USI->perf.group_drop_cwnd_divisor);
+      USI->gstats->timing.ccthresh = (int) MAX(USI->gstats->num_probes_active / USI->perf.group_drop_ccthresh_divisor, 2);
+      USI->gstats->timing.last_drop = USI->now;
+    }
   } else {
     /* Good news -- got a response to first try.  Increase window as 
        appropriate.  */
@@ -1379,13 +1381,18 @@ void ultrascan_adjust_times(UltraScanInfo *USI, HostScanStats *hss,
       /* Congestion control mode */
       hss->timing.cwnd += ping_magnifier * USI->perf.cc_incr / hss->timing.cwnd;
     }
+    if (hss->timing.cwnd > USI->perf.max_cwnd)
+      hss->timing.cwnd = USI->perf.max_cwnd;
+
     if (USI->gstats->timing.cwnd <= USI->gstats->timing.ccthresh) {
       /* In quick start mode */
-      USI->gstats->timing.cwnd += USI->perf.quick_incr;
+      USI->gstats->timing.cwnd += ping_magnifier * USI->perf.quick_incr;
     } else {
       /* Congestion control mode */
-      USI->gstats->timing.cwnd += USI->perf.cc_incr / USI->gstats->timing.cwnd;
+      USI->gstats->timing.cwnd += ping_magnifier * USI->perf.cc_incr / USI->gstats->timing.cwnd;
     }
+    if (USI->gstats->timing.cwnd > USI->perf.max_cwnd)
+      USI->gstats->timing.cwnd = USI->perf.max_cwnd;
   }
 
   /* If packet drops are particularly bad, enforce a delay between

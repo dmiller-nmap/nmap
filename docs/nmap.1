@@ -453,6 +453,13 @@ only reported in normal output with -v.
 .Sp
 When verbose mode (\-v) is on with \-O, IPID Sequence Generation is also reported.  Most machines are in the "incremental" class, which means that they increment the "ID" field in the IP header for each packet they send.  This makes them vulnerable to several advanced information gathering and spoofing attacks.
 .TP
+.B \--osscan_limit
+OS detection is far more effective if at least one open and one closed
+TCP port are found.  Set this option and Nmap will not even try OS
+detection against hosts that do not meet this criteria.  This can save
+substantial time, particularly on -P0 scans against many hosts.  It
+only matters when OS detection is requested (-O or -A options).
+.TP
 .B \-A
 This option enables _a_dditional _a_dvanced and _a_ggressive options.
 I haven't decided exactly which it stands for yet :).  Presently

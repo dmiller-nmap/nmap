@@ -1,5 +1,26 @@
 # Nmap Changelog ($Id$)
 
+o Added support for --min_parallelism and --max_parallelism in the new
+  ultra_scan() framework.  Thanks to Bill Petersen
+  (bill.petersen(a)alcatel.com) for noting that they weren't affecting
+  his scan times.
+
+Nmap 3.59ALPHA5
+
+o Fixed a major timing bug that I introduced in ALPHA4.  The bug tends
+  to affect scans against multiple, filtered hosts.
+
+o Improved timing algorithms based on benchmark results against a
+  diverse set of networks.
+
+o Documented the --osscan_limit option, which saves time by skipping
+  OS detection if at least one open and one closed port are not found on
+  the remote hosts.  OS detection is much less reliable against such
+  hosts anyway, and skipping it can save some time.
+
+o Fixed an assertion failure (!probes_outstanding.empty()) reported by
+  Bill Petersen (bill.petersen(a)alcatel.com).
+
 o Fixed a bug that caused the source host (localhost) to be
   skipped when scanning a network that includes the host itself (at
   least on Linux).
