@@ -1,5 +1,9 @@
 # Nmap Changelog ($Id$)
 
+Nmap 2.54BETA36
+
+o Fixed connect scan problem introduced in BETA35
+
 Nmap 2.54BETA35
 
 o Fixed an issue that could cause the abort message "Serious time

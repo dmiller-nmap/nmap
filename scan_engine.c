@@ -668,35 +668,34 @@ void pos_scan(struct hoststruct *target, u16 *portarray, int numports, stype sca
 
     set_pcap_filter(target, pd, flt_icmptcp, filter);
 
-    if (scantype == CONNECT_SCAN) {
-      rawsd = -1;
-      /* Init our sock */
-      bzero((char *)&sock,sizeof(struct sockaddr_in));
-      sock.sin_addr.s_addr = target->host.s_addr;
-      sock.sin_family=AF_INET;
-    } else if (scantype == RPC_SCAN) {
-      get_rpc_procs(&(rsi.rpc_progs), &(rsi.rpc_number));
-      scan = (struct portinfo *) safe_malloc(rsi.rpc_number * sizeof(struct portinfo));
-      for(j = 0; j < rsi.rpc_number; j++) {
-	scan[j].state = PORT_FRESH;
-	scan[j].portno = rsi.rpc_progs[j];
-	scan[j].trynum = 0;
-	scan[j].prev = j-1;
-	scan[j].sd[0] = scan[j].sd[1] = scan[j].sd[2] = -1;
-	if (j < rsi.rpc_number -1 ) scan[j].next = j+1;
-	else scan[j].next = -1;
-      }
-      current = pil.testinglist = &scan[0]; 
-      rawsd = -1;
-      rsi.rpc_current_port = NULL; /*nextport(&target->ports, NULL, 0, PORT_OPEN); */
-    }
-    else if (o.scanflags != -1) scanflags = o.scanflags;
+    if (o.scanflags != -1) scanflags = o.scanflags;
     else if (scantype == SYN_SCAN)
       scanflags = TH_SYN;
     else
       scanflags = TH_ACK;
+  } else if (scantype == CONNECT_SCAN) {
+    rawsd = -1;
+    /* Init our sock */
+    bzero((char *)&sock,sizeof(struct sockaddr_in));
+    sock.sin_addr.s_addr = target->host.s_addr;
+    sock.sin_family=AF_INET;
+  } else if (scantype == RPC_SCAN) {
+    get_rpc_procs(&(rsi.rpc_progs), &(rsi.rpc_number));
+    scan = (struct portinfo *) safe_malloc(rsi.rpc_number * sizeof(struct portinfo));
+    for(j = 0; j < rsi.rpc_number; j++) {
+      scan[j].state = PORT_FRESH;
+      scan[j].portno = rsi.rpc_progs[j];
+      scan[j].trynum = 0;
+      scan[j].prev = j-1;
+      scan[j].sd[0] = scan[j].sd[1] = scan[j].sd[2] = -1;
+      if (j < rsi.rpc_number -1 ) scan[j].next = j+1;
+      else scan[j].next = -1;
+    }
+    current = pil.testinglist = &scan[0]; 
+    rawsd = -1;
+    rsi.rpc_current_port = NULL; /*nextport(&target->ports, NULL, 0, PORT_OPEN); */
   } else {
-    assert("Unknown scan type given to pos_scan()");
+    fatal("Unknown scan type given to pos_scan()");
   }
 
   starttime = time(NULL);
