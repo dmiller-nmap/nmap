@@ -6,3 +6,7 @@ I have submitted a bug report to the winpcap folks,
 who say they'll fix this in the next version.
 
 (source is available at the above-mentioned website)
+
+[ Note -- this was written by Andy Lutomirski when the latest libpcap
+  was 2.02 ( http://netgroup-serv.polito.it/winpcap/ ) -- Fyodor ]
+
