@@ -299,7 +299,10 @@ while(<>) {
 
 # OK, now it is time to print out the merged Fprint ...
 
-if ($fp{contrib}) { print "# Contributed by $fp{contrib}\n"; }
+# Printing contributed by line was like a magnet for spammers and took
+# up a substantial amount of space in the file.  Plus may make
+# licensees nervous.
+# if ($fp{contrib}) { print "# Contributed by $fp{contrib}\n"; }
 print "Fingerprint $fp{os}\n";
 if ($fp{tseq}{cls}) {
     print("TSeq(Class=$fp{tseq}{cls}");
