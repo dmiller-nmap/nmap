@@ -781,6 +781,8 @@ match zebra m|^\r\nHello, this is zebra \(version (\d[-.\w]+)\)\.\r\nCopyright 2
 
 match pcp m|^\0\0\0\x14\0\0p\0\0\0..\0\0\0\0\x02\x01\0\0| v/SGI Performance Co-Pilot///
 
+match smtp m|^220 SPAM, we hates it.\r\n| v/Barracuda Spam firewall///
+
 ##############################NEXT PROBE##############################
 Probe TCP GenericLines q|\r\n\r\n|
 ports 21,23,43,98,110,113,199,505,540,628,1040,1248,1467,1501,2010,3333,5432,5555,6112,6667-6670,11965,30444
@@ -889,6 +891,8 @@ match uucp m|^login: Please enter user name: Password: $| v/Solaris uucpd///
 match ups m|^32\r $| v/Cyber Power PowerPanelPlus UPS Server//Windows/
 match whois m|^%  No entries found for the selected source\(s\)\.\n$| v/Merit IRRD whoisd///
 match zebedee m|^\x02\x01$| v/Zebedee encrypted tunnel///
+
+match bmc-perform-service m|^SDPACK$| v/BMC Perform Service Daemon///
 
 ##############################NEXT PROBE##############################
 Probe TCP GetRequest q|GET / HTTP/1.0\r\n\r\n|
@@ -1252,7 +1256,7 @@ match irc m|^:Default-Chat-Community 421 \* GET :Unknown command\r\n| v/Microsof
 
 # Jabber 1.4.2
 match jabber m|^<stream:error>Invalid XML</stream:error>$| v/Jabber instant messaging server///
-match kazaa-http m|^HTTP/1\.0 404 Not Found\r\nX-Kazaa-Username: ([-.+\w]+)\r\nX-Kazaa-Network: ([-.\w]+)\r\n| v/KaZaA P2P client//username: $1; network: $2/
+match kazaa-http m|^HTTP/1\.0 404 Not Found\(\r\)?\nX-Kazaa-Username: ([-.+\w]+)\r\nX-Kazaa-Network: ([-.\w]+)\r\n| v/KaZaA P2P client//username: $1; network: $2/
 match kazaa-peerpoint m|^HTTP/1\.0 404 Not Found\n\r\n$| v/KaZaA P2P client Peer Point Manager///
 match msdtc m|^...\0..$|s v/Microsoft Distributed Transaction Coordinator///
 match msdtc m|^ERROR\n$|s v/Microsoft Distributed Transaction Coordinator//error/
@@ -1319,6 +1323,8 @@ match vnc-http m|^HTTP/1\.0 200 OK\n\n<HTML><TITLE>VNC desktop \[([-.\w]+)\]</TI
 match vnc-http m|^HTTP/1\.0 200 OK\n\n<HTML>\n  <HEAD><TITLE>Ultr@VNC Desktop \[[-.\w]+\] ------- Ultr@VNC Home Page is  http://ultravnc\.sf\.net -------</TITLE></HEAD>\n  <BODY>\n  <SPAN style='position: absolute; top:0px;left:0px'>\n    <APPLET CODE=VncViewer\.class ARCHIVE=VncViewer\.jar WIDTH=(\d+) HEIGHT=(\d+)>\n      <PARAM NAME=PORT VALUE=(\d+)>\n      <PARAM NAME=ENCODING VALUE=Tight>\n    </APPLET>  </SPAN>\n  </BODY>\n| v/Ultr@VNC//Resolution $1x$2; VNC TCP port: $3/
 
 match xml-rpc m|^HTTP/1\.0 400 Bad Request\r\nServer: Apache XML-RPC (\d[-.\w ]+)\r\n\r\nMethod GET not implemented \(try POST\)$| v/Apache XML-RPC/$1//
+
+match wsmserver m|^Language received from client: GET\nSetlocale: C\n$| v/AIX Web-based System Manager///
 
 ##############################NEXT PROBE##############################
 Probe TCP HTTPOptions q|OPTIONS / HTTP/1.0\r\n\r\n|

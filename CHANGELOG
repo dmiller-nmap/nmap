@@ -1,6 +1,54 @@
 # Nmap Changelog ($Id$)
 
-UNRELEASED:
+Nmap 3.55
+
+o Added MAC address printing.  If Nmap receives packet from a target
+  machine which is on an Ethernet segment directly connected to the
+  scanning machine, Nmap will print out the target MAC address.  Nmap
+  also now contains a database (derived from the official IEEE
+  version) which it uses to determine the vendor name of the target
+  ethernet interface.  The Windows version of Nmap does not yet have
+  this capability.  Here are examples from normal and XML
+  output (angle brackets replaced with [] for HTML changelog compatability):
+  MAC Address: 08:00:20:8F:6B:2F (SUN Microsystems)
+  [address addr="00:A0:CC:63:85:4B" vendor="Lite-on Communications" addrtype="mac" /]
+
+o Updated the XML DTD to support the newly printed MAC addresses.
+  Thanks to Thorsten Holz (thorsten.holz(a)mmweg.rwth-aachen.de) for
+  sending this patch.
+
+o Added a bunch of new and fixed service fingerprints for version
+  detection.  These are from Martin Maèok
+  (martin.macok(a)underground.cz).
+
+o Normalized many of the OS names in nmap-os-fingerprints (fixed
+  capitalization, typos, etc.).  Thanks to Royce Williams
+  (royce(a)alaska.net) and Ping Huang (pshuang(a)alum.mit.edu) for
+  sending patches.
+
+o Modified the mswine32/nmap_performance.reg Windows registry file to
+  use an older and more compatable version.  It also now includes the
+  value "StrictTimeWaitSeqCheck"=dword:00000001 , as suggested by Jim
+  Harrison (jmharr(a)microsoft.com).  Without that latter value, the
+  TcpTimedWaitDelay value apparently isn't checked.  Windows users
+  should apply the new registry changes by clicking on the .reg file.
+  Or do it manually as described in README-WIN32.  This file is also
+  now available in the data directory at
+  http://www.insecure.org/nmap/data/nmap_performance.reg
+
+o Applied patch from Gisle Vanem (giva(a)bgnett.no) which allows the
+  Windows version of Nmap to work with WinPCAP 3.1BETA (and probably
+  future releases).  The Winpcap folks apparently changed the encoding
+  of adaptor names in this release.
+
+o Fixed a ping scanning bug that would cause this error message: "nmap:
+  targets.cc:196: int hostupdate (Target **, Target *, int, int, int,
+  timeout_info *, timeval *, timeval *, pingtune *, tcpqueryinfo *,
+  pingstyle): Assertion `pt->down_this_block > 0' failed."  Thanks to
+  Beirne Konarski (beirne(a)neo.rr.com) for reporting the problem.
+
+o If a user attempts -PO (the letter O), print an error suggesting
+  that they probably mean -P0 (Zero) to disable ping scanning.
 
 o Applied a couple patches (with minor changes) from Oliver Eikemeier
   (eikemeier(a)fillmore-labs.com) which fix an edge case relating to
@@ -46,31 +94,6 @@ o Added --source_port as a longer, but hopefully easier to remember,
 
 o Removed undocumented (and useless) -N option.
 
-o Added MAC address printing.  If Nmap receives packet from a target
-  machine which is on an Ethernet segment directly connected to the
-  scanning machine, Nmap will print out the target MAC address.  Nmap
-  also now contains a database (derived from the official IEEE
-  version) which it uses to determine the vendor name of the target
-  ethernet interface.  The Windows version of Nmap does not yet have
-  this capability.  Here are examples from normal and XML
-  output (angle brackets replaced with [] for HTML changelog compatability):
-  MAC Address: 08:00:20:8F:6B:2F (SUN Microsystems)
-  [address addr="00:A0:CC:63:85:4B" vendor="Lite-on Communications" addrtype="mac" /]
-
-o Updated the XML DTD to support the newly printed MAC addresses.
-  Thanks to Thorsten Holz (thorsten.holz(a)mmweg.rwth-aachen.de) for
-  sending this patch.
-
-o Normalized many of the OS names in nmap-os-fingerprints (fixed
-  capitalization, typos, etc.).  Thanks to Royce Williams
-  (royce(a)alaska.net) and Ping Huang (pshuang(a)alum.mit.edu) for
-  sending patches.
-
-o Applied patch from Gisle Vanem (giva(a)bgnett.no) which allows the
-  Windows version of Nmap to work with WinPCAP 3.1BETA (and probably
-  future releases).  The Winpcap folks apparently changed the encoding
-  of adaptor names in this release.
-
 o Fixed a version detection crash reported in excellent detail by
   Jedi/Sector One (j(a)pureftpd.org).
 
@@ -81,16 +104,6 @@ o Modified the configure/build system to fix library ordering problems
   that prevented Nmap from building on certain platforms.  Thanks to
   Greg A. Woods (woods(a)weird.com) and Saravanan
   (saravanan_kovai(a)HotPop.com) for the suggestions.
-
-o Modified the mswine32/nmap_performance.reg Windows registry file to
-  use an older and more compatable version.  It also now includes the
-  value "StrictTimeWaitSeqCheck"=dword:00000001 , as suggested by Jim
-  Harrison (jmharr(a)microsoft.com).  Without that latter value, the
-  TcpTimedWaitDelay value apparently isn't checked.  Windows users
-  should apply the new registry changes by clicking on the .reg file.
-  Or do it manually as described in README-WIN32.  This file is also
-  now available in the data directory at
-  http://www.insecure.org/nmap/data/nmap_performance.reg
 
 o Applied a patch to Makefile.in from Scott Mansfield
   (thephantom(a)mac.com) which enables the use of a DESTDIR variable

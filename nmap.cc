@@ -582,8 +582,9 @@ int nmap_main(int argc, char *argv[]) {
 	  o.num_ping_ackprobes = 1;
 	  o.ping_ackprobes[0] = DEFAULT_TCP_PROBE_PORT;
 	}
-      }
-      else { 
+      } else if (*optarg == 'O') {
+	fatal("-PO (the letter O)? No such option. Perhaps you meant to disable pings with -P0 (Zero).");
+      } else { 
 	fatal("Illegal Argument to -P, use -P0, -PI, -PB, -PM, -PP, -PT, or -PT80 (or whatever number you want for the TCP probe destination port)"); 
       }
       break;

@@ -8093,9 +8093,11 @@ PU(DF=Y|N%TOS=0|8|14|20|28|38|40|C0|C8%IPLEN=164%RIPTL=148%RID=E%RIPCK=E|F%UCK=E
 
 # Linux 2.4.18 on Alpha EV4
 # Linux 2.5.70 (x86)
-Fingerprint Linux 2.4.18 - 2.5.70 (x86)
+# Linux 2.6.4 i686
+Fingerprint Linux 2.4.18 - 2.6.4 (x86)
 Class Linux | Linux | 2.4.X | general purpose
 Class Linux | Linux | 2.5.X | general purpose
+Class Linux | Linux | 2.6.X | general purpose
 TSeq(Class=RI%gcd=<6%SI=<20DBA72&>5419C%IPID=Z%TS=1000HZ)
 T1(DF=Y%W=16A0%ACK=S++%Flags=AS%Ops=MNNTNW)
 T2(Resp=N)
