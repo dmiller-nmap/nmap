@@ -530,6 +530,8 @@ ndbserver98	536871042
 ndbserver99	536871043
 ndbserver100	536871044
 #
+fcagent         541414217   # SGI FibreVault Status/Configuration daemon
+#
 ugidd		545580417	rpc.ugidd
 #
 # Inetray - Raytrace
