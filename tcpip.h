@@ -265,9 +265,16 @@ int send_tcp_raw( int sd, struct in_addr *source,
                   unsigned long ack, unsigned char flags,
                   unsigned short window, char *data,
                   unsigned short datalen);
-/* A simple program I wrote to help in debugging, shows the important fields
+int send_udp_raw( int sd, struct in_addr *source, 
+		  struct in_addr *victim, unsigned short sport, 
+		  unsigned short dport, char *data, unsigned short datalen);
+int send_ip_raw( int sd, struct in_addr *source, 
+		  struct in_addr *victim, unsigned char proto,
+		  char *data, unsigned short datalen);
+/* A simple function I wrote to help in debugging, shows the important fields
    of a TCP packet*/
 int readtcppacket(char *packet, int readdata);
+int readudppacket(char *packet, int readdata);
 /* Convert an IP address to the device (IE ppp0 eth0) using that address */
 int ipaddr2devname( char *dev, struct in_addr *addr );
 void sethdrinclude(int sd);
