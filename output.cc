@@ -285,7 +285,7 @@ void printportoutput(Target *currenths, PortList *plist) {
 log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT, "%d service%s unrecognized despite returning data. If you know the service/version, please submit the following fingerprint%s at http://www.insecure.org/cgi-bin/servicefp-submit.cgi :\n", numfps, (numfps > 1)? "s" : "", (numfps > 1)? "s" : "");
     for(i=0; i < numfps; i++) {
       if (numfps > 1)
-	log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT, "==========NEXT SERVICE FINGERPRINT (SUBMIT INDIVIDUALLY)===========\n");
+	log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT, "==============NEXT SERVICE FINGERPRINT (SUBMIT INDIVIDUALLY)==============\n");
       log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT, "%s\n", saved_servicefps[i]);
     }
   }

@@ -49,6 +49,10 @@
 
 #include <assert.h>
 
+#ifndef __attribute__
+#define __attribute__(args)
+#endif
+
 /**********************  DEFINES/ENUMS ***********************************/
 
 /**********************  STRUCTURES  ***********************************/

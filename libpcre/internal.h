@@ -36,8 +36,11 @@ restrictions:
 modules, but which are not relevant to the outside. */
 
 /* Get the definitions provided by running "configure" */
-
+#ifndef WIN32
 #include "config.h"
+#else
+#include "pcre_winconfig.h"
+#endif
 
 /* When compiling for use with the Virtual Pascal compiler, these functions
 need to have their names changed. PCRE must be compiled with the -DVPCOMPAT
@@ -164,7 +167,11 @@ capturing parenthesis numbers in back references. */
 #define PCRE_DEFINITION       /* Win32 __declspec(export) trigger for .dll */
 #endif
 
+#ifndef WIN32
 #include "pcre.h"
+#else
+#include "pcre_win.h"
+#endif
 
 /* In case there is no definition of offsetof() provided - though any proper
 Standard C system should have one. */

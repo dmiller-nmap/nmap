@@ -109,7 +109,7 @@ void Target::GenerateIPString() {
                 (char *) NULL,
 #endif
 		targetipstring, sizeof(targetipstring)) == NULL) {
-    fatal("Failed to convert target address to presentation format!?!  Error: %s", strerror(errno));
+    fatal("Failed to convert target address to presentation format!?!  Error: %s", strerror(socket_errno()));
   }
 }
 

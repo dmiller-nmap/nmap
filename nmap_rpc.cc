@@ -247,7 +247,7 @@ int send_rpc_query(const struct in_addr *target_host, unsigned short portno,
 	hdump((unsigned char *) rpch, sizeof(struct rpc_hdr));
       res = sendto(udp_rpc_socket, (char *)rpch, sizeof(struct rpc_hdr), 0,
 		   (struct sockaddr *) &sock, sizeof(struct sockaddr_in));
-    } while(res == -1 && (errno == EINTR || errno == ENOBUFS));
+    } while(res == -1 && (socket_errno() == EINTR || socket_errno() == ENOBUFS));
     if (res == -1) {
       if (o.debugging) {
 	gh_perror("Sendto in send_rpc_query");
@@ -460,7 +460,7 @@ unsigned long current_msg_len;
    sres = select(max_sd + 1, &fds_r, NULL, NULL, &tv);
    if (!sres)
      break;
-   if (sres == -1 && errno == EINTR)
+   if (sres == -1 && socket_errno() == EINTR)
      continue;
    if (udp_rpc_socket >= 0 && FD_ISSET(udp_rpc_socket, &fds_r)) {
      res = recvfrom(udp_rpc_socket, readbuf, sizeof(readbuf), 0, (struct sockaddr *) &from, &fromlen);
@@ -490,7 +490,7 @@ unsigned long current_msg_len;
    } else if (tcp_rpc_socket >= 0 && FD_ISSET(tcp_rpc_socket, &fds_r)) {
      do {     
        res = read(tcp_rpc_socket, readbuf + tcp_readlen, sizeof(readbuf) - tcp_readlen);
-     } while(res == -1 && errno == EINTR);
+     } while(res == -1 && socket_errno() == EINTR);
      if (res <= 0) {
        if (o.debugging) {
 	 if (res == -1)

@@ -1034,7 +1034,7 @@ ServiceGroup::~ServiceGroup() {
 
   // Sends probe text to an open connection.  In the case of a NULL probe, there
   // may be no probe text
-  static int send_probe_text(nsock_pool nsp, nsock_iod nsi, struct ServiceNFO *svc,
+  static int send_probe_text(nsock_pool nsp, nsock_iod nsi, ServiceNFO *svc,
 			     ServiceProbe *probe) {
     const u8 *probestring;
     int probestringlen;
@@ -1057,7 +1057,7 @@ ServiceGroup::~ServiceGroup() {
 // new connection will be made even if the previous probe was the NULL probe.
 // You would do this, for example, if the other side has closed the connection.
 static void startNextProbe(nsock_pool nsp, nsock_iod nsi, ServiceGroup *SG, 
-			   struct ServiceNFO *svc, bool alwaysrestart) {
+			   ServiceNFO *svc, bool alwaysrestart) {
   ServiceProbe *probe = svc->currentProbe();
 
   if (!alwaysrestart && probe->isNullProbe()) {
@@ -1143,7 +1143,7 @@ void servicescan_connect_handler(nsock_pool nsp, nsock_event nse, void *mydata) 
   nsock_iod nsi = nse_iod(nse);
   enum nse_status status = nse_status(nse);
   enum nse_type type = nse_type(nse);
-  struct ServiceNFO *svc = (ServiceNFO *) mydata;
+  ServiceNFO *svc = (ServiceNFO *) mydata;
   ServiceProbe *probe = svc->currentProbe();
   ServiceGroup *SG = (ServiceGroup *) nsp_getud(nsp);
 
@@ -1179,7 +1179,7 @@ void servicescan_connect_handler(nsock_pool nsp, nsock_event nse, void *mydata) 
 void servicescan_write_handler(nsock_pool nsp, nsock_event nse, void *mydata) {
   enum nse_status status = nse_status(nse);
   nsock_iod nsi;
-  struct ServiceNFO *svc = (struct ServiceNFO *)mydata;
+  ServiceNFO *svc = (ServiceNFO *)mydata;
   ServiceGroup *SG;
 
   svc->current_write = (nsock_event_id) -1;
@@ -1213,7 +1213,7 @@ void servicescan_read_handler(nsock_pool nsp, nsock_event nse, void *mydata) {
   nsock_iod nsi = nse_iod(nse);
   enum nse_status status = nse_status(nse);
   enum nse_type type = nse_type(nse);
-  struct ServiceNFO *svc = (ServiceNFO *) mydata;
+  ServiceNFO *svc = (ServiceNFO *) mydata;
   ServiceProbe *probe = svc->currentProbe();
   ServiceGroup *SG = (ServiceGroup *) nsp_getud(nsp);
   const char *matchname;

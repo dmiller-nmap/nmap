@@ -46,56 +46,6 @@
 
 #include "utils.h"
 
-/* Return num if it is between min and max.  Otherwise return min or
-   max (whichever is closest to num), */
-/*
-export template<class T> T box(T bmin, T bmax, T bnum) {
-  if (bmin > bmax)
-    fatal("box(bmin=%d,bmax=%d,bnum=%d) called = bmin must be <= bmax", (int) bmin, (int) bmax, (int) bnum);
-  if (bnum >= bmax)
-    return bmax;
-  if (bnum <= bmin)
-    return bmin;
-  return bnum;
-}
-*/
-void *safe_malloc(int size)
-{
-  void *mymem;
-  if (size < 0)
-    fatal("Tried to malloc negative amount of memory!!!");
-  mymem = malloc(size);
-  if (mymem == NULL)
-    fatal("Malloc Failed! Probably out of space.");
-  //  printf("Called safe_malloc(%d) -- returning %lX\n", size, (unsigned long) mymem);
-  return mymem;
-}
-
-void *safe_realloc(void *ptr, size_t size)
-{
-  void *mymem;
-  if (size < 0)
-    fatal("Tried to realloc negative amount of memory!!!");
-  mymem = realloc(ptr, size);
-  if (mymem == NULL)
-    fatal("Realloc Failed! Probably out of space.");
-  //  printf("Called safe_malloc(%d) -- returning %lX\n", size, (unsigned long) mymem);
-  return mymem;
-}
-
-/* Zero-initializing version of safe_malloc */
-void *safe_zalloc(int size)
-{
-  void *mymem;
-  if (size < 0)
-    fatal("Tried to malloc negative amount of memory!!!");
-  mymem = calloc(1, size);
-  if (mymem == NULL)
-    fatal("Malloc Failed! Probably out of space.");
-  //  printf("Called safe_zalloc(%d) -- returning %lX\n", size, (unsigned long) mymem);
-  return mymem;
-}
-
 /* Hex dump */
 void hdump(unsigned char *packet, unsigned int len) {
 unsigned int i=0, j=0;
@@ -433,7 +383,7 @@ ssize_t Write(int fd, const void *buf, size_t count) {
     res = write(fd,(char *) buf + len,count - len);
     if (res > 0)
       len += res;
-  } while(len < count && (res != -1 || errno == EINTR));
+  } while(len < count && (res != -1 || socket_errno() == EINTR));
 
   return res;
 }

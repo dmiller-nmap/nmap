@@ -138,7 +138,7 @@ const char *inet_socktop(struct sockaddr_storage *ss) {
                 (char *) NULL,
 #endif /* HAVE_IPV6 */
                 buf, sizeof(buf)) == NULL) {
-    fatal("Failed to convert target address to presentation format in inet_socktop!?!  Error: %s", strerror(errno));
+    fatal("Failed to convert target address to presentation format in inet_socktop!?!  Error: %s", strerror(socket_errno()));
   }
   return buf;
 }
@@ -1189,7 +1189,7 @@ int done = 0;
       tv.tv_usec = 0;
       res = recvfrom(sd2, buf, 65535, 0, &sa, &sasize);
       if (res < 0) {
-	if (errno != EWOULDBLOCK)
+	if (socket_errno() != EWOULDBLOCK)
 	  perror("recvfrom");
       }
       if (res > 0) {
@@ -2058,8 +2058,8 @@ do {
   if ((res = sendto(sd, (const char *) packet, len, flags, to, tolen)) == -1) {
     error("sendto in %s: sendto(%d, packet, %d, 0, %s, %d) => %s",
 	  functionname, sd, len, inet_ntoa(sin->sin_addr), tolen,
-	  strerror(errno));
-    if (retries > 2 || errno == EPERM) 
+	  strerror(socket_errno()));
+    if (retries > 2 || socket_errno() == EPERM) 
       return -1;
     sleeptime = 15 * (1 << (2 * retries));
     error("Sleeping %d seconds then retrying", sleeptime);

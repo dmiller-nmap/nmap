@@ -285,7 +285,7 @@ static int get_connect_results(Target *target,
 	assert(trynum != -1);
 
 	if (getsockopt(sd, SOL_SOCKET, SO_ERROR, (char *) &optval, &optlen) != 0)
-	  optval = errno; /* Stupid Solaris ... */
+	  optval = socket_errno(); /* Stupid Solaris ... */
 
 	switch(optval) {
 	case 0:
@@ -964,7 +964,7 @@ void pos_scan(Target *target, u16 *portarray, int numports, stype scantype) {
 		  if (res != -1) {
 		    posportupdate(target, current, NULL, current->trynum, scan, &ss, scantype, PORT_OPEN, &pil, &csi);
 		  } else {
-		    switch(errno) {
+		    switch(socket_errno()) {
 		    case EINPROGRESS: /* The one I always see */
 		    case EAGAIN:
 		      /* GOOD REASON FOR THIS????block_socket(sockets[current_socket]); */
@@ -977,7 +977,7 @@ void pos_scan(Target *target, u16 *portarray, int numports, stype scantype) {
 		    default:
 		      if (!connecterror) {	
 			connecterror++;
-			fprintf(stderr, "Strange error from connect (%d):", errno);
+			fprintf(stderr, "Strange error from connect (%d):", socket_errno());
 			fflush(stdout);
 			perror(""); /*falling through intentionally*/
 		      }
@@ -1043,7 +1043,7 @@ void pos_scan(Target *target, u16 *portarray, int numports, stype scantype) {
 	      if (res != -1) {
 		posportupdate(target, current, NULL, current->trynum, scan, &ss, scantype, PORT_OPEN, &pil, &csi);
 	      } else {
-		switch(errno) {
+		switch(socket_errno()) {
 		case EINPROGRESS: /* The one I always see */
 		case EAGAIN:
 		  /* GOOD REASON FOR THIS????block_socket(sockets[current_socket]); */
@@ -1056,7 +1056,7 @@ void pos_scan(Target *target, u16 *portarray, int numports, stype scantype) {
 		default:
 		  if (!connecterror) {	
 		    connecterror++;
-		    fprintf(stderr, "Strange error from connect (%d):", errno);
+		    fprintf(stderr, "Strange error from connect (%d):", socket_errno());
 		    fflush(stdout);
 		    perror(""); /*falling through intentionally*/
 		  }

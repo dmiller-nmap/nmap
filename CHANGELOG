@@ -1,5 +1,17 @@
 # Nmap Changelog ($Id$)
 
+o The Winpcap libraries used in the Windows build process have been
+  upgraded to version 3.0.
+
+o Most of the Windows port is complete.  It compiles and service scan
+  works (I didn't test very deeply) on my WinXP box with VS.Net 2003.
+  I try to work out remaining kinks and do some cleanup for the next
+  version.  The Windows code was restructed and improved quite a bit,
+  but much more work remains to be done in that area.  I'll probably
+  do a Windows binary .zip release of the next version.
+
+Nmap 3.40PVT8
+
 o Service scan is now OFF by default.  You can activate it with -sV.
   Or use the snazzy new -A (for "All recommended features" or "Aggressive") option which
   turns on both OS detection and service detection.

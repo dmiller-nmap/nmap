@@ -131,12 +131,6 @@ template<class T> T box(T bmin, T bmax, T bnum) {
   return bnum;
 }
 
-  /*int box(int bmin, int bmax, int bnum);
-    int box(double bmin, double bmax, double bnum); */
-void *safe_malloc(int size);
-void *safe_realloc(void *ptr, size_t size);
-/* Zero-initializing version of safe_malloc */
-void *safe_zalloc(int size);
 void hdump(unsigned char *packet, unsigned int len);
 void lamont_hdump(char *cp, unsigned int length);
 int get_random_bytes(void *buf, int numbytes);

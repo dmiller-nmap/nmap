@@ -1130,7 +1130,7 @@ void init_socket(int sd) {
 
   if (setsockopt(sd, SOL_SOCKET, SO_LINGER,  (const char *) &l, sizeof(struct linger)))
     {
-      fprintf(stderr, "Problem setting socket SO_LINGER, errno: %d\n", errno);
+      fprintf(stderr, "Problem setting socket SO_LINGER, errno: %d\n", socket_errno());
       perror("setsockopt");
     }
   if (o.spoofsource && !bind_failed)
@@ -1139,7 +1139,7 @@ void init_socket(int sd) {
       res=bind(sd, (struct sockaddr*)&ss, sslen);
       if (res<0)
 	{
-	  fprintf(stderr, "init_socket: Problem binding source address (%s), errno :%d\n", inet_socktop(&ss), errno);
+	  fprintf(stderr, "init_socket: Problem binding source address (%s), errno :%d\n", inet_socktop(&ss), socket_errno());
 	  perror("bind");
 	  bind_failed=1;
 	}
@@ -1621,7 +1621,7 @@ int check_ident_port(struct in_addr target) {
   res = connect(sd, (struct sockaddr *) &sock, sizeof(struct sockaddr_in));
   if (res != -1) /* must be scanning localhost, this socket is non-blocking */ 
     goto success;
-  if (errno == ECONNREFUSED) /* Unlikely in non-blocking, but could happen  */ 
+  if (socket_errno() == ECONNREFUSED) /* Unlikely in non-blocking, but could happen  */ 
     goto failure;
   if ((res = select(sd+1, &fds_read, &fds_write, NULL, &tv)) > 0) {
     /* Yay, it may be up ... */

@@ -634,14 +634,14 @@ int sendconnecttcpquery(Target *hostbatch[], struct tcpqueryinfo *tqi,
 
   res = connect(tqi->sockets[probe_port_num][seq],(struct sockaddr *)&sock, socklen);
 
-  if ((res != -1 || errno == ECONNREFUSED)) {
+  if ((res != -1 || socket_errno() == ECONNREFUSED)) {
     /* This can happen on localhost, successful/failing connection immediately
        in non-blocking mode */
       hostupdate(hostbatch, target, HOST_UP, 1, trynum, to, 
 		 &time[seq], NULL, pt, tqi, pingstyle_connecttcp);
     if (tqi->maxsd == tqi->sockets[probe_port_num][seq]) tqi->maxsd--;
   }
-  else if (errno == ENETUNREACH) {
+  else if (socket_errno() == ENETUNREACH) {
     if (o.debugging) 
       error("Got ENETUNREACH from sendconnecttcpquery connect()");
     hostupdate(hostbatch, target, HOST_DOWN, 1, trynum, to, 
@@ -820,11 +820,11 @@ if (ptech.icmpscan) {
      //     PacketTrace::trace(PacketTrace::SENT, (u8 *) ping, icmplen); 
      if ((res = sendto(sd,(char *) ping,icmplen,0,(struct sockaddr *)&sock,
 		       sizeof(struct sockaddr))) != icmplen && 
-		       errno != EHOSTUNREACH 
+		       socket_errno() != EHOSTUNREACH 
 #ifdef WIN32
         // Windows (correctly) returns this if we scan an address that is
         // known to be nonsensical (e.g. myip & mysubnetmask)
-	&& errno != WSAEADDRNOTAVAIL
+	&& socket_errno() != WSAEADDRNOTAVAIL
 #endif 
 		       ) {
        fprintf(stderr, "sendto in sendpingquery returned %d (should be 8)!\n", res);
@@ -885,13 +885,13 @@ while(pt->block_unaccounted) {
 	      foundsomething = 0;
 	      res2 = read(tqi->sockets[p][seq], buf, sizeof(buf) - 1);
 	      if (res2 == -1) {
-	        switch(errno) {
+	        switch(socket_errno()) {
 	        case ECONNREFUSED:
 	        case EAGAIN:
 #ifdef WIN32
 //		  case WSAENOTCONN:	//	needed?  this fails around here on my system
 #endif
-		  if (errno == EAGAIN && o.verbose) {
+		  if (socket_errno() == EAGAIN && o.verbose) {
 		    log_write(LOG_STDOUT, "Machine %s MIGHT actually be listening on probe port %d\n", hostbatch[hostindex]->targetipstr(), o.ping_synprobes[p]);
 		  }
 		  foundsomething = 1;
