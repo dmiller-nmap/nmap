@@ -221,8 +221,8 @@ short seq = -1;
 /*type(8bit)=8, code(8)=0 (echo REQUEST), checksum(16)=34190, id(16)=27002 */
 unsigned char *ping; /*[64] = { 0x8, 0x0, 0x8e, 0x85, 0x69, 0x7A };*/
 unsigned short ushorttmp;
-int prod;
-int sd;
+int prod,decoy;
+int sd,rawsd;
 struct timeval *time = safe_malloc(sizeof(struct timeval) * ((retries + 1) * num_hosts));
 struct timeval start, end;
 unsigned short pid;
@@ -257,6 +257,12 @@ if (sizeof(struct ppkt) != 8)
 
 sd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
 /*sethdrinclude(sd);*/
+
+/* Init our raw socket */
+ if ((rawsd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) < 0 )
+   pfatal("socket trobles in super_scan");
+ unblock_socket(rawsd);
+ 
 bzero((char *)&sock,sizeof(struct sockaddr_in));
 sock.sin_family=AF_INET;
 gettimeofday(&start, NULL);
@@ -291,12 +297,18 @@ for(;;) {
       /* Send a ping packet to it */
       sock.sin_addr = hostbatch[seq%num_hosts].host;
       gettimeofday(&time[i], NULL);
-      if ((res = sendto(sd,(char *) ping,8,0,(struct sockaddr *)&sock,
-			sizeof(struct sockaddr))) != 8) {
-	fprintf(stderr, "sendto in massping returned %d (should be 8)!\n", res);
-	perror("sendto");
+      for(decoy=0; decoy < o.numdecoys; decoy++) {
+	if (decoy == o.decoyturn) {
+	  if ((res = sendto(sd,(char *) ping,8,0,(struct sockaddr *)&sock,
+			    sizeof(struct sockaddr))) != 8) {
+	    fprintf(stderr, "sendto in massping returned %d (should be 8)!\n", res);
+	    perror("sendto");
+	  }
+	} else {
+	    int send_ip_raw( rawsd, &o.decoys[decoy], &sock.sin_addr, IPPROTO_ICMP, ping, 8);
+	}
       }
-    }
+    }    
   } /* for() loop */
   rounds += 1;
   do {
@@ -345,6 +357,7 @@ for(;;) {
 }
 alldone:
 close(sd);
+close(rawsd);
 free(time);
 if (o.debugging) 
   printf("massping done:  num_hosts: %d  num_responses: %d\n", num_hosts, num_responses);

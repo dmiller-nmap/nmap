@@ -455,7 +455,7 @@ if (!source) {
 /*do we even have to fill out this damn thing?  This is a raw packet, 
   after all */
 sock.sin_family = AF_INET;
-sock.sin_port = htons(dport);
+sock.sin_port = 0;
 sock.sin_addr.s_addr = victim->s_addr;
 
 
