@@ -1192,7 +1192,7 @@ void HostScanStats::getTiming(struct ultra_timing_vals *tmng) {
      drops were detected. */
 void HostScanStats::boostScanDelay() {
   if (sdn.delayms == 0)
-    sdn.delayms = 32;
+    sdn.delayms = (USI->udp_scan)? 50 : 5; // In many cases, a pcap wait takes a minimum of 80ms, so this matters little :(
   else sdn.delayms = MIN(sdn.delayms * 2, 1000);
   sdn.last_boost = USI->now;
   sdn.droppedRespSinceDelayChanged = 0;
@@ -1329,11 +1329,11 @@ void ultrascan_adjust_times(UltraScanInfo *USI, HostScanStats *hss,
   /* Now change the send delay if neccessary */
   unsigned int oldgood = hss->sdn.goodRespSinceDelayChanged;
   unsigned int oldbad = hss->sdn.droppedRespSinceDelayChanged;
-  double threshold = (o.timing_level >= 4)? 0.25 : 0.20;
+  double threshold = (o.timing_level >= 4)? 0.40 : 0.30;
   if (oldbad > 10 && (oldbad / ((double) oldbad + oldgood) > threshold)) {
     unsigned int olddelay = hss->sdn.delayms;
     hss->boostScanDelay();
-    if (o.debugging && hss->sdn.delayms != olddelay)
+    if (o.verbose && hss->sdn.delayms != olddelay)
       printf("Increasing send delay for %s from %d to %d due to %d out of %d dropped probes since last increase.\n", 
 	     hss->target->targetipstr(), olddelay, hss->sdn.delayms, oldbad, 
 	     oldbad + oldgood);
@@ -1463,10 +1463,10 @@ static void ultrascan_port_update(UltraScanInfo *USI, HostScanStats *hss,
     hss->max_successful_tryno = probe->tryno;
     if (o.debugging)
       log_write(LOG_STDOUT, "Increased max_successful_tryno for %s to %d (packet drop)\n", hss->target->targetipstr(), hss->max_successful_tryno);
-    if (hss->max_successful_tryno > 3) {
+    if (hss->max_successful_tryno > ((o.timing_level >= 4)? 4 : 3)) {
       unsigned int olddelay = hss->sdn.delayms;
       hss->boostScanDelay();
-      if (o.debugging && hss->sdn.delayms != olddelay) 
+      if (o.verbose && hss->sdn.delayms != olddelay) 
 	log_write(LOG_STDOUT, "Increasing send delay for %s from %d to %d due to max_successful_tryno increase to %d\n", 
 		  hss->target->targetipstr(), olddelay, hss->sdn.delayms, 
 		  hss->max_successful_tryno);
@@ -2110,7 +2110,7 @@ static bool get_pcap_result(UltraScanInfo *USI, struct timeval *stime) {
   
   do {
     to_usec = TIMEVAL_SUBTRACT(*stime, USI->now);
-    if (to_usec < 5000) to_usec = 5000;
+    if (to_usec < 2000) to_usec = 2000;
     ip = (struct ip *) readip_pcap(USI->pd, &bytes, to_usec, &rcvdtime, &linkhdr);
     gettimeofday(&USI->now, NULL);
     if (!ip && TIMEVAL_SUBTRACT(*stime, USI->now) < 0) {
@@ -2414,7 +2414,7 @@ static void begin_sniffer(UltraScanInfo *USI, vector<Target *> &Targets) {
   if (USI->scantype == CONNECT_SCAN)
     return; /* No sniffer needed! */
 
-  USI->pd = my_pcap_open_live(Targets[0]->device, 100,  (o.spoofsource)? 1 : 0, 10);
+  USI->pd = my_pcap_open_live(Targets[0]->device, 100,  (o.spoofsource)? 1 : 0, 2);
   /* Windows nonsense */
   flt_srchost = Targets[0]->v4host().s_addr;
   flt_dsthost = Targets[0]->v4source().s_addr;
@@ -2606,8 +2606,12 @@ void ultra_scan(vector<Target *> &Targets, struct scan_lists *ports,
     doAnyPings(USI);
     doAnyRetransmits(USI);
     doAnyNewProbes(USI);
+    gettimeofday(&USI->now, NULL);
+    //    printf("TRACE: Finished doAnyNewProbes() at %.4fs\n", o.TimeSinceStartMS(&USI->now) / 1000.0);
     printAnyStats(USI);
     waitForResponses(USI);
+    gettimeofday(&USI->now, NULL);
+    //    printf("TRACE: Finished waitForResponses() at %.4fs\n", o.TimeSinceStartMS(&USI->now) / 1000.0);
     processData(USI);
   }
 
