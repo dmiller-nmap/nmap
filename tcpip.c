@@ -624,99 +624,21 @@ return NULL;
 }
 #endif /* 0 */
 
-#ifdef NOT_DEFINED
 int getsourceip(struct in_addr *src, struct in_addr *dst) {
-  int sd, sd2;
+  int sd;
   struct sockaddr_in sock;
-  struct sockaddr sa;
-  int sasize = sizeof(struct sockaddr);
   int socklen = sizeof(struct sockaddr_in);
-  char buf[65535];
   unsigned short p1;
-  struct timeval tv;
-  int done = 0;
-  int res;
-  int ihl;
-  int ports;
-  int start;
-  int data_offset;
-  unsigned int *intptr;
 
-  /* Get us some unreserved port numbers */
   do {
     p1 = rand();
   } while (p1 < 5000);
-
-  if (!getuid()) {
-    if ((sd2 = socket(AF_INET, SOCK_PACKET, htons(ETH_P_ALL))) == -1)
-      {perror("Linux Packet Socket troubles"); return 0;}
-    unblock_socket(sd2);
-    if ((sd = socket(AF_INET, SOCK_DGRAM, 0)) == -1)
-      {perror("Socket troubles"); return 0;}
-    sock.sin_family = AF_INET;
-    sock.sin_addr = *dst;
-    sock.sin_port = htons(p1);
-    if (connect(sd, (struct sockaddr *) &sock, sizeof(struct sockaddr_in)) == -1)
-      { perror("UDP connect()");
-      close(sd);
-      return 0;
-      }
-    if (getsockname(sd, (SA *)&sock, &socklen) == -1) {
-      perror("getsockname");
-      close(sd);
-      return 0;
-    }
-    ports = (ntohs(sock.sin_port) << 16) + p1;
-#if ( TCPIP_DEBUGGING )
-    printf("ports is %X\n", ports);
-#endif
-    if (send(sd, "", 0, 0) == -1)
-    fatal("Could not send UDP packet");
-    start = time(NULL);
-    do {
-      tv.tv_sec = 2;
-      tv.tv_usec = 0;
-      res = recvfrom(sd2, buf, 65535, 0, &sa, &sasize);
-      if (res < 0) {
-	if (errno != EWOULDBLOCK)
-	  perror("recvfrom");
-      }
-      if (res > 0) {
-#if (TCPIP_DEBUGGING)
-	printf("Got packet!\n");
-	printf("sa.sa_data: %s\n", sa.sa_data);
-	printf("Hex dump of packet (len %d):\n", res);
-	hdump(buf, res);
-#endif      
-	data_offset = get_link_offset(sa.sa_data);
-	ihl = (*(buf + data_offset) & 0xf) * 4;
-	/* If it is big enough and it is IPv4 */
-	if (res >=  data_offset + ihl + 4 &&
-	    (*(buf + data_offset) & 0x40)) {
-	  intptr = (int *)  ((char *) buf + data_offset + ihl);
-	  if (*intptr == ntohl(ports)) {
-	    intptr = (int *) ((char *) buf + data_offset + 12);
-#if (TCPIP_DEBUGGING)
-	    printf("We've found our packet [krad]\n");
-#endif
-	    memcpy(src, buf + data_offset + 12, 4);
-	    close(sd);
-	    close(sd2);
-	    return 1;
-	  }
-	}
-      }  
-      
-    } while(!done && time(NULL) - start < 3);
-    close(sd);
-    close(sd2);
-  }
 
   if ((sd = socket(AF_INET, SOCK_DGRAM, 0)) == -1)
     {perror("Socket troubles"); return 0;}
   sock.sin_family = AF_INET;
   sock.sin_addr = *dst;
-  sock.sin_port = htons(o.magic_port);
+  sock.sin_port = htons(p1);
   if (connect(sd, (struct sockaddr *) &sock, sizeof(struct sockaddr_in)) == -1)
     { perror("UDP connect()");
     close(sd);
@@ -728,32 +650,11 @@ int getsourceip(struct in_addr *src, struct in_addr *dst) {
     close(sd);
     return 0;
   }
-  /* should check whether a bind() succeeds */
-  if (sock.sin_addr.s_addr == dst->s_addr) {
-    /* could be valid, but only if we are sending to ourself */
-    /* Its probably an error so I'm returning 0 */
-    /* Linux has the very bad habit of doing this */
-    close(sd);
-    return 0;
-  }
-  if (sock.sin_addr.s_addr) {
-    src->s_addr = sock.sin_addr.s_addr;
-#if ( TCPIP_DEBUGGING )
-    printf("getsourceip: %s routes through interface %s\n", inet_ntoa(*dst), inet_ntoa(*src));
-#endif
-  }
-  else {
-#if (TCPIP_DEBUGGING)
-    printf("failed to obtain your IP address\n");
-#endif
-    close(sd);
-    return 0;
-  }
-  close(sd);
-  return 1;
-}
 
-#endif /* NOT_DEFINED */
+  src->s_addr = sock.sin_addr.s_addr;
+  close(sd);
+  return 1; /* Calling function responsible for checking validity */
+}
 
 #if 0
 int get_link_offset(char *device) {
@@ -950,13 +851,15 @@ char *routethrough(struct in_addr *dest, struct in_addr *source) {
   int sd;
   int i;
   int res;
+  struct in_addr addy;
   int len = 10240;
+  enum { procroutetechnique, connectsockettechnique, guesstechnique } technique = procroutetechnique;
   char buf[10240];
-  struct mydev {
+  static struct mydev {
     char name[64];
     struct in_addr addr;
   } mydevs[32];
-  struct myroute {
+  static struct myroute {
     struct mydev *dev;
     unsigned long mask;
     unsigned long dest;
@@ -1006,46 +909,70 @@ char *routethrough(struct in_addr *dest, struct in_addr *source) {
 	fatal("My god!  You seem to have WAY too many interfaces!\n");
     }
 
-    /* Now that we've got the interfaces, we g0 after the r0ut3Z, this
-     is the part that is partially from CRH #7 */
+    /* Now we must go through several techniques to determine info */
+
     routez = fopen("/proc/net/route", "r");
-    fgets(buf, sizeof(buf), routez); /* Kill the first line */
-    while(1) {
-      res = fscanf(routez, "%s %8lX %8lX %2lX %ld %ld %ld %8lX %ld %ld %ld \n",iface,&myroutes[numroutes].dest,&tmp,&tmp,&tmp,&tmp,&tmp,&myroutes[numroutes].mask, &tmp, &tmp, &tmp);
-      if (res == EOF) break;
-      if (res != 11) { 
-	error("fscanf on route table returned %d (should be 11)", res); 
-	continue; 
-      }
-      /*      myroutes[numroutes].dest = htonl(myroutes[numroutes].dest);
-	      myroutes[numroutes].mask = htonl(myroutes[numroutes].mask);*/
-      printf("#%d: for dev %s, The dest is %lX and the mask is %lX\n", numroutes, iface, myroutes[numroutes].dest, myroutes[numroutes].mask);
-      for(i=0; i < numinterfaces; i++)
-	if (!strcmp(iface, mydevs[i].name)) {
-	  myroutes[numroutes].dev = &mydevs[i];
-	  break;
+    if (routez) {
+      /* OK, linux style /proc/net/route ... we can handle this ... */
+      /* Now that we've got the interfaces, we g0 after the r0ut3Z, this
+	 is the part that is partially from CRH #7 */
+      
+      fgets(buf, sizeof(buf), routez); /* Kill the first line */
+      while(1) {
+	res = fscanf(routez, "%s %8lX %8lX %2lX %ld %ld %ld %8lX %ld %ld %ld \n",iface,&myroutes[numroutes].dest,&tmp,&tmp,&tmp,&tmp,&tmp,&myroutes[numroutes].mask, &tmp, &tmp, &tmp);
+	if (res == EOF) break;
+	if (res != 11) { 
+	  error("fscanf on route table returned %d (should be 11)", res); 
+	  continue; 
 	}
-      if (i == numinterfaces) 
-	fatal("Failed to find interface %s mentioned in /proc/net/route\n", iface);
-      numroutes++;
-      if (numroutes == 32)
-	fatal("My god!  You seem to have WAY to many routes!\n");
-    }   
+	/*      myroutes[numroutes].dest = htonl(myroutes[numroutes].dest);
+		myroutes[numroutes].mask = htonl(myroutes[numroutes].mask);*/
+	printf("#%d: for dev %s, The dest is %lX and the mask is %lX\n", numroutes, iface, myroutes[numroutes].dest, myroutes[numroutes].mask);
+	for(i=0; i < numinterfaces; i++)
+	  if (!strcmp(iface, mydevs[i].name)) {
+	    myroutes[numroutes].dev = &mydevs[i];
+	    break;
+	  }
+	if (i == numinterfaces) 
+	  fatal("Failed to find interface %s mentioned in /proc/net/route\n", iface);
+	numroutes++;
+	if (numroutes == 32)
+	  fatal("My god!  You seem to have WAY to many routes!\n");
+      }
+      fclose(routez);
+    } else {
+      technique = connectsockettechnique;
+    }
   }
   /* WHEW, that takes care of initializing, now we have the easy job of 
      finding which route matches */
-  for(i=0; i < numroutes; i++) {  
-    printf("dest=%X mask=%lx dest&mask=%lX myroutes.dest=%lX\n", 
-	   dest->s_addr, myroutes[i].mask, (dest->s_addr & myroutes[i].mask), 
-	   myroutes[i].dest);
-    if ((dest->s_addr & myroutes[i].mask) == myroutes[i].dest) {
-      if (source) {
-	source->s_addr = myroutes[i].dev->addr.s_addr;
+    if (technique == procroutetechnique) {    
+      for(i=0; i < numroutes; i++) {  
+	printf("dest=%X mask=%lx dest&mask=%lX myroutes.dest=%lX\n", 
+	       dest->s_addr, myroutes[i].mask, (dest->s_addr & myroutes[i].mask), 
+	       myroutes[i].dest);
+	if ((dest->s_addr & myroutes[i].mask) == myroutes[i].dest) {
+	  if (source) {
+	    source->s_addr = myroutes[i].dev->addr.s_addr;
+	  }
+	  return myroutes[i].dev->name;      
+	}
       }
-	return myroutes[i].dev->name;      
-    }
-  }
-return NULL;
+    } else if (technique == connectsockettechnique) {
+      if (!getsourceip(&addy, dest))
+	return NULL;
+      /* Now we insure this claimed address is a real interface ... */
+      for(i=0; i < numinterfaces; i++)
+	if (mydevs[i].addr.s_addr == dest->s_addr) {
+	  if (source) {
+	    source->s_addr = dest->s_addr;	  
+	  }
+	  return mydevs[i].name;
+	}  
+      return NULL;
+    } else 
+      fatal("I know sendmail technique ... I know rdist technique ... but I don't know what the hell kindof technique you are attempting!!!");
+    return NULL;
 }
 
 
