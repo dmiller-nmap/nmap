@@ -1,5 +1,9 @@
 # Nmap Changelog ($Id$)
 
+o Fixed a bug in ACK scan that could cause Nmap to crash with the
+message "Unexpected port state: 6" in some cases.  Thanks to Glyn
+Geoghegan (glyng(a)corsaire.com) for reporting the problem.
+
 o Change IP protocol scan (-sO) so that a response from the target
   host in any protocol at all will prove that protocol is open.  As
   before, no response means "open|filtered", an ICMP protocol

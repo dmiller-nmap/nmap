@@ -106,22 +106,26 @@
 
               The  idea  is  that  closed  ports are required to reply to your
               probe packet with an RST, while open ports must ignore the pack-
-              ets  in  question (see RFC 793 pp 64).  The FIN scan uses a bare
-              (surprise) FIN packet as the probe, while  the  Xmas  tree  scan
-              turns  on the FIN, URG, and PUSH flags.  The Null scan turns off
-              all flags.  Unfortunately Microsoft (like usual) decided to com-
-              pletely  ignore  the standard and do things their own way.  Thus
-              this scan type  will  not  work  against  systems  running  Win-
-              dows95/NT.   On the positive side, this is a good way to distin-
-              guish between the two platforms.  If the scan finds open  ports,
-              you  know the machine is not a Windows box.  If a -sF,-sX,or -sN
-              scan shows all ports closed, yet a SYN (-sS)  scan  shows  ports
-              being  opened,  you are probably looking at a Windows box.  This
-              is less useful now that nmap has proper OS detection  built  in.
-              There  are  also a few other systems that are broken in the same
-              way Windows is.  They include Cisco, BSDI, HP/UX, MVS, and IRIX.
-              All  of  the  above  send  resets  from the open ports when they
-              should just drop the packet.
+              ets in question (see RFC 793 pp 64).  Filered ports also tend to
+              drop  probes  without  a  response,  so  Nmap  considers   ports
+              "open|filtered"  when  it  fails to elicit any response.  If you
+              add version detection (-sV), it will try to verify  whether  the
+              ports  are  actually  open  and change the state as appropriate.
+              The FIN scan uses a bare (surprise) FIN  packet  as  the  probe,
+              while  the Xmas tree scan turns on the FIN, URG, and PUSH flags.
+              The Null scan turns  off  all  flags.   Unfortunately  Microsoft
+              (like  usual)  decided  to completely ignore the standard and do
+              things their own way.  Thus this scan type will not work against
+              systems  running  Windows95/NT.  On the positive side, this is a
+              good way to distinguish between the two platforms.  If the  scan
+              finds open ports, you know the machine is not a Windows box.  If
+              a -sF,-sX,or -sN scan shows all ports closed, yet  a  SYN  (-sS)
+              scan  shows  ports  being  opened, you are probably looking at a
+              Windows box.  This is less useful now that nmap  has  proper  OS
+              detection built in.  There are also a few other systems that are
+              broken in the same way Windows is.  They  include  Cisco,  BSDI,
+              HP/UX,  MVS,  and  IRIX.   All of the above send resets from the
+              open ports when they should just drop the packet.
 
        <B>-sP</B>    Ping scanning: Sometimes you only want to know which hosts on  a
               network  are  up.  Nmap can do this by sending ICMP echo request
@@ -142,14 +146,14 @@
               sweep <B>without</B> doing any actual port scans.
 
        <B>-sV</B>    Version detection: Afer TCP  and/or  UDP  ports  are  discovered
-              using  one of the other scan methods, version detection communi-
-              cates with those ports to try and determine more about  what  is
-              actually  running.  A file called nmap-service-probes is used to
-              determine the best probes for detecting various services and the
-              match  strings  to  expect.  Nmap tries to determine the service
-              protocol (e.g. ftp, ssh, telnet,  http),  the  application  name
-              (e.g. ISC Bind, Apache httpd, Solaris telnetd), the version num-
-              ber, and sometimes  miscellaneous  details  like  whether  an  X
+              using   one   of  the  other  scan  methods,  version  detection
+              communicates with those ports to try and  determine  more  about
+              what  is actually running.  A file called nmap-service-probes is
+              used to determine the best probes for detecting various services
+              and  the  match  strings to expect.  Nmap tries to determine the
+              service protocol (e.g. ftp, ssh, telnet, http), the  application
+              name (e.g. ISC Bind, Apache httpd, Solaris telnetd), the version
+              number, and sometimes miscellaneous details like  whether  an  X
               server  is open to connections or the SSH protocol version).  If
               Nmap was compiled with OpenSSL support, it will connect  to  SSL
               servers  to  deduce the service listening behind the encryption.
@@ -326,7 +330,7 @@
               allows  the  scanning  of  networks  that  don’t allow ICMP echo
               requests (or responses) through their  firewall.   microsoft.com
               is  an example of such a network, and thus you should always use
-              <B>-P0</B> or <B>-PS80</B> when portscanning microsoft.com.  Note  tht  "ping"
+              <B>-P0</B> or <B>-PS80</B> when portscanning microsoft.com.  Note that  "ping"
               in  this context may involve more than the traditional ICMP echo
               request packet.  Nmap supports many such probes, including arbi-
               trary  combinations  of  TCP, UDP, and ICMP probes.  By default,
@@ -410,10 +414,10 @@
               remote  host.   This  is  useful  for exploiting source-IP based
               trust relationships (rlogin, firewall filters, etc) or for  hid-
               ing  the  source  of an attack.  The actual difficulty number is
-              based  on  statistical  sampling  and  may  fluctuate.   It   is
-              generally better to use the English classification such as "wor-
-              thy challenge" or "trivial joke".  This is only reported in nor-
-              mal output with -v.
+              based on statistical sampling and may fluctuate.  It  is  gener-
+              ally  better  to  use the English classification such as "worthy
+              challenge" or "trivial joke".  This is only reported  in  normal
+              output with -v.
 
               When  verbose  mode (-v) is on with -O, IPID Sequence Generation
               is also reported.  Most machines are in the "incremental" class,
@@ -478,9 +482,9 @@
 
        <B>-oX</B> <B>&lt;logfilename&gt;</B>
               This logs the results of your scans in <B>XML</B> form  into  the  file
-              you  specify  as  an  argument.   This allows programs to easily
-              capture and interpret Nmap results.  You can give  the  argument
-              "-"  (without  quotes)  to  shoot  output into stdout (for shell
+              you specify as an argument.  This allows programs to easily cap-
+              ture and interpret Nmap results.  You can give the argument  "-"
+              (without   quotes)  to  shoot  output  into  stdout  (for  shell
               pipelines, etc).  In this case normal output will be suppressed.
               Watch out for error messages if you use this (they will still go
               to stderr).  Also note that "-v" may cause some  extra  informa-
@@ -825,8 +829,8 @@
               Nmap allows this delay to grow to one second  per  probe.   This
               option allows you to set a lower or higher maximum.  Even if you
               set it to zero, Nmap will have some delay between  packet  sends
-              so  that  it  can  wait  for responses and avoid having too many
-              outstanding probes in parallel.
+              so that it can wait for responses and avoid having too many out-
+              standing probes in parallel.
 
 
 
@@ -977,8 +981,8 @@
        applications and appliances.  These contracts have been  sold  to  many
        security  vendors, and generally include a perpetual license as well as
        providing for priority support and updates as well as helping  to  fund
-       the   continued   development   of   Nmap   technology.   Please  email
-       sales@insecure.com for further information.
+       the continued development of Nmap technology.  Please email sales@inse-
+       cure.com for further information.
 
        As a special exception to the GPL terms, Insecure.Com LLC  grants  per-
        mission  to  link  the  code  of  this  program with any version of the

@@ -1529,6 +1529,15 @@ static void ultrascan_port_update(UltraScanInfo *USI, HostScanStats *hss,
     }
     remove_probe = true;
     break;
+  case PORT_UNFILTERED:
+    /* This could happen in an ACK scan if I receive a RST and then an
+       ICMP filtered message.  I'm gonna stick with unfiltered in that
+       case.  I'll change it if the new state is open or closed,
+       though I don't expect that to ever happen */
+    if (newstate == PORT_OPEN || newstate == PORT_CLOSED)
+      hss->target->ports.addPort(portno, proto, NULL, newstate);
+    remove_probe = true;
+    break;
   case PORT_OPENFILTERED:
     if (newstate != PORT_OPENFILTERED) {
       hss->target->ports.addPort(portno, proto, NULL, newstate);
