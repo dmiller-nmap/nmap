@@ -554,6 +554,7 @@ int nmap_main(int argc, char *argv[]) {
 	case 'F':  o.finscan = 1; break;
 	case 'M':  o.maimonscan = 1; break;
 	case 'N':  o.nullscan = 1; break;
+	case 'O':  o.ipprotscan = 1;break;
 	case 'P':  o.pingscan = 1; break;
 	case 'R':  o.rpcscan = 1; break;
 	case 'S':  o.synscan = 1; break;	  
@@ -623,7 +624,7 @@ int nmap_main(int argc, char *argv[]) {
 
   /* Now we check the option sanity */
   /* Insure that at least one scantype is selected */
-  if (!o.connectscan && !o.udpscan && !o.synscan && !o.windowscan && !o.finscan && !o.maimonscan &&  !o.nullscan && !o.xmasscan && !o.ackscan && !o.bouncescan && !o.pingscan) {
+  if (!o.connectscan && !o.udpscan && !o.synscan && !o.windowscan && !o.finscan && !o.maimonscan &&  !o.nullscan && !o.xmasscan && !o.ackscan && !o.bouncescan && !o.pingscan && !o.ipprotscan) {
     o.connectscan++;
     if (o.verbose) error("No tcp,udp, or ICMP scantype specified, assuming vanilla tcp connect() scan. Use -sP if you really don't want to portscan (and just want to see what hosts are up).");
   }
@@ -638,6 +639,8 @@ int nmap_main(int argc, char *argv[]) {
 
   if (fastscan && ports) {
     fatal("You can specify fast scan (-F) or explicitly select individual ports (-p), but not both");
+  } else if (fastscan && o.ipprotscan) {
+    ports = getfastprots();
   } else if (fastscan) {
     ports = getfastports(o.windowscan|o.synscan|o.connectscan|o.fragscan|o.finscan|o.maimonscan|o.bouncescan|o.nullscan|o.xmasscan|o.ackscan,o.udpscan);
   }
@@ -651,16 +654,20 @@ int nmap_main(int argc, char *argv[]) {
   }
 
   if (!ports) {
-    ports = getdefaultports(o.windowscan|o.synscan|o.connectscan|o.fragscan|o.finscan|
-			    o.maimonscan|o.bouncescan|o.nullscan|o.xmasscan|o.ackscan,
+    if (o.ipprotscan) {
+      ports = getdefaultprots();
+    } else {
+      ports = getdefaultports(o.windowscan|o.synscan|o.connectscan|o.fragscan|o.finscan|
+			      o.maimonscan|o.bouncescan|o.nullscan|o.xmasscan|o.ackscan,
 			    o.udpscan);
+    }
   }
 
   /* Default dest port for tcp probe */
   if (!o.tcp_probe_port) o.tcp_probe_port = 80;
 
 
-  if (o.pingscan && (o.connectscan || o.udpscan || o.windowscan || o.synscan || o.finscan || o.maimonscan ||  o.nullscan || o.xmasscan || o.ackscan || o.bouncescan)) {
+  if (o.pingscan && (o.connectscan || o.udpscan || o.windowscan || o.synscan || o.finscan || o.maimonscan ||  o.nullscan || o.xmasscan || o.ackscan || o.bouncescan || o.ipprotscan)) {
     fatal("Ping scan is not valid with any other scan types (the other ones all include a ping scan");
   }
 
@@ -673,7 +680,7 @@ int nmap_main(int argc, char *argv[]) {
     }
 
     if (o.finscan || o.windowscan || o.synscan || o.maimonscan || o.nullscan || o.xmasscan || o.ackscan
-	|| o.udpscan ) {
+	|| o.udpscan || o.ipprotscan) {
       fatal("You requested a scan type which requires r00t privileges, and you do not have them.\n");
     }
   
@@ -701,17 +708,23 @@ int nmap_main(int argc, char *argv[]) {
     fatal("You specified more than one type of TCP scan.  Please choose only one of -sT, -sS, -sF, -sM, -sX, -sA, -sW, and -sN");
   }
 
+  if (o.ipprotscan && (o.connectscan | o.windowscan | o.synscan | o.finscan | o.maimonscan | o.xmasscan | o.nullscan | o.ackscan | o.udpscan))
+    fatal("Sorry, IP protocol scan cannot be combined with any other scans\n");
+  /* this is due to use of the port spec infrastructure for protocols */
+
   if (o.numdecoys > 0 && (o.bouncescan || o.connectscan)) {
     fatal("Decoys are irrelevant to the bounce or connect scans");
   }
 
   if (o.fragscan && (o.connectscan || 
-		     (o.udpscan && (o.windowscan + o.synscan + o.finscan + o.maimonscan + 
+		     ((o.udpscan || o.ipprotscan) &&
+		      (o.windowscan + o.synscan + o.finscan + o.maimonscan + 
 				    o.xmasscan + o.ackscan + o.nullscan == 0))))
     fatal("Fragmentation scan can only be used with SYN, FIN, Maimon, XMAS, ACK, or NULL scan types");
  
   if (o.identscan && !o.connectscan) {
     error("Identscan only works with connect scan (-sT) ... ignoring option");
+    o.identscan = 0;
   }
 
   if (o.osscan && o.bouncescan)
@@ -914,7 +927,7 @@ int nmap_main(int argc, char *argv[]) {
       if (currenths->flags & HOST_UP /*&& !currenths->wierd_responses*/ &&
 	  !o.pingscan) {
    
-	if (currenths->flags & HOST_UP && !currenths->source_ip.s_addr && ( o.windowscan || o.synscan || o.finscan || o.maimonscan || o.udpscan || o.nullscan || o.xmasscan || o.ackscan )) {
+	if (currenths->flags & HOST_UP && !currenths->source_ip.s_addr && ( o.windowscan || o.synscan || o.finscan || o.maimonscan || o.udpscan || o.nullscan || o.xmasscan || o.ackscan || o.ipprotscan )) {
 	  if (gethostname(myname, MAXHOSTNAMELEN) || 
 	      !(target = gethostbyname(myname)))
 	    fatal("Cannot get hostname!  Try using -S <my_IP_address> or -e <interface to scan through>\n"); 
@@ -926,7 +939,7 @@ int nmap_main(int argc, char *argv[]) {
 	}
    
 	/* Figure out what link-layer device (interface) to use (ie eth0, ppp0, etc) */
-	if (!*currenths->device && currenths->flags & HOST_UP && (o.nullscan || o.xmasscan || o.ackscan || o.udpscan || o.finscan || o.maimonscan ||  o.synscan || o.osscan || o.windowscan) && (ipaddr2devname( currenths->device, &currenths->source_ip) != 0))
+	if (!*currenths->device && currenths->flags & HOST_UP && (o.nullscan || o.xmasscan || o.ackscan || o.udpscan || o.finscan || o.maimonscan ||  o.synscan || o.osscan || o.windowscan || o.ipprotscan) && (ipaddr2devname( currenths->device, &currenths->source_ip) != 0))
 	  fatal("Could not figure out what device to send the packet out on!  You might possibly want to try -S (but this is probably a bigger problem).  If you are trying to sp00f the source of a SYN/FIN scan with -S <fakeip>, then you must use -e eth0 (or other devicename) to tell us what interface to use.\n");
 	/* Set up the decoy */
 	o.decoys[o.decoyturn] = currenths->source_ip;
@@ -942,6 +955,7 @@ int nmap_main(int argc, char *argv[]) {
 	if (o.nullscan) super_scan(currenths, ports, NULL_SCAN);
 	if (o.maimonscan) super_scan(currenths, ports, MAIMON_SCAN);
 	if (o.udpscan) super_scan(currenths, ports, UDP_SCAN);
+	if (o.ipprotscan) super_scan(currenths, ports, IPPROT_SCAN);
    
 	if (o.bouncescan) {
 	  if (ftp.sd <= 0) ftp_anon_connect(&ftp);
@@ -1494,6 +1508,7 @@ void printportoutput(struct hoststruct *currenths, portlist *plist) {
   char *name;
   int first = 1;
   struct servent *service;
+  struct protoent *proto;
   struct port *current;
   int numignoredports;
   int portno, protocount;
@@ -1516,27 +1531,47 @@ void printportoutput(struct hoststruct *currenths, portlist *plist) {
     return;
   }
 
-  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Interesting ports on %s (%s):\n", currenths->name, 
+  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Interesting %s on %s (%s):\n",
+	    (o.ipprotscan)? "protocols" : "ports", currenths->name, 
 	    inet_ntoa(currenths->host));
   log_write(LOG_MACHINE,"Host: %s (%s)", inet_ntoa(currenths->host), 
 	    currenths->name);
   
   if (numignoredports > 0) {
-    log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"(The %d %s scanned but not shown below %s in state: %s)\n", numignoredports, (numignoredports == 1)? "port" : "ports", (numignoredports == 1)? "is" : "are", statenum2str(plist->ignored_port_state));
+    log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"(The %d %s%s scanned but not shown below %s in state: %s)\n", numignoredports, o.ipprotscan?"protocol":"port", (numignoredports == 1)? "" : "s", (numignoredports == 1)? "is" : "are", statenum2str(plist->ignored_port_state));
   }
 
-  if (!o.rpcscan) {  
+  if (o.ipprotscan) {
+    log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Protocol   State       Name");
+  } else if (!o.rpcscan) {  
     log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Port       State       Service");
   } else {
     log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Port       State       Service (RPC)");
   }
   log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"%s", (o.identscan)? ((o.rpcscan)? "           Owner\n" : "                 Owner\n") :"\n");
-  log_write(LOG_MACHINE,"\tPorts: ");
+  log_write(LOG_MACHINE,"\t%s: ", (o.ipprotscan)? "Protocols" : "Ports" );
   
   protoarrays[0] = plist->tcp_ports;
   protoarrays[1] = plist->udp_ports;
   current = NULL;
-  for(portno = 1; portno < 65536; portno++) {
+  if (o.ipprotscan) {
+    for (portno = 1; portno < 256; portno++) {
+      if (!plist->ip_prots[portno]) continue;
+      current = plist->ip_prots[portno];
+      if (current->state != plist->ignored_port_state) {
+	if (!first) log_write(LOG_MACHINE,", ");
+	else first = 0;
+	state = statenum2str(current->state);
+	proto = nmap_getprotbynum(htons(current->portno));
+	snprintf(portinfo, sizeof(portinfo), "%-24s",
+		 proto?proto->p_name: "unknown");
+	log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"%-11d%-12s%-24s\n", portno, state, portinfo);
+	log_write(LOG_MACHINE,"%d/%s/%s/", current->portno, state, 
+		  (proto)? proto->p_name : "");
+      }
+    }
+  } else {
+   for(portno = 1; portno < 65536; portno++) {
     for(protocount = 0; protocount < 2; protocount++) {
       if (protoarrays[protocount] && protoarrays[protocount][portno]) 
 	current = protoarrays[protocount][portno];
@@ -1594,6 +1629,7 @@ void printportoutput(struct hoststruct *currenths, portlist *plist) {
 	
       }
     }
+   }
   }
   log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"\n");
   log_write(LOG_MACHINE, "\tIgnored State: %s (%d)", statenum2str(plist->ignored_port_state), plist->state_counts[plist->ignored_port_state]);
@@ -1884,7 +1920,8 @@ void super_scan(struct hoststruct *target, unsigned short *portarray, stype scan
   else if (scantype == NULL_SCAN) scanflags = 0;
   else if (scantype == FIN_SCAN) scanflags = TH_FIN;
   else if (scantype == MAIMON_SCAN) scanflags = TH_FIN|TH_ACK;
-  else if (scantype != UDP_SCAN) { fatal("Unknown scan type for super_scan"); }
+  else if (scantype != UDP_SCAN && scantype != IPPROT_SCAN) {
+    fatal("Unknown scan type for super_scan"); }
 
   starttime = time(NULL);
 
@@ -1944,13 +1981,18 @@ void super_scan(struct hoststruct *target, unsigned short *portarray, stype scan
 		now = current->sent[1];
 		if (o.fragscan)
 		  send_small_fragz_decoys(rawsd, &target->host, 0,i, current->portno, scanflags);
-		else if (scantype != UDP_SCAN) 
+		else if (scantype == UDP_SCAN)
+		  send_udp_raw_decoys(rawsd, &target->host, i,
+				      current->portno, NULL ,0);
+		else if (scantype == IPPROT_SCAN)
+		  send_ip_raw_decoys(rawsd, &target->host, current->portno, NULL, 0);
+		else
 		  send_tcp_raw_decoys(rawsd, &target->host, i, 
 				      current->portno, 0, 0, scanflags, 0, NULL, 0,
 				      0, 0);
-		else send_udp_raw_decoys(rawsd, &target->host, i,
-					 current->portno, NULL ,0);	      
-		if (senddelay && scantype == UDP_SCAN) usleep(senddelay);
+		if (senddelay &&
+		    (scantype == UDP_SCAN || scantype == IPPROT_SCAN))
+		  usleep(senddelay);
 	      }
 	    }
 	  } else { 
@@ -1968,12 +2010,18 @@ void super_scan(struct hoststruct *target, unsigned short *portarray, stype scan
 	    gettimeofday(&current->sent[0], NULL);
 	    if (o.fragscan)
 	      send_small_fragz_decoys(rawsd, &target->host, 0, o.magic_port, current->portno, scanflags);
-	    else if (scantype != UDP_SCAN) 
+	    else if (scantype == UDP_SCAN)
+	      send_udp_raw_decoys(rawsd, &target->host, o.magic_port,
+				  current->portno, NULL, 0);
+	    else if (scantype == IPPROT_SCAN)
+	      send_ip_raw_decoys(rawsd, &target->host,
+				 current->portno, NULL, 0);
+	    else
 	      send_tcp_raw_decoys(rawsd, &target->host, o.magic_port, 
 				  current->portno, 0, 0, scanflags, 0, NULL, 0, 0, 0);
-	    else send_udp_raw_decoys(rawsd, &target->host, o.magic_port,
-				     current->portno, NULL, 0);
-	    if (scantype == UDP_SCAN && senddelay) usleep(senddelay);
+	    if ((scantype == UDP_SCAN || scantype == IPPROT_SCAN) &&
+		senddelay)
+	      usleep(senddelay);
 	  }
 	}
 
@@ -2045,8 +2093,12 @@ void super_scan(struct hoststruct *target, unsigned short *portarray, stype scan
 		data = (unsigned short *) ((char *)ip2 + 4 * ip2->ip_hl);
 		/*	    log_write(LOG_STDOUT, "Caught ICMP packet:\n");
 			    hdump(icmp, ntohs(ip->ip_len) - sizeof(struct ip)); */
+
 		if (icmp->icmp_type == 3) {
-		  newport = ntohs(data[1]);
+		  if (scantype != IPPROT_SCAN)
+		    newport = ntohs(data[1]);
+		  else
+		    newport = ip2->ip_p;
 		  if (portlookup[newport] < 0) {
 		    if (o.debugging) {
 		      log_write(LOG_STDOUT, "Strange ICMP packet type 3 code %d related to port %d:\n", icmp->icmp_code, newport);
@@ -2069,7 +2121,10 @@ void super_scan(struct hoststruct *target, unsigned short *portarray, stype scan
 		  
 		  case 1: /* Host unreachable */
 		  case 2: /* pr0t0c0l unreachable */
-		    newstate = PORT_FIREWALLED;
+		    if (scantype == IPPROT_SCAN) {
+		      newstate = PORT_CLOSED;
+		    } else
+		      newstate = PORT_FIREWALLED;
 		    break;
 		  
 		  case 3: /* p0rt unreachable */		
@@ -2100,6 +2155,9 @@ void super_scan(struct hoststruct *target, unsigned short *portarray, stype scan
 		    error("UDP packet received\n");
 		}
 		continue;
+	      } else if (scantype == IPPROT_SCAN) {
+		if (o.debugging)
+		  error("packet with protocol %d received\n", ip->ip_p);
 	      }
 	    
 	      if (current) {	  
@@ -2118,7 +2176,8 @@ void super_scan(struct hoststruct *target, unsigned short *portarray, stype scan
 		    if (freshportstried > 50 && ((double) dropped/freshportstried) > 0.3) {
 		      if (!senddelay) senddelay = 50000;
 		      else senddelay = MIN(senddelay * 2, 1000000);
-		      if (senddelay >= 200000 && scantype == UDP_SCAN)
+		      if (senddelay >= 200000 &&
+			  (scantype == UDP_SCAN || scantype == IPPROT_SCAN))
 			max_width = MIN(max_width,2);
 		      freshportstried = 0;
 		      dropped = 0;
@@ -2130,7 +2189,8 @@ void super_scan(struct hoststruct *target, unsigned short *portarray, stype scan
 		      if (numqueries_ideal < 1) numqueries_ideal = 1;
 		      if (o.debugging) { log_write(LOG_STDOUT, "Lost a packet, decreasing window to %d\n", (int) numqueries_ideal);
 		      windowdecrease++;
-		      if (scantype == UDP_SCAN) usleep(250000);
+		      if (scantype == UDP_SCAN || scantype == IPPROT_SCAN)
+			usleep(250000);
 		      }
 		    } else if (o.debugging > 1) { 
 		      log_write(LOG_STDOUT, "Lost a packet, but not decreasing\n");
@@ -2153,8 +2213,9 @@ void super_scan(struct hoststruct *target, unsigned short *portarray, stype scan
 		current->next = current->prev = -1;
 		current->state = newstate;
 		addport(&target->ports, current->portno, 
-			(scantype == UDP_SCAN)? IPPROTO_UDP : IPPROTO_TCP, 
-			NULL, current->state);	      
+			(scantype == UDP_SCAN)? IPPROTO_UDP :
+			  (scantype == IPPROT_SCAN? IPPROTO_IP: IPPROTO_TCP), 
+			NULL, current->state);
 	      }
 	    }
 	  }
@@ -2190,7 +2251,9 @@ void super_scan(struct hoststruct *target, unsigned short *portarray, stype scan
 	    (long) time(NULL) - starttime, (((long) time(NULL) - starttime) == 1)? "second" : "seconds",  o.numports);
   
   for (current = openlist; current;  current = (current->next >= 0)? &scan[current->next] : NULL) {
-    if (scantype != UDP_SCAN)
+    if (scantype == IPPROT_SCAN)
+      addport(&target->ports, current->portno, IPPROTO_IP, NULL, PORT_OPEN);
+    else if (scantype != UDP_SCAN)
       addport(&target->ports, current->portno, IPPROTO_TCP, NULL, PORT_OPEN);
     else
       addport(&target->ports, current->portno, IPPROTO_UDP, NULL, PORT_OPEN);
@@ -3944,4 +4007,3 @@ void output_ports_to_machine_parseable_output(unsigned short *ports,
    output_rangelist_given_ports_to_machine_output(ports, udpportsscanned);
  log_write(LOG_MACHINE, ")\n");
 }
-

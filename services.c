@@ -32,6 +32,10 @@ static int nmap_services_init() {
   while(fgets(line, sizeof(line), fp)) {
     lineno++;
     p = line;
+    while(*p && isspace(*p))
+      p++;
+    if (*p == '#')
+      continue;
     res = sscanf(line, "%s %hu/%s", servicename, &portno, proto);
     if (res !=3)
       continue;

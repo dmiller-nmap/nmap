@@ -43,10 +43,12 @@ struct port {
 typedef struct portlist {
   struct port **udp_ports;
   struct port **tcp_ports;
+  struct port **ip_prots;
   int state_counts[PORT_HIGHEST_STATE]; /* How many ports in list are in each
 					   state */
   int state_counts_udp[PORT_HIGHEST_STATE];
   int state_counts_tcp[PORT_HIGHEST_STATE];
+  int state_counts_ip[PORT_HIGHEST_STATE];
   int ignored_port_state; /* The state of the port we ignore for output */
   int numports; /* Total number of ports in list in ANY state */
 } portlist;

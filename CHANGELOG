@@ -1,16 +1,32 @@
 # Nmap Changelog
 
+** Version 2.54BETA1
+
+-- Added an extremely cool scan type by Gerhard Rieger ( rieger at
+   iue.tuwien.ac.at ) -- IP Protocol scanning.  Basically it sends a
+   bunch of IP headers (no data) with different "protocol" fields to
+   the host.  The host then (usually) sends back a protocol
+   unreachable for those that it does not support.  By exclusion, nmap
+   can make a list of those that are supported.  This is similar in
+   concept to (and is implemented using most of the same scanning
+   routines as) UDP scanning.  Note that some hosts do not send back
+   protocol unreachables -- in that case all protocols will appear
+   "open".
+
+-- Fixed an uninitialized variable problem in NmapFE (found by Alvin
+   Starr (alvin at iplink.net )
+
+-- Fixed a packaging problem that lead to the Nmap man page being
+   included twice in the .tgz .
+
+-- Fixed dangling nroff include in xnmap man page (noted by Debian
+   Nmap package maintainer LaMont Jones (lamont@security.hp.com)
+
 -- Give a warning when no targets at all are specified
 
 -- Updated 'make uninstall' so that it deletes all relevant files
 
--- Fixed dangling nroff symlink in xnmap man page (noted by Debian
-   Nmap package maintainer LaMont Jones (lamont@security.hp.com)
-
 -- Included latest nmap-rpc from Eilon Gishri (eilon at aristo.tau.ac.il)
-
--- Fixed an uninitialized variable problem in NmapFE (found by Alvin
-   Starr (alvin at iplink.net )
 
 -- Eliminated -I. from Nmap's and NmapFE's makefiles (suggested by
    "Jay Freeman (saurik)" (saurik at saurik.com)
@@ -18,7 +34,6 @@
 -- Added Russian documentation by Alex Volkov
 
 -- Added Lithuanian documentation from Aurimas Mikalauskas (inner at dammit.lt) 
-
 ** Version 2.53
 
 -- Fixed a commenting issue that could cause trouble for non-GNU compilers

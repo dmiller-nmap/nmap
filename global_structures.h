@@ -3,7 +3,7 @@
 
 /* Stores "port info" which is TCP/UDP ports or RPC program ids */
  struct portinfo {
-   unsigned long portno; /* TCP/UDP port or RPC program id */
+   unsigned long portno; /* TCP/UDP port or RPC program id or IP protocool */
    short trynum;
    int sd[3]; /* Socket descriptors for connect_scan */
    struct timeval sent[3]; 
@@ -204,6 +204,7 @@ struct ops /* someone took struct options, <grrr> */ {
   int maimonscan;
   int finscan;
   int udpscan;
+  int ipprotscan;
   int noresolve;
   int force; /* force nmap to continue on even when the outcome seems somewhat certain */
   int append_output; /* Append to any output files rather than overwrite */
@@ -211,7 +212,7 @@ struct ops /* someone took struct options, <grrr> */ {
   FILE *nmap_stdout; /* Nmap standard output */
 };
   
-typedef enum { ACK_SCAN, SYN_SCAN, FIN_SCAN, XMAS_SCAN, UDP_SCAN, CONNECT_SCAN, NULL_SCAN, WINDOW_SCAN, RPC_SCAN, MAIMON_SCAN } stype;
+typedef enum { ACK_SCAN, SYN_SCAN, FIN_SCAN, XMAS_SCAN, UDP_SCAN, CONNECT_SCAN, NULL_SCAN, WINDOW_SCAN, RPC_SCAN, MAIMON_SCAN, IPPROT_SCAN } stype;
 
 #endif /*GLOBAL_STRUCTURES_H */
 

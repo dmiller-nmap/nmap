@@ -1,4 +1,7 @@
-NMAP_VERSION = 2.53
+# CHANGE NOTICE as required by GNU General Public License 2.a:
+# 2000/05/28 Gerhard Rieger: added files protocols.[hc], nmap-protocols
+
+NMAP_VERSION = 2.54BETA1
 NMAP_NAME= nmap
 NMAP_URL= www.insecure.org/nmap/
 prefix = @prefix@
@@ -30,11 +33,11 @@ RPMTDIR=$(HOME)/rpmdir
 
 TARGET = nmap
 
-SRCS = nmap.c targets.c tcpip.c error.c utils.c osscan.c charpool.c services.c rpc.c  portlist.c @COMPAT_SRCS@
+SRCS = nmap.c targets.c tcpip.c error.c utils.c osscan.c charpool.c services.c protocols.c rpc.c  portlist.c @COMPAT_SRCS@
 
-OBJS = nmap.o targets.o tcpip.o error.o utils.o osscan.o charpool.o services.o rpc.o portlist.o @COMPAT_OBJS@
+OBJS = nmap.o targets.o tcpip.o error.o utils.o osscan.o charpool.o services.o protocols.o rpc.o portlist.o @COMPAT_OBJS@
 
-DEPS = nmap.h error.h targets.h osscan.h tcpip.h utils.h global_structures.h charpool.h services.h rpc.h portlist.h
+DEPS = nmap.h error.h targets.h osscan.h tcpip.h utils.h global_structures.h charpool.h services.h protocols.h rpc.h portlist.h
 
 all: $(TARGET) nmapfe/nmapfe
 
@@ -88,6 +91,7 @@ distro:
 	rm -f $(LIBPCAPDIR)/config.cache $(LIBPCAPDIR)/Makefile
 	cp -ra $(SRCS) $(DEPS) inet_aton.c snprintf.c nmap-os-fingerprints \
 	nmapfe.desktop getopt.h getopt.c getopt1.c nmap-services nmap-rpc \
+	nmap-protocols \
 	configure.in config.h.in Makefile.in configure $(SHTOOL) install-sh \
         config.guess nmap-$(NMAP_VERSION)-1.spec config.sub INSTALL \
 	COPYING CHANGELOG \
@@ -147,6 +151,7 @@ install: $(TARGET)
 	$(INSTALL) -c -m 644 docs/$(TARGET).1 $(mandir)/man1/$(TARGET).1
 	$(INSTALL) -c -m 644 nmap-os-fingerprints  $(nmapdatadir)/nmap-os-fingerprints
 	$(INSTALL) -c -m 644 nmap-services  $(nmapdatadir)/nmap-services
+	$(INSTALL) -c -m 644 nmap-protocols  $(nmapdatadir)/nmap-protocols
 	$(INSTALL) -c -m 644 nmap-rpc  $(nmapdatadir)/nmap-rpc
 
 uninstall:

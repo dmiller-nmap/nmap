@@ -259,6 +259,7 @@ void *realloc();
 #include "error.h"
 #include "utils.h"
 #include "services.h"
+#include "protocols.h"
 #include "rpc.h"
 #include "targets.h"
 
@@ -354,6 +355,8 @@ void output_rangelist_given_ports_to_machine_output(unsigned short *ports,
 void output_ports_to_machine_parseable_output(unsigned short *ports, 
 					      int numports, int tcpscan, 
 					      int udpscan);
+void output_prots_to_machine_parseable_output(unsigned short *ports, 
+					      int numports);
 
 void log_write(int logt, char *fmt, ...);
 void log_close(int logt);

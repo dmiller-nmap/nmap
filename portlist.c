@@ -1,5 +1,3 @@
-
-
 #include "portlist.h"
 #include "error.h"
 #include "nmap.h"
@@ -38,6 +36,12 @@ int addport(portlist *plist, unsigned short portno, unsigned short protocol,
       bzero(plist->udp_ports, 65536 * sizeof(struct port *));
     }
     portarray = plist->udp_ports;
+  } else if (protocol == IPPROTO_IP) {
+    if (!plist->ip_prots) {
+      plist->ip_prots = safe_malloc(256 * sizeof(struct port *));
+      bzero(plist->ip_prots, 256 * sizeof(struct port *));
+    }
+    portarray = plist->ip_prots;
   } else fatal("addport: attempted port insertion with invalid protocol");
 
   if (portarray[portno]) {
@@ -46,14 +50,16 @@ int addport(portlist *plist, unsigned short portno, unsigned short protocol,
     current = portarray[portno];    
     if (o.debugging && current->state == state && (!owner || !*owner)) {
       error("Duplicate port (%hu/%s)\n", portno ,
-	    (protocol == IPPROTO_TCP)? "tcp": "udp");
+	    (protocol == IPPROTO_TCP)? "tcp":
+	    (protocol == IPPROTO_UDP)? "udp": "ip");
     } 
     plist->state_counts[current->state]--;
     if (current->proto == IPPROTO_TCP) {
       plist->state_counts_tcp[current->state]--;
-    } else {
+    } else if (current->proto == IPPROTO_UDP) {
       plist->state_counts_udp[current->state]--;
-    }  
+    } else
+      plist->state_counts_ip[current->state]--;
   } else {
     portarray[portno] = make_empty_port();
     current = portarray[portno];
@@ -67,9 +73,10 @@ int addport(portlist *plist, unsigned short portno, unsigned short protocol,
   current->state = state;
   if (protocol == IPPROTO_TCP) {
     plist->state_counts_tcp[state]++;
-  } else {
+  } else if (protocol == IPPROTO_UDP) {
     plist->state_counts_udp[state]++;
-  }
+  } else
+    plist->state_counts_ip[state]++;
   current->proto = protocol;
 
   if (owner && *owner) {
@@ -93,6 +100,8 @@ int deleteport(portlist *plist, unsigned short portno,
   if (protocol == IPPROTO_UDP && plist->udp_ports) {  
     answer = plist->udp_ports[portno];
     plist->udp_ports[portno] = NULL;
+  } else if (protocol == IPPROTO_IP && plist->ip_prots) {
+    answer = plist->ip_prots[portno] = NULL;
   }
 
   if (!answer)
@@ -110,7 +119,10 @@ struct port *lookupport(portlist *ports, unsigned short portno, unsigned short p
 
   if (protocol == IPPROTO_UDP && ports->udp_ports)
     return ports->udp_ports[portno];
-  
+
+  if (protocol == IPPROTO_IP && ports->ip_prots)
+    return ports->ip_prots[portno];
+
   return NULL;
 }
 
@@ -162,6 +174,15 @@ void resetportlist(portlist *plist) {
     }
     free(plist->udp_ports);
   }
+
+  if (plist->ip_prots) {
+    for(i=0; i < 256; ++i) {
+      if (plist->ip_prots[i])
+	free_port(plist->ip_prots[i]);
+    }
+    free(plist->ip_prots);
+  }
+
   bzero(plist, sizeof(portlist));
 }
 

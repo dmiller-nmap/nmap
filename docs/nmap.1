@@ -16,10 +16,10 @@ is designed to allow system administrators and curious
 individuals to scan large networks to determine which hosts
 are up and what services they are offering.
 .I nmap 
-supports a large number of scanning techniques such as: UDP,
-TCP connect(), TCP SYN (half open), ftp proxy (bounce
-attack), Reverse-ident, ICMP (ping sweep), FIN, ACK sweep,
-Xmas Tree, SYN sweep, and Null scan.  See the
+supports a large number of scanning techniques such as: UDP, TCP
+connect(), TCP SYN (half open), ftp proxy (bounce attack),
+Reverse-ident, ICMP (ping sweep), FIN, ACK sweep, Xmas Tree, SYN
+sweep, IP Protocol, and Null scan.  See the
 .I Scan Types 
 section for more details.  nmap also offers a number of
 advanced features such as remote OS detection via TCP/IP
@@ -187,6 +187,21 @@ and NT machines.  Thus we can scan all 65K ports of a
 Windows machine
 .B very
 quickly.  Woop!
+.TP
+.B \-sO
+IP protocol scans: This method is used to determine which IP protocols
+are supported on a host.  The technique is to send raw IP packets
+without any further protocol header to each specified protocol on the
+target machine.  If we receive an ICMP protocol unreachable message,
+then the protocol is not in use.  Otherwise we assume it is open.
+Note that some hosts (AIX, HP-UX, Digital UNIX) and firewalls may not
+send protocol unreachable messages.  This causes all of the protocols
+to appear "open".
+.Sp
+Because the implemented technic is very similar to UDP port scanning,
+ICMP rate limit might apply too. But the IP 
+protocol field has only 8 bits, so at most 256 protocols can be
+probed which should be possible in reasonable time anyway.
 .TP
 .B \-sA
 ACK scan: This advanced method is usually used to map out
@@ -443,12 +458,14 @@ example '-p 23' will only try port 23 of the target host(s).
 \'\-p 20-30,139,60000-\' scans ports between 20 and 30, port
 139, and all ports greater than 60000.  The default is to
 scan all ports between 1 and 1024 as well as any ports
-listed in the services file which comes with nmap.
+listed in the services file which comes with nmap.  For IP protocol
+scanning (-sO), this specifies the protocol number you wish to scan
+for (0-255).
 .TP
 .B \-F Fast scan mode.
-Specifies that you only wish to scan for ports listed in the
-services file which comes with nmap.  This is obviously much
-faster than scanning all 65535 ports on a host.
+Specifies that you only wish to scan for ports listed in the services
+file which comes with nmap (or the protocols file for -sO).  This is
+obviously much faster than scanning all 65535 ports on a host.
 .TP
 .B \-D <decoy1 [,decoy2][,ME],...>
 Causes a decoy scan to be performed which makes it appear to
