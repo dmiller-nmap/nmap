@@ -62,7 +62,7 @@ etherstatd      100010  etherstat
 rquotad         100011  rquotaprog quota rquota
 sprayd          100012  spray
 3270_mapper     100013
-rje_mapper      100014
+rje_mapper      100014		# Remote job entry mapping service.
 selection_svc   100015  selnsvc
 database_svc    100016	dbsessionmgr unify netdbms dbms
 rexd            100017  rex
@@ -72,27 +72,27 @@ llockmgr        100020
 nlockmgr        100021
 x25.inr         100022
 statmon         100023
-status          100024
+status          100024		# Status monitor
 select_lib      100025
 bootparam       100026
-mazewars        100027				# Mazewars game
+mazewars        100027		# Mazewars game
 ypupdated       100028  ypupdate
 keyserv         100029  keyserver
 securelogin     100030
-nfs_fwdlnit     100031
-nfs_fwdtrns     100032
+nfs_fwdlnit     100031		# NFS network forwarding service.
+nfs_fwdtrns     100032		# NFS forwarding transmitter
 sunlink_mapper	100033
 net_monitor	100034
-database	100035 # Lightweight database
+database	100035		# Lightweight database
 passwd_auth	100036
-tfsd		100037
+tfsd		100037		# Translucent file service.
 nsed		100038
 nsemntd		100039
 pfs_mountd	100040
 showfhd		100043	showfh
-mvsmount	100044	# MVSmount daemon (for mvslogin mvslogout)
+mvsmount	100044		# MVSmount daemon (for mvslogin mvslogout)
 ioadmd		100055	rpc.ioadmd
-showattrd	100059	DFSMS/MVS NFS server
+showattrd	100059		# DFSMS/MVS NFS server
 NETlicense	100062
 sunisamd	100065
 debug_svc 	100066	dbsrv
@@ -126,7 +126,7 @@ snmp		100122	na.snmp snmp-cmc snmp-synoptics snmp-unisys snmp-utk
 traffic		100123	na.traffic
 DNInode		100124	na.dni	DNIneT
 layers2		100131	na.layers2	# SunNet Manager
-nsm_addrand	100133			# Solaris's statd
+nsm_addrand	100133			# Solaris's statd NSM
 etherif2	100135	na.etherif2	# SunNet Manager
 hostmem2	100136	na.hostmem2	# SunNet Manager
 iostat2		100137	na.iostat2	# SunNet Manager
@@ -143,6 +143,7 @@ nfs_acl		100227
 metad		100229	metad	rpc.metad
 metamhd		100230	metamhd	rpc.metamhd
 #
+nfsauth		100231
 sadmind		100232			# Solstice
 ufsd		100233	ufsd
 gssd		100234	gss		# GSS Daemon
@@ -161,12 +162,12 @@ pcnfsd		150001	pcnfs
 # Pyramid
 #
 PyramidLock	200000
-PyramidSys5	200001 # Sys5
+PyramidSys5	200001		# Sys5
 #
-CADDS_Image     200002 			# CV CADDS images.
+CADDS_Image     200002 		# CV CADDS images.
 #
 pdbDA		200005
-SWG		200020	swg # DMFE/DAWS (Defense Automated Warning System)
+SWG		200020	swg	# DMFE/DAWS (Defense Automated Warning System)
 exportmap	200023
 #
 # DMFE/DAWS (Defense Automated Warning System)
@@ -182,6 +183,8 @@ Msgq		200041	msgq
 Smpsrv		200042	smpsrv
 Dexsrv		200043	dexsrv
 Statussrv	200044	statussrv
+SessionServer	200046	sessionserver
+SessionDaemon	200047	sessiondaemon
 Pmsgq		200048	pmsgq
 Filesrv		200049	filesrv
 Magfetch	200050	magfetch
@@ -200,17 +203,17 @@ ecoad		200205
 rpc.dbserv      211637  dbserv rpc.dbserv_dir
 rpc.taped       217854  taped  rpc.taped_dir
 #
-ADTFileLock     300001			# ADT file locking service.
+ADTFileLock     300001		# ADT file locking service.
 #
 # FrameMaker
 #
 rpc.frameusersd	300004				# FrameMaker
 fmclient	300006				# FrameMaker Client
 fmeditor	300007				# FrameMaker Editor
-fmserver	300009  stdfm FrameServer	# FrameMaker Server
+fmserver	300009	stdfm FrameServer	# FrameMaker Server
 #
-amd		300019  amq
-rpc.ldmd	300029  ldm		# Unidata LDM
+amd		300019	amq
+rpc.ldmd	300029	ldm	# Unidata LDM
 #
 # DMFE/DAWS (Defense Automated Warning System)
 #
@@ -218,10 +221,15 @@ UpdtAuditsS	300030
 Dbpass		300091	dbpass
 #
 # FrameMaker
-fm_flb          300214			# FrameMaker
-fm_fls          300215			# FrameMaker licnese server
+fm_flb		300214		# FrameMaker
+fm_fls		300215		# FrameMaker licnese server
 #
-dr_daemon       300326	# Sun Enterprise Server Alternate Pathing
+# AcuServer provides remote file access services to ACUCOBOL-85 and
+# ACUCOBOL-GT applications. 
+#
+acuserve	300301
+#
+dr_daemon	300326		# Sun Enterprise Server Alternate Pathing
 #
 # FA&O Command Post App
 #
@@ -230,12 +238,13 @@ agcd		300376
 #
 bssd		300433	bss
 drdd		300434	drd
-ap_daemon       300473                  # SUNWapu - Alternate Pathing (AP)
+ap_daemon       300473		# SUNWapu - Alternate Pathing (AP)
 cnxmond		300483		# cluster node monitor (Digital UNIX)
 cnxagentd	300484		# cluster agent (Digital UNIX)
 cluinfod	300527		# cluster information server (Digital UNIX)
-dmispd		300598     # Sun Solstice Enterprise DMI Service Provider
+dmispd		300598		# Sun Solstice Enterprise DMI Service Provider
 prpasswd	300632
+sfs		344444		# SFS - Self-Certifying File System
 prestoctl_svc	390100	presto	# Prestoserve control daemon
 #
 # Legato Networker
@@ -359,6 +368,8 @@ sgi_reserved	391061
 sgi_reserved	391062
 sgi_reserved	391063
 #
+ingsqld		391434		# SCO JDBC
+#
 # AEDIS
 #
 afsd		391200
@@ -384,12 +395,17 @@ aboutdb         20000115  rpc.acedbd
 aatdb           20000116  rpc.acedbd
 #
 seagent		20000777	# Memco/Platinum/CA SeOS security product
+dbsrvr		21000023	# TACO
 #
 # MIDAS - Software for Nuclear Physics data aqcuisition and analysis
 #
 egts		28000205	# Eurogam Tape Server       (10205/udp)
 ers		28000220	# Eurogam Register Server   (10220/udp)
 sas		28000230	# Spectrum Access Server    (10230/udp)
+#
+# The range 200100000-200199999 is reserved for NeXT services ???
+#
+netinfobind	200100001	nibindd # NeXT NetInfo
 #
 SLSd_daemon	536870913	# HP Distributed Single Logical Screen
 uidd		536870915
@@ -514,7 +530,7 @@ ndbserver98	536871042
 ndbserver99	536871043
 ndbserver100	536871044
 #
-bwnfsd		545580417
+ugidd		545580417	rpc.ugidd
 #
 # Inetray - Raytrace
 #
@@ -526,13 +542,15 @@ inetray         555555558
 inetray         555555559
 inetray         555555560
 #
-fypxfrd		600100069	freebsd-ypxfrd
+des_crypt	600100029	freebsd-crypt	# FreeBSD
+fypxfrd		600100069	freebsd-ypxfrd	# FreeBSD
 bminrd		630474513	# MacroModel - BatchMin Network Server
 bwnfsd          788585389	# (PC)NFS server by Beame & Whiteside, Inc.
-dmispd		805306368  # Sun Solstice Enterprise DMI Service Provider
+dmispd		805306368	# Sun Solstice Enterprise DMI Service Provider
+piktc_svc	806422610	# PIKT: Problem Informant/Killer Tool 
 cfsd		824395111
 fmproduct	1073741824  _Frame_RPC		# FrameMaker
 cfsd		1092830567
 dtcm		1289637086
-ttsession	1289637087  # Sun Solaris 7 (2.7) and up.
-ttsession	1342177279  # Sun Solaris upto 2.6
+ttsession	1289637087	# Sun Solaris 7 (2.7) and up.
+ttsession	1342177279	# Sun Solaris upto 2.6
