@@ -148,7 +148,6 @@ if (o.verbose && openport != -1)
      }
    }
    if (target->seq.responses >= 4) {
-     printf("Here are the sequences: ");
      for(i=0; i < target->seq.responses; i++) {     
        printf("%lX  ", target->seq.seqs[i]);
      }
