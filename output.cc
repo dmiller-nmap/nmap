@@ -1156,7 +1156,7 @@ void printfinaloutput(int numhosts_scanned, int numhosts_up,
   int i;
   char mytime[128];
   struct timeval tv;
-
+  char statbuf[128];
   gettimeofday(&tv, NULL);
   timep = time(NULL);
   i = timep - starttime;
@@ -1166,8 +1166,10 @@ void printfinaloutput(int numhosts_scanned, int numhosts_up,
   if (numhosts_scanned == 1 && numhosts_up == 0 && !o.listscan)
     log_write(LOG_STDOUT, "Note: Host seems down. If it is really up, but blocking our ping probes, try -P0\n");
   /*  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"\n"); */
-  log_write(LOG_STDOUT|LOG_SKID, "Nmap run completed -- %d %s (%d %s up) scanned in %.3f seconds\n", numhosts_scanned, (numhosts_scanned == 1)? "IP address" : "IP addresses", numhosts_up, (numhosts_up == 1)? "host" : "hosts",  o.TimeSinceStartMS(&tv) / 1000.0);
-
+  log_write(LOG_STDOUT|LOG_SKID, "Nmap finished: %d %s (%d %s up) scanned in %.3f seconds\n", numhosts_scanned, (numhosts_scanned == 1)? "IP address" : "IP addresses", numhosts_up, (numhosts_up == 1)? "host" : "hosts",  o.TimeSinceStartMS(&tv) / 1000.0);
+  if (o.verbose && o.isr00t && o.RawScan()) 
+    log_write(LOG_STDOUT|LOG_SKID, "               %s\n", 
+	      getFinalPacketStats(statbuf, sizeof(statbuf)));
 
   Strncpy(mytime, ctime(&timep), sizeof(mytime));
   chomp(mytime);

@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- $Id$
-=========================================================================
-            nmap.xsl stylesheet version 0.9
-            last change: 2004-12-30
+<!-- =========================================================================
+            nmap.xsl stylesheet version 0.9a
+            last change: 2005-02-04
             Benjamin Erb, http://www.benjamin-erb.de
 ==============================================================================
     Copyright (c) 2004 Benjamin Erb
@@ -35,7 +34,7 @@
 
 <!-- global variables      -->
 <!-- ............................................................ -->
-<xsl:variable name="nmap_xsl_version">0.9</xsl:variable>
+<xsl:variable name="nmap_xsl_version">0.9a</xsl:variable>
 <!-- ............................................................ -->
 <xsl:variable name="start"><xsl:value-of select="/nmaprun/@start" /></xsl:variable>
 <xsl:variable name="end"><xsl:value-of select="/nmaprun/runstats/finished/@time" /> </xsl:variable>
@@ -54,11 +53,10 @@
 <html>
 <head>
 
-<xsl:comment>generated with nmap.xsl - version <xsl:value-of select="$nmap_xsl_version" /> by Benjamin Erb</xsl:comment>
+<xsl:comment>generated with nmap.xsl - version <xsl:value-of select="$nmap_xsl_version" /> by Benjamin Erb - http://www.benjamin-erb.de/nmap_xsl.php </xsl:comment>
 
 <!-- embedded JavaScript for time conversion -->
 <script language="JavaScript" type="text/javascript" >
-<xsl:comment>
 function timestamp2date(stamp)
 {
     var myDate = new Date(stamp * 1000);
@@ -66,13 +64,11 @@ function timestamp2date(stamp)
 
     return dateStr;
 }
-</xsl:comment>
 </script>
 
 <style type="text/css">
-<xsl:comment>
 /* stylesheet print */
-@media print	
+@media print
 {
 	#menu
 	{
@@ -101,69 +97,69 @@ function timestamp2date(stamp)
     	margin:1pt 0pt 0pt 20pt;
     	padding:0;
 	}
-	
+
 	p,ul
 	{
     	font-size: 9pt;
     	margin:1pt 0pt 8pt 40pt;
     	padding:0;
     	text-align:left;
-    	
+
 	}
-	
+
 	li
 	{
     	font-size: 9pt;
     	margin:0;
     	padding:0;
     	text-align:left;
-    	
+
 	}
-	
+
 	table
 	{
     	margin:1pt 0pt 8pt 40pt;
-    	border:0px;	
+    	border:0px;
     	width:90%
 	}
-	
+
 	td
 	{
     	border:0px;
     	border-top:1px solid black;
     	font-size: 9pt;
 	}
-	
+
 	.head td
 	{
 		border:0px;
     	font-weight:bold;
     	font-size: 9pt;
 	}
-	
-	
+
+
 }
 
 /* stylesheet screen */
 @media screen
 {
-    body		
+    body
     {
     	margin: 0px;
     	background-color: #FFFFFF;
     	color: #000000;
-    	text-align: center;	
+    	text-align: center;
     }
-    
-    #container	
-    {	
+
+    #container
+    {
         text-align:left;
         margin: 0px auto;
-        width: 90%; 
+        width: 90%;
     }
-    
-    h1			
-    {	
+
+    h1
+    {
     	font-family: Verdana, Helvetica, sans-serif;
     	font-weight:bold;
     	font-size: 16pt;
@@ -175,7 +171,7 @@ function timestamp2date(stamp)
         border:1px solid black;
         text-align: left;
     }
-    
+
     h1 a
     {
         font-family: Verdana, Helvetica, sans-serif;
@@ -184,7 +180,7 @@ function timestamp2date(stamp)
         color: #000000;
         background-color:#87CEFA;
     }
-    
+
     h2
     {
         font-family: Verdana, Helvetica, sans-serif;
@@ -198,21 +194,21 @@ function timestamp2date(stamp)
         background-color:#F0F8FF;
         text-align: left;
     }
-    
+
     h2.green
     {
         color: #000000;
         background-color:#CCFFCC;
         border-color:#006400;
     }
-    
+
     h2.red
     {
         color: #000000;
         background-color:#FFCCCC;
         border-color:#8B0000;
     }
-    
+
     h3
     {
         font-family: Verdana, Helvetica, sans-serif;
@@ -223,7 +219,7 @@ function timestamp2date(stamp)
         width: 75%;
         text-align: left;
     }
-    
+
     p
     {
         font-family: Verdana, Helvetica, sans-serif;
@@ -233,7 +229,7 @@ function timestamp2date(stamp)
         width: 75%;
         text-align: left;
     }
-    
+
     p i
     {
         font-family: "Courier New", Courier, mono;
@@ -241,7 +237,7 @@ function timestamp2date(stamp)
         color:#000000;
         background-color: #CCCCCC;
     }
-    
+
     ul
     {
         font-family: Verdana, Helvetica, sans-serif;
@@ -251,7 +247,7 @@ function timestamp2date(stamp)
         width: 75%;
         text-align: left;
     }
-    
+
     a
     {
         font-family: Verdana, Helvetica, sans-serif;
@@ -262,12 +258,12 @@ function timestamp2date(stamp)
         background-color: #FFFFFF;
         color: #000000;
     }
-    
-    a:hover 
+
+    a:hover
     {
 	    text-decoration: underline;
     }
-    
+
     table
     {
         width: 80%;
@@ -279,7 +275,7 @@ function timestamp2date(stamp)
 
     tr
     {
-        vertical-align:top; 
+        vertical-align:top;
         font-family: Verdana, Helvetica, sans-serif;
         font-size: 10pt;
         color:#000000;
@@ -311,7 +307,7 @@ function timestamp2date(stamp)
         color: #000000;
     }
 
-    #menu li 
+    #menu li
     {
         display         : inline;
         margin          : 0;
@@ -320,7 +316,6 @@ function timestamp2date(stamp)
         list-style-type : none;
     }
 }
-</xsl:comment>
 </style>
 	<title>nmap report</title>
 </head>
@@ -604,15 +599,23 @@ function timestamp2date(stamp)
 <!-- ............................................................ -->
 
 
-<!-- Timestamp Link -->
+<!-- Timestamp Conversion -->
 <!-- ............................................................ -->
 <xsl:template name="timestamp">
 	<xsl:param name="stamp" />
-    <script language="JavaScript" type="text/javascript" >
-    <xsl:comment>
-	document.write(timestamp2date(<xsl:value-of select="$stamp"/>));
-    </xsl:comment>
-	</script>
+    <xsl:choose>
+    	<!-- Prevent Firefox / Transformiix from running docuement.write() -->
+        <xsl:when test="system-property('xsl:vendor')!='Transformiix'">
+            <script language="JavaScript" type="text/javascript" >
+            <xsl:comment>
+            document.write(timestamp2date(<xsl:value-of select="$stamp"/>));
+            </xsl:comment>
+            </script>        
+        </xsl:when>
+
+	    <xsl:otherwise><xsl:value-of select="$stamp"/></xsl:otherwise>
+	</xsl:choose>
+    
 </xsl:template>
 <!-- ............................................................ -->
 

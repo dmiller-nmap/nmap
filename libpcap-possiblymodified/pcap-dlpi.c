@@ -675,16 +675,6 @@ pcap_open_live(const char *device, int snaplen, int promisc, int to_ms,
 		}
 	}
 
-	/*
-	** Set the chunk length.
-	*/
-	chunksize = CHUNKSIZE;
-	if (strioctl(p->fd, SBIOCSCHUNK, sizeof(chunksize), (char *)&chunksize)
-	    != 0) {
-		snprintf(ebuf, PCAP_ERRBUF_SIZE, "SBIOCSCHUNKP: %s",
-		    pcap_strerror(errno));
-		goto bad;
-	}
 #endif
 
 	/*

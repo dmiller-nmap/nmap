@@ -126,7 +126,7 @@ class NmapOps {
   bool UDPScan(); /* Returns true if at least one chosen scan type is UDP */
 
   /* Returns true if at least one chosen scan type uses raw packets.
-     Itdoes not currently cover cases such as TCP SYN ping scan which
+     It does not currently cover cases such as TCP SYN ping scan which
      can go either way based on whether the user is root or IPv6 is
      being used.  It will return false in those cases where a RawScan
      is not neccessarily used. */

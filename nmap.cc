@@ -748,7 +748,8 @@ int nmap_main(int argc, char *argv[]) {
   }
 
 #ifdef WIN32
-  winip_postopt_init();
+  if (!o.listscan)
+    winip_postopt_init();
 #endif
 
 #if HAVE_SIGNAL

@@ -213,3 +213,30 @@ diff -w -u -r1.1 pcap-bpf.h
  
  /*
   * Encapsulated packets for IPsec; DLT_ENC is 13 in OpenBSD, but that's
+
+
+The following patch removes some code that apparently causes libpcap on
+Solaris to wait for 64K chunks before returning in some cases, regardless of
+the timeout values.  Problem report and patch came from 
+Ben Harris (bjh21(a)cam.ac.uk)
+
+--- pcap-dlpi.c 1 Aug 2004 05:34:47 -0000       1.4
++++ pcap-dlpi.c 1 Feb 2005 20:29:29 -0000
+@@ -675,16 +675,6 @@
+                }
+        }
+ 
+-       /*
+-       ** Set the chunk length.
+-       */
+-       chunksize = CHUNKSIZE;
+-       if (strioctl(p->fd, SBIOCSCHUNK, sizeof(chunksize), (char *)&chunksize)
+-           != 0) {
+-               snprintf(ebuf, PCAP_ERRBUF_SIZE, "SBIOCSCHUNKP: %s",
+-                   pcap_strerror(errno));
+-               goto bad;
+-       }
+ #endif
+ 
+        /*
+

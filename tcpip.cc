@@ -139,6 +139,7 @@ void nmapwin_list_interfaces();
 int if2nameindex(int ifi);
 #endif
 
+static PacketCounter PC;
 
 #ifndef WIN32 /* Already defined in wintcpip.c for now */
 void sethdrinclude(int sd) {
@@ -171,6 +172,35 @@ const char *proto2ascii(u8 proto, bool uppercase) {
 
 }
 
+static char *ll2shortascii(unsigned long long bytes, char *buf, int buflen) {
+  if (buflen < 2 || !buf) fatal("Bogus parameter passed to ll2shortascii");
+
+  if (bytes > 1000000) {
+    snprintf(buf, buflen, "%.3gMB", bytes / 1000000.0);
+  } else if (bytes > 10000) {
+    snprintf(buf, buflen, "%.3gKB", bytes / 1000.0);
+  } else snprintf(buf, buflen, "%lldB", bytes);
+    
+  return buf;
+}
+
+/* Fill buf (up to buflen -- truncate if necessary but always
+   terminate) with a short representation of the packet stats.
+   Returns buf.  Aborts if there is a problem. */
+char *getFinalPacketStats(char *buf, int buflen) {
+  char sendbytesasc[16], recvbytesasc[16];
+
+  if (buflen <= 10 || !buf)
+    fatal("getFinalPacketStats called with woefully inadequate parameters");
+
+  snprintf(buf, buflen, "Raw packets sent: %lli (%s) | Rcvd: %lli (%s)",
+	   PC.sendPackets,
+	   ll2shortascii(PC.sendBytes, sendbytesasc, sizeof(sendbytesasc)),
+	   PC.recvPackets,
+	   ll2shortascii(PC.recvBytes, recvbytesasc, sizeof(recvbytesasc)));
+  return buf;
+}
+
 
   /* Takes an IP PACKET and prints it if packet tracing is enabled.
      'packet' must point to the IPv4 header. The direction must be
@@ -180,6 +210,14 @@ const char *proto2ascii(u8 proto, bool uppercase) {
 void PacketTrace::trace(pdirection pdir, const u8 *packet, u32 len,
 			struct timeval *now) {
   struct timeval tv;
+
+  if (pdir == SENT) {
+    PC.sendPackets++;
+    PC.sendBytes += len;
+  } else {
+    PC.recvPackets++;
+    PC.recvBytes += len;
+  }
 
   if (!o.packetTrace()) return;
 
@@ -2408,3 +2446,4 @@ int IPProbe::storePacket(u8 *ippacket, u32 len) {
   }
   return 0;
 }
+

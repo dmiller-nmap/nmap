@@ -1,12 +1,31 @@
 # Nmap Changelog ($Id$)
 
-UNRELEASED:
+Nmap 3.80
 
-o Fixed (I hope) an error which would cause the Windows version of
-  Nmap to abort under some circumstances with the error message
-  "Unexpected error in NSE_TYPE_READ callback.  Error code: 10053
-  (Unknown error)".  Problem reported by "Tony Golding"
-  (biz(a)tonygolding.com).
+o Nmap now ships with and installs (in the same directory as other
+  data files such as nmap-os-fingerprints) an XSL stylesheet for
+  rendering the XML output as HTML.  This stylesheet was written by
+  Benjamin Erb ( see http://www.benjamin-erb.de/nmap/ for examples).
+  It supports tables, version detection, color-coded port states, and
+  more.  The XML output has been augmented to include an
+  xml-stylesheet directive pointing to nmap.xsl on the local
+  filesystem.  You can point to a different XSL file by providing the
+  filename or URL to the new --stylesheet argument.  Omit the
+  xml-stylesheet directive entirely by specifying --no-stylesheet.
+  The XML to HTML conversion can be done with an XSLT processor such
+  as Saxon, Sablot, or Xalan, but modern browsers can do this on the
+  fly -- simply load the XML output file in IE or Firefox.  Some
+  features don't currently work with Firefox's on-the-fly rendering.
+  Perhaps some Mozilla wizard can fix that in either the XSL or the
+  browser itself.  I hate having things work better in IE :).  It is
+  often more convenient to have the stylesheet loaded from a URL
+  rather than the local filesystem, allowing the XML to be rendered on
+  any machine regardless of whether/where the XSL is installed.  For
+  privacy reasons (avoid loading of an external URL when you view
+  results), Nmap uses the local filesystem by default.  If you would
+  like the latest version of the stylesheet load from the web when
+  rendering, specify 
+  --stylesheet http://www.insecure.org/nmap/data/nmap.xsl .
 
 o Fixed fragmentatation option (-f).  One -f now sets sends fragments
   with just 8 bytes after the IP header, while -ff sends 16 bytes to
@@ -18,30 +37,28 @@ o Fixed fragmentatation option (-f).  One -f now sets sends fragments
   These changes are from a patch by Martin Maèok
   (martin.macok(a)underground.cz).
 
-o Applied several Nmap service detection database updates sent in by
-  Martin Maèok (martin.macok(a)underground.cz).
+o Nmap now prints the number (and total bytes) of raw IP packets sent
+  and received when it completes, if verbose mode (-v) is enabled.  The
+  report looks like:
+  Nmap finished: 256 IP addresses (3 hosts up) scanned in 30.632 seconds
+                 Raw packets sent: 7727 (303KB) | Rcvd: 6944 (304KB)
 
-o Applied Martin Maèok's (martin.macok(a)underground.cz) "cosmetics
-  patch", which fixes a few typos and minor problems.
-
-o The XML nmaprun element now has a startstr attribute which gives the
-  human readable calendar time format that a scan started.  Similarly
-  the finished element now has a timestr attribute describing when the
-  scan finished.  These are in addition to the existing nmaprun/start
-  and finished/time attributes that provided the start and finish time
-  in UNIX time_t notation.  This should help in development of better
-  XSLT stylesheets for Nmap XML output.
+o Fixed (I hope) an error which would cause the Windows version of
+  Nmap to abort under some circumstances with the error message
+  "Unexpected error in NSE_TYPE_READ callback.  Error code: 10053
+  (Unknown error)".  Problem reported by "Tony Golding"
+  (biz(a)tonygolding.com).
 
 o Added new "closed|filtered" state.  This is used for Idlescan, since
   that scan method can't distinguish between those two staes.  Nmap
   previously just used "closed", but this is more accurate.
 
-o Fixed a memory leak that would generally consume several hundred
-  bytes per down host scanned.  While the effect for most scans is
-  negligible, it was overwhelming when Scott Carlson
-  (Scott.Carlson(a)schwab.com) tried to scan 24 million IPs
-  (10.0.0.0/8).  Thanks to him for reporting the problem.  Also thanks
-  to Valgrind ( http://valgrind.kde.org ) for making it easy to debug.
+o Null, FIN, Maimon, and Xmas scans now mark ports as "open|filtered"
+  instead of "open" when they fail to receive any response from the
+  target port.  After all, it could just as easily be filtered as open.
+  This is the same change that was made to UDP scan in 3.70.  Also as
+  with UDP scan, adding version detection (-sV) will change the state
+  from open|filtered to open if it confirms that they really are open.
 
 o Fixed a bug in ACK scan that could cause Nmap to crash with the
   message "Unexpected port state: 6" in some cases.  Thanks to Glyn
@@ -53,6 +70,11 @@ o Change IP protocol scan (-sO) so that a response from the target
   unreachable means "closed", and most other ICMP error messages mean
   "filered".
 
+o Patched a Winpcap issue that prevented read timeouts from being
+  honored on Solaris (thus slowing down Nmap substantially).  The
+  problem report and patch were sent in by Ben Harris
+  (bjh21(a)cam.ac.uk).
+
 o Changed IP protocol scan (-sO) so that it sends valid ICMP, TCP, and
   UDP headers when scanning protocols 1, 6, and 17, respectively.  An
   emtpy IP header is still sent for all other protocols.  This should
@@ -63,12 +85,27 @@ o Changed IP protocol scan (-sO) so that it sends valid ICMP, TCP, and
   likely that these protocols will elicit a response, proving that the
   protocol is "open".
 
-o Null, FIN, Maimon, and Xmas scans now mark ports as "open|filtered"
-  instead of "open" when they fail to receive any response from the
-  target port.  After all, it could just as easily be filtered as open.
-  This is the same change that was made to UDP scan in 3.70.  Also as
-  with UDP scan, adding version detection (-sV) will change the state
-  from open|filtered to open if it confirms that they really are open.
+o Added an NTP probe and matches to the version detection database
+  (nmap-service-probes) thanks to a submission from Martin
+  Maèok (martin.macok@underground.cz).
+
+o Applied several Nmap service detection database updates sent in by
+  Martin Maèok (martin.macok(a)underground.cz).
+
+o The XML nmaprun element now has a startstr attribute which gives the
+  human readable calendar time format that a scan started.  Similarly
+  the finished element now has a timestr attribute describing when the
+  scan finished.  These are in addition to the existing nmaprun/start
+  and finished/time attributes that provided the start and finish time
+  in UNIX time_t notation.  This should help in development of
+  XSLT stylesheets for Nmap XML output.
+
+o Fixed a memory leak that would generally consume several hundred
+  bytes per down host scanned.  While the effect for most scans is
+  negligible, it was overwhelming when Scott Carlson
+  (Scott.Carlson(a)schwab.com) tried to scan 24 million IPs
+  (10.0.0.0/8).  Thanks to him for reporting the problem.  Also thanks
+  to Valgrind ( http://valgrind.kde.org ) for making it easy to debug.
 
 o Fixed a crash on Windows systems that don't include the iphlpapi
   DLL.  This affects Win95 and perhaps other variants.  Thanks to Ganga
@@ -87,15 +124,17 @@ o Changed to Nmap XML DTD to use the same xmloutputversion (1.01) as
   newer versions of Nmap.  Thanks to Laurent Estieux
   (laurent.estieux(a)free.fr) for reporting the problem.
 
-o Fixed compilation on soem HP-UX 11 boxes thanks to a patch by Petter
+o Fixed compilation on some HP-UX 11 boxes thanks to a patch by Petter
   Reinholdtsen (pere(a)hungry.com).
 
 o Fixed a portability problem on some OpenBSD and FreeBSD machines
   thanks to a patch by Okan Demirmen (okan(a)demirmen.com).
 
-o Added an NTP probe and matches to the version detection database
-  (nmap-service-probes) thanks to a submission from Martin
-  Maèok (martin.macok@underground.cz).
+o Applied Martin Maèok's (martin.macok(a)underground.cz) "cosmetics
+  patch", which fixes a few typos and minor problems.
+
+o I don't bother initializing winip on Windows (using
+  winip_postopt_init()) is only a list scan was requested.
 
 Nmap 3.75
 

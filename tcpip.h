@@ -295,6 +295,16 @@ class PacketTrace {
 			   const struct timeval *now);
 };
 
+class PacketCounter {
+ public:
+  PacketCounter() : sendPackets(0), sendBytes(0), recvPackets(0), recvBytes(0) {}
+
+  unsigned long long sendPackets;
+  unsigned long long sendBytes;
+  unsigned long long recvPackets;
+  unsigned long long recvBytes;
+};
+
 #define MAX_LINK_HEADERSZ 24
 struct link_header {
   int datalinktype; /* pcap_datalink(), such as DLT_EN10MB */
@@ -599,6 +609,11 @@ int getsourceip(struct in_addr *src, const struct in_addr * const dst);
    to dst should be sent to.  Interface name is dynamically
    assigned and thus should be freed */
 char *getsourceif(struct in_addr *src, struct in_addr *dst);
+
+/* Fill buf (up to buflen -- truncate if necessary but always
+   terminate) with a short representation of the packet stats.
+   Returns buf.  Aborts if there is a problem. */
+char *getFinalPacketStats(char *buf, int buflen);
 
 /* This function tries to determine the target's ethernet MAC address
    from a received packet as follows:
