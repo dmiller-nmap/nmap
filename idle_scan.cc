@@ -458,7 +458,7 @@ void initialize_idleproxy(struct idle_proxy_info *proxy, char *proxyName,
     if (distance <= 0) {
       fatal("Your IPID Zombie (%s; %s) is behaving strangely -- suddenly cannot obtain valid IPID distance.", proxy->host.HostName(), proxy->host.targetipstr());
     } else if (distance == 1) {
-      fatal("Even though your Zombie (%s; %s) appears to be vulnerable to IPID sequence prediction (class: %s), our attempts have failed.  There generally means that either the Zombie uses a separate IPID base for each host (like Solaris), or because you cannot spoof IP packets (perhaps your ISP has enabled egress filtering to prevent IP spoofing), or maybe the target network recognizes the packet source as bogus and drops them", proxy->host.HostName(), proxy->host.targetipstr(), ipidclass2ascii(proxy->seqclass));
+      fatal("Even though your Zombie (%s; %s) appears to be vulnerable to IPID sequence prediction (class: %s), our attempts have failed.  This generally means that either the Zombie uses a separate IPID base for each host (like Solaris), or because you cannot spoof IP packets (perhaps your ISP has enabled egress filtering to prevent IP spoofing), or maybe the target network recognizes the packet source as bogus and drops them", proxy->host.HostName(), proxy->host.targetipstr(), ipidclass2ascii(proxy->seqclass));
     }
     if (o.debugging && distance != 5) {
       error("WARNING: IPID spoofing test sent 4 packets and expected a distance of 5, but instead got %d", distance);
@@ -887,7 +887,7 @@ void idle_scan(Target *target, u16 *portarray, int numports,
   /* If we don't have timing infoz for the new target, we'll use values 
      derived from the proxy */
   if (target->to.srtt == -1 && target->to.rttvar == -1) {
-    target->to.srtt = 2 * proxy.host.to.srtt;
+    target->to.srtt = MAX(200,2 * proxy.host.to.srtt);
     target->to.rttvar = MAX(10000, MIN(target->to.srtt, 2000000));
     target->to.timeout = target->to.srtt + (target->to.rttvar << 2);
   }

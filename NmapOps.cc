@@ -178,7 +178,7 @@ void NmapOps::ValidateOptions() {
   }
 
   if (pingtype != PINGTYPE_NONE && idlescan) {
-    error("WARNING: Many people use -P0 w/Idlescan to prevent pings from their true IP");
+    error("WARNING: Many people use -P0 w/Idlescan to prevent pings from their true IP.  On the other hand, timing info Nmap gains from pings can allow for faster, more reliable scans.");
     sleep(2); /* Give ppl a chance for ^C :) */
   }
 
