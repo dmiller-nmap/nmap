@@ -1,5 +1,11 @@
 # Nmap Changelog ($Id$)
 
+o Applied patch by Max Schubert (nmap@webwizarddesign.com) which adds
+  an add-port XML tag whenever a new port is found open when Nmap is
+  running in verbose mode.  The new tag looks like:
+  <addport state="open" portid="22" protocol="tcp"/>
+  I also updated docs/nmap.dtd to recognize this new tag.
+
 o Added German translation of Nmap manpage by Marc Ruef
   (marc.ruef@computec.ch).  It is also available at
   http://www.insecure.org/nmap/data/nmap_manpage-de.html

@@ -485,7 +485,8 @@ const char *ippackethdrinfo(const u8 *packet, u32 len) {
       Strncpy(protoinfo, "TCP header incomplete", sizeof(protoinfo));
     else {
 
-      snprintf(tcpinfo, sizeof(tcpinfo), "seq=%u win=%hi", ntohl(tcp->th_seq),
+      snprintf(tcpinfo, sizeof(tcpinfo), "seq=%lu win=%hi", 
+	       (unsigned long) ntohl(tcp->th_seq),
 	       ntohs(tcp->th_win));
       p = tflags;
       /* These are basically in tcpdump order */
@@ -495,7 +496,8 @@ const char *ippackethdrinfo(const u8 *packet, u32 len) {
       if (tcp->th_flags & TH_PUSH) *p++ = 'P';
       if (tcp->th_flags & TH_ACK) {
 	*p++ = 'A';
-	snprintf(buf, sizeof(buf), " ack=%u", ntohl(tcp->th_seq));
+	snprintf(buf, sizeof(buf), " ack=%lu", 
+		 (unsigned long) ntohl(tcp->th_seq));
 	strncat(tcpinfo, buf, sizeof(tcpinfo));
       }
       if (tcp->th_flags & TH_URG) *p++ = 'U';

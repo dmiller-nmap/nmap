@@ -68,12 +68,20 @@ int addport(portlist *plist, u16 portno, u8 protocol, char *owner, int state) {
     if (owner && *owner) {
       snprintf(msg, sizeof(msg), " (owner: %s)", owner);
     } else msg[0] = '\0';
-
+    
     log_write(LOG_STDOUT, "Adding %s port %hu/%s%s\n",
 	      statenum2str(state), portno, 
 	      (protocol == IPPROTO_TCP)? "tcp" : "udp", msg);
     log_flush(LOG_STDOUT);
+    
+    /* Write out add port messages for XML format so wrapper libraries can
+       use it and not have to parse LOG_STDOUT ;), which is a pain! */
+    
+    log_write(LOG_XML, "<addport state=\"%s\" portid=\"%hu\" protocol=\"%s\"/>\n", statenum2str(state), portno,
+	      (protocol == IPPROTO_TCP)? "tcp" : "udp");
+    log_flush(LOG_XML); 
   }
+
 
 /* Make sure state is OK */
   if (state != PORT_OPEN && state != PORT_CLOSED && state != PORT_FIREWALLED &&
