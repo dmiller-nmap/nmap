@@ -100,7 +100,7 @@ distro:
                     nmap_manpage-es.html nmap_manpage-fr.html \
                     nmap_manpage.html nmap_spanish.1 nmapfe.1 xnmap.1 \
                     /usr/tmp/nmap-$(NMAP_VERSION)/docs
-       $(SHTOOL) mkdir /usr/tmp/nmap-$(NMAP_VERSION)/nmapfe
+	$(SHTOOL) mkdir /usr/tmp/nmap-$(NMAP_VERSION)/nmapfe
 	cd nmapfe; cp Make.files Make.header Makefile  \
 	              Makefile.in aclocal.m4 configure configure.in \
 	              nmapfe.c nmapfe.h nmapfe_sig.c nmapfe_sig.h \
