@@ -694,7 +694,7 @@ bool HostScanStats::sendOK(struct timeval *when) {
   struct timeval probe_to, earliest_to, sendTime;
   long tdiff;
 
-  if (target->timedOut(&USI->now)) {
+  if (target->timedOut(&USI->now) || completed()) {
     if (when) *when = USI->now;
     return false;
   }
@@ -718,7 +718,8 @@ bool HostScanStats::sendOK(struct timeval *when) {
   }
 
   getTiming(&tmng);
-  if (tmng.cwnd >= num_probes_active + .5) {
+  if (tmng.cwnd >= num_probes_active + .5 && 
+      (freshPortsLeft() || num_probes_waiting_retransmit)) {
     if (when) *when = USI->now;
     return true;
   }
