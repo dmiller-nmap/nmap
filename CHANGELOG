@@ -22,6 +22,10 @@
    3) When all you want to do is resolve a bunch of IPs.
    4) You just want results of a zone transfer (if it is implemented).
 
+-- Added some new fingerprints and adjusted some others based on
+   submissions to the DB (I still have a lot more to go through so
+   don't worry if your submission is still not detected).
+
 -- Added a warning when you scan 0 hosts (eg "nmap -v").  There are
    various other output tweaks as well.
 
