@@ -421,7 +421,7 @@ gettimeofday(&start, NULL);
 	 if (TIMEVAL_SUBTRACT(t2,time[seq]) > 1000000) {
 	   pt.discardtimesbefore = hostnum;
 	   if (o.debugging) 
-	     printf("Huge send delay: %lu microseconds\n", TIMEVAL_SUBTRACT(t2,t1));
+	     printf("Huge send delay: %lu microseconds\n", (unsigned long) TIMEVAL_SUBTRACT(t2,t1));
 	 }
        }
      } /* for() loop */
