@@ -33,7 +33,7 @@ AC_SUBST(libpcapdir)
 pcredir=libpcre
 AC_SUBST(pcredir)
 
-dnl use config.h instad of -D macros
+dnl use config.h instead of -D macros
 AC_CONFIG_HEADER(config.h)
 
 dnl Checks for programs.
@@ -248,9 +248,9 @@ AC_ARG_WITH(libpcap,
 [  --with-libpcap[=DIR]    Look for pcap in DIR/include and DIR/libs],
 [  case "$with_libpcap" in
   yes)
-    AC_CHECK_HEADER(pcap.h,
+    AC_CHECK_HEADER(pcap.h,[
       AC_CHECK_LIB(pcap, pcap_datalink,
-      [have_libpcap=yes ]))
+      [have_libpcap=yes ])])
     ;;
   *)
     _cppflags=$CXXFLAGS
@@ -361,15 +361,18 @@ AC_ARG_WITH(libpcre,
 # If they didn't specify it, we try to find it
 if test $have_pcre != yes ; then
   AC_CHECK_HEADER(pcre.h,
-  AC_CHECK_LIB(pcre, pcre_version,
-  [have_pcre=yes ]))
+    AC_CHECK_LIB(pcre, pcre_version, [have_pcre=yes ]),
+    [AC_CHECK_HEADERS(pcre/pcre.h, 
+      [AC_CHECK_LIB(pcre, pcre_version, [have_pcre=yes])]
+    )]
+  )
 fi
 
 # If we still don't have it, we use our own
 if test $have_pcre != yes ; then
-  subdirs="$LIBPCREDIR $subdirs"
+  AC_CONFIG_SUBDIRS( libpcre )
   CXXFLAGS="-I$LIBPCREDIR $CXXFLAGS"
-  LIBPCRE_LIB="$LIBPCREDIR/.libs"
+  LIBPCRE_LIB="$LIBPCREDIR"
   LIBS="$LIBS $LIBPCRE_LIB/libpcre.a"
   PCRE_DEPENDS="$LIBPCRE_LIB/libpcre.a"
   PCRE_CLEAN="pcre_clean"
@@ -385,9 +388,6 @@ AC_SUBST(LIBPCREDIR)
 AC_SUBST(PCRE_DEPENDS)
 AC_SUBST(PCRE_CLEAN)
 AC_SUBST(PCRE_DIST_CLEAN)
-
-
-
 
 dnl Checks for typedefs, structures, and compiler characteristics.
 

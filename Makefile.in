@@ -1,4 +1,4 @@
-NMAP_VERSION = 3.40PVT16
+NMAP_VERSION = 3.40PVT17
 NMAP_NAME= nmap
 NMAP_URL= http://www.insecure.org/nmap/
 NMAP_PLATFORM=@host@
@@ -61,7 +61,7 @@ $(TARGET): $(DEPS) @PCAP_DEPENDS@ @PCRE_DEPENDS@ $(NBASEDIR)/libnbase.a $(NSOCKD
 # all of the prerequisites (e.g. recursive makes and such)
 FORCE:
 
-$(LIBPCREDIR)/.libs/libpcre.a: $(LIBPCREDIR)/Makefile FORCE
+$(LIBPCREDIR)/libpcre.a: $(LIBPCREDIR)/Makefile FORCE
 	@echo Compiling libpcre; cd $(LIBPCREDIR) && $(MAKE)
 
 $(LIBPCAPDIR)/libpcap.a: $(LIBPCAPDIR)/Makefile FORCE
@@ -121,10 +121,10 @@ distro:
 	unix2dos README-WIN32
 	cp -ra $(SRCS) $(DEPS) nmap-os-fingerprints nmap-service-probes \
 	nmapfe.desktop nmap-services nmap-rpc nmap-protocols \
-	configure.ac config.h.in nmap_winconfig.h Makefile.in configure \
-        $(SHTOOL) install-sh config.guess nmap-$(NMAP_VERSION)-1.spec \
-            config.sub INSTALL README-WIN32 COPYING CHANGELOG HACKING \
-            /usr/tmp/nmap-$(NMAP_VERSION)
+	configure.ac config.h.in aclocal.m4 nmap_winconfig.h Makefile.in \
+	configure $(SHTOOL) install-sh config.guess \
+	nmap-$(NMAP_VERSION)-1.spec config.sub INSTALL README-WIN32 COPYING \
+	CHANGELOG HACKING /usr/tmp/nmap-$(NMAP_VERSION)
 
 	$(SHTOOL) mkdir /usr/tmp/nmap-$(NMAP_VERSION)/mswin32
 	cd mswin32; cp -ra *.[hHcC] *.cc ARPA NET NETINET RPC icon1.ico \
@@ -179,7 +179,7 @@ distro:
                         mkinstalldirs NEWS NMAP_MODIFICATIONS NON-UNIX-USE \
                         pcre.c pcre-config.in pcre.def pcre.h pcre.in \
                         pcre_win.h pcre_winconfig.h pcreposix.c pcreposix.h \
-                        perltest printint.c README RunTest RunTest.in study.c \
+                        perltest printint.c README study.c \
                         /usr/tmp/nmap-$(NMAP_VERSION)/libpcre
 
 	$(SHTOOL) mkdir /usr/tmp/nmap-$(NMAP_VERSION)/nsock

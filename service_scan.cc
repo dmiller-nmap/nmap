@@ -90,6 +90,9 @@
 #include "timing.h"
 #include "NmapOps.h"
 #include "nsock.h"
+#if HAVE_OPENSSL
+#include <openssl/ssl.h>
+#endif
 
 #if TIME_WITH_SYS_TIME
 # include <sys/time.h>
@@ -143,6 +146,10 @@ public:
   char version_matched[80];
   char extrainfo_matched[80];
   enum service_tunnel_type tunnel; /* SERVICE_TUNNEL_NONE, SERVICE_TUNNEL_SSL */
+  // This stores our SSL session id, which will help speed up subsequent
+  // SSL connections.  It's overwritten each time.  void* is used so we don't
+  // need to #ifdef HAVE_OPENSSL all over.  We'll cast later as needed.
+  void *ssl_session;
   // if a match was found (see above), this tells whether it was a "soft"
   // or hard match.  It is always false if no match has been found.
   bool softMatchFound;
@@ -893,6 +900,7 @@ ServiceNFO::ServiceNFO(AllProbes *newAP) {
   port = NULL;
   product_matched[0] = version_matched[0] = extrainfo_matched[0] = '\0';
   tunnel = SERVICE_TUNNEL_NONE;
+  ssl_session = NULL;
   softMatchFound = false;
   servicefplen = servicefpalloc = 0;
   servicefp = NULL;
@@ -901,6 +909,11 @@ ServiceNFO::ServiceNFO(AllProbes *newAP) {
 ServiceNFO::~ServiceNFO() {
   if (currentresp) free(currentresp);
   if (servicefp) free(servicefp);
+#if HAVE_OPENSSL
+  if (ssl_session)
+    SSL_SESSION_free((SSL_SESSION*)ssl_session);
+  ssl_session=NULL;
+#endif
 }
 
   // Adds a character to servicefp.  Takes care of word wrapping if
@@ -962,7 +975,7 @@ void ServiceNFO::addToServiceFingerprint(const char *probeName, const u8 *resp,
   if (servicefplen == 0) {
     timep = time(NULL);
     ltime = localtime(&timep);
-    servicefplen = snprintf(servicefp, spaceleft, "SF-Port%hi-%s:V=%s%s%%D=%d/%d%%Time=%X", portno, (proto == IPPROTO_TCP)? "TCP" : "UDP", NMAP_VERSION, (tunnel == SERVICE_TUNNEL_SSL)? "%T=SSL" : "", ltime->tm_mon + 1, ltime->tm_mday, (int) timep);
+    servicefplen = snprintf(servicefp, spaceleft, "SF-Port%hu-%s:V=%s%s%%D=%d/%d%%Time=%X", portno, (proto == IPPROTO_TCP)? "TCP" : "UDP", NMAP_VERSION, (tunnel == SERVICE_TUNNEL_SSL)? "%T=SSL" : "", ltime->tm_mon + 1, ltime->tm_mday, (int) timep);
   }
 
   // Note that we give the total length of the response, even though we 
@@ -1278,7 +1291,7 @@ static void startNextProbe(nsock_pool nsp, nsock_iod nsi, ServiceGroup *SG,
 	  nsock_connect_ssl(nsp, svc->niod, servicescan_connect_handler, 
 			    DEFAULT_CONNECT_SSL_TIMEOUT, svc, 
 			    (struct sockaddr *) &ss,
-			    ss_len, svc->portno);
+			    ss_len, svc->portno, svc->ssl_session);
 	}
       } else {
 	assert(svc->proto == IPPROTO_UDP);
@@ -1364,6 +1377,23 @@ void servicescan_connect_handler(nsock_pool nsp, nsock_event nse, void *mydata) 
   assert(type == NSE_TYPE_CONNECT || type == NSE_TYPE_CONNECT_SSL);
 
   if (status == NSE_STATUS_SUCCESS) {
+
+#if HAVE_OPENSSL
+    // Snag our SSL_SESSION from the nsi for use in subsequent connections.
+    if (nsi_checkssl(nsi)) {
+      if ( svc->ssl_session ) {
+	if (svc->ssl_session == (SSL_SESSION *)(nsi_get0_ssl_session(nsi))) {
+	  //nada
+	} else {
+          SSL_SESSION_free((SSL_SESSION*)svc->ssl_session);
+          svc->ssl_session = (SSL_SESSION *)(nsi_get1_ssl_session(nsi));
+        }
+      } else {
+        svc->ssl_session = (SSL_SESSION *)(nsi_get1_ssl_session(nsi));
+      }
+    }
+#endif
+
     // Yeah!  Connection made to the port.  Send the appropriate probe
     // text (if any is needed -- might be NULL probe)
     svc->currentprobe_exec_time = *nsock_gettimeofday();
@@ -1690,7 +1720,7 @@ int service_scan(Target *targets[], int num_targets) {
     fatal("service_scan() failed to create new nsock pool.");
   }
 
-  if (o.packetTrace()) {
+  if (o.versionTrace()) {
     nsp_settrace(nsp, 5, o.getStartTime());
   }
 

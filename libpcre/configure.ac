@@ -1,3 +1,6 @@
+dnl This has been stripped down a bit by fyodor@insecure.org for
+dnl inclusion in Nmap (removed libtool and dynamic library stuff)
+
 dnl Process this file with autoconf to produce a configure script.
 
 dnl This is required at the start; the name is the name of a file
@@ -38,9 +41,7 @@ PCRE_POSIXLIB_VERSION=0:0:0
 dnl Checks for programs.
 
 AC_PROG_CC
-AC_PROG_INSTALL
-AC_LIBTOOL_WIN32_DLL
-AC_PROG_LIBTOOL
+AC_PROG_RANLIB
 
 dnl We need to find a compiler for compiling a program to run on the local host
 dnl while building. It needs to be different from CC when cross-compiling.
@@ -122,10 +123,6 @@ AC_ARG_WITH(match-limit,
   MATCH_LIMIT=-DMATCH_LIMIT=$withval
 )
 
-dnl Now arrange to build libtool
-
-AC_PROG_LIBTOOL
-
 dnl "Export" these variables
 
 AC_SUBST(BUILD_EXEEXT)
@@ -146,37 +143,7 @@ AC_SUBST(PCRE_POSIXLIB_VERSION)
 AC_SUBST(POSIX_MALLOC_THRESHOLD)
 AC_SUBST(UTF8)
 
-dnl Stuff to make Win32 work better
 
-case $host_os in
-mingw* )
-    POSIX_OBJ=pcreposix.o
-    POSIX_LOBJ=pcreposix.lo
-    POSIX_LIB=
-    ON_WINDOWS=
-    NOT_ON_WINDOWS="#"
-    WIN_PREFIX=
-    ;;
-cygwin* )
-    ON_WINDOWS=
-    POSIX_OBJ=pcreposix.o
-    POSIX_LOBJ=pcreposix.lo
-    POSIX_LIB=
-    WIN_PREFIX=cyg
-    NOT_ON_WINDOWS="#"
-    ;;
-* )
-    ON_WINDOWS="#"
-    NOT_ON_WINDOWS=
-    POSIX_OBJ=
-    POSIX_LOBJ=
-    POSIX_LIB=libpcreposix.la
-    WIN_PREFIX=
-    ;;
-esac
-AC_SUBST(WIN_PREFIX)
-AC_SUBST(ON_WINDOWS)
-AC_SUBST(NOT_ON_WINDOWS)
 AC_SUBST(POSIX_OBJ)
 AC_SUBST(POSIX_LOBJ)
 AC_SUBST(POSIX_LIB)
@@ -186,4 +153,4 @@ if test "x$enable_shared" = "xno" ; then
 fi
 
 dnl This must be last; it determines what files are written as well as config.h
-AC_OUTPUT(Makefile pcre.h:pcre.in pcre-config:pcre-config.in RunTest:RunTest.in,[chmod a+x RunTest pcre-config])
+AC_OUTPUT(Makefile pcre.h:pcre.in pcre-config:pcre-config.in,[chmod a+x pcre-config])

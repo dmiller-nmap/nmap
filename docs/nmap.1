@@ -150,7 +150,7 @@ to ping sweep
 doing any actual port scans.
 .TP
 .B \-sV
-Version detection:  Afer TCP and/or UDP ports are discovered using one
+Version detection: Afer TCP and/or UDP ports are discovered using one
 of the other scan methods, version detection communicates with those
 ports to try and determine more about what is actually running.  A
 file called nmap-service-probes is used to determine the best probes
@@ -164,7 +164,11 @@ to deduce the service listening behind the encryption.  When RPC
 services are discovered, the Nmap RPC grinder is used to determine the
 RPC program and version numbers.  Note that the Nmap -A option also
 enables this feature.  For a much more detailed description of Nmap
-service detection, read our paper at http://www.insecure.org/nmap/versionscan.html .
+service detection, read our paper at
+http://www.insecure.org/nmap/versionscan.html .  There is a related
+--version_trace option which causes Nmap to print out extensive
+debugging info about what version scanning is doing (this is a subset
+of what you would get with --packet_trace).
 .TP
 .B \-sU
 UDP scans: This method is used to determine which UDP (User Datagram

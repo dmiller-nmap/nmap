@@ -1,19 +1,73 @@
 # Nmap Changelog ($Id$)
 
+Nmap 3.40PVT17
+
 o Wrote and posted a new paper on version scanning to
   http://www.insecure.org/nmap/versionscan.html .  Updated
   nmap-service-probes and the Nmap man page to simply refer to this
   URL.
 
+o Integrated more service signatures from my own scanning as well as
+  contributions from Brian Hatch (bri(a)ifokr.org), MadHat
+  (madhat(a)unspecific.com), Max Vision (vision(a)whitehats.com), HD
+  Moore (hdm(a)digitaloffense.net), Seth Master
+  (smaster(a)stanford.edu), and Niels Heien (zillion(a)safemode.org).
+  MadHat also contributed a new probe for Windows Media Service.  Many
+  people set a LOT of signatures, which has allowed
+  nmap-service-probes to grow from 295 to 356 signatures representing
+  85 service protocols!
+
+o Applied a patch (with slight changes) from Brian Hatch
+  (bri(a)ifokr.org) which enables caching of SSL sessions so that
+  negociation doesn't have to be repeated when Nmap reconnects to the same
+  between probes.
+
+o Applied a patch from Brian Hatch (bri@ifokr.org) which optimizes the
+  requested SSL ciphers for speed rather than security.  The list was
+  based on empirical evidence from substantial benchmarking he did with
+  tests that resemble nmap-service-scanning.
+
 o Updated the Nmap man page to discuss the new version scanning
   options (-sV, -A).
 
-o Integrated more service signatures from my own scanning as well as
-  contributions from Max Vision (vision(a)whitehats.com).
+o I now include nmap-version/aclocal.m4 in the distribution as this is
+  required to rebuild the configure script ( thanks to Dmitry V. Levin
+  (ldv(a)altlinux.org) for notifying me of the problem.
+
+o Applied a patch from Dmitry V. Levin (ldv(a)altlinux.org) which
+  detects whether the PCRE include file is <pcre.h> or <pcre
+
+o Applied a patch from Dmitry V. Levin (ldv(a)altlinux.org) which
+  fixes typos in some error messages.  The patch apparently came from
+  the highly-secure and stable Owl and Alt Linux distributions.  Check
+  them out at http://www.openwall.com/Owl/ and
+  http://www.altlinux.com/
+
+o Fixed compilation on Mac OS X - thanks to Brian Hatch
+  (bri(a)ifokr.org> and Ryan Lowe (rlowe(a)pablowe.net) for giving me
+  access to Mac OS X boxes.
+
+o Stripped down libpcre build system to remove libtool dependency and
+  other cruft that Nmap doesn't need. (this was mostly a response to
+  libtool-related issues on Mac OS X).
+
+o Added a new --version_trace option which causes Nmap to print out extensive
+  debugging info about what version scanning is doing (this is a subset
+  of what you would get with --packet_trace).  You should usually use
+  this in combination with at least one -d option.
+
+o Fixed a port number printing bug that would cause Nmap service
+  fingerprints to give a negative port number when the actual port was
+  above 32K.  Thanks to Seth Master (smaster@stanford.edu) for finding
+  this.
+
 
 o Updated all the header text again to clarify our interpretation of
   "derived works" after some suggestions from Brian Hatch
   (bri(a)ifokr.org)
+
+o Updated the Nsock config.sub/config.guess to the same newer versions
+  that Nmap uses (for Mac OS X compilation).
 
 Nmap 3.40PVT16
 

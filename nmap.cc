@@ -243,6 +243,7 @@ int nmap_main(int argc, char *argv[]) {
     {"osscan_limit", no_argument, 0, 0}, /* skip OSScan if no open ports */
     {"osscan_guess", no_argument, 0, 0}, /* More guessing flexability */
     {"packet_trace", no_argument, 0, 0}, /* Display all packets sent/rcv */
+    {"version_trace", no_argument, 0, 0}, /* Display -sV related activity */
     {"fuzzy", no_argument, 0, 0}, /* Alias for osscan_guess */
     {"data_length", required_argument, 0, 0},
     {"rH", no_argument, 0, 0},
@@ -367,6 +368,9 @@ int nmap_main(int argc, char *argv[]) {
 	o.osscan_guess = 1;
       } else if (strcmp(long_options[option_index].name, "packet_trace") == 0) {
 	o.setPacketTrace(true);
+      } else if (strcmp(long_options[option_index].name, "version_trace") == 0) {
+	o.setVersionTrace(true);
+	o.debugging++;
       } else if (strcmp(long_options[option_index].name, "data_length") == 0) {
 	o.extra_payload_length = atoi(optarg);
 	if (o.extra_payload_length < 0) {
@@ -434,7 +438,8 @@ int nmap_main(int argc, char *argv[]) {
       break;
     case 'A':
       o.servicescan = true;
-      o.osscan++; 
+      if (o.isr00t)
+	o.osscan++; 
       break;
     case 'b': 
       o.bouncescan++;

@@ -165,307 +165,351 @@
               option  if you wish to ping sweep <B>without</B> doing any
               actual port scans.
 
-       <B>-sU</B>    UDP scans: This method is used to  determine  which
-              UDP  (User  Datagram  Protocol,  RFC 768) ports are
-              open on a host.  The technique is to  send  0  byte
+       <B>-sV</B>    Version detection: Afer TCP and/or  UDP  ports  are
+              discovered  using  one  of  the other scan methods,
+              version detection communicates with those ports  to
+              try  and determine more about what is actually run­
+              ning.  A file called nmap-service-probes is used to
+              determine  the  best  probes  for detecting various
+              services and the match  strings  to  expect.   Nmap
+              tries  to determine the service protocol (e.g. ftp,
+              ssh, telnet, http), the application name (e.g.  ISC
+              Bind,  Apache  httpd, Solaris telnetd), the version
+              number, and sometimes  miscellaneous  details  like
+              whether  an  X server is open to connections or the
+              SSH protocol version).  If Nmap was  compiled  with
+              OpenSSL  support, it will connect to SSL servers to
+              deduce the service listening behind the encryption.
+              When  RPC  services  are  discovered,  the Nmap RPC
+              grinder is used to determine the  RPC  program  and
+              version numbers.  Note that the Nmap -A option also
+              enables this feature.  For  a  much  more  detailed
+              description  of  Nmap  service  detection, read our
+              paper   at    http://www.insecure.org/nmap/version­
+              scan.html  .   There  is  a related --version_trace
+              option which causes Nmap  to  print  out  extensive
+              debugging info about what version scanning is doing
+              (this is a  subset  of  what  you  would  get  with
+              --packet_trace).
+
+       <B>-sU</B>    UDP  scans:  This method is used to determine which
+              UDP (User Datagram Protocol,  RFC  768)  ports  are
+              open  on  a  host.  The technique is to send 0 byte
               UDP packets to each port on the target machine.  If
-              we receive an ICMP port unreachable  message,  then
-              the  port  is  closed.   Otherwise  we assume it is
-              open.  Unfortunately,  firewalls  often  block  the
-              port  unreachable  messages,  causing  the  port to
-              appear open.  Sometimes an ISP will  block  only  a
-              few  specific  dangerous  ports such as 31337 (back
-              orifice) and 139 (Windows NetBIOS), making it  look
-              like  these  vulnerable  ports  are open.  So don't
-              panic immediately.  Unfortunately, it isn't  always
-              trivial  to  differentiate  between  real  open UDP
+              we  receive  an ICMP port unreachable message, then
+              the port is closed.   Otherwise  we  assume  it  is
+              open.   Unfortunately,  firewalls  often  block the
+              port unreachable  messages,  causing  the  port  to
+              appear  open.   Sometimes  an ISP will block only a
+              few specific dangerous ports such  as  31337  (back
+              orifice)  and 139 (Windows NetBIOS), making it look
+              like these vulnerable ports  are  open.   So  don't
+              panic  immediately.  Unfortunately, it isn't always
+              trivial to  differentiate  between  real  open  UDP
               ports and these filtered false-positives.
 
               Some people think UDP scanning is pointless. I usu­
-              ally  remind  them  of  the  recent Solaris rcpbind
-              hole. Rpcbind can be found  hiding  on  an  undocu­
+              ally remind them  of  the  recent  Solaris  rcpbind
+              hole.  Rpcbind  can  be  found hiding on an undocu­
               mented  UDP  port  somewhere  above  32770.  So  it
               doesn't matter that 111 is blocked by the firewall.
               But can you find which of the more than 30,000 high
-              ports it is listening on? With a  UDP  scanner  you
-              can!   There  is also the cDc Back Orifice backdoor
-              program which hides on a configurable UDP  port  on
+              ports  it  is  listening on? With a UDP scanner you
+              can!  There is also the cDc Back  Orifice  backdoor
+              program  which  hides on a configurable UDP port on
               Windows machines.  Not to mention the many commonly
-              vulnerable services that utilize UDP such as  snmp,
+              vulnerable  services that utilize UDP such as snmp,
               tftp, NFS, etc.
 
-              Unfortunately  UDP  scanning is sometimes painfully
+              Unfortunately UDP scanning is  sometimes  painfully
               slow since most hosts implement a suggestion in RFC
-              1812  (section  4.3.2.8) of limiting the ICMP error
-              message rate.  For example, the  Linux  kernel  (in
-              net/ipv4/icmp.h)   limits  destination  unreachable
-              message generation to 80 per 4 seconds, with a  1/4
-              second  penalty  if  that is exceeded.  Solaris has
-              much more strict limits (about 2 messages per  sec­
-              ond)  and  thus  takes  even  longer to scan.  <I>nmap</I>
-              detects this rate limiting and slows  down  accord­
-              ingly,  rather  than flood the network with useless
+              1812 (section 4.3.2.8) of limiting the  ICMP  error
+              message  rate.   For  example, the Linux kernel (in
+              net/ipv4/icmp.h)  limits  destination   unreachable
+              message  generation to 80 per 4 seconds, with a 1/4
+              second penalty if that is  exceeded.   Solaris  has
+              much  more strict limits (about 2 messages per sec­
+              ond) and thus takes  even  longer  to  scan.   <I>nmap</I>
+              detects  this  rate limiting and slows down accord­
+              ingly, rather than flood the network  with  useless
               packets that will be ignored by the target machine.
 
-              As  is typical, Microsoft ignored the suggestion of
-              the RFC and does not seem to do any  rate  limiting
-              at  all on Win95 and NT machines.  Thus we can scan
-              all 65K ports of a Windows  machine  <B>very</B>  quickly.
+              As is typical, Microsoft ignored the suggestion  of
+              the  RFC  and does not seem to do any rate limiting
+              at all on Win95 and NT machines.  Thus we can  scan
+              all  65K  ports  of a Windows machine <B>very</B> quickly.
               Whoop!
 
 
        <B>-sO</B>    IP protocol scans: This method is used to determine
-              which IP protocols are supported on  a  host.   The
-              technique  is  to  send  raw IP packets without any
-              further protocol header to each specified  protocol
-              on  the target machine.  If we receive an ICMP pro­
+              which  IP  protocols  are supported on a host.  The
+              technique is to send raw  IP  packets  without  any
+              further  protocol header to each specified protocol
+              on the target machine.  If we receive an ICMP  pro­
               tocol unreachable message, then the protocol is not
               in use.  Otherwise we assume it is open.  Note that
               some hosts (AIX, HP-UX, Digital UNIX) and firewalls
-              may  not  send protocol unreachable messages.  This
+              may not send protocol unreachable  messages.   This
               causes all of the protocols to appear "open".
 
-              Because the implemented technique is  very  similar
-              to  UDP  port scanning, ICMP rate limit might apply
-              too. But the IP protocol field has only 8 bits,  so
+              Because  the  implemented technique is very similar
+              to UDP port scanning, ICMP rate limit  might  apply
+              too.  But the IP protocol field has only 8 bits, so
               at most 256 protocols can be probed which should be
               possible in reasonable time anyway.
 
        <B>-sI</B> <B>&lt;zombie</B> <B>host[:probeport]&gt;</B>
-              Idlescan: This advanced scan method  allows  for  a
+              Idlescan:  This  advanced  scan method allows for a
               truly blind TCP port scan of the target (meaning no
-              packets are sent to the target from  your  real  IP
-              address).   Instead,  a  unique side-channel attack
+              packets  are  sent  to the target from your real IP
+              address).  Instead, a  unique  side-channel  attack
               exploits predictable "IP fragmentation ID" sequence
-              generation  on the zombie host to glean information
-              about the open ports on the  target.   IDS  systems
-              will  display  the  scan  as coming from the zombie
+              generation on the zombie host to glean  information
+              about  the  open  ports on the target.  IDS systems
+              will display the scan as  coming  from  the  zombie
               machine you specify (which must be up and meet cer­
-              tain  criteria).   I  wrote an informal paper about
-              this      technique       at       http://www.inse­
+              tain criteria).  I wrote an  informal  paper  about
+              this       technique       at      http://www.inse­
               cure.org/nmap/idlescan.html .
 
-              Besides  being extraordinarily stealthy (due to its
-              blind nature), this scan type permits  mapping  out
+              Besides being extraordinarily stealthy (due to  its
+              blind  nature),  this scan type permits mapping out
               IP-based trust relationships between machines.  The
-              port listing shows open ports <I>from</I> <I>the</I>  <I>perspective</I>
+              port  listing shows open ports <I>from</I> <I>the</I> <I>perspective</I>
               <I>of</I> <I>the</I> <I>zombie</I> <I>host.</I>  So you can try scanning a tar­
-              get using various zombies that you think  might  be
-              trusted  (via  router/packet  filter rules).  Obvi­
-              ously this is crucial information when prioritizing
-              attack targets.  Otherwise, you penetration testers
-              might have to expend considerable  resources  "own­
-              ing"  an intermediate system, only to find out that
-              its IP isn't even trusted by the  target  host/net­
-              work you are ultimately after.
+              get  using  various zombies that you think might be
+              trusted   (via   router/packet    filter    rules).
+              Obviously  this is crucial information when priori­
+              tizing attack targets.  Otherwise, you  penetration
+              testers might have to expend considerable resources
+              "owning" an intermediate system, only to  find  out
+              that  its  IP  isn't  even  trusted  by  the target
+              host/network you are ultimately after.
 
-              You  can  add  a colon followed by a port number if
-              you wish to probe a particular port on  the  zombie
+              You can add a colon followed by a  port  number  if
+              you  wish  to probe a particular port on the zombie
               host for IPID changes.  Otherwise Nmap will use the
               port it uses by default for "tcp pings".
 
-       <B>-sA</B>    ACK scan: This advanced method is usually  used  to
-              map  out  firewall rulesets.  In particular, it can
-              help determine whether a firewall  is  stateful  or
-              just  a  simple  packet filter that blocks incoming
+       <B>-sA</B>    ACK  scan:  This advanced method is usually used to
+              map out firewall rulesets.  In particular,  it  can
+              help  determine  whether  a firewall is stateful or
+              just a simple packet filter  that  blocks  incoming
               SYN packets.
 
-              This scan type sends an  ACK  packet  (with  random
+              This  scan  type  sends  an ACK packet (with random
               looking  acknowledgment/sequence  numbers)  to  the
               ports specified.  If a RST comes back, the ports is
-              classified  as "unfiltered".  If nothing comes back
-              (or if an ICMP unreachable is returned),  the  port
-              is  classified  as "filtered".  Note that <I>nmap</I> usu­
-              ally doesn't print "unfiltered" ports,  so  getting
+              classified as "unfiltered".  If nothing comes  back
+              (or  if  an ICMP unreachable is returned), the port
+              is classified as "filtered".  Note that  <I>nmap</I>  usu­
+              ally  doesn't  print "unfiltered" ports, so getting
               <B>no</B> ports shown in the output is usually a sign that
-              all the probes got  through  (and  returned  RSTs).
-              This  scan  will  obviously never show ports in the
+              all  the  probes  got  through (and returned RSTs).
+              This scan will obviously never show  ports  in  the
               "open" state.
 
-       <B>-sW</B>    Window scan: This advanced scan is very similar  to
-              the  ACK  scan, except that it can sometimes detect
+       <B>-sW</B>    Window  scan: This advanced scan is very similar to
+              the ACK scan, except that it can  sometimes  detect
               open ports as well as filtered/unfiltered due to an
-              anomaly  in  the  TCP window size reporting by some
+              anomaly in the TCP window size  reporting  by  some
               operating  systems.   Systems  vulnerable  to  this
               include at least some versions of AIX, Amiga, BeOS,
-              BSDI, Cray, Tru64  UNIX,  DG/UX,  OpenVMS,  Digital
-              UNIX,  FreeBSD,  HP-UX,  OS/2, IRIX, MacOS, NetBSD,
-              OpenBSD,  OpenStep,  QNX,  Rhapsody,   SunOS   4.X,
-              Ultrix,  VAX,  and  VxWorks.   See the nmap-hackers
+              BSDI,  Cray,  Tru64  UNIX,  DG/UX, OpenVMS, Digital
+              UNIX, FreeBSD, HP-UX, OS/2,  IRIX,  MacOS,  NetBSD,
+              OpenBSD,   OpenStep,   QNX,  Rhapsody,  SunOS  4.X,
+              Ultrix, VAX, and  VxWorks.   See  the  nmap-hackers
               mailing list archive for a full list.
 
-       <B>-sR</B>    RPC scan.  This method works  in  combination  with
-              the  various  port  scan methods of Nmap.  It takes
-              all the TCP/UDP ports found open  and  then  floods
+       <B>-sR</B>    RPC  scan.   This  method works in combination with
+              the various port scan methods of  Nmap.   It  takes
+              all  the  TCP/UDP  ports found open and then floods
               them  with  SunRPC  program  NULL  commands  in  an
-              attempt to determine whether they  are  RPC  ports,
-              and  if  so,  what  program and version number they
+              attempt  to  determine  whether they are RPC ports,
+              and if so, what program  and  version  number  they
               serve up.  Thus you can effectively obtain the same
-              info  as "rpcinfo -p" even if the target's portmap­
+              info as "rpcinfo -p" even if the target's  portmap­
               per is behind a firewall (or protected by TCP wrap­
               pers).  Decoys do not currently work with RPC scan,
-              at some point I may add decoy support for  UDP  RPC
+              at  some  point I may add decoy support for UDP RPC
               scans.
 
        <B>-sL</B>    List scan.  This method simply generates and prints
-              a list of IPs/Names  without  actually  pinging  or
-              port  scanning  them.   DNS name resolution will be
+              a  list  of  IPs/Names  without actually pinging or
+              port scanning them.  DNS name  resolution  will  be
               performed unless you use -n.
 
        <B>-b</B> <B>&lt;ftp</B> <B>relay</B> <B>host&gt;</B>
-              FTP bounce attack: An interesting "feature" of  the
-              ftp  protocol  (RFC 959) is support for "proxy" ftp
-              connections. In other words, I should  be  able  to
-              connect  from  evil.com  to  the FTP server of tar­
-              get.com and request that the  server  send  a  file
+              FTP  bounce attack: An interesting "feature" of the
+              ftp protocol (RFC 959) is support for  "proxy"  ftp
+              connections.  In  other  words, I should be able to
+              connect from evil.com to the  FTP  server  of  tar­
+              get.com  and  request  that  the server send a file
               ANYWHERE on the Internet!  Now this may have worked
-              well in 1985 when  the  RFC  was  written.  But  in
-              today's  Internet,  we  can't have people hijacking
+              well  in  1985  when  the  RFC  was written. But in
+              today's Internet, we can't  have  people  hijacking
               ftp servers and requesting that data be spit out to
               arbitrary points on the Internet. As *Hobbit* wrote
-              back in 1995, this protocol flaw "can  be  used  to
+              back  in  1995,  this protocol flaw "can be used to
               post virtually untraceable mail and news, hammer on
               servers at various sites, fill up disks, try to hop
-              firewalls,  and  generally  be annoying and hard to
-              track down at the same time." What we will  exploit
-              this  for is to (surprise, surprise) scan TCP ports
-              from a "proxy" ftp server. Thus you  could  connect
-              to  an  ftp server behind a firewall, and then scan
-              ports that are more likely to be blocked (139 is  a
-              good  one).  If  the ftp server allows reading from
-              and writing to some directory (such as  /incoming),
-              you  can  send  arbitrary data to ports that you do
+              firewalls, and generally be annoying  and  hard  to
+              track  down at the same time." What we will exploit
+              this for is to (surprise, surprise) scan TCP  ports
+              from  a  "proxy" ftp server. Thus you could connect
+              to an ftp server behind a firewall, and  then  scan
+              ports  that are more likely to be blocked (139 is a
+              good one). If the ftp server  allows  reading  from
+              and  writing to some directory (such as /incoming),
+              you can send arbitrary data to ports  that  you  do
               find open (nmap doesn't do this for you though).
 
-              The argument passed to the "b" option is  the  host
-              you  want  to use as a proxy, in standard URL nota­
-              tion.     The     format     is:     <I>username:pass­</I>
+              The  argument  passed to the "b" option is the host
+              you want to use as a proxy, in standard  URL  nota­
+              tion.      The     format     is:    <I>username:pass­</I>
               <I>word@server:port.</I>    Everything   but   <I>server</I>   is
               optional.  To determine what servers are vulnerable
-              to  this  attack,  you can see my article in <I>Phrack</I>
-              51.  And updated version is available at  the  <I>nmap</I>
+              to this attack, you can see my  article  in  <I>Phrack</I>
+              51.   And  updated version is available at the <I>nmap</I>
               URL (http://www.insecure.org/nmap).
 
        <B>GENERAL</B> <B>OPTIONS</B>
-              None  of  these  are required but some can be quite
-              useful.  Note that the -P options can now  be  com­
-              bined  -- you can increase your odds of penetrating
-              strict firewalls by sending many probe types  using
+              None of these are required but some  can  be  quite
+              useful.   Note  that the -P options can now be com­
+              bined -- you can increase your odds of  penetrating
+              strict  firewalls by sending many probe types using
               different TCP ports/flags and ICMP codes.
 
-       <B>-P0</B>    Do  not  try  and ping hosts at all before scanning
-              them.  This allows the scanning  of  networks  that
+       <B>-P0</B>    Do not try and ping hosts at  all  before  scanning
+              them.   This  allows  the scanning of networks that
               don't  allow  ICMP  echo  requests  (or  responses)
-              through their firewall.  microsoft.com is an  exam­
-              ple  of  such a network, and thus you should always
-              use <B>-P0</B> or <B>-PT80</B> when portscanning microsoft.com.
+              through  their firewall.  microsoft.com is an exam­
+              ple of such a network, and thus you  should  always
+              use  <B>-P0</B>  or <B>-PT80</B> when portscanning microsoft.com.
+              Note tht "ping" in this contect  may  involve  more
+              than  the  traditional  ICMP  echo  request packet.
+              Nmap supports many such probes, including arbitrary
+              combinations  of  TCP,  UDP,  and  ICMP probes.  By
+              default, Nmap sends an ICMP echo request and a  TCP
+              ACK packet to port 80.
 
        <B>-PT</B> <B>[portlist]</B>
-              Use TCP "ping" to  determine  what  hosts  are  up.
-              Instead  of  sending  ICMP echo request packets and
+              Use  TCP  "ping"  to  determine  what hosts are up.
+              Instead of sending ICMP echo  request  packets  and
               waiting for a response, we spew out TCP ACK packets
-              throughout  the  target  network  (or  to  a single
-              machine) and then wait  for  responses  to  trickle
+              throughout the  target  network  (or  to  a  single
+              machine)  and  then  wait  for responses to trickle
               back.  Hosts that are up should respond with a RST.
-              This option preserves the efficiency of only  scan­
-              ning  hosts that are up while still allowing you to
-              scan networks/hosts that block ping  packets.   For
-              non  root users, we use connect().  To set the des­
+              This  option preserves the efficiency of only scan­
+              ning hosts that are up while still allowing you  to
+              scan  networks/hosts  that block ping packets.  For
+              non root users, we use connect().  To set the  des­
               tination   ports   of   the   probe   packets   use
-              -PT&lt;port1&gt;[,port2][...].   The  default port is 80,
-              since this port is often not  filtered  out.   Note
-              that  this option now accepts multiple, comma-sepa­
+              -PT&lt;port1&gt;[,port2][...].  The default port  is  80,
+              since  this  port  is often not filtered out.  Note
+              that this option now accepts multiple,  comma-sepa­
               rated port numbers.
 
        <B>-PS</B> <B>[portlist]</B>
-              This option uses SYN (connection  request)  packets
-              instead  of ACK packets for root users.  Hosts that
-              are up should respond with a  RST  (or,  rarely,  a
+              This  option  uses SYN (connection request) packets
+              instead of ACK packets for root users.  Hosts  that
+              are  up  should  respond  with a RST (or, rarely, a
               SYN|ACK).  You can set the destination ports in the
               same manner as -PT above.
 
        <B>-PU</B> <B>[portlist]</B>
-              This option  sends  UDP  probes  to  the  specified
-              hosts,  expecting  an  ICMP port unreachable packet
+              This  option  sends  UDP  probes  to  the specified
+              hosts, expecting an ICMP  port  unreachable  packet
               (or possibly a UDP response if the port is open) if
-              the  host  is  up.   Since  many UDP services won't
+              the host is up.   Since  many  UDP  services  won't
               reply to an empty packet, your best bet might be to
               send this to expected-closed ports rather than open
               ones.
 
-       <B>-PE</B>    This option uses a true ping  (ICMP  echo  request)
-              packet.   It finds hosts that are up and also looks
-              for subnet-directed  broadcast  addresses  on  your
-              network.   These  are IP addresses which are exter­
-              nally reachable and translate  to  a  broadcast  of
-              incoming  IP  packets  to  a  subnet  of computers.
-              These should be eliminated if found as  they  allow
-              for  numerous  denial  of service attacks (Smurf is
+       <B>-PE</B>    This  option  uses  a true ping (ICMP echo request)
+              packet.  It finds hosts that are up and also  looks
+              for  subnet-directed  broadcast  addresses  on your
+              network.  These are IP addresses which  are  exter­
+              nally  reachable  and  translate  to a broadcast of
+              incoming IP  packets  to  a  subnet  of  computers.
+              These  should  be eliminated if found as they allow
+              for numerous denial of service  attacks  (Smurf  is
               the most common).
 
-       <B>-PP</B>    Uses an ICMP timestamp request (code 13) packet  to
+       <B>-PP</B>    Uses  an ICMP timestamp request (code 13) packet to
               find listening hosts.
 
-       <B>-PM</B>    Same  as  <B>-PE</B> and <B>-PP</B> except uses a netmask request
+       <B>-PM</B>    Same as <B>-PE</B> and <B>-PP</B> except uses a  netmask  request
               (ICMP code 17).
 
-       <B>-PB</B>    This is the default ping type.  It  uses  both  the
+       <B>-PB</B>    This  is  the  default ping type.  It uses both the
               ACK ( <B>-PT</B> ) and ICMP echo request ( <B>-PE</B> ) sweeps in
               parallel.  This way you can get firewalls that fil­
-              ter  either one (but not both).  The TCP probe des­
+              ter either one (but not both).  The TCP probe  des­
               tination port can be set in the same manner as with
-              -PT  above.   Note that this flag is now deprecated
-              as pingtype flags can now be used  in  combination.
-              So  you  should  use  both "PE" and "PT" to achieve
+              -PT above.  Note that this flag is  now  deprecated
+              as  pingtype  flags can now be used in combination.
+              So you should use both "PE"  and  "PT"  to  achieve
               this same effect.
 
-       <B>-O</B>     This option activates  remote  host  identification
+       <B>-O</B>     This  option  activates  remote host identification
               via TCP/IP fingerprinting.  In other words, it uses
-              a bunch of techniques to detect subtleties  in  the
-              underlying  operating  system  network stack of the
-              computers you are scanning.  It uses this  informa­
-              tion  to  create  a "fingerprint" which it compares
-              with its database of  known  OS  fingerprints  (the
-              nmap-os-fingerprints  file)  to decide what type of
+              a  bunch  of techniques to detect subtleties in the
+              underlying operating system network  stack  of  the
+              computers  you are scanning.  It uses this informa­
+              tion to create a "fingerprint"  which  it  compares
+              with  its  database  of  known OS fingerprints (the
+              nmap-os-fingerprints file) to decide what  type  of
               system you are scanning.
 
               If Nmap is unable to guess the OS of a machine, and
-              conditions  are good (e.g. at least one open port),
-              Nmap will provide a URL you can use to  submit  the
-              fingerprint  if  you know (for sure) the OS running
-              on the machine.  By doing this  you  contribute  to
-              the  pool  of  operating  systems known to nmap and
-              thus it will be more accurate for  everyone.   Note
-              that  if  you  leave an IP address on the form, the
-              machine may be scanned when we add the  fingerprint
+              conditions are good (e.g. at least one open  port),
+              Nmap  will  provide a URL you can use to submit the
+              fingerprint if you know (for sure) the  OS  running
+              on  the  machine.   By doing this you contribute to
+              the pool of operating systems  known  to  nmap  and
+              thus  it  will be more accurate for everyone.  Note
+              that if you leave an IP address on  the  form,  the
+              machine  may be scanned when we add the fingerprint
               (to validate that it works).
 
-              The  -O  option  also  enables several other tests.
+              The -O option also  enables  several  other  tests.
               One is the "Uptime" measurement, which uses the TCP
               timestamp option (RFC 1323) to guess when a machine
-              was last  rebooted.   This  is  only  reported  for
+              was  last  rebooted.   This  is  only  reported for
               machines which provide this information.
 
-              Another  test  enabled  by  -O is TCP Sequence Pre­
+              Another test enabled by -O  is  TCP  Sequence  Pre­
               dictability Classification.  This is a measure that
               describes approximately how hard it is to establish
-              a forged TCP connection against  the  remote  host.
+              a  forged  TCP  connection against the remote host.
               This is useful for exploiting source-IP based trust
-              relationships (rlogin, firewall  filters,  etc)  or
-              for  hiding  the  source  of an attack.  The actual
-              difficulty number is based on statistical  sampling
-              and  may  fluctuate.  It is generally better to use
-              the English classification such  as  "worthy  chal­
+              relationships  (rlogin,  firewall  filters, etc) or
+              for hiding the source of  an  attack.   The  actual
+              difficulty  number is based on statistical sampling
+              and may fluctuate.  It is generally better  to  use
+              the  English  classification  such as "worthy chal­
               lenge" or "trivial joke".  This is only reported in
               normal output with -v.
 
               When verbose mode (-v) is on with -O, IPID Sequence
-              Generation  is also reported.  Most machines are in
-              the "incremental"  class,  which  means  that  they
-              increment  the "ID" field in the IP header for each
-              packet they send.  This makes  them  vulnerable  to
+              Generation is also reported.  Most machines are  in
+              the  "incremental"  class,  which  means  that they
+              increment the "ID" field in the IP header for  each
+              packet  they  send.   This makes them vulnerable to
               several advanced information gathering and spoofing
               attacks.
+
+       <B>-A</B>     This  option  enables  _a_dditional  _a_dvanced and
+              _a_ggressive options.  I  haven't  decided  exactly
+              which it stands for yet :).  Presently this enables
+              OS Detection (-O) and version scanning (-sV).  More
+              features  may be added in the future.  The point is
+              to enable a comprehensive set of scan options with­
+              out people having to remember a large set of flags.
+              This option only enables features, and  not  timing
+              options  (such  as  -T4)  or verbosity options (-v)
+              that you might wan't as well.
 
        <B>-6</B>     This options enables  IPv6  support.   All  targets
               must  be  IPv6 if this option is used, and they can
@@ -498,10 +542,10 @@
               to detect what you are doing. Be careful with this!
               Some  programs  have  trouble  handling  these tiny
               packets. My favorite sniffer  segmentation  faulted
-              immediately  upon receiving the first 36-byte frag­
-              ment. After that comes a 24 byte  one!  While  this
-              method  won't  get  by packet filters and firewalls
-              that  queue  all  IP  fragments  (like   the   CON­
+              immediately   upon   receiving  the  first  36-byte
+              fragment. After that comes a  24  byte  one!  While
+              this  method  won't get by packet filters and fire­
+              walls that queue all IP fragments  (like  the  CON­
               FIG_IP_ALWAYS_DEFRAG  option  in the Linux kernel),
               some networks can't afford the performance hit this
               causes and thus leave it disabled.
@@ -962,8 +1006,8 @@
        <B>host</B> <B>-l</B> <B>company.com</B> <B>|</B> <B>cut</B>  <B>-d</B>  <B>-f</B> <B>4</B> <B>|</B> <B>./nmap</B> <B>-v</B> <B>-iL</B> <B>-</B>
 
        Do a DNS zone transfer to find the  hosts  in  company.com
-       and  then  feed  the IP addresses to <I>nmap.</I>  The above com­
-       mands are for my GNU/Linux box.  You  may  need  different
+       and  then  feed  the  IP  addresses  to  <I>nmap.</I>   The above
+       commands are for my GNU/Linux box.  You may need different
        commands/options on other operating systems.
 
 
@@ -1078,8 +1122,8 @@
        of  this  classification  is  AT  (anti-terrorism),  which
        applies to almost all goods and denies export to a handful
        of  rogue  nations  such  as  Iraq  and North Korea.  Thus
-       exporting Nmap  does  not  require  any  special  license,
-       permit, or other governmental authorization.
+       exporting Nmap does not require any special license,  per­
+       mit, or other governmental authorization.
 
 
 

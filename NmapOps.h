@@ -118,9 +118,11 @@ class NmapOps {
   int isr00t;
   int debugging;
   bool packetTrace() { return (debugging >= 3)? true : pTrace;  }
+  bool versionTrace() { return packetTrace()? true : vTrace;  }
   // Note that packetTrace may turn on at high debug levels even if
   // setPacketTrace(false) has been called
   void setPacketTrace(bool pt) { pTrace = pt;  }
+  void setVersionTrace(bool vt) { vTrace = vt;  }
   int verbose;
   int randomize_hosts;
   int spoofsource; /* -S used */
@@ -213,5 +215,6 @@ class NmapOps {
   size_t sourcesocklen;
   struct timeval start_time;
   bool pTrace; // Whether packet tracing has been enabled
+  bool vTrace; // Whether version tracing has been enabled
 };
   

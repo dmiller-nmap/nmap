@@ -7,7 +7,7 @@ o rm -rf doc testdata pcretest.c pcregrep.c pcredemo.c ChangeLog
 
 o Renamed configure.in to configure.ac
 
-o Regenerated configure script by running 'aclocal; autoconf'
+o Removed Runtest, Runtest.in
 
 o Removed pcretest and pcregrep from the Makefile.in all target:
 
@@ -23,3 +23,11 @@ o Removed pcretest and pcregrep from the Makefile.in all target:
  pcregrep@EXEEXT@: libpcre.la pcregrep.@OBJEXT@ @ON_WINDOWS@ winshared
                 $(LINK) -o pcregrep@EXEEXT@ pcregrep.@OBJEXT@ -lpcre
 
+o Stripped down Makefile and configure.ac substantially to remove
+  libtool dependency (was having trouble on Mac OS X), remove Windows
+  stuff (Nmap uses a custom MS VC project for this), and insure it only
+  worries about building libpcre.a (which is now build in the libpcre
+  directory rather than in libpcre/.libs ).
+
+
+o Regenerated configure script by running 'aclocal; autoconf'

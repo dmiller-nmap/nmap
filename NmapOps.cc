@@ -205,7 +205,7 @@ void NmapOps::Initialize() {
   ttl = -1;
   nmap_stdout = stdout;
   gettimeofday(&start_time, NULL);
-  pTrace = false;
+  pTrace = vTrace = false;
   if (datadir) free(datadir);
   datadir = NULL;
 }

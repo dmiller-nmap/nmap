@@ -295,7 +295,7 @@ struct scan_lists *getfastports(int tcpscan, int udpscan) {
 
   if (!services_initialized)
     if (nmap_services_init() == -1)
-      fatal("Getfastports: Coudn't get port numbers");
+      fatal("Getfastports: Couldn't get port numbers");
   
   usedports = (u8 *) safe_zalloc(sizeof(*usedports) * 65536);
 

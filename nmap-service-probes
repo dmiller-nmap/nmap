@@ -31,6 +31,7 @@
 
 
 # This is the NULL probe that just compares any banners given to us
+##############################NEXT PROBE##############################
 Probe TCP NULL q||
 # Wait for at least 5 seconds for data.  Otherwise an Nmap default is used.
 totalwaitms 5000
@@ -45,6 +46,8 @@ match daytime m|^[A-Z][a-z]{2} [A-Z][a-z]{2} +\d{1,2} +\d\d:\d\d:\d\d 20\d\d\n\r
 match daytime m|^\d+:\d\d:\d\d [AP]M \d+/\d+/200\d\n$| v/Microsoft Windows USA daytime///
 # HP-UX B.11.00 A inetd daytime
 match daytime m|^[A-Z][a-z]{2} [A-Z][a-z]{2} +\d{1,2} \d\d:\d\d:\d\d [A-Z]+ 200\d\r\n$| v/HP-UX daytime///
+# Tardis 2000 v1.4 on NT
+match daytime m|^^[A-Z][a-z]{2} [A-Z][a-z]{2} +\d{1,2} \d\d:\d\d:\d\d 200\d $| v/Tardis 2000 daytime///
 
 match time m|^[\xc0-\xc5]...$|
 match chargen m|^!"#\$%\&'\(\)\*\+,-\./0123456789:;<=>\?\@ABCDEFGHIJKLMNOPQRSTUVWXYZ\[\\\]\^_`abcdefgh\r\n"#\$%\&'\(\)\*\+,-\./0123456789:;<=>\?\@ABCDEF| v/Linux chargen///
@@ -116,6 +119,7 @@ match ssh m/^SSH-([.\d]+)-(\d+\.\d+\.\d+) SSH Secure Shell/ v/SSH/$2/protocol $1
 match ssh m/^SSH-([.\d]+)-(\d+\.\d+\.[-.\w]+)/ v/SSH/$2/protocol $1/
 # Akamai hosted systems tend to run this - found on www.microsoft.com
 match ssh m|^SSH-(\d[.\d]*)-AKAMAI-I\n$| v/Akamai-I SSH//protocol $1/
+match ssh m|^SSH-(\d[.\d]+)-Cisco-(\d[.\d]+)\n$| v/Cisco SSH/$2/protocol $1/
 softmatch ssh m/^SSH-([.\d]+)-/
 
 match telnet m/^Check Point FireWall-1 authenticated Telnet server running on/ v/Check Point Firewall-1 telnetd///
@@ -138,7 +142,8 @@ match telnet m|^\r\n\r\nUser Access Verification\r\nPassword:\xff\xfb\x01$| v/Ci
 #  Cisco 2900 Catalyst switch, IOS 12.0(5)XU
 match telnet m|^\xff\xfb\x01\xff\xfb\x03\xff\xfd\x18\xff\xfd\x1f\r\n\r\nUser Access Verification\r\n\r\nPassword: $| v/Cisco telnetd//IOS 12.X/
 # OpenBSD 2.3
-match telnet m|^\xff\xfd%$| v/OpenBSD telnetd///
+# FreeBSD 5.1
+match telnet m|^\xff\xfd%$| v/BSD-derived telnetd///
 # Solaris 9
 match telnet m|^\xff\xfd\x18\xff\xfd\x1f\xff\xfd#\xff\xfd'\xff\xfd\$$| v/Sun Solaris telnetd///
 # Redhat Linux 7.3 telnet
@@ -153,8 +158,10 @@ match telnet m|^\xff\xfd\x18$| v/Cisco microswitch telnetd///
 match telnet m|^\xff\xfb\x01\xff\xfb\x03\xff\xfe\x01\n\rlogin: $| v/Cayman-DSL router telnetd///
 # Blue Coat Port 80 Security Appliance  Model: Blue Coat SG400  Software Version: SGOS 2.1.6044 Software Release id: 19480 Service Pack 4
 # Maybe I should call this SGOS telnetd instead
-match telnetd m|^\xff\xfb\x03\xff\xfb\x01\xff\xfd\x1f\r\n\r\nUsername: $| v/Blue Coat telnetd///
-
+match telnet m|^\xff\xfb\x03\xff\xfb\x01\xff\xfd\x1f\r\n\r\nUsername: $| v/Blue Coat telnetd///
+match telnet m|^\xff\xfb\x01@ Userid: | v/Shiva LanRover telnetd///
+# Netscreen ScreenOS 4.0.1r1.0 telnetd on a netscreen 5XT running firmware 4.0.1r1.0
+match telnet m|^\xff\xfd\x18\xff\xfb\x01\xff\xfe\x01Remote Management Console\r\n\r\nlogin: $| v/Netscreen ScreenOS telnetd///
 match smtp m/^220 [-.+\w]+ \(IMail ([^)]+)\) NT-ESMTP Server/ v/IMail NT-ESMTP/$1//
 match smtp m/^220 X1 NT-ESMTP Server [-.+\w]+ \(IMail ([^)]+)\)\r\n/ v/IMail NT-ESMTP/$1//
 match smtp m/^220-[-.+\w]+ Microsoft SMTP MAIL ready at.*Version: ([-\w.]+)\r\n/ v/Microsoft SMTP/$1//
@@ -224,7 +231,13 @@ softmatch pop3 m|^\+OK [-\[\]\(\)!,/+:<>@.\w ]+\r\n$|
 
 match nntp m|^200 Lotus Domino NNTP Server for UNIX \(Release (\d[-.\w]+), .*\) - Not OK to post\r\n$| v/Lotus Domino nntpd/$1/posting denied/
 softmatch nntp m|^200 [-\[\]\(\)!,/+:<>@.\w ]*nntp[-\[\]\(\)!,/+:<>@.\w ]*\r\n$|
+# Windows 2000 Server read:
+match nntp m|^200 NNTP Service 5\.00\.0984 Version: (5\.0\.2159.1) Posting Allowed \r\n| v/Microsoft NNTP Service/$1/on Windows 2000 Server/
+# Windows NT 4.0 SP5-SP6 
+match nntp m|^200 Microsoft Exchange Internet News Service Version (5\.5\.[.\d]+) \(posting allowed\)\r\n| v/Microsoft Exchange Internet News Service/$1/posting allowed/
 
+# courier-0.36.1
+match imap m|^\* OK Courier-IMAP ready\. Copyright 1998-2001 Double Precision, Inc\.  See COPYING for distribution information\.\r\n$| v/Courier Imap///
 # Courier-Imap 1.4.3-2.3
 match imap m|^\* OK Courier-IMAP ready\. Copyright 1998-2002 Double Precision, Inc\.  See COPYING for distribution information\.\r\n$| v/Courier Imap///
 # Courier IMAP courier-imapd-0.42.0-1.7.3
@@ -251,7 +264,6 @@ match mysql m/^.\0\0\0.(3\.[-.\w]+)\0.*\x08\x02\0\0\0\0\0\0\0\0\0\0\0\0\0\0$/s v
 match mysql m/^.\0\0\0\n(3\.[-.\w]+)\0..\0\0/s v/MySQL/$1//
 # r(NULL,2B,"'\0\0\0\n4.0.13\0\xdf\xbc\x02\0SC7)fHu5\0, \x08\x02\0\0\0\0\0\0\0\0\0\0\0\0\0\0")
 match mysql m/^.\0\0\0\n(4\.[-.\w]+)\0...\0/s v/MySQL/$1//
-
 match mud m|^\n\r\xff\xfbUDo you want ANSI color\? \(Y/n\) $| v|ROM-based MUD||http://rrp.rom.org/|
 match winshell m/^Microsoft Windows ((2000)|(XP)|(NT 4\.0)) \[Version ([\d.]+)\]\r\n\(C\) Copyright 1985-20\d\d Microsoft Corp\.\r\n\r\n/ v/Microsoft Windows $1 $5 cmd.exe///
 match netsaint m|^Sorry, you \(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\) are not among the allowed hosts\.\.\.\n$| v/Netsaint status daemon///
@@ -266,14 +278,29 @@ match shell m|^\x01remshd: getservbyname\n$| v/HP-UX Remshd///
 match snpp m|^220 [-.\w]+ SNPP server \(HylaFAX \(tm\) Version ([-.\w]+)\) ready.\r\n| v/HylaFAX SNPP/$1//
 match snpp m|^220 QuickPage v(\d[-.\w]+) SNPP server ready at | v/QuickPage SNPP/$1//
 # RedHat 7.3 - rsync server version 2.5.4  protocol version 26
-match rsync m|^@RSYNCD: (\d+)\n\n| v///protocol version $1/
+match rsync m|^@RSYNCD: (\d+)\n\n$| v///protocol version $1/
+# Redhat Linux 7.1
+match rsync m|^@RSYNCD: (\d+)\n$| v///protocol version $1/
 # Unreal IRCD Server version 3.2 beta 17
 match ircd m|^:[-.\w]+ NOTICE AUTH :\*\*\* Looking up your hostname\.\.\.\r\n| v/Unreal IRCD///
 match pcanywheredata m/^\0X\x08\0}\x08\x0d\x0a\0\x2e\x08Please press<Enter>...\x0d\x0a/ v/PCAnywhere///
 match meetingmaker m/^\xc1,$/ v/Meeting Maker calendaring///
 match finger m|^\r\n    Line      User       Host\(s\)              Idle Location\r\n| v/Cisco fingerd//IOS 12.X/
+# Windows 2000 Server Windows Media Unicast Service (NsUnicast) - Nsum.exe
+match nsunicast m|^4\0\0\0V4\x12\0\0\0\0\0\0\0\0\x004\0\0\0\x04\0\xf0\0\xd3\x07\t\0\x02\0\t\0.\0.\0.\0..\0\0\0\0.\0\0\0.\0\0\0\x02\0| v/Microsoft Windows Media Unicast Service//nsum.exe/
+
+# Redhat Linux 7.1 - HAHAHAHAHAHA!!!! I love this service :) 
+match systat m|^USER       PID %CPU %MEM   VSZ  RSS TTY      STAT START   TIME COMMAND\n| v/Linux systat///
+# I love this service too:
+match netstat m|^netstat: invalid option -- f\nusage: netstat \[-veenNcCF\]| v/Linux netstat//broken/
+match hp-gsg m|^220 JetDirect GGW server \(version (\d[.\d]+)\) ready\r\n| v/HP JetDirect Generic Scan Gateway/$1//
+match http m|^HTTP/1.0 500\r\nContent-type: text/plain\r\n\r\nNo Scan Capable Devices Found\r\n| v/HP Embedded Web Server remote scan service//no scanner found/
+match dict m|^530 access denied\r\n$| v/dictd//access denied/
+match dict m|^220 [-.\w]+ dictd ([-.\w/]+) on ([-.+ \w]+) <auth\.mime>| v/dictd/$1/on $2/
+
+##############################NEXT PROBE##############################
 Probe TCP GenericLines q|\r\n\r\n|
-ports 21,43,110,113,199,505,540,1248,5432,30444
+ports 21,43,98,110,113,199,505,540,1248,5432,6667-6670,30444
 # iopd 2003debian0.0304182231-1
 match pop3 m|^\+OK POP3 \[[-.\w]+\] v(200[-.\w]+) server ready\r\n-ERR Null command\r\n-ERR Null command\r\n| v/ipopd/$1//
 # Solid POP3d 0.15
@@ -304,9 +331,11 @@ match nsclient m|^ERROR:Wrong password$| v/Netsaint Windows Client///
 match ircbot m|^ \r\nSorry, that nickname format is invalid\.\r\r\n$| v/Diverse IRC bot///
 # Part of Linux net-snmp-5.0.6-17
 match smux m|^A\x01\x02$| v/Linux SNMP multiplexer///
+match linuxconf m|^500 access denied: Check networking/linuxconf network access\r\n$| v///Access denied/
 
+##############################NEXT PROBE##############################
 Probe TCP GetRequest q|GET / HTTP/1.0\r\n\r\n|
-ports 79,80-85,113,139,143,280,515,554,631,783,993,995,1220,5000,5432,5900,8000-8010,8080-8085,40193
+ports 79,80-85,88,113,139,143,280,497,515,554,631,783,993,995,1220,5000,5432,5800,5900,8000-8010,8080-8085,8888,40193
 sslports 443
 # Server: CUPS/1.1
 match ipp m|^HTTP/1\.0.*Server: CUPS/(\S+)|s v/CUPS $1///
@@ -336,6 +365,7 @@ match http m|^HTTP/1.1 \d\d\d .*\r\nServer: Lotus-Domino/0\r\n| v/Lotus Domino h
 # what the telnetd on this device said).
 match http m|^HTTP/1.1 302 Document Follows\r\nLocation: /hag/pages/home.ssi\r\n\r\n$| v/GlobespanVirata httpd//on broadband router/
 match http m|^HTTP/1.0 200 OK\r\nServer:HTTP/1.0\r\n.*<title>Hewlett Packard</title>|s v/HP Jetdirect httpd///
+match http m|^HTTP/1\.0 401 Unauthorized\r\nServer: EHTTP/([.\d]+)\r\nWWW-Authenticate: Basic realm=\"HP ([-.\w]+)\"\r\n| v/HP printer EHTTP admin server/$1/HP $2 printer/
 match http m|^HTTP/1\.0 \d{3}.*\r\nServer: CompaqHTTPServer/([\.\w]+)\r\n|s v/Compaq Insight Manager/$1//
 match http m|^HTTP/1.1 401 Authorization Required\r\nWWW-Authenticate: Basic realm="Linksys ([-A-Z\d/]+)"\r\n| v/Linksys router web admin server//device model $1/
 match http m|^HTTP/1\.1 \d\d\d .*\r\nServer: Insight Manager (\d)\r\n\r\n|s v/Compaq Insite Manager/$1//
@@ -347,6 +377,19 @@ match http m|^HTTP/1\.0 \d\d\d .*\r\nServer: Netscape-Enterprise/([-.\w]+)\r\n| 
 match http m|^HTTP/1\.0 \d\d\d .*\nDate: .*\nServer: NCSA/(1\.\d)\n| v/NCSA httpd/$1//
 match http m|^HTTP/1\.0 \d\d\d .*\r\nServer: Netscape-FastTrack/(\d[-.\w]+)\r\n| v/Netscape FastTrack web server/$1//
 match http m|^HTTP/1\.1 \d\d\d .*\r\nServer: (Oracle[-.\w/]+) Oracle HTTP Server ([-.\w]+)|s v/Oracle HTTP Server/$1/$2/
+match http m|^HTTP/1\.0 401 Unauthorized\r\nServer: Embedded HTTP Server (\d[.\d]+)\r\nWWW-Authenticate: Basic realm=\"([-+.\w]+)\"\r\nConnection:| v/D-Link Embedded HTTP Server/$1/on D-Link $2/
+# iCal 3.6
+match http m|^HTTP/1\.1 200 OK\r\nDate: .*\r\nMIME-Version: 1\.0\r\nServer: Wapapi/1\.1\r\nContent-Type: text/html\r\nContent-Length: \d+\r\n\r\n<html>\r\n<head><title>iCal Tutorial:  Introduction</title></head>| v/Brown Bear iCal web calendar///
+match http m|^HTTP/1\.1 401 Unauthorized\r\nDate: .*\r\nServer: (Virata-EmWeb/R6_0_1)\r\nWWW-Authenticate: Basic realm=\"Administration Tools\"\r\n\r\n401 Unauthorized\r\n$| v/Netscreen administrative web server//runs $1/
+# Phaser860 Printer
+match http m|^HTTP/1\.1 404 Not Found\r\nDate: .*\r\nAllow: GET, HEAD\r\nServer: Spyglass_MicroServer/(\d[-.\w]+)\r\nContent-Type: text/html\r\nContent-Length: \d+\r\n\r\n<HTML><HEAD><TITLE>Not Found</TITLE></HEAD>\r\n<BODY>The requested URL was not found\.</BODY></HTML>\r\n| v/Spyglass MicroServer embedded webserver/$1//
+# Cisco Catalyst 3500-XL switch IOS 12.0(5)XU
+match http m|^HTTP/1\.0 401 Unauthorized\r\nDate: .*\r\nContent-type: text/html\r\nExpires: .*\r\nWWW-Authenticate: Basic realm=\"level 15 access\"\r\n\r\n<HEAD><TITLE>Authorization Required</TITLE></HEAD><BODY><H1>Authorization Required</H1>Browser not authentication-capable or authentication failed\.</BODY>\r\n\r\n$| v/Cisco IOS administrative webserver///
+# Xerox Document Centre (DocuCentre) 425
+match http m|^HTTP/1\.1 200 OK\r\nContent-Length: \d+\r\nContent-Type: text/html\r\nDate: .*\r\nAllow: GET, HEAD\r\nServer: Xerox_MicroServer/([-.\w]+)\r\nExpires: .*\r\nCache-Control: no-cache\r\n\r\n<HTML>\n<HEAD>\n<TITLE>([-.+ \w]+)</TITLE>| v/Xerox Microserver httpd/$1/on $2/
+match http m|^HTTP/1\.1 200 OK\r\nContent-Type: text/html\r\nDate: .*\r\nAllow: GET, HEAD\r\nServer: Spyglass_MicroServer/(\d[-.\w]+)\r\nLast-Modified: .*\r\nExpires: .*\r\nPragma: no-cache\r\n\r\n\n<html> \n<head>\n   <meta http-equiv=\"Content-Type\" content=\"text/html; charset=iso-8859-1\">\n   <meta name=\"keywords\" content=\"printer; embedded web server; int| v/Spyglass MicroServer/$1/embedded in printer/
+match http m|^HTTP/1\.0 500 Internal Server Error\r\nServer: Cougar (\d[-.\w]+)\r\n\r\n$| v/Microsoft Windows Media Server/$1//
+match http m|^HTTP/1\.0 200 OK\r\nContent-Type: video/x-ms-asf\r\nCache-Control: max-age=0, no-cache\r\nServer: Cougar/(\d[-.\w]+)\r\n| v/Microsoft Windows Media Server/$1//
 # No more HTTP softmatch because many services that I don't think are
 # best classified 'http' use http-like semantics (for example UPnP,
 # some https servers, etc).  Maybe I should make softmatch allow
@@ -356,9 +399,16 @@ match http m|^HTTP/1\.1 \d\d\d .*\r\nServer: (Oracle[-.\w/]+) Oracle HTTP Server
 match http-proxy m|^HTTP/1\.0 400 Bad Request\r\nServer: [sS]quid/([-.\w]+)\r\n| v/Squid webproxy/$1//
 # Blue Coat Port 80 Security Appliance  Model: Blue Coat SG400 Software Version: SGOS 2.1.6044 Software Release id: 19480 Service Pack 4
 match http-proxy m|^HTTP/1\.1 504 Gateway Time-out\r\nConnection: close\r\nCache-Control: no-cache\r\nPragma: no-cache\r\nContent-Length: 2976\r\nContent-Type: text/html\r\n\r\n<DIV class=Section1> \n\t\t<P class=MsoNormal| v/Blue Coat Security Appliance http proxy///
+match http-proxy m|^HTTP/1.0 200 OK\r\nServer: MS-MFC-HttpSvr/1.0\r\nDate: Wed, 13 Aug 2003 01:58:26 GMT\r\n\r\n<html><h1>http://| v/Surfcontrol SuperScout Web Filter//Windows/
+match http-proxy m|^HTTP/1\.0 400 Cache Detected Error\r\nDate: .*\r\nContent-Type: text/html\r\nVia: 1\.0 [-.\w]+ \(NetCache NetApp/([-.\w]+)\)\r\n\r\n| v/NetApp NetCache web proxy/$1//
 # TightVNC 1.2.6
-match vnc-http m|^HTTP/1.0 200 OK\n\n<HTML>\n  <HEAD><TITLE>TightVNC desktop \[[-.\w]+\]| v/TightVNC///
+match vnc-http m|^HTTP/1\.0 200 OK\n\n<HTML>\n  <HEAD><TITLE>TightVNC desktop \[[-.\w]+\]| v/TightVNC///
+# Tightvnc-1.2.3
+match vnc-http m|^HTTP/1\.0 404 Not found\n\n<HEAD><TITLE>File Not Found</TITLE></HEAD>\n<BODY><H1>File Not Found</H1></BODY>\n$| v/TightVNC///
+# WinVNC 3.3.7 Build Mar 5 2003
+match vnc-http m|^HTTP/1\.0 200 OK\r\n\r\n<HTML><TITLE>VNC desktop \[[-.\w]+\]</TITLE>\n<APPLET CODE=vncviewer\.class ARCHIVE=vncviewer\.jar WIDTH=800 HEIGHT=632>\n<param name=PORT| v/WinVNC///
 match rtsp m|^RTSP/1.0 400 Bad Request\r\nServer: DSS/([-.\w]+) \[(v\d+)]-(\w+)\r\n| v/DarwinStreamingServer/$1/$2 on $3/
+match rtsp m|^RTSP/1\.0 505 Protocol Version Not Supported\r\nDate: .*\r\nServer: WMServer/(\d[-.\w]+)\r\n\r\n$| v/Microsoft Windows Media Server/$1//
 # pidentd 2.81
 match ident m|^0 , 0 : ERROR : X-INVALID-REQUEST\r\n$| v/pidentd///
 match netbios-ssn m/^\x83\0\0\x01\x82|\x8f$/
@@ -382,7 +432,8 @@ match postgres m|^EFATAL:  invalid length of startup packet\n\0$| v/Postgresql//
 match netwareip m|^\xfb\xff\xfe\xff\xfb\xff\xfe\xff\xfb\xff\xfe\xff$| v|Novell Netware/IP|||
 # Windows XP 8/2003
 match upnp m|^HTTP/1.1 400 Bad Request\r\n\r\n$| v/Microsoft Windows UPnP///
-
+match irc m|^:Default-Chat-Community 421 \* GET :Unknown command\r\n| v/Microsoft Exchange 2000 Server Chat Service///
+match dantz m|^\0\xca\0\0\0\0\0\x04\0\0\0\0$| v/Dantz Retrospect/6.0//
 
 # This probe sends an RPC "Null command" to the port for service
 # 100000 (portmapper).
@@ -390,26 +441,31 @@ match upnp m|^HTTP/1.1 400 Bad Request\r\n\r\n$| v/Microsoft Windows UPnP///
 # adding an \R escape in the string logic to provide a random byte.
 # This would make IDS detection and such a bit harder.  On the other
 # hand, that would make the response a little harder to recognize too.
+##############################NEXT PROBE##############################
 Probe TCP RPCCheck q|\x80\0\0\x28\x72\xFE\x1D\x13\0\0\0\0\0\0\0\x02\0\x01\x86\xA0\0\x01\x97\x7C\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0|
 ports 111,4045,32750-32810,38978
 match rpc m|^\x80\0\0\x18\x72\xFE\x1D\x13\0\0\0\x01\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x01|
 match rpc m|^\x80\0\0\x20\x72\xFE\x1D\x13\0\0\0\x01\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x02|
 
+##############################NEXT PROBE##############################
 Probe UDP RPCCheck q|\x72\xFE\x1D\x13\0\0\0\0\0\0\0\x02\0\x01\x86\xA0\0\x01\x97\x7C\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0|
 ports 111,4045,32750-32810,38978
 match rpc m|^\x72\xFE\x1D\x13\0\0\0\x01\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x01|
 match rpc m|^\x72\xFE\x1D\x13\0\0\0\x01\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x02|
 
+##############################NEXT PROBE##############################
 Probe UDP DNSVersionBindReq q|\0\x06\x01\0\0\x01\0\0\0\0\0\0\x07version\x04bind\0\0\x10\0\x03|
-ports 53
+ports 53,2967
 # Allow 3-12 character version numbers
 match domain m|\x07version\x04bind.*[\x03-\x10]([-\w._]{3,16})$|s v/ISC Bind/$1//
 # Tinydns 1.05
 match domain m|^\0\x06\x81\x81\0\x01\0\0\0\0\0\0\x07version\x04bind\0\0\x10\0\x03$| v/TinyDNS///
 # Microsoft DNS Windows 2000, SP4
 match domain m|^\0\x06\x81\x04\0\x01\0\0\0\0\0\0\x07version\x04bind\0\0\x10\0\x03$| v/Microsoft DNS///
+# Symantec Antivirus (rtvscan.exe)
+match symantec-av m|^\0\x06\x01\x01\0\x101\x01\xe0\nI\0\xe0\nI\0$| v/Symantec rtvscan antivirus///
 
-
+##############################NEXT PROBE##############################
 Probe TCP DNSVersionBindReq q|\0\x1E\0\x06\x01\0\0\x01\0\0\0\0\0\0\x07version\x04bind\0\0\x10\0\x03|
 ports 53,512,513,1521,2967
 match domain m|\x07version\x04bind.*[\x03-\x10]([-\w._]{3,16})$|s v/ISC Bind/$1//
@@ -418,7 +474,7 @@ match domain m|^\0\x1e\0\x06\x81\x04\0\x01\0\0\0\0\0\0\x07version\x04bind\0\0\x1
 # OpenBSD 2.3
 # Solaris 9
 match rlogind m|^\x01rlogind: Permission denied\.\r\n$|
-match exec m|^\x01Login incorrect\.\n$| v/Solaris rexecd///
+match exec m|^\x01Login incorrect\.\n$|
 # HP-UX B.11.00 A
 match exec m|^\x01rexecd: Login incorrect.\n$| v/HP-UX rexecd///
 # RedHat 7.3 - Oracle TNS Listener Oracle 8.1.7
@@ -426,6 +482,7 @@ match oracle-tns m|^\0\x1c\0\0\x04\x01\0\0\0X\0\0\xc4W\xdc3\x04\xc38\x81\xe00\xe
 match ssc-agent m|^\0\x1e\0\x06\0\t\0\0$| v/Novell Netware ssc-agent///
 
 # DNS Server status request: http://www.crynwr.com/crynwr/rfc1035/rfc1035.html
+##############################NEXT PROBE##############################
 Probe UDP DNSStatusRequest q|\0\0\x10\0\0\0\0\0\0\0\0\0|
 ports 53,135
 match domain m|^\0\0\x90\x04\0\0\0\0\0\0\0\0|
@@ -433,10 +490,12 @@ match domain m|^\0\0\x90\x04\0\0\0\0\0\0\0\0|
 match msrpc m|^\x04\x06\0\0\x10\0\0\0\0\0\0\0|
 
 # DNS Server status request: http://www.crynwr.com/crynwr/rfc1035/rfc1035.html
+##############################NEXT PROBE##############################
 Probe TCP DNSStatusRequest q|\0\x0C\0\0\x10\0\0\0\0\0\0\0\0\0|
 ports 53
 match domain m|^\0\x0C\0\0\x90\x04\0\0\0\0\0\0\0\0|
 
+##############################NEXT PROBE##############################
 Probe UDP NBTStat q|\x80\xf0\0\x10\0\x01\0\0\0\0\0\0\x20\x43\x4bAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\0\0\x21\0\x01|
 ports 137
 # NBT Response starts with a header:  
@@ -455,19 +514,35 @@ ports 137
 # 32 bit fields: trasnmitted; received
 # The remaining fields are all 16-bits: iframe transmit errors; number of receive buffers; tl_timeouts; tl_timeouts; free ncbs; ncbs; 
 #                                       max_ncbs; number of transmit buffers; max datagram; pending sessions; max sessions; packet_sessions
+
+# I'm not convinced that these next 4 work on a very wide variety of
+# machines.  I think most of the real matching comes in the next block.
 match netbios-ns m|\x80\xf0\x84\0\0\0\0\x01\0\0\0\0 CKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\0\0!\0\x01\0\0\0\0...(\w{1,15}) *\0\x04\0(\w{1,15}) *\0\x84\0\w{1,15} *\x03\x04\0\w{1,15} *\x04\0\w{1,15} *\x1e\x84\0\w{1,15} *\x1d\x04\0\x01\x02__MSBROWSE__\x02\x01\x84\0(\w{1,15}) *\x03| v/Microsoft Windows XP netbios-ssn//host: $1 workgroup: $2 user: $3/
 match netbios-ns m|\x80\xf0\x84\0\0\0\0\x01\0\0\0\0 CKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\0\0!\0\x01\0\0\0\0...(\w{1,15}) *\0\x04\0(\w{1,15}) *\0\x84\0\w{1,15} *\x03\x04\0\w{1,15} *\x04\0\w{1,15} *\x1e\x84\0\w{1,15} *\x1d\x04\0\x01\x02__MSBROWSE__\x02\x01\x84\0\0| v/Microsoft Windows XP netbios-ssn//host: $1 workgroup: $2/
 match netbios-ns m|\x80\xf0\x84\0\0\0\0\x01\0\0\0\0 CKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\0\0!\0\x01\0\0\0\0...(\w{1,15}) *\0\x04\0(\w{1,15}) *\0\x84\0\w{1,15} *\x03\x04\0\w{1,15} *\x04\0(\w{1,15}) *\x03\x04\0\w{1,15} *\x1e\x84\0| v/Microsoft Windows XP netbios-ssn//host: $1 workgroup: $2 user: $3/
 match netbios-ns m|\x80\xf0\x84\0\0\0\0\x01\0\0\0\0 CKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\0\0!\0\x01\0\0\0\0...(\w{1,15}) *\0\x04\0(\w{1,15}) *\0\x84\0\w{1,15} *\x03\x04\0\w{1,15} *\x04\0\w{1,15} *\x1e\x84\0| v/Microsoft Windows XP netbios-ssn//host: $1 workgroup: $2/
+# It would be really nice if we could get username and/or OS
+# information from this.  But it is quite hard to parse out the proper
+# information unambiguously, especially with just regular expressions.
+# But it certainly would be nice to get more info:
+#
+# nbtstat
+#
+match netbios-ns m|^\x80\xf0\x84\0\0\0\0\x01\0\0\0\0 CKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\0\0!\0\x01\0\0\0\0\0..([\w\-]{1,15}) *\0D\0.*\0([\w\-]{1,15}) *\0\xc4\0| v/Microsoft Windows netbios-ssn//host: $1 workgroup: $2/
+match netbios-ns m|^\x80\xf0\x84\0\0\0\0\x01\0\0\0\0 CKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\0\0!\0\x01\0\0\0\0\0..([\w\-]{1,15}) *\0D\0([\w\-]{1,15}) *\0\xc4\0| v/Microsoft Windows netbios-ssn//host: $1 workgroup: $2/
+match netbios-ns m|^\x80\xf0\x84\0\0\0\0\x01\0\0\0\0 CKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\0\0!\0\x01\0\0\0\0\0...*\0([\w\-]{1,15}) *\0D\0.*\0([\w\-]{1,15}) *\0\xc4\0| v/Microsoft Windows netbios-ssn//host: $1 workgroup: $2/
+match netbios-ns m|^\x80\xf0\x84\0\0\0\0\x01\0\0\0\0 CKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\0\0!\0\x01\0\0\0\0\0...*\0([\w\-]{1,15}) *\0D\0([\w\-]{1,15}) *\0\xc4\0| v/Microsoft Windows netbios-ssn//host: $1 workgroup: $2/
 
 
+##############################NEXT PROBE##############################
 Probe UDP Help q|help\r\n\r\n|
 ports 7
 match echo m|^help\r\n\r\n$|
 match chargen m|@ABCDEFGHIJKLMNOPQRSTUVWXYZ|
 
+##############################NEXT PROBE##############################
 Probe TCP Help q|HELP\r\n|
-ports 7,25,2401,2627
+ports 7,21,25,2401,2627
 sslports 465
 match echo m|^HELP\r\n$|
 match smtp m|^220 [-.\w]+ ESMTP\r\n214 qmail home page: http://pobox.com/~djb/qmail.html| v/Qmail smtpd///
@@ -486,24 +561,29 @@ match cvspserver m|^cvs-pserver \[pserver aborted\]: bad auth protocol start: HE
 # Written in 1986.  More info at 
 # http://ftp.rge.com/pub/X/X11R5/contrib/xwebster.README
 match webster m/^DICTIONARY server protocol:\r\n\r\nContact name is/ v/Webster dictionary server///
+# Phaser860 printer
+match ftp m|^220 FTP server ready\.\r\n214- The following commands are recognized \(\* =>'s unimplemented\)\.\r\n   USER    PORT    STOR    MSAM\*   RNTO\*   NLST\*   MKD\*    CDUP\*   EPLF\*\r\n   PASS    PASV\*   APPE\*   MRSQ\*   ABOR    SITE\*   XMKD\*   XCUP\*\r\n   ACCT\*   TYPE    MLFL\*   MRCP\*   DELE    SYST    RMD\*    STOU \r\n   SMNT\*   STRU    MAIL\*   ALLO\*   CWD\*    STAT    XRMD\*   SIZE\*\r\n   REIN\*   MODE    MSND\*   REST\*   XC$| v/Phaser printer ftpd///
 
+##############################NEXT PROBE##############################
 Probe TCP SSLSessionReq q|\x16\x03\0\0S\x01\0\0O\x03\0?G\xd7\xf7\xba,\xee\xea\xb2`~\xf3\0\xfd\x82{\xb9\xd5\x96\xc8w\x9b\xe6\xc4\xdb<=\xdbo\xef\x10n\0\0(\0\x16\0\x13\0\x0a\0f\0\x05\0\x04\0e\0d\0c\0b\0a\0`\0\x15\0\x12\0\x09\0\x14\0\x11\0\x08\0\x06\0\x03\x01\0|
-ports 443,636,8009
+ports 443,548,636,8009
 # OpenSSL/0.9.7aa
 match ssl m|^\x16\x03\0\0J\x02\0\0F\x03\0\?| v/OpenSSL///
 # Microsoft-IIS/5.0
-match ssl m|^\x16\x03\0..\x02\0\0F\x03\0\?|s v/Microsoft IIS SSL///
+match ssl m|^\x16\x03\0..\x02\0\0F\x03\0|s v/Microsoft IIS SSL///
 # Novell Netware 6 Enterprise Web server 5.1 https
 # Novell Netware Ldap over SSL or enterprise web server 5.1 over SSL
 match ssl m|^\x16\x03\0\0:\x02\0\x006\x03\0| v/Novell Netware SSL///
 # Cisco IDS 4.1 Appliance
 match ssl m|^\x16\x03\0\0\*\x02\0\0&\x03\0\xd10:\xbd\\\x8e\xe3\x15\x1c\x0fZ\xe4\x04\x87\x07\xc0\x82\xa9\xd4\x0e\x9c1LXk\xd1\xd2\x0b\x1a\xc6/p\0\0\n\0\x16\x03\0\x026\x0b\0\x022\0| v/Cisco IDS SSL///
-#Probe TCP SSLSessionReq q|\x80\x67\x01\x03\x01\0\x4e\0\0\0\x10\x01\0\x80\x03\0\x80\x07\0\xc0\x06\0\x40\x02\0\x80\x04\0\x80\0\0\x39\0\0\x38\0\0\x35\0\0\x33\0\0\x32\0\0\x04\0\0\x05\0\0\x2f\0\0\x16\0\0\x13\0\xfe\xff\0\0\x0a\0\0\x15\0\0\x12\0\xfe\xfe\0\0\x09\0\0\x64\0\0\x62\0\0\x03\0\0\x06\xc8\xd5\x5a\x76\x5c\x0a\x7d\x9e\x9d\x47\xcd\x7d\xce\x4a\x06\x9a|
-#ports 443
+# Apple Filing Protocol (AFP) over TCP on Mac OS X 10.1.5
+match afp m|^\x01\x03\0\0\xff\xff\xecQ\0\0\x01.\0\0\0\0\0.\0.\0.\0.\x80\xfb.[-.\w]+.*\tMacintosh\x05\x06AFPX03\x06AFP2\.2\x0eAFPVersion 2\.1\x0eAFPVersion 2\.0\x0eAFPVersion 1\.1\x03\tDHCAST128\x10Cleartxt Passwrd\x0fNo User Authent|s v/Apple AFP//protocol 2.2; Mac OS X/
+
 
 # SMB Negotiate Protocol
+##############################NEXT PROBE##############################
 Probe TCP SMBProgNeg q|\0\0\0\xa4\xff\x53\x4d\x42\x72\0\0\0\0\x08\x01\x40\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x40\x06\0\0\x01\0\0\x81\0\x02PC NETWORK PROGRAM 1.0\0\x02MICROSOFT NETWORKS 1.03\0\x02MICROSOFT NETWORKS 3.0\0\x02LANMAN1.0\0\x02LM1.2X002\0\x02Samba\0\x02NT LANMAN 1.0\0\x02NT LM 0.12\0|
-ports 135,139,445
+ports 42,135,139,445
 # Windows XP SP1
 match microsoft-ds m|^\0\0\0.\xffSMBr\0\0\0\0\x88\x01@\0\0\0\0\0\0\0\0\0\0\0\0\0\0@\x06\0\0\x01\0\x11\x07\0\x03\n\0\x01\0\x04\x11\0\0\0\0\x01\0\0\0\0\0\xfd\xe3\0\0| v/Microsoft Windows XP microsoft-ds///
 # Microsoft Windows XP SP1
@@ -512,13 +592,17 @@ match msrpc m|^\x05\0\r\x03\x10\0\0\0\x18\0\0\0\0\x08\x01@\x04\0\x01\x05\0\0\0\0
 # Microsoft Windows 2000
 match microsoft-ds m|^\0\0\0.\xffSMBr\0\0\0\0\x88\x01@\0\0\0\0\0\0\0\0\0\0\0\0\0\0@\x06\0\0\x01\0\x11\x07\0.2\0\x01\0\x04A\0\0\0\0\x01\0\0\0\0\0\xfd\xf3\0\0| v/Microsoft Windows 2000 microsoft-ds///
 # Microsoft Windows 2003
-match microsoft-ds m|^\0\0\0.\xffSMBr\0\0\0\0\x88\x01@\0\0\0\0\0\0\0\0\0\0\0\0\0\0@\x06\0\0\x01\0\x11\x07\0\x032\0\x01\0\x04A\0\0\0\0\x01\0\0\0\0\0\xfd\xf3\x01\0| v/Microsoft Windows 2003 microsoft-ds///
+match microsoft-ds m|^\0\0\0.\xffSMBr\0\0\0\0\x88\x01@\0\0\0\0\0\0\0\0\0\0\0\0\0\0@\x06\0\0\x01\0\x11\x07\0\x032\0\x01\0\x04.\0\0\0\0\x01\0\0\0\0\0\xfd\xf3\x01\0|s v/Microsoft Windows 2003 microsoft-ds///
 # samba-2.2.7-5.8.0 on RedHat 8
 # samba-2.2.7a-8.9.0 on Red Hat Linux 7.x
 match netbios-ssn m|^\0\0\0.\xffSMBr\0\0\0\0\x88\x01\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0@\x06\0\0\x01\0\x11\x06\0.*\W(\w+)\0$|s v/Samba smbd//workgroup: $1/
 # Netware might just be using Samba?
 match netbios-ssn m|^\0\0\0M\xffSMBr\0\0\0\0\x80\x01\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0@\x06\0\0\x01\0\x11\x07\0\x032\0\x01\0\xff\xff\0\0\0\0\x01\0\x84\xdeu\x07\x01\x02\0\0\x80\xaa\xa0\x83{k\xc3\x01\xa4\x01\x08\x08\0\x8a\xffp\xd3\x1d\?\xdbl$| v/Netware 6 SMB Services///
+# Windows 2000 Server Wins name resolution service
+match wins m|^\0\0\0\x1e\xffS\xad\x80\0\0\0\x01\0\0\0\0\0\0\0\0\0\0\0\x07\xe9\0\0\0\x01\0\0\x81\0\x02| v/Microsoft Windows 2000 Wins///
+
 # From xlsclients
+##############################NEXT PROBE##############################
 Probe TCP X11Probe q|\x6C\0\x0B\0\0\0\0\0\0\0\0\0|
 ports 6000-6020,7100
 match X11 m|^\0\x2D\x0B\0\0\0\x0C\0| v///access denied/
@@ -527,17 +611,23 @@ match X11 m|^\0\x2D\x0B\0\0\0\x0C\0| v///access denied/
 match X11 m|^\0\x16\x0b\0\0\0\x06\0No protocol specified\x0a..$|s v///access denied/
 match X11 m|^\x01\0\x0b\0\0\0.\0...\x02\0\0.*The XFree86 Project, Inc|s v/XFree86//open/
 match X11 m|^\x01\0\x0b\0\0\0\x4C\0\xA0\xE0\x63\x02\0\0| v///open/
+# tightvnc 1.2.3 xvnc
+match X11 m|^\x01\0\x0b\0\0\0%\0\x04\r\0\0\0\0\x80\x03\xff\xff\?\0\0\x01\0\0\x1b\0\xff\xff\x01\x02\0\0  \x08\xff@\x0b\x1c\x08AT&T Laboratories Cambridge\0| v/Xvnc///
 match font-service m|^\0\0\x02\0\0\0\0\0\0\0\0\0\x06\0\0\0\0@\x0c\0p\x17\0\0X Consortium\x01\n\x01\0\x05\0\0\0....\0\0\0\0\0\0\0\0$|s v/Sun Solaris fs.auto///
 
 # ftp://ftp.rfc-editor.org/in-notes/rfc1179.txt
+##############################NEXT PROBE##############################
 Probe TCP LPDString q|\x01default\n|
 ports 515
 match printer m|^\0$|
 match printer m|^default: unknown printer\n$| v/Solaris lpd///
 # Redhat Linux 7.3 LPRng-3.8.9
 match printer m|^\x01no connect permissions\n$| v/LPRng///
+# Microsoft Windows 2000 serverr LPD
+match printer m|^\x01\x01$| v/Microsoft lpd///
 
 # Ldap bind request, version 2, null DN, AUTH_TYPE simple, null password
+##############################NEXT PROBE##############################
 Probe TCP LDAPBindReq q|\x30\x0c\x02\x01\x01\x60\x07\x02\x01\x02\x04\0\x80\0|
 ports 389
 sslports 636
@@ -547,6 +637,7 @@ match ldap m|^0\x0c\x02\x01\x01a\x07\n\x01\0\x04\0\x04\0| v/Netware 6 ldap//Anon
 # MS Windows Win2K SP4 AD server
 match ldap m|^0\x84\0\0\0\x10\x02\x01\x01a\x84\0\0\0\x07\n\x01\0\x04\0\x04\0$| v/Microsoft LDAP server///
 
+##############################NEXT PROBE##############################
 Probe TCP LANDesk-RC q|\x54\x4e\x4d\x50\x04\0\0\0\x54\x4e\x4d\x45\0\0\x04\0|
 ports 1761
 # With Host and User currently logged in
@@ -556,23 +647,43 @@ match landesk-rc m|^TNMP.\0\0\0TNME.\0\0\0USER.\x08\x04\0\x08\0.{9}\0R\0\x03\0W\
 # Being Controled w/ User
 match landesk-rc m|^TNMP.\0\0\0TNME.\0\0\0USER.\x08\x04\0\x08\0.{9}\0R\0\x03\0W\0\xff\xff\0.\0\xfd..\0\0\0\0\x02\0\0\0\0\x01\x04\0\0\0\0\0...\0\xb5\x01\xbb\0Desktop Manager (\d\.\d)\0\x02\x04\x01\x02\x01\0\0\W+([\w.:]+)\W+(\w+)\0(\w+)\0\0$| v/LANDesk RC/$1/Host: $3 User: $4 Controler: $2/
 # Being Controled w/o User
-match landesk-rc m|^TNMP.\0\0\0TNME.\0\0\0USER.\x08\x04\0\x08\0.{9}\0R\0\x03\0W\0\xff\xff\0.\0\xfd..\0\0\0\0\x02\0\0\0\0\x01\x04\0\0\0\0\0...\0\xb5\x01\xbb\0Desktop Manager (\d\.\d)\0\x02\x04\x01\x02\x01\0\0\W+([\w.:]+)\W+(\w+)\0(\w+)\0\0$| v/LANDesk RC/$1/Host: $3 Controler: $2/
+#match landesk-rc m|^TNMP.\0\0\0TNME.\0\0\0USER.\x08\x04\0\x08\0.{9}\0R\0\x03\0W\0\xff\xff\0.\0\xfd..\0\0\0\0\x02\0\0\0\0\x01\x04\0\0\0\0\0...\0\xb5\x01\xbb\0Desktop Manager (\d\.\d)\0\x02\x04\x01\x02\x01\0\0\W+([\w.:]+)\W+(\w+)\0(\w+)\0{2,3}$| v/LANDesk RC/$1/Host: $3 Controler: $2/
+match landesk-rc m|^TNMP.\0\0\0TNME.\0\0\0USER.\x08\x04\0\x08\0.{9}\0R\0\x03\0W\0\xff\xff\0.\0\xfd..\0\0\0\0\x02\0\0\0\0\x01\x04\0\0\0\0\0...\0\xb5\x01\xbb\0Desktop Manager (\d\.\d)\0\x02\x04\x01\x02\x01\0\0\W+([\w.:]+)\W+(\w+)\0|s v/LANDesk RC/$1/Host: $3 Controler: $2/
+
 match landesk-rc m|^TNMP\x16\0\0\0TNME\x80\0\xfe\xff..([\w.]+):(\d)$| v/LANDesk RC//Busy, From $1 on port 176$2/
 
+##############################NEXT PROBE##############################
 Probe TCP TerminalServer q|\x03\0\0\x0b\x06\xe0\0\0\0\0\0|
 ports 3389
+match microsoft-rdp m|^\x03\0\0\x0b\x06\xd0\0\0\x12.\0$|s v/Microsoft Terminal Service//Windows 2000 Server/
+# I don't know why this stupid service is answering to TerminalServer probe,
+# but that has been verified.  I'm not going to add 515 to the TerminalServer
+# ports line unless I see more like this.
+match lpd m/^no entries\n$/ v/Xerox LPD///
 
 # Netware Create Connection Service request
+##############################NEXT PROBE##############################
 Probe TCP NCP q|\x44\x6d\x64\x54\0\0\0\x17\0\0\0\x01\0\0\0\0\x11\x11\0\xff\x01\xff\x13|
 ports 524
 # Netware 5 and 6
 # NCP "OK" reply
 match ncp m|^\x74\x4e\x63\x50\0\0\0\x10\x33\x33| v/Novell Netware NCP///
 
+##############################NEXT PROBE##############################
 Probe TCP NotesRPC q|\x3A\x00\x00\x00\x2F\x00\x00\x00\x02\x00\x00\x40\x02\x0F\x00\x01\x00\x3D\x05\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x2F\x00\x00\x00\x00\x00\x00\x00\x00\x00\x40\x1F\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00|
 ports 1352
 match lotusnotes m|^`\0\0\0U\0\0\0\x03\0\0@\x02\x0f\0\x05\x009\x05.....\x03\0\0\0\0\x02\0/\0\x12|s
 
+##############################NEXT PROBE##############################
 Probe UDP Sqlping q|\x02|
 ports 1434
+match ms-sql-m m|^\x05..ServerName;([\w\-]+);InstanceName;[\w\-]+;IsClustered;\w{2,3};Version;([\d\.]+);np;.+;tcp;(\d{1,5});| v/Microsoft SQL Server/$2/ServerName: $1; TCPPort: $3/
+match ms-sql-m m|^\x05..ServerName;([\w\-]+);InstanceName;[\w\-]+;IsClustered;\w{2,3};Version;([\d\.]+);tcp;(\d{1,5});np;(.+);$| v/Microsoft SQL Server/$2/ServerName: $1; TCPPort: $3/
+
+Probe TCP WMSRequest q|\x01\0\0\xfd\xce\xfa\x0b\xb0\xa0\0\0\0MMS\x14\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x12\0\0\0\x01\0\x03\0\xf0\xf0\xf0\xf0\x0b\0\x04\0\x1c\0\x03\0N\0S\0P\0l\0a\0y\0e\0r\0/\09\0.\00\0.\00\0.\02\09\08\00\0;\0 \0{\00\00\00\00\0A\0A\00\00\0-\00\0A\00\00\0-\00\00\0a\00\0-\0A\0A\00\0A\0-\00\00\00\00\0A\00\0A\0A\00\0A\0A\00\0}\0\0\0\xe0\x6d\xdf\x5f|
+ports 1755
+#WMS 4.1.0.3927
+match wms m|^\x01\0\0.\xce\xfa\x0b\xb0.\0\0\0MMS .\0{7}.{9}\0\0\0\x01\0\x04\0\0\0\0\0\xf0\xf0\xf0\xf0\x0b\0\x04\0\x1c\0\x03\0\0\0\0\0\0\0\xf0\?\x01\0\0\0\x01\0\0\0\0\x80\0\0...\0.\0\0\0\0\0\0\0\0\0\0\0.\0\0\x00(\d)\0\.\x00(\d)\0\.\x00(\d)\0\.\x00(\d)\x00(\d)\x00(\d)\x00(\d)\0\0\0|s v/Microsoft Windows Media Service/$1.$2.$3.$4$5$6$7//
+match wms m|^\x01\0\0.\xce\xfa\x0b\xb0.\0\0\0MMS .\0{7}.{9}\0\0\0\x01\0\x04\0\0\0\0\0\xf0\xf0\xf0\xf0\x0b\0\x04\0\x1c\0\x03\0\0\0\0\0\0\0\xf0\?\x01\0\0\0\x01\0\0\0\0\x80\0\0...\0.\0\0\0\0\0\0\0\0\0\0\0.\0\0\x00(\d)\0\.\x00(\d)\x00(\d)\0\.\x00(\d)\x00(\d)\0\.\x00(\d)\x00(\d)\x00(\d)\x00(\d)\0\0\0|s v/Microsoft Windows Media Service/$1.$2$3.$4$5.$6$7$8$9//
+
 

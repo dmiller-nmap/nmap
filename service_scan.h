@@ -92,9 +92,12 @@
 #include "global_structures.h"
 
 #include <vector>
-/* TODO: sometimes this is <pcre/pcre.h> or just <pcre.h> -- need to check 
-   in configure */
-#include <pcre.h>
+#ifdef HAVE_PCRE_PCRE_H
+# include <pcre/pcre.h>
+#else
+# include <pcre.h>
+#endif
+
 
 using namespace std;
 
