@@ -1652,7 +1652,7 @@ void printandfreeports(portlist *plist) {
   char *name;
   int first = 1;
   struct servent *service;
-  struct port *current = plist->ports, *tmp;
+  struct port *tmp, *current;
 
   /* If we are ignoring filtered ports, we always make a note of it.  
      Otherwise, we only do so in verbose mode ... */
@@ -1670,7 +1670,11 @@ void printandfreeports(portlist *plist) {
   }
   log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"%s", (o.identscan)?"         Owner\n":"\n");
   log_write(LOG_MACHINE,"\tPorts: ");
+  
+  current = plist->ports;
   while(current != NULL) {
+    if (current->state == plist->ignored_port_state)
+      continue;
     if (!first) log_write(LOG_MACHINE,", ");
     else first = 0;
     strcpy(protocol,(current->proto == IPPROTO_TCP)? "tcp": "udp");
