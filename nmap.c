@@ -314,7 +314,7 @@ o.decoys[o.decoyturn] = currenths->source_ip;
       
       if (o.synscan) syn_scan(currenths, ports);
       
-      if (o.finscan||o.xmasscan||o.nullscan) fin_scan(currenths, ports);
+      if (o.finscan||o.xmasscan||o.nullscan) super_scan(currenths, ports, FIN_SCAN);
       
       if (bouncescan) {
 	if (ftp.sd <= 0) ftp_anon_connect(&ftp);
