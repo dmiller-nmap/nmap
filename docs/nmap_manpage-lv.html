@@ -7,652 +7,475 @@
 <HR>
 <PRE>
 <!-- Manpage converted by man2html 3.0.1 -->
-<B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
+<B>NMAP(1)</B>                                                                <B>NMAP(1)</B>
 
 
 
 
 </PRE>
-<H2>VÂRDS</H2><PRE>
+<H2>VDS</H2><PRE>
        nmap - Network exploration tool and security scanner
 
 
 </PRE>
 <H2>NOSAUKUMS</H2><PRE>
-       <B>nmap</B>    [skançðanas   metode(s)]   [opcijas]   &lt;host   vai
-       tîkls#1...[#N]&gt;
+       <B>nmap</B> [skannas metode(s)] [opcijas] &lt;host vai ts#1...[#N]&gt;
 
 
 </PRE>
 <H2>APRAKSTS</H2><PRE>
-       <I>Ar</I>  <I>Nmap</I>  <I>var</I>  <I>skançt</I>  <I>neierobeþotu</I>  <I>daudzumu</I>  <I>un</I>  <I>lielumu</I>
-       <I>tîklus,</I>  <I>noteikt</I> <I>to</I> <I>droðîbas</I> <I>pakâpi,</I> <I>apzinât</I> <I>atvçrtos</I> <I>por­</I>
-       <I>tus,</I>  <I>kâ</I>  <I>arî</I>  <I>atbilstoðo</I>  <I>servisu</I>  <I>esamîbu.</I>  <I>Ðî</I>  <I>uzdevuma</I>
-       <I>îstenoðanai</I> <I>Nmap</I> <I>izmanto</I> <I>daudz</I> <I>daþâdas</I> <I>skançðanas</I> <I>metodes,</I>
-       <I>kâ</I>  <I>piemçram</I>  <I>UDP,</I>  <I>TCP</I>  <I>connect(),</I>  <I>TCP</I>  <I>SYN,</I>  <I>FTP</I>  <I>proxy</I>
-       <I>(skançðana</I> <I>caur</I> <I>ftp),</I> <I>Reverse-ident,</I> <I>ICMP</I> <I>(ping)</I> <I>FIN,</I> <I>ACK,</I>
-       <I>Xmas</I> <I>tree,</I> <I>SYN,</I> <I>NULL</I> <I>metodes.</I> <I>Tuvâk</I> <I>tâs</I> <I>apskatîtas</I>  <I>nodaïâ</I>
-       <I>Skançðanas</I>  <I>opcijas</I>  <I>.</I>   <I>Nmap</I> <I>satur</I> <I>daudz</I> <I>daþâdas</I> <I>papildus</I>
-       <I>iespçjas,</I> <I>konkrçtâk:</I>  <I>datora</I>  <I>operçtâjsistçmas</I>  <I>noteikðana</I>
-       <I>(tâlâk</I>   <I>tekstâ</I>   <I>OS)</I>   <I>izmantojot</I>  <I>TCP/IP</I>  <I>steka</I>  <I>sniegto</I>
-       <I>informâciju,</I> <I>neredzamo</I> <I>skançðanu,</I> <I>dinamiski</I> <I>ìenerçtas</I> <I>aiz­</I>
-       <I>tures</I>   <I>un</I>   <I>atkârtota</I>   <I>pakeðu</I>   <I>pârraidîðana,</I>   <I>paralçlâ</I>
-       <I>skançðana,</I> <I>neaktîva</I> <I>host`a</I> <I>noteikðana</I> <I>izmantojot</I>  <I>paralçlo</I>
-       <I>ping</I>  <I>pieprasîjumu,</I>  <I>skançðana</I> <I>no</I> <I>neeksistçjoðiem</I> <I>hostiem,</I>
-       <I>noteikt</I>  <I>pakeðu</I>  <I>filtru</I>   <I>esamîbu,</I>   <I>tieðâ</I>   <I>(neizmantojot</I>
-       <I>portmapper)</I>  <I>RPC</I>  <I>skançðana,</I> <I>skançðana</I> <I>izmantojot</I> <I>IP-frag­</I>
-       <I>mentâciju.</I>
+       <I>Ar</I>  <I>Nmap</I>  <I>var</I>  <I>skanneierobeaudzumu</I> <I>un</I> <I>lielumu</I> <I>tus,</I> <I>noteikt</I> <I>to</I> <I>dros</I> <I>pak,</I>
+       <I>apzinatvos</I> <I>portus,</I> <I>krtbilstoervisu</I> <I>esam.</I>  <I>uzdevuma</I> <I>eno</I> <I>i</I>  <I>Nmap</I>  <I>izmanto</I>
+       <I>daudz</I>  <I>da</I> <I>skannas</I> <I>metodes,</I> <I>kiemm</I> <I>UDP,</I> <I>TCP</I> <I>connect(),</I> <I>TCP</I> <I>SYN,</I> <I>FTP</I> <I>proxy</I>
+       <I>(skanna</I> <I>caur</I> <I>ftp),</I> <I>Reverse-ident,</I> <I>ICMP</I> <I>(ping)</I> <I>FIN,</I> <I>ACK,</I> <I>Xmas</I> <I>tree,</I> <I>SYN,</I>
+       <I>NULL</I>  <I>metodes.</I>  <I>Tuv</I> <I>tapskats</I> <I>nodaSkannas</I> <I>opcijas</I> <I>.</I>  <I>Nmap</I> <I>satur</I> <I>daudz</I> <I>da</I>
+       <I>papildus</I> <I>iesps,</I> <I>konkrk:</I> <I>datora</I> <I>operjsists</I> <I>noteik</I> <I>(tk</I> <I>tekstS)</I> <I>izmantojot</I>
+       <I>TCP/IP</I> <I>steka</I> <I>sniegto</I> <I>informju,</I> <I>neredzamo</I> <I>skannu,</I> <I>dinamiski</I> <I>ers</I> <I>aiztures</I>
+       <I>un</I> <I>atkota</I> <I>pakeaidna,</I> <I>paral</I> <I>skanna,</I> <I>neakt</I> <I>hostâ€˜a</I> <I>noteik</I> <I>izmantojot</I> <I>paral</I>
+       <I>ping</I> <I>pieprasmu,</I> <I>skanna</I> <I>no</I> <I>neeksist</I> <I>hostiem,</I> <I>noteikt</I> <I>pakeiltru</I> <I>esam,</I> <I>tie</I>
+       <I>neizmantojot</I> <I>portmapper)</I> <I>RPC</I> <I>skanna,</I> <I>skanna</I> <I>izmantojot</I> <I>IP-fragmentju.</I>
 
 
-       <I>Kaut</I> <I>arî</I> <I>Nmap</I> <I>ir</I>  <I>maksimâli</I>  <I>optimizçts</I>  <I>priekð</I>  <I>parastiem</I>
-       <I>lietotâjiem,</I>  <I>daudzas</I>  <I>tâ</I>  <I>iespçjas</I> <I>ir</I> <I>atïautas</I> <I>tikai</I> <I>root</I>
-       <I>lietotâjam.</I> <I>Ieteicam</I> <I>Nmap</I> <I>laist</I> <I>ar</I> <I>root</I> <I>tiesîbâm.</I>
+       <I>Kaut</I> <I>armap</I> <I>ir</I> <I>maksim</I> <I>optimiz</I> <I>priekrastiem</I> <I>lietotem,</I> <I>daudzas</I> <I>tesps</I> <I>ir</I> <I>at</I>
+       <I>tas</I> <I>tikai</I> <I>root</I> <I>lietotm.</I> <I>Ieteicam</I> <I>Nmap</I> <I>laist</I> <I>ar</I> <I>root</I> <I>tiesm.</I>
 
 
 
-       Nmap rezultâti tiek izvadîti kâ interesçjoðo portu  sarak­
-       sts   uz   skançtâ  kompjûtera,  protokola  tips,  servisa
-       nosaukums. Portiem klât ir  apzîmçjumi  "atvçrts"  (open),
-       "filtrçts"    (filtered),    "nefiltrçts"    (unfiltered).
-       "atvçrts"  nozîmç,  ka   ðim   portam   var   pieslçgties,
-       "filtrçts"  -  ugunsmûris  (firewall)  pakeðu filtrs , vai
-       kâds cits apstâklis neïauj  Nmap  noteikt,  vai  ports  ir
-       atvçrts  vai nç, "nefiltrçts" - ports ir aizvçrts, lai gan
-       nekas netraucçja Nmap to skançt.
+       Nmap  rezult  tiek  izvad knteresortu saraksts uz skan kompj, protokola
+       tips, servisa nosaukums. Portiem klir apzjumi "atvs"  (open),  "filtr "
+       (filtered), "nefiltr" (unfiltered). "atvs" noz, ka portam var pieslies,
+       "filtr" - ugunsm(firewall) pakeiltrs , vai k  cits  apst is  ne j  Nmap
+       noteikt,  vai  ports  ir  atvs vai n"nefiltr" - ports ir aizvs, lai gan
+       nekas netrauc Nmap to skan
 
 
 
-       Atkarîbâ no dotajâm  komandâm,  Nmap  spçj  noteikt  ðâdas
-       skançjamâ   host`a   îpaðîbas:   lietotâja   OS,  TCP  ISN
-       ìenerçðanas  metodi,  lietotâja   vârdu   (username)   kam
-       "pieder" noteikts serviss, DNS nosaukumu u.t.t.
+       Atkar no dotajkomand Nmap spnoteikt s skanmostâ€˜a s: lietot OS, TCP  ISN
+       er nas  metodi, lietot vu (username) kam "pieder" noteikts serviss, DNS
+       nosaukumu u.t.t.
 
 
 
 
 </PRE>
 <H2>OPCIJAS</H2><PRE>
-       Vairumu  opciju  ir  iespçjams kombinçt savâ starpâ.Vienas
-       opcijas paredzçtas priekð skançðanas metoþu izvçlçs, citas
-       savukârt  atbild  par daþâdu papildus iespçju izmantoðanu,
-       vai  arî  atbild  par  daþâdiem  skançðanas   parametriem.
-       Palaiþot   programmu   Nmap  ar  opciju  '-h'  vienmçr  ir
-       iespçjams iegût informâciju par visâm tâs iespçjâm.
+       Vairumu opciju ir iespms kombinsavtarpienas opcijas paredzs priekan nas
+       meto  s, citas savuk atbild par daapildus iesp izmanto, vai artbild par
+       da skannas parametriem. Palaiogrammu Nmap ar opciju â€™-hâ€™ vienmir iespms
+       iegformju par vistiespm.
 
-       <B>SKANÇÐANAS</B> <B>VEIDI</B>
+       <B>SKANANAS</B> <B>VEIDI</B>
 
-       <B>-sS</B>    (scan SYN) - Izmantot TCP  SYN  metodi.  Ðo  metodi
-              sauc   par   "pusatverto"   skançðanu,  jo  pilnîgs
-              savienojums ar attâlinâtâ  datora  portu  nenotiek.
-              Nmap  nosûta  SYN  paketi, itkâ pieprasot nodibinât
-              savienojumu un gaida attâlinâtâs sistçmas  atbildi.
-              Atbildot sistçma nosûta paketi ar SYN|ACK maríçjumu
-              (flag), ka ir  gatava  nodibinât  savienojumu.  Kad
-              Nmap  saòem  SYN|ACK  paketi,  atpakaï nekavçjoties
-              tiek   nosûtîta   RST   pakete    liekot    saprast
-              attâlinâtajai  sistçmai,  ka  nevçlas nodibinât vçl
-              neveikto savienojumu. Ne visas sistçmas fiksç  ðâda
-              tipa    skançðanu.   Lietotâjam   vajadzîgas   root
-              tiesîbas, lai varçtu izveidot SYN paketes.
+       <B>-sS</B>    (scan  SYN)  -  Izmantot  TCP  SYN  metodi.    metodi  sauc  par
+              "pusatverto" skannu, jo piln savienojums ar att n  datora  portu
+              nenotiek.  Nmap  nosYN paketi, itkieprasot nodibinsavienojumu un
+              gaida attns sists atbildi. Atbildot sist nosaketi ar SYN|ACK mar
+              umu  (flag), ka ir gatava nodibinsavienojumu. Kad Nmap saSYN|ACK
+              paketi, atpakaekavties tiek nos RST pakete liekot saprast  att n
+              jai  sisti, ka nevs nodibinvneveikto savienojumu. Ne visas sists
+              fiks tipa skannu. Lietotm vajadzs root tiess, lai  var  izveidot
+              SYN paketes.
 
-              Lai paâtrinâtu skançðanu, skançjot  lielus  tîklus,
-              kopâ  ar  opciju '-sS' var lietot saîsinâjumu, kurð
-              atïauj pieprasît  norâdîto  portu  visâm  aktîvajâm
-              sistçmâm jûsu skançtajâ diapazonâ daudz âtrâk, nekâ
-              izmantojot tikai '-p' opciju.  To  var  izdarît  ar
-              saîsinâjuma   -PS   palîdzîbu.   Piemçram,   ja  ir
-              nepiecieðamîba noteik, cik sistçmas noteiktâ diapa­
-              zonâ ir atvçruðas 25 portu jums ieteicams lietot ðo
-              saîsinâjumu. (piem):
+              Lai  pain skannu, skant lielus tus, kopr opciju â€™-sSâ€™ var lietot
+              sanmu, kurj pieprasnorto portu visaktjsistm j kan j iapazon audz
+              nek zmantojot  tikai  â€™-pâ€™ opciju. To var izdarar sanma -PS pal.
+              Piemm, ja ir nepiecieba noteik, cik sists noteiktiapazonr atv 25
+              portu jums ieteicams lietot anmu. (piem):
 
               nmap -n -sS -p25 -PS25 24.0.0.0/8
 
 
 
 
-       <B>-sT</B>    (scan TCP) - izmanto TCP connect()  metodi.  Ðî  ir
-              visizplatîtâkâ   TCP   portu   skançðanas   metode.
-              Funkcija  connect(),  ir   iekïauta   jebkurâ   OS,
-              tâdejâdi  atïaujot îstenot savienojumus ar vienalga
-              kâdu attâlinâtâs  sistçmas  portu.  Ja  skançjamais
-              ports  uz  attâlinâtâs  sistçmas  bûs pieejams, tad
-              funkcija  connect()  noritçs   veiksmîgi,   pretçjâ
-              gadîjumâ  ports  skaitâs slçgts, vai arî aizsargâts
-              ar ugunsmûri, vai ko tamlîdzîgu.
+       <B>-sT</B>    (scan  TCP)  -  izmanto  TCP  connect() metodi.  ir visizplatkCP
+              portu skannas metode. Funkcija connect(), ir iekta jebkurS,  t j
+              atjot enot savienojumus ar vienalga k attns sists portu. Ja skan
+              mais ports uz attns sists beejams, tad funkcija connect()  norit
+              veiksm ,  pret  gad morts skaitsls, vai arizsarg ar ugunsmvai ko
+              taml.
 
 
-              Lai izmantotu ðo skançðanas metodi, lietotâjam  nav
-              vajadzîgas   t.s.   priviliìçtâs   tiesîbas.   Ðâdu
-              skançðanu ïoti  viegli  konstatç  skançjamâ  datorâ
-              îpâðnieks,  jo  viss  tiek  akurâti  ierakstîts log
-              failâ.
+              Lai izmantotu kannas metodi, lietotm nav vajadz s  t.s.  privili
+              ties s.   du  skannu i viegli konstatkanmatorpieks, jo viss tiek
+              akur ierakst log fail
 
 
 
        <B>-sF</B> <B>-sX</B> <B>-sN</B>
-              (scan FIN, scan Xmas, scan NULL) - "neredzamâ" FIN,
-              Xmas  Tree  un  NULL skançðana. Ðo metodi lieto, ja
-              SYN  skançðana  kâdu  iemeslu  dçï  nav  iespçjama.
-              Piemçram  daþi  ugunsmûri  filtrç  SYN paketes, kas
-              tiek nosûtîtas uz viòu aizsargâtajiem  portiem,  un
-              tâdas  programmas  kâ Synlogger spçjîgas fiksçt SYN
-              skançðanas mçìinâjumu.
+              (scan FIN, scan Xmas, scan NULL) - "neredzamFIN,  Xmas  Tree  un
+              NULL skanna.  metodi lieto, ja SYN skanna k iemeslu dnav iespma.
+              Piemm dansmiltrYN paketes, kas tiek noss uz vi izsarg jiem  por-
+              tiem, un ts programmas kynlogger spgas fiksSYN skannas mnmu.
 
 
-              Dotâs  skançðanas  laikâ  notiek  sekojoðais.   FIN
-              skançðanu  veic  ar  FIN paketçm. Xmas Tree izmanto
-              FIN|URG|PSH paketes, NULL skançðanas gadîjumâ  tiek
-              nosûtîtas  nemaríçtas paketes. Vadoties pçc RFC 973
-              rakstîtâ, skançjamâs sistçmas  OS  ir  jâatbild  uz
-              ðâda  veida  paketçm,  no  slçgtiem  portiem ar RST
-              paketi, tajâ paðâ laikâ atvçrtie porti ðo nemaríçto
-              paketi   ignorç.    Kâ  vienmçr  Microsoft  Windows
-              izstrâdâtâji nerçíinâs ar pieòemto standartu, tâdçï
-              ði   skançðanas   metode  bûs  neefektîva  skançjot
-              jebkuru sistçmu, kas izmanto Microsoft veidotâs OS.
-              Ja  FIN  skançðanas rezultâtâ, tiek izmests atvçrto
-              portu saraksts, tad  attâlinâtâs  sistçmas  OS  nav
-              Windows.  Ja visas ðîs metodes izmet paziòojumu, ka
-              visi porti slçgti, turpretîm SYN  skançðana  atklâj
-              atvçrtus   portus,   tad   visticamâk   attâlinâtâs
-              sistçmas OS ir Windows. Jâpiebilst, ka Windows  nav
-              vienîgâ  OS, kura satur ðo nepilnîbu. Pie ðâda tipa
-              OS var pieskaitît arî Cisco, BSDI, IRIX,  HP/UX  un
-              MVS. Visas ðis OS neatbild nemaríçtâm paketçm.
+              Dot skan nas laikotiek sekojo. FIN skannu veic ar FIN paket Xmas
+              Tree izmanto FIN|URG|PSH paketes, NULL skannas  gad m iek  nos s
+              nemaras paketes. Vadoties pRFC 973 rakst, skanmsists OS ir jbild
+              uz  veida paket no sliem portiem ar RST paketi,  taj a aik tv ie
+              porti   emar o paketi ignor KienmMicrosoft Windows izstrt nernar
+              pieo standartu, ti skannas metode befekt skant jebkuru sist, kas
+              izmanto  Microsoft veidotOS. Ja FIN skannas rezult, tiek izmests
+              atvo portu saraksts, tad attns sists OS nav  Windows.  Ja  visas
+              metodes  izmet pazimu, ka visi porti sli, turpretSYN skanna atkl
+              atvus portus, tad visticamattns sists OS ir Windows. Jebilst, ka
+              Windows nav vien OS, kura satur epiln. Pie  tipa OS var pieskait
+              arisco, BSDI, IRIX, HP/UX un MVS. Visas OS neatbild nemarpaket
 
 
 
-       <B>-sP</B>    scan   Ping)   -   ping   "skançðana".  Daþreiz  ir
-              nepiecieðamîba uzzinât tikai aktîvo hostu  adreses.
-              Nmap   to   spçj   izdarît,   nosûtot   ICMP   ECHO
-              pieprasîjumu katrai ip  adresei  norâdîtajâ  diapa­
-              zonâ.  Hosts,  kas  atbild  uz  ðo  pieprasîjumu ir
-              aktîvs, t.i. ir pieslçgts tîklam.
+       <B>-sP</B>    scan Ping) - ping "skanna". Dair nepiecieba uzzintikai akt hostu
+              adreses.  Nmap to spizdar nosICMP ECHO pieprasmu katrai ip adre-
+              sei nortajiapazonHosts, kas atbild uz ieprasmu ir akt,  t.i.  ir
+              piesls tam.
 
 
-              Daþi  hosti  (piemçram  microsoft.com)  bloíç  ECHO
-              pieprasîjumus,  tâdçï  Nmap papildus nosûta TCP ACK
-              paketi uz 80 portu (noklusçti). Ja hosts atbild  ar
-              RST  paketi,  tad  viòð  ir  aktîvs.  Treðâ  metode
-              izmanto SYN paketi,  par  atbildi  gaidot  RST  vai
-              SYN|ACK   paketi.   Lietotâjiem,  kuriem  nav  root
-              privilçìijas tiek izmantota connect() metode.
+              Dati (piemm microsoft.com) bloECHO pieprasmus, tmap papildus nos
+              CP ACK paketi uz 80 portu (noklus ).  Ja  hosts  atbild  ar  RST
+              paketi,  tad  vi r akt. Treetode izmanto SYN paketi, par atbildi
+              gaidot RST vai SYN|ACK paketi. Lietotem, kuriem nav root  privil
+              jas tiek izmantota connect() metode.
 
 
-              Lietotâjiem ar  root  privilçìijâm  Nmap  noklusçti
-              lieto  abas  metodes  - ICMP un ACK. Ðo iestâdijumu
-              var mainît izmantojot opciju .B -P , kur aprakstîta
-              zemâk. Ping skançðana tiek lietota vienmçr un tikai
-              aktîvâs sistçmas tiek skançtas, tâdçï ðo skançðanas
-              metodi  izmatojiet  tikai  ta,  ja vçlaties uzzinât
-              aktîvo  sistçmu  daudzumu,  ne   veikt   to   portu
-              skançðanu.
+              Lietotem ar root priviljNmap noklus lieto abas metodes - ICMP un
+              ACK.  iestjumu var mainizmantojot opciju .B -P , kur aprakst zem
+              Ping skanna tiek lietota vienmun tikai akts sists tiek skans, to
+              skannas metodi izmatojiet tikai ta,  ja  v ties  uzzin akt  sist
+              daudzumu, ne veikt to portu skannu.
 
 
 
-       <B>-sU</B>    (scan UDP) - Ðî skançðanas metode ïauj noteikt kâdi
-              UDP porti  (RFC  768)  ir  atvçrti  uz  attâlinâtâs
-              sistçmas.  Uz  katru skançjamâs sistçmas portu tiek
-              nosûtîta UDP pakete, kas nesatur datus. Ja  sistçma
-              atbild  ar  ICMP  paziòojumu "port unreachable" tad
-              ports  ir  aizvçrts,  pretçjâ  gadîjumâ  tas   tiek
-              uzskatîts  par atvçrtu. Daþi uzskata, ka skançt UDP
-              portus nav nekâdas jçgas.  Ðinî  gadîjumâ  atgâdinu
-              par  "slavenîbu" ieguvuðo gïuku iekð dçmona rpcbind
-              OS  Solaris.  Ðis  dçmons  grieþas  uz  jebkura  no
-              nedokumentçtajiem  UDP  portiem, kas ir lielâki par
-              32770.
+       <B>-sU</B>    (scan  UDP) -  skannas metode j noteikt k UDP porti (RFC 768) ir
+              atvi uz attns sists. Uz katru skanmsist s  portu  tiek  nos  UDP
+              pakete,  kas  nesatur datus. Ja sist atbild ar ICMP pazimu "port
+              unreachable" tad ports ir aizvs, pret gadmas tiek uzskat par atv
+              u.  Dakata, ka skanUDP portus nav neks js. nadmtgnu par "slaven"
+              ieguvuu iekmona rpcbind OS Solaris.   s  d ns  grie  jebkura  no
+              nedokumentjiem UDP portiem, kas ir liel par 32770.
 
 
-              Par noþçloðanu jâatdzîst, ka UDP  skançðana  velkas
-              lçni,  jo  gandrîz  visas  OS seko RFC 1812 (sadaïa
-              4.3.2.8)   rekomendâcijâm   iegroþot   ICMP   "port
-              unreachable"  ìenerçðanas  âtrumu.  Piemçram  Linux
-              kernelis (katalogs net/ipv4/icmp.h)  ierobeþo  ðâda
-              tipa  paziòojumu  ìenerçðanu lîdz 80, 4 sekundçs ar
-              1/4  sekundes  novçloðanu,  ja   ðî   robeþa   tiek
-              pârsniegta.   OS  Solaris  ir  vçl  striktâki  ier­
-              obeþojumi  (2  ziòojumi  sekundç),  tâdçï   sistçmu
-              skançðana  kuras  grieþas  uz  OS  Solaris  ir  vçl
-              lçnâka.
+              Par  nonu jdz, ka UDP skanna velkas l, jo gandrvisas OS seko RFC
+              1812 (sada4.3.2.8) rekomendjiegroMP "port  unreachable"   er nas
+              umu.  Piem m  Linux  kernelis (katalogs net/ipv4/icmp.h) ierobea
+              tipa pazimu ernu l 80, 4 sekundar 1/4 sekundes nov, ja  obe k  p
+              niegta.  OS Solaris ir vstrikt ierobe (2 zimi sekund tist skanna
+              kuras grie OS Solaris ir vlka.
 
 
 
-              Nmap nosaka ðo ierobeþojumu  parametrus  un  atbil­
-              stoði   tiem  samazina  ìenerçjamos  pieprasîjumus,
-              tâdejâdi atturoties no tîkla piemçsloðanas ar neva­
-              jadzîgâm  paketçm, kuras ignorç attâlinâtâ sistçma.
-              Kâ jau ierasts  kompânija  Microsoft  ignorç  visas
-              rekomendâcijas  un  neizmanto savâs OS nekâdus ier­
-              obeþojumus. Tâdejâdi jûs varat ïoti  âtri  noskançt
-              visus 65535 UDP portus sistçmai, kas grieþas zem OS
-              Windows.
+              Nmap nosaka erobe parametrus un  atbilsto iem  samazina   er mos
+              piepras mus, tj atturoties no ta piemos ar nevajadzm paket kuras
+              ignorttn sist. Kau ierasts kompja Microsoft ignor isas  rekomend
+              jas  un  neizmanto  sav OS neks ierobes. Tj jrat i i noskanvisus
+              65535 UDP portus sisti, kas griem OS Windows.
 
 
 
-       <B>-sO</B>    (scan Open protocol) - Dotâ metode tiek  izmantota,
-              lai  noteiktu IP protokolus, kurus uztur attâlinâtâ
-              sistçma. Attâlinâtajai  sistçmai  tiek  sûtîtas  IP
-              paketes,  kurâm  nav  nekâda  maríçjuma.  Tâs  tiek
-              sûtîtas katram  protokolam.  Ja  par  atbildi  tiek
-              saòemts  paziòojums "protocol ureachable", tad doto
-              protokolu  attâlinâtâ  sistçma   neuztur.   Pretçjâ
-              gadîjumâ  Nmap uzskata, ka protokols tiek uzturçts.
+       <B>-sO</B>    (scan Open protocol) - Dotetode tiek izmantota, lai noteiktu  IP
+              protokolus,  kurus  uztur  att n  sist. Attnjai sisti tiek ss IP
+              paketes, kurnav nek maruma. Ttiek ss katram protokolam.  Ja  par
+              atbildi  tiek  sa s  pazims "protocol ureachable", tad doto pro-
+              tokolu attn sist neuztur. Pret gadm map  uzskata,  ka  protokols
+              tiek uztur.
 
-              Daþas  OS  (AIX,  HP-UX,  Digital  UNIX)   kâ   arî
-              ugunsmûris  var  bloíçt ziòojumus "protocol ureach­
-              able", tâ rezultâtâ visi protokoli  tiks  uzskatîti
-              par  uzturçtiem.   Par  cik  aprakstîtâ  metode  ir
-              lîdzîga   UDP   skançðanas   metodei,   tad    ICMP
-              ìenerçðanas  ierobeþojumu  noteikðana paliek spçkâ,
-              taèu tâdçï ka IP paketes "header" sastâv tikai no 8
-              bitiem   visus   256  protokolus  izdodas  noskançt
-              pieòemamâ âtrumâ.
+              Da  (AIX,  HP-UX,  Digital  UNIX) krgunsmvar blo zimus "protocol
+              ureachable", tezult visi protokoli tiks uzskat par uzturem.  Par
+              cik  aprakst  metode  ir  l  UDP skannas metodei, tad ICMP ernas
+              ierobe noteik paliek sp, tata IP paketes "header" sasttikai no 8
+              bitiem visus 256 protokolus izdodas noskanpiemtrum
 
-       <B>-sA</B>    (scan ACK) - ACK  skançðanas  metode.  Ðî  papildus
-              metode  ïauj  noteikt ugunmûra konfigurâciju (rule­
-              sets).  Izmantojot  ðo  metodi  var  noteikt,   vai
-              attâlinâtâ  sistçma  ir aizsargâta ar ugunsmûri vai
-              tikai ar pakeðu filtru, kurð  bloíç  ienâkoðâs  SYN
+       <B>-sA</B>    (scan  ACK)  -  ACK  skan nas metode.  papildus metode j noteikt
+              ugunmonfigurju (rulesets). Izmantojot etodi var noteikt, vai att
+              n  sist  ir  aizsarg  ar ugunsmai tikai ar pakeiltru, kuroienSYN
               paketes.
 
-              Skançjamajai  sistçmai tiek nosûtîta ACK pakete (ar
-              gadîjuma skaitïu acknowledgement number un sequence
-              number).  Ja  par  atbildi tiek saòemta RST pakete,
-              ports tiek uzskatîts  par  nefiltrçtu.  Ja  atbilde
-              nepienâk  (vai  arî pienâk ICMP "port unreachable")
-              tad ports tiek uzskatîts par filtrçtu.
+              Skanmajai sisti tiek nos ACK pakete (ar gadma skait acknowledge-
+              ment  number  un  sequence  number). Ja par atbildi tiek saa RST
+              pakete, ports tiek uzskat par nefiltr. Ja atbilde nepien(vai  ar
+              ienICMP "port unreachable") tad ports tiek uzskat par filtr.
 
-              Jâpiebilst, ka Nmap  nerâda  "nefiltrçtos"  portus,
-              tâpçc, ja skançjot attâlinâtu sistçmu jums neatklâj
-              nevienu atvçrtu portu, tas nozîmç ka porti  skaitâs
-              nefiltrçti. Ðî metode nekad rezultâtos nerâdîs por­
-              tus kuri skaitâs atvçrti.
+              J ebilst,  ka Nmap ner "nefiltrs" portus, tc, ja skant attn sist
+              jums neatklnevienu atvu portu, tas noz ka porti  skait nefiltr .
+              metode nekad rezults ners portus kuri skaitatvi.
 
-       <B>-sW</B>    (scan Window)  -  Izmanto  TCP  Window  metodi.  Ðî
-              metode  lîdzinâs  ACK  skançðanai,  izòemot  to, ka
-              daþreiz ar ðîs metodes  palîdzîbu  var  noteikt  kâ
-              atvçrtos,   tâ   filtrçtos/nefiltrçtos  portus.  To
-              iespçjams izdarît, pârbaudot Initial  Window  datus
-              TCP  paketç,  kurus  nosûta  attâlinâtâ sistçma par
-              atbildi tai nosûtitajai paketei, kuru tâ  nepareizi
-              apstrâdâ.  Sistçmas kurâs ir ðî kïuda: vairâkas AIX
-              versijas, Amiga,  BeOS,  BSDI,  Cray,  Tru64  UNIX,
-              DG/UX, OpenVMS, Digital UNIX, FreeBSD, HP-UX, OS/2,
-              IRIX, MacOS, NetBSD, OpenBSD, OpenStep, QNX,  Rhap­
-              sody,  SunOS  4.X,  Ultrix,  VAX un VxWorks. Tuvâku
-              informâciju var iegût aplûkojot Nmap-hackers listes
-              arhîvus.
+       <B>-sW</B>    (scan  Window)  - Izmanto TCP Window metodi.  metode linACK skan
+              nai, izt to, ka daar metodes pal  var  noteikt  k tv os,  t iltr
+              s/nefiltr s  portus. To iespms izdar paudot Initial Window datus
+              TCP paketkurus nosttn sist par atbildi tai nosjai paketei,  kuru
+              t epareizi  apstr .   Sist s kurir a: vairs AIX versijas, Amiga,
+              BeOS, BSDI, Cray, Tru64  UNIX,  DG/UX,  OpenVMS,  Digital  UNIX,
+              FreeBSD,  HP-UX,  OS/2,  IRIX, MacOS, NetBSD, OpenBSD, OpenStep,
+              QNX, Rhapsody, SunOS 4.X, Ultrix, VAX un VxWorks. Tuv  inform ju
+              var ieglt Nmap-hackers listes arhs.
 
 
 
-       <B>-sR</B>    (scan  RPC)  -  Izmantot  RPC skançðanas metodi. Ðo
-              metodi izmanto kopâ ar citâm.  Tâ  palîdz  noteikt,
-              kâda  programma  apkalpo  RPC portu un tâs versiju.
-              Lai to noteiktu, visi TCP/UDP porti tiek flûdoti ar
-              SunRPC  NULL  pieprasîjumiem  pçc  tam nosakot pro­
-              grammu kas  apkalpo  RPC  portu(s).  Izmantojot  ðo
-              metodi jûs viegli iegûstat tâdu paðu informâciju kâ
-              palaiþot komandu 'rpcinfo -p', arî  tâdâ  gadîjumâ,
-              ja attâlinâtâs sistçmas portmapper ir aizsargâts ar
-              ugunsmûri vai TCP_wrapper.
+       <B>-sR</B>    (scan  RPC)  - Izmantot RPC skannas metodi.  metodi izmanto kopr
+              cit Tal noteikt, k programma apkalpo RPC portu un tversiju.  Lai
+              to  noteiktu,  visi TCP/UDP porti tiek fl ar SunRPC NULL piepras
+              miem ptam nosakot programmu kas apkalpo RPC portu(s). Izmantojot
+              etodi  j egli ieg t panformju kalaimandu â€™rpcinfo -pâ€™, ar gadmja
+              attns sists portmapper ir aizsarg ar ugunsmai TCP_wrapper.
 
 
-       <B>-sL</B>    (scan List) - Iegût skançjamo adreðu  sarakstu.  Ðî
-              opcija  ïauj  jums  aplûkot  adreðu sarakstu, kuras
-              TIKS skançtas ar  Nmap  palîdzîbu.  Noklusçti  tiek
-              noteikti  to DNS nosaukumi. Ðo iespçju var aizliegt
-              izmantojot -n opciju.
+       <B>-sL</B>    (scan List) - Ieganmo adrearakstu.  opcija j jums apl adre arak-
+              stu,  kuras  TIKS skans ar Nmap pal. Noklus tiek noteikti to DNS
+              nosaukumi.  iesp var aizliegt izmantojot -n opciju.
 
        <B>-b</B> <B>&lt;ftp</B> <B>relay</B> <B>host&gt;</B>
-              (bounce  scan)  -  Izmantot  "ftp  bounce   attack"
-              uzbrukumu.  Ði  interesantâ  FTP  protokola iespçja
-              tuvâk aprakstîta RFC 959. No hosta  source.com  var
-              nodibinât  savienpjumu ar target.com ftp serveri un
-              nosûtît failus, kas tur atrodas  uz  vienalga  kâdu
-              adresi.  Ðis  uzbrukums tika atklâts 1985 gadâ, kad
-              tika uzrakstîts augðminçtais RFC. Nmap  izmanto  ðo
-              kïûdu lai skançtu portus no "uzticamâ" ftp servera.
+              (bounce  scan)  -  Izmantot  "ftp  bounce   attack"   uzbrukumu.
+              interesant TP  protokola  iesp  tuv aprakst  RFC  959.  No hosta
+              source.com var nodibinsavienpjumu ar target.com ftp  serveri  un
+              nos failus,  kas  tur  atrodas uz vienalga k adresi. s uzbrukums
+              tika atkl 1985 gadkad tika uzrakst augis RFC. Nmap izmanto u lai
+              skan portus no "uzticamftp servera.
 
-              Iespçjams pieslçgties ftp  serverim,  kuru  apsargâ
-              ugunsmûris  un noskançt pârçjos aizsargâtos portus.
-              Ja ftp serveris atïauj lasît un rakstît datus  kâdâ
-              katalogâ  (piemçram  /incoming),  jûs varat nosûtît
-              jebkâdus datus uz ðo portu. Opcija '-b', norâda ftp
-              servera adresi, kurð tiek izmantots kâ "uzticamais"
-              serveris. URL formâts:  <I>login:parole@serveris:ports</I>
-              Adrese nepiecieðama obligâti, pârçjo var neievadît.
+              Iesp ms  piesl ies  ftp  serverim, kuru apsarggunsmun noskanpjos
+              aizsargs portus. Ja ftp serveris atj lasun rakstdatus k  katalog
+              piem m /incoming), jrat nosjebks datus uz ortu. Opcija â€™-bâ€™, nor
+              ftp servera adresi, kurek izmantots kuzticamais"  serveris.  URL
+              form: <I>login:parole@serveris:ports</I> Adrese nepiecie oblig, pjo var
+              neievad
 
-       <B>PAPILDUS</B> <B>IESPÇjAS</B>
-              Ðîs opcijas nav nepiecieðams lietot obligâti,  taèu
-              daþreiz tâs var bût diezgan noderîgas.
+       <B>PAPILDUS</B> <B>IESPAS</B>
+              s opcijas nav nepiecie lietot oblig, tadatvar bezgan noders.
 
-       <B>-P0</B>    (Ping   0)  -  Nepingot  attâlinâto  sistçmu  pirms
-              skançðanas. Ðî opcija  atïauj  skançt  tîklus  kuri
-              neatïauj  ICMP  ECHO pieprasîjumus, vai atbildes uz
-              tiem. piemçram microsoft.com. Var izmantot  .B  -P0
-              vai <B>-PT80</B> kad skançjat tâdu tiklu.
+       <B>-P0</B>    (Ping 0) - Nepingot attn sist pirms skannas.  opcija atj skantus
+              kuri  neat j  ICMP  ECHO pieprasmus, vai atbildes uz tiem. piemm
+              microsoft.com. Var izmantot .B -P0 vai <B>-PT80</B> kad skant t  tiklu.
 
-       <B>-PT</B>    (Ping  TCP)  - Izmantot TCP "ping". ICMP ECHO vietâ
-              Nmap nosûta TCP ACK paketi skançjamajai sistçmai un
-              gaida tâs atbildi. Ja sistçma ir "aktîva" tâ atbild
-              ar  RST  paketi.   Lietotâju,   kuriem   nav   root
-              privilçìijas  tiek izmantota connect() funkcija. Ðî
-              opcija  jums  ïauj  noteikt  attâlinâtâs   sistçmas
-              stâvokli  pat  tâdâ gadîjumâ , ja ICMP pieprasîjumu
-              tiek aizliegti ar ugunsmûra palîdzîbu. Lai norâdîtu
-              kuram    attâlinâtâs    sistçmas    portam    sûtît
-              pieprasîjumu izmantojiet  opciju  '-PT  &lt;porta_num­
-              murs&gt;'.  Noklusçti  pieprasîjums  tiek sûtîts uz 80
-              portu, jo tas praktiski nekad netiek filtrçts.
+       <B>-PT</B>    (Ping  TCP)  -  Izmantot TCP "ping". ICMP ECHO vietmap nosCP ACK
+              paketi skanmajai sisti un gaida tatbildi. Ja sist  ir  "akt "  t
+              tbild  ar  RST  paketi.  Lietot , kuriem nav root priviljas tiek
+              izmantota connect() funkcija.  opcija jums j noteikt attns sists
+              st kli  pat t gadm ja ICMP pieprasmu tiek aizliegti ar ugunsmal.
+              Lai nortu kuram attns sists portam spieprasmu izmantojiet opciju
+              â€™-PT  &lt;porta_nummurs&gt;â€™.  Noklus pieprasms tiek s uz 80 portu, jo
+              tas praktiski nekad netiek filtr.
 
-       <B>-PS</B>     (Ping SYN) - opcija, kas  arîdzan  tiek  izmantota
-              ping pieprasîðanai. Ðinî gadîjumâ ACK paketes vietâ
-              tiek sûtîta SYN pakete. Aktîvâs sistçmas atbild  ar
-              RST paketi (retâk ar SYN|ACK).
+       <B>-PS</B>     (Ping SYN) - opcija, kas aran tiek izmantota ping pieprasnai. n
+              ad m CK  paketes  vietiek s SYN pakete. Akts sists atbild ar RST
+              paketi (retar SYN|ACK).
 
-       <B>-PI</B>    (Ping  ICMP) - Ðî opcija ping pieprasîðanai izmanto
-              normâlu ping paketi (ICMP ECHO). Opcija tiek izman­
-              tota,   lai   meklçtu   aktîvas  sistçmas,  kâ  arî
-              nepareizi konfigurçtas sistçmas, kuras atïauj veikt
-              DoS uzbrukumus citâm sistçmâm (piemçram Smurf).
+       <B>-PI</B>    (Ping ICMP) -  opcija ping pieprasnai izmanto norm  ping  paketi
+              (ICMP  ECHO).  Opcija  tiek  izmantota,  lai mekl akts sists, kr
+              epareizi konfigurs sists, kuras atj veikt DoS uzbrukumus citsist
+              m (piemm Smurf).
 
-       <B>-PP</B>    Izmanto  ICMP  timestamp  pieprasîjuma  paketi, lai
-              atrastu aktîvus hostus.
+       <B>-PP</B>    Izmanto  ICMP  timestamp pieprasma paketi, lai atrastu akts hos-
+              tus.
 
-       <B>-PM</B>    Lidzîga kâ -PI un -PP, vienîgâ atðíirîba ir netmask
-              pieprasîjums.
+       <B>-PM</B>    Lidz kPI un -PP, vien at ir netmask pieprasms.
 
-       <B>-PB</B>    (Ping  Both)  -  Vienlaicîgi  izmantot  ACK un ICMP
-              pieprasîjumu.
+       <B>-PB</B>    (Ping Both) - Vienlaic izmantot ACK un ICMP pieprasmu.
 
-       <B>-O</B>     (Operating  system  detection)  -  Ðî  opcija  ïauj
-              noteikt  attâlinâtâs  sistçmas  OS  izmantojot t.s.
-              TCP/IP steka "pirkstu nospiedumus". Citiem  vârdiem
-              skaidrojot, Nmap nosûta pieprasîjumus uz attâlinâto
-              sistçmu un saòemot atbildi  salîdzina  to  ar  savu
-              datubâzi,  kura glabâjas failâ Nmap-os-fingerprint­
-              ing. Ja Nmap nespçj noteikt attâlinâtâs sistçmas OS
-              jums   tiek   piedâvâts   nosûtît  rezultâtus  Nmap
-              autoram, ja jûs zinât attâlinâtâs  sistçmas  OS  un
-              esat pârliecinâts, ka Nmap nespçja to atpazît.
+       <B>-O</B>     (Operating system detection) -  opcija j noteikt attns sists  OS
+              izmantojot  t.s. TCP/IP steka "pirkstu nospiedumus". Citiem viem
+              skaidrojot, Nmap nosieprasmus uz attn sist un sat atbildi salina
+              to  ar savu datub, kura glabs failmap-os-fingerprinting. Ja Nmap
+              nespnoteikt attns sists OS jums tiek pied ts  nos rezult s  Nmap
+              autoram,  ja  j n attns sists OS un esat piecin, ka Nmap nesp to
+              atpaz
 
-       <B>-I</B>     (Ident  scan)  -  Izmanto  reverse-ident skançðanu.
-              Ident  protokols  (RFC  1413)  atïauj  uzzinât   tâ
-              lietotâja  vârdu  (username), kuram pieder process,
-              kurð izmanto TCP, pat tâdâ gadîjumâ ja ðis  process
-              nenodibina  savienojumu.  Piemçram  var pieslçgties
-              http  portam  un  izmantojot  ident   uzzinât   vai
-              serveris   grieþas   zem  root  lietotâja.  Tas  ir
-              iespçjams tikai nodibinot "pilnîgu" TCP savienojumu
-              ar  skançjamâs  sistçmas  portu  (t.i. nepiecieðams
-              izmantot arî opciju '-sT'). Nmap pieprasa  ident`am
-              informâciju  par  katru  atvçrto  portu. Protams ðî
-              metode  nestrâdâs  ja  skançjamâ  sistçma   neuztur
-              ident.
+       <B>-I</B>     (Ident scan) - Izmanto reverse-ident  skan nu.  Ident  protokols
+              (RFC  1413) atj uzzintietot vu (username), kuram pieder process,
+              kurmanto TCP, pat t gadma process nenodibina savienojumu. Piem m
+              var  piesl ies http portam un izmantojot ident uzzinvai serveris
+              griem root lietot. Tas ir iespms  tikai  nodibinot  "piln "  TCP
+              savienojumu  ar skanmsists portu (t.i. nepiecie izmantot arpciju
+              â€™-sTâ€™). Nmap pieprasa identâ€˜am informju par katru  atv o  portu.
+              Protams etode nestrs ja skanmist neuztur ident.
 
-       <B>-f</B>     (use fragmentation) - ðî opcija izmantojama kopâ ar
-              SYN, FIN,  Xmas  vai  NULL  skançðanas  metodçm  un
-              norâda  uz  vajadzîbu  izmantot IP fragmentâciju ar
-              mazizmçra fragmentiem. Skançðanas laikâ TCP  header
-              tiek   sadalîta   pa   vairâkâm  paketçm,  tâdejâdi
-              apgrûtinot pakeðu  filtriem,  IDS,  un  tamlîdzîgâm
-              aizsardzîbas  metodçm  noteikt  ko tu vçlies darît.
-              Lietojiet ðo opciju piesardzîgi.  Daþas  programmas
-              uzkarâs cenðoties savâkt kopâ tik sîkus fragmentus.
+       <B>-f</B>     (use  fragmentation) - pcija izmantojama kopr SYN, FIN, Xmas vai
+              NULL skannas metodun nor uz vajadz izmantot  IP  fragment ju  ar
+              mazizm  fragmentiem.  Skan nas laikCP header tiek sadal pa vairm
+              paket tj apgrt pakeiltriem, IDS, un tamlm aizsardzs metodnoteikt
+              ko  tu  v es dar Lietojiet pciju piesardz. Daogrammas uzkarcenes
+              sav kopik ss fragmentus.
 
-       <B>-v</B>     (verbose output) - Ðo opciju ir  ieteicams  lietot,
-              jo  tâ sniedz vairâk informâciju par to kas paðreiz
-              notiek. Nmap atskaitâs detalizçtâk par to  ko  viòð
-              paðreiz  dara.  Priekð  lielâka efekta ieteicams to
-              lietot divreiz. Kopâ ar '-d' opciju var iegût  vis­
-              detalizçtako informâciju.
+       <B>-v</B>     (verbose output) -  opciju ir ieteicams lietot, jo t niedz  vair
+              inform ju  par to kas paz notiek. Nmap atskaitdetalizk par to ko
+              viaz dara. Priekel efekta ieteicams to lietot divreiz. Kopr â€™-dâ€™
+              opciju var iegsdetalizko informju.
 
-       <B>-h</B>     (show help) - izmet Nmap help`u.
+       <B>-h</B>     (show help) - izmet Nmap helpâ€˜u.
 
        <B>-oN</B> <B>&lt;logfilename&gt;</B>
-              (output  Normal)  -  ieraksta skançðanas rezultâtus
-              lasîðanai çrtâ formâ norâdîtâjâ failâ.
-
-       <B>-oX</B> <B>&lt;logfilename&gt;</B>
-              (output XML) - ðî opcija  ieraksta  saòemtos  datus
-              XML formâ.
+              (output Normal) - ieraksta skannas rezults lasnai ormort fail.TP
+              <B>-oX</B> <B>&lt;logfilename&gt;</B> (output XML) - pcija ieraksta saos  datus  XML
+              form
 
        <B>-oG</B> <B>&lt;logfilename&gt;</B>
-              (output  grepable)  -  ðî  opcija ieraksta saòemtos
-              datus norâdîtajâ failâ vienâ rindiòâ.
+              (output grepable) - pcija ieraksta saos datus nortajailienindi
 
        <B>-oA</B> <B>&lt;basefilename&gt;</B>
-              output All) - liek Nmap logot rezultâtus izmantojot
-              visas logoðanas metodes (normal, grepable, un XML).
+              output  All)  -  liek  Nmap logot rezults izmantojot visas logos
+              metodes (normal, grepable, un XML).
 
        <B>-oS</B> <B>&lt;logfilename&gt;</B>
-              thIs l0gz th3 r3suLtS of YouR  ScanZ  iN  a  <B>s|&lt;ipT</B>
-              <B>kiDd|3</B>  f0rM iNto THe fiL3 U sPecfy 4s an arGuMEnT!
-              U kAn gIv3 the 4rgument  ´-´  (wItHOUt  qUOteZ)  to
-              sh00t output iNT0 stDouT!@!!
+              thIs l0gz th3 r3suLtS of YouR ScanZ iN a <B>s|&lt;ipT</B> <B>kiDd|3</B> f0rM iNto
+              THe  fiL3  U sPecfy 4s an arGuMEnT!  U kAn gIv3 the 4rgument Â´-Â´
+              (wItHOUt qUOteZ) to sh00t output iNT0 stDouT!@!!
 
        <B>--resume</B> <B>&lt;logfilename&gt;</B>
-              ja  kâda  iemesla  dçï esat bijis spiests pârtraukt
-              skançðanu nospieþot &lt;Ctrl C&gt;, jûs varat izmantot ðo
-              opciju, ja skançðanas rezultâti ierakstîti izmanto­
-              jot  opcijas  '-oM'  vai   '-oN'.   lai   atjaunotu
-              skançðanu  no  tâs  vietas,  kur pârtraucât. Vairâk
-              nekâdas papildus opcijas lietot nav nepiecieðams.
+              ja k iemesla desat bijis spiests praukt skannu nospietrl  C&gt;,  j
+              rat izmantot pciju, ja skannas rezult ierakst izmantojot opcijas
+              â€™-oMâ€™ vai â€™-oNâ€™. lai atjaunotu skannu no tvietas, kur prauc Vair
+              neks papildus opcijas lietot nav nepiecie.
 
        <B>--append_output</B>
-              liek Nmap rakstît rezultâtus tâlâk tajâ paðâ failâ,
-              kurð izmantots iepriekð.
+              liek  Nmap  rakst rezult s  t k tajaailkurmantots iepriek.TP <B>-iL</B>
+              <B>&lt;inputfilename&gt;</B> (input List) - lasadreses no nortaila. Adresfail
+              r  atdal m ar tuk, ar tab, vai ar &lt;CR&gt;&lt;LF&gt; kombinju (katrs hosts
+              jaunind
 
-       <B>-iL</B> <B>&lt;inputfilename&gt;</B>
-              (input  List)  -  lasît  adreses no norâdîtâ faila.
-              Adresçm failâ jâbur atdalîtâm ar tukðumu,  ar  tab,
-              vai  ar  &lt;CR&gt;&lt;LF&gt;  kombinâciju  (katrs  hosts jaunâ
-              rindâ).
-
-       <B>-iR</B>    (input Random) - lietojot  ðo  opciju  Nmap  skançs
-              gadîjuma  izvçlçtas  adreses.  Ðis process vilksies
-              tik ilgi, kamçr jûs to neapturçsiet. Ðî  opcija  ir
-              noderîga, lai veiktu Internet statistiku.
+       <B>-iR</B>    (input Random) - lietojot pciju Nmap skangadma izvtas adreses. s
+              process vilksies tik ilgi, kamj neapturet.  opcija ir noder, lai
+              veiktu Internet statistiku.
 
        <B>-p</B> <B>&lt;port</B> <B>ranges&gt;</B>
-              (ports)  -  ðî  opcija  norâda  Nmap,  kâdus portus
-              nepiecieðams skançt. Piem. opcija '-p23'  liek  tam
-              skançt skançs tikai 23 portu. Ja norâdîs ko lîdzîgu
-              ðai opcijai '-p 20-30,139,60000-', Nmap skançs por­
-              tus  no  20  lîdz  30 ieskaitot, 139 portu un visus
-              portus, kas lielâki par 60000. Noklusçti Nmap skanç
-              portus no 1 lîdz 1024.
+              (ports) - pcija nor Nmap, ks portus nepiecie skan  Piem.  opcija
+              â€™-p23â€™ liek tam skanskantikai 23 portu. Ja nors ko l opcijai â€™-p
+              20-30,139,60000-â€™, Nmap skanportus no 20  l  30  ieskaitot,  139
+              portu un visus portus, kas liel par 60000. Noklus Nmap skanortus
+              no 1 l 1024.
 
-              Skançjot  TCP  un  UDP  portus  tu vari norâdît '-p
-              U:53,11,137,T:21-25,139,8080'. Lai skançtu ðâdi tev
-              nepiecieðams  norâdît  vismaz  vienu TCP skançðanas
-              tipu (piem. -sS, -sF, vai -sT). Ja netiek  norâdîts
-              protokols,  tad dotie porti tiek skançti visos pro­
-              tokolos.
+              Skan  t   TCP   un   UDP   portus   tu    vari    nor   t    â€™-p
+              U:53,11,137,T:21-25,139,8080â€™.  Lai skan  tev nepiecie nort vis-
+              maz vienu TCP skannas tipu (piem. -sS, -sF, vai -sT). Ja  netiek
+              norts protokols, tad dotie porti tiek skan visos protokolos.
 
        <B>-F</B> <B>(Fast</B> <B>scan)</B> <B>-</B>
-              norâda skançt tikai tos portus kas norâdîti servisu
-              failâ (iekïauts kopâ ar Nmap).
+              nor skantikai tos portus kas norti servisu failiekts kopr Nmap).
 
        <B>-D</B> <B>&lt;decoy1</B> <B>[,decoy2][,ME],...&gt;</B>
-              use   Decoy   hosts).   -  Ðajâ  reþîmâ  Nmap  liek
-              attâlinâtajai sistçmai domât, ka tâ tiek skançta no
-              vairâkiem  hostiem.Tâdejâdi  ir  grûtâk noteikt, no
-              kurienes reâli tiek skançts. Ðî  ir  ïoti  efektîga
-              metodç, lai slçptu savu IP adresi skançjot.
+              use Decoy hosts). - jemap liek attnjai sisti dom ka tiek skan no
+              vair em hostiem.Tj ir grnoteikt, no kurienes re tiek skan.  ir i
+              efekt metodlai slu savu IP adresi skant.
 
-              Jûs varat norâdît savu IP adresi kâ 'ME' Tâ norâda,
-              kad tiks lietota tava IP adrese. Piemçram, ja tu to
-              ieraksti   kâ  sesto  vai  vçl  tâlâk,  tad  daudzi
-              skançðanas detektori uz  attâlinâtâs  sistçmas  var
-              vispâr  neielogot  tavu  IP  adresi. Jâpiebilst, ka
-              norâdîtajiem  attâlinâtajiem   hostiem   ir   jâbût
-              pieslçgtiem  pie  tîkla, pretçjâ gadîjumâ jûs varat
-              pârslogot  skançjamo  sistçmu   ar   SYN   paketçm.
-              Jâpiebilst, ka pastâv iespçja tâdejâdi noteikt tavu
-              IP adresi, ja  tevis  norâdîtie  attâlinâtie  hosti
-              reâli neeksistçs.
+              Jrat nort savu IP adresi kMEâ€™ Tor,  kad  tiks  lietota  tava  IP
+              adrese.  Piemm, ja tu to ieraksti kesto vai vtk, tad daudzi skan
+              nas detektori uz attns sists var vispneielogot tavu IP adresi. J
+              ebilst,  ka  nor tajiem  attnjiem hostiem ir jt piesliem pie ta,
+              pret gadmrat plogot skanmo sist ar SYN paket J ebilst,  ka  past
+              iesp  t j noteikt tavu IP adresi, ja tevis nortie attne hosti re
+              neeksist
 
-              Ja  tu  norâdi  daudzus attâlinâtus hostus, tas var
-              ievçrojami palçlinât skançðanas âtrumu. Ðo  iespçju
-              var   izmantot   jebkurâ   skançðanas  veidâ.  Daþi
-              provaideri var filtrçt jûsu  paketes,  tâdejâdi  ði
-              opcija var nedot jums vçlamos rezultâtus.
+              Ja tu nor daudzus attns hostus, tas var ievjami palnskannas umu.
+              iesp var izmantot jebkurkannas veidDavaideri var filtrjaketes, t
+              j pcija var nedot jums vmos rezults.
 
        <B>-S</B> <B>&lt;IP_Address&gt;</B>
-              (set  Source)  -  Ja Nmap nespçj patstâvîgi noteikt
-              jûsu hosta ip adresi (viòð par  to  jûs  brîdinâs),
-              jums  ir  nepiecieðams  to viòam norâdît. Vçl viens
-              pielietojums ðai opcijai var bût  -  izlikties,  ka
-              skançðana notiek no citas IP adreses. Ðinî gadîjumâ
-              jûs  nevarat  iegût  rezultâtus,  taèu   attâlinâtâ
-              sistçma domâs, ka skanç no tevis norâdîtâs adreses.
-              Ðai gasîjumâ nepiecieðams lietot opciju  '-S'  kopâ
-              ar '-e'.
+              (set Source) - Ja Nmap nesppatstgi noteikt josta ip adresi (viar
+              to  j n, jums ir nepiecie to vinort. Vviens pielietojums opcijai
+              var bizlikties, ka skanna notiek no citas IP adreses. nadm varat
+              ieg zult s,  ta attn sist dom ka skano tevis nortadreses. i gasm
+              epiecie lietot opciju â€™-Sâ€™ kopr â€™-eâ€™.
 
        <B>-e</B> <B>&lt;interface&gt;</B>
-              (interface)  -  norâda  Nmap,  kâds interfeiss tiks
-              izmantots lai saòemtu/sûtîtu paketes. Nmap  parasti
-              pats nosaka, kâds interfeiss tiek lietots.
+              (interface) - nor Nmap, k interfeiss tiks izmantots  lai  sa u/s
+              paketes. Nmap parasti pats nosaka, k interfeiss tiek lietots.
 
        <B>-g</B> <B>&lt;portnumber&gt;</B>
-               norâda  porta  numuru  uz  tava  datora, kuru Nmap
-              izmatos  skançðanai.  Daudzi  pakeðu   filtri   vai
-              ugunsmûri  laiþ cauri DNS paketes (53 ports)un FTP-
-              DATA  (20  ports)  tâdejâdi   atïaujot   nodibinâts
-              savienojumu   ar   attâlinâtu  aizsargâtu  sistçmu.
-              Skançjot UDP portus  Nmap  no  sâkuma  izmçìina  53
-              portu,  pçctam  20  poru.  Skançjot  TCP  portus  -
-              otrâdâk.
+               nor  porta  numuru  uz  tava datora, kuru Nmap izmatos skannai.
+              Daudzi pakeiltri vai ugunsmaii DNS paketes (53 ports)un FTP-DATA
+              (20  ports)  t j atjot nodibin savienojumu ar attn aizsarg sist.
+              Skant UDP portus Nmap no sma izmna 53 portu, pam 20 poru. Skan t
+              TCP portus - otrk.
 
        <B>--data_length</B> <B>&lt;number&gt;</B>
-              Parasti Nmap  sûta  maziòas  paketes,  kuras  satur
-              tikai  header  informâciju.  Ðî  opcija  atïauj tâs
-              palielinât tâdejâdi  palçlinot  skançðanas  âtrumu,
-              taèu  samazinot  iespçju  ka  jûsu  skançðanu  kâds
-              pamanîs.
+              Parasti  Nmap  s azi paketes, kuras satur tikai header informju.
+              opcija atj tpalielintj palnot skannas umu, tasamazinot iesp ka j
+              kannu k paman
 
-       <B>-n</B>     norâda, lai Nmap nekad nenoteiktu DNS  IP  adresçm,
-              kuras tas atrod. Ðî opcija var paâtrinât skançðanu.
+       <B>-n</B>     nor ,  lai  Nmap  nekad nenoteiktu DNS IP adres kuras tas atrod.
+              opcija var painskannu.
 
-       <B>-R</B>     norâda, lai Nmap vienmçr noteiktu atrasto IP adreðu
-              DNS.
+       <B>-R</B>     nor, lai Nmap vienmnoteiktu atrasto IP adreNS.
 
-       <B>-r</B>     (randomize  off) - Nmap skanç visus portus noteiktâ
-              secîbâ katrai skançjamai sistçmai.
+       <B>-r</B>     (randomize off) - Nmap skanisus portus noteiktec katrai skan mai
+              sisti.
 
        <B>--randomize_hosts</B>
-              Norâda lai Nmap  skanç  attâlinâto  sistçmu  portus
-              neregulâri.  Piem.  vienai  sistçmai tas noskanç 23
-              portu otrai sistçmai noskanç 665 portu,  tad  atkal
-              pirmajai  sistçmai  45  utt.  Tâdejâdi ir iespçjams
-              skançt 2048 sistçmas vienlaicîgi.
+              Nor lai Nmap skanttn sist portus neregul. Piem. vienai sisti tas
+              noskan3 portu otrai sisti noskan65  portu,  tad  atkal  pirmajai
+              sisti 45 utt. Tj ir iespms skan2048 sists vienlaic.
 
        <B>-M</B> <B>&lt;max</B> <B>sockets&gt;</B>
-              (Max sockets) - norâda maksimâlo soketu skaitu, kas
-              tiks  izmantots  paralçli skançjot ar TCP connect()
-              metodi.  Tâdejâdi  var  izvairîties  no  attâlinâto
-              sistçmu  nokârðanas. Var izmantot arî '-sS' opciju,
-              jo SYN paketes jebkura OS "pacieð" vieglâk.
+              (Max  sockets)  -  nor  maksim soketu skaitu, kas tiks izmantots
+              paral skant ar TCP connect() metodi. Tj var izvair es  no  att n
+              sist nokanas. Var izmantot ar-sSâ€™ opciju, jo SYN paketes jebkura
+              OS "pacieiegl
 
-       <B>LAIKA</B> <B>IESTÂDÎÐANA</B>
-              Parasti  Nmap   automâtiski   nosaka   kâdâ   laika
-              intervâlâ tiks sûtîtas paketes un notiks skançðana.
-              Ðîs  opcijas   paredzçtu,   gan   lai   palielinâtu
-              skançðanas  âtrumu,  gan lai samazinâtu kïudas, gan
-              lai  palçlinâtu  âtrumu   un   samazinâtu   iespçju
-              attâlinâtâs    sistçmas    administrâtorâm   fiksçt
-              skançðanas mçìinâjumu.
+       <B>LAIKA</B> <B>IESTANA</B>
+              Parasti Nmap automski nosaka k laika interv tiks ss  paketes  un
+              notiks  skan na. s opcijas paredz, gan lai palielin skannas umu,
+              gan lai samazin kas, gan lai paln umu un samazin iesp attns sist
+              s administrrfiksskannas mnmu.
 
-       <B>-T</B> <B>&lt;Paranoid|Sneaky|Polite|Normal|Aggressive|Insane&gt;</B> <B>(Tim­</B>
-       <B>ing</B>  <B>options)</B>  <B>-</B>  <B>Ðî</B>  <B>opcija</B>  <B>tiek</B> <B>izmantota,</B> <B>lai</B> <B>regulçtu</B>
-       <B>skançðanas</B> <B>âtrumu.</B>
-              <B>Paranoid</B> <B>reþîms</B> <B>tiek</B> <B>izmantots</B>  <B>tad,</B>  <B>ja</B>  <B>ir</B>  <B>liela</B>
-              <B>iespçjamîba,</B>   <B>ka</B>   <B>uz</B>   <B>attâlinâtâs</B>   <B>sistçmas</B>  <B>ir</B>
-              <B>uzstâdîts</B> <B>IDS.</B> <B>Ðinî</B> <B>gadîjumâ</B> <B>skançðana</B>  <B>noris</B>  <B>ïoti</B>
-              <B>lçni.</B>  <B>Paralçla</B>  <B>skançðana</B> <B>netiek</B> <B>izmantota.</B> <B>Pakete</B>
-              <B>tiek</B> <B>izsûtîtâ</B> <B>kâ</B> <B>minimums</B> <B>ar</B>  <B>5</B>  <B>minûðu</B>  <B>intervâlu.</B>
-              <B>Sneaky</B>
-               reþîms  ir  lîdzîgs  Paranoid  reþîmam.  Tas  sûta
-              paketes ar 15  sekunþu  intervâlu.   <B>Polite</B>  reþîms
-              tiek   izmantots   gadîjumos,   kad   ir  vajadzîba
-              samazinât tîkla noslogotîbu  lîdz  minimumam.  Ðinî
-              reþîmâ  paketes  tiek sûtîtas ar minimâlo intervâlu
-              0,4 sekundes.   <B>Normal</B>  reþîmu  Nmap  izmanto  nok­
-              lusçti.  Ðinî  reþîmâ  tiek  nodroðinâts  maksimâlo
-              iespçjamo  âtrumu,  tajâ  paðâ  laikâ  nenoslogojot
-              tîklu un cenðoties izvairîties no kïûdâm skançðanas
-              gaitâ.  <B>Aggressive</B> reþîmâ tiek uzstâdîts  5  minûðu
-              skançðanas  limits  katram  hostam,  un  Nmap nekad
-              negaida ilgâk par 1,25 sekundi uz atbildi.   <B>Insane</B>
-              reþîms   ir  ieteicams  tikai  priekð  ïoti  âtriem
-              tîkliem, vai arî tad ja tu  vari  samierinâties  ar
-              iespçjamâm kïûdâm skânçðanas norisç. Tiek uzstâdîts
-              75 sekunþu limits katram  hostam  un  tiek  gaidîts
-              tikai 0.3 sekundes uz atbildi.
+       <B>-T</B> <B>&lt;Paranoid|Sneaky|Polite|Normal|Aggressive|Insane&gt;</B> <B>(Timing</B> <B>options)</B> <B>-</B>
+       <B>opcija</B> <B>tiek</B> <B>izmantota,</B> <B>lai</B> <B>regulskannas</B> <B>umu.</B>
+              <B>Paranoid</B>  <B>re</B> <B>iek</B>  <B>izmantots</B>  <B>tad,</B> <B>ja</B> <B>ir</B> <B>liela</B> <B>iespm,</B> <B>ka</B> <B>uz</B> <B>attns</B>
+              <B>sists</B> <B>ir</B> <B>uzstts</B> <B>IDS.</B> <B>nadmkanna</B> <B>noris</B> <B>i</B> <B>l.</B> <B>Paral</B>  <B>skan</B> <B>na</B>  <B>netiek</B>
+              <B>izmantota.</B> <B>Pakete</B> <B>tiek</B> <B>izs</B> <B>kinimums</B> <B>ar</B> <B>5</B> <B>minnterv.</B>  <B>Sneaky</B>
+               re r  l   Paranoid re Tas saketes ar 15 sekunerv.  <B>Polite</B> reiek
+              izmantots gadmos, kad ir vajadz samazinta noslogot l  minimumam.
+              n e aketes  tiek  ss ar minim interv 0,4 sekundes.  <B>Normal</B> remap
+              izmanto noklus. neiek nodrots maksim iespmo umu, tajaaik enoslo-
+              gojot  t u un cenes izvaires no kskannas gait.B Aggressive reiek
+              uzstts 5 minkannas limits katram hostam, un Nmap  nekad  negaida
+              ilg par  1,25  sekundi  uz  atbildi.  <B>Insane</B> rer ieteicams tikai
+              priekti iem tiem, vai arad ja tu vari samierines ar iespmk sk  s
+              noris Tiek  uzst ts 75 sekunits katram hostam un tiek gaid tikai
+              0.3 sekundes uz atbildi.
 
-              Katram reþîmam ir piesaistîts nummurs. Piem. opcija
-              '-T0' apzîmç paranoid reþîmu, bet '-T5' - Insane
+              Katram reir piesaist nummurs. Piem. opcija â€™-T0â€™ apz paranoid re
+              bet â€™-T5â€™ - Insane
 
        <B>--host_timeout</B> <B>&lt;milliseconds&gt;</B>
-              Uzstâda laiku, norâdit Nmap  cik  ilgs  laiks  tiek
-              atvçlçts  priekð viena hosta pilnîgas noskançðanas.
-              Noklusçti ðis parametrs netiek izmantost. Nmap  sâk
-              skançt  nâkoðo  hostu pçc tam, kad pabeidzis skançt
-              iepriekðçjo.
+              Uzst  laiku,  nort Nmap cik ilgs laiks tiek atvts priekena hosta
+              pilns noskannas. Noklus parametrs netiek izmantost. Nmap sskan n
+              ostu ptam, kad pabeidzis skaniepriek.
 
        <B>--max_rtt_timeout</B> <B>&lt;milliseconds&gt;</B>
-              (maximal round-trip  time  timeout)  -  Maksimâlais
-              laiks,   cik   ilgi   Nmap   gaidîs   uz   nosûtîto
-              pieprasîjuma atbildi, pçc tam  nosûtot  jaunu,  vai
-              pârtraucot gaidîðanu. Standartâ tas ir nostâdîts uz
-              9000 milisekundçm.
+              (maximal  round-trip  time  timeout)  - Maksimis laiks, cik ilgi
+              Nmap gaiduz nos pieprasma atbildi, ptam nosjaunu,  vai  p raucot
+              gaidnu. Standartas ir nostts uz 9000 milisekund
 
        <B>--min_rtt_timeout</B> <B>&lt;milliseconds&gt;</B>
-              Minimâlais laiks, cik ilgi Nmap gadîs  uz  nosûtîtâ
-              pieprasîjuma   atbildi.  Ðî  opcija  var  paâtrinât
-              skançðanas  âtrumu,  taèu   var   tika   pazaudçtas
-              paketes.
+              Minim is  laiks,  cik  ilgi  Nmap  gad uz nos pieprasma atbildi.
+              opcija var painskannas umu, tavar tika pazauds paketes.
 
        <B>--initial_rtt_timeout</B> <B>&lt;milliseconds&gt;</B>
-              Norâda  vidçjo laiku, cik ilgi Nmap gaidîs nosûtîtâ
-              pieprasîjuma atbildi. Parasti  ðo  opciju  izmanto,
-              kad  tiek skançtas sistçmas kas tiek aizsargâtas ar
-              ugunsmûri.   Parasti   Nmap   ðo   lielumu   nosaka
-              automâtiski    pçc    pirmo    pâris   pieprasîjumu
-              noteikðanu. Standartâ tas ir 6000 milisekundes
+              Nor vid laiku, cik ilgi Nmap gaidnos pieprasma atbildi.  Parasti
+              pciju  izmanto, kad tiek skans sists kas tiek aizsargs ar ugunsm
+              Parasti Nmap ielumu nosaka automski ppirmo ps pieprasmu noteik .
+              Standartas ir 6000 milisekundes
 
        <B>--max_parallelism</B> <B>&lt;number&gt;</B>
-              Uzstâda  skaitu  cik  daudz  paketes  tiks  sûtîtas
-              paralçli.  Ja  ðis parametrs tiek norâdîts kâ 1 tad
-              tas nozîmç, ka Nmap nekad neskançs vairâk par vienu
-              portu reizç.
+              Uzst  skaitu  cik daudz paketes tiks ss paral. Ja parametrs tiek
+              norts k tad tas noz, ka Nmap nekad neskan vair par  vienu  portu
+              reiz
 
        <B>--scan_delay</B> <B>&lt;milliseconds&gt;</B>
-               Norâda  minimâlo laiku, cik ilgi Nmap gaidîs starp
-              pieprasîjumu nosûtîðanu. Ðî  opcija  ïauj  minimâli
-              noslogot  tîklu  un/vai  izvairîties  no skançðanas
-              pamanîðanas uz attâlinâtâs sistçmas.
+               Nor  minim  laiku,  cik  ilgi  Nmap  gaidstarp pieprasmu nosnu.
+              opcija j minim noslogot tu un/vai izvaires no skannas  paman nas
+              uz attns sists.
 
 
-       <B>SKANÇJAMÂ</B> <B>MÇRÍA</B> <B>NORÂDÎÐANAS</B> <B>IESPÇJAS</B>
-              Visu, kas nav opcijas vai to argumenti, Nmap pieòem
-              kâ  adresi  vai  attâlinâtâs  sistçmas DNS. Visele­
-              mentârâkais veids kâ norâdît skançjamo  hostu,  ir,
-              norâdît  to  aiz  opcijâm. Ja jûs vçlaties noskançt
-              subnet`u,  jums  nepiecieðams   norâdît   parametru
-              '/&lt;mask&gt;'   pçc  skançjamâs  sistçmas  DNS  vai  ip
-              adreses. Subnet`a masku var norâdît ðâdos veidos:
+       <B>SKANAMMNORANAS</B> <B>IESPAS</B>
+              Visu, kas nav opcijas vai to argumenti, Nmap piekdresi vai attns
+              sists DNS. Viselementkais veids kort skanmo hostu, ir, nor t  to
+              aiz  opcij  Ja  j laties  noskan subnetâ€˜u,  jums  nepiecie  nort
+              parametru â€™/&lt;mask&gt;â€™ pskanmsists DNS  vai  ip  adreses.  Subnetâ€˜a
+              masku var nort s veidos:
 
 
 
 
 
-       Nmap tâdâ paðâ veidâ atïauj norâdît ip adreses  izmantojot
-       sarakstu, vai arî diapazonu katram tâs elementam. Piem. ir
-       vajadzîba noskançt B klases subnetu ar adresi 128.210.*.*.
-       To iespçjams norâdît sekojoðos veidos:
+       Nmap  t pa eid t j nor t ip adreses izmantojot sarakstu, vai ariapazonu
+       katram telementam. Piem. ir vajadznoskan B  klases  subnetu  ar  adresi
+       128.210.*.*. To iespms nort sekojoveidos:
 
               128.210.*.*
 
@@ -662,58 +485,47 @@
 
               128.210.0.0/16
 
-       Visas ðîs komandas ir vienâdas. Ja jûs izmantojat  *,  tad
-       vairâkumâ shell`os nepiecieðams tâs atdalît ar ' vai apos­
-       trofu. Vçl viens  piemçrs:  Ja  jûs  norâdat  adresi  ðâdâ
-       formâtâ  '*.*.5.6-7' , tad Nmap noskançs visas ip adreses,
-       kas beidzas ar .5.6 vai .5.7
+       Visas   komandas  ir vien s. Ja jmantojat *, tad vairmhellâ€˜os nepieciet
+       atdalar â€™ vai apostrofu. Vviens piem: Ja jrt adresi  form â€™*.*.5.6-7â€™ ,
+       tad Nmap noskanvisas ip adreses, kas beidzas ar .5.6 vai .5.7
 
 
 </PRE>
-<H2>PIEMÇRI</H2><PRE>
+<H2>PIEMI</H2><PRE>
        <B>nmap</B> <B>-v</B> <B>target.example.com</B>
 
-       Norâda skançt visus atvçrtos  portus  hostam  target.exam­
-       ple.com.  Opcija  '-v'  atïauj  novçrot skançðanas procesu
-       detalizçtâk.
+       Nor  skan visus atvos portus hostam target.example.com. Opcija â€™-vâ€™ atj
+       novt skannas procesu detalizk.
 
        <B>nmap</B> <B>-sS</B> <B>-O</B> <B>target.example.com/24</B>
 
-       Visi 255 kompji ar C klases adresçm,  no  kurâm  viens  ir
-       target.example.com    tiks    noskançti   izmantojot   SYN
-       skançðanas metodi. Vçl tiks noteikta OS kas grieþas uz ðîm
-       sistçmâm.  Lai izmantotu ðo metodi jums nepiecieðamas root
-       tiesîbas.
+       Visi 255 kompji ar C klases adres no  kur viens  ir  target.example.com
+       tiks  noskan  izmantojot SYN skannas metodi. Vtiks noteikta OS kas grie
+       sistm. Lai izmantotu etodi jums nepiecies root tiess.
 
        <B>nmap</B> <B>-sX</B> <B>-p</B> <B>22,53,110,143,4564</B> <B>198.116.*.1-127</B>
 
-       Nmap skançs pirmo pusi ar adresçm (0-127) katrâ no  255  B
-       klases  subnet`iem  ar  Xmas  skançðanas  metodi  ip  zonâ
-       128.210.*.*. Ðajos hostos tiks konstatçta sshd (22 ports),
-       DNS  (53),  pop3  (110),  imapd  (143) un 4564 portu piee­
-       jamîba.  Vçlçtos  pievçrst  uzmanîbu   faktam,   ka   Xmas
-       skançðanas  metodi  nevar izmantot sistçmâm, kuras grieþas
-       uz WinOS, CISCO, IRIX, HP/UX un BSDI.
+       Nmap skanpirmo pusi ar adres(0-127) katro 255 B  klases  subnetâ€˜iem  ar
+       Xmas  skannas metodi ip zon28.210.*.*. jos hostos tiks konstat sshd (22
+       ports), DNS (53), pop3 (110), imapd (143) un 4564 portu pieejam.  V tos
+       piev t uzman faktam, ka Xmas skannas metodi nevar izmantot sistm, kuras
+       grie WinOS, CISCO, IRIX, HP/UX un BSDI.
 
-       <B>nmap</B> <B>-v</B> <B>--randomize_hosts</B> <B>-p</B> <B>80</B> <B>´*.*.2.3-5´</B>
+       <B>nmap</B> <B>-v</B> <B>--randomize_hosts</B> <B>-p</B> <B>80</B> <B>Â´*.*.2.3-5Â´</B>
 
-       Nmap meklçs visus kompjus ar IP adresçm, kuras beidzas  ar
-       .2.3,  .2.4  un  .2.5.  Ja  jums ir root tiesîbas, tad jûs
-       varât pie reizes arî  noskançt  portus  izmantojot  opciju
-       '-sS'.   Jûs  varat  atrast  daudz  interesantas  sistçmas
-       skançjot diapazonu 127-222.*.*
+       Nmap meklvisus kompjus ar IP adres kuras beidzas ar .2.3, .2.4 un .2.5.
+       Ja jums ir root tiess, tad jrpie reizes aroskanportus izmantojot opciju
+       â€™-sSâ€™. Jrat atrast daudz interesantas sists skant diapazonu 127-222.*.*
 
-       <B>host</B> <B>-l</B> <B>company.com</B> <B>|</B> <B>cut</B> <B>´-d</B> <B>´</B> <B>-f</B> <B>4</B> <B>|</B> <B>./nmap</B> <B>-v</B> <B>-iL</B> <B>-</B>
+       <B>host</B> <B>-l</B> <B>company.com</B> <B>|</B> <B>cut</B> <B>Â´-d</B> <B>Â´</B> <B>-f</B> <B>4</B> <B>|</B> <B>./nmap</B> <B>-v</B> <B>-iL</B> <B>-</B>
 
-       Atrast eksistçjoðus hostus domçnâ company.com, nodot  Nmap
-       to  adreses. Ðî komanda strâdâ GNU/Linux OS. Ja izmantojat
-       citu OS jums var bût vajadzîba rakstît to savâdâk.
+       Atrast  eksist  hostus dom company.com, nodot Nmap to adreses.  komanda
+       str GNU/Linux OS. Ja izmantojat citu OS jums var bjadz rakstto savk.
 
 
 </PRE>
-<H2>IESPÇJAMÂS KÏÛDAS</H2><PRE>
-       Ja jûs gadîjumâ konstatçjat  kâdas  kïûdas  Nmap  darbîbâ,
-       lûdzu paziòojiet par to autoram
+<H2>IESPAM KDAS</H2><PRE>
+       Ja jdmonstatt ks kas Nmap darb, lpaziet par to autoram
 
 
 </PRE>
@@ -722,76 +534,66 @@
 
        <I>nmap</I> is (C) 1995-2001 by Insecure.Com LLC
 
-       This program is free software;  you  can  redistribute  it
-       and/or modify it under the terms of the GNU General Public
-       License as published by the Free Software Foundation; Ver­
-       sion  2.   This  guarantees your right to use, modify, and
-       redistribute  Nmap  under  certain  conditions.   If  this
-       license  is unacceptable to you, Insecure.Org may be will­
-       ing to sell  alternative  licenses  (contact  fyodor@inse­
-       cure.org).
+       This program is free software; you can redistribute it and/or modify it
+       under  the  terms of the GNU General Public License as published by the
+       Free Software Foundation; Version 2.  This  guarantees  your  right  to
+       use,  modify,  and redistribute Nmap under certain conditions.  If this
+       license is unacceptable to you, Insecure.Org may  be  willing  to  sell
+       alternative licenses (contact fyodor@insecure.org).
 
-       Source  is  provided  to  this software because we believe
-       users have a right to know exactly what a program is going
-       to  do  before they run it.  This also allows you to audit
-       the software for security holes (none have been  found  so
-       far).
+       Source  is  provided  to  this software because we believe users have a
+       right to know exactly what a program is going to do before they run it.
+       This  also  allows  you  to audit the software for security holes (none
+       have been found so far).
 
-       Source code also allows you to port Nmap to new platforms,
-       fix bugs, and add new features.  You are highly encouraged
-       to  send  your changes to fyodor@insecure.org for possible
-       incorporation into  the  main  distribution.   By  sending
-       these  changes  to Fyodor or one the insecure.org develop­
-       ment mailing lists, it is assumed that  you  are  offering
-       Fyodor  the  unlimited, non-exclusive right to reuse, mod­
-       ify, and relicense the code.  This  is  important  because
-       the  inability  to  relicense  code has caused devastating
-       problems for other Free Software projects (such as KDE and
-       NASM).  Nmap will always be available Open Source.  If you
-       wish to specify special license conditions of your contri­
-       butions, just say so when you send them.
+       Source code also allows you to port Nmap to new  platforms,  fix  bugs,
+       and  add  new features.  You are highly encouraged to send your changes
+       to fyodor@insecure.org for possible incorporation into the main distri-
+       bution.   By  sending  these  changes to Fyodor or one the insecure.org
+       development mailing lists, it is assumed that you are  offering  Fyodor
+       the  unlimited, non-exclusive right to reuse, modify, and relicense the
+       code.  This is important because the inability to  relicense  code  has
+       caused  devastating  problems for other Free Software projects (such as
+       KDE and NASM).  Nmap will always be available Open Source.  If you wish
+       to  specify  special license conditions of your contributions, just say
+       so when you send them.
 
-       This  program  is  distributed in the hope that it will be
-       useful, but <B>WITHOUT</B> <B>ANY</B> <B>WARRANTY;</B> without even the implied
-       warranty  of  <B>MERCHANTABILITY</B>  or <B>FITNESS</B> <B>FOR</B> <B>A</B> <B>PARTICULAR</B>
-       <B>PURPOSE.</B>  See the GNU  General  Public  License  for  more
-       details  (it  is in the COPYING file of the <I>nmap</I> distribu­
-       tion).
+       This program is distributed in the hope that it  will  be  useful,  but
+       <B>WITHOUT</B>  <B>ANY</B>  <B>WARRANTY;</B>  without  even  the  implied  warranty  of <B>MER-</B>
+       <B>CHANTABILITY</B> or <B>FITNESS</B> <B>FOR</B> <B>A</B> <B>PARTICULAR</B> <B>PURPOSE.</B>  See the GNU  General
+       Public  License for more details (it is in the COPYING file of the <I>nmap</I>
+       distribution).
 
-       It should also be noted that Nmap has been known to  crash
-       certain  poorly  written  applications, TCP/IP stacks, and
-       even operating systems.  <B>Nmap</B> <B>should</B> <B>never</B> <B>be</B> <B>run</B>  <B>against</B>
-       <B>mission</B> <B>critical</B> <B>systems</B> unless you are prepared to suffer
-       downtime.  We acknowledge here that Nmap  may  crash  your
-       systems  or networks and we disclaim all liability for any
+       It should also be noted that Nmap  has  been  known  to  crash  certain
+       poorly written applications, TCP/IP stacks, and even operating systems.
+       <B>Nmap</B> <B>should</B> <B>never</B> <B>be</B> <B>run</B> <B>against</B> <B>mission</B> <B>critical</B>  <B>systems</B>  unless  you
+       are  prepared  to  suffer  downtime.  We acknowledge here that Nmap may
+       crash your systems or networks and we disclaim all  liability  for  any
        damage or problems Nmap could cause.
 
-       Because of the slight risk of crashes and  because  a  few
-       black  hats  like  to use Nmap for reconnaissance prior to
-       attacking systems, there  are  administrators  who  become
-       upset  and  may  complain  when  their  system is scanned.
-       Thus, it is often advisable to request  permission  before
+       Because of the slight risk of crashes and because a few black hats like
+       to use Nmap for reconnaissance prior to attacking  systems,  there  are
+       administrators  who  become upset and may complain when their system is
+       scanned.  Thus, it is often  advisable  to  request  permission  before
        doing even a light scan of a network.
 
-       Nmap  should  never  be run with privileges (eg suid root)
-       for security reasons.
+       Nmap  should  never  be run with privileges (eg suid root) for security
+       reasons.
 
 
-       This product includes software  developed  by  the  Apache
-       Software Foundation (http://www.apache.org/).  The <I>Libpcap</I>
-       portable packet capture library is distributed along  with
-       nmap.  Libpcap was originally copyrighted by Van Jacobson,
-       Craig Leres and Steven McCanne, all of the Lawrence Berke­
-       ley  National Laboratory, University of California, Berke­
+       This product includes software developed by the Apache Software Founda-
+       tion  (http://www.apache.org/).   The  <I>Libpcap</I>  portable packet capture
+       library is distributed along with nmap.  Libpcap was  originally  copy-
+       righted  by  Van  Jacobson,  Craig Leres and Steven McCanne, all of the
+       Lawrence Berkeley National Laboratory, University of California, Berke-
        ley, CA.  It is now maintained by http://www.tcpdump.org .
 
-       Latviski  manuâli  pârtulkojis  m|sc  (misc@inbox.lv) (Var
-       gadîties daþi gïuki tekstâ, taèu ko lai dara, ja  latvieðu
-       valodâ nav normâli datortermini.)
+       Latviski  manu  pulkojis m|sc (misc@inbox.lv) (Var gades daki teksttako
+       lai dara, ja latviealodav norm datortermini.)
 
 
 
-                                                          <B>NMAP(1)</B>
+                                                                       <B>NMAP(1)</B>
 </PRE>
 <HR>
 <ADDRESS>
