@@ -1,5 +1,7 @@
 # Nmap Changelog
 
+** Version 2.53
+
 -- Fixed a commenting issue that could cause trouble for non-GNU compilers
    (first found by Jan-Frode Myklebust (janfrode at parallab.uib.no))
 
