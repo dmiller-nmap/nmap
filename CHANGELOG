@@ -1,5 +1,10 @@
 # Nmap Changelog ($Id$)
 
+Nmap 3.10ALPHA2
+
+o Made some portability changes based on suggestions by Josef 'Jupp'
+  Schugt (jupp@gmx.de)
+
 o Fixed compilation and IPv6 support on Solaris 9 (haven't tested
   earlier versions).
 
