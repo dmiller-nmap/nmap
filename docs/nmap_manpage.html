@@ -50,7 +50,7 @@
        ing ports on the machine(s) being scanned (if any).   Nmap
        always  gives  the  port's  "well  known" service name (if
        any), number, state, and protocol.  The  state  is  either
-       ´open´,  ´filtered´, or ´unfiltered´.  Open means that the
+       "open",  "filtered", or "unfiltered".  Open means that the
        target machine will accept()  connections  on  that  port.
        Filtered  means  that a firewall, filter, or other network
        obstacle is covering the port  and  preventing  nmap  from
@@ -301,7 +301,7 @@
               attempt to determine whether they  are  RPC  ports,
               and  if  so,  what  program and version number they
               serve up.  Thus you can effectively obtain the same
-              info  as ´rpcinfo -p´ even if the target's portmap­
+              info  as "rpcinfo -p" even if the target's portmap­
               per is behind a firewall (or protected by TCP wrap­
               pers).  Decoys do not currently work with RPC scan,
               at some point I may add decoy support for  UDP  RPC
@@ -337,7 +337,7 @@
               you  can  send  arbitrary data to ports that you do
               find open (nmap doesn't do this for you though).
 
-              The argument passed to the ´b´ option is  the  host
+              The argument passed to the "b" option is  the  host
               you  want  to use as a proxy, in standard URL nota­
               tion.     The     format     is:     <I>username:pass­</I>
               <I>word@server:port.</I>    Everything   but   <I>server</I>   is
@@ -424,7 +424,7 @@
               a bunch of techniques to detect subtleties  in  the
               underlying  operating  system  network stack of the
               computers you are scanning.  It uses this  informa­
-              tion  to  create  a ´fingerprint´ which it compares
+              tion  to  create  a "fingerprint" which it compares
               with its database of  known  OS  fingerprints  (the
               nmap-os-fingerprints  file)  to decide what type of
               system you are scanning.
@@ -519,7 +519,7 @@
 
        <B>-h</B>     This handy option display a quick reference  screen
               of  nmap  usage  options.  As you may have noticed,
-              this man page is not exactly a ´quick reference´ :)
+              this man page is not exactly a "quick reference" :)
 
        <B>-oN</B> <B>&lt;logfilename&gt;</B>
               This  logs  the  results  of your scans in a normal
@@ -530,12 +530,12 @@
               This  logs  the  results  of your scans in <B>XML</B> form
               into the file you specify  as  an  argument.   This
               allows  programs  to  easily  capture and interpret
-              Nmap results.  You can give the argument ´-´ (with­
+              Nmap results.  You can give the argument "-" (with­
               out  quotes) to shoot output into stdout (for shell
               pipelines, etc).  In this case normal  output  will
               be suppressed.  Watch out for error messages if you
               use this (they will still go to stderr).  Also note
-              that  ´-v´  may  cause some extra information to be
+              that  "-v"  may  cause some extra information to be
               printed.  The Document Type Definition (DTD) defin­
               ing  the  XML  output  structure  is  available  at
               http://www.insecure.org/nmap/nmap.dtd .
@@ -550,11 +550,11 @@
               with Nmap, but now we  recommend  XML  output  (-oX
               instead).   This  simple  format may not contain as
               much information as the  other  formats.   You  can
-              give  the  argument  ´-´  (without quotes) to shoot
+              give  the  argument  "-"  (without quotes) to shoot
               output into stdout (for shell pipelines, etc).   In
               this  case normal output will be suppressed.  Watch
               out for error messages if you use this  (they  will
-              still  go  to  stderr).   Also  note that ´-v´ will
+              still  go  to  stderr).   Also  note that "-v" will
               cause some extra information to be printed.
 
        <B>-oA</B> <B>&lt;basefilename&gt;</B>
@@ -566,7 +566,7 @@
        <B>-oS</B> <B>&lt;logfilename&gt;</B>
               thIs  l0gz  th3  r3suLtS  of YouR ScanZ iN a <B>s|&lt;ipT</B>
               <B>kiDd|3</B> f0rM iNto THe fiL3 U sPecfy 4s an  arGuMEnT!
-              U  kAn  gIv3  the  4rgument ´-´ (wItHOUt qUOteZ) to
+              U  kAn  gIv3  the  4rgument "-" (wItHOUt qUOteZ) to
               sh00t output iNT0 stDouT!@!!
 
        <B>--resume</B> <B>&lt;logfilename&gt;</B>
@@ -607,8 +607,8 @@
 
        <B>-p</B> <B>&lt;port</B> <B>ranges&gt;</B>
               This option specifies what ports you want to  spec­
-              ify.  For  example ´-p 23´ will only try port 23 of
-              the target host(s).   ´-p  20-30,139,60000-´  scans
+              ify.  For  example "-p 23" will only try port 23 of
+              the target host(s).   "-p  20-30,139,60000-"  scans
               ports  between  20  and 30, port 139, and all ports
               greater than 60000.  The default  is  to  scan  all
               ports  between  1  and  1024  as  well as any ports
@@ -648,13 +648,13 @@
               technique for hiding your IP address.
 
               Separate  each  decoy host with commas, and you can
-              optionally use ´ME´ as one of the decoys to  repre­
+              optionally use "ME" as one of the decoys to  repre­
               sent  the  position  you want your IP address to be
-              used.  If your put ´ME´  in  the  6th  position  or
+              used.  If your put "ME"  in  the  6th  position  or
               later,  some  common  port  scan detectors (such as
               Solar Designer's excellent scanlogd) are  unlikeley
               to  show  your IP address at all.  If you don't use
-              ´ME´, nmap will put you in a random position.
+              "ME", nmap will put you in a random position.
 
               Note that the hosts you use as decoys should be  up
               or  you  might  accidently  SYN flood your targets.
@@ -821,12 +821,12 @@
               tient folks with a fast net connection.  <B>Insane</B>  is
               only  suitable  for very fast networks or where you
               don't mind losing some information.  It  times  out
-              hosts  in  15  minutes and won´t wait more than 0.3
+              hosts  in  15  minutes and won't wait more than 0.3
               seconds for individual probes.  It does  allow  for
               very quick network sweeps though :).
 
               You  can also reference these by number (0-5).  For
-              example, ´-T0´ gives you Paranoid mode and ´-T5´ is
+              example, "-T0" gives you Paranoid mode and "-T5" is
               Insane mode.
 
        <B>--host_timeout</B> <B>&lt;milliseconds&gt;</B>
@@ -886,26 +886,26 @@
               cation.   The simplest case is listing single host­
               names or IP addresses on the command line.  If  you
               want  to  scan  a  subnet  of IP addresses, you can
-              append <B>´/mask´</B> to the hostname or IP address.  <B>mask</B>
+              append <B>/mask</B> to the hostname or IP  address.   <B>mask</B>
               must  be between 0 (scan the whole internet) and 32
               (scan the single host specified).  Use /24 to  scan
-              a class ´C´ address and /16 for a class ´B´.
+              a class "C" address and /16 for a class "B".
 
               Nmap  also  has a more powerful notation which lets
               you specify an IP address  using  lists/ranges  for
               each  element.   Thus  you can scan the whole class
-              ´B´ network 192.168.*.* by specifying ´192.168.*.*´
-              or        ´192.168.0-255.0-255´       or       even
-              ´192.168.1-50,51-255.1,2,3,4,5-255´.  And of course
-              you  can  use  the mask notation: ´192.168.0.0/16´.
+              "B" network 192.168.*.* by specifying "192.168.*.*"
+              or        "192.168.0-255.0-255"       or       even
+              "192.168.1-50,51-255.1,2,3,4,5-255".  And of course
+              you  can  use  the mask notation: "192.168.0.0/16".
               These are all equivalent.   If  you  use  asterisks
-              (´*´),  remember  that  most  shells require you to
+              ("*"),  remember  that  most  shells require you to
               escape them with back slashes or protect them  with
               quotes.
 
               Another interesting thing to do is slice the Inter­
               net the other way.  Instead  of  scanning  all  the
-              hosts  in  a  class  ´B´,  scan ´*.*.5.6-7´ to scan
+              hosts  in  a  class  "B",  scan "*.*.5.6-7" to scan
               every IP address that ends in specifying  hosts  to
               scan, see the <I>examples</I> section.
 
@@ -932,7 +932,7 @@
        <B>nmap</B> <B>-sS</B> <B>-O</B> <B>target.example.com/24</B>
 
        Launches a stealth SYN scan against each machine  that  is
-       up out of the 255 machines on class ´C´ where target.exam­
+       up out of the 255 machines on class "C" where target.exam­
        ple.com resides.  It also tries to determine what  operat­
        ing system is running on each host that is up and running.
        This requires root privileges because of the SYN scan  and
@@ -941,25 +941,25 @@
        <B>nmap</B> <B>-sX</B> <B>-p</B> <B>22,53,110,143,4564</B> <B>198.116.*.1-127</B>
 
        Sends  an  Xmas tree scan to the first half of each of the
-       255 possible 8  bit  subnets  in  the  198.116  class  ´B´
+       255 possible 8  bit  subnets  in  the  198.116  class  "B"
        address  space.   We  are  testing whether the systems run
        sshd, DNS, pop3d, imapd, or port  4564.   Note  that  Xmas
        scan  doesn't  work  on Microsoft boxes due to their defi­
        cient TCP stack.  Same goes with CISCO, IRIX,  HP/UX,  and
        BSDI boxes.
 
-       <B>nmap</B> <B>-v</B> <B>--randomize_hosts</B> <B>-p</B> <B>80</B> <B>´*.*.2.3-5´</B>
+       <B>nmap</B> <B>-v</B> <B>--randomize_hosts</B> <B>-p</B> <B>80</B> <B>*.*.2.3-5</B>
 
        Rather  than focus on a specific IP range, it is sometimes
        interesting to slice up the entire  Internet  and  scan  a
        small  sample from each slice.  This command finds all web
        servers on machines with  IP  addresses  ending  in  .2.3,
        .2.4,  or  .2.5 find more interesting machines starting at
-       127. so you might want to use  ´127-222´  instead  of  the
+       127. so you might want to use  "127-222"  instead  of  the
        first asterisks because that section has a greater density
        of interesting machines (IMHO).
 
-       <B>host</B> <B>-l</B> <B>company.com</B> <B>|</B> <B>cut</B> <B>´-d</B> <B>´</B> <B>-f</B> <B>4</B> <B>|</B> <B>./nmap</B> <B>-v</B> <B>-iL</B> <B>-</B>
+       <B>host</B> <B>-l</B> <B>company.com</B> <B>|</B> <B>cut</B>  <B>-d</B>  <B>-f</B> <B>4</B> <B>|</B> <B>./nmap</B> <B>-v</B> <B>-iL</B> <B>-</B>
 
        Do a DNS zone transfer to find the  hosts  in  company.com
        and  then  feed  the IP addresses to <I>nmap.</I>  The above com­

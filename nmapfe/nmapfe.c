@@ -116,14 +116,15 @@ GtkWidget*
 create_main_win ()
 {
   GtkWidget *main_win;
+  GtkWidget *main_vbox;
+  GtkWidget *menubar;
   GtkWidget *fixed1;
-  GSList *fixed1_group = NULL;
+  GSList *scan_group = NULL;
   GSList *ping_group = NULL;
   GtkWidget *vscroll;
   GtkWidget *exit_me;
   GtkWidget *hseparator2;
   GtkWidget *label2;
-  GtkWidget *menubar1;
   GtkWidget *File;
   GtkWidget *menu5;
 /*New for 1.0*/
@@ -133,8 +134,10 @@ create_main_win ()
   GtkWidget *CTrad;
   /*GtkWidget *Tree;*/
   GtkWidget *machine;
+/*** not used
   GtkWidget *extra;
   GtkWidget *extra_menu;
+***/
 /*End new*/
   GtkWidget *Save_Log;
   GtkWidget *Open_Log;
@@ -145,15 +148,16 @@ create_main_win ()
   GtkWidget *menu7;
   GtkWidget *hbox1;
   GtkWidget *Help;
-  GtkWidget *Other;
+  GtkWidget *Output;
   GtkWidget *Get_Nmap_Version;
   GtkWidget *separator2;
   GtkWidget *About;
   GtkWidget *vseparator1;
+  GtkWidget *vseparator2;
   GtkWidget *hseparator1;
   GtkWidget *label3;
-  GtkWidget *vbox2;
   GtkWidget *label1;
+  GtkWidget *label4;
   char title[256];
 
 #ifdef WIN32
@@ -165,8 +169,9 @@ create_main_win ()
   our_uid = getuid();
 #endif
 
+  /* main window */
   main_win = gtk_window_new (GTK_WINDOW_TOPLEVEL);
-  gtk_object_set_data (GTK_OBJECT (main_win), "main_win", main_win);
+  /* gtk_object_set_data (GTK_OBJECT (main_win), "main_win", main_win); */
   /* Need to integrate with nmapfe so I can use snprintf() */
   sprintf(title, "Nmap Front End v%s", VERSION);
   gtk_window_set_title (GTK_WINDOW (main_win), title);
@@ -174,330 +179,23 @@ create_main_win ()
   gtk_signal_connect (GTK_OBJECT (main_win), "delete_event",
 					  GTK_SIGNAL_FUNC (on_delete_event), NULL);
   
-  vbox2 = gtk_vbox_new (FALSE, 0);
-  gtk_object_set_data (GTK_OBJECT (main_win), "vbox2", vbox2);
-  gtk_widget_show (vbox2);
-  gtk_container_add (GTK_CONTAINER (main_win), vbox2);
-  
-  menubar1 = gtk_menu_bar_new ();
-  gtk_object_set_data (GTK_OBJECT (main_win), "menubar1", menubar1);
-  gtk_widget_show (menubar1);
-  gtk_box_pack_start (GTK_BOX (vbox2), menubar1, FALSE, TRUE, 0);
+  /* Container for menu bar, input, output and status fields */
+  main_vbox = gtk_vbox_new (FALSE, 1);
+  /* gtk_object_set_data (GTK_OBJECT (main_win), "main_vbox", main_vbox); */
+  gtk_container_border_width(GTK_CONTAINER(main_vbox), 1);
+  gtk_container_add (GTK_CONTAINER (main_win), main_vbox);
+  gtk_widget_show (main_vbox);
 
-  fixed1 = gtk_fixed_new ();
-  gtk_object_set_data (GTK_OBJECT (main_win), "fixed1", fixed1);
-  gtk_widget_show (fixed1);
-  gtk_box_pack_start (GTK_BOX (vbox2), fixed1, FALSE, TRUE, 0);
-  gtk_widget_set_usize (fixed1, -2, 233);
-
-  hbox1 = gtk_hbox_new (FALSE, 0);
-  gtk_object_set_data (GTK_OBJECT (main_win), "hbox1", hbox1);
-  gtk_widget_show (hbox1);
-  gtk_box_pack_start (GTK_BOX (vbox2), hbox1, TRUE, TRUE, 0);
-
-  MW->output = gtk_text_new (NULL, NULL);
-  gtk_object_set_data (GTK_OBJECT (main_win), "output", MW->output);
-  gtk_widget_show (MW->output);
-  gtk_box_pack_start (GTK_BOX (hbox1), MW->output, TRUE, TRUE, 0);
-  gtk_text_set_word_wrap(GTK_TEXT(MW->output), 1);
-  gtk_widget_set_usize (MW->output, 464, 248);
-  gtk_widget_realize (MW->output);
-  
-  vscroll = gtk_vscrollbar_new (GTK_TEXT (MW->output)->vadj);
-  gtk_object_set_data (GTK_OBJECT (main_win), "vscroll", vscroll);
-  gtk_widget_show (vscroll);
-  gtk_box_pack_end (GTK_BOX (hbox1), vscroll, FALSE, FALSE, 0);
-  
-  MW->host_text = gtk_entry_new ();
-  gtk_object_set_data (GTK_OBJECT (main_win), "host_text", MW->host_text);
-  gtk_widget_show (MW->host_text);
-  gtk_fixed_put (GTK_FIXED (fixed1), MW->host_text, 56, 22);
-  gtk_widget_set_usize (MW->host_text, 272, 22);
-  GTK_WIDGET_SET_FLAGS (MW->host_text, GTK_CAN_DEFAULT);
-  gtk_widget_grab_focus (MW->host_text);
-  gtk_widget_grab_default (MW->host_text);
-  gtk_entry_set_text (GTK_ENTRY (MW->host_text), "127.0.0.1");
-  gtk_signal_connect(GTK_OBJECT(MW->host_text), "changed",
-			GTK_SIGNAL_FUNC(display_nmap_command_callback), NULL);
-
-  MW->connect_scan = gtk_radio_button_new_with_label (fixed1_group, "connect()");
-  fixed1_group = gtk_radio_button_group (GTK_RADIO_BUTTON (MW->connect_scan));
-  gtk_object_set_data (GTK_OBJECT (main_win), "connect", MW->connect_scan);
-  gtk_widget_show (MW->connect_scan);
-  gtk_fixed_put (GTK_FIXED (fixed1), MW->connect_scan, 8, 74);
-  gtk_signal_connect(GTK_OBJECT(MW->connect_scan), "released",
-			GTK_SIGNAL_FUNC(validate_option_change), NULL);
-  gtk_widget_set_usize (MW->connect_scan, 104, 19);
-
-if(our_uid == 0) {
-  MW->syn_scan = gtk_radio_button_new_with_label (fixed1_group, "SYN Stealth");
-  fixed1_group = gtk_radio_button_group (GTK_RADIO_BUTTON (MW->syn_scan));
-  gtk_object_set_data (GTK_OBJECT (main_win), "syn", MW->syn_scan);
-  gtk_widget_show (MW->syn_scan);
-  gtk_fixed_put (GTK_FIXED (fixed1), MW->syn_scan, 8,  91);
-  gtk_signal_connect(GTK_OBJECT(MW->syn_scan), "released",
-			GTK_SIGNAL_FUNC(validate_option_change), NULL);
-  gtk_widget_set_usize (MW->syn_scan, 104, 19);
-  gtk_toggle_button_set_state (GTK_TOGGLE_BUTTON (MW->syn_scan), TRUE);
-} /* end uid check */
-
-  MW->ping_scan = gtk_radio_button_new_with_label (fixed1_group, "Ping Sweep");
-  fixed1_group = gtk_radio_button_group (GTK_RADIO_BUTTON (MW->ping_scan));
-  gtk_object_set_data (GTK_OBJECT (main_win), "ping", MW->ping_scan);
-  gtk_widget_show (MW->ping_scan);
-  gtk_fixed_put (GTK_FIXED (fixed1), MW->ping_scan, 8, 108);
-  gtk_signal_connect(GTK_OBJECT(MW->ping_scan), "released",
-			GTK_SIGNAL_FUNC(validate_option_change), NULL);
-  gtk_widget_set_usize (MW->ping_scan, 104, 19);
-
-if (our_uid == 0){
-  MW->udp_scan = gtk_radio_button_new_with_label (fixed1_group, "UDP Port Scan");
-  fixed1_group = gtk_radio_button_group (GTK_RADIO_BUTTON (MW->udp_scan));
-  gtk_object_set_data (GTK_OBJECT (main_win), "udp", MW->udp_scan);
-  gtk_widget_show (MW->udp_scan);
-  gtk_fixed_put (GTK_FIXED (fixed1), MW->udp_scan, 8, 126);
-  gtk_signal_connect(GTK_OBJECT(MW->udp_scan), "released",
-			GTK_SIGNAL_FUNC(validate_option_change), NULL);
-  gtk_widget_set_usize (MW->udp_scan, 104, 17);
-
-  MW->fin_scan = gtk_radio_button_new_with_label (fixed1_group, "FIN Stealth");
-  fixed1_group = gtk_radio_button_group (GTK_RADIO_BUTTON (MW->fin_scan));
-  gtk_object_set_data (GTK_OBJECT (main_win), "fin", MW->fin_scan);
-  gtk_widget_show (MW->fin_scan);
-  gtk_fixed_put (GTK_FIXED (fixed1), MW->fin_scan, 8, 142);
-  gtk_signal_connect(GTK_OBJECT(MW->fin_scan), "released",
-			GTK_SIGNAL_FUNC(validate_option_change), NULL);
-  gtk_widget_set_usize (MW->fin_scan, 104, 19);
-} /*end uid check*/
-
-  MW->resolve_check = gtk_check_button_new_with_label ("Don't Resolve");
-  gtk_object_set_data (GTK_OBJECT (main_win), "resolve_check", MW->resolve_check);
-  gtk_widget_show (MW->resolve_check);
-  gtk_fixed_put (GTK_FIXED (fixed1), MW->resolve_check, 136, 70);
-  gtk_widget_set_usize (MW->resolve_check, 104, 24);
-  gtk_signal_connect(GTK_OBJECT(MW->resolve_check), "released",
-			GTK_SIGNAL_FUNC(display_nmap_command_callback), NULL);
-
-  MW->fast_check = gtk_check_button_new_with_label ("Fast Scan");
-  gtk_object_set_data (GTK_OBJECT (main_win), "fast_check", MW->fast_check);
-  gtk_widget_show (MW->fast_check);
-  gtk_fixed_put (GTK_FIXED (fixed1), MW->fast_check, 136,  94);
-  gtk_widget_set_usize (MW->fast_check, 104, 24);
-  gtk_signal_connect(GTK_OBJECT(MW->fast_check), "released",
-			GTK_SIGNAL_FUNC(validate_option_change), NULL);
-
-
-  MW->range_check = gtk_check_button_new_with_label ("Range of Ports:");
-  gtk_object_set_data (GTK_OBJECT (main_win), "range_check", MW->range_check);
-  gtk_widget_show (MW->range_check);
-  gtk_fixed_put (GTK_FIXED (fixed1), MW->range_check, 136, 118);
-  gtk_widget_set_usize (MW->range_check, 104, 24);
-  gtk_signal_connect(GTK_OBJECT(MW->range_check), "released",
-			GTK_SIGNAL_FUNC(validate_option_change), NULL);
-
-
-  MW->range_text = gtk_entry_new ();
-  gtk_object_set_data (GTK_OBJECT (main_win), "range_text", MW->range_text);
-  gtk_widget_show (MW->range_text);
-  gtk_fixed_put (GTK_FIXED (fixed1), MW->range_text, 136, 142);
-  gtk_widget_set_usize (MW->range_text, 104, 21);
-  gtk_signal_connect (GTK_OBJECT(MW->range_text), "changed",
-		      GTK_SIGNAL_FUNC(entry_toggle_checkbox), MW->range_check);
-
-
-  MW->decoy_check = gtk_check_button_new_with_label ("Use Decoy(s):");
-  gtk_object_set_data (GTK_OBJECT (main_win), "decoy_check", MW->decoy_check);
-  if (our_uid == 0)
-    gtk_widget_show (MW->decoy_check);
-  gtk_fixed_put (GTK_FIXED (fixed1), MW->decoy_check, 136, 165);
-  gtk_widget_set_usize (MW->decoy_check, 104, 16);
-  gtk_signal_connect(GTK_OBJECT(MW->decoy_check), "released",
-		     GTK_SIGNAL_FUNC(validate_option_change), NULL);
-
-  MW->decoy_text = gtk_entry_new ();
-  gtk_object_set_data (GTK_OBJECT (main_win), "decoy_text", MW->decoy_text);
-  if (our_uid == 0)
-    gtk_widget_show (MW->decoy_text);
-  gtk_fixed_put (GTK_FIXED (fixed1), MW->decoy_text, 136, 182);  
-  gtk_widget_set_usize (MW->decoy_text, 104, 21);
-  gtk_signal_connect (GTK_OBJECT(MW->decoy_text), "changed",
-		      GTK_SIGNAL_FUNC(entry_toggle_checkbox), MW->decoy_check);
-
-
-  MW->tcp_check = gtk_radio_button_new_with_label (ping_group, "TCP Ping");
-  ping_group = gtk_radio_button_group (GTK_RADIO_BUTTON (MW->tcp_check));
-  gtk_object_set_data (GTK_OBJECT (main_win), "tcp_check", MW->tcp_check);
-  gtk_widget_show (MW->tcp_check);
-  gtk_fixed_put (GTK_FIXED (fixed1), MW->tcp_check, 248, 70);
-  gtk_widget_set_usize (MW->tcp_check, 99, 24);
-  gtk_signal_connect(GTK_OBJECT(MW->tcp_check), "released",
-			GTK_SIGNAL_FUNC(display_nmap_command_callback), NULL);
-
-  MW->icmp_check = gtk_radio_button_new_with_label (ping_group, "ICMP Ping");
-  ping_group = gtk_radio_button_group (GTK_RADIO_BUTTON (MW->icmp_check));
-  gtk_object_set_data (GTK_OBJECT (main_win), "icmp_check", MW->icmp_check);
-	if(our_uid == 0)
-	  gtk_widget_show (MW->icmp_check);
-  gtk_fixed_put (GTK_FIXED (fixed1), MW->icmp_check, 248, 118);
-  gtk_widget_set_usize (MW->icmp_check, 99, 24);
-  gtk_signal_connect(GTK_OBJECT(MW->icmp_check), "released",
-			GTK_SIGNAL_FUNC(display_nmap_command_callback), NULL);
-
-
-  MW->tcpicmp_check = gtk_radio_button_new_with_label (ping_group, "TCP&ICMP");
-  ping_group = gtk_radio_button_group (GTK_RADIO_BUTTON (MW->tcpicmp_check));
-  gtk_object_set_data (GTK_OBJECT (main_win), "tcpicmp_check", MW->tcpicmp_check);
-	if(our_uid == 0){
-	  gtk_widget_show (MW->tcpicmp_check);
-	  /*	  gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(MW->tcpicmp_check), 1);*/
-	  gtk_toggle_button_set_state( GTK_TOGGLE_BUTTON(MW->tcpicmp_check), TRUE);
-	  }
-  gtk_fixed_put (GTK_FIXED (fixed1), MW->tcpicmp_check, 248,  94);
-  gtk_widget_set_usize (MW->tcpicmp_check, 99, 24);
-  gtk_signal_connect(GTK_OBJECT(MW->tcpicmp_check), "released",
-			GTK_SIGNAL_FUNC(display_nmap_command_callback), NULL);
-
-
-  MW->ping_check = gtk_radio_button_new_with_label (ping_group, "Don't Ping");
-  ping_group = gtk_radio_button_group (GTK_RADIO_BUTTON (MW->ping_check));
-  gtk_object_set_data (GTK_OBJECT (main_win), "ping_check", MW->ping_check);
-  gtk_widget_show (MW->ping_check);
-  gtk_fixed_put (GTK_FIXED (fixed1), MW->ping_check, 248, 140);
-  gtk_widget_set_usize (MW->ping_check, 99, 24);
-  gtk_signal_connect(GTK_OBJECT(MW->ping_check), "released",
-			GTK_SIGNAL_FUNC(display_nmap_command_callback), NULL);
-
-
-  MW->input_check = gtk_check_button_new_with_label ("Input File:");
-  gtk_object_set_data (GTK_OBJECT (main_win), "input_check", MW->input_check);
-  gtk_widget_show (MW->input_check);
-  gtk_fixed_put (GTK_FIXED (fixed1), MW->input_check, 248, 165);
-  gtk_widget_set_usize (MW->input_check, 99, 16);
-  gtk_signal_connect(GTK_OBJECT(MW->input_check), "released",
-		     GTK_SIGNAL_FUNC(validate_option_change), NULL);
-
-
-  MW->input_text = gtk_entry_new ();
-  gtk_object_set_data (GTK_OBJECT (main_win), "input_text", MW->input_text);
-  gtk_widget_show (MW->input_text);
-  gtk_fixed_put (GTK_FIXED (fixed1), MW->input_text, 248, 182);
-  gtk_widget_set_usize (MW->input_text, 96, 21);
-  gtk_signal_connect (GTK_OBJECT(MW->input_text), "changed",
-		      GTK_SIGNAL_FUNC(entry_toggle_checkbox), MW->input_check);
-
-  MW->fragment_check = gtk_check_button_new_with_label ("Fragmentation");
-  gtk_object_set_data (GTK_OBJECT (main_win), "fragment_check", MW->fragment_check);
-	if(our_uid == 0)
-	  gtk_widget_show (MW->fragment_check);
-  gtk_fixed_put (GTK_FIXED (fixed1), MW->fragment_check, 352, 70);
-  gtk_widget_set_usize (MW->fragment_check, 112, 24);
-  gtk_signal_connect(GTK_OBJECT(MW->fragment_check), "released",
-			GTK_SIGNAL_FUNC(validate_option_change), NULL);
-
-
-  MW->identd_check = gtk_check_button_new_with_label ("Get Identd Info");
-  gtk_object_set_data (GTK_OBJECT (main_win), "identd_check", MW->identd_check);
-  gtk_widget_show (MW->identd_check);
-  gtk_fixed_put (GTK_FIXED (fixed1), MW->identd_check, 352,  94);
-  gtk_widget_set_usize (MW->identd_check, 112, 24);
-  gtk_signal_connect(GTK_OBJECT(MW->identd_check), "released",
-			GTK_SIGNAL_FUNC(validate_option_change), NULL);
-
-
-  MW->resolveall_check = gtk_check_button_new_with_label ("Resolve All");
-  gtk_object_set_data (GTK_OBJECT (main_win), "resolveall_check", MW->resolveall_check);
-  gtk_widget_show (MW->resolveall_check);
-  gtk_fixed_put (GTK_FIXED (fixed1), MW->resolveall_check, 352, 118);
-  gtk_widget_set_usize (MW->resolveall_check, 112, 24);
-  gtk_signal_connect(GTK_OBJECT(MW->resolveall_check), "released",
-		     GTK_SIGNAL_FUNC(display_nmap_command_callback), NULL);
-
-
-  MW->fingerprinting_check = gtk_check_button_new_with_label ("OS Detection");
-  gtk_object_set_data (GTK_OBJECT (main_win), "fingerprinting_check",    MW->fingerprinting_check);
-	if(our_uid == 0){
-	  gtk_widget_show (MW->fingerprinting_check);
-	  /*	  gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(MW->fingerprinting_check), 1);*/
-	  gtk_toggle_button_set_state( GTK_TOGGLE_BUTTON(MW->fingerprinting_check), TRUE);
-	}
-  gtk_fixed_put (GTK_FIXED (fixed1), MW->fingerprinting_check, 352, 140);
-  gtk_widget_set_usize (MW->fingerprinting_check, 112, 24);
-  gtk_signal_connect(GTK_OBJECT(MW->fingerprinting_check), "released",
-		     GTK_SIGNAL_FUNC(display_nmap_command_callback), NULL);
-
-
-  MW->device_check = gtk_check_button_new_with_label ("Send on Device:");
-  gtk_object_set_data (GTK_OBJECT (main_win), "device_check", MW->device_check);
-  if (our_uid == 0)
-    gtk_widget_show (MW->device_check);
-  gtk_fixed_put (GTK_FIXED (fixed1), MW->device_check, 352, 165);
-  gtk_widget_set_usize (MW->device_check, 112, 17);
-  gtk_signal_connect(GTK_OBJECT(MW->device_check), "released",
-			GTK_SIGNAL_FUNC(validate_option_change), NULL);
-
-
-  MW->device_text = gtk_entry_new ();
-  gtk_object_set_data (GTK_OBJECT (main_win), "device_text", MW->device_text);
-  if (our_uid == 0)
-    gtk_widget_show (MW->device_text);
-  gtk_fixed_put (GTK_FIXED (fixed1), MW->device_text, 352, 182);
-  gtk_widget_set_usize (MW->device_text, 112, 21);
-  gtk_signal_connect (GTK_OBJECT(MW->device_text), "changed",
-		      GTK_SIGNAL_FUNC(entry_toggle_checkbox), MW->device_check);
-
-
-  MW->start_scan = gtk_toggle_button_new_with_label("Scan.");
-  gtk_object_set_data (GTK_OBJECT (main_win), "start_scan", MW->start_scan);
-  gtk_widget_show (MW->start_scan);
-  gtk_fixed_put (GTK_FIXED (fixed1), MW->start_scan, 344, 22);
-  gtk_widget_set_usize (MW->start_scan, 72, 24);
-  gtk_signal_connect (GTK_OBJECT (MW->start_scan), "toggled",
-                      GTK_SIGNAL_FUNC (on_start_scan_clicked),
-                      MW->host_text);
-
-  exit_me = gtk_button_new_with_label ("Exit");
-  gtk_object_set_data (GTK_OBJECT (main_win), "exit", exit_me);
-  gtk_widget_show (exit_me);
-  gtk_fixed_put (GTK_FIXED (fixed1), exit_me, 424, 22);
-  gtk_widget_set_usize (exit_me, 48, 24);
-  gtk_signal_connect (GTK_OBJECT (exit_me), "clicked",
-                      GTK_SIGNAL_FUNC (on_exit_me_clicked),
-                      NULL);
-
-  MW->bounce_check = gtk_check_button_new_with_label ("Bounce Scan:");
-  gtk_object_set_data (GTK_OBJECT (main_win), "bounce_check", MW->bounce_check);
-  gtk_widget_show (MW->bounce_check);
-  gtk_fixed_put (GTK_FIXED (fixed1), MW->bounce_check, 8, 165);
-  gtk_widget_set_usize (MW->bounce_check, 104, 17);
-  gtk_signal_connect(GTK_OBJECT(MW->bounce_check), "released",
-			GTK_SIGNAL_FUNC(validate_option_change), NULL);
-
-  MW->bounce_text = gtk_entry_new ();
-  gtk_object_set_data (GTK_OBJECT (main_win), "bounce_text", MW->bounce_text);
-  gtk_widget_show (MW->bounce_text);
-  gtk_fixed_put (GTK_FIXED (fixed1), MW->bounce_text, 8, 182);
-  gtk_widget_set_usize (MW->bounce_text, 104, 21);
-  gtk_signal_connect (GTK_OBJECT(MW->bounce_text), "changed",
-		      GTK_SIGNAL_FUNC(entry_toggle_checkbox), MW->bounce_check);
-
-
-  hseparator2 = gtk_hseparator_new ();
-  gtk_object_set_data (GTK_OBJECT (main_win), "hseparator2", hseparator2);
-  gtk_widget_show (hseparator2);
-  gtk_fixed_put (GTK_FIXED (fixed1), hseparator2, 8, 54);
-  gtk_widget_set_usize (hseparator2, 114, 16);
-
-  label2 = gtk_label_new ("Scan Options:");
-  gtk_object_set_data (GTK_OBJECT (main_win), "label2", label2);
-  gtk_widget_show (label2);
-  gtk_fixed_put (GTK_FIXED (fixed1), label2, 8, 46);
-  gtk_widget_set_usize (label2, 104, 16);
-
+  /* main menu */
+  menubar = gtk_menu_bar_new ();
+  gtk_object_set_data (GTK_OBJECT (main_win), "menubar", menubar);
+  gtk_box_pack_start (GTK_BOX (main_vbox), menubar, FALSE, TRUE, 0);
+  gtk_widget_show (menubar);
 
   File = gtk_menu_item_new_with_label ("File");
   gtk_object_set_data (GTK_OBJECT (main_win), "File", File);
+  gtk_container_add (GTK_CONTAINER (menubar), File);
   gtk_widget_show (File);
-  gtk_container_add (GTK_CONTAINER (menubar1), File);
 
   menu5 = gtk_menu_new ();
   gtk_object_set_data (GTK_OBJECT (main_win), "menu5", menu5);
@@ -532,15 +230,15 @@ if (our_uid == 0){
                       GTK_SIGNAL_FUNC (on_Close_activate),
                       NULL);
 
-  Other = gtk_menu_item_new_with_label ("Output");
-  gtk_object_set_data (GTK_OBJECT (main_win), "Other", Other);
-  gtk_widget_show (Other);
-  gtk_container_add (GTK_CONTAINER (menubar1), Other);
-  gtk_signal_connect (GTK_OBJECT (Other), "activate", NULL, NULL);
+  Output = gtk_menu_item_new_with_label ("Output");
+  gtk_object_set_data (GTK_OBJECT (main_win), "Output", Output);
+  gtk_widget_show (Output);
+  gtk_container_add (GTK_CONTAINER (menubar), Output);
+  gtk_signal_connect (GTK_OBJECT (Output), "activate", NULL, NULL);
 
   menu7 = gtk_menu_new ();
   gtk_object_set_data (GTK_OBJECT (main_win), "menu7", menu7);
-  gtk_menu_item_set_submenu (GTK_MENU_ITEM (Other), menu7);
+  gtk_menu_item_set_submenu (GTK_MENU_ITEM (Output), menu7);
 
   MW->Verbose = gtk_check_menu_item_new_with_label("Verbose Output");
   gtk_object_set_data (GTK_OBJECT (main_win), "Verbose", MW->Verbose);
@@ -558,7 +256,7 @@ if (our_uid == 0){
                       GTK_SIGNAL_FUNC (on_Append_activate),
                       NULL);
                       
-  machine = gtk_menu_item_new_with_label("Machine Parsable Log");
+  machine = gtk_menu_item_new_with_label("Machine Parseable Log");
   gtk_object_set_data (GTK_OBJECT (main_win), "Machine", machine);
   gtk_widget_show (machine);
   gtk_container_add (GTK_CONTAINER (menu7), machine);
@@ -570,7 +268,7 @@ if (our_uid == 0){
 	View_Main = gtk_menu_item_new_with_label ("View");
   	gtk_object_set_data (GTK_OBJECT (main_win), "View_Main", View_Main);
   	gtk_widget_show (View_Main);
-  	gtk_container_add (GTK_CONTAINER (menubar1), View_Main);
+  	gtk_container_add (GTK_CONTAINER (menubar), View_Main);
   	gtk_signal_connect (GTK_OBJECT (View_Main), "activate",
                       GTK_SIGNAL_FUNC (on_View_Main_activate),
                       NULL);
@@ -599,28 +297,30 @@ if (our_uid == 0){
  	* 	gtk_signal_connect (GTK_OBJECT (Tree), "activate", GTK_SIGNAL_FUNC (on_Tree_activate), NULL);
  	**************************************************************/
 
-  	extra = gtk_menu_item_new_with_label ("BETA Options");
-  	gtk_object_set_data (GTK_OBJECT (main_win), "EXTRA", extra);
-  	gtk_widget_show (extra);
-  	gtk_container_add (GTK_CONTAINER (menubar1), extra);
-
-  	extra_menu = gtk_menu_new ();
-  	gtk_object_set_data (GTK_OBJECT (main_win), "extra_menu", extra_menu);
-  	gtk_menu_item_set_submenu (GTK_MENU_ITEM (extra), extra_menu);
-
-  	MW->rpc = gtk_check_menu_item_new_with_label("RPC Scan (only 2.3BETA4!)");
-  	gtk_object_set_data (GTK_OBJECT (main_win), "RPC", MW->rpc);
-  	gtk_widget_show (MW->rpc);
-  	gtk_container_add (GTK_CONTAINER (extra_menu), MW->rpc);
-  	gtk_signal_connect (GTK_OBJECT (MW->rpc), "activate",
-  	                    GTK_SIGNAL_FUNC (on_rpc_activate),
-  	                    NULL);
+  	/*** "BETA Options" menu is obsolete now that -sR is a regular option ***
+        *	extra = gtk_menu_item_new_with_label ("BETA Options");
+  	*	gtk_object_set_data (GTK_OBJECT (main_win), "EXTRA", extra);
+  	*	gtk_widget_show (extra);
+  	*	gtk_container_add (GTK_CONTAINER (menubar), extra);
+	*
+  	*	extra_menu = gtk_menu_new ();
+  	*	gtk_object_set_data (GTK_OBJECT (main_win), "extra_menu", extra_menu);
+  	*	gtk_menu_item_set_submenu (GTK_MENU_ITEM (extra), extra_menu);
+	*
+  	*	MW->rpc = gtk_check_menu_item_new_with_label("RPC Scan (only 2.3BETA4!)");
+  	*	gtk_object_set_data (GTK_OBJECT (main_win), "RPC", MW->rpc);
+  	*	gtk_widget_show (MW->rpc);
+  	*	gtk_container_add (GTK_CONTAINER (extra_menu), MW->rpc);
+  	*	gtk_signal_connect (GTK_OBJECT (MW->rpc), "activate",
+  	*                    GTK_SIGNAL_FUNC (on_rpc_activate),
+  	*                    NULL);
+        ************************************************************************/
 
 	/********END NEW CODE **********************************************/
   Help_Main = gtk_menu_item_new_with_label ("Help");
   gtk_object_set_data (GTK_OBJECT (main_win), "Help_Main", Help_Main);
   gtk_widget_show (Help_Main);
-  gtk_container_add (GTK_CONTAINER (menubar1), Help_Main);
+  gtk_container_add (GTK_CONTAINER (menubar), Help_Main);
   gtk_signal_connect (GTK_OBJECT (Help_Main), "activate",
                       GTK_SIGNAL_FUNC (on_Help_Main_activate),
                       NULL);
@@ -659,36 +359,489 @@ if (our_uid == 0){
                       GTK_SIGNAL_FUNC (on_About_activate),
                       About);
 
+
+  fixed1 = gtk_fixed_new ();
+  gtk_object_set_data (GTK_OBJECT (main_win), "fixed1", fixed1);
+  gtk_widget_show (fixed1);
+  gtk_box_pack_start (GTK_BOX (main_vbox), fixed1, FALSE, TRUE, 0);
+  gtk_widget_set_usize (fixed1, -2, 280);
+
+  hbox1 = gtk_hbox_new (FALSE, 0);
+  gtk_object_set_data (GTK_OBJECT (main_win), "hbox1", hbox1);
+  gtk_widget_show (hbox1);
+  gtk_box_pack_start (GTK_BOX (main_vbox), hbox1, TRUE, TRUE, 0);
+
+  MW->output = gtk_text_new (NULL, NULL);
+  gtk_object_set_data (GTK_OBJECT (main_win), "output", MW->output);
+  gtk_widget_show (MW->output);
+  gtk_box_pack_start (GTK_BOX (hbox1), MW->output, TRUE, TRUE, 0);
+  gtk_text_set_word_wrap(GTK_TEXT(MW->output), 1);
+  gtk_widget_set_usize (MW->output, 500, 248);
+  gtk_widget_realize (MW->output);
+  
+  vscroll = gtk_vscrollbar_new (GTK_TEXT (MW->output)->vadj);
+  gtk_object_set_data (GTK_OBJECT (main_win), "vscroll", vscroll);
+  gtk_widget_show (vscroll);
+  gtk_box_pack_end (GTK_BOX (hbox1), vscroll, FALSE, FALSE, 0);
+  
+  label1 = gtk_label_new ("Host(s):");
+  gtk_object_set_data (GTK_OBJECT (main_win), "label1", label1);
+  gtk_widget_show (label1);
+  gtk_fixed_put (GTK_FIXED (fixed1), label1, 0, 17);
+  gtk_widget_set_usize (label1, 64, 17);
+
+  MW->host_text = gtk_entry_new ();
+  gtk_object_set_data (GTK_OBJECT (main_win), "host_text", MW->host_text);
+  gtk_widget_show (MW->host_text);
+  gtk_fixed_put (GTK_FIXED (fixed1), MW->host_text, 56, 16);
+  gtk_widget_set_usize (MW->host_text, 280, 22);
+  GTK_WIDGET_SET_FLAGS (MW->host_text, GTK_CAN_DEFAULT);
+  gtk_widget_grab_focus (MW->host_text);
+  gtk_widget_grab_default (MW->host_text);
+  gtk_entry_set_text (GTK_ENTRY (MW->host_text), "127.0.0.1");
+  gtk_signal_connect(GTK_OBJECT(MW->host_text), "changed",
+			GTK_SIGNAL_FUNC(display_nmap_command_callback), NULL);
+
+  MW->start_scan = gtk_toggle_button_new_with_label("Scan");
+  gtk_object_set_data (GTK_OBJECT (main_win), "start_scan", MW->start_scan);
+  gtk_widget_show (MW->start_scan);
+  gtk_fixed_put (GTK_FIXED (fixed1), MW->start_scan, 375, 16);
+  gtk_widget_set_usize (MW->start_scan, 72, 24);
+  gtk_signal_connect (GTK_OBJECT (MW->start_scan), "toggled",
+                      GTK_SIGNAL_FUNC (on_start_scan_clicked),
+                      MW->host_text);
+
+  exit_me = gtk_button_new_with_label ("Exit");
+  gtk_object_set_data (GTK_OBJECT (main_win), "exit", exit_me);
+  gtk_widget_show (exit_me);
+  gtk_fixed_put (GTK_FIXED (fixed1), exit_me, 455, 16);
+  gtk_widget_set_usize (exit_me, 48, 24);
+  gtk_signal_connect (GTK_OBJECT (exit_me), "clicked",
+                      GTK_SIGNAL_FUNC (on_exit_me_clicked),
+                      NULL);
+
+
+  MW->connect_scan = gtk_radio_button_new_with_label (scan_group, "connect()");
+  scan_group = gtk_radio_button_group (GTK_RADIO_BUTTON (MW->connect_scan));
+  gtk_object_set_data (GTK_OBJECT (main_win), "connect", MW->connect_scan);
+  gtk_widget_show (MW->connect_scan);
+  gtk_fixed_put (GTK_FIXED (fixed1), MW->connect_scan, 8, 66);
+  gtk_signal_connect(GTK_OBJECT(MW->connect_scan), "released",
+			GTK_SIGNAL_FUNC(validate_option_change), NULL);
+  gtk_widget_set_usize (MW->connect_scan, 115, 17);
+
+
+if(our_uid == 0) {
+  MW->syn_scan = gtk_radio_button_new_with_label (scan_group, "SYN Stealth");
+  scan_group = gtk_radio_button_group (GTK_RADIO_BUTTON (MW->syn_scan));
+  gtk_object_set_data (GTK_OBJECT (main_win), "syn", MW->syn_scan);
+  gtk_widget_show (MW->syn_scan);
+  gtk_fixed_put (GTK_FIXED (fixed1), MW->syn_scan, 8,  83);
+  gtk_signal_connect(GTK_OBJECT(MW->syn_scan), "released",
+			GTK_SIGNAL_FUNC(validate_option_change), NULL);
+  gtk_widget_set_usize (MW->syn_scan, 115, 17);
+  gtk_toggle_button_set_state (GTK_TOGGLE_BUTTON (MW->syn_scan), TRUE);
+} /* end uid check */
+
+
+  MW->ping_scan = gtk_radio_button_new_with_label (scan_group, "Ping Sweep");
+  scan_group = gtk_radio_button_group (GTK_RADIO_BUTTON (MW->ping_scan));
+  gtk_object_set_data (GTK_OBJECT (main_win), "ping", MW->ping_scan);
+  gtk_widget_show (MW->ping_scan);
+  gtk_fixed_put (GTK_FIXED (fixed1), MW->ping_scan, 8, 100);
+  gtk_signal_connect(GTK_OBJECT(MW->ping_scan), "released",
+			GTK_SIGNAL_FUNC(validate_option_change), NULL);
+  gtk_widget_set_usize (MW->ping_scan, 115, 17);
+
+
+  MW->list_scan = gtk_radio_button_new_with_label (scan_group, "List Sweep");
+  scan_group = gtk_radio_button_group (GTK_RADIO_BUTTON (MW->list_scan));
+  gtk_object_set_data (GTK_OBJECT (main_win), "list", MW->list_scan);
+  gtk_widget_show (MW->list_scan);
+  gtk_fixed_put (GTK_FIXED (fixed1), MW->list_scan, 8, 117);
+  gtk_signal_connect(GTK_OBJECT(MW->list_scan), "released",
+			GTK_SIGNAL_FUNC(validate_option_change), NULL);
+  gtk_widget_set_usize (MW->list_scan, 115, 17);
+
+
+if (our_uid == 0){
+  MW->udp_scan = gtk_radio_button_new_with_label (scan_group, "UDP Port Scan");
+  scan_group = gtk_radio_button_group (GTK_RADIO_BUTTON (MW->udp_scan));
+  gtk_object_set_data (GTK_OBJECT (main_win), "udp", MW->udp_scan);
+  gtk_widget_show (MW->udp_scan);
+  gtk_fixed_put (GTK_FIXED (fixed1), MW->udp_scan, 8, 134);
+  gtk_signal_connect(GTK_OBJECT(MW->udp_scan), "released",
+			GTK_SIGNAL_FUNC(validate_option_change), NULL);
+  gtk_widget_set_usize (MW->udp_scan, 115, 17);
+
+
+  MW->fin_scan = gtk_radio_button_new_with_label (scan_group, "FIN Stealth");
+  scan_group = gtk_radio_button_group (GTK_RADIO_BUTTON (MW->fin_scan));
+  gtk_object_set_data (GTK_OBJECT (main_win), "fin", MW->fin_scan);
+  gtk_widget_show (MW->fin_scan);
+  gtk_fixed_put (GTK_FIXED (fixed1), MW->fin_scan, 8, 151);
+  gtk_signal_connect(GTK_OBJECT(MW->fin_scan), "released",
+			GTK_SIGNAL_FUNC(validate_option_change), NULL);
+  gtk_widget_set_usize (MW->fin_scan, 115, 17);
+
+
+  MW->null_scan = gtk_radio_button_new_with_label (scan_group, "NULL Stealth");
+  scan_group = gtk_radio_button_group (GTK_RADIO_BUTTON (MW->null_scan));
+  gtk_object_set_data (GTK_OBJECT (main_win), "null", MW->null_scan);
+  gtk_widget_show (MW->null_scan);
+  gtk_fixed_put (GTK_FIXED (fixed1), MW->null_scan, 8, 168);
+  gtk_signal_connect(GTK_OBJECT(MW->null_scan), "released",
+			GTK_SIGNAL_FUNC(validate_option_change), NULL);
+  gtk_widget_set_usize (MW->null_scan, 115, 17);
+
+
+  MW->xmas_scan = gtk_radio_button_new_with_label (scan_group, "XMas Stealth");
+  scan_group = gtk_radio_button_group (GTK_RADIO_BUTTON (MW->xmas_scan));
+  gtk_object_set_data (GTK_OBJECT (main_win), "xmas", MW->xmas_scan);
+  gtk_widget_show (MW->xmas_scan);
+  gtk_fixed_put (GTK_FIXED (fixed1), MW->xmas_scan, 8, 185);
+  gtk_signal_connect(GTK_OBJECT(MW->xmas_scan), "released",
+			GTK_SIGNAL_FUNC(validate_option_change), NULL);
+  gtk_widget_set_usize (MW->xmas_scan, 115, 17);
+
+
+  MW->ack_scan = gtk_radio_button_new_with_label (scan_group, "ACK Scan");
+  scan_group = gtk_radio_button_group (GTK_RADIO_BUTTON (MW->ack_scan));
+  gtk_object_set_data (GTK_OBJECT (main_win), "ack", MW->ack_scan);
+  gtk_widget_show (MW->ack_scan);
+  gtk_fixed_put (GTK_FIXED (fixed1), MW->ack_scan, 8, 201);
+  gtk_signal_connect(GTK_OBJECT(MW->ack_scan), "released",
+			GTK_SIGNAL_FUNC(validate_option_change), NULL);
+  gtk_widget_set_usize (MW->ack_scan, 115, 17);
+
+
+  MW->win_scan = gtk_radio_button_new_with_label (scan_group, "TCP Win. Scan");
+  scan_group = gtk_radio_button_group (GTK_RADIO_BUTTON (MW->win_scan));
+  gtk_object_set_data (GTK_OBJECT (main_win), "win", MW->win_scan);
+  gtk_widget_show (MW->win_scan);
+  gtk_fixed_put (GTK_FIXED (fixed1), MW->win_scan, 8, 219);
+  gtk_signal_connect(GTK_OBJECT(MW->win_scan), "released",
+			GTK_SIGNAL_FUNC(validate_option_change), NULL);
+  gtk_widget_set_usize (MW->win_scan, 115, 17);
+
+
+  MW->prot_scan = gtk_radio_button_new_with_label (scan_group, "IP Proto. Scan");
+  scan_group = gtk_radio_button_group (GTK_RADIO_BUTTON (MW->prot_scan));
+  gtk_object_set_data (GTK_OBJECT (main_win), "prot", MW->prot_scan);
+  gtk_widget_show (MW->prot_scan);
+  gtk_fixed_put (GTK_FIXED (fixed1), MW->prot_scan, 8, 236);
+  gtk_signal_connect(GTK_OBJECT(MW->prot_scan), "released",
+			GTK_SIGNAL_FUNC(validate_option_change), NULL);
+  gtk_widget_set_usize (MW->prot_scan, 115, 17);
+} /*end uid check*/
+
+
+
+  MW->ping_check = gtk_radio_button_new_with_label (ping_group, "Don't Ping");
+  ping_group = gtk_radio_button_group (GTK_RADIO_BUTTON (MW->ping_check));
+  gtk_object_set_data (GTK_OBJECT (main_win), "ping_check", MW->ping_check);
+  gtk_widget_show (MW->ping_check);
+  gtk_fixed_put (GTK_FIXED (fixed1), MW->ping_check, 135, 66);
+  gtk_widget_set_usize (MW->ping_check, 115, 17);
+  gtk_signal_connect(GTK_OBJECT(MW->ping_check), "released",
+			GTK_SIGNAL_FUNC(display_nmap_command_callback), NULL);
+
+
+  MW->icmpecho_ping = gtk_radio_button_new_with_label (ping_group, "ICMP Echo");
+  ping_group = gtk_radio_button_group (GTK_RADIO_BUTTON (MW->icmpecho_ping));
+  gtk_object_set_data (GTK_OBJECT (main_win), "icmpecho_ping", MW->icmpecho_ping);
+	if(our_uid == 0)
+	  gtk_widget_show (MW->icmpecho_ping);
+  gtk_fixed_put (GTK_FIXED (fixed1), MW->icmpecho_ping, 135, 83);
+  gtk_widget_set_usize (MW->icmpecho_ping, 115, 17);
+  gtk_signal_connect(GTK_OBJECT(MW->icmpecho_ping), "released",
+			GTK_SIGNAL_FUNC(display_nmap_command_callback), NULL);
+
+
+  MW->icmptime_ping = gtk_radio_button_new_with_label (ping_group, "ICMP Timestamp");
+  ping_group = gtk_radio_button_group (GTK_RADIO_BUTTON (MW->icmptime_ping));
+  gtk_object_set_data (GTK_OBJECT (main_win), "icmptime_ping", MW->icmptime_ping);
+	if(our_uid == 0)
+	  gtk_widget_show (MW->icmptime_ping);
+  gtk_fixed_put (GTK_FIXED (fixed1), MW->icmptime_ping, 135, 100);
+  gtk_widget_set_usize (MW->icmptime_ping, 115, 17);
+  gtk_signal_connect(GTK_OBJECT(MW->icmptime_ping), "released",
+			GTK_SIGNAL_FUNC(display_nmap_command_callback), NULL);
+
+
+  MW->icmpmask_ping = gtk_radio_button_new_with_label (ping_group, "ICMP Netmask");
+  ping_group = gtk_radio_button_group (GTK_RADIO_BUTTON (MW->icmpmask_ping));
+  gtk_object_set_data (GTK_OBJECT (main_win), "icmpmask_ping", MW->icmpmask_ping);
+	if(our_uid == 0)
+	  gtk_widget_show (MW->icmpmask_ping);
+  gtk_fixed_put (GTK_FIXED (fixed1), MW->icmpmask_ping, 135, 117);
+  gtk_widget_set_usize (MW->icmpmask_ping, 115, 17);
+  gtk_signal_connect(GTK_OBJECT(MW->icmpmask_ping), "released",
+			GTK_SIGNAL_FUNC(display_nmap_command_callback), NULL);
+
+
+  MW->tcp_ping = gtk_radio_button_new_with_label (ping_group, "TCP Ping");
+  ping_group = gtk_radio_button_group (GTK_RADIO_BUTTON (MW->tcp_ping));
+  gtk_object_set_data (GTK_OBJECT (main_win), "tcp_ping", MW->tcp_ping);
+  gtk_widget_show (MW->tcp_ping);
+  gtk_fixed_put (GTK_FIXED (fixed1), MW->tcp_ping, 135, 134);
+  gtk_widget_set_usize (MW->tcp_ping, 115, 17);
+  gtk_signal_connect(GTK_OBJECT(MW->tcp_ping), "released",
+			GTK_SIGNAL_FUNC(display_nmap_command_callback), NULL);
+
+  MW->tcp_pingports = gtk_entry_new ();
+  gtk_object_set_data (GTK_OBJECT (main_win), "tcp_pingports", MW->tcp_pingports);
+  gtk_widget_show (MW->tcp_pingports);
+  gtk_fixed_put (GTK_FIXED (fixed1), MW->tcp_pingports, 135, 151);
+  gtk_widget_set_usize (MW->tcp_pingports, 112, 21);
+  gtk_signal_connect (GTK_OBJECT(MW->tcp_pingports), "changed",
+		      GTK_SIGNAL_FUNC(entry_toggle_checkbox), MW->tcp_ping);
+
+
+  MW->syn_ping = gtk_radio_button_new_with_label (ping_group, "SYN Ping");
+  ping_group = gtk_radio_button_group (GTK_RADIO_BUTTON (MW->syn_ping));
+  gtk_object_set_data (GTK_OBJECT (main_win), "udp_ping", MW->syn_ping);
+  if (our_uid == 0) {
+    gtk_widget_show (MW->syn_ping);
+    /*	  gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(MW->syn_ping), 1);*/
+    gtk_toggle_button_set_state( GTK_TOGGLE_BUTTON(MW->syn_ping), TRUE);
+  }
+  gtk_fixed_put (GTK_FIXED (fixed1), MW->syn_ping, 135, 171);
+  gtk_widget_set_usize (MW->syn_ping, 115, 17);
+  gtk_signal_connect(GTK_OBJECT(MW->syn_ping), "released",
+			GTK_SIGNAL_FUNC(display_nmap_command_callback), NULL);
+
+  MW->syn_pingports = gtk_entry_new ();
+  gtk_object_set_data (GTK_OBJECT (main_win), "syn_pingports", MW->syn_pingports);
+  gtk_widget_show (MW->syn_pingports);
+  gtk_fixed_put (GTK_FIXED (fixed1), MW->syn_pingports, 135, 188);
+  gtk_widget_set_usize (MW->syn_pingports, 112, 21);
+  gtk_signal_connect (GTK_OBJECT(MW->syn_pingports), "changed",
+		      GTK_SIGNAL_FUNC(entry_toggle_checkbox), MW->syn_ping);
+
+
+  MW->udp_ping = gtk_radio_button_new_with_label (ping_group, "UDP Ping");
+  ping_group = gtk_radio_button_group (GTK_RADIO_BUTTON (MW->udp_ping));
+  gtk_object_set_data (GTK_OBJECT (main_win), "udp_ping", MW->udp_ping);
+  if (our_uid == 0) {
+    gtk_widget_show (MW->udp_ping);
+    /*	  gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(MW->udp_ping), 1);*/
+    gtk_toggle_button_set_state( GTK_TOGGLE_BUTTON(MW->udp_ping), TRUE);
+  }
+  gtk_fixed_put (GTK_FIXED (fixed1), MW->udp_ping, 135,  208);
+  gtk_widget_set_usize (MW->udp_ping, 115, 17);
+  gtk_signal_connect(GTK_OBJECT(MW->udp_ping), "released",
+			GTK_SIGNAL_FUNC(display_nmap_command_callback), NULL);
+
+  MW->udp_pingports = gtk_entry_new ();
+  gtk_object_set_data (GTK_OBJECT (main_win), "udp_pingports", MW->udp_pingports);
+  gtk_widget_show (MW->udp_pingports);
+  gtk_fixed_put (GTK_FIXED (fixed1), MW->udp_pingports, 135, 225);
+  gtk_widget_set_usize (MW->udp_pingports, 112, 21);
+  gtk_signal_connect (GTK_OBJECT(MW->udp_pingports), "changed",
+		      GTK_SIGNAL_FUNC(entry_toggle_checkbox), MW->udp_ping);
+
+
+
+  MW->resolve_check = gtk_check_button_new_with_label ("Don't Resolve");
+  gtk_object_set_data (GTK_OBJECT (main_win), "resolve_check", MW->resolve_check);
+  gtk_widget_show (MW->resolve_check);
+  gtk_fixed_put (GTK_FIXED (fixed1), MW->resolve_check, 270, 70);
+  gtk_widget_set_usize (MW->resolve_check, 104, 24);
+  gtk_signal_connect(GTK_OBJECT(MW->resolve_check), "released",
+			GTK_SIGNAL_FUNC(display_nmap_command_callback), NULL);
+
+
+  MW->fast_check = gtk_check_button_new_with_label ("Fast Scan");
+  gtk_object_set_data (GTK_OBJECT (main_win), "fast_check", MW->fast_check);
+  gtk_widget_show (MW->fast_check);
+  gtk_fixed_put (GTK_FIXED (fixed1), MW->fast_check, 270,  94);
+  gtk_widget_set_usize (MW->fast_check, 104, 24);
+  gtk_signal_connect(GTK_OBJECT(MW->fast_check), "released",
+			GTK_SIGNAL_FUNC(validate_option_change), NULL);
+
+
+  MW->range_check = gtk_check_button_new_with_label ("Range of Ports:");
+  gtk_object_set_data (GTK_OBJECT (main_win), "range_check", MW->range_check);
+  gtk_widget_show (MW->range_check);
+  gtk_fixed_put (GTK_FIXED (fixed1), MW->range_check, 270, 118);
+  gtk_widget_set_usize (MW->range_check, 104, 24);
+  gtk_signal_connect(GTK_OBJECT(MW->range_check), "released",
+			GTK_SIGNAL_FUNC(validate_option_change), NULL);
+
+  MW->range_text = gtk_entry_new ();
+  gtk_object_set_data (GTK_OBJECT (main_win), "range_text", MW->range_text);
+  gtk_widget_show (MW->range_text);
+  gtk_fixed_put (GTK_FIXED (fixed1), MW->range_text, 270, 142);
+  gtk_widget_set_usize (MW->range_text, 104, 21);
+  gtk_signal_connect (GTK_OBJECT(MW->range_text), "changed",
+		      GTK_SIGNAL_FUNC(entry_toggle_checkbox), MW->range_check);
+
+
+  MW->decoy_check = gtk_check_button_new_with_label ("Use Decoy(s):");
+  gtk_object_set_data (GTK_OBJECT (main_win), "decoy_check", MW->decoy_check);
+  if (our_uid == 0)
+    gtk_widget_show (MW->decoy_check);
+  gtk_fixed_put (GTK_FIXED (fixed1), MW->decoy_check, 270, 165);
+  gtk_widget_set_usize (MW->decoy_check, 104, 16);
+  gtk_signal_connect(GTK_OBJECT(MW->decoy_check), "released",
+		     GTK_SIGNAL_FUNC(validate_option_change), NULL);
+
+  MW->decoy_text = gtk_entry_new ();
+  gtk_object_set_data (GTK_OBJECT (main_win), "decoy_text", MW->decoy_text);
+  if (our_uid == 0)
+    gtk_widget_show (MW->decoy_text);
+  gtk_fixed_put (GTK_FIXED (fixed1), MW->decoy_text, 270, 182);  
+  gtk_widget_set_usize (MW->decoy_text, 104, 21);
+  gtk_signal_connect (GTK_OBJECT(MW->decoy_text), "changed",
+		      GTK_SIGNAL_FUNC(entry_toggle_checkbox), MW->decoy_check);
+
+
+  MW->bounce_scan = gtk_check_button_new_with_label ("Bounce Scan:");
+  gtk_object_set_data (GTK_OBJECT (main_win), "bounce_scan", MW->bounce_scan);
+  gtk_widget_show (MW->bounce_scan);
+  gtk_fixed_put (GTK_FIXED (fixed1), MW->bounce_scan, 270, 205);
+  gtk_widget_set_usize (MW->bounce_scan, 104, 17);
+  gtk_signal_connect(GTK_OBJECT(MW->bounce_scan), "released",
+			GTK_SIGNAL_FUNC(validate_option_change), NULL);
+
+  MW->bounce_text = gtk_entry_new ();
+  gtk_object_set_data (GTK_OBJECT (main_win), "bounce_text", MW->bounce_text);
+  gtk_widget_show (MW->bounce_text);
+  gtk_fixed_put (GTK_FIXED (fixed1), MW->bounce_text, 270, 222);
+  gtk_widget_set_usize (MW->bounce_text, 104, 21);
+  gtk_signal_connect (GTK_OBJECT(MW->bounce_text), "changed",
+		      GTK_SIGNAL_FUNC(entry_toggle_checkbox), MW->bounce_scan);
+
+
+
+  MW->fragment_check = gtk_check_button_new_with_label ("Fragmentation");
+  gtk_object_set_data (GTK_OBJECT (main_win), "fragment_check", MW->fragment_check);
+	if(our_uid == 0)
+	  gtk_widget_show (MW->fragment_check);
+  gtk_fixed_put (GTK_FIXED (fixed1), MW->fragment_check, 390, 70);
+  gtk_widget_set_usize (MW->fragment_check, 112, 24);
+  gtk_signal_connect(GTK_OBJECT(MW->fragment_check), "released",
+			GTK_SIGNAL_FUNC(validate_option_change), NULL);
+
+
+  MW->identd_check = gtk_check_button_new_with_label ("Get Identd Info");
+  gtk_object_set_data (GTK_OBJECT (main_win), "identd_check", MW->identd_check);
+  gtk_widget_show (MW->identd_check);
+  gtk_fixed_put (GTK_FIXED (fixed1), MW->identd_check, 390,  94);
+  gtk_widget_set_usize (MW->identd_check, 112, 24);
+  gtk_signal_connect(GTK_OBJECT(MW->identd_check), "released",
+			GTK_SIGNAL_FUNC(validate_option_change), NULL);
+
+
+  MW->resolveall_check = gtk_check_button_new_with_label ("Resolve All");
+  gtk_object_set_data (GTK_OBJECT (main_win), "resolveall_check", MW->resolveall_check);
+  gtk_widget_show (MW->resolveall_check);
+  gtk_fixed_put (GTK_FIXED (fixed1), MW->resolveall_check, 390, 118);
+  gtk_widget_set_usize (MW->resolveall_check, 112, 24);
+  gtk_signal_connect(GTK_OBJECT(MW->resolveall_check), "released",
+		     GTK_SIGNAL_FUNC(display_nmap_command_callback), NULL);
+
+
+  MW->fingerprinting_check = gtk_check_button_new_with_label ("OS Detection");
+  gtk_object_set_data (GTK_OBJECT (main_win), "fingerprinting_check",    MW->fingerprinting_check);
+  if (our_uid == 0) {
+    gtk_widget_show (MW->fingerprinting_check);
+    /*	  gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(MW->fingerprinting_check), 1);*/
+    gtk_toggle_button_set_state( GTK_TOGGLE_BUTTON(MW->fingerprinting_check), TRUE);
+  }
+  gtk_fixed_put (GTK_FIXED (fixed1), MW->fingerprinting_check, 390, 140);
+  gtk_widget_set_usize (MW->fingerprinting_check, 112, 24);
+  gtk_signal_connect(GTK_OBJECT(MW->fingerprinting_check), "released",
+		     GTK_SIGNAL_FUNC(display_nmap_command_callback), NULL);
+
+
+  MW->device_check = gtk_check_button_new_with_label ("Send on Device:");
+  gtk_object_set_data (GTK_OBJECT (main_win), "device_check", MW->device_check);
+  if (our_uid == 0)
+    gtk_widget_show (MW->device_check);
+  gtk_fixed_put (GTK_FIXED (fixed1), MW->device_check, 390, 165);
+  gtk_widget_set_usize (MW->device_check, 112, 17);
+  gtk_signal_connect(GTK_OBJECT(MW->device_check), "released",
+			GTK_SIGNAL_FUNC(validate_option_change), NULL);
+
+  MW->device_text = gtk_entry_new ();
+  gtk_object_set_data (GTK_OBJECT (main_win), "device_text", MW->device_text);
+  if (our_uid == 0)
+    gtk_widget_show (MW->device_text);
+  gtk_fixed_put (GTK_FIXED (fixed1), MW->device_text, 390, 182);
+  gtk_widget_set_usize (MW->device_text, 112, 21);
+  gtk_signal_connect (GTK_OBJECT(MW->device_text), "changed",
+		      GTK_SIGNAL_FUNC(entry_toggle_checkbox), MW->device_check);
+
+
+  MW->input_check = gtk_check_button_new_with_label ("Input File:");
+  gtk_object_set_data (GTK_OBJECT (main_win), "input_check", MW->input_check);
+  gtk_widget_show (MW->input_check);
+  gtk_fixed_put (GTK_FIXED (fixed1), MW->input_check, 390, 205);
+  gtk_widget_set_usize (MW->input_check, 112, 16);
+  gtk_signal_connect(GTK_OBJECT(MW->input_check), "released",
+		     GTK_SIGNAL_FUNC(validate_option_change), NULL);
+
+  MW->input_text = gtk_entry_new ();
+  gtk_object_set_data (GTK_OBJECT (main_win), "input_text", MW->input_text);
+  gtk_widget_show (MW->input_text);
+  gtk_fixed_put (GTK_FIXED (fixed1), MW->input_text, 390, 222);
+  gtk_widget_set_usize (MW->input_text, 112, 21);
+  gtk_signal_connect (GTK_OBJECT(MW->input_text), "changed",
+		      GTK_SIGNAL_FUNC(entry_toggle_checkbox), MW->input_check);
+
+
+
+  hseparator2 = gtk_hseparator_new ();
+  gtk_object_set_data (GTK_OBJECT (main_win), "hseparator2", hseparator2);
+  gtk_widget_show (hseparator2);
+  gtk_fixed_put (GTK_FIXED (fixed1), hseparator2, 8, 54);
+  gtk_widget_set_usize (hseparator2, 120, 16);
+
+  label2 = gtk_label_new ("Scan Types:");
+  gtk_object_set_data (GTK_OBJECT (main_win), "label2", label2);
+  gtk_widget_show (label2);
+  gtk_fixed_put (GTK_FIXED (fixed1), label2, 0, 46);
+  gtk_widget_set_usize (label2, 104, 16);
+
   vseparator1 = gtk_vseparator_new ();
   gtk_object_set_data (GTK_OBJECT (main_win), "vseparator1", vseparator1);
   gtk_widget_show (vseparator1);
-  gtk_fixed_put (GTK_FIXED (fixed1), vseparator1, 116, 62);
-  gtk_widget_set_usize (vseparator1, 16, 144);
+  gtk_fixed_put (GTK_FIXED (fixed1), vseparator1, 120, 62);
+  gtk_widget_set_usize (vseparator1, 16, 190);
+
+  vseparator2 = gtk_vseparator_new ();
+  gtk_object_set_data (GTK_OBJECT (main_win), "vseparator2", vseparator2);
+  gtk_widget_show (vseparator2);
+  gtk_fixed_put (GTK_FIXED (fixed1), vseparator2, 250, 62);
+  gtk_widget_set_usize (vseparator2, 16, 190);
 
   hseparator1 = gtk_hseparator_new ();
   gtk_object_set_data (GTK_OBJECT (main_win), "hseparator1", hseparator1);
   gtk_widget_show (hseparator1);
   gtk_fixed_put (GTK_FIXED (fixed1), hseparator1, 127, 54);
-  gtk_widget_set_usize (hseparator1, 336, 16);
+  gtk_widget_set_usize (hseparator1, 372, 16);
+
+  label4 = gtk_label_new ("Ping Types:");
+  gtk_object_set_data (GTK_OBJECT (main_win), "label4", label4);
+  gtk_widget_show (label4);
+  gtk_fixed_put (GTK_FIXED (fixed1), label4, 120, 46);
+  gtk_widget_set_usize (label4, 104, 16);
 
   label3 = gtk_label_new ("General Options:");
   gtk_object_set_data (GTK_OBJECT (main_win), "label3", label3);
   gtk_widget_show (label3);
-  gtk_fixed_put (GTK_FIXED (fixed1), label3, 128, 46);
-  gtk_widget_set_usize (label3, 344, 16);
-
-  label1 = gtk_label_new ("Host(s):");
-  gtk_object_set_data (GTK_OBJECT (main_win), "label1", label1);
-  gtk_widget_show (label1);
-  gtk_fixed_put (GTK_FIXED (fixed1), label1, 0, 22);
-  gtk_widget_set_usize (label1, 64, 17);
+  gtk_fixed_put (GTK_FIXED (fixed1), label3, 240, 46);
+  gtk_widget_set_usize (label3, 240, 16);
 
   MW->output_label = gtk_label_new ("Output from Nmap:");
   gtk_object_set_data (GTK_OBJECT (main_win), "Output Label", MW->output_label);
   gtk_label_set_justify( GTK_LABEL(MW->output_label), GTK_JUSTIFY_LEFT );
   gtk_widget_show (MW->output_label);
-  gtk_fixed_put (GTK_FIXED (fixed1), MW->output_label, 0, 206);
+  gtk_fixed_put (GTK_FIXED (fixed1), MW->output_label, 0, 258);
   gtk_widget_set_usize (MW->output_label, 480, 16);
+
   display_nmap_command();
 
   return main_win;

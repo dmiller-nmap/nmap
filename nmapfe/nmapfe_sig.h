@@ -71,6 +71,7 @@ on_delete_event                        (GtkWidget     *widget,
 
 #include "nmapfe_error.h"
 
+void print_line(GtkText *gtktext, char *line);
 void build_tree(char *buf);
 void stop_scan();
 gint read_data(gpointer data);

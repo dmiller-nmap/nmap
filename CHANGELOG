@@ -29,6 +29,10 @@ o For years, Nmap has added -I/usr/local/include and -L/usr/local/lib
 o Fixed (I hope) a problem that led to the error message "Assertion
   `tqi->sockets[probe_port_num][seq] == -1' failed".
 
+o Fixed a problem that would cause Nmap on Windows to send ICMP ping
+  packets from 0.0.0.0 instead of the appropriate source IP.  Thanks
+  to Yeti (boxed(a)blueyonder.co.uk) for the report.
+
 o Applied some changes from Solar Designer (solar(a)openwall.com)
   which fix some typos and also suggest safer /tmp/ behavior in the
   HACKING file and Lithuanian man page.  These changes are for the
@@ -45,8 +49,27 @@ o Removed an errant getopt() prototype in nbase/getopt.h which should
   hopefully improve compilation on certain Solaris boxes and BSD
   variants.
 
+o SCO operating systems are no longer supported due to their recent
+  (and absurd) attacks against Linux and IBM.  Bug reports relating to
+  UnixWare will be ignored, or possibly even laughed at derisively.
+  Note that I have no reason to believe anyone has ever used Nmap on
+  SCO systems.  Unixware sucks.
+
+o Fixed a problem with small --max_parallism values when non-root ping
+  scanning that would cause Nmap to say "sendconnecttcpquery: Could
+  not scavenge a free socket!" and quit.  Problem was reported by
+  Justin A (justin(a)bouncybouncy.net) as Debian Bug #195463.
+
+o Applied (with a few modifications) a large NmapFE patch from Peter
+  Marschall (peter(a)adpm.de).  This patch adds a bunch more scan/ping
+  options and cleans up some redundant NmapFE code.
+
 o Included new Russian man page translation by Alex Volkov
   (alex(a)cherepovets-city.ru)
+
+o Changed many single-quotes (') into double quotes (") in the man
+  page due to a disagreement over whether to represent them as (') or
+  (\') in nroff.
 
 o Included --packet_trace support for Explicit Congestion Notification
   (rfc 2481/3168) flags thanks to a patch sent in by Maik Pfeil
@@ -58,6 +81,9 @@ o Included --packet_trace support for a few (unusual) ICMP types in
 o Fixed a problem with redirecting XML/Grep/Machine output to stdout
   on Windows (e.g. -oX - ).  Problem was reported by Wei Jiang
   (Wei.Jiang(a)bindview.com)
+
+o Made "-g -Wall" compiler flags dependent on availability of gcc/g++
+  sine some other compilers do not support them.
 
 o I spam-protected the email addresses in this file.  I fervently hope
   that within 5 years we will be able to defeat this scourge through

@@ -217,12 +217,17 @@ do {
 	/* We figure out the source IP/device IFF
 	   1) We are r00t AND
 	   2) We are doing tcp or udp pingscan OR
-	   3) We are doing a raw-mode portscan or osscan */
+	   3) We are doing a raw-mode portscan or osscan OR 
+	   4) We are on windows and doing ICMP ping */
 	if (o.isr00t && o.af() == AF_INET && 
 	    ((*pingtype & (PINGTYPE_TCP|PINGTYPE_UDP)) || 
 	     o.synscan || o.finscan || o.xmasscan || o.nullscan || 
 	     o.ipprotscan || o.maimonscan || o.idlescan || o.ackscan || 
-	     o.udpscan || o.osscan || o.windowscan)) {
+	     o.udpscan || o.osscan || o.windowscan
+#ifdef WIN32
+         || (*pingtype & (PINGTYPE_ICMP_PING|PINGTYPE_ICMP_MASK|PINGTYPE_ICMP_TS))
+#endif // WIN32
+		 )) {
 	  struct sockaddr_in *sin = (struct sockaddr_in *) &ss;
 	  sslen = sizeof(*sin);
 	  sin->sin_family = AF_INET;
@@ -232,10 +237,14 @@ do {
 	  device = routethrough(hs->hostbatch[hidx]->v4hostip(), 
 				&(sin->sin_addr));
 	  hs->hostbatch[hidx]->setSourceSockAddr(&ss, sslen);
+      o.decoys[o.decoyturn] = hs->hostbatch[hidx]->v4source();
 	  if (!device) {
 	    if (*pingtype == PINGTYPE_NONE) {
 	      fatal("Could not determine what interface to route packets through, run again with -e <device>");
 	    } else {
+#if WIN32
+          fatal("Unable to determine what interface to route packets through to %s", hs->hostbatch[hidx]->targetipstr());
+#endif
 	      error("WARNING:  Could not determine what interface to route packets through to %s, changing ping scantype to ICMP ping only", hs->hostbatch[hidx]->targetipstr());
 	      *pingtype = PINGTYPE_ICMP_PING;
 	    }
@@ -325,7 +334,7 @@ unsigned short id;
 pcap_t *pd = NULL;
 char filter[512];
 unsigned short sportbase;
-int max_width = 0;
+int max_sockets = 0;
 int p;
 int group_start, group_end, direction; /* For going forward or backward through
 					       grouplen */
@@ -368,7 +377,9 @@ if (pingtype & PINGTYPE_TCP) {
 
 pt.min_group_size = MAX(3, MAX(o.min_parallelism, 16) / probes_per_host);
 
-pt.group_size = (o.max_parallelism)? MIN(o.max_parallelism, gsize) : gsize;
+ /* I think max_parallelism mostly relates to # of probes in parallel against
+    a single machine.  So I only use it to go down to 15 here */
+pt.group_size = (o.max_parallelism)? MIN(MAX(o.max_parallelism,15), gsize) : gsize;
 /* Make sure we have at least the minimum parallelism level */
 pt.group_size = MAX(pt.group_size, o.min_parallelism);
 /* Reduce the group size proportionally to number of probes sent per host */
@@ -379,9 +390,16 @@ time = (struct timeval *) safe_zalloc(sizeof(struct timeval) * ((pt.max_tries) *
 id = (unsigned short) get_random_uint();
 
 if (ptech.connecttcpscan)  {
-  max_width = (o.max_parallelism)? o.max_parallelism : MAX(1, max_sd() - 4);
-  max_block_size = MIN(50, max_width);
-
+  /* I think max_parallelism mostly relates to # of probes in parallel against
+      a given machine.  So I won't go below 15 here because of it */
+  max_sockets = MAX(1, max_sd() - 4);
+  if (o.max_parallelism) {
+    max_block_size = MIN(50, MAX(o.max_parallelism, 15) / probes_per_host);
+  } else {
+    max_block_size = MIN(50, max_sockets / probes_per_host);
+  }
+  max_block_size = MAX(1, max_block_size);
+  pt.group_size = MIN(pt.group_size, max_block_size);
   bzero((char *)&tqi, sizeof(tqi));
 
   for(p=0; p < o.num_ping_synprobes; p++) {
@@ -490,7 +508,7 @@ gettimeofday(&start, NULL);
 	   sendrawtcpudppingqueries(rawsd, hostbatch[hostnum], pingtype, seq, time, &pt);
 
 	 else if (ptech.connecttcpscan) {
-	   sendconnecttcpqueries(hostbatch, &tqi, hostbatch[hostnum], seq, time, &pt, &to, max_width);
+	   sendconnecttcpqueries(hostbatch, &tqi, hostbatch[hostnum], seq, time, &pt, &to, max_sockets);
 	 }
        }
      } /* for() loop */
@@ -549,12 +567,12 @@ gettimeofday(&start, NULL);
 int sendconnecttcpqueries(Target *hostbatch[], struct tcpqueryinfo *tqi,
 			Target *target, u16 seq, 
 			struct timeval *time, struct pingtune *pt, 
-			struct timeout_info *to, int max_width) {
+			struct timeout_info *to, int max_sockets) {
   int i;
 
   for( i=0; i<o.num_ping_synprobes; i++ ) {
     if (i > 0 && o.scan_delay) enforce_scan_delay(NULL);
-    sendconnecttcpquery(hostbatch, tqi, target, i, seq, time, pt, to, max_width);
+    sendconnecttcpquery(hostbatch, tqi, target, i, seq, time, pt, to, max_sockets);
   }
 
   return 0;
@@ -563,7 +581,7 @@ int sendconnecttcpqueries(Target *hostbatch[], struct tcpqueryinfo *tqi,
 int sendconnecttcpquery(Target *hostbatch[], struct tcpqueryinfo *tqi,
 			Target *target, int probe_port_num, u16 seq, 
 			struct timeval *time, struct pingtune *pt, 
-			struct timeout_info *to, int max_width) {
+			struct timeout_info *to, int max_sockets) {
 
   int res,i;
   int tmpsd;
@@ -577,8 +595,8 @@ int sendconnecttcpquery(Target *hostbatch[], struct tcpqueryinfo *tqi,
   trynum = seq % pt->max_tries;
   hostnum = seq / pt->max_tries;
 
-  assert(tqi->sockets_out <= max_width);
-  if (tqi->sockets_out == max_width) {
+  assert(tqi->sockets_out <= max_sockets);
+  if (tqi->sockets_out == max_sockets) {
     /* We've got to free one! */
     for(i=0; i < trynum; i++) {
       tmpsd = hostnum * pt->max_tries + i;

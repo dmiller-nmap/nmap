@@ -66,36 +66,11 @@
 /* #define DEBUG(str) { fprintf(stderr, str); fflush(stderr); } */
 
 struct MyWidgets {
+  GtkWidget *start_scan;
   GtkWidget *output;
   GtkWidget *host_text;
-  GtkWidget *fast_check;
-  GtkWidget *resolve_check;
   GtkWidget *Verbose;
   GtkWidget *Append;
-  GtkWidget *range_check;
-  GtkWidget *start_scan;
-  GtkWidget *range_text;
-  GtkWidget *decoy_check;
-  GtkWidget *decoy_text;
-  GtkWidget *tcp_check;
-  GtkWidget *fingerprinting_check;
-  GtkWidget *icmp_check;
-  GtkWidget *ping_check;
-  GtkWidget *input_check;
-  GtkWidget *input_text;
-  GtkWidget *fragment_check;
-  GtkWidget *identd_check;
-  GtkWidget *resolveall_check;
-  GtkWidget *tcpicmp_check;
-  GtkWidget *device_check;
-  GtkWidget *device_text;
-  GtkWidget *bounce_check;
-  GtkWidget *bounce_text;
-  GtkWidget *connect_scan;
-  GtkWidget *syn_scan;
-  GtkWidget *ping_scan;
-  GtkWidget *udp_scan;
-  GtkWidget *fin_scan;
   GtkWidget *output_label;
   GtkWidget *browse;
   GtkWidget *file_entry;
@@ -103,16 +78,55 @@ struct MyWidgets {
   GtkWidget *cancel;
   char *machine_file;
   GtkWidget *rpc;
+  /* scan types */
+  GtkWidget *connect_scan;
+  GtkWidget *syn_scan;
+  GtkWidget *ping_scan;
+  GtkWidget *udp_scan;
+  GtkWidget *fin_scan;
+  GtkWidget *xmas_scan;
+  GtkWidget *maimon_scan;
+  GtkWidget *null_scan;
+  GtkWidget *ack_scan;
+  GtkWidget *win_scan;
+  GtkWidget *rpc_scan;
+  GtkWidget *prot_scan;
+  GtkWidget *list_scan;
+  GtkWidget *idle_scan;
+  GtkWidget *idle_text;
+  GtkWidget *bounce_scan;
+  GtkWidget *bounce_text;
+  /* ping types */
+  GtkWidget *ping_check;
+  GtkWidget *icmpecho_ping;
+  GtkWidget *icmptime_ping;
+  GtkWidget *icmpmask_ping;
+  GtkWidget *tcp_ping;
+  GtkWidget *tcp_pingports;
+  GtkWidget *syn_ping;
+  GtkWidget *syn_pingports;
+  GtkWidget *udp_ping;
+  GtkWidget *udp_pingports;
+  /* options */
+  GtkWidget *fast_check;
+  GtkWidget *resolve_check;
+  GtkWidget *range_check;
+  GtkWidget *range_text;
+  GtkWidget *decoy_check;
+  GtkWidget *decoy_text;
+  GtkWidget *fingerprinting_check;
+  GtkWidget *input_check;
+  GtkWidget *input_text;
+  GtkWidget *fragment_check;
+  GtkWidget *identd_check;
+  GtkWidget *resolveall_check;
+  GtkWidget *device_check;
+  GtkWidget *device_text;
 };
 
-GtkWidget*
-get_widget                             (GtkWidget       *widget,
-                                        gchar           *widget_name);
+GtkWidget* get_widget(GtkWidget *widget, gchar *widget_name);
 
-void
-set_notebook_tab                       (GtkWidget       *notebook,
-                                        gint             page_num,
-                                        GtkWidget       *widget);
+void set_notebook_tab(GtkWidget *notebook, gint page_num, GtkWidget *widget);
 
 GtkWidget* create_main_win (void);
 GtkWidget* create_about_window (void);

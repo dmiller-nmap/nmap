@@ -126,9 +126,9 @@ int sendrawtcppingquery(int rawsd, Target *target, int pingtype, u16 probe_port,
 int sendrawudppingquery(int rawsd, Target *target, u16 probe_port,
 			u16 seq, struct timeval *time, struct pingtune *pt);
 int sendconnecttcpqueries(Target *hostbatch[], struct tcpqueryinfo *tqi, Target *target,
-			  u16 seq, struct timeval *time, struct pingtune *pt, struct timeout_info *to, int max_width);
+			  u16 seq, struct timeval *time, struct pingtune *pt, struct timeout_info *to, int max_sockets);
 int sendconnecttcpquery(Target *hostbatch[], struct tcpqueryinfo *tqi, Target *target, int probe_port_num,
-			u16 seq, struct timeval *time, struct pingtune *pt, struct timeout_info *to, int max_width);
+			u16 seq, struct timeval *time, struct pingtune *pt, struct timeout_info *to, int max_sockets);
 int get_connecttcpscan_results(struct tcpqueryinfo *tqi, 
 			       Target *hostbatch[], 
 			       struct timeval *time, struct pingtune *pt, 

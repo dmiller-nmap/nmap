@@ -37,7 +37,7 @@ AC_CONFIG_HEADER(config.h)
 dnl Checks for programs.
 AC_PROG_CC
 AC_PROG_CXX
- if test -n "$GCC"; then
+ if test -n "$GXX"; then
       CXXFLAGS="$CXXFLAGS -Wall "
  fi
 dnl AC_PROG_INSTALL

@@ -21,9 +21,9 @@ DEFS = @DEFS@ -DNMAP_VERSION=\"$(NMAP_VERSION)\" -DNMAP_NAME=\"$(NMAP_NAME)\" -D
 # For mtrace debugging -- see MTRACE define in main.cc for instructions
 # Should only be enabled during debugging and not in any real release.
 # DEFS += -DMTRACE=1
-CXXFLAGS = -g -Wall @CXXFLAGS@ $(CCOPT) $(DEFS) $(INCLS)
+CXXFLAGS = @CXXFLAGS@ $(CCOPT) $(DEFS) $(INCLS)
 # CFLAGS = $(CXXFLAGS)
-# CFLAGS = -g -Wall $(DEFS) $(INCLS)
+# CFLAGS = $(DEFS) $(INCLS)
 STATIC = 
 LDFLAGS = @LDFLAGS@ $(STATIC)
 LIBS =  @LIBS@ -lpcap
