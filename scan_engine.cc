@@ -1241,6 +1241,7 @@ void super_scan(Target *target, u16 *portarray, int numports,
   int numqueries_outstanding = 0; /* How many unexpired queries are on the 'net right now? */
   double numqueries_ideal; /* How many do we WANT to be on the 'net right now? */
   int max_width; /* No more packets than this at once, pleeze */
+  int min_width; /* At least this many at once */
   int tries = 0;
   int tmp = 0;
   int starttime;
@@ -1269,7 +1270,8 @@ void super_scan(Target *target, u16 *portarray, int numports,
     log_write(LOG_STDOUT, "Starting super_scan\n");
 
   max_width = (o.max_parallelism)? o.max_parallelism : 125;
-  numqueries_ideal = initial_packet_width = MIN(max_width, 10);
+  min_width = (o.min_parallelism)? o.min_parallelism : 1;
+  numqueries_ideal = initial_packet_width = MAX(min_width, MIN(max_width, 10));
 
   memset(portlookup, 255, 65536 * sizeof(int)); /* 0xffffffff better always be (int) -1 */
   scan = (struct portinfo *) safe_malloc(numports * sizeof(struct portinfo));
@@ -1594,8 +1596,7 @@ void super_scan(Target *target, u16 *portarray, int numports,
 			log_write(LOG_STDOUT, "Too many drops ... increasing senddelay to %d\n", senddelay);
 		    }
 		    if (windowdecrease == 0) {
-		      numqueries_ideal *= fallback_percent;
-		      if (numqueries_ideal < 1) numqueries_ideal = 1;
+		      numqueries_ideal = MAX(min_width, numqueries_ideal * fallback_percent);
 		      if (o.debugging) { log_write(LOG_STDOUT, "Lost a packet, decreasing window to %d\n", (int) numqueries_ideal);
 		      windowdecrease++;
 		      if (scantype == UDP_SCAN || scantype == IPPROT_SCAN)
