@@ -34,6 +34,7 @@ extern int our_uid;
 extern int view_type;
 int machine_yn = 0;
 /* Variables for piping */
+int nmap_pid = 0;
 int pid;
 int pid2;
 int pipes[2];
@@ -85,6 +86,8 @@ void
 on_exit_me_clicked                        (GtkButton       *button,
 					   gpointer        user_data)
 {
+  /* First we want to kill the Nmap process that is running */
+  stop_scan();
   gtk_main_quit();
 }
 
@@ -412,7 +415,7 @@ void func_start_scan()
     if(!(append))
       kill_output(NULL);
 
-    execute(command);
+    nmap_pid = execute(command);
 
   } else {
     stop_scan(NULL);
@@ -879,7 +882,9 @@ gint read_data(gpointer data)
 
 void stop_scan()
 {
-  kill(pid, 1);
+  if (nmap_pid)
+    kill(nmap_pid, 1);
+  nmap_pid = 0;
 }
 
 void
