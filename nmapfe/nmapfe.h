@@ -8,6 +8,10 @@
  * Long live Aol and pr: Phreak. <grins>
  */
 
+#if MISSING_GTK
+#error "Your system does not appear to have GTK (www.gtk.org) installed.  Thus the Nmap X Front End will not compile.  You should still be able to use Nmap the normal way (via text console).  GUIs are for wimps anyway :)"
+#endif
+
 #include <gtk/gtk.h>
 
 struct MyWidgets {

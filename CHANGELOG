@@ -1,37 +1,54 @@
 # Nmap Changelog
 
--- Various internal code cleanups.
+** Version 2.3BETA18
 
--- Added a whole bunch of OS fingerprints that people have submitted.
+-- Fixed a very important bug that occurred when SYN scanning
+   localhost.  Many thanks to Dries Schellekens (
+   gwyllion@ace.ulyssis.student.kuleuven.ac.be ) for first reporting
+   the problem.
 
--- Added ACK scanning!  This scan technique (which van Houser and
+-- Uros Prestor from TurboLinux informed us that the latest
+   versions of Nmap work with Linux on the upcoming Intel
+   Merced/Itanium IA-64 processors.  He also said that the TurboLinux
+   distribution includes Nmap.  Kudos to them!  As well as the other
+   distros that support Nmap (Debian, Red Hat, Suse, Trinux) and of
+   course FreeBSD, NetBSD, & OpenBSD.  Does anyone know if Nmap ships
+   with the latest from Mandrake or Corel?  The latest Solaris
+   includes some Free software.  If anyone can get them to ship Nmap,
+   I will buy you a case of beer :).
+
+-- Added a #define to change vsnprintf to vsprintf on machines which
+   do not support the former (mostly Solaris 2.5.1 and earlier).  This
+   function is less safe.  For people who care about security, we
+   recommend an upgrade to Solaris 8 (or Linux/*BSD).
+
+-- Changed the NmapFE version to 0.<nmap_version> rather than always
+   leaving it at 0.9.5 (which was confusing).  Thanks to J.D.K. Chipps
+   (jdkc@woptura.com) for noticing this.
+
+-- Added support for "-vv" (means the same as "-v -v").  Older
+   versions of Nmap supported it (noted by George Kurtz).
+
+** Version 2.3BETA17
+
+
+-- Added ACK scanning.  This scan technique (which van Houser and
    others have been bugging me to add for years :), is great for
    testing firewall rulesets.  It can NOT find open ports, but it can
    distinguish between filtered/unfilterd by sending an ACK packet to
    each port and waiting for a RST to come back.  Filtered ports will
-   not send back a RST.  This scan type is activated with -sA .
+   not send back a RST (or will send ICMP unreachables).  This scan
+   type is activated with -sA .
 
--- Changed version number from 2.3BETA* to 2.30BETA* to appease
-   various packaging systems that thought 2.3BETA was < 2.12 .
+-- Documented the Window scan (-sW) which Lamont Granquist added in
+   September 99.
 
--- Nmap output to files now correctly flushes output after scanning
-   for each host is finished.
+-- Added a whole bunch of OS fingerprints that people have submitted.
 
--- Fixed compiler -L flags error found by  Ralf Hildebrandt <R.Hildebrandt@tu-bs.de>
-
--- Added --noninteractive option for when nmap is called from scripts
-(where stuff like prompting users for info is unacceptable).  It does
-not currently do anything (Nmap never prompts) and script writers
-should probably wait until at least May '2000 so their scripts still
-work with earlier versions of Nmap.
-
--- Updated to the latest config.guess and config.sub from Autoconf 2.13
-
--- Applied patch by Sven <s.carstens@gmx.de> which fixes a segmentation
-   fault problem in Nmapfe colored mode as well as some output niceties.
-
--- Changed some C++ comments to C-style for portability (noticed by 
-   "Sergei V. Rousakov" <sergei@cas.Vanderbilt.Edu> )
+-- "Protocol" field in output eliminated.  It is now printed right
+   next to the number (/etc/services style).  Like "22/tcp".  I wonder
+   what I should put in the extra white space this leaves on the
+   report :).
 
 -- Added --resume option to continue a large network scan where you
    left off.  This is useful for recovering from errors (modem drops
@@ -47,6 +64,37 @@ work with earlier versions of Nmap.
 
 -- Added --append_output option which causes -oN/-oM/-oS to APPEND to
    the output file you specify rather than overwriting it.
+
+-- Various internal code cleanup, makefile fixes, etc.
+
+-- Changed version number from 2.3BETA* to 2.30BETA* to appease
+   various packaging systems that thought 2.3BETA was < 2.12 .
+
+-- Nmap output to files now correctly flushes output after scanning
+   for each host is finished.
+
+-- Fixed compiler -L flags error found by Ralf Hildebrandt
+   <R.Hildebrandt@tu-bs.de>
+
+-- Fixed configure scripts so that options you give to the Nmap
+   configure (like --prefix ) are also passed to the nmapfe configure
+   script.  This problem was noted by Ralf Hildebrandt
+   <R.Hildebrandt@tu-bs.de>.  While I was at it, I added some other
+   cleanups to the system.
+
+-- Added --noninteractive option for when nmap is called from scripts
+   (where stuff like prompting users for info is unacceptable).  It
+   does not currently do anything (Nmap never prompts) and script
+   writers should probably wait until at least May '2000 so their
+   scripts still work with earlier versions of Nmap.
+
+-- Updated to the latest config.guess and config.sub from Autoconf 2.13
+
+-- Applied patch by Sven <s.carstens@gmx.de> which fixes a segmentation
+   fault problem in Nmapfe colored mode as well as some output niceties.
+
+-- Changed some C++ comments to C-style for portability (noticed by 
+   "Sergei V. Rousakov" <sergei@cas.Vanderbilt.Edu> )
 
 ** Version 2.3BETA14
 

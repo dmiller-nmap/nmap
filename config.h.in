@@ -40,6 +40,8 @@
 
 #undef HAVE_SNPRINTF
 
+#undef HAVE_VSNPRINTF
+
 #undef HAVE_GETOPT_LONG
 
 #undef IN_ADDR_DEEPSTRUCT

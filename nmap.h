@@ -135,6 +135,11 @@ void *realloc();
 #endif /* NETINET_IF_ETHER_H */
 #endif /* HAVE_NETINET_IF_ETHER_H */
 
+#if !HAVE_VSNPRINTF
+#define vsnprintf(str, n, format, ap) vsprintf(str, format, ap)
+#endif
+
+
 /*******  DEFINES  ************/
 
 /* User configurable #defines: */

@@ -7,6 +7,9 @@
  *
  * Long live Aol and pr: Phreak. <grins>
  */
+#if MISSING_GTK
+/* Do nothing, nmapfe.c will spit out an error */
+#else
 
 #include <gtk/gtk.h>
 #include <stdio.h>
@@ -987,3 +990,4 @@ void on_help_ok_clicked(GtkButton *button, GtkWidget	*help)
 }
 /***************************************************************/
 
+#endif /* MISSING_GTK */

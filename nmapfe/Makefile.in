@@ -31,10 +31,8 @@ pkgincludedir = $(includedir)/@PACKAGE@
 
 top_builddir = .
 
-ACLOCAL = @ACLOCAL@
-AUTOCONF = @AUTOCONF@
-# AUTOMAKE = @AUTOMAKE@
-AUTOHEADER = @AUTOHEADER@
+ACLOCAL = aclocal
+AUTOCONF = autoconf
 
 # INSTALL = @INSTALL@
 # INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -72,7 +70,7 @@ CONFIG_CLEAN_FILES =
 PROGRAMS =  $(bin_PROGRAMS)
 
 
-DEFS = @DEFS@ -I. -I$(srcdir) 
+DEFS = @DEFS@ -DVERSION=\"$(VERSION)\" -I. -I$(srcdir) 
 CPPFLAGS = @CPPFLAGS@
 STATIC =
 LDFLAGS = @LDFLAGS@ $(STATIC)
@@ -81,8 +79,9 @@ nmapfe_OBJECTS =  nmapfe.o nmapfe_sig.o
 nmapfe_LDADD = $(LDADD)
 nmapfe_DEPENDENCIES = 
 nmapfe_LDFLAGS = 
-CFLAGS = @CFLAGS@
-COMPILE = $(CC) $(DEFS) $(INCLUDES) $(CPPFLAGS) $(CFLAGS)
+CFLAGS = @CFLAGS@ $(DEFS) $(INCLUDES) $(CPPFLAGS)
+# COMPILE = $(CC) $(DEFS) $(INCLUDES) $(CPPFLAGS) $(CFLAGS)
+COMPILE = $(CC) $(CFLAGS)
 LINK = $(CC) $(CFLAGS) $(LDFLAGS) -o $@
 HEADERS =  $(noinst_HEADERS)
 

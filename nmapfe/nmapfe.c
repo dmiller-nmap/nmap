@@ -7,6 +7,9 @@
  *
  * Long live Aol and pr: Phreak. <grins>
  */
+#if MISSING_GTK
+#error "Your system does not appear to have GTK (www.gtk.org) installed.  Thus the Nmap X Front End will not compile.  You should still be able to use Nmap the normal way (via text console).  GUIs are for wimps anyway :)"
+#else
 
 #include <gtk/gtk.h>
 #include <gdk/gdkkeysyms.h>
@@ -672,7 +675,7 @@ create_about_window ()
   gtk_container_add (GTK_CONTAINER (notebook1), text2);
   gtk_widget_realize (text2);
   gtk_text_insert (GTK_TEXT (text2), NULL, NULL, NULL,
-                   "\n\nAuthor: Fyodor\nE-mail: fyodor@dhp.com\nHTTP: insecure.org/nmap\nWritten in: C", 77);
+                   "\n\nAuthor: Fyodor\nEmail: fyodor@insecure.org\nhttp://www.insecure.org/nmap\nWritten in: C", 77);
 
   label1 = gtk_label_new ("About NmapFE");
   gtk_object_set_data (GTK_OBJECT (about_window), "label1", label1);
@@ -867,3 +870,5 @@ create_machine_parse_selection ()
                       machine_parse_selection); 
   return machine_parse_selection;
 }
+
+#endif /* MISSING_GTK */

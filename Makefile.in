@@ -1,4 +1,4 @@
-VERSION = 2.30BETA16
+VERSION = 2.30BETA18
 prefix = @prefix@
 exec_prefix = @exec_prefix@
 bindir = @bindir@
@@ -34,9 +34,9 @@ OBJS = nmap.o targets.o tcpip.o error.o utils.o osscan.o charpool.o services.o r
 
 DEPS = nmap.h error.h targets.h osscan.h tcpip.h utils.h global_structures.h charpool.h services.h rpc.h
 
-all: $(TARGET)
+all: $(TARGET) nmapfe/nmapfe
 
-$(TARGET): $(DEPS) @PCAP_DEPENDS@ $(OBJS) nmapfe/nmapfe
+$(TARGET): $(DEPS) @PCAP_DEPENDS@ $(OBJS)
 	@echo Compiling nmap
 	rm -f $@
 	$(CC) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
@@ -44,14 +44,14 @@ $(TARGET): $(DEPS) @PCAP_DEPENDS@ $(OBJS) nmapfe/nmapfe
 $(LIBPCAPDIR)/libpcap.a: $(LIBPCAPDIR)/Makefile
 	@echo Compiling libpcap; cd $(LIBPCAPDIR); $(MAKE)
 
-$(LIBPCAPDIR)/Makefile:
-	@echo Configuring libpcap; cd $(LIBPCAPDIR); ./configure
+#$(LIBPCAPDIR)/Makefile:
+#	@echo Configuring libpcap; cd $(LIBPCAPDIR); ./configure
 
 nmapfe/nmapfe: 
 	@echo "FAILURES HERE ARE OK -- THEY JUST MEAN YOU CANNOT USE nmapfe"
-	-rm -f nmapfe/Makefile
-	-cd nmapfe; ./configure;
-	-cd nmapfe; test -f Makefile && $(MAKE) VERSION=$(VERSION) STATIC=$(STATIC);
+#	-rm -f nmapfe/Makefile
+#	-cd nmapfe; ./configure;
+	-cd nmapfe; test -f Makefile && $(MAKE) VERSION=0.$(VERSION) STATIC=$(STATIC);
 	@echo "END OF SECTION WHERE FAILURES ARE OK"
 
 ci: checkin
@@ -99,7 +99,7 @@ distro:
 # Make the actual RPM
 	rpm -ta /usr/tmp/nmap-$(VERSION).tgz
 	cp -f $(RPMTDIR)/RPMS/i386/nmap-$(VERSION)-1.i386.rpm /usr/tmp
-	cp -f $(RPMTDIR)/RPMS/i386/nmap-frontend-$(VERSION)-1.i386.rpm /usr/tmp
+	cp -f $(RPMTDIR)/RPMS/i386/nmap-frontend-0.$(VERSION)-1.i386.rpm /usr/tmp
 	cp -f $(RPMTDIR)/SRPMS/nmap-$(VERSION)-1.src.rpm /usr/tmp
 	rm -rf /usr/tmp/nmap-$(VERSION)
 
@@ -127,7 +127,7 @@ my_distclean:
 depend:
 	$(MAKEDEPEND) $(INCLS) -s "# DO NOT DELETE" -- $(DEFS) -- $(SRCS)
 
-install: all
+install: $(TARGET)
 	$(SHTOOL) mkdir -f -p -m 755 $(bindir) $(mandir)/man1 $(libdir) $(deskdir)
 	$(INSTALL) -c -m 755 nmap $(bindir)/nmap
 	@echo "If the next command failes -- you cannot use the X front end"

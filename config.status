@@ -70,6 +70,7 @@ s%@PCAP_DEPENDS@%$(LIBPCAPDIR)/libpcap.a%g
 s%@PCAP_CLEAN@%pcap_clean%g
 s%@PCAP_DIST_CLEAN@%pcap_dist_clean%g
 s%@CPP@%gcc -E%g
+s%@subdirs@%libpcap-possiblymodified nmapfe %g
 
 CEOF
 
@@ -272,18 +273,21 @@ ${ac_eA}HAVE_BZERO${ac_eB}HAVE_BZERO${ac_eC}1${ac_eD}
 ${ac_dA}HAVE_SNPRINTF${ac_dB}HAVE_SNPRINTF${ac_dC}1${ac_dD}
 ${ac_uA}HAVE_SNPRINTF${ac_uB}HAVE_SNPRINTF${ac_uC}1${ac_uD}
 ${ac_eA}HAVE_SNPRINTF${ac_eB}HAVE_SNPRINTF${ac_eC}1${ac_eD}
+${ac_dA}HAVE_VSNPRINTF${ac_dB}HAVE_VSNPRINTF${ac_dC}1${ac_dD}
+${ac_uA}HAVE_VSNPRINTF${ac_uB}HAVE_VSNPRINTF${ac_uC}1${ac_uD}
+${ac_eA}HAVE_VSNPRINTF${ac_eB}HAVE_VSNPRINTF${ac_eC}1${ac_eD}
 ${ac_dA}HAVE_MEMCPY${ac_dB}HAVE_MEMCPY${ac_dC}1${ac_dD}
 ${ac_uA}HAVE_MEMCPY${ac_uB}HAVE_MEMCPY${ac_uC}1${ac_uD}
 ${ac_eA}HAVE_MEMCPY${ac_eB}HAVE_MEMCPY${ac_eC}1${ac_eD}
-${ac_dA}HAVE_USLEEP${ac_dB}HAVE_USLEEP${ac_dC}1${ac_dD}
-${ac_uA}HAVE_USLEEP${ac_uB}HAVE_USLEEP${ac_uC}1${ac_uD}
-${ac_eA}HAVE_USLEEP${ac_eB}HAVE_USLEEP${ac_eC}1${ac_eD}
 CEOF
   sed -f conftest.frag conftest.in > conftest.out
   rm -f conftest.in
   mv conftest.out conftest.in
 
   cat > conftest.frag <<CEOF
+${ac_dA}HAVE_USLEEP${ac_dB}HAVE_USLEEP${ac_dC}1${ac_dD}
+${ac_uA}HAVE_USLEEP${ac_uB}HAVE_USLEEP${ac_uC}1${ac_uD}
+${ac_eA}HAVE_USLEEP${ac_eB}HAVE_USLEEP${ac_eC}1${ac_eD}
 ${ac_dA}HAVE_NANOSLEEP${ac_dB}HAVE_NANOSLEEP${ac_dC}1${ac_dD}
 ${ac_uA}HAVE_NANOSLEEP${ac_uB}HAVE_NANOSLEEP${ac_uC}1${ac_uD}
 ${ac_eA}HAVE_NANOSLEEP${ac_eB}HAVE_NANOSLEEP${ac_eC}1${ac_eD}

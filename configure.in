@@ -323,7 +323,7 @@ fi
 
 dnl Checks for library functions.
 dnl AC_TYPE_SIGNAL
-AC_CHECK_FUNCS(bzero snprintf memcpy usleep nanosleep strerror)
+AC_CHECK_FUNCS(bzero snprintf vsnprintf memcpy usleep nanosleep strerror)
 
 AC_CHECK_FUNC(snprintf, , 
   [ COMPAT_SRCS="$COMPAT_SRCS snprintf.c"
@@ -338,6 +338,10 @@ AC_CHECK_FUNC(getopt_long, ,
     COMPAT_OBJS="$COMPAT_OBJS getopt.o getopt1.o" ])
 
 dnl AC_CHECK_FUNCS(gethostname gettimeofday select socket strdup strstr )
+
+dnl I need to configure nmapfe and libpcap here since the user might
+dnl have specified special options (such as --prefix )
+AC_CONFIG_SUBDIRS( $libpcapdir nmapfe )
 
 dnl Configure libpcap if we need to since a lot of lamers don't
 dnl already have it installed ...

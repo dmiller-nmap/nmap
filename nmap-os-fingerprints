@@ -1183,7 +1183,7 @@ T7(Resp=N)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=F%ULEN=134%DAT=E)
 
 # Thanks to Francis J. Lacoste <francis@Contre.COM>
-Fingerprint Cisco 762 IOS 4.1(2) or 766 ISDN router
+Fingerprint Cisco 762 Non-IOS Software release 4.1(2) or 766 ISDN router
 TSeq(Class=TD%gcd=A000|3C000|14000|14A000|348000|26C000%SI=<F)
 T1(DF=N%W=800%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -1257,7 +1257,7 @@ T7(DF=N%W=800%ACK=S%Flags=UPRF%Ops=WNMETL)
 PU(Resp=N)
 
 # Contributed by Anonymous
-Fingerprint Cisco 766 IOS4.2(3.5)
+Fingerprint Cisco 766 non-IOS software 4.2(3.5)
 TSeq(Class=TD%gcd=82000%SI=<F)
 T1(DF=N%W=800%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -3592,7 +3592,7 @@ T7(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(Resp=Y%TOS=0%IPLEN=38%RIPTL=148%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
 # Thanks to  Christopher P. Lindsey <lindsey@lorien.mallorn.com>
-Fingerprint NetApp OnTap 3.1.6
+Fingerprint NetApp OnTap 3.1.6 or BSDi 1.1
 TSeq(Class=64K)
 T1(DF=N%W=F87%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -5319,7 +5319,7 @@ T7(DF=N%W=0%ACK=S++%Flags=UAPRF%Ops=)
 PU(Resp=N)
 
 # Thanks to Roeland Th Jansen <bengel@grobbebol.xs4all.nl>
-Fingerprint Zyxel P128imh router
+Fingerprint Zyxel P128imh or P480 router (ZyNOS)
 TSeq(Class=TD%gcd=1000|2000|5000|4000|6000|8000|A000%SI=<5)
 T1(DF=N%W=400%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)

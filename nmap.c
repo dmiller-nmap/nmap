@@ -302,6 +302,7 @@ int nmap_main(int argc, char *argv[]) {
     {"initial_rtt_timeout", required_argument, 0, 0},
     {"randomize_hosts", no_argument, 0, 0},
     {"rH", no_argument, 0, 0},
+    {"vv", no_argument, 0, 0},
     {"append_output", no_argument, 0, 0},
     {"noninteractive", no_argument, 0, 0},
     {0, 0, 0, 0}
@@ -398,6 +399,9 @@ int nmap_main(int argc, char *argv[]) {
 	}
       } else if (strcmp(long_options[option_index].name, "iR") == 0) {
 	o.generate_random_ips = 1;
+      } else if (strcmp(long_options[option_index].name, "vv") == 0) {
+	/* Compatability hack ... ugly */
+	o.verbose += 2;
       } else {
 	fatal("Unknown long option (%s) given@#!$#$", long_options[option_index].name);
       }
@@ -943,8 +947,11 @@ int nmap_main(int argc, char *argv[]) {
 			   inet_ntoa(currenths->host), currenths->name);
 	}
 	else if (!currenths->ports.numports && !o.pingscan) {
-	  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"No ports open for host %s (%s)\n", currenths->name,
-		   inet_ntoa(currenths->host));
+	  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,
+		    "No scanned ports open for %s (%s); All are: %s\n", 
+		    currenths->name, inet_ntoa(currenths->host),
+		    (currenths->ports.ignored_port_state == PORT_FIREWALLED)?
+		    "filtered" : "UNfiltered");
 	  log_write(LOG_MACHINE,"Host: %s (%s)\tStatus: Up", 
 			   inet_ntoa(currenths->host), currenths->name);
 	}
@@ -1639,6 +1646,7 @@ void printandfreeports(portlist *plist) {
   char protocol[4];
   char rpcinfo[64];
   char rpcmachineinfo[64];
+  char portinfo[64];
   char *state;
   char serviceinfo[64];
   char *name;
@@ -1646,11 +1654,19 @@ void printandfreeports(portlist *plist) {
   struct servent *service;
   struct port *current = plist->ports, *tmp;
 
-  
+  /* If we are ignoring filtered ports, we always make a note of it.  
+     Otherwise, we only do so in verbose mode ... */
+  if (plist->ignored_port_state == PORT_FIREWALLED) {
+    log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"(Ports scanned but not shown below are in state: filtered)\n");
+  } else if (o.verbose) {
+    log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"(Ports scanned but not shown below are in state: UNfiltered)\n");
+  }
+
+
   if (!o.rpcscan) {  
-    log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Port    State       Protocol  Service");
+    log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Port       State       Service");
   } else {
-    log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Port    State       Protocol  Service (RPC)");
+    log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Port       State       Service (RPC)");
   }
   log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"%s", (o.identscan)?"         Owner\n":"\n");
   log_write(LOG_MACHINE,"\tPorts: ");
@@ -1658,6 +1674,7 @@ void printandfreeports(portlist *plist) {
     if (!first) log_write(LOG_MACHINE,", ");
     else first = 0;
     strcpy(protocol,(current->proto == IPPROTO_TCP)? "tcp": "udp");
+    snprintf(portinfo, sizeof(portinfo), "%d/%s", current->portno, protocol);
     state = statenum2str(current->state);
     service = nmap_getservbyport(htons(current->portno), protocol);
 
@@ -1696,8 +1713,7 @@ void printandfreeports(portlist *plist) {
       Strncpy(serviceinfo, (service)? service->s_name : "unknown" , sizeof(serviceinfo));
       strcpy(rpcmachineinfo, "");
     }
-    log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"%-8d%-12s%-10s%-24s", current->portno, state, protocol, 
-	     serviceinfo);
+    log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"%-11s%-12s%-24s", portinfo, state, serviceinfo);
     log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"%s\n", (current->owner)? current->owner : "");
 
     log_write(LOG_MACHINE,"%d/%s/%s/%s/%s/%s//", current->portno, state, 
@@ -2299,8 +2315,8 @@ void super_scan(struct hoststruct *target, unsigned short *portarray, stype scan
   openlist = testinglist;
 
   if (o.debugging || o.verbose)
-    log_write(LOG_STDOUT, "The UDP or stealth FIN/NULL/XMAS scan took %ld seconds to scan %d ports.\n", 
-	    (long) time(NULL) - starttime, o.numports);
+    log_write(LOG_STDOUT, "The UDP or stealth FIN/NULL/XMAS scan took %ld %s to scan %d ports.\n", 
+	    (long) time(NULL) - starttime, (((long) time(NULL) - starttime) == 1)? "second" : "seconds",  o.numports);
   
   for (current = openlist; current;  current = (current->next >= 0)? &scan[current->next] : NULL) {
     if (scantype != UDP_SCAN)
@@ -2938,7 +2954,7 @@ void pos_scan(struct hoststruct *target, unsigned short *portarray, stype scanty
   }
   
   if (o.verbose)
-    log_write(LOG_STDOUT, "The %s scan took %ld seconds to scan %d ports.\n", (scantype == WINDOW_SCAN) ? "Window" : (scantype == SYN_SCAN)? "SYN" : (scantype == CONNECT_SCAN)? "TCP connect" : "RPC",  (long) time(NULL) - starttime, o.numports);
+    log_write(LOG_STDOUT, "The %s scan took %ld %s to scan %d ports.\n", (scantype == WINDOW_SCAN) ? "Window" : (scantype == SYN_SCAN)? "SYN" : (scantype == CONNECT_SCAN)? "TCP connect" : (scantype == RPC_SCAN)? "RPC" : "ACK",  (long) time(NULL) - starttime, (((long) time(NULL) - starttime) == 1)? "second" : "seconds", o.numports);
   
  posscan_timedout:
   
@@ -3368,7 +3384,7 @@ void get_syn_results(struct hoststruct *target, struct portinfo *scan,
       newport = ntohs(tcp->th_sport);
       /* In case we are scanning localhost and see outgoing packets */
       /* If only one of SYN, ACK flags are set, we skip it */
-      if (ip->ip_src.s_addr == target->source_ip.s_addr && (((tcp->th_flags & (TH_SYN|TH_ACK)) == TH_ACK) || ((tcp->th_flags & (TH_SYN|TH_ACK)) == TH_SYN))) {
+      if (ip->ip_src.s_addr == target->source_ip.s_addr && ((tcp->th_flags == TH_ACK) || (tcp->th_flags == TH_SYN))) {
 	continue;
       }
       if (portlookup[newport] < 0) {
@@ -3479,7 +3495,7 @@ void invertfirewalled(portlist *plist, unsigned short *ports) {
 
   if (firewalledports > 10 && (((double) firewalledports / plist->numports ) > 0.6))
     {
-      log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"(Ports scanned but not shown below are in state: filtered)\n");
+      plist->ignored_port_state = PORT_FIREWALLED;
       /* OK, we are going to add an UNFIREWALLED entry for every port not
 	 listed and then we will delete every port that is firewalled */
       for(i=0; i < o.numports; i++) {
@@ -3506,6 +3522,8 @@ void invertfirewalled(portlist *plist, unsigned short *ports) {
 	  }	 
 	}
       }
+    } else {
+      plist->ignored_port_state = PORT_UNFIREWALLED;
     }
 }
 
