@@ -301,8 +301,8 @@ bzero((char *)&sock,sizeof(struct sockaddr_in));
 sock.sin_family=AF_INET;
 gettimeofday(&start, NULL);
 
-if (num_hosts > 10) 
-  max_rcvbuf(sd);
+/*if (num_hosts > 10) 
+  max_rcvbuf(sd);*/
 if (o.allowall) broadcast_socket(sd);
 
 group_end = MIN(group_start + group_size -1, num_hosts -1);
