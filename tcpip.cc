@@ -184,6 +184,60 @@ void PacketTrace::trace(pdirection pdir, const u8 *packet, u32 len,
   return;
 }
 
+/* Adds a trace entry when a connect() is attempted if packet tracing
+   is enabled.  Pass IPPROTO_TCP or IPPROTO_UDP as the protocol.  The
+   sock may be a sockaddr_in or sockaddr_in6.  The return code of
+   connect is passed in connectrc.  If the return code is -1, get the
+   errno and pass that as connect_errno. */
+void PacketTrace::traceConnect(u8 proto, const struct sockaddr *sock, 
+			       int socklen, int connectrc, int connect_errno,
+			       const struct timeval *now) {
+  struct sockaddr_in *sin = (struct sockaddr_in *) sock;
+#if HAVE_IPV6
+  struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *) sock;
+#endif
+  struct timeval tv;
+  char errbuf[64] = "";
+  char targetipstr[INET6_ADDRSTRLEN] = "";
+  u16 targetport = 0;
+
+  if (!o.packetTrace()) return;
+  
+  if (now)
+    tv = *now;
+  else gettimeofday(&tv, NULL);
+
+  assert(proto == IPPROTO_TCP || proto == IPPROTO_UDP);
+
+  if (connectrc > 0)
+    Strncpy(errbuf, "Connected", sizeof(errbuf));
+  else {
+    snprintf(errbuf, sizeof(errbuf), "%s", strerror(connect_errno));
+  }
+
+  if (sin->sin_family == AF_INET) {
+    if (inet_ntop(sin->sin_family, (char *) &sin->sin_addr, targetipstr, 
+		  sizeof(targetipstr)) == NULL)
+      fatal("Failed to convert target IPv4 address to presentation format!?!");
+    targetport = ntohs(sin->sin_port);
+  } else {
+#if HAVE_IPV6
+    assert(sin->sin_family == AF_INET6);
+    if (inet_ntop(sin->sin_family, (char *) &sin6->sin6_addr, targetipstr, 
+		  sizeof(targetipstr)) == NULL)
+      fatal("Failed to convert target IPv4 address to presentation format!?!");
+    targetport = ntohs(sin6->sin6_port);
+#else
+    assert(0);
+#endif
+  }
+
+  log_write(LOG_STDOUT|LOG_NORMAL, "CONN (%.4fs) %s localhost > %s:%d => %s\n",
+	    o.TimeSinceStartMS(&tv) / 1000.0, 
+	    (proto == IPPROTO_TCP)? "TCP" : "UDP", targetipstr, targetport, 
+	    errbuf);
+}
+
 /* Converts an IP address given in a sockaddr_storage to an IPv4 or
    IPv6 IP address string.  Since a static buffer is returned, this is
    not thread-safe and can only be used once in calls like printf() 

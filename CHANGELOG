@@ -8,6 +8,8 @@ o Many Windows portability fix and bug fixes, thanks to patch from
 o Fixed compilation on Solaris versions < 2.51 thanks to a patch by
   Tom Duffy (tduffy(a)sun.com)
 
+o Provide limited --packet_trace support for TCP connect() (-sT) scans.
+
 Nmap 3.59ALPHA3
 
 o Fixed a segfault bug that could occur when certain ICMP messages are

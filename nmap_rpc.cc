@@ -203,7 +203,7 @@ int send_rpc_query(const struct in_addr *target_host, unsigned short portno,
   struct sockaddr_in sock;
   char rpch_buf[256]; 
   struct rpc_hdr *rpch;
-  int res;
+  int res, err = 0;
 
   /* static int numruns = 0;
      if (numruns++ > 2)
@@ -285,12 +285,11 @@ int send_rpc_query(const struct in_addr *target_host, unsigned short portno,
   if (ipproto == IPPROTO_UDP) {
     /* Simply send this sucker we have created ... */
     do {  
-     int err;
       if (o.debugging > 1)
 	hdump((unsigned char *) rpch, sizeof(struct rpc_hdr));
       res = sendto(udp_rpc_socket, (char *)rpch, sizeof(struct rpc_hdr), 0,
 		   (struct sockaddr *) &sock, sizeof(struct sockaddr_in));
-      if (res < 0)
+      if (res == -1)
 	err = socket_errno();
      } while(res == -1 && (err == EINTR || err == ENOBUFS));
 

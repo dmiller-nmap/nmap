@@ -1491,6 +1491,7 @@ static UltraProbe *sendConnectScanProbe(UltraScanInfo *USI, HostScanStats *hss,
   static bool connecterror = false;
   u16 sport;
   int rc;
+  int connect_errno = 0;
   struct sockaddr_storage sock;
   struct sockaddr_in *sin = (struct sockaddr_in *) &sock;
 #if HAVE_IPV6
@@ -1528,7 +1529,9 @@ static UltraProbe *sendConnectScanProbe(UltraScanInfo *USI, HostScanStats *hss,
   hss->lastprobe_sent = probe->sent = USI->now;
   rc = connect(CP->sd, (struct sockaddr *)&sock, socklen);
   gettimeofday(&USI->now, NULL);
-
+  if (rc == -1) connect_errno = socket_errno();
+  PacketTrace::traceConnect(IPPROTO_TCP, (sockaddr *) &sock, socklen, rc, 
+			    connect_errno, &USI->now);
   /* This counts as probe being sent, so update structures */
   hss->probes_outstanding.push_back(probe);
   probeI = hss->probes_outstanding.end();
@@ -1548,8 +1551,7 @@ static UltraProbe *sendConnectScanProbe(UltraScanInfo *USI, HostScanStats *hss,
       ultrascan_port_update(USI, hss, probeI, PORT_OPEN, &USI->now);
     probe = NULL;
   } else {
-    int err = socket_errno();
-    switch(err) {
+    switch(connect_errno) {
     case EINPROGRESS:
     case EAGAIN:
       USI->gstats->CSI->watchSD(CP->sd);
@@ -1557,7 +1559,7 @@ static UltraProbe *sendConnectScanProbe(UltraScanInfo *USI, HostScanStats *hss,
     default:
       if (!connecterror) {	
 	connecterror = true;
-	fprintf(stderr, "Strange error from connect (%d):", err);
+	fprintf(stderr, "Strange error from connect (%d):", connect_errno);
 	fflush(stdout);
 	perror(""); /*falling through intentionally*/
       }

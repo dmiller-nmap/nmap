@@ -274,6 +274,14 @@ class PacketTrace {
      call. */
   static void trace(pdirection pdir, const u8 *packet, u32 len,
 		    struct timeval *now=NULL);
+/* Adds a trace entry when a connect() is attempted if packet tracing
+   is enabled.  Pass IPPROTO_TCP or IPPROTO_UDP as the protocol.  The
+   sock may be a sockaddr_in or sockaddr_in6.  The return code of
+   connect is passed in connectrc.  If the return code is -1, get the
+   errno and pass that as connect_errno. */
+  static void traceConnect(u8 proto, const struct sockaddr *sock, 
+			   int socklen, int connectrc, int connect_errno,
+			   const struct timeval *now);
 };
 
 #define MAX_LINK_HEADERSZ 24
