@@ -180,6 +180,8 @@ void *realloc();
 #define PINGTYPE_NONE 0
 #define PINGTYPE_ICMP 1
 #define PINGTYPE_TCP  2
+#define PINGTYPE_RAWTCP 4
+#define PINGTYPE_CONNECTTCP 8
 
 #define SEQ_UNKNOWN 0
 #define SEQ_64K 1
@@ -235,9 +237,6 @@ int getidentinfoz(struct in_addr target, int localport, int remoteport,
 		  char *owner);
 int parse_bounce(struct ftpinfo *ftp, char *url);
 int ftp_anon_connect(struct ftpinfo *ftp);
-int sendpingquery(int sd, int rawsd, struct hoststruct *target,  
-		  int seq, unsigned short id, struct scanstats *ss, 
-		  struct timeval *time);
 /* Does the appropriate stuff when the port we are looking at is found
    to be open trynum is the try number that was successful */
 void posportupdate(struct hoststruct *target, struct portinfo *current, 

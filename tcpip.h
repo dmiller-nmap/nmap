@@ -126,6 +126,13 @@ void *realloc();
 #define TH_BOGUS 64
 #define TH_BOG 64
 
+struct interface_info {
+    char name[64];
+    struct in_addr addr;
+};
+
+
+
 
 #ifndef HAVE_STRUCT_IP
 #define HAVE_STRUCT_IP
@@ -287,6 +294,10 @@ int readtcppacket(char *packet, int readdata);
 int readudppacket(char *packet, int readdata);
 /* Convert an IP address to the device (IE ppp0 eth0) using that address */
 int ipaddr2devname( char *dev, struct in_addr *addr );
+/* And vice versa */
+int devname2ipaddr(char *dev, struct in_addr *addr);
+/* Where the above 2 functions get their info */
+struct interface_info *getinterfaces(int *howmany);
 void sethdrinclude(int sd);
 int getsourceip(struct in_addr *src, struct in_addr *dst);
 /* Get the source IP and interface name that a packet

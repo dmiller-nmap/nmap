@@ -99,8 +99,9 @@ if (o.verbose && openport != -1)
      for(decoy=0; decoy < o.numdecoys; decoy++) {
        send_tcp_raw(rawsd, &o.decoys[decoy], &target->host, o.magic_port+i, 
 		    openport, sequence_base + i, 0,TH_BOGUS|TH_SYN, 0,"\003\003\012\001\002\004\001\011\010\012\077\077\077\077\000\000\000\000\000\000" , 20, NULL, 0);
+       usleep( 5000 + target->to.srtt);
     }
-     usleep(25000);
+     /*     usleep(25000);*/
    }
    /* Now we collect  the replies */
    target->seq.responses = 0;
@@ -243,7 +244,7 @@ if (o.verbose && openport != -1)
      }
    }
    else {
-     printf("Insuficient responses for TCP sequencing (%d)\n", target->seq.responses);
+     printf("Insufficient responses for TCP sequencing (%d)\n", target->seq.responses);
    }
  } else {
    printf("Warning:  No ports found open on this machine, OS detection will be less reliable");

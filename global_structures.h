@@ -72,7 +72,6 @@ typedef struct FingerTest {
   struct FingerTest *next;
  } FingerPrint;
 
-
 struct timeout_info {
   int srtt; /* Smoothed rtt estimate (microseconds) */
   int rttvar; /* Rout trip time variance */
@@ -121,6 +120,7 @@ struct ops /* someone took struct options, <grrr> */ {
   int debugging;
   int verbose;
   int spoofsource; /* -S used */
+  struct in_addr *source;
   char device[64];
   FingerPrint **reference_FPs;
   int number_of_ports;

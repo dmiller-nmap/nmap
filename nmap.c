@@ -14,6 +14,7 @@ char *host_spec;
 short fastscan=0, randomize=1, resolve_all=0;
 short quashargv = 0;
 int numhosts_scanned = 0;
+int numhosts_up = 0;
 int starttime;
 int lookahead = LOOKAHEAD;
 struct timeval tv; /* Just for seeding random generator */
@@ -28,13 +29,14 @@ struct ftpinfo ftp = { FTPUSER, FTPPASS, "",  { { { 0 } } } , 21, 0};
 struct ftpinfo ftp = { FTPUSER, FTPPASS, "", { 0 }, 21, 0};
 #endif
 struct hostent *target = NULL;
-struct in_addr *source=NULL;
 char **fakeargv = (char **) safe_malloc(sizeof(char *) * (argc + 1));
 struct hoststruct *currenths;
 char emptystring[1];
 int sourceaddrwarning = 0; /* Have we warned them yet about unguessable
 			      source addresses? */
 
+
+#ifdef ROUTETHROUGHTEST
 /* Routethrough stuph -- kill later */
 {
 char *dev;
@@ -47,12 +49,9 @@ if (dev)
   printf("%s routes through device %s using IP address %s\n", argv[1], dev, inet_ntoa(source));
 else printf("Could not determine which device to route through for %s!!!\n", argv[1]);
 
-
-
-
 exit(0);
 }
-
+#endif
 
 /* argv faking silliness */
 for(i=0; i < argc; i++) {
@@ -151,14 +150,22 @@ while((arg = getopt(argc,fakeargv,"Ab:D:de:Ffg:hIi:L:M:NnOo:P::p:qrRS:s:T:w:Vv")
     break;
   case 'P': 
     if (*optarg == '\0' || *optarg == 'I')
-      o.pingtype |= PINGTYPE_ICMP;
+      o.pingtype = PINGTYPE_ICMP;
     else if (*optarg == '0' || *optarg == 'N' || *optarg == 'D')      
       o.pingtype = PINGTYPE_NONE;
     else if (*optarg == 'T') {
-      o.pingtype |= PINGTYPE_TCP;
-      if (isdigit((int) *(optarg+1)))
+      o.pingtype = PINGTYPE_TCP;
+      if (isdigit((int) *(optarg+1))) {      
 	o.tcp_probe_port = atoi(optarg+1);
 	printf("TCP probe port is %hu\n", o.tcp_probe_port);
+      } else if (o.verbose)
+	printf("TCP probe port is %hu\n", o.tcp_probe_port);
+    }
+    else if (*optarg == 'B') {
+      o.pingtype = PINGTYPE_TCP|PINGTYPE_ICMP;
+      if (isdigit((int) *(optarg+1)))
+	o.tcp_probe_port = atoi(optarg+1);
+      printf("TCP probe port is %hu\n", o.tcp_probe_port);
     }
     else {fatal("Illegal Argument to -P, use -P0, -PI, -PT, or -PT80 (or whatever number you want for the TCP probe destination port)"); }
     break;
@@ -199,9 +206,9 @@ while((arg = getopt(argc,fakeargv,"Ab:D:de:Ffg:hIi:L:M:NnOo:P::p:qrRS:s:T:w:Vv")
   case 'S': 
     if (o.spoofsource)
       fatal("You can only use the source option once!  Use -D <decoy1> -D <decoy2> etc. for decoys\n");
-    source = safe_malloc(sizeof(struct in_addr));
+    o.source = safe_malloc(sizeof(struct in_addr));
     o.spoofsource = 1;
-    if (!resolve(optarg, source))
+    if (!resolve(optarg, o.source))
       fatal("Failed to resolve source address, try dotted decimal IP address\n");
     break;
   case 'T': o.ptime = atoi(optarg); break;
@@ -259,6 +266,24 @@ o.decoyturn = (o.numdecoys == 0)?  0 : rand() % o.numdecoys;
 o.numdecoys++;
 for(i=o.numdecoys-1; i > o.decoyturn; i--)
   o.decoys[i] = o.decoys[i-1];
+
+/* We need to find what interface to route through if:
+ * --None have been specified AND
+ * --We are root and doing tcp ping OR
+ * --We are doing a raw sock scan and NOT pinging anyone */
+if (o.source && !*o.device) {
+  if (!ipaddr2devname(o.device, o.source)) {
+    fatal("Could not figure out what device to send the packet out on with the source address you gave me!  If you are trying to sp00f your scan, this is normal, just give the -e eth0 or -e ppp0 or whatever.  Otherwise you can still use -e, but I find it kindof fishy.");
+  }
+}
+
+if (*o.device && !o.source) {
+  o.source = safe_malloc(sizeof(struct in_addr)); 
+  if (devname2ipaddr(o.device, o.source) == -1) {
+    fatal("I cannot figure out what source address to use for device %s, does it even exist?", o.device);
+  }
+}
+
 
 /* If he wants to bounce off of an ftp site, that site better damn well be reachable! */
 if (bouncescan) {
@@ -318,7 +343,7 @@ if (!o.max_sockets) {
   o.max_sockets = MIN(o.max_sockets, 125);
 }
 
-if (o.debugging > 1) printf("The max # of sockets on your system is: %d\n", i);
+if (o.debugging > 1) printf("The max # of sockets we are using is: %d\n", o.max_sockets);
 
 if (randomize)
   shortfry(ports); 
@@ -328,6 +353,9 @@ starttime = time(NULL);
 while((host_spec = grab_next_host_spec(inputfd, argc, fakeargv))) {
   while((currenths = nexthost(host_spec, 500, o.ptime)) && currenths->host.s_addr) {
     numhosts_scanned++;
+    if (currenths->flags & HOST_UP) 
+      numhosts_up++;
+
     /* Ugly temporary hack to init timeout info */
     currenths->rtt = currenths->to.timeout;
 
@@ -342,7 +370,7 @@ while((host_spec = grab_next_host_spec(inputfd, argc, fakeargv))) {
       currenths->name = emptystring;
     }
     if (o.wait && currenths->rtt) currenths->rtt += o.wait;
-    if (source) memcpy(&currenths->source_ip, source, sizeof(struct in_addr));
+    if (o.source) memcpy(&currenths->source_ip, o.source, sizeof(struct in_addr));
 if (!o.pingscan) {
   if (o.pingtype && (currenths->flags & HOST_UP) && (o.verbose || o.debugging)) 
     printf("Host %s (%s) appears to be up ... good.\n", currenths->name, inet_ntoa(currenths->host));    
@@ -377,10 +405,8 @@ if (currenths->flags & HOST_UP && !currenths->source_ip.s_addr && ( o.synscan ||
   }
 }
 
- if (o.device[0]) { strcpy(currenths->device, o.device); }
-
 /* Figure out what link-layer device (interface) to use (ie eth0, ppp0, etc) */
-if (!o.device[0] && currenths->flags & HOST_UP && (o.nullscan || o.xmasscan || o.udpscan || o.finscan || o.maimonscan ||  o.synscan || o.osscan) && !ipaddr2devname( currenths->device, &currenths->source_ip))
+if (!*currenths->device && currenths->flags & HOST_UP && (o.nullscan || o.xmasscan || o.udpscan || o.finscan || o.maimonscan ||  o.synscan || o.osscan) && !ipaddr2devname( currenths->device, &currenths->source_ip))
   fatal("Could not figure out what device to send the packet out on!  You might possibly want to try -S (but this is probably a bigger problem).  If you are trying to sp00f the source of a SYN/FIN scan with -S <fakeip>, then you must use -e eth0 (or other devicename) to tell us what interface to use.\n");
 /* Set up the decoy */
 o.decoys[o.decoyturn] = currenths->source_ip;
@@ -445,7 +471,7 @@ o.decoys[o.decoyturn] = currenths->source_ip;
   }
 }
 
-printf("Nmap run completed -- %d host(s) scanned in %ld seconds\n", numhosts_scanned, (long) time(NULL) - starttime);
+printf("Nmap run completed -- %d %s (%d %s up) scanned in %ld seconds\n", numhosts_scanned, (numhosts_scanned == 1)? "IP address" : "IP addresses", numhosts_up, (numhosts_up == 1)? "host" : "hosts",  (long) time(NULL) - starttime);
 return 0;
 }
 
@@ -460,7 +486,7 @@ o.magic_port = 33000 + (rand() % 31000);
 o.allowall = !(IGNORE_ZERO_AND_255_HOSTS);
 #endif
 o.ptime = PING_TIMEOUT;
-o.pingtype = (o.isr00t)? PINGTYPE_ICMP : PINGTYPE_TCP;
+o.pingtype = (o.isr00t)? (PINGTYPE_ICMP|PINGTYPE_TCP) : PINGTYPE_TCP;
 }
 
 __inline__ void max_rcvbuf(int sd) {
@@ -964,7 +990,7 @@ char tmp[256];
 char *p;
 int i;
 int len;
- sprintf(report, "Class=%s; Difficulty=%s;Index=%d  (lower=easier)", seqclass2ascii(seq->class), (seq->index < 10)? "Trivial joke" : (seq->index < 40)? "Easy" : (seq->index < 150)? "Medium" : (seq->index < 1000)? "Formidable" : (seq->index < 100000)? "Very difficult" : "Good luck!", seq->index);
+ sprintf(report, "Class=%s; Difficulty=%s; Index=%d  (lower=easier)", seqclass2ascii(seq->class), (seq->index < 10)? "Trivial joke" : (seq->index < 40)? "Easy" : (seq->index < 150)? "Medium" : (seq->index < 1000)? "Formidable" : (seq->index < 100000)? "Very difficult" : "Good luck!", seq->index);
  if (o.verbose) {
    tmp[0] = '\n';
    tmp[1] = '\0'; 
@@ -1704,12 +1730,13 @@ if (!(pd = pcap_open_live(target->device, 92, (o.spoofsource)? 1 : 0, 1000, err0
 if (pcap_lookupnet(target->device, &localnet, &netmask, err0r) < 0)
   fatal("Failed to lookup device subnet/netmask: %s", err0r);
 p = strdup(inet_ntoa(target->host));
-#ifdef HAVE_SNPRINTF
-snprintf(filter, sizeof(filter), "tcp and src host %s and dst host %s and dst port %d", p, inet_ntoa(target->source_ip), o.magic_port );
-#else
 sprintf(filter, "tcp and src host %s and dst host %s and dst port %d", p, inet_ntoa(target->source_ip), o.magic_port );
-#endif
 free(p);
+
+/* Due to apparent bug in libpcap */
+if (target->source_ip.s_addr == htonl(0x7F000001))
+   filter[0] = '\0';
+
 if (o.debugging)
   printf("Packet capture filter: %s\n", filter);
 if (pcap_compile(pd, &fcode, filter, 0, netmask) < 0)
@@ -1959,7 +1986,7 @@ portlist super_scan(struct hoststruct *target, unsigned short *portarray, stype 
   int tries = 0;
   int tmp = 0;
   unsigned int localnet, netmask;
-  int starttime, delta;
+  int starttime;
   unsigned short newport;
   struct hostent *myhostent = NULL;
   struct portinfo *scan, *openlist, *current, *fresh, *testinglist, *next;
@@ -2027,6 +2054,9 @@ if (pcap_lookupnet(target->device, &localnet, &netmask, err0r) < 0)
 p = strdup(inet_ntoa(target->host));
 sprintf(filter, "(icmp and dst host %s) or (tcp and src host %s and dst host %s and ( dst port %d or dst port %d))", inet_ntoa(target->source_ip), p, inet_ntoa(target->source_ip), o.magic_port , o.magic_port + 1);
  free(p);
+ /* Due to apparent bug in libpcap */
+ if (target->source_ip.s_addr == htonl(0x7F000001))
+   filter[0] = '\0';
  if (o.debugging)
    printf("Packet capture filter: %s\n", filter);
  if (pcap_compile(pd, &fcode, filter, 0, netmask) < 0)
@@ -2166,6 +2196,25 @@ if (o.debugging || o.verbose)
 		    hdump(icmp, ntohs(ip->ip_len) - sizeof(struct ip)); */
 	    if (icmp->icmp_type == 3) {
 	      switch(icmp->icmp_code) {
+
+	      case 2: /* pr0t0c0l unreachable */
+		newport = ntohs(data[1]);
+		if (portlookup[newport] >= 0) {
+		  current = &scan[portlookup[newport]];
+		  if (!o.magic_port_set) {
+		    packet_trynum = ntohs(data[0]) - o.magic_port;
+		    if ((packet_trynum|1) != 1) packet_trynum = -1;
+		  } else if (current->trynum == 0) packet_trynum = 0;
+		  else packet_trynum = -1;
+		}
+		else { 
+		  if (o.debugging) {
+		    printf("Illegal ICMP pr0t0c0l unreachable packet:\n");
+		    hdump((unsigned char *)icmp, ntohs(ip->ip_len) -sizeof(struct ip));
+		  }
+		  continue; 
+		}		  		
+		break;
 		
 	      case 3: /* p0rt unreachable */		
 		newport = ntohs(data[1]);
@@ -2191,20 +2240,15 @@ if (o.debugging || o.verbose)
 	    printf("Received udp packet back ... interesting\n");
 	    continue;
 	  }
-	  gettimeofday(&now, NULL);
+
 	  if (current->state == PORT_CLOSED && (packet_trynum < 0)) {
 	    target->to.rttvar *= 1.2;
 	    if (o.debugging) { printf("Late packet, couldn't figure out sendno so we do varianceincrease to %d\n", target->to.rttvar); 
 	    }
 	  } else if (packet_trynum > -1) {		
 	    /* Update our records */
-	    delta = TIMEVAL_SUBTRACT(now,current->sent[packet_trynum]) - target->to.srtt;
-	    if (o.debugging > 1) printf("Got packet (trynum %d, packetnum %d), delta %d srtt %d rttvar %d timeout %d ->", current->trynum, packet_trynum, delta, target->to.srtt, target->to.rttvar, target->to.timeout);
+	    adjust_timeouts(current->sent[packet_trynum], &(target->to));
 	    numqueries_ideal = MIN(numqueries_ideal + (packet_incr/numqueries_ideal), max_width);
-	    target->to.srtt += delta >> 3;
-	    target->to.rttvar += (ABS(delta) - target->to.rttvar) >> 2;
-	    target->to.timeout = target->to.srtt + (target->to.rttvar << 2);
-	    if (o.debugging > 1) printf("srtt %d rttvar %d timeout %d senddelay %d dropped %d freshportstried %d\n",  target->to.srtt, target->to.rttvar, target->to.timeout, senddelay, dropped, freshportstried);
 	    if (packet_trynum > 0 && current->trynum > 0) {
 	      /* The first packet was apparently lost, slow down */
 	      dropped++;
@@ -2374,10 +2418,9 @@ portlist pos_scan(struct hoststruct *target, unsigned short *portarray, stype sc
     sprintf(filter, "(icmp and dst host %s) or (tcp and src host %s and dst host %s)", inet_ntoa(target->source_ip), p, inet_ntoa(target->source_ip));
     free(p);
 
+    /* Due to apparent bug in libpcap */
     if (target->source_ip.s_addr == htonl(0x7F000001))
       filter[0] = '\0';
-
-
 
     if (o.debugging)
       printf("Packet capture filter: %s\n", filter);
@@ -2526,7 +2569,8 @@ portlist pos_scan(struct hoststruct *target, unsigned short *portarray, stype sc
 	    }
 	  }
 	} else { 
-	  if (current->state != PORT_FRESH) fatal("State mismatch!%!@% %d", current->state);
+	  if (current->state != PORT_FRESH) 
+	    fatal("State mismatch!!@ %d", current->state);
 	  /* current->state == PORT_FRESH */
 	  /* OK, now we have gone through our list of in-transit queries, so now
 	     we try to send off new queries if we can ... */
@@ -2768,11 +2812,11 @@ __inline__ void adjust_timeouts(struct timeval sent, struct timeout_info *to) {
   else {
     delta = TIMEVAL_SUBTRACT(end, sent) - to->srtt;
     /* sanity check */
-    if (delta > 2000000 && delta > 10 * to->srtt) {
+    if (delta > 1500000 && delta > 10 * to->srtt) {
       if (o.debugging) {
 	printf("Bogus delta: %d (srtt %d)\n", delta, to->srtt);
       }
-      delta = 10 * to->srtt;
+      delta = 7 * to->srtt;
     }
     to->srtt += delta >> 3;
     to->rttvar += (ABS(delta) - to->rttvar) >> 2;
@@ -2959,6 +3003,21 @@ unsigned short *data;
 	  if (icmp->icmp_type == 3) {
 	    switch(icmp->icmp_code) {
 	      
+	    case 2: /* Protocol unreachable -- rare */
+	      newport = ntohs(data[1]);
+	      if (portlookup[newport] >= 0) {
+		current = &scan[portlookup[newport]];
+		trynum = (current->trynum == 0)? 0 : -1;
+		newstate = PORT_FIREWALLED;
+	      } else { 
+		if (o.debugging) {
+		  printf("Illegal ICMP pr0t0c0l unreachable packet:\n");
+		  hdump((unsigned char *)icmp, ntohs(ip->ip_len) -sizeof(struct ip));
+		}
+		continue; 
+	      }	  		
+	      break;
+
 	    case 3: /* p0rt unreachable */		
 	      newport = ntohs(data[1]);
 	      if (portlookup[newport] >= 0) {
@@ -3063,12 +3122,13 @@ if (!(pd = pcap_open_live(target->device, 92,  (o.spoofsource)? 1 : 0, 1500, err
 if (pcap_lookupnet(target->device, &localnet, &netmask, err0r) < 0)
   fatal("Failed to lookup device subnet/netmask: %s", err0r);
 p = strdup(inet_ntoa(target->host));
-#ifdef HAVE_SNPRINTF
-snprintf(filter, sizeof(filter), "tcp and src host %s and dst host %s and dst port %d", p, inet_ntoa(target->source_ip), o.magic_port );
-#else
 sprintf(filter, "tcp and src host %s and dst host %s and dst port %d", p, inet_ntoa(target->source_ip), o.magic_port );
-#endif
 free(p);
+
+/* Due to apparent bug in libpcap */
+if (target->source_ip.s_addr == htonl(0x7F000001))
+   filter[0] = '\0';
+
 if (o.debugging)
   printf("Packet capture filter: %s\n", filter);
 if (pcap_compile(pd, &fcode, filter, 0, netmask) < 0)

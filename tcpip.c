@@ -698,57 +698,6 @@ exit(1);
 }
 #endif
 
-/* Convert an IP address into the name of the device which uses that IP
-   address return 1 if successful, 0 if failure */
-int ipaddr2devname( char *dev, struct in_addr *addr ) {
-  int sd;
-  int len = 2048;
-  char buf[2048];
-  char *pbuf = buf;
-  struct ifconf ifc;
-  struct ifreq *ifr;
-  struct sockaddr_in *sin;
-  char *p;
-
-  if (!dev) fatal("NULL pointer given to ipaddr2devname");
-  if (!addr) fatal("ipaddr2devname passed a NULL address");
-  /* Dummy socket for ioctl */
-  sd = socket(AF_INET, SOCK_DGRAM, 0);
-  if (sd < 0) pfatal("socket in ipaddr2devname");
-  ifc.ifc_len = len;
-  ifc.ifc_buf = buf;
-  if (ioctl(sd, SIOCGIFCONF, &ifc) < 0) {
-    fatal("Failed to determine your configured interfaces!\n");
-  }
-  close(sd);
-ifr = (struct ifreq *) pbuf;
-if (ifc.ifc_len == 0) 
-  fatal("SIOCGIFCONF claims you have no network interfaces!\n");
-#if HAVE_SOCKADDR_SA_LEN
-  len = MAX(sizeof(struct sockaddr), ifr->ifr_addr.sa_len);
-#else
-  len = sizeof(SA);
-#endif
-  for( ifr = (struct ifreq *) pbuf;
-       ifr && *((char *)ifr) && ((char *)ifr) < pbuf + ifc.ifc_len; 
-       ((*(char **)&ifr) +=  sizeof(ifr->ifr_name) + len )) {
-    sin = (struct sockaddr_in *) &ifr->ifr_addr;
-    if (sin->sin_addr.s_addr == addr->s_addr) {
-      /* Stevens does this in UNP, so it may be useful in some cases */
-      if ((p = strchr(ifr->ifr_name, ':')))
-	*p = '\0';
-      /* If an app gives me less than 64 bytes, they deserve to be
-	 overflowed! */
-      strncpy(dev, ifr->ifr_name, 63);
-      dev[63] = '\0';
-      return 1;
-    }
-  }
-  /* Shucks, we didn't find it ... */
-  dev[0] = '\0';
-  return 0;
-}
-
 /* Read an IP packet using libpcap .  We return the packet and take
    a pcap descripter and a pointer to the packet length (which we set
    in the function.  If you want a read timeout, specify one in 
@@ -837,50 +786,59 @@ signal(SIGALRM, SIG_DFL);
 return p;
 }
 
-/* An awesome function to determine what interface a packet to a given
-   destination should be routed through.  It returns NULL if no appropriate
-   interface is found, oterwise it returns the device name and fills in the
-   source parameter.   A very small but very important portion of this
-   (the /proc/net/route stuff for Linux is from something I found in 
-   tcpip.c from the checkos program by the Confidence
-   Remains High folks.  Word to them!  Some of the other stuff is
-   from Stevens' Unix Network Programming V2.  He had an easier suggestion
-   for doing this (in the book), but it isn't portable :( */
-char *routethrough(struct in_addr *dest, struct in_addr *source) {
+int ipaddr2devname( char *dev, struct in_addr *addr ) {
+struct interface_info *mydevs;
+int numdevs;
+int i;
+mydevs = getinterfaces(&numdevs);
+
+if (!mydevs) return -1;
+
+for(i=0; i < numdevs; i++) {
+  if (addr->s_addr == mydevs[i].addr.s_addr) {
+    strcpy(dev, mydevs[i].name);
+    return 0;
+  }
+}
+return -1;
+}
+
+int devname2ipaddr(char *dev, struct in_addr *addr) {
+struct interface_info *mydevs;
+int numdevs;
+int i;
+mydevs = getinterfaces(&numdevs);
+
+if (!mydevs) return -1;
+
+for(i=0; i < numdevs; i++) {
+  if (!strcmp(dev, mydevs[i].name)) {  
+    memcpy(addr, (char *) &mydevs[i].addr, sizeof(struct in_addr));
+    return 0;
+  }
+}
+return -1;
+}
+
+
+struct interface_info *getinterfaces(int *howmany) {
   static int initialized = 0;
+  static struct interface_info mydevs[48];
+  static int numinterfaces = 0;
   int sd;
-  int i;
-  int res;
-  struct in_addr addy;
-  int len = 10240;
-  enum { procroutetechnique, connectsockettechnique, guesstechnique } technique = procroutetechnique;
+  int len;
+  char *p;
   char buf[10240];
-  static struct mydev {
-    char name[64];
-    struct in_addr addr;
-  } mydevs[32];
-  static struct myroute {
-    struct mydev *dev;
-    unsigned long mask;
-    unsigned long dest;
-  } myroutes[32];
-  int numinterfaces = 0;
-  char iface[64];
-  int numroutes = 0;
-  unsigned long tmp;
   struct ifconf ifc;
   struct ifreq *ifr;
-  char *p;
-  FILE *routez;
   struct sockaddr_in *sin;
+  
+  if (!initialized) {
 
-  if (!dest) fatal("ipaddr2devname passed a NULL dest address");
-
-  if (!initialized) {  
-    /* Dummy socket for ioctl */
     initialized = 1;
+    /* Dummy socket for ioctl */
     sd = socket(AF_INET, SOCK_DGRAM, 0);
-    if (sd < 0) pfatal("socket in routethrough");
+    if (sd < 0) pfatal("socket in getinterfaces");
     ifc.ifc_len = sizeof(buf);
     ifc.ifc_buf = buf;
     if (ioctl(sd, SIOCGIFCONF, &ifc) < 0) {
@@ -889,10 +847,10 @@ char *routethrough(struct in_addr *dest, struct in_addr *source) {
     close(sd);
     ifr = (struct ifreq *) buf;
     if (ifc.ifc_len == 0) 
-      fatal("routethrough: SIOCGIFCONF claims you have no network interfaces!\n");
+      fatal("getinterfaces: SIOCGIFCONF claims you have no network interfaces!\n");
 #if HAVE_SOCKADDR_SA_LEN
-/*    len = MAX(sizeof(struct sockaddr), ifr->ifr_addr.sa_len);*/
-   len = ifr->ifr_addr.sa_len;
+    /*    len = MAX(sizeof(struct sockaddr), ifr->ifr_addr.sa_len);*/
+    len = ifr->ifr_addr.sa_len;
 #else
     len = sizeof(SA);
 #endif
@@ -906,17 +864,60 @@ char *routethrough(struct in_addr *dest, struct in_addr *source) {
       strncpy(mydevs[numinterfaces].name, ifr->ifr_name, 63);
       mydevs[numinterfaces].name[63] = '\0';
       numinterfaces++;
-      if (numinterfaces == 32) 
-	fatal("My god!  You seem to have WAY too many interfaces!\n");
+      if (numinterfaces == 47)  {      
+	error("My god!  You seem to have WAY too many interfaces!  Things may not work right\n");
+	break;
+      }
 #if HAVE_SOCKADDR_SA_LEN
       /* len = MAX(sizeof(struct sockaddr), ifr->ifr_addr.sa_len);*/
       len = ifr->ifr_addr.sa_len;
 #endif 
-
+      mydevs[numinterfaces].name[0] = '\0';
     }
+  }
+  if (howmany) *howmany = numinterfaces;
+  return mydevs;
+}
+
+
+
+/* An awesome function to determine what interface a packet to a given
+   destination should be routed through.  It returns NULL if no appropriate
+   interface is found, oterwise it returns the device name and fills in the
+   source parameter.   A very small but very important portion of this
+   (the /proc/net/route stuff for Linux is from something I found in 
+   tcpip.c from the checkos program by the Confidence
+   Remains High folks.  Word to them!  Some of the other stuff is
+   from Stevens' Unix Network Programming V2.  He had an easier suggestion
+   for doing this (in the book), but it isn't portable :( */
+char *routethrough(struct in_addr *dest, struct in_addr *source) {
+  static int initialized = 0;
+  int i;
+  int res;
+  struct in_addr addy;
+  enum { procroutetechnique, connectsockettechnique, guesstechnique } technique = procroutetechnique;
+  char buf[10240];
+  struct interface_info *mydevs;
+  static struct myroute {
+    struct interface_info *dev;
+    unsigned long mask;
+    unsigned long dest;
+  } myroutes[32];
+  int numinterfaces = 0;
+  char iface[64];
+  static int numroutes = 0;
+  unsigned long tmp;
+  FILE *routez;
+
+  if (!dest) fatal("ipaddr2devname passed a NULL dest address");
+
+  if (!initialized) {  
+    /* Dummy socket for ioctl */
+    initialized = 1;
+
+    mydevs = getinterfaces(&numinterfaces);
 
     /* Now we must go through several techniques to determine info */
-
     routez = fopen("/proc/net/route", "r");
     if (routez) {
       /* OK, linux style /proc/net/route ... we can handle this ... */
@@ -933,7 +934,9 @@ char *routethrough(struct in_addr *dest, struct in_addr *source) {
 	}
 	/*      myroutes[numroutes].dest = htonl(myroutes[numroutes].dest);
 		myroutes[numroutes].mask = htonl(myroutes[numroutes].mask);*/
-	printf("#%d: for dev %s, The dest is %lX and the mask is %lX\n", numroutes, iface, myroutes[numroutes].dest, myroutes[numroutes].mask);
+#if TCPIP_DEBUGGING
+	  printf("#%d: for dev %s, The dest is %lX and the mask is %lX\n", numroutes, iface, myroutes[numroutes].dest, myroutes[numroutes].mask);
+#endif
 	for(i=0; i < numinterfaces; i++)
 	  if (!strcmp(iface, mydevs[i].name)) {
 	    myroutes[numroutes].dev = &mydevs[i];
@@ -949,14 +952,13 @@ char *routethrough(struct in_addr *dest, struct in_addr *source) {
     } else {
       technique = connectsockettechnique;
     }
+  } else {  
+    mydevs = getinterfaces(&numinterfaces);
   }
   /* WHEW, that takes care of initializing, now we have the easy job of 
      finding which route matches */
     if (technique == procroutetechnique) {    
       for(i=0; i < numroutes; i++) {  
-	printf("dest=%X mask=%lx dest&mask=%lX myroutes.dest=%lX\n", 
-	       dest->s_addr, myroutes[i].mask, (dest->s_addr & myroutes[i].mask), 
-	       myroutes[i].dest);
 	if ((dest->s_addr & myroutes[i].mask) == myroutes[i].dest) {
 	  if (source) {
 	    source->s_addr = myroutes[i].dev->addr.s_addr;
