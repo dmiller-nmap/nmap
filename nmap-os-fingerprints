@@ -2191,7 +2191,7 @@ T7(Resp=N)
 PU(DF=N%TOS=C0%IPLEN=164%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Cisco 1200 access point (WAP) running IOS 12.2(8)
-Class Cisco | IOS | 12.X | router
+Class Cisco | IOS | 12.X | WAP
 TSeq(Class=TR%gcd=<6%IPID=Z%TS=U)
 T1(DF=N%W=1020%ACK=S++%Flags=AS%Ops=ME)
 T2(Resp=N)
@@ -9758,6 +9758,18 @@ TSeq(Class=C)
 T1(DF=N%W=5B40%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
 T3(Resp=Y%DF=N%W=0%ACK=O%Flags=AR%Ops=)
+T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=70%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
+
+Fingerprint Polycom ViewStation
+Class Polycom | embedded || webcam
+TSeq(Class=C)
+T1(DF=N%W=5B40%ACK=S++%Flags=AS%Ops=M)
+T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
+T3(Resp=Y%DF=N%W=5B40%ACK=S++%Flags=AS%Ops=M)
 T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)

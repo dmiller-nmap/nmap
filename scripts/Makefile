@@ -11,10 +11,10 @@ all: fingermatch fingerdiff servicematch
 dummy:
 
 fingermatch: dummy
-	$(CPP) -g -Wall $(INCLUDE_FLAGS) $(LINK_FLAGS) $(DEFINES) -o $@ $@.cc $(NMAP_OBJS) -lm -lnbase -lpcap -lpcre
+	$(CPP) -g -Wall $(INCLUDE_FLAGS) $(LINK_FLAGS) $(DEFINES) -o $@ $@.cc $(NMAP_OBJS) -lm -lnbase -lpcap -lpcre -lssl -lcrypt
 
 fingerdiff: dummy
-	$(CPP) -g -Wall $(INCLUDE_FLAGS) $(LINK_FLAGS) $(DEFINES) -o $@ $@.cc $(NMAP_OBJS) -lm -lnbase -lpcap -lpcre
+	$(CPP) -g -Wall $(INCLUDE_FLAGS) $(LINK_FLAGS) $(DEFINES) -o $@ $@.cc $(NMAP_OBJS) -lm -lnbase -lpcap -lpcre -lssl -lcrypt
 
 servicematch: dummy
-	$(CPP) -g -Wall $(INCLUDE_FLAGS) $(LINK_FLAGS) $(DEFINES) -o $@ $@.cc $(NMAP_OBJS) -lm -lnbase -lpcap -lpcre
+	$(CPP) -g -Wall $(INCLUDE_FLAGS) $(LINK_FLAGS) $(DEFINES) -o $@ $@.cc $(NMAP_OBJS) -lm -lnbase -lpcap -lpcre -lssl -lcrypt

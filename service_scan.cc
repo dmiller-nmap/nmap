@@ -597,12 +597,8 @@ void ServiceProbe::setProbeString(const u8 *ps, int stringlen) {
   } else probestring = NULL;
 }
 
-  // Takes a string as given in the 'ports ' line of
-  // nmap-services-probes.  Pass in any text after "ports ".  The line
-  // number is requested because this function will bail with an error
-  // (giving the line number) if it fails to parse the string.  Ports are
-  // a comma seperated list of prots and ranges (e.g. 53,80,6000-6010)
-void ServiceProbe::setProbablePorts(const char *portstr, int lineno) {
+void ServiceProbe::setPortVector(vector<u16> *portv, const char *portstr, 
+				 int lineno) {
   const char *current_range;
   char *endptr;
   long int rangestart = 0, rangeend = 0;
@@ -643,7 +639,7 @@ void ServiceProbe::setProbablePorts(const char *portstr, int lineno) {
 
     /* Now I have a rangestart and a rangeend, so I can add these ports */
     while(rangestart <= rangeend) {
-      probableports.push_back(rangestart);
+      portv->push_back(rangestart);
       rangestart++;
     }
     
@@ -657,10 +653,33 @@ void ServiceProbe::setProbablePorts(const char *portstr, int lineno) {
   } while(current_range && *current_range);
 }
 
-// Returns true if the passed in port is on the list of probable ports for 
-// this probe.
-bool ServiceProbe::portIsProbable(u16 portno) {
-  if (find(probableports.begin(), probableports.end(), portno) == probableports.end())
+  // Takes a string as given in the 'ports '/'sslports ' line of
+  // nmap-services-probes.  Pass in the list from the appropriate
+  // line.  For 'sslports', tunnel should be specified as
+  // SERVICE_TUNNEL_SSL.  Otherwise use SERVICE_TUNNEL_NONE.  The line
+  // number is requested because this function will bail with an error
+  // (giving the line number) if it fails to parse the string.  Ports
+  // are a comma seperated list of prots and ranges
+  // (e.g. 53,80,6000-6010).
+void ServiceProbe::setProbablePorts(enum service_tunnel_type tunnel,
+				    const char *portstr, int lineno) {
+  if (tunnel == SERVICE_TUNNEL_NONE)
+    setPortVector(&probableports, portstr, lineno);
+  else {
+    assert(tunnel == SERVICE_TUNNEL_SSL);
+    setPortVector(&probablesslports, portstr, lineno);
+  }
+}
+
+  /* Returns true if the passed in port is on the list of probable
+     ports for this probe and tunnel type.  Use a tunnel of
+     SERVICE_TUNNEL_SSL or SERVICE_TUNNEL_NONE as appropriate */
+bool ServiceProbe::portIsProbable(enum service_tunnel_type tunnel, u16 portno) {
+  vector<u16> *portv;
+
+  portv = (tunnel == SERVICE_TUNNEL_SSL)? &probablesslports : &probableports;
+  
+  if (find(portv->begin(), portv->end(), portno) == portv->end())
     return false;
   return true;
 }
@@ -734,7 +753,9 @@ void parse_nmap_service_probe_file(AllProbes *AP, char *filename) {
 	}
 	goto anotherprobe;
       } else if (strncmp(line, "ports ", 6) == 0) {
-	newProbe->setProbablePorts(line + 6, lineno);
+	newProbe->setProbablePorts(SERVICE_TUNNEL_NONE, line + 6, lineno);
+      } else if (strncmp(line, "sslports ", 9) == 0) {
+	newProbe->setProbablePorts(SERVICE_TUNNEL_SSL, line + 9, lineno);
       } else if (strncmp(line, "totalwaitms ", 12) == 0) {
 	long waitms = strtol(line + 12, NULL, 10);
 	if (waitms < 100 || waitms > 300000)
@@ -901,7 +922,7 @@ void ServiceNFO::addToServiceFingerprint(const char *probeName, const u8 *resp,
   if (servicefplen == 0) {
     timep = time(NULL);
     ltime = localtime(&timep);
-    servicefplen = snprintf(servicefp, spaceleft, "SF-Port%hi-%s:V=%s%%D=%d/%d%%Time=%X", portno, (proto == IPPROTO_TCP)? "TCP" : "UDP", NMAP_VERSION, ltime->tm_mon + 1, ltime->tm_mday, (int) timep);
+    servicefplen = snprintf(servicefp, spaceleft, "SF-Port%hi-%s:V=%s%s%%D=%d/%d%%Time=%X", portno, (proto == IPPROTO_TCP)? "TCP" : "UDP", NMAP_VERSION, (tunnel == SERVICE_TUNNEL_SSL)? "%T=SSL" : "", ltime->tm_mon + 1, ltime->tm_mday, (int) timep);
   }
 
   // Note that we give the total length of the response, even though we 
@@ -922,7 +943,7 @@ void ServiceNFO::addToServiceFingerprint(const char *probeName, const u8 *resp,
       if (srcidx + 1 >= respused || !isdigit(resp[srcidx + 1]))
 	addServiceString("\\0", servicewrap);
       else addServiceString("\\x00", servicewrap);
-    } else if (strchr(resp[srcidx], "\\?\"[]().*+")) {
+    } else if (strchr("\\?\"[]().*+", resp[srcidx])) {
       addServiceChar('\\', servicewrap);
       addServiceChar(resp[srcidx], servicewrap);
     } else if (ispunct((int)resp[srcidx])) {
@@ -1023,7 +1044,7 @@ bool dropdown = false;
    while (current_probe != AP->probes.end()) {
      // For the first run, we only do probes that match this port number
      if ((proto == (*current_probe)->getProbeProtocol()) && 
-	 (*current_probe)->portIsProbable(portno)) {
+	 (*current_probe)->portIsProbable(tunnel, portno)) {
        // This appears to be a valid probe.  Let's do it!
        return *current_probe;
      }
@@ -1042,7 +1063,7 @@ bool dropdown = false;
      // and we better either have no soft match yet, or the soft service match must
      // be available via this probe.
      if ((proto == (*current_probe)->getProbeProtocol()) && 
-	 !(*current_probe)->portIsProbable(portno) &&
+	 !(*current_probe)->portIsProbable(tunnel, portno) &&
 	 (!softMatchFound || (*current_probe)->serviceIsPossible(probe_matched))) {
        // Valid, probe.  Let's do it!
        return *current_probe;
@@ -1176,6 +1197,8 @@ static void startNextProbe(nsock_pool nsp, nsock_iod nsi, ServiceGroup *SG,
 			   ServiceNFO *svc, bool alwaysrestart) {
   bool isInitial = svc->probe_state == PROBESTATE_INITIAL;
   ServiceProbe *probe = svc->currentProbe();
+  struct sockaddr_storage ss;
+  size_t ss_len;
 
   if (!alwaysrestart && probe->isNullProbe()) {
     // The difference here is that we can reuse the same (TCP) connection
@@ -1204,15 +1227,16 @@ static void startNextProbe(nsock_pool nsp, nsock_iod nsi, ServiceGroup *SG,
 	if ((svc->niod = nsi_new(nsp, svc)) == NULL) {
 	  fatal("Failed to allocate Nsock I/O descriptor in startNextProbe()");
 	}
+	svc->target->TargetSockAddr(&ss, &ss_len);
 	if (svc->tunnel == SERVICE_TUNNEL_NONE) {
 	  nsock_connect_tcp(nsp, svc->niod, servicescan_connect_handler, 
-			    DEFAULT_CONNECT_TIMEOUT, svc, svc->target->v4host(),
+			    DEFAULT_CONNECT_TIMEOUT, svc, &ss, ss_len,
 			    svc->portno);
 	} else {
 	  assert(svc->tunnel == SERVICE_TUNNEL_SSL);
 	  nsock_connect_ssl(nsp, svc->niod, servicescan_connect_handler, 
-			    DEFAULT_CONNECT_SSL_TIMEOUT, svc, 
-			    svc->target->v4host(), svc->portno);
+			    DEFAULT_CONNECT_SSL_TIMEOUT, svc, &ss,
+			    ss_len, svc->portno);
 	}
       } else {
 	assert(svc->proto == IPPROTO_UDP);
@@ -1544,6 +1568,8 @@ list<ServiceNFO *>::iterator svc;
 int launchSomeServiceProbes(nsock_pool nsp, ServiceGroup *SG) {
   ServiceNFO *svc;
   ServiceProbe *nextprobe;
+  struct sockaddr_storage ss;
+  size_t ss_len;
 
   while (SG->services_in_progress.size() < SG->ideal_parallelism &&
 	 !SG->services_remaining.empty()) {
@@ -1557,14 +1583,15 @@ int launchSomeServiceProbes(nsock_pool nsp, ServiceGroup *SG) {
     if (o.debugging > 1) {
       printf("Starting probes against new service: %s:%hi (%s)\n", svc->target->targetipstr(), svc->portno, (svc->proto == IPPROTO_TCP)? "tcp" : "udp");
     }
+    svc->target->TargetSockAddr(&ss, &ss_len);
     if (svc->proto == IPPROTO_TCP)
       nsock_connect_tcp(nsp, svc->niod, servicescan_connect_handler, 
-			DEFAULT_CONNECT_TIMEOUT, svc, svc->target->v4host(),
+			DEFAULT_CONNECT_TIMEOUT, svc, &ss, ss_len,
 			svc->portno);
     else {
       assert(svc->proto == IPPROTO_UDP);
       nsock_connect_udp(nsp, svc->niod, servicescan_connect_handler, 
-			svc, svc->target->v4host(),
+			svc, &ss, ss_len,
 			svc->portno);
     }
     // Now remove it from the remaining service list

@@ -1,4 +1,4 @@
-NMAP_VERSION = 3.40PVT13
+NMAP_VERSION = 3.40PVT14
 NMAP_NAME= nmap
 NMAP_URL= http://www.insecure.org/nmap/
 NMAP_PLATFORM=@host@

@@ -45,6 +45,9 @@
 /* $Id$ */
 
 #include "utils.h"
+#include "NmapOps.h"
+
+extern NmapOps o;
 
 /* Hex dump */
 void hdump(unsigned char *packet, unsigned int len) {
@@ -578,9 +581,12 @@ char *mmapfile(char *fname, int *length, int openflags) {
    file at a time (note how gmap is used).*/
 /* I believe this was written by Ryan Permeh ( ryan@eeye.com) */
 
-HANDLE gmap = 0;
-char *mmapfile(char *fname, int *length, int openflags) {
+static HANDLE gmap = NULL;
+
+char *mmapfile(char *fname, int *length, int openflags)
+{
 	HANDLE fd;
+	DWORD mflags, oflags;
 	char *fileptr;
 
 	if (!length || !fname) {
@@ -588,27 +594,44 @@ char *mmapfile(char *fname, int *length, int openflags) {
 		return NULL;
 	}
 
-	*length = -1;
+ if (openflags == O_RDONLY) {
+  oflags = GENERIC_READ;
+  mflags = PAGE_READONLY;
+  }
+ else {
+  oflags = GENERIC_READ | GENERIC_WRITE;
+  mflags = PAGE_READONLY | PAGE_READWRITE;
+ }
 
-	fd= CreateFile(fname,
-		openflags,                // open for writing 
-		0,                            // do not share 
-		NULL,                         // no security 
-		OPEN_EXISTING,                // overwrite existing 
-		FILE_ATTRIBUTE_NORMAL,
-		NULL);                        // no attr. template 
+ fd = CreateFile (
+   fname,
+   oflags,                       // open flags
+   0,                            // do not share
+   NULL,                         // no security
+   OPEN_EXISTING,                // open existing
+   FILE_ATTRIBUTE_NORMAL,
+   NULL);                        // no attr. template
+ if (!fd)
+  pfatal ("%s(%u): CreateFile()", __FILE__, __LINE__);
 
-	gmap=CreateFileMapping(fd,NULL, (openflags & O_RDONLY)? PAGE_READONLY:(openflags & O_RDWR)? (PAGE_READONLY|PAGE_READWRITE) : PAGE_READWRITE,0,0,NULL);
+ *length = (int) GetFileSize (fd, NULL);
 
-	fileptr = (char *)MapViewOfFile(gmap, FILE_MAP_ALL_ACCESS,0,0,0);
-	*length = (int) GetFileSize(fd,NULL);
-	CloseHandle(fd);
+ gmap = CreateFileMapping (fd, NULL, mflags, 0, 0, NULL);
+ if (!gmap)
+  pfatal ("%s(%u): CreateFileMapping(), file '%s', length %d, mflags %08lX",
+    __FILE__, __LINE__, fname, *length, mflags);
 
-	#ifdef MAP_FAILED
-	if (fileptr == MAP_FAILED) return NULL;
-	#else
-	if (fileptr == (char *) -1) return NULL;
-	#endif
+ fileptr = (char*) MapViewOfFile (gmap, oflags == GENERIC_READ ? FILE_MAP_READ : FILE_MAP_WRITE,
+                                     0, 0, 0);
+ if (!fileptr)
+  pfatal ("%s(%u): MapViewOfFile()", __FILE__, __LINE__);
+
+ CloseHandle (fd);
+
+ if (o.debugging > 2)
+  printf ("mmapfile(): fd %08lX, gmap %08lX, fileptr %08lX, length %d\n",
+    (DWORD)fd, (DWORD)gmap, (DWORD)fileptr, *length);
+
 	return fileptr;
 }
 
@@ -617,13 +640,14 @@ char *mmapfile(char *fname, int *length, int openflags) {
    works if the file is the most recently mapped one */
 int win32_munmap(char *filestr, int filelen)
 {
-	if(gmap == 0)
-		fatal("win32_munmap: no current mapping !\n");
-	FlushViewOfFile(filestr, filelen);
-	UnmapViewOfFile(filestr);
-	CloseHandle(gmap);
-	gmap = 0;
-	return 0;
+  if (gmap == 0)
+    fatal("win32_munmap: no current mapping !\n");
+
+  FlushViewOfFile(filestr, filelen);
+  UnmapViewOfFile(filestr);
+  CloseHandle(gmap);
+  gmap = NULL;
+  return 0;
 }
 
 #endif

@@ -4279,7 +4279,7 @@ if test "${with_openssl+set}" = set; then
 fi;
 
 # If they didn't specify it, we try to find it
-if test "$use_openssl" == "yes" -a "${specialssldir+set}" == "set" ; then
+if test "$use_openssl" = "yes" -a "${specialssldir:+set}" = "set"; then
   if test "${ac_cv_header_openssl_ssl_h+set}" = set; then
   echo "$as_me:$LINENO: checking for openssl/ssl.h" >&5
 echo $ECHO_N "checking for openssl/ssl.h... $ECHO_C" >&6
@@ -4419,7 +4419,7 @@ fi
 
 
 
- if test "$use_openssl" == "yes"; then
+ if test "$use_openssl" = "yes"; then
    if test "${ac_cv_header_openssl_err_h+set}" = set; then
   echo "$as_me:$LINENO: checking for openssl/err.h" >&5
 echo $ECHO_N "checking for openssl/err.h... $ECHO_C" >&6
@@ -4560,7 +4560,7 @@ fi
 
  fi
 
- if test "$use_openssl" == "yes"; then
+ if test "$use_openssl" = "yes"; then
    if test "${ac_cv_header_openssl_rand_h+set}" = set; then
   echo "$as_me:$LINENO: checking for openssl/rand.h" >&5
 echo $ECHO_N "checking for openssl/rand.h... $ECHO_C" >&6
@@ -4701,7 +4701,7 @@ fi
 
  fi
 
- if test "$use_openssl" == "yes"; then
+ if test "$use_openssl" = "yes"; then
 
 echo "$as_me:$LINENO: checking for SSL_new in -lssl" >&5
 echo $ECHO_N "checking for SSL_new in -lssl... $ECHO_C" >&6
@@ -4773,7 +4773,7 @@ fi
  fi
 fi
 
-if test "$use_openssl" == "yes"; then
+if test "$use_openssl" = "yes"; then
   cat >>confdefs.h <<\_ACEOF
 #define HAVE_OPENSSL 1
 _ACEOF

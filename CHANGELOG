@@ -1,34 +1,77 @@
 # Nmap Changelog ($Id$)
 
-o Added SSL-scanthru support.  If service detection finds a port to be
-  SSL, it will transparently connect to the port using OpenSSL and use version
-  detection to determine what service lies beneath.  This feature
-  is only enabled if OpenSSL is available at build time.  A new
-  --with-openssl=DIR configure option is available if OpenSSL is not
-  in your default compiler paths.  You can use --without-openssl to
-  disable this functionality.  Thanks to Brian Hatch (bri@ifokr.org)
-  for sample code and other assitance.  Make sure you use a version
-  without known exploitable overflows.  At the time of this writing, I
-  think post-beta 0.9.7 and 0.9.6e or later (in 0.9.6 series) are OK.
+Nmap 3.40PVT14
 
-o Fixed a problem reported by Solar Designer and MadHat (
-  madhat@unspecific.com ) where Nmap would bail when certain Apache
-  version/info responses were particularly long.  It could happen in
-  other cases as well.  Now Nmap just prints a warning.
+o Added IPv6 support for service scan.
+
+o Added an 'sslports' directive to nmap-service-probes.  This tells
+  Nmap which service checks to try first for SSL-wrapped ports.  The
+  syntax is the same as the normal 'ports' directive for non-ssl ports.
+  For example, the HTTP probe has an 'sslports 443' line and
+  SMTP-detecting probes have and 'sslports 465' line.
+
+o Integrated more services thanks to submissiosn from MadHat
+  (madhat(a)unspecific.com), Solar Designer (solar(a)openwall.com), Dug
+  Song (dugsong(a)monkey.org), pope(a)undersec.com, and Brian Hatch
+  (bri(a)ifokr.org).  There are now 288 signatures, matching these 65
+  service protocols:
+    chargen cvspserver daytime domain echo exec finger font-service
+    ftp ftp-proxy http http-proxy hylafax ident ident imap imaps ipp
+    ircbot ircd irc-proxy issrealsecure landesk-rc ldap meetingmaker
+    microsoft-ds msrpc mud mysql ncacn_http ncp netbios-ns netbios-ssn
+    netsaint netwareip nntp nsclient oracle-tns pcanywheredata pop3
+    pop3s postgres printer qotd redcarpet rlogind rpc rsync rtsp shell
+    smtp snpp spamd ssc-agent ssh ssl telnet time upnp uucp vnc
+    vnc-http webster whois winshell X11
+
+o Added a Lotus Notes probe from Fyodor Yarochkin
+  (fygrave(a)tigerteam.net).
+
+o Dug Song wins the "award" for most obscure service fingerprint
+  submission.  Nmap now detects Dave Curry's Webster dictionary server
+  from 1986 :).
+
+o Service fingerprints now include a 'T=SSL' attribute when SSL
+  tunneling was used.
+
+o More portability enhancements thanks to Solar Designer and his Linux
+  2.0 libc5 boxes.
+
+o Applied a patch from Gisle Vanem (giva(a)bgnett.no) which improves
+  Windows emulation of the UNIX mmap() and munmap() memory mapping calls.
+
+Nmap 3.40PVT13
+
+o Added SSL-scanthru support.  If service detection finds a port to be
+  SSL, it will transparently connect to the port using OpenSSL and use
+  version detection to determine what service lies beneath.  This
+  feature is only enabled if OpenSSL is available at build time.  A
+  new --with-openssl=DIR configure option is available if OpenSSL is
+  not in your default compiler paths.  You can use --without-openssl
+  to disable this functionality.  Thanks to Brian Hatch
+  (bri(a)ifokr.org) for sample code and other assitance.  Make sure you
+  use a version without known exploitable overflows.  At the time of
+  this writing, I think post-beta 0.9.7 and 0.9.6e or later (in 0.9.6
+  series) are OK.
 
 o Integrated many more services thanks to submissions from Brian
   Hatch, HellNBack ( hellnbak(a)nmrc.org ), MadHat, Solar Designer,
-  Simple Nomad, and Shawn Wallis (swallis@ku.edu).  The number of
+  Simple Nomad, and Shawn Wallis (swallis(a)ku.edu).  The number of
   signatures hsa grown from 242 to 271.  Thanks!
 
-o Fixed some portability issues reported by Solar Designer 
-  ( solar@openwall.com )
-
 o Integrated Novell Netware NCP and MS Terminal Server probes from
-  Simple Nomad (thegnome@nmrc.org).
+  Simple Nomad (thegnome(a)nmrc.org).
 
 o Fixed a segfault found by Solar Designer that could occur when
   scanning certain "evil" services.
+
+o Fixed a problem reported by Solar Designer and MadHat (
+  madhat(a)unspecific.com ) where Nmap would bail when certain Apache
+  version/info responses were particularly long.  It could happen in
+  other cases as well.  Now Nmap just prints a warning.
+
+o Fixed some portability issues reported by Solar Designer 
+  ( solar(a)openwall.com )
 
 Nmap 3.40PVT12
 
@@ -38,7 +81,7 @@ o I added probes for SSL (session startup request) and microsoft-ds
 o I changed the default read timeout for a service probe from 7.5s to 5s.
 
 o Fixed a one-character bug that broke many scans when -sV was NOT
-  given.  Thanks to Blue Boar (BlueBoar@thievco.com) for the report.
+  given.  Thanks to Blue Boar (BlueBoar(a)thievco.com) for the report.
 
 Nmap 3.40PVT11
 
@@ -114,7 +157,7 @@ o Updated XML output to handle new version and service detection
 o Fixed issue where Nmap would quit when ECONNREFUSED was returned
   when we try to read from an already-connected TCP socket.  FreeBSD
   does this for some reason instead of giving ECONNRESET.  Thanks to
-  Will Saxon (WillS@housing.ufl.edu) for the report.
+  Will Saxon (WillS(a)housing.ufl.edu) for the report.
 
 o Removed the SERVICEMATCH_STATIC match type from
   nmap-service-probes.  There wasn't much benefit of this over regular
@@ -163,7 +206,7 @@ o Soem of the service fingerprint length limitations are relaxed a bit
 Nmap 3.40PVT7
 
 o Added a whole bunch of services submitted by Brian Hatch
-  (bri(@)ifokr.org).  I also added a few Windows-related probes.
+  (bri(a)ifokr.org).  I also added a few Windows-related probes.
   Nmap-service-probes has gone from 101 match strings to 137.  Please
   keep the submissions coming.
 
@@ -172,11 +215,11 @@ o The question mark now only appears for ports in the OPEN state and
 
 o I now print a separator bar between service fingerprints when Nmap
   prints more than one for a given host so that users unerstand to
-  submit them individually (suggested by Brian Hatch (bri(@)ifokr.org))
+  submit them individually (suggested by Brian Hatch (bri(a)ifokr.org))
 
 o Fixed a bug that would cause Nmap to print "empty" service
   fingerprints consisting of just a semi-colon.  Thanks to Brian Hatch
-  (bri(@)ifokr.org) for reporting this.
+  (bri(a)ifokr.org) for reporting this.
 
 Nmap 3.40PVT6
 
@@ -196,7 +239,7 @@ o Applied a large portability patch from Albert Chin-A-Young
   (china(at)thewrittenword.com).  This cleans up a number of things,
   particularly for IRIX, Tru64, and Solaris.
 
-o Applied NmapFE patch from Peter Marschall (peter@adpm.de) which
+o Applied NmapFE patch from Peter Marschall (peter(a)adpm.de) which
   "makes sure changes in the relay host and scanned port entry fields
   are displayed immediately, and also keeps the fields editable after
   de- and reactivating them."
@@ -204,7 +247,7 @@ o Applied NmapFE patch from Peter Marschall (peter@adpm.de) which
 Nmap 3.40PVT4
 
 o Limited the size of service fingerprints to roughly 1024 bytes.
-  This was suggested by Niels Heinen (niels@heinen.ws), because the previous
+  This was suggested by Niels Heinen (niels(a)heinen.ws), because the previous
   limit was excessive.  The number of fingerprints printed is also now
   limited to 10.
 
@@ -239,7 +282,7 @@ o Fixed a bug that would cause Nmap to quit with an nsock error when
 
 o Fixed a bug that would cause Nmap to fail to print the OS
   fingerprint in certain cases.  Thanks to Ste Jones
-  (root@networkpenetration.com) for the problem report.
+  (root(a)networkpenetration.com) for the problem report.
 
 Nmap 3.40PVT2
 

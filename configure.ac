@@ -227,24 +227,24 @@ AC_ARG_WITH(openssl,
 )
 
 # If they didn't specify it, we try to find it
-if test "$use_openssl" == "yes" -a "${specialssldir+set}" == "set" ; then
+if test "$use_openssl" = "yes" -a "${specialssldir:+set}" = "set"; then
   AC_CHECK_HEADER(openssl/ssl.h,,
   [ use_openssl="no"
     AC_MSG_WARN([Failed to find openssl/ssl.h so OpenSSL will not be used. If it is installed you can try the --with-openssl=DIR argument]) ])
 
- if test "$use_openssl" == "yes"; then
+ if test "$use_openssl" = "yes"; then
    AC_CHECK_HEADER(openssl/err.h,,
     [ use_openssl="no"
     AC_MSG_WARN([Failed to find openssl/err.h so OpenSSL will not be used. If it is installed you can try the --with-openssl=DIR argument]) ])
  fi
 
- if test "$use_openssl" == "yes"; then
+ if test "$use_openssl" = "yes"; then
    AC_CHECK_HEADER(openssl/rand.h,,
     [ use_openssl="no"
     AC_MSG_WARN([Failed to find openssl/rand.h so OpenSSL will not be used. If it is installed you can try the --with-openssl=DIR argument]) ])
  fi
 
- if test "$use_openssl" == "yes"; then
+ if test "$use_openssl" = "yes"; then
    AC_CHECK_LIB(ssl, SSL_new,
     [],
     [ use_openssl="no"
@@ -252,7 +252,7 @@ if test "$use_openssl" == "yes" -a "${specialssldir+set}" == "set" ; then
  fi
 fi
 
-if test "$use_openssl" == "yes"; then
+if test "$use_openssl" = "yes"; then
   AC_DEFINE(HAVE_OPENSSL)
   LIBS="$LIBS -lssl -lcrypt"
 fi

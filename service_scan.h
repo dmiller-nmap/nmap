@@ -183,15 +183,21 @@ class ServiceProbe {
   }
   void setProbeProtocol(u8 protocol) { probeprotocol = protocol; }
 
-  // Takes a string as given in the 'ports ' line of
-  // nmap-services-probes.  Pass in any text after "ports ".  The line
+  // Takes a string as given in the 'ports '/'sslports ' line of
+  // nmap-services-probes.  Pass in the list from the appropriate
+  // line.  For 'sslports', tunnel should be specified as
+  // SERVICE_TUNNEL_SSL.  Otherwise use SERVICE_TUNNEL_NONE.  The line
   // number is requested because this function will bail with an error
-  // (giving the line number) if it fails to parse the string.  Ports are
-  // a comma seperated list of prots and ranges (e.g. 53,80,6000-6010)
-  void setProbablePorts(const char *portstr, int lineno);
+  // (giving the line number) if it fails to parse the string.  Ports
+  // are a comma seperated list of prots and ranges
+  // (e.g. 53,80,6000-6010).
+  void setProbablePorts(enum service_tunnel_type tunnel,
+			const char *portstr, int lineno);
 
-  // Returns true if the passed in port is on the list of probable ports for this probe.
-  bool portIsProbable(u16 portno);
+  /* Returns true if the passed in port is on the list of probable
+     ports for this probe and tunnel type.  Use a tunnel of
+     SERVICE_TUNNEL_SSL or SERVICE_TUNNEL_NONE as appropriate */
+  bool portIsProbable(enum service_tunnel_type tunnel, u16 portno);
   // Returns true if the passed in service name is among those that can
   // be detected by the matches in this probe;
   bool serviceIsPossible(const char *sname);
@@ -216,11 +222,14 @@ class ServiceProbe {
   const struct MatchDetails *testMatch(const u8 *buf, int buflen);
 
  private:
+  void ServiceProbe::setPortVector(vector<u16> *portv, const char *portstr, 
+				 int lineno);
   char *probename;
 
   u8 *probestring;
   int probestringlen;
   vector<u16> probableports;
+  vector<u16> probablesslports;
   vector<const char *> detectedServices;
   int probeprotocol;
   vector<ServiceProbeMatch *> matches; // first-ever use of STL in Nmap!
