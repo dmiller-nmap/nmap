@@ -220,13 +220,8 @@ void *realloc();
 void printusage(char *name);
 
 /* our scanning functions */
-portlist tcp_scan(struct hoststruct *target, unsigned short *portarray,                  int timeout);
-portlist syn_scan(struct hoststruct *target, unsigned short *portarray);
-portlist fin_scan(struct hoststruct *target, unsigned short *portarray);
 portlist super_scan(struct hoststruct *target, unsigned short *portarray, stype scantype);
 portlist pos_scan(struct hoststruct *target, unsigned short *portarray, stype scantype);
-portlist udp_scan(struct hoststruct *target, unsigned short *portarray);
-portlist lamer_udp_scan(struct hoststruct *target,unsigned short *portarray);
 portlist bounce_scan(struct hoststruct *target, unsigned short *portarray,
 		     struct ftpinfo *ftp);
 
@@ -278,7 +273,6 @@ int listen_icmp(int icmpsock, unsigned short outports[],
 		unsigned short numtries[], int *num_out,
 		struct in_addr target, portlist *ports);
 void massping(struct hoststruct *hostbatch, int numhosts, int pingtimeout);
-void masstcpping(struct hoststruct *hostbatch, int num_hosts, int pingtimeout);
 
 /* general helper functions */
 void hdump(unsigned char *packet, int len);

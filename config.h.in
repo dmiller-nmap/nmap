@@ -39,6 +39,9 @@
 
 #undef HAVE_NETINET_IF_ETHER_H
 
+#undef STUPID_SOLARIS_CHECKSUM_BUG
+
 #undef LINUX
 #undef SOLARIS
 #undef FREEBSD
+#undef BSDI

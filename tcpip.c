@@ -181,10 +181,12 @@ else tcp->th_win = htons(1024 * (myttl % 4 + 1)); /* Who cares */
    memcpy(packet + sizeof(struct ip) + sizeof(struct tcphdr), options, optlen);
  }
 
-
+#if STUPID_SOLARIS_CHECKSUM_BUG
+ tcp->th_sum = sizeof(struct tcphdr); /* Do I have to add the data length??? */
+#else
 tcp->th_sum = in_cksum((unsigned short *)pseudo, sizeof(struct tcphdr) + 
 		       optlen + sizeof(struct pseudo_header) + datalen);
-
+#endif
 /* Now for the ip header */
 
 bzero(packet, sizeof(struct ip)); 

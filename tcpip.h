@@ -114,7 +114,7 @@ void *realloc();
 #define TCPIP_DEBUGGING 0
 #endif
 
-#ifdef FREEBSD
+#if FREEBSD || BSDI
 #define BSDFIX(x) x
 #define BSDUFIX(x) x
 #else

@@ -11,7 +11,7 @@ CC = @CC@
 CCOPT = 
 LIBPCAPDIR = @libpcapdir@
 INCLS = -I. -I$(LIBPCAPDIR)
-VERSION = 2.0-Beta1
+VERSION = 2.0-Beta3
 DEFS = @DEFS@ -DVERSION=\"$(VERSION)\" -DLIBDIR=\"$(libdir)\"
 #CFLAGS = @CFLAGS@ $(CCOPT) $(DEFS) $(INCLS)
 CFLAGS = -g -Wall $(DEFS) $(INCLS)
@@ -26,7 +26,7 @@ SRCS = nmap.c targets.c tcpip.c error.c utils.c osscan.c @COMPAT_SRCS@
 
 OBJS = nmap.o targets.o tcpip.o error.o utils.o osscan.o @COMPAT_OBJS@
 
-DEPS = nmap.h error.h osscan.h tcpip.h utils.h global_structures.h
+DEPS = nmap.h error.h targets.h osscan.h tcpip.h utils.h global_structures.h
 
 all: $(TARGET)
 
@@ -63,7 +63,7 @@ distro:
 	mkdir /usr/tmp/nmap-$(VERSION)
 	$(MAKE) clean
 	rm -f $(LIBPCAPDIR)/config.cache $(LIBPCAPDIR)/Makefile
-	cp -ra nmap.c targets.c nmap.h \
+	cp -ra nmap.c targets.c targets.h nmap.h \
 	tcpip.c tcpip.h error.c error.h utils.c utils.h inet_aton.c \
         global_structures.h  osscan.h osscan.c nmap-os-fingerprints \
 	configure.in config.h.in Makefile.in configure install-sh config.guess \

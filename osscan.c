@@ -325,7 +325,7 @@ if (o.verbose && openport != -1)
  } while ( testsleft > 0 && (tries++ < 5 && (newcatches || tries == 1)));
  
 for(i=2; i < 8; i++)
-  if (!FPtests[i]) {
+  if (!FPtests[i] && ((openport != -1) || i > 4)) {
     /* We create a Resp (response) attribute with value of N (no) because
        it is important here to note whether responses were or were not 
        received */
@@ -596,7 +596,7 @@ int i;
       the first fingerprint */
    for(try=1; try < 3; try++) {
      if (o.debugging)
-       error("Killing fingerprint #%d (0 based): %s\n", try, 
+       error("Killing fingerprint #%d (0 based):\n %s", try, 
 	     fp2ascii(FPs[try]));
      if (FPs[try]) freeFingerPrint(FPs[try]);
    }

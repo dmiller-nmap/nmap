@@ -40,6 +40,10 @@ case "$host" in
     no_libsocket=yes
     no_libnsl=yes
     ;;
+  *-solaris2.5.1)
+    AC_DEFINE(STUPID_SOLARIS_CHECKSUM_BUG)
+    AC_DEFINE(SOLARIS)
+    ;;
   *-solaris*)
     AC_DEFINE(SOLARIS)
     ;;
@@ -49,8 +53,12 @@ case "$host" in
     AC_DEFINE(PCAP_TIMEOUT_IGNORED)  # libpcap doesn't even LOOK at
                                      # the timeout you give it under Linux
     ;;
-    *-freebsd*)
+  *-freebsd*)
     AC_DEFINE(FREEBSD)
+    ;;
+  *-bsdi*)
+    AC_DEFINE(BSDI)
+    ;;
 esac
 
 dnl Checks for libraries.
