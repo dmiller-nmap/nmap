@@ -1,8 +1,18 @@
 # Nmap Changelog
 
+-- Added some debug code to help diagnose the "Unknown datalink type"
+   error.  If Nmap is giving you this error, please send the following
+   info to fyodor@insecure.org :
+   1) The full output from Nmap (including the command arguments)
+   2) What OS and OS version are you using
+   3) What type of adaptor are you using (modem, ethernet, FDDI, etc)
+
 -- Fixed a bunch of fingerprints that were corrupt due to violations
    of the fingerprint syntax/grammar (problems were found by Raymond
    Mercier of VIGILANTe )
+
+-- Fixed command-line option parsing bug found 
+   by "m r rao" (mrrao@del3.vsnl.net.in )
 
 ** 2.54BETA25
 

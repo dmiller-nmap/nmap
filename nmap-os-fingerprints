@@ -3681,6 +3681,18 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=C0%IPLEN=178%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=F|E)
 
+# Contributed by sverre <sverre@gmx.net>
+Fingerprint Linux 2.2.19
+TSeq(Class=RI%gcd=<6%SI=<2665AC4&>62494%IPID=I%TS=U)
+T1(DF=Y%W=3F25%ACK=S++%Flags=AS%Ops=ME)
+T2(Resp=N)
+T3(Resp=Y%DF=Y%W=3F25%ACK=S++%Flags=AS%Ops=ME)
+T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
+PU(DF=N%TOS=C0%IPLEN=164%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
+
 # Contributed by Cabal (dogbert@clue4all.net)
 # Linux 2.2.19 on a DEC Alpha 233mhz Multia
 Fingerprint Linux 2.2.19 on a DEC Alpha
