@@ -160,7 +160,7 @@ if (o.verbose && openport != -1)
        for(i=0; i < target->seq.responses - 1; i++) {     
 	 if (MOD_DIFF(target->seq.seqs[i+1],target->seq.seqs[i]) > 10000000) {
 	   target->seq.class = SEQ_TR;
-	   target->seq.index = 999999;
+	   target->seq.index = 9999999;
 	   /*	 printf("Target is a TR box\n");*/
 	   break;
 	 }	
@@ -466,7 +466,7 @@ struct AVal *fingerprint_iptcppacket(struct ip *ip, int mss, unsigned long syn) 
 
 FingerPrint **match_fingerprint(FingerPrint *FP) {
   static FingerPrint *matches[10];
-  int max_matches = 10;
+  int max_matches = 6;
   int matches_found = 0;
   FingerPrint *current_os;
   FingerPrint *current_test;
@@ -561,13 +561,12 @@ int AVal_match(struct AVal *reference, struct AVal *fprint) {
 
 
 int os_scan(struct hoststruct *target) {
-FingerPrint *FP;
 FingerPrint **matches;
 FingerPrint *current;
 int i;
-FP = get_fingerprint(target);
-matches = match_fingerprint(FP);
-if (matches[0])
+target->FP = get_fingerprint(target);
+target->FP_matches = match_fingerprint(target->FP);
+if (target->FP_matches[0])
   for(i=0; matches[i]; i++) {  
     current = matches[i];
     printf("Match #%d: %s\n", i +1, current->OS_name);

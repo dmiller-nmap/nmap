@@ -70,6 +70,13 @@ struct timeout_info {
   int timeout; /* Current timeout threshold (microseconds) */
 };
 
+struct seq_info {
+    int class;
+    int responses;
+    unsigned long seqs[NUM_SEQ_SAMPLES];
+    int index;
+};
+
 struct targets {
   /* These 4 are used for the '/mask' style of specifying target net*/
   unsigned int netmask;
@@ -80,19 +87,14 @@ struct targets {
   /* These two are for the '138.[1-7,16,91-95,200-].12.1 style */
   unsigned char addresses[4][256];
   unsigned int current[4];
-  unsigned char last[4];
+  unsigned char last[4];  
 };
 
 struct hoststruct {
   struct in_addr host;
   struct in_addr source_ip;
   char *name;
-  struct {
-    int class;
-    int responses;
-    unsigned long seqs[NUM_SEQ_SAMPLES];
-    int index;
-  } seq;
+  struct seq_info seq;
   FingerPrint **FP_matches;
   FingerPrint *FP;
   struct port *ports;

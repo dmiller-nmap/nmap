@@ -403,6 +403,27 @@ o.decoys[o.decoyturn] = currenths->source_ip;
 	printandfreeports(currenths->ports);
 	if (currenths->wierd_responses)
 	  nmap_log("Host  %s (%s) seems to be a subnet broadcast address (returned %d extra pings)\n",  currenths->name, inet_ntoa(currenths->host), currenths->wierd_responses);
+      } if (o.osscan) {
+	if (currenths->seq.responses > 3) {
+	  nmap_log("Sequenceability report:  %s\n", seqreport(&(currenths->seq)));
+	}
+	if (currenths->FP_matches[0]) {
+	  i=0;
+	  if (!currenths->FP_matches[1])
+	    nmap_log("Suspected operating system: ");
+	  else  nmap_log("Suspected operating systems:");
+	  while(currenths->FP_matches[i]) {
+	    nmap_log(" %s", currenths->FP_matches[i]->OS_name);
+	  }
+	  nmap_log("\n");
+	  if (o.debugging || o.verbose > 1) {
+	    nmap_log("OS Fingerprint:\n%s\n", fp2ascii(currenths->FP));
+	  }
+	} else {
+	  nmap_log("No OS matches for this host.  TCP fingerprint:\n%s\n", fp2ascii(currenths->FP));
+	}
+
+
       }
     }
     fflush(stdout);
@@ -922,6 +943,51 @@ if (o.debugging || o.verbose)
 return target->ports;
 }
 
+char *seqreport(struct seq_info *seq) {
+static char report[512];
+char tmp[256];
+char *p;
+int i;
+int len;
+ sprintf(report, "Sequence class: %s  Difficulty category/index: %s/%d  (lower = easier to predict\n", seqclass2ascii(seq->class), (seq->index < 10)? "Trivial joke" : (seq->index < 40)? "Easy" : (seq->index < 150)? "Medium" : (seq->index < 1000)? "Formidable" : (seq->index < 100000)? "Very difficult" : "As tough as it gets", seq->index);
+ if (o.verbose) {
+   tmp[0] = '\0'; 
+   p = tmp;
+   strcpy(p, "Sequence numbers: ");
+   p += 18;
+   for(i=0; i < seq->responses; i++) {
+     len = sprintf(p, "%lX ", seq->seqs[i]);
+     p += len;
+   }
+   *p = '\n';
+   strcat(report, tmp);
+ }
+return report;
+}
+
+char *seqclass2ascii(int class) {
+  switch(class) {
+  case SEQ_CONSTANT:
+    return "constant sequence number (!)";
+  case SEQ_64K:
+    return "64K rule";
+  case SEQ_TD:
+    return "trivial time dependence";
+  case SEQ_i800:
+    return "increments by 800";
+  case SEQ_RI:
+    return "random positive increments";
+  case SEQ_TR:
+    return "truly random";
+  case SEQ_UNKNOWN:
+    return "unknown class";
+  default:
+    return "Error, WTF?";
+  }
+}
+
+
+
 struct port *lookupport(portlist ports, unsigned short portno, unsigned short protocol) {
   portlist result = ports;
   while(result && result->portno <= portno) {
@@ -931,6 +997,8 @@ struct port *lookupport(portlist ports, unsigned short portno, unsigned short pr
   }
   return NULL;
 }
+
+
 
 /* gawd, my next project will be in c++ so I don't have to deal with
    this crap ... simple linked list implementation */

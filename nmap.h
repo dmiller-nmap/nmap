@@ -266,6 +266,7 @@ void broadcast_socket(int sd);
 int recvtime(int sd, char *buf, int len, int seconds);
 void max_rcvbuf(int sd);
 int max_sd();
+
 /* RAW packet building/dissasembling stuff */
 int isup(struct in_addr target);
 int send_small_fragz(int sd, struct in_addr *source, struct in_addr *victim,
@@ -275,6 +276,7 @@ int listen_icmp(int icmpsock, unsigned short outports[],
 		struct in_addr target, portlist *ports);
 void massping(struct hoststruct *hostbatch, int numhosts, int pingtimeout);
 void masstcpping(struct hoststruct *hostbatch, int num_hosts, int pingtimeout);
+
 /* general helper functions */
 void hdump(unsigned char *packet, int len);
 void *safe_malloc(int size);
@@ -284,6 +286,8 @@ struct hoststruct *nexthost(char *hostexp, int lookahead, int pingtimeout);
 void options_init();
 void nmap_log(char *fmt, ...);
 void sigdie(int signo);
+char *seqreport(struct seq_info *seq);
+char *seqclass2ascii(int clas);
 /* From glibc 2.0.6 because Solaris doesn't seem to have this function */
 #ifndef HAVE_INET_ATON
 int inet_aton(register const char *, struct in_addr *);
