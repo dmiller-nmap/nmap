@@ -648,7 +648,7 @@ void printosscanoutput(struct hoststruct *currenths) {
 	  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"TCP/IP fingerprint:\n%s\n\n",  mergeFPs(currenths->FPs, currenths->numFPs, currenths->osscan_openport, currenths->osscan_closedport));
 	}
       } else { assert(0); }
-     log_write(LOG_XML, "</os>");
+     log_write(LOG_XML, "</os>\n");
 
      if (currenths->seq.lastboot) {
        char tmbuf[128];
@@ -657,6 +657,7 @@ void printosscanoutput(struct hoststruct *currenths) {
        strncpy(tmbuf, ctime(&(currenths->seq.lastboot)), sizeof(tmbuf));
        chomp(tmbuf);
        log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Uptime %.3f days (since %s)\n", (double) (tv.tv_sec - currenths->seq.lastboot) / 86400, tmbuf);
+       log_write(LOG_XML, "<uptime seconds=\"%li\" lastboot=\"%s\" />\n", tv.tv_sec - currenths->seq.lastboot, tmbuf);
      }
 
      if (currenths->seq.responses > 3) {

@@ -1,5 +1,12 @@
 # Nmap Changelog ($Id$)
 
+-- Documented the --append_output option which tells Nmap to append 
+   scan results to any output files you have specified rather than 
+   overwriting the files.
+
+-- Applied patch by William McVey (wam@cisco.com) which adds the uptime
+   information printed with -O to the XML output format.
+   
 -- Applied patch by Colin Phipps (cph@netcraft.com) which correctly
    encodes special characters in the XML output.
 

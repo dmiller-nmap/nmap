@@ -4121,7 +4121,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=Y%TOS=0%IPLEN=38%RIPTL=15C%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
 # Contributed by Brian Vancil <bvancil@leland.stanford.edu>
-Fingerprint MacOS X 10.0.4 (Darwin V. 1.3-1.3.7 or 4P13)
+Fingerprint FreeBSD 4.4 or MacOS X 10.0.4 (Darwin V. 1.3-1.3.7 or 4P13)
 TSeq(Class=RI%gcd=<6%SI=<6E99C&>2A1%IPID=I%TS=2HZ)
 T1(DF=Y%W=807A|C0B7%ACK=S++%Flags=AS%Ops=MNWNNT)
 T2(Resp=N)
