@@ -1,17 +1,22 @@
-# Nmap OS FingerPrint List.  If you add stuff to this, please send the
-# fingerprints or (even better) the OS name and IP address to
-# fyodor@insecure.org .  Actually the best thing to do now is to
-# use the fingerprint CGI at:  http://www.insecure.org/cgi-bin/nmap-submit.cgi
-
+# Nmap OS Fingerprint List.
+#
+# Contributions to this database are welcome.  If Nmap obtains a new
+# fingerprint (and test conditions are favorable), it will print out a
+# URL you can use to submit the fingerprint.  If Nmap guesses wrong,
+# please send the full Nmap output and the exact destination host
+# OS name/version to fyodor@insecure.org .
+#
 # By submitting fingerprints you are transfering any and all copyright
 # interest in the data to Fyodor so that he can modify it, relicense it,
 # incorporate it into programs, etc.
-
-# This collection of fingerprint data is (C) 1998-2001 by
-# Fyodor (fyodor@insecure.org ).
-# The usage license for this file is the same as that for which
-# you acquired nmap (probably the GNU General Public License)
-
+#
+# This collection of fingerprint data is (C) 1998-2002 by
+# Fyodor (fyodor@insecure.org ).  This data is available for
+# free use by open source software under the terms of the GNU General
+# Public License.  We also license the data to selected
+# commercial/proprietary vendors under less restrictive terms.
+# Contact sales@insecure.com for more information.
+#
 # TEST DESCRIPTION:
 # Tseq is the TCP sequenceability test
 # T1 is a SYN packet with a bunch of TCP options to open port

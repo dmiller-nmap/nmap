@@ -3,6 +3,8 @@
 o Applied fix for an important RPC scanning bug sent in by Pasi Eronen
   (pasi.eronen@nixu.com)
 
+o Move main() into a new file, cleverly named main.c.
+
 Nmap 2.54BETA32
 
 o Applied Windows pinging fix and from Andy Lutomirski

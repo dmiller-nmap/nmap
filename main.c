@@ -1,3 +1,4 @@
+
 /***********************************************************************
  * main.c -- Contains the main() function of Nmap.  Note that main()   *
  * does very little except for calling nmap_main() (which is in        *
@@ -51,7 +52,7 @@
 #include "timing.h"
 
 /* global options */
-struct ops o;  /* option structure */
+extern struct ops o;  /* option structure */
 extern char **environ;
 
 int main(int argc, char *argv[], char *envp[]) {

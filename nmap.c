@@ -1,3 +1,4 @@
+
 /***********************************************************************
  * nmap.c -- Currently handles some of Nmap's port scanning            *
  * features as well as the command line user interface.  Note that the *
@@ -53,7 +54,7 @@
 /* global options */
 extern char *optarg;
 extern int optind;
-extern struct ops o;  /* option structure */
+struct ops o;  /* option structure */
 extern char **environ;
 
 /* parse the --scanflags argument.  It can be a number >=0 or a string consisting of TCP flag names like "URGPSHFIN".  Returns -1 if the argument is invalid. */
