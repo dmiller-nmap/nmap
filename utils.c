@@ -404,7 +404,7 @@ int arg_parse(const char *command, char ***argv) {
   char **myargv = NULL;
   int argc = 0;
   char mycommand[4096];
-  char *start, *end;
+  unsigned char *start, *end;
   char oldend;
 
   *argv = NULL;

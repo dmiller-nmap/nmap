@@ -1,5 +1,9 @@
 # Nmap Changelog
 
+-- Various internal code cleanups.
+
+-- Added a whole bunch of OS fingerprints that people have submitted.
+
 -- Added ACK scanning!  This scan technique (which van Houser and
    others have been bugging me to add for years :), is great for
    testing firewall rulesets.  It can NOT find open ports, but it can

@@ -846,7 +846,7 @@ int nmap_main(int argc, char *argv[]) {
       target = NULL;
       if (((currenths->flags & HOST_UP) || resolve_all) && !o.noresolve)
 	target = gethostbyaddr((char *) &currenths->host, 4, AF_INET);
-      if (target) {
+      if (target && *target->h_name) {
 	currenths->name = strdup(target->h_name);
       }
       else {
@@ -1005,6 +1005,7 @@ int nmap_main(int argc, char *argv[]) {
 	log_write(LOG_MACHINE,"\n");
       }
       log_flush_all();
+      if (*currenths->name) free(currenths->name);
     }
     /* Free my host expressions */
     for(i=0; i < num_host_exp_groups; i++)
@@ -1046,7 +1047,7 @@ int gather_logfile_resumption_state(char *fname, int *myargc, char ***myargv) {
   int filelen;
   char nmap_arg_buffer[1024];
   struct in_addr lastip;
-  char *p, *q, *found; /* I love C! */
+  unsigned char *p, *q, *found; /* I love C! */
   /* We mmap it read/write since we will change the last char to a newline if it is not already */
   filestr = mmapfile(fname, &filelen, O_RDWR);
   if (!filestr) {
@@ -1249,7 +1250,7 @@ unsigned short *getpts(char *origexpr) {
   unsigned char porttbl[65536];
   int portwarning = 0; /* have we warned idiot about dup ports yet? */
   long rangestart = -2343242, rangeend = -9324423;
-  char *current_range;
+  unsigned char *current_range;
   char *endptr;
   int i;
   unsigned short *ports;
@@ -1974,8 +1975,7 @@ void super_scan(struct hoststruct *target, unsigned short *portarray, stype scan
    * header + 4 bytes of TCP port info.
    */
 
-  if (!(pd = pcap_open_live(target->device, 92,  (o.spoofsource)? 1 : 0, 10, err0r)))
-    fatal("pcap_open_live: %s\nIf you are on Linux and getting Socket type not supported, try modprobe af_packet or recompile your kernel with SOCK_PACKET enabled.  If you are on bsd and getting device not configured, you need to recompile your kernel with Berkeley Packet Filter support.  If you are getting No such file or directory, try creating the device (eg cd /dev; MAKEDEV <device>; or use mknod)", err0r);
+  pd = my_pcap_open_live(target->device, 92,  (o.spoofsource)? 1 : 0, 10);
 
   if (pcap_lookupnet(target->device, &localnet, &netmask, err0r) < 0)
     fatal("Failed to lookup device subnet/netmask: %s", err0r);
@@ -2447,6 +2447,7 @@ void pos_scan(struct hoststruct *target, unsigned short *portarray, stype scanty
   FD_ZERO(&csi.fds_read);
   FD_ZERO(&csi.fds_write);
   FD_ZERO(&csi.fds_except);
+  csi.maxsd = 0;
 
   /* Start the firewall mode with a clean slate ... */
   target->firewallmode.active = 0;
@@ -2519,9 +2520,7 @@ void pos_scan(struct hoststruct *target, unsigned short *portarray, stype scanty
        link_layer header + first 12 bytes of TCP header.
     */
     
-    if (!(pd = pcap_open_live(target->device, 100,  (o.spoofsource)? 1 : 0, 
-			      20, err0r)))
-      fatal("pcap_open_live: %s\nIf you are on Linux and getting Socket type not supported, try modprobe af_packet or recompile your kernel with SOCK_PACKET enabled.  If you are on bsd and getting device not configured, you need to recompile your kernel with Berkeley Packet Filter support.  If you are getting No such file or directory, try creating the device (eg cd /dev; MAKEDEV <device>; or use mknod)", err0r);
+    pd = my_pcap_open_live(target->device, 100,  (o.spoofsource)? 1 : 0, 20);
     
     if (pcap_lookupnet(target->device, &localnet, &netmask, err0r) < 0)
       fatal("Failed to lookup device subnet/netmask: %s", err0r);
@@ -3171,15 +3170,18 @@ int get_connect_results(struct hoststruct *target, struct portinfo *scan,
   int optval, optlen = sizeof(int);
   struct timeval timeout;
   int i, sd;
-  int res;
   int trynum;
   char buf[2048];
   struct portinfo *current = NULL;
   struct timeval tv;
+  int res;
+#ifdef LINUX
   struct sockaddr_in sin,sout;
   int sinlen = sizeof(sin);
   int soutlen = sizeof(sout);
+#endif
 
+  res = 0;  /* to prevent compiler warning */
   do {
     fds_rtmp = csi->fds_read;
     fds_wtmp = csi->fds_write;
@@ -3788,7 +3790,7 @@ int log_open(int logt, int append, char *filename)
   return 1;
 }
 
-void skid_output(char *s)
+void skid_output(unsigned char *s)
 {
   int i;
   for (i=0;s[i];i++)

@@ -71,8 +71,7 @@ get_random_bytes(&sequence_base, sizeof(unsigned int));
 ossofttimeout = MAX(200000, target->to.timeout);
 oshardtimeout = MAX(500000, 5 * target->to.timeout);
 
-if (!(pd = pcap_open_live(target->device, 650,  (o.spoofsource)? 1 : 0, (ossofttimeout + 500)/ 1000, err0r)))
-  fatal("pcap_open_live: %s\nIf you are on Linux and getting Socket type not supported, try modprobe af_packet or recompile your kernel with SOCK_PACKET enabled.  If you are on bsd and getting device not configured, you need to recompile your kernel with Berkeley Packet Filter support.  If you are getting No such file or directory, try creating the device (eg cd /dev; MAKEDEV <device>; or use mknod)", err0r);
+ pd = my_pcap_open_live(target->device, 650,  (o.spoofsource)? 1 : 0, (ossofttimeout + 500)/ 1000);
 
 if (o.debugging)
    log_write(LOG_STDOUT, "Wait time is %d\n", (ossofttimeout +500)/1000);

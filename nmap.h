@@ -189,7 +189,10 @@ void *realloc();
 /* If nmap is called with one of the names below, it will start up in interactive mode -- alternatively, you can rename Nmap any of the following names to have it start up interactivey by default.  */
 #define INTERACTIVE_NAMES { "BitchX", "Calendar", "X", "awk", "bash", "bash2", "calendar", "cat", "csh", "elm", "emacs", "ftp", "fvwm", "g++", "gcc", "gimp", "httpd", "irc", "man", "mutt", "nc", "ncftp", "netscape", "perl", "pine", "ping", "sleep", "slirp", "ssh", "sshd", "startx", "tcsh", "telnet", "telnetd", "tia", "top", "vi", "vim", "xdvi", "xemacs", "xterm", "xv" }
 
-#define HOST_GROUP_SZ 512
+/* Number of hosts we pre-ping and then scan.  We do a lot more if
+   randomize_hosts is set.  Every one you add to this leads to ~1K of
+   extra always-resident memory in nmap */
+#define HOST_GROUP_SZ 256
 
 /* DO NOT change stuff after this point */
 #define UC(b)   (((int)b)&0xff)
@@ -358,6 +361,7 @@ int gather_logfile_resumption_state(char *fname, int *myargc, char ***myargv);
 void log_write(int logt, char *fmt, ...);
 void log_close(int logt);
 void log_flush_all();
+void skid_output(unsigned char *s);
 
 /* From glibc 2.0.6 because Solaris doesn't seem to have this function */
 #ifndef HAVE_INET_ATON

@@ -325,6 +325,9 @@ int send_small_fragz_decoys(int sd, struct in_addr *victim, unsigned long seq,
 int send_ip_raw_decoys( int sd, struct in_addr *victim, unsigned char proto,
                         char *data, unsigned short datalen);
 
+/* Calls pcap_open_live and spits out an error (and quits) if the call failes.
+   So a valid pcap_t will always be returned. */
+pcap_t *my_pcap_open_live(char *device, int snaplen, int promisc, int to_ms);
 
 /* A simple function I wrote to help in debugging, shows the important fields
    of a TCP packet*/

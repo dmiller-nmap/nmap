@@ -43,6 +43,20 @@ char dev[128];
   return 0;
 }
 
+/* Calls pcap_open_live and spits out an error (and quits) if the call failes.
+   So a valid pcap_t will always be returned. */
+pcap_t *my_pcap_open_live(char *device, int snaplen, int promisc, int to_ms) 
+{
+  char err0r[PCAP_ERRBUF_SIZE];
+  pcap_t *pt;
+  if (!((pt = pcap_open_live(device, snaplen, promisc, to_ms, err0r)))) {
+    fatal("pcap_open_live: %s\nThere are several possible reasons for this, depending on your operating system:\n"
+          "LINUX: If you are getting Socket type not supported, try modprobe af_packet or recompile your kernel with SOCK_PACKET enabled.\n"
+          "*BSD:  If you are getting device not configured, you need to recompile your kernel with Berkeley Packet Filter support.  If you are getting No such file or directory, try creating the device (eg cd /dev; MAKEDEV <device>; or use mknod).\n"
+          "SOLARIS:  If you are trying to scan localhost and getting '/dev/lo0: No such file or directory', complain to Sun.  I don't think Solaris can support localhost scans.  Try nmap -P0 -sT localhost\n\n", err0r);
+  }
+  return pt;
+}
 
 /* Standard swiped internet checksum routine */
 inline unsigned short in_cksum(unsigned short *ptr,int nbytes) {

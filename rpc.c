@@ -15,7 +15,7 @@ static int tcp_readlen=0; /* used in get_rpc_results but can be reset in
 static void rpc_services_init() {
   char filename[512];
   FILE *fp;
-  char *tmpptr, *p;
+  unsigned char *tmpptr, *p;
   char line[1024];
   int lineno = 0;
 

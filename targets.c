@@ -342,6 +342,7 @@ struct timeval begin_select;
 struct pingtech ptech;
 struct tcpqueryinfo tqi;
 int max_block_size = 40;
+char err0r[PCAP_ERRBUF_SIZE];
 struct ppkt {
   unsigned char type;
   unsigned char code;
@@ -360,7 +361,6 @@ struct timeval start, end, t1, t2;
 unsigned short id;
 pcap_t *pd = NULL;
 struct bpf_program fcode;
-char err0r[PCAP_ERRBUF_SIZE];
 char filter[512];
 unsigned int localnet, netmask;
 unsigned short sportbase;
@@ -456,9 +456,7 @@ if (ptech.rawicmpscan || ptech.rawtcpscan) {
      16 bytes of the TCP header
      ---
    = 104 byte snaplen */
-  if (!(pd = pcap_open_live(hostbatch[0].device, 104, o.spoofsource, 20,
-			    err0r)))
-      fatal("pcap_open_live: %s\nIf you are on Linux and getting Socket type not supported, try modprobe af_packet or recompile your kernel with SOCK_PACKET enabled.  If you are on bsd and getting device not configured, you need to recompile your kernel with Berkeley Packet Filter support.  If you are getting No such file or directory, try creating the device (eg cd /dev; MAKEDEV <device>; or use mknod)", err0r);
+  pd = my_pcap_open_live(hostbatch[0].device, 104, o.spoofsource, 20);
 
   if (pcap_lookupnet(hostbatch[0].device, &localnet, &netmask, err0r) < 0)
     fatal("Failed to lookup device subnet/netmask: %s", err0r);
