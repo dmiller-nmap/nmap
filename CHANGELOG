@@ -1,7 +1,16 @@
 # Nmap Changelog
 
+
+-- Fixed bug in zombie:port option parsing in Idlescan as well a few
+   other bugs in patch sent by Germano Caronni 
+   (caronni@batfax.olymp.org)
+
 -- Fixed more nmap-os-fingerprints syntax/grammar violations found by
    Raymond Mercier of VIGILANTe
+
+-- Fixed a memory leak in Nbase str*casecmp() functions by applying
+   patch sent my Matt (matt@use.net).  I plan to kill this whole
+   strcasecmp.c file as soon as possible (it is a mess).
 
 ** 2.54BETA26
 

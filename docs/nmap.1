@@ -204,7 +204,7 @@ ICMP rate limit might apply too. But the IP
 protocol field has only 8 bits, so at most 256 protocols can be
 probed which should be possible in reasonable time anyway.
 .TP
-.B \-sI <zombie host>
+.B \-sI <zombie host[:probeport]>
 Idlescan: This advanced scan method allows for a truly blind TCP
 port scan of the target (meaning no packets are sent to the target from
 your real IP address).  Instead, a unique side-channel attack exploits
@@ -226,6 +226,9 @@ crucial information when prioritizing attack targets.  Otherwise, you
 penetration testers might have to expend considerable resources "owning" an 
 intermediate system, only to find out that its IP isn't even trusted 
 by the target host/network you are ultimately after.
+.Sp You can add a colon followed by a port number if you wish to probe
+a particular port on the zombie host for IPID changes.  Otherwise Nmap
+will use the port it uses by default for "tcp pings".
 .TP
 .B \-sA
 ACK scan: This advanced method is usually used to map out

@@ -58,7 +58,7 @@
 
 extern struct ops o;
 
-/*  predefined filters -- I need to kill these globals at some pont. */
+/*  predefined filters -- I need to kill these globals at some point. */
 extern unsigned long flt_dsthost, flt_srchost, flt_baseport;
 
 
@@ -246,15 +246,15 @@ void initialize_idleproxy(struct idle_proxy_info *proxy, char *proxyName,
   if (q) {
     *q++ = '\0';
     proxy->probe_port = strtoul(q, &endptr, 10);
-    if (*q || !endptr || *endptr != '\0' || !proxy->probe_port) {
+    if (*q==0 || !endptr || *endptr != '\0' || !proxy->probe_port) {
       fatal("Invalid port number given in IPID zombie specification: %s", proxyName);
     }
   } else proxy->probe_port = o.tcp_probe_port;
 
   proxy->host.name = strdup(name);
 
-  if (resolve(proxyName, &(proxy->host.host)) == 0) {
-    fatal("Could not resolve idlescan zombie host: %s", proxyName);
+  if (resolve(name, &(proxy->host.host)) == 0) {
+    fatal("Could not resolve idlescan zombie host: %s", name);
   }
 
   /* Lets figure out the appropriate source address to use when sending
@@ -395,7 +395,7 @@ void initialize_idleproxy(struct idle_proxy_info *proxy, char *proxyName,
   proxy->current_groupsz = MIN(proxy->max_groupsz, 30);
 
   if (probes_returned < NUM_IPID_PROBES) {
-    /* Yies!  We're already losing packets ... clamp down a bit ... */
+    /* Yikes!  We're already losing packets ... clamp down a bit ... */
     if (o.debugging)
       error("idlescan initial zombie qualification test: %d probes sent, only %d returned", NUM_IPID_PROBES, probes_returned);
     proxy->current_groupsz = MIN(12, proxy->max_groupsz);
@@ -411,7 +411,7 @@ void initialize_idleproxy(struct idle_proxy_info *proxy, char *proxyName,
    detect the problem by sending some spoofed packets "from" the first
    target to the zombie and then probing to verify that the proxy IPID
    changed.  This will also catch the case where the Nmap user is
-   behind a egress filter or other measure that prevents this sort of
+   behind an egress filter or other measure that prevents this sort of
    sp00fery */
   if (first_target) {  
     for (probes_sent = 0; probes_sent < 4; probes_sent++) {  
@@ -572,7 +572,7 @@ int idlescan_countopen2(struct idle_proxy_info *proxy,
   openports = -1;
   tries = 0;
   /* CHANGEME: I d'nt think that MAX() line works right */
-  TIMEVAL_MSEC_ADD(probe_times[0], start, MAX(50, ((int).75 * (target->to.srtt / 1000))));
+  TIMEVAL_MSEC_ADD(probe_times[0], start, MAX(50, (target->to.srtt * 3/4) / 1000));
   TIMEVAL_MSEC_ADD(probe_times[1], start, target->to.srtt / 1000 );
   TIMEVAL_MSEC_ADD(probe_times[2], end, MAX(75, (target->to.srtt + 
 						   target->to.rttvar) / 1000));
@@ -875,7 +875,7 @@ void idle_scan(struct hoststruct *target, u16 *portarray, char *proxyName) {
      divide-and-counquer function to find the open ports */
   while(portidx < o.numports) {
     portsleft = o.numports - portidx;
-    /* current_grupsz is doubled below because idle_subscan cuts in half */
+    /* current_groupsz is doubled below because idle_subscan cuts in half */
     groupsz = MIN(portsleft, (int) (proxy.current_groupsz * 2));
     idle_treescan(&proxy, target, portarray + portidx, groupsz, -1);
     portidx += groupsz;
