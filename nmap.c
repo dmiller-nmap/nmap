@@ -2527,7 +2527,11 @@ if (tryident == -1 || target != lasttarget)
   tryident = o.identscan;
 lasttarget = target;
 
-/*if (newstate == PORT_CLOSED) current->state = PORT_OPEN;*/
+if (current->state != PORT_OPEN && current->state != PORT_CLOSED &&
+    current->state != PORT_FIREWALLED && current->state != PORT_TESTING) {
+  if (o.debugging) error("Whacked packet to port %hi passed to posportupdate with state %d\n", current->portno, current->state);
+  return;
+}
 
 /* Lets do the timing stuff */
   if (o.debugging > 1) 
@@ -2537,7 +2541,6 @@ if (trynum > -1)
 
  if (o.debugging > 1) 
     printf(" srtt %d rttvar %d timeout %d\n", target->to.srtt, target->to.rttvar, target->to.timeout);
-
 
 
 /* If a non-zero trynum finds a port that hasn't been discovered, the
@@ -2633,7 +2636,7 @@ int trynum;
 int newstate = -1;
 int i;
 int newport;
-struct portinfo *current;
+struct portinfo *current = NULL;
 struct icmp *icmp;
 struct ip *ip2;
 unsigned short *data;
@@ -2669,7 +2672,7 @@ unsigned short *data;
 	  else {
 	    if (o.debugging) 
 	      printf("Strange ACK number from target\n");
-	    trynum = (current->trynum == 0)? 0 : -1;
+	    trynum = (current->trynum == 0)? 0 : -1;	    
 	  }
 	  if ((tcp->th_flags & (TH_SYN|TH_ACK)) == (TH_SYN|TH_ACK)) {	  
 	    newstate = PORT_OPEN;
