@@ -1,4 +1,4 @@
-NMAP_VERSION = 2.54BETA12
+NMAP_VERSION = 2.54BETA14
 NMAP_NAME= nmap
 NMAP_URL= www.insecure.org/nmap/
 NMAP_PLATFORM=@host@
@@ -32,7 +32,7 @@ RPMTDIR=$(HOME)/rpmdir
 
 TARGET = nmap
 
-SRCS = nmap.c targets.c tcpip.c error.c utils.c osscan.c output.c scan_engine.c timing.c charpool.c services.c protocols.c rpc.c  portlist.c @COMPAT_SRCS@
+SRCS = nmap.c targets.c tcpip.c error.c utils.c osscan.c output.c scan_engine.c timing.c charpool.c services.c protocols.c rpc.c portlist.c @COMPAT_SRCS@
 
 OBJS = nmap.o targets.o tcpip.o error.o utils.o osscan.o output.o scan_engine.o timing.o charpool.o services.o protocols.o rpc.o portlist.o @COMPAT_OBJS@
 
@@ -112,7 +112,8 @@ distro:
 	$(SHTOOL) mkdir /usr/tmp/nmap-$(NMAP_VERSION)/nbase
 	cd $(NBASEDIR); cp Makefile.in aclocal.m4 configure configure.in \
 	             install-sh config.guess config.sub nbase_config.h.in \
-                     *.c *.h CHANGELOG /usr/tmp/nmap-$(NMAP_VERSION)/nbase 
+                     *.c *.h CHANGELOG /usr/tmp/nmap-$(NMAP_VERSION)/nbase
+	rm -f /usr/tmp/nmap-$(NMAP_VERSION)/nbase/nbase_config.h 
 # Kill the CVS crap
 	find /usr/tmp/nmap-$(NMAP_VERSION) -type d -name CVS | xargs rm -rf
 	cd /usr/tmp; \

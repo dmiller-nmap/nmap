@@ -1407,6 +1407,11 @@ current_testno++;
 /* This next test doesn't work on Solaris because the lamers
    overwrite our ip_id */
 #if !defined(SOLARIS) && !defined(SUNOS) && !defined(IRIX)
+
+#ifdef WIN32
+if(!winip_corruption_possible()) {
+#endif
+
 /* Now lets see how they treated the ID we sent ... */
 AVs[current_testno].attribute = "RID";
 if (ntohs(ip2->ip_id) == 0)
@@ -1416,6 +1421,11 @@ else if (ip2->ip_id == upi->ipid)
 else strcpy(AVs[current_testno].value, "F"); /* They fucked it up */
 
 current_testno++;
+
+#ifdef WIN32
+}
+#endif
+
 #endif
 
 /* Let us see if the IP checksum we got back computes */

@@ -1,5 +1,7 @@
 # Nmap Changelog
 
+-- Upgraded to latest version of Winpcap ( 2.1-beta )
+
 -- Merged in Windows port code from Ryan Permeh ( ryan@eeye.com) and
    Andy Lutomirski ( Luto@mailandnews.com ).
 

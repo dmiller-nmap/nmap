@@ -698,6 +698,11 @@ pcap_t *my_pcap_open_live(char *device, int snaplen, int promisc, int to_ms)
 	return 0;	//	to make the compiler happy
 }
 
+int winip_corruption_possible()
+{
+	return rawsock_avail;	//	for now
+}
+
 inline void sethdrinclude(int sd) 
 {
 	int one = 1;

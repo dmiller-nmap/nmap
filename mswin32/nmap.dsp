@@ -50,7 +50,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib iphlpapi.lib wpcap.lib packet.lib delayimp.lib nbase.lib /nologo /subsystem:console /machine:I386 /force /libpath:"winip" /libpath:"lib" /libpath:"..\nbase" /delayload:packet.dll /delay:nobind /opt:nowin98 /delayload:iphlpapi.dll
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib iphlpapi.lib wpcap.lib packet.lib delayimp.lib /nologo /subsystem:console /machine:I386 /force /libpath:"winip" /libpath:"lib" /libpath:"..\nbase" /delayload:packet.dll /delay:nobind /opt:nowin98 /delayload:iphlpapi.dll /delayload:wpcap.dll
 # SUBTRACT LINK32 /pdb:none
 
 !ELSEIF  "$(CFG)" == "nmap - Win32 Debug"
@@ -75,7 +75,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib iphlpapi.lib wpcap.lib packet.lib delayimp.lib nbase.lib /nologo /subsystem:console /profile /debug /machine:I386 /force /libpath:"winip" /libpath:"lib" /libpath:"..\nbase" /delayload:packet.dll /delay:nobind
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib iphlpapi.lib wpcap.lib packet.lib delayimp.lib /nologo /subsystem:console /profile /debug /machine:I386 /force /libpath:"winip" /libpath:"lib" /libpath:"..\nbase" /delayload:packet.dll /delay:nobind /delayload:wpcap.dll
 
 !ENDIF 
 
@@ -337,6 +337,134 @@ SOURCE=..\utils.h
 # Begin Source File
 
 SOURCE=.\icon1.ico
+# End Source File
+# End Group
+# Begin Group "Files to copy"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE="..\nmap-os-fingerprints"
+
+!IF  "$(CFG)" == "nmap - Win32 Release"
+
+# PROP Ignore_Default_Tool 1
+# Begin Custom Build - Copying $(InputName) to output directory...
+InputPath=..\nmap-os-fingerprints
+InputName=nmap-os-fingerprints
+
+"Release\$(InputName)" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	copy /y $(InputPath) Release\$(InputName) > nul
+
+# End Custom Build
+
+!ELSEIF  "$(CFG)" == "nmap - Win32 Debug"
+
+# PROP Ignore_Default_Tool 1
+# Begin Custom Build - Copying $(InputName) to output directory...
+InputPath=..\nmap-os-fingerprints
+InputName=nmap-os-fingerprints
+
+"Debug\$(InputName)" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	copy /y $(InputPath) Debug\$(InputName) > nul
+
+# End Custom Build
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE="..\nmap-protocols"
+
+!IF  "$(CFG)" == "nmap - Win32 Release"
+
+# PROP Ignore_Default_Tool 1
+# Begin Custom Build - Copying $(InputName) to output directory...
+InputPath=..\nmap-protocols
+InputName=nmap-protocols
+
+"Release\$(InputName)" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	copy /y $(InputPath) Release\$(InputName) > nul
+
+# End Custom Build
+
+!ELSEIF  "$(CFG)" == "nmap - Win32 Debug"
+
+# PROP Ignore_Default_Tool 1
+# Begin Custom Build - Copying $(InputName) to output directory...
+InputPath=..\nmap-protocols
+InputName=nmap-protocols
+
+"Debug\$(InputName)" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	copy /y $(InputPath) Debug\$(InputName) > nul
+
+# End Custom Build
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE="..\nmap-rpc"
+
+!IF  "$(CFG)" == "nmap - Win32 Release"
+
+# PROP Ignore_Default_Tool 1
+# Begin Custom Build - Copying $(InputName) to output directory...
+InputPath=..\nmap-rpc
+InputName=nmap-rpc
+
+"Release\$(InputName)" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	copy /y $(InputPath) Release\$(InputName) > nul
+
+# End Custom Build
+
+!ELSEIF  "$(CFG)" == "nmap - Win32 Debug"
+
+# PROP Ignore_Default_Tool 1
+# Begin Custom Build - Copying $(InputName) to output directory...
+InputPath=..\nmap-rpc
+InputName=nmap-rpc
+
+"Debug\$(InputName)" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	copy /y $(InputPath) Debug\$(InputName) > nul
+
+# End Custom Build
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE="..\nmap-services"
+
+!IF  "$(CFG)" == "nmap - Win32 Release"
+
+# PROP Ignore_Default_Tool 1
+# Begin Custom Build - Copying $(InputName) to output directory...
+InputPath=..\nmap-services
+InputName=nmap-services
+
+"Release\$(InputName)" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	copy /y $(InputPath) Release\$(InputName) > nul
+
+# End Custom Build
+
+!ELSEIF  "$(CFG)" == "nmap - Win32 Debug"
+
+# PROP Ignore_Default_Tool 1
+# Begin Custom Build - Copying $(InputName) to output directory...
+InputPath=..\nmap-services
+InputName=nmap-services
+
+"Debug\$(InputName)" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	copy /y $(InputPath) Debug\$(InputName) > nul
+
+# End Custom Build
+
+!ENDIF 
+
 # End Source File
 # End Group
 # End Target

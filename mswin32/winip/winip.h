@@ -139,6 +139,7 @@ typedef struct _WINIP_IF {
 void winip_init();
 void winip_postopt_init();
 void winip_barf(const char *msg);
+int winip_corruption_possible();
 
 //	name translation
 int name2ifi(const char *name);
