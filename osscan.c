@@ -561,14 +561,13 @@ int AVal_match(struct AVal *reference, struct AVal *fprint) {
 
 
 int os_scan(struct hoststruct *target) {
-FingerPrint **matches;
 FingerPrint *current;
 int i;
 target->FP = get_fingerprint(target);
 target->FP_matches = match_fingerprint(target->FP);
 if (target->FP_matches[0])
-  for(i=0; matches[i]; i++) {  
-    current = matches[i];
+  for(i=0; FP_matches[i]; i++) {  
+    current = FP_matches[i];
     printf("Match #%d: %s\n", i +1, current->OS_name);
   }
 else printf("No match!\n");

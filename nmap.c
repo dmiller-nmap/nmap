@@ -949,7 +949,7 @@ char tmp[256];
 char *p;
 int i;
 int len;
- sprintf(report, "Class: %s; Difficulty category/index: %s/%d  (lower=easier)\n", seqclass2ascii(seq->class), (seq->index < 10)? "Trivial joke" : (seq->index < 40)? "Easy" : (seq->index < 150)? "Medium" : (seq->index < 1000)? "Formidable" : (seq->index < 100000)? "Very difficult" : "Good luck!", seq->index);
+ sprintf(report, "Class: %s; Difficulty category: %s; index: %d  (lower=easier)\n", seqclass2ascii(seq->class), (seq->index < 10)? "Trivial joke" : (seq->index < 40)? "Easy" : (seq->index < 150)? "Medium" : (seq->index < 1000)? "Formidable" : (seq->index < 100000)? "Very difficult" : "Good luck!", seq->index);
  if (o.verbose) {
    tmp[0] = '\0'; 
    p = tmp;
