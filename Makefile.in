@@ -78,6 +78,7 @@ distro:
 # drop lines if you let it try to delete page breaks
 	nroff -man docs/nmap.1 | man2html -nodepage -title 'Nmap network security scanner man page' > docs/nmap_manpage.html
 	nroff -man docs/nmap_spanish.1 | man2html -nodepage -title 'Nmap network security scanner man page (Spanish translation)' > docs/nmap_manpage-es.html
+	nroff -man docs/nmap_italian.1 | man2html -nodepage -title 'Nmap network security scanner man page (Italian translation)' > docs/nmap_manpage-it.html
 	nroff -Tlatin1 -man docs/nmap_lithuanian.1 | man2html -nodepage -title 'Nmap network security scanner man page (Lithuanian translation)' > docs/nmap_manpage-lt.html
 # We need a content-type for the Lithuanian version
 	sr '<HEAD>' '<HEAD><META http-equiv="Content-Type" content="text/html; charset=windows-1257">' docs/nmap_manpage-lt.html
@@ -92,15 +93,16 @@ distro:
 	nmap-protocols \
 	configure.in config.h.in Makefile.in configure $(SHTOOL) install-sh \
         config.guess nmap-$(NMAP_VERSION)-1.spec config.sub INSTALL \
-	COPYING CHANGELOG \
+	COPYING CHANGELOG HACKING \
 	$(LIBPCAPDIR) /usr/tmp/nmap-$(NMAP_VERSION)
 	$(SHTOOL) mkdir /usr/tmp/nmap-$(NMAP_VERSION)/docs
 	cd docs; cp README copying.html nmap-fingerprinting-article.txt \
                     nmap.1 nmap.deprecated.txt nmap.usage.txt nmap_doc.html \
                     nmap_manpage-es.html nmap_manpage-fr.html \
                     nmap_manpage-lt.html nmap_manpage-ru.html \
-	            nmap_manpage.html \
-                    nmap_spanish.1 nmap_lithuanian.1 nmapfe.1 xnmap.1 \
+	            nmap_manpage-it.html nmap_manpage.html \
+                    nmap_spanish.1 nmap_lithuanian.1 nmap_italian.1 nmapfe.1 \
+	            xnmap.1 \
                     /usr/tmp/nmap-$(NMAP_VERSION)/docs
 	$(SHTOOL) mkdir /usr/tmp/nmap-$(NMAP_VERSION)/nmapfe
 	cd nmapfe; cp Makefile.in aclocal.m4 configure configure.in \

@@ -964,7 +964,7 @@ void WriteSInfo(char *ostr, int ostrlen, int openport, int closedport) {
   timep = time(NULL);
   ltime = localtime(&timep);
 
-  snprintf(ostr, ostrlen, "SInfo(V=%s%%P=%s%%D=%d/%d;%d%%O=%d%%C=%d)\n", 
+  snprintf(ostr, ostrlen, "SInfo(V=%s%%P=%s%%D=%d/%d%%Time=%X%%O=%d%%C=%d)\n", 
 	   NMAP_VERSION, NMAP_PLATFORM, ltime->tm_mon + 1, ltime->tm_mday, 
 	   (int) timep, openport, closedport);
 }

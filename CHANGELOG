@@ -1,8 +1,6 @@
 # Nmap Changelog
 
--- I tried to install Nmap on yet another machine without lex/yacc or
-   flex/bison.  That was the last straw!  I am now shipping the
-   generated C files, which eliminates the lex/yacc requirement.
+** Version 2.54BETA4
 
 -- Upgraded to the very latest Libpcap version ( the 9/3/00 CVS
    snapshot ).  This version is from the tcpdump.org group rather than
@@ -10,27 +8,50 @@
    Socket Filter support (so you won't have that annoying syslog
    message about Nmap using the obsolete SOCK_PACKET interface).
 
+-- I tried to install Nmap on yet another machine without lex/yacc or
+   flex/bison.  That was the last straw!  I am now shipping the
+   generated C files, which eliminates the lex/yacc requirement.
+
 -- Applied patch by Jay Freeman (saurik) <saurik@saurik.com> to make
    Nmap C++-clean (this was lot of tedious work!  Thanks!).  Note that
    Nmap still uses a normal C compiler by default, but Nmap
    derivatives may appreciate C++ compatability.  Note that this only
    applies to "Nmap proper", not libpcap.
 
--- Fixed a SYN scan problem that could cause a major slowdown on some
-   busy networks.
-
--- Fixed a crash problem in NmapFE reported by sverre ( sverre@gmx.net )
+-- Added a HACKING file for people who want to help with Nmap
+   development.  It describes preferred patch formats, development
+   resources, and offers a number of useful changes that would likely
+   be accepted into the main tree.
 
 -- Fixed a configure.in error found by Vacuum
    (vacuum@technotronic.com) which could cause compilation errors.
 
 -- Fingerprint file adjustments for better Win* detection
 
+-- Ensure libpcap is not configured and/or installed if you already
+   have a "new enough" version (0.4a6+) installed.
+
+-- Included Italian translation of Nmap man page from Giorgio Zoppi
+   <deneb@supereva.it> .
+
+-- Fixed a SYN scan problem that could cause a major slowdown on some
+   busy networks.
+
+-- Fixed a crash problem in NmapFE reported by sverre ( sverre@gmx.net )
+
+-- Added an "SInfo" line to most printed fingerprints.  It looks
+   similar to this: 
+   SInfo(V=2.54BETA4%P=i686-pc-linux-gnu%D=9/4%Time=9681031%O=7%C=1)
+   and contains information useful when fingerprints are reported
+   (Nmap version/platform, scan date, and open/closed ports used)
+
 -- Fixed RPCGrind (-sR) scan.  It has been almost completely broken
    since 2.54BETA2 (which has been out for two weeks) and nobody
    reported it!  I noticed the problem myself during testing of
    something else.  I am disappointed that nobody bothered to even let
    me know that this was broken.  Does anyone even use RPC Scan?
+
+-- Various other small fixes/improvements
 
 ** Version 2.54BETA3
 
@@ -763,8 +784,6 @@ state name in machine parseable logs.  It used to looke like:
 -- Added my nmap-fingerprintinting-article.txt to the distribution in
    the docs directory.
 
--- Added a CHANGELOG file to the distribution.
-
 -- Fixed problem where nmap -sS <my_ethernet_or_ppp_ip_address> would
    not correctly scan localhost (due to the kernel rerouting the
    traffic through localhost).  Nmap should now detect and work around
@@ -778,7 +797,7 @@ state name in machine parseable logs.  It used to looke like:
 
 -- Documentation updated and clarified slightly.
 
-
+-- Added this CHANGELOG file to the distribution.
 
 
 
