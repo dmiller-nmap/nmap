@@ -54,6 +54,8 @@
 #include "config.h"
 #endif
 
+
+
 #ifdef STDC_HEADERS
 #include <stdlib.h>
 #else
@@ -73,14 +75,6 @@ void *realloc();
 
 #ifdef HAVE_BSTRING_H
 #include <bstring.h>
-#endif
-
-#ifndef HAVE_BZERO
-#define bzero(s, n) memset((s), 0, (n))
-#endif
-
-#ifndef HAVE_MEMCPY
-#define memcpy(d, s, n) bcopy((s), (d), (n))
 #endif
 
 #include <ctype.h>
@@ -170,6 +164,8 @@ extern "C" {
 #if HAVE_SYS_SOCKIO_H
 #include <sys/sockio.h>  /* SIOCGIFCONF for Solaris */
 #endif
+
+#include "nbase.h"
 #include "error.h"
 #include "utils.h"
 #include "nmap.h"

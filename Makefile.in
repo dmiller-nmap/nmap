@@ -14,13 +14,14 @@ deskdir = $(prefix)/share/gnome/apps/Utilities
 CC = @CC@
 CCOPT = 
 LIBPCAPDIR = @libpcapdir@
-INCLS = -I$(LIBPCAPDIR)
+NBASEDIR=nbase
+INCLS = -I$(LIBPCAPDIR) -I$(NBASEDIR)
 DEFS = @DEFS@ -DNMAP_VERSION=\"$(NMAP_VERSION)\" -DNMAP_NAME=\"$(NMAP_NAME)\" -DNMAP_URL=\"$(NMAP_URL)\" -DNMAP_PLATFORM=\"$(NMAP_PLATFORM)\" -DNMAPDATADIR=\"$(nmapdatadir)\"
 CFLAGS = @CFLAGS@ $(CCOPT) $(DEFS) $(INCLS)
 # CFLAGS = -g -Wall $(DEFS) $(INCLS)
 STATIC = 
 LDFLAGS = @LDFLAGS@ $(STATIC)
-LIBS =  @LIBS@ -lpcap -lm
+LIBS =  @LIBS@ -L$(NBASEDIR) -lnbase -lpcap -lm
 # LIBS =  -lefence @LIBS@ -lpcap -lm
 # LIBS =  -lrmalloc @LIBS@ -lpcap -lm
 SHTOOL = ./shtool
@@ -39,13 +40,17 @@ DEPS = nmap.h error.h targets.h osscan.h tcpip.h utils.h global_structures.h cha
 
 all: $(TARGET) nmapfe/nmapfe
 
-$(TARGET): $(DEPS) @PCAP_DEPENDS@ $(OBJS)
+$(TARGET): $(DEPS) @PCAP_DEPENDS@ $(NBASEDIR)/libnbase.a $(OBJS)
 	@echo Compiling nmap
 	rm -f $@
 	$(CC) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
 
 $(LIBPCAPDIR)/libpcap.a: $(LIBPCAPDIR)/Makefile
 	@echo Compiling libpcap; cd $(LIBPCAPDIR); $(MAKE)
+
+$(NBASEDIR)/libnbase.a: $(NBASEDIR)/Makefile
+	@echo Compiling libnbase;
+	cd $(NBASEDIR); $(MAKE)
 
 #$(LIBPCAPDIR)/Makefile:
 #	@echo Configuring libpcap; cd $(LIBPCAPDIR); ./configure
@@ -107,7 +112,11 @@ distro:
 	$(SHTOOL) mkdir /usr/tmp/nmap-$(NMAP_VERSION)/nmapfe
 	cd nmapfe; cp Makefile.in aclocal.m4 configure configure.in \
 	              nmapfe.c nmapfe.h nmapfe_sig.c nmapfe_sig.h \
-	              /usr/tmp/nmap-$(NMAP_VERSION)/nmapfe
+	              /usr/tmp/nmap-$(NMAP_VERSION)/nmapfe \
+	$(SHTOOL) mkdir /usr/tmp/nmap-$(NMAP_VERSION)/nbase
+	cd nbase; cp Makefile.in aclocal.m4 configure configure.in \
+	             install-sh config.guess config.sub config.h.in *.c *.h \
+	             CHANGELOG 	/usr/tmp/nmap-$(NMAP_VERSION)/nbase 
 # Kill the CVS crap
 	find /usr/tmp/nmap-$(NMAP_VERSION) -type d -name CVS | xargs rm -rf
 	cd /usr/tmp; \
@@ -125,13 +134,16 @@ static:
 	$(CC) $(CFLAGS) -static $(LDFLAGS) -o nmap.linux.bin  $(SRCS) $(LIBS)
 	strip nmap.linux.bin
 
-clean: @PCAP_CLEAN@ nmapfe_clean my_clean
+clean: @PCAP_CLEAN@ nmapfe_clean nbase_clean my_clean
+
 my_clean:
 	rm -f $(OBJS) $(TARGET) config.cache
 pcap_clean:
 	cd $(LIBPCAPDIR); $(MAKE) clean
 nmapfe_clean:
 	cd nmapfe; $(MAKE) clean
+nbase_clean:
+	cd $(NBASEDIR); $(MAKE) clean
 pcap_dist_clean:
 	cd $(LIBPCAPDIR); $(MAKE) distclean
 

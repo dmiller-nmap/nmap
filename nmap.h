@@ -56,18 +56,9 @@
 #include "config.h"
 #endif
 
+#include <nbase.h>
+
 #include <unistd.h>
-#ifdef HAVE_GETOPT_H
-#include <getopt.h>
-#else
-/* The next half-dozen lines are from gcc-2.95 ... -Fyodor */
-/* Include getopt.h for the sake of getopt_long.
-   We don't need the declaration of getopt, and it could conflict
-   with something from a system header file, so effectively nullify that.  */
-#define getopt getopt_loser
-#include "getopt.h"
-#undef getopt
-#endif
 
 #ifdef STDC_HEADERS
 #include <stdlib.h>
@@ -88,14 +79,6 @@ void *realloc();
 
 #ifdef HAVE_BSTRING_H
 #include <bstring.h>
-#endif
-
-#ifndef HAVE_BZERO
-#define bzero(s, n) memset((s), 0, (n))
-#endif
-
-#ifndef HAVE_MEMCPY
-#define memcpy(d, s, n) bcopy((s), (d), (n))
 #endif
 
 #include <ctype.h>
@@ -182,11 +165,6 @@ void *realloc();
 #define NETINET_IF_ETHER_H
 #endif /* NETINET_IF_ETHER_H */
 #endif /* HAVE_NETINET_IF_ETHER_H */
-
-#if !HAVE_VSNPRINTF
-#define vsnprintf(str, n, format, ap) vsprintf(str, format, ap)
-#endif
-
 
 /*******  DEFINES  ************/
 
@@ -452,9 +430,6 @@ void skid_output(char *s);
 /* From glibc 2.0.6 because Solaris doesn't seem to have this function */
 #ifndef HAVE_INET_ATON
 int inet_aton(register const char *, struct in_addr *);
-#endif
-#ifndef HAVE_SNPRINTF
-int snprintf ( char *str, size_t n, const char *format, ... );
 #endif
 #endif /* NMAP_H */
 

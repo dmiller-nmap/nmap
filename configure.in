@@ -359,21 +359,23 @@ if test $ac_cv_ip_has_ip_sum = yes ; then
         AC_DEFINE(HAVE_IP_IP_SUM)
 fi
 
+AC_ARG_WITH(libnbase,
+[  --with-libnbase=DIR     Look for nbase include/libs in DIR],
+[  case "$with_libnbase" in
+  yes)
+    ;;
+  *)
+    NBASEDIR="$with_libnbase"
+    ;;
+  esac],
+NBASEDIR="../nbase"
+)
+
+AC_SUBST(NBASEDIR)
+
 dnl Checks for library functions.
 dnl AC_TYPE_SIGNAL
 AC_CHECK_FUNCS( bzero snprintf vsnprintf memcpy usleep nanosleep strerror strcasestr inet_aton getopt_long_only )
-
-AC_CHECK_FUNC(snprintf, , 
-  [ COMPAT_SRCS="$COMPAT_SRCS snprintf.c"
-    COMPAT_OBJS="$COMPAT_OBJS snprintf.o" ])
-
-AC_CHECK_FUNC(inet_aton, , 
-  [ COMPAT_SRCS="$COMPAT_SRCS inet_aton.c"
-    COMPAT_OBJS="$COMPAT_OBJS inet_aton.o" ])
-
-AC_CHECK_FUNC(getopt_long_only, , 
-  [ COMPAT_SRCS="$COMPAT_SRCS getopt.c getopt1.c"
-    COMPAT_OBJS="$COMPAT_OBJS getopt.o getopt1.o" ])
 
 dnl AC_CHECK_FUNCS(gethostname gettimeofday select socket strdup strstr )
 
@@ -382,9 +384,9 @@ dnl have specified special options (such as --prefix )
 dnl
 dnl But I only have to configure libpcap if I am going to use it
 if test $have_libpcap = yes ; then
-        subdirs=nmapfe
+        subdirs="nbase nmapfe"
 else
-        subdirs="$libpcapdir nmapfe"
+        subdirs="nbase $libpcapdir nmapfe"
 fi
 AC_CONFIG_SUBDIRS( $subdirs )
 
