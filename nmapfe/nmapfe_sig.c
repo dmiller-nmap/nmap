@@ -1033,6 +1033,16 @@ void on_help_ok_clicked(GtkButton *button, GtkWidget	*help)
 {
   gtk_widget_destroy(help);
 }
+
+void
+on_delete_event (GtkWidget *widget, GdkEvent *event, gpointer data)
+{
+  /* First we want to kill the Nmap process that is running */
+  stop_scan();
+  gtk_main_quit ();
+}
+
+
 /***************************************************************/
 
 int Strncpy(char *dest, const char *src, size_t n) {

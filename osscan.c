@@ -92,6 +92,8 @@ snprintf(filter, sizeof(filter), "(icmp and dst host %s) or (tcp and src host %s
  if (pcap_setfilter(pd, &fcode) < 0 )
    fatal("Failed to set the pcap filter: %s\n", pcap_geterr(pd));
 
+ target->osscan_performed = 1; /* Let Nmap know that we did try an OS scan */
+
  /* Lets find an open port to used */
  openport = -1;
  tport = NULL;
@@ -716,8 +718,17 @@ struct timeval now;
    return 1;
  
  bzero(si, sizeof(si));
- if (target->ports.state_counts_tcp[PORT_OPEN] == 0)
-   log_write(LOG_STDOUT|LOG_NORMAL|LOG_SKID,"Warning:  No TCP ports found open on this machine, OS detection will be MUCH less reliable\n", si->responses);
+ if (target->ports.state_counts_tcp[PORT_OPEN] == 0 ||
+     (target->ports.state_counts_tcp[PORT_CLOSED] == 0 &&
+      target->ports.state_counts_tcp[PORT_UNFIREWALLED])) {
+   if (o.osscan_limit) {
+     if (o.verbose)
+       log_write(LOG_STDOUT|LOG_NORMAL|LOG_SKID, "Skipping OS Scan due to absence of open (or perhaps closed) ports\n", target->host);
+     return 1;
+   } else {   
+     log_write(LOG_STDOUT|LOG_NORMAL|LOG_SKID,"Warning:  No TCP ports found open on this machine, OS detection will be MUCH less reliable\n");
+   }
+ }
 
  for(try=0; try < 3; try++) {
    if (o.host_timeout) {   

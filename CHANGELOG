@@ -1,5 +1,11 @@
 # Nmap Changelog
 
+-- Applied NmapFE patch from Michael Fischer v. Mollard <mfvm@gmx.de>
+   which made did the following:
+    -- Added delete event so that NmapFE always quits when you kill it
+       with your window manager
+    -- added the menubar to the vbox instead to the fixed widget
+
 ** Version 2.54BETA2
 
 -- Added a shortcut which can make single port SYN scans of a network

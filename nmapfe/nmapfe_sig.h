@@ -11,6 +11,11 @@
 #error "Your system does not appear to have GTK (www.gtk.org) installed.  Thus the Nmap X Front End will not compile.  You should still be able to use Nmap the normal way (via text console).  GUIs are for wimps anyway :)"
 #endif
 
+void
+on_delete_event                        (GtkWidget     *widget,
+                                        GdkEvent      *event,
+                                        gpointer      data);
+
 
 #include <gtk/gtk.h>
 void build_tree(char *buf);

@@ -118,6 +118,7 @@ struct hoststruct {
   struct seq_info seq;
   FingerPrint **FP_matches;
   FingerPrint *FPs[10];
+  int osscan_performed; /* nonzero if an osscan was performed */
   int numFPs;
   int goodFP;
   portlist ports;
@@ -183,6 +184,8 @@ struct ops /* someone took struct options, <grrr> */ {
 			       to 0. */
   int isr00t;
   struct in_addr decoys[MAX_DECOYS];
+  int osscan_limit; /* Skip OS Scan if no open or no closed TCP ports */
+  int osscan_guess;   /* Be more aggressive in guessing OS type */
   int numdecoys;
   int decoyturn;
   int identscan;

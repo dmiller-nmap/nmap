@@ -1639,7 +1639,7 @@ tcp-id-port       1999/tcp   # cisco identification port
 tcp-id-port       1999/udp   # cisco identification port
 callbook          2000/tcp   # 
 callbook          2000/udp   # 
-dc                2001/tcp   # 
+dc                2001/tcp   # or nfr20 web queries
 wizard            2001/udp   # curry
 globe             2002/tcp   # 
 globe             2002/udp   # 
@@ -1656,7 +1656,7 @@ conf              2008/tcp   #
 terminaldb        2008/udp   # 
 news              2009/tcp   # 
 whosockami        2009/udp   # 
-search            2010/tcp   # 
+search            2010/tcp   #  Or nfr411
 pipe_server       2010/udp   # 
 raid-cc           2011/tcp   # raid
 servserv          2011/udp   # 

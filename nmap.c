@@ -303,6 +303,8 @@ int nmap_main(int argc, char *argv[]) {
     {"iR", no_argument, 0, 0},  
     {"initial_rtt_timeout", required_argument, 0, 0},
     {"randomize_hosts", no_argument, 0, 0},
+    {"osscan_limit", no_argument, 0, 0}, /* skip OSScan if no open ports */
+    {"osscan_guess", no_argument, 0, 0}, /* More guessing flexability */
     {"rH", no_argument, 0, 0},
     {"vv", no_argument, 0, 0},
     {"append_output", no_argument, 0, 0},
@@ -372,6 +374,10 @@ int nmap_main(int argc, char *argv[]) {
 		 || strcmp(long_options[option_index].name, "rH") == 0) {
 	o.randomize_hosts = 1;
 	o.host_group_sz = 2048;
+      } else if (strcmp(long_options[option_index].name, "osscan_limit")  == 0) {
+	o.osscan_limit = 1;
+      } else if (strcmp(long_options[option_index].name, "osscan_guess")  == 0) {
+	o.osscan_guess = 1;
       } else if (strcmp(long_options[option_index].name, "initial_rtt_timeout") == 0) {
 	o.initial_rtt_timeout = atoi(optarg);
 	if (o.initial_rtt_timeout <= 0) {
@@ -990,7 +996,7 @@ int nmap_main(int argc, char *argv[]) {
 	  printportoutput(currenths, &currenths->ports);
 	  resetportlist(&currenths->ports);
 	  
-	  if (o.osscan) {
+	  if (currenths->osscan_performed) {
 	    if (currenths->seq.responses > 3) {
 	      log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"%s", seqreport(&(currenths->seq)));
 	      log_write(LOG_MACHINE,"\tSeq Index: %d", currenths->seq.index);
