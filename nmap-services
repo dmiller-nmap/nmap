@@ -1002,6 +1002,7 @@ npmp-local        610/udp    #
 npmp-gui          611/tcp    # 
 npmp-gui          611/udp    # 
 qmqp              628/tcp    # Qmail Quick Mail Queueing
+cups              631/tcp    # http://www.cups.org (Common UNIX Printing System)
 ginad             634/tcp    # 
 ginad             634/udp    # 
 mount             635/udp    # NFS Mount Service

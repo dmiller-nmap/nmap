@@ -1,5 +1,8 @@
 # Nmap Changelog
 
+-- Merged in Windows port code from Ryan Permeh ( ryan@eeye.com) and
+   Andy Lutomirski ( Luto@mailandnews.com ).
+
 -- Took out C++ compiler test from nbase configure script.  It was
    inserted accidently, but I found it interesting that only 2 people
    complained about this causing them problems.  I guess most everyone
