@@ -183,7 +183,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
 # Contributed by juan@netsoc.tcd.ie
-Fingerprint Acorn Risc OS 3.6 (Acorn TCP/IP Stack 4.07)
+Fingerprint Acorn RISK OS 3.60 (Acorn TCP/IP Stack 4.07)
 TSeq(Class=TR)
 T1(Resp=Y%DF=N%W=3000%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -194,7 +194,7 @@ T6(Resp=Y%DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(Resp=N)
 
-Fingerprint Acorn RiscOS 3.7 using AcornNet TCP/IP stack  # Thanks to Chris Wilson
+Fingerprint Acorn RISC OS 3.70 using AcornNet TCP/IP stack or RISC OS 4 (Pace, RISCOS Ltd) # Thanks to Chris Wilson
 TSeq(Class=RI%gcd=<6)
 T1(DF=Y%W=403D%ACK=S++%Flags=AS%Ops=MNWNNT)
 T2(Resp=N)
@@ -3881,7 +3881,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=C0|C8%IPLEN=178%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=F|E)
 
 # Contributed by sverre <sverre@gmx.net>
-Fingerprint Linux 2.2.19
+Fingerprint Linux 2.2.19 - 2.2.20
 TSeq(Class=RI%gcd=<6%SI=<2665AC4&>62494%IPID=I%TS=U)
 T1(DF=Y%W=3F25%ACK=S++%Flags=AS%Ops=ME)
 T2(Resp=N)
@@ -5282,7 +5282,8 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 # Contributed by Anonymous
-Fingerprint Packeteer IP-PacketShaper 2000 V3.1
+# Packeteer IP-PacketShaper 2000 V3.1
+Fingerprint pSOS embedded IP stack, such as Packeteer IP-PacketShaper 2000 V3.1
 TSeq(Class=64K)
 T1(Resp=Y%DF=N%W=1000%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
