@@ -561,7 +561,11 @@ trynum = seq % pt->max_tries;
  myseq = (rand() << 19) + (seq << 3) + 3; /* Response better end in 011 or 100 */
  memcpy((char *)&(o.decoys[o.decoyturn]), (char *)&target->source_ip, sizeof(struct in_addr));
  for (decoy = 0; decoy < o.numdecoys; decoy++) {
+   if (o.pingtype & PINGTYPE_TCP_USE_SYN) {   
    send_tcp_raw( rawsd, &o.decoys[decoy], &(target->host), o.magic_port + trynum, o.tcp_probe_port, myseq, 0, TH_SYN, 0, NULL, 0, NULL, 0);
+   } else {
+     send_tcp_raw( rawsd, &o.decoys[decoy], &(target->host), o.magic_port + trynum, o.tcp_probe_port, myseq, 0, TH_ACK, 0, NULL, 0, NULL, 0);
+   }
  }
 
  gettimeofday(&time[seq], NULL);
@@ -822,7 +826,8 @@ while(pt->block_unaccounted > 0) {
       if  ( !response.type && !response.code && response.identifier == id) {
 	hostnum = response.sequence / pt->max_tries;
 	if (hostnum > pt->group_end) continue;
-	hostbatch[hostnum].source_ip.s_addr = response.ip.ip_dst.s_addr;
+	if (!hostbatch[hostnum].source_ip.s_addr)
+	  hostbatch[hostnum].source_ip.s_addr = response.ip.ip_dst.s_addr;
 	if (o.debugging) printf("We got a ping packet back from %s: id = %d seq = %d checksum = %d\n", inet_ntoa(*(struct in_addr *)(&response.ip.ip_src.s_addr)), response.identifier, response.sequence, response.checksum);
 	if (hostbatch[hostnum].host.s_addr == response.ip.ip_src.s_addr) {
 	  foundsomething = 1;
@@ -861,15 +866,34 @@ while(pt->block_unaccounted > 0) {
       newport = ntohs(tcp->th_sport);
       tmpl = ntohl(tcp->th_ack);
       /* Grab the sequence nr */
-      if ((tmpl & 7) == 4 || (tmpl & 7) == 3) {
-	sequence = (tmpl >> 3) & 0xffff;
-	hostnum = sequence / pt->max_tries;
-	trynum = sequence % pt->max_tries;
-      } else {
-	if (o.debugging) {
-	  error("Whacked ACK number from %s", inet_ntoa(response.ip.ip_src));
+      if (o.pingtype & PINGTYPE_TCP_USE_SYN) {      
+	if ((tmpl & 7) == 4 || (tmpl & 7) == 3) {
+	  sequence = (tmpl >> 3) & 0xffff;
+	  hostnum = sequence / pt->max_tries;
+	  trynum = sequence % pt->max_tries;
+	} else {
+	  if (o.debugging) {
+	    error("Whacked ACK number from %s", inet_ntoa(response.ip.ip_src));
+	  }
+	  continue;	
 	}
-	continue;	
+      } else {
+	trynum = ntohs(tcp->th_dport) - o.magic_port;
+	if (trynum >= pt->max_tries) {
+	  continue;
+	}
+	/* FUDGE!  This ACK scan is cool but we don't get sequence numbers
+	   back! We'll have to brute force lookup to find the hostnum */
+	for(hostnum = pt->group_end; hostnum >= 0; hostnum--) {
+	  if (hostbatch[hostnum].host.s_addr == ip->ip_src.s_addr)
+	    break;
+	}
+	if (hostnum < 0) {	
+	  if (o.debugging) 
+	    error("Warning, unexpacted packet from machine %s", inet_ntoa(ip->ip_src));
+	  continue;
+	}	
+	sequence = hostnum * pt->max_tries + trynum;
       }
       if (hostnum > pt->group_end) {
 	if (o.debugging) {

@@ -11,7 +11,7 @@ CC = @CC@
 CCOPT = 
 LIBPCAPDIR = @libpcapdir@
 INCLS = -I. -I$(LIBPCAPDIR)
-VERSION = 2.0-Beta3
+VERSION = 2.0-Beta5
 DEFS = @DEFS@ -DVERSION=\"$(VERSION)\" -DLIBDIR=\"$(libdir)\"
 #CFLAGS = @CFLAGS@ $(CCOPT) $(DEFS) $(INCLS)
 CFLAGS = -g -Wall $(DEFS) $(INCLS)

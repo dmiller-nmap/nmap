@@ -177,11 +177,15 @@ void *realloc();
 #define CONF_LOW 1
 #define CONF_HIGH 2
 
-#define PINGTYPE_NONE 0
+#define PINGTYPE_UNKNOWN 0
+#define PINGTYPE_NONE 1
 #define PINGTYPE_ICMP 1
 #define PINGTYPE_TCP  2
-#define PINGTYPE_RAWTCP 4
-#define PINGTYPE_CONNECTTCP 8
+#define PINGTYPE_TCP_USE_ACK 4
+#define PINGTYPE_TCP_USE_SYN 8
+#define PINGTYPE_RAWTCP 16
+#define PINGTYPE_CONNECTTCP 32
+
 
 #define SEQ_UNKNOWN 0
 #define SEQ_64K 1

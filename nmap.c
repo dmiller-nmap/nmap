@@ -151,11 +151,19 @@ while((arg = getopt(argc,fakeargv,"Ab:D:de:Ffg:hIi:L:M:NnOo:P::p:qrRS:s:T:w:Vv")
     break;
   case 'P': 
     if (*optarg == '\0' || *optarg == 'I')
-      o.pingtype = PINGTYPE_ICMP;
+      o.pingtype |= PINGTYPE_ICMP;
     else if (*optarg == '0' || *optarg == 'N' || *optarg == 'D')      
       o.pingtype = PINGTYPE_NONE;
-    else if (*optarg == 'T') {
-      o.pingtype = PINGTYPE_TCP;
+    else if (*optarg == 'S') {
+      o.pingtype |= (PINGTYPE_TCP|PINGTYPE_TCP_USE_SYN);
+      if (isdigit((int) *(optarg+1))) {      
+	o.tcp_probe_port = atoi(optarg+1);
+	printf("TCP probe port is %hu\n", o.tcp_probe_port);
+      } else if (o.verbose)
+	printf("TCP probe port is %hu\n", o.tcp_probe_port);
+    }
+    else if (*optarg == 'T' || *optarg == 'A') {
+      o.pingtype |= (PINGTYPE_TCP|PINGTYPE_TCP_USE_ACK);
       if (isdigit((int) *(optarg+1))) {      
 	o.tcp_probe_port = atoi(optarg+1);
 	printf("TCP probe port is %hu\n", o.tcp_probe_port);
@@ -163,7 +171,7 @@ while((arg = getopt(argc,fakeargv,"Ab:D:de:Ffg:hIi:L:M:NnOo:P::p:qrRS:s:T:w:Vv")
 	printf("TCP probe port is %hu\n", o.tcp_probe_port);
     }
     else if (*optarg == 'B') {
-      o.pingtype = PINGTYPE_TCP|PINGTYPE_ICMP;
+      o.pingtype = (PINGTYPE_TCP|PINGTYPE_TCP_USE_ACK|PINGTYPE_ICMP);
       if (isdigit((int) *(optarg+1)))
 	o.tcp_probe_port = atoi(optarg+1);
       printf("TCP probe port is %hu\n", o.tcp_probe_port);
@@ -223,6 +231,10 @@ while((arg = getopt(argc,fakeargv,"Ab:D:de:Ffg:hIi:L:M:NnOo:P::p:qrRS:s:T:w:Vv")
   }
 }
 
+if (o.pingtype == PINGTYPE_UNKNOWN) {
+  if (o.isr00t) o.pingtype = PINGTYPE_TCP|PINGTYPE_TCP_USE_ACK|PINGTYPE_ICMP;
+  else o.pingtype = PINGTYPE_TCP;
+}
 /* Take care of user wierdness */
 if (!o.isr00t && (o.pingtype & PINGTYPE_ICMP)) {
   error("Warning:  You are not root -- using TCP pingscan rather than ICMP");
@@ -244,6 +256,7 @@ if ((o.fragscan && !o.synscan && !o.finscan &&!o.maimonscan && !o.nullscan && !o
 #endif
  /*if (o.pingtype == tcp && o.numdecoys > 1)
    printf("Warning: Using TCPping could theoretically reveal your IP address (even though you are using decoys.  If this concerns you, use -pI (the default)\n"); */
+
 if ((o.synscan || o.finscan || o.maimonscan || o.udpscan || o.fragscan || o.xmasscan || o.nullscan) && !o.isr00t)
   fatal("Options specified require r00t privileges.  You don't have them!");
 if (!o.connectscan && !o.udpscan && !o.synscan && !o.finscan && !o.maimonscan &&  !o.nullscan && !o.xmasscan && !bouncescan && !o.pingscan) {
@@ -494,7 +507,7 @@ o.magic_port = 33000 + (rand() % 31000);
 o.allowall = !(IGNORE_ZERO_AND_255_HOSTS);
 #endif
 o.ptime = PING_TIMEOUT;
-o.pingtype = (o.isr00t)? (PINGTYPE_ICMP|PINGTYPE_TCP) : PINGTYPE_TCP;
+o.pingtype = PINGTYPE_UNKNOWN;
 }
 
 __inline__ void max_rcvbuf(int sd) {
@@ -1332,7 +1345,7 @@ portlist super_scan(struct hoststruct *target, unsigned short *portarray, stype 
     
   /* Init our raw socket */
   if ((rawsd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) < 0 )
-    pfatal("socket trobles in super_scan");
+    pfatal("socket troubles in super_scan");
   unblock_socket(rawsd);
 
   /* Do we have a correct source address? */
@@ -1690,7 +1703,7 @@ portlist pos_scan(struct hoststruct *target, unsigned short *portarray, stype sc
   /* Init our raw socket */
   if (scantype == SYN_SCAN) {  
     if ((rawsd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) < 0 )
-      pfatal("socket trobles in super_scan");
+      pfatal("socket troubles in super_scan");
     unblock_socket(rawsd);
     broadcast_socket(rawsd);
     
@@ -2511,8 +2524,8 @@ if (o.verbose || o.debugging)
 	 target->name,  inet_ntoa(target->host));
 for(i=0; portarray[i]; i++) {
   portno = htons(portarray[i]);
-  p1 = ((char *) &portno)[0];
-  p2 = ((char *) &portno)[1];
+  p1 = ((unsigned char *) &portno)[0];
+  p2 = ((unsigned char *) &portno)[1];
 #ifndef HAVE_SNPRINTF
   sprintf(command, "PORT %s%i,%i\r\n", targetstr, p1,p2);
 #else

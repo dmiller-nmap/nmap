@@ -246,7 +246,7 @@ if (o.verbose && openport != -1)
      }
    }
    else {
-     nmap_log("Insufficient responses for TCP sequencing (%d), OS detection will be less reliable\n", si->responses);
+     nmap_log("Insufficient responses for TCP sequencing (%d), OS detection will be MUCH less reliable\n", si->responses);
    }
  } else {
    nmap_log("Warning:  No ports found open on this machine, OS detection will be MUCH less reliable\n");
