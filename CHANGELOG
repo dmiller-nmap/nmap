@@ -1,5 +1,7 @@
 # Nmap Changelog ($Id$)
 
+Nmap 3.50
+
 o Integrated a ton of service fingerprints, increasing the number of
   signatures more than 50%.  It has now exceeded 1,000 for the first
   time, and represents 180 unique service protocols from acap, afp,
@@ -19,9 +21,6 @@ o Implemented a huge OS fingerprint update.  The number of
   multiple times and I also received and integrated fingerprints for the
   Handspring Treo 600 (PalmOS).
 
-o Fixed a crash that could happen during SSL version detection due to
-  SSL session ID cache reference counting issues.
-
 o Applied some man page fixes from Eric S. Raymond
   (esr(a)snark.thyrsus.com).
 
@@ -36,6 +35,13 @@ o Added version scan information to grepable output between the last
   parsing simple.  The service name field has been updated so that it
   is the same as in normal output (except for the same sort of
   escaping discussed above).
+
+o Integrated an Oracle TNS service probe and match lines contributed
+  by Frank Berger (fm.berger(a)gmx.de).  New probe contributions are
+  always appreciated!
+
+o Fixed a crash that could happen during SSL version detection due to
+  SSL session ID cache reference counting issues.
 
 o Applied patch from Rob Foehl (rwf(a)loonybin.net) which fixes the
   --with_openssl=DIR configure argument.
