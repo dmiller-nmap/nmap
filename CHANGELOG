@@ -1,5 +1,14 @@
 # Nmap Changelog
 
+-- Fix target parsing bug found by Steve Horsburgh (shorsburgh (at)
+   horsburgh.com).
+
+-- I am now including Eilon Gishri's (eilon (at) aristo.tau.ac.il) rpc
+   number list (which he recently merged with the Nmap 2.50 rpc list).
+
+-- Included Spanish and French HTML versions of the Nmap man page (may
+   not always be up to date).
+
 ** Version 2.50
 
 -- Fixed an IP calculation error which could occur in some cases where
@@ -579,7 +588,7 @@ state name in machine parseable logs.  It used to looke like:
    Netbus, Back Orifice, etc.
 
 -- Random number generation now takes advantage of the /dev/urandom or
-   /dev/random that most free operating systems offer.
+   /dev/random that most Free operating systems offer.
 
 -- Increased the maximum number of OS guesses nmap will make, told
    nmap never to give you two matches where the OS names are

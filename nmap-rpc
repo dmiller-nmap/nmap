@@ -4,187 +4,300 @@
 # Nmap is available from http://www.insecure.org/nmap/
 # All the rpc services we could find as of Feb22, 1999
 # Tweaked a bit by Fyodor <fyodor@dhp.com>
+# NOTE:  Eilon Gishri <eilon@aristo.tau.ac.il> has merged the nmap-rpc
+# with his massive rpc file (see comments below).  So as of 4/28/00,
+# this is an exact copy (except for these comments) of 
+# ftp://ftp.tau.ac.il/pub/users/eilon/rpc/rpc
+#
+# Someday I would like to reorder this with the most popular services
+# first to make scans faster
+#
+# ident "@(#)rpc        1.11    95/07/14 SMI"   /* SVr4.0 1.2   */
+#
+# $Date$
+#
+# $Revision$
+#
+# Maintained by Eilon Gishri <eilon@aristo.tau.ac.il>
+#
+# Program numbers are assigned in groups of 0x20000000 (decimal 536870912)
+# according to the following chart: 
+#
+#	       0x0 - 0x1fffffff		Defined by Sun 
+#	0x20000000 - 0x3fffffff		Defined by user 
+#	0x40000000 - 0x5fffffff		Transient 
+#	0x60000000 - 0x7fffffff		Reserved 
+#	0x80000000 - 0x9fffffff		Reserved 
+#	0xa0000000 - 0xbfffffff		Reserved 
+#	0xc0000000 - 0xdfffffff		Reserved 
+#	0xe0000000 - 0xffffffff		Reserved 
+#
+# To obtain SUN Remote Procedure Call (RPC) numbers send an e-mail
+# request to "rpc@sun.com".
+#
 
-3270_mapper          100013 
-NETlicense           100062 
-activity             100109 na.activity	# SunNet Manager
-admind               100087 
-alis                 100018 
-amd                  300019 amq
-arserverd            390600 arserverd               # Remedy AR System daemons
-arservtcd            390604 arservtcd
-aseagent             395176 aseagent
-asedirector          395175 asedirector
-asehsm               395177 asehsm
-aselogger            395179 aselogger
-autofsd              100099 autofsd
-bootparamd           100026 bootparam
-bssd                 300433 bss
-bugtraqd             100071 
-bwnfsd            545580417 
-cachefsd             100235 
-cfsd              824395111 
-cfsd             1092830567 
-cluinfod             300527 # cluster information server
-cmsd                 100068 dtcalendar
-cnxagentd            300484 # cluster agent
-cnxmond              300483 # cluster node monitor
-database_svc         100016 
-debug_svc            100066 dbsrv
-diskinfo             100105 na.diskinfo             # SunNet Manager
-dmispd               300598 
-dmispd            805306368 
-drdd                 300434 drd
-etherif              100118 na.etherif
-etherif2             100135 na.etherif2             # SunNet Manager
-etherstatd           100010 etherstat
-event                100101 na.event	# SunNet Manager
-exportmap            200023 
-fypxfrd           600100069 freebsd-ypxfrd
-hostif               100117 na.hostif
-hostmem              100112 na.hostmem
-hostmem2             100136 na.hostmem2             # SunNet Manager
-hostperf             100107 na.hostperf
-inetray           555555555 
-inetray           555555556 
-inetray           555555557 
-inetray           555555558 
-inetray           555555559 
-inetray           555555560 
-inetray.start     555555554 
-ioadmd               100055 rpc.ioadmd
-iostat               100106 na.iostat
-iostat2              100137 na.iostat2              # SunNet Manager
-ippath               100119 na.ippath               # SunNet Manager
-iproutes             100120 na.iproutes
-kcms                 100221 
-kerbd                100078 
-keyserv              100029 keyserver
-layers               100121 na.layers
-layers2              100131 na.layers2              # SunNet Manager
-llockmgr             100020 
-logger               100102 na.logger	# SunNet Manager
-lpstat               100111 na.lpstat               # SunNet Manager
-metad                100229 metad                   # rpc.metad
-metamhd              100230 metamhd                 # rpc.metamhd
-mountd               100005 mount showmount
-nf_snmd              120126 # SunNet Manager
-nf_snmd              120127 
-nfs                  100003 nfsprog
-nfs_acl              100227 
-nis_cache            100301 
-nis_callback         100302 
-nisd                 100300 rpc.nisd
-nisd_resolv          1073741824                     # chosen at run-time
-nispasswd            100303 rpc.nispasswdd
-nlockmgr             100021 
-nsed                 100038 
-nsemntd              100039 
-ntserverd            390601 ntserverd
-pcnfsd               150001 pcnfs
-ping                 100115 na.ping
-portmapper           100000 portmap sunrpc rpcbind
-prestoctl            390100 # Prestoserve
-prpasswd             300632 
-rexd                 100017 rex
-rje_mapper           100014 
-rpcnfs               100116 na.rpcnfs
-rquotad              100011 rquotaprog quota rquota
-rstatd               100001 rstat rstat_svc rup perfmeter
-rusersd              100002 rusers
-sadmind              100232 
-sample               100113 na.sample
-sched                100019 
-scopeux              805306352 # HP measureware scopeUX
-seagent              20000777  # Memco/Platinum/CA SeOS security product
-selection_svc        100015 selnsvc
-sender               100139 cc_sender               # Cooperative Consoles
-sgi.ha_ifa           391021 ha_ifa
-sgi.ha_ifmx          391019 ha_ifmx
-sgi.ha_orcl          391018 ha_orcl
-sgi.ha_sybs          391020 ha_sybs
-sgi_fam              391002 
-sgi_ha_appmon        391015 ha_appmon sgi.ha_appmon
-sgi_ha_hb            391013 ha_heartbeat ha_hbeat sgi.ha_hbeat
-sgi_ha_nc            391014 ha_nc sgi.ha_nc
-sgi_iphone           391010 
-sgi_mediad           391017 mediad
-sgi_mountd           391004 mount showmount
-sgi_nfs              391007 
-sgi_notepad          391003 notepad
-sgi_pcsd             391006 pcsd
-sgi_pod              391009 pod
-sgi_reserved         391022 
-sgi_reserved         391023 
-sgi_reserved         391024 
-sgi_reserved         391025 
-sgi_reserved         391026 
-sgi_reserved         391027 
-sgi_reserved         391028 
-sgi_reserved         391029 
-sgi_reserved         391030 
-sgi_reserved         391031 
-sgi_reserved         391032 
-sgi_reserved         391033 
-sgi_reserved         391034 
-sgi_reserved         391035 
-sgi_reserved         391036 
-sgi_reserved         391037 
-sgi_reserved         391038 
-sgi_reserved         391039 
-sgi_reserved         391040 
-sgi_reserved         391041 
-sgi_reserved         391042 
-sgi_reserved         391043 
-sgi_reserved         391044 
-sgi_reserved         391045 
-sgi_reserved         391046 
-sgi_reserved         391047 
-sgi_reserved         391048 
-sgi_reserved         391049 
-sgi_reserved         391050 
-sgi_reserved         391051 
-sgi_reserved         391052 
-sgi_reserved         391053 
-sgi_reserved         391054 
-sgi_reserved         391055 
-sgi_reserved         391056 
-sgi_reserved         391057 
-sgi_reserved         391058 
-sgi_reserved         391059 
-sgi_reserved         391060 
-sgi_reserved         391061 
-sgi_reserved         391062 
-sgi_reserved         391063 
-sgi_rfind            391008 rfind
-sgi_smtd             391005 smtd
-sgi_snoopd           391000 snoopd snoop
-sgi_testcd           391012 testcd
-sgi_toolkitbus       391001 
-sgi_videod           391011 
-sgi_xfsmd            391016 
-showfhd              100043 showfh
-snmp                 100122 na.snmp snmp-cmc snmp-synoptics snmp-unisys snmp-utk
-snmp-utk                  0 
-snmpXdmid            100249 
-snmpv2               100138 na.snmpv2               # SunNet Manager
-sprayd               100012 spray
-statmon              100023 
-status               100024 
-stdfm                300009 # Online help with
-sunisamd             100065 
-sunlink_mapper       100033 
-sync                 100104 na.sync
-tfsd                 100037 
-traffic              100123 na.traffic
-ttdbserverd          100083 ttdbserverd tooltack ttdbserver rpc.ttdbserverd
-ttsession        1342177279 
-ufsd                 100233 ufsd
-walld                100008 rwall shutdown
-x25                  100114 na.x25
-x25.inr              100022 
-ypbind               100007 
-yppasswdd            100009 yppasswd
-ypserv               100004 ypprog
-ypupdated            100028 ypupdate
-ypxfrd               100069 rpc.ypxfrd ypxfr
+rpcbind		100000	portmap sunrpc rpcbind
+rstatd		100001	rstat rup perfmeter rstat_svc
+rusersd		100002	rusers
+nfs		100003	nfsprog
+ypserv		100004	ypprog
+mountd		100005	mount showmount
+remote_dbx	100006
+ypbind		100007
+walld		100008  rwall shutdown
+yppasswdd       100009  yppasswd
+etherstatd      100010  etherstat
+rquotad         100011  rquotaprog quota rquota
+sprayd          100012  spray
+3270_mapper     100013
+rje_mapper      100014
+selection_svc   100015  selnsvc
+database_svc    100016
+rexd            100017  rex
+alis            100018
+sched           100019
+llockmgr        100020
+nlockmgr        100021
+x25.inr         100022
+statmon         100023
+status          100024
+select_lib      100025
+bootparam       100026
+mazewars        100027				# Mazewars game
+ypupdated       100028  ypupdate
+keyserv         100029  keyserver
+securelogin     100030
+nfs_fwdlnit     100031
+nfs_fwdtrns     100032
+sunlink_mapper	100033
+net_monitor	100034
+database	100035 # Lightweight database
+passwd_auth	100036
+tfsd		100037
+nsed		100038
+nsemntd		100039
+showfhd		100043	showfh
+ioadmd		100055	rpc.ioadmd
+NETlicense	100062
+sunisamd	100065
+debug_svc 	100066	dbsrv
+cmsd		100068	rpc.cmsd dtcalendar
+ypxfrd		100069	rpc.ypxfrd ypxfr
+bugtraqd	100071
+kerbd		100078
+ttdbserverd     100083	rpc.ttdbserverd ttdbserverd ttdbserver tooltalk
+admind		100087
+autofsd		100099	autofsd
+event		100101	na.event	# SunNet Manager
+logger		100102	na.logger	# SunNet Manager
+sync		100104	na.sync
+diskinfo	100105	na.diskinfo	# SunNet Manager
+iostat		100106	na.iostat
+hostperf	100107	na.hostperf
+activity	100109	na.activity	# SunNet Manager
+db_mgr		100110
+lpstat		100111	na.lpstat	# SunNet Manager
+hostmem		100112	na.hostmem
+sample		100113	na.sample
+x25		100114	na.x25
+ping		100115	na.ping
+rpcnfs		100116	na.rpcnfs
+hostif		100117	na.hostif
+etherif		100118	na.etherif
+ippath		100119	na.ippath	# SunNet Manager
+iproutes	100120	na.iproutes
+layers		100121	na.layers
+snmp		100122	na.snmp snmp-cmc snmp-synoptics snmp-unisys snmp-utk
+traffic		100123	na.traffic
+DNInode		100124	na.dni	DNIneT
+layers2		100131	na.layers2	# SunNet Manager
+nsm_addrand	100133			# Solaris's statd
+etherif2	100135	na.etherif2	# SunNet Manager
+hostmem2	100136	na.hostmem2	# SunNet Manager
+iostat2		100137	na.iostat2	# SunNet Manager
+snmpv2		100138	na.snmpv2	# SNM Version 2.2.2
+sender		100139	cc_sender	# Cooperative Consoles
+amiserv		100146
+amiaux		100147
+ocfserv		100150
+kcms_server	100221			# SunKCMS Profile Server
+nfs_acl		100227
+# rpc.metad
+metad		100229	metad	rpc.metad
+metamhd		100230	metamhd	rpc.metamhd
+#
+sadmind		100232			# Solstice
+ufsd		100233	ufsd
+gssd		100234	gss		# GSS Daemon
+cachefsd	100235	cachefs		# CacheFS Daemon
+snmpXdmid	100249
+nisd		100300	rpc.nisd
+nis_cache	100301
+nis_callback	100302
+nispasswd	100303	rpc.nispasswdd
+rpc.pts         105004  Protoserver	# Advanced Printing Software
+nf_snmd		120126			# SunNet Manager
+nf_snmd		120127
+pcnfsd		150001	pcnfs
+# Pyramid
+PyramidLock	200000
+PyramidSys5	200001 # Sys5
+
+CADDS_Image     200002 			# CV CADDS images.
+#
+pdbDA		200005
+exportmap	200023
+# EcoTools daemons/programs
+ecodisc		200201
+ecolic		200202
+eamon		200203
+ecoad		200205
+# VERSANT
+rpc.dbserv      211637  dbserv rpc.dbserv_dir
+rpc.taped       217854  taped  rpc.taped_dir
+#
+ADTFileLock     300001			# ADT file locking service.
+stdfm		300009			# Online help with
+amd		300019  amq
+rpc.ldmd	300029  ldm		# Unidata LDM
+# FA&O Command Post App
+rmd		300375
+agcd		300376
+#
+bssd		300433	bss
+drdd		300434	drd
+cnxmond		300483		# cluster node monitor (Digital UNIX)
+cnxagentd	300484		# cluster agent (Digital UNIX)
+cluinfod	300527		# cluster information server (Digital UNIX)
+prpasswd	300632
+prestoctl_svc	390100	presto	# Prestoserve control daemon
+# Legato Networker
+rap		390101	rapla
+rapserv		390102	raprd
+nsrd		390103	nsr
+nsrmmd		390104	nsrmm
+nsrindexd	390105	nsrindex
+nsrmmdbd	390107	nsrmmdb
+nsrstat		390109
+nsrjb		390110	nsrjbd
+nsrexec		390113	nsrexecd
+nsrnotd		390400
+# Remedy AR System daemons
+arserverd       390600  arserverd
+ntserverd       390601  ntserverd
+ntclientd       390602  ntclientd
+arservtcd       390604  arservtcd
+# SGI
+sgi_snoopd	391000	snoopd snoop
+sgi_toolkitbus	391001
+sgi_fam		391002
+sgi_notepad	391003	notepad
+sgi_mountd	391004  mount showmount
+sgi_smtd	391005  smtd
+sgi_pcsd        391006  pcsd
+sgi_nfs		391007
+sgi_rfind	391008  rfind
+sgi_pod		391009	pod
+sgi_iphone	391010
+sgi_videod	391011
+sgi_testcd	391012	testcd
+sgi.ha_hbeat 	391013  ha_hbeat ha_heartbeat sgi_ha_hb
+sgi.ha_nc	391014  ha_nc sgi.ha_nc
+sgi.ha_appmon	391015  ha_appmon
+sgi_xfsmd	391016
+sgi_mediad	391017	mediad
+sgi.ha_orcl	391018	ha_orcl
+sgi.ha_ifmx	391019	ha_ifmx
+sgi.ha_sybs	391020	ha_sybs
+sgi.ha_ifa	391021	ha_ifa
+sgi_reserved	391022
+sgi_reserved	391023
+sgi_reserved	391024
+sgi_reserved	391025
+sgi_reserved	391026
+sgi_reserved	391027
+sgi_reserved	391028
+sgi_espd    	391029  espd
+sgi_reserved	391030
+sgi_reserved	391031
+sgi_reserved	391032
+sgi_reserved	391033
+sgi_reserved	391034
+sgi_reserved	391035
+sgi_reserved	391036
+sgi_reserved	391037
+sgi_reserved	391038
+sgi_reserved	391039
+sgi_reserved	391040
+sgi_reserved	391041
+sgi_reserved	391042
+sgi_reserved	391043
+sgi_reserved	391044
+sgi_reserved	391045
+sgi_reserved	391046
+sgi_reserved	391047
+sgi_reserved	391048
+sgi_reserved	391049
+sgi_reserved	391050
+sgi_reserved	391051
+sgi_reserved	391052
+sgi_reserved	391053
+sgi_reserved	391054
+sgi_reserved	391055
+sgi_reserved	391056
+sgi_reserved	391057
+sgi_reserved	391058
+sgi_reserved	391059
+sgi_reserved	391060
+sgi_reserved	391061
+sgi_reserved	391062
+sgi_reserved	391063
+#
+asedirector	395175  asedirector
+aseagent	395176  aseagent
+asehsm		395177  asehsm
+aselogger	395179  aselogger
+#
+retherif	20000000	na.retherif
+genagnt		20000001	na.genagnt
+# ACeDB database server
+acedb           20000114  rpc.acedbd
+aboutdb         20000115  rpc.acedbd
+aatdb           20000116  rpc.acedbd
+#
+seagent		20000777	# Memco/Platinum/CA SeOS security product
+# MIDAS - Software for Nuclear Physics data aqcuisition and analysis
+egts		28000205	# Eurogam Tape Server       (10205/udp)
+ers		28000220	# Eurogam Register Server   (10220/udp)
+sas		28000230	# Spectrum Access Server    (10230/udp)
+#
+uidd		536870915
+userd		536870916
+bondd		536870917
+staticd		536870918
+curved		536870919
+msglogd		536870920
+aliasd		536870921
+ticketd		536870922
+glossd		536870923
+futured		536870924
+priced		536870928
+ladderd		536870929
+optiond		536870937	# FIRM option server
+#
+bwnfsd		545580417
+# Inetray - Raytrace
+inetray.start   555555554
+inetray         555555555
+inetray         555555556
+inetray         555555557
+inetray         555555558
+inetray         555555559
+inetray         555555560
+#
+fypxfrd		600100069	freebsd-ypxfrd
+cfsd		824395111
+rpc.nisd_resolv	1073741824
+cfsd		1092830567
+ttsession	1342177279
+

@@ -1,4 +1,4 @@
-VERSION = 2.50
+VERSION = 2.51
 prefix = @prefix@
 exec_prefix = @exec_prefix@
 bindir = @bindir@
@@ -74,6 +74,7 @@ distro:
 # nodepage option is included in man2html because of bug in that program which causes it to
 # drop lines if you let it try to delete page breaks
 	nroff -man docs/nmap.1 | man2html -nodepage -title 'Nmap network security scanner man page' > docs/nmap_manpage.html
+	nroff -man docs/nmap_spanish.1 | man2html -nodepage -title 'Nmap network security scanner man page (Spanish translation)' > docs/nmap_manpage-es.html
 	rm -rf /usr/tmp/nmap-$(VERSION)
 	mkdir /usr/tmp/nmap-$(VERSION)
 # Make the RPM .spec file
