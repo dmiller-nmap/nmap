@@ -1,6 +1,6 @@
 
 /***********************************************************************
- * portlist.c -- Functions for manipulating various lists of ports     *
+ * portlist.h -- Functions for manipulating various lists of ports     *
  * maintained internally by Nmap.                                      *
  *                                                                     *
  ***********************************************************************

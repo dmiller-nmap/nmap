@@ -1,6 +1,6 @@
 
 /***********************************************************************
- * error.cc -- Some simple error handling routines.                    *
+ * nmap_error.cc -- Some simple error handling routines.                    *
  *                                                                     *
  ***********************************************************************
  *  The Nmap Security Scanner is (C) 1995-2001 Insecure.Com LLC. This  *

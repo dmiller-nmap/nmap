@@ -1,6 +1,6 @@
 
 /***********************************************************************
- * utils.c -- Various miscellaneous utility functions which defy       *
+ * utils.h -- Various miscellaneous utility functions which defy       *
  * categorization :)                                                   *
  *                                                                     *
  ***********************************************************************
