@@ -3270,7 +3270,7 @@ T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
-PU(Resp=N)
+PU(Resp=Y%DF=N%TOS=0%IPLEN=70%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 # Contributed by style <style@style.net>
 Fingerprint Hydra HydraWEB 5000
@@ -3660,7 +3660,7 @@ T4(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
-PU(Resp=N)
+PU(Resp=Y%DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=0%ULEN=134%DAT=E)
 
 # Contributed by kill9@succeed.net
 Fingerprint Lantronix EPS1 Version V3.5/1(970325)
@@ -4457,7 +4457,7 @@ T7(DF=Y%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=Y%TOS=C0%IPLEN=178%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=F|E)
 
 # Contributed by <DeXteR> root@dexter.dynu.com
-Fingerprint Linux Kernel 2.4.0 - 2.4.18 (X86)
+Fingerprint Linux Kernel 2.4.0 - 2.4.18 (X86 or PPC)
 TSeq(Class=RI%gcd=<8%SI=<2D870AA&>3A454%IPID=Z|C%TS=100HZ)
 T1(DF=Y%W=5B4|2D24|16A0|1680|4000|7FFF%ACK=S++%Flags=AS%Ops=MNNTNW)
 T2(Resp=N)

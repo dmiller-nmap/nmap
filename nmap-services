@@ -1838,6 +1838,7 @@ unicall           4343/tcp   #
 unicall           4343/udp   # 
 krb524            4444/tcp   # Kerberos 5 to 4 ticket xlator
 krb524            4444/udp   # 
+proxy-plus        4480/tcp   # Proxy+ HTTP proxy port
 sae-urn           4500/tcp   # 
 sae-urn           4500/udp   # 
 fax               4557/tcp   # FlexFax FAX transmission service
@@ -1908,12 +1909,14 @@ prosharerequest   5716/tcp   # proshare conf request
 prosharerequest   5716/udp   # proshare conf request
 prosharenotify    5717/tcp   # proshare conf notify
 prosharenotify    5717/udp   # proshare conf notify
-vnc               5800/tcp   # Virtual Network Computer display 0
-vnc-1             5801/tcp   # Virtual Network Computer display 1
-vnc-2             5802/tcp   # Virtual Network Computer display 2
-vnc-http          5900/tcp   # Virtual Network Computer HTTP Access, display 0
-vnc-http-1        5901/tcp   # Virtual Network Computer HTTP Access, display 1
-vnc-http-2        5902/tcp   # Virtual Network Computer HTTP Access, display 2
+vnc-http          5800/tcp   # Virtual Network Computer HTTP Access, display 0
+vnc-http-1        5801/tcp   # Virtual Network Computer HTTP Access, display 1
+vnc-http-2        5802/tcp   # Virtual Network Computer HTTP Access, display 2
+vnc-http-3        5803/tcp   # Virtual Network Computer HTTP Access, display 3
+vnc               5900/tcp   # Virtual Network Computer display 0
+vnc-1             5901/tcp   # Virtual Network Computer display 1
+vnc-2             5902/tcp   # Virtual Network Computer display 2
+vnc-3             5903/tcp   # Virtual Network Computer display 3
 ncd-pref-tcp      5977/tcp   # NCD preferences tcp port
 ncd-diag-tcp      5978/tcp   # NCD diagnostic tcp port
 ncd-conf-tcp      5979/tcp   # NCD configuration tcp port
@@ -1959,6 +1962,7 @@ netop-rc          6502/tcp   # NetOp Remote Control (by Danware Data A/S)
 netop-rc          6502/udp   # NetOp Remote Control (by Danware Data A/S)
 xdsxdm            6558/tcp   # 
 xdsxdm            6558/udp   # 
+analogx           6588/tcp   # AnalogX HTTP proxy port
 irc-serv          6666/tcp   # internet relay chat server
 irc               6667/tcp   # Internet Relay Chat
 irc               6668/tcp   # Internet Relay Chat
@@ -2027,6 +2031,7 @@ NetBus            12346/tcp  # NetBus backdoor trojan
 subseven          16959/tcp  # Subseven trojan
 isode-dua         17007/tcp  # 
 isode-dua         17007/udp  # 
+wdbrpc            17185/udp  # vxWorks WDB remote debugging ONCRPC
 biimenu           18000/tcp  # Beckman Instruments, Inc.
 biimenu           18000/udp  # Beckman Instruments, Inc.
 btx               20005/tcp  # xcept4 (Interacts with German Telekom's CEPT videotext service)
