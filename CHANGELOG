@@ -34,16 +34,15 @@ o Fixed bug that caused Nmap to ignore certain RST responses when you
 o Modified ping scan to work better when many instances of Nmap are
   executed concurrently.
 
+o I'm now linking directly to the gzip compressed version of Nmap on
+  the homepage as well as the .bz2.
+
 o Fixed a portability problem that caused BSD Make to bail out.
 
 o Fixed a divide by zero error caused when nonroot users (on UNIX)
   explicitly request ICMP pings (which require root privileges).  Now it
   prints a warning and uses the normal nonroot TCP connect() ping.
   Jaroslav Sladek (jup@matfyz.cz) found the bug and provided the patch.
-
-o Changed the wording of NmapFE Gnome entries to better-comply with
-  Gnome's Human Interface Guidelines (HIG).  Suggested by Axel Krauth
-  (krauth@fmi.uni-passau.de)
 
 o Made Nmap more tolerant of corrupt nmap-services and nmap-protocols
   files thanks to report & patch sent by Phix (phix@hush.com)
@@ -73,6 +72,10 @@ o Upgraded to autoconf 2.57, including the latest config.guess/config.sub
 
 o Renamed configure.ac files to configure.in as recommended by the
   latest autoconf documentation.
+
+o Changed the wording of NmapFE Gnome entries to better-comply with
+  Gnome's Human Interface Guidelines (HIG).  Suggested by Axel Krauth
+  (krauth@fmi.uni-passau.de)
 
 Nmap 3.20
 

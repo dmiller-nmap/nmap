@@ -1130,6 +1130,7 @@ ock               1000/udp   #
 ufsd              1008/tcp   # ufsd		# UFS-aware server
 ufsd              1008/udp   # 
 sometimes-rpc1    1012/udp   # This is rstatd on my openBSD box
+netvenuechat      1023/tcp   # Nortel NetVenue Notification, Chat, Intercom
 kdm               1024/tcp   # K Display Manager (KDE version of xdm)
 NFS-or-IIS        1025/tcp   # IIS, NFS, or listener RFS remote_file_sharing
 blackjack         1025/udp   # network blackjack
@@ -1153,6 +1154,7 @@ instl_boots       1067/tcp   # Installation Bootstrap Proto. Serv.
 instl_boots       1067/udp   # Installation Bootstrap Proto. Serv.
 instl_bootc       1068/tcp   # Installation Bootstrap Proto. Cli.
 instl_bootc       1068/udp   # Installation Bootstrap Proto. Cli.
+sns_credit        1076/tcp   # Shared Network Services (SNS) for Canadian credit card authorizations
 socks             1080/tcp   # 
 socks             1080/udp   # 
 ansoft-lm-1       1083/tcp   # Anasoft License Manager
@@ -2105,6 +2107,7 @@ VeritasNetbackup  13721/tcp  # bpdbm         server
 VeritasNetbackup  13722/tcp  # bpjava-msvc   client
 VeritasNetbackup  13782/tcp  # bpcd          client
 VeritasNetbackup  13783/tcp  # vopied        client
+swgps             15126/tcp  # Nortel Java S/WGPS Global Payment Solutions for US credit card authorizations
 subseven          16959/tcp  # Subseven trojan
 isode-dua         17007/tcp  # 
 isode-dua         17007/udp  # 
