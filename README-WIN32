@@ -1,0 +1,67 @@
+
+The Win32 version of Nmap is still in an ALPHA/BETA stage of
+development.  If you find bugs, you are strongly encouraged to report
+them to fyodor@insecure.org or nmap-dev@insecure.org .  Patches are
+very welcome too :).  
+
+I would like to thank the following people for doing most of the Win32
+porting work:
+
+Andy Lutomirski ( Luto@mailandnews.com )
+Ryan Permeh ( ryan@eEye.com ) from eEye Digital Security ( www.eeye.com )
+
+Nmap only exists for Win32 because of their hard work.
+
+*** Known Issues/Bugs ***
+
+== You cannot scan yourself (localhost).  This is currently a WinPcap
+   limitation.
+
+== Nmap does not work under Windows ME .  This is a WinPcap
+   limitation.
+
+== RAS connections (eg PPP, SLIP, etc) are not supported under Windows
+   NT or 2000.  This is a WinPcap limitation.  Ethernet should work
+   fine on those platforms.
+
+== NmapFE (the GUI front end) has not yet been ported to Win32 .
+
+*** Using the Binary Distribution ***
+
+At some point this will be an easy install-shield app and may install
+an icon and such for the graphical version of Nmap ( nmapfe ).  But
+for now, here is how to use the command line binaries available in
+nmap-VERSION-win32.zip :
+
+1) Make sure you have installed Winpcap Version 2.1-beta or later.  This
+   is available at http://netgroup-serv.polito.it/winpcap/ .  It is
+   very important that you use version 2.1-beta or later.
+
+2) Unzip the archive using Winzip or your favorite decompression
+   utility -- a directory call nmap-VERSION will be extracted .
+
+3) Open a command prompt (DOS) window and cd into the new nmap-VERSION
+   directory.  Type "nmap -h" for usage information.  
+
+*** Compiling the Source Distribution for Windows ***
+
+1) Decompress the archive ( nmap-VERSION.tgz ).  This is the same
+   tarball that is used for UNIX installations.
+
+2) Open Visual C++ 6 and then open the nmap workspace (
+   nmap-VERSION/mswin32/nmap.dsw )
+
+3) Project Menu -> Set Active Project -> Nmap
+   Build Menu -> Set Active Configuration -> Nmap - Win32 Release
+
+4) Press [F7] to build nmap.exe .
+
+5) The executable can be found in
+   nmap-VERSION/mswin32/Release/nmap.exe .  Remember that you must
+   have Winpcap Version2.1-beta or later installed to run it (see the
+   Binary Distribution instructions).
+
+As mentioned earlier, patches, suggestions, and improvements are more
+than welcome!  Send them to nmap-dev@insecure.org or to me personally
+( fyodor@insecure.org ).
+
