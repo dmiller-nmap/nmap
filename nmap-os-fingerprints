@@ -84,7 +84,7 @@ T5(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 
-Fingerprint 3COM OfficeConnect Remote 812 ADSL Router
+Fingerprint 3Com OfficeConnect Remote 812 ADSL Router
 TSeq(Class=TD%gcd=<C354%SI=<1E)
 T1(DF=N%W=200%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -129,7 +129,7 @@ T6(Resp=Y%DF=N%W=0%ACK=O%Flags=AR%Ops=)
 T7(Resp=N)
 PU(Resp=N)
 
-Fingerprint 3COM Netbuilder II Ver 11.4.0.51
+Fingerprint 3Com Netbuilder II Ver 11.4.0.51
 TSeq(Class=TD%gcd=<68%SI=<1E%IPID=I%TS=U)
 T1(DF=N%W=800%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=O%Flags=AR%Ops=)
@@ -152,7 +152,7 @@ T7(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(Resp=Y%DF=N%TOS=0%IPLEN=54%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=F)
 
 Fingerprint 3Com NetBuilder & NetBuilder II OS v 9.3
-TSeq(Class=TD%gcd=3C%SI=<FF) 
+TSeq(Class=TD%gcd=3C%SI=<FF)
 T1(Resp=Y%DF=Y%W=2017%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=O%Flags=AR%Ops=)
 T3(Resp=Y%DF=Y%W=2017%ACK=S++%Flags=AS%Ops=M)
@@ -173,7 +173,7 @@ T6(Resp=Y%DF=N%W=0%ACK=O%Flags=R%Ops=WNMETL)
 T7(Resp=Y%DF=N%W=0%ACK=O%Flags=R%Ops=WNMETL)
 PU(Resp=Y%DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=F%UCK=0%ULEN=134%DAT=E)
 
-Fingerprint 3COM / USR TotalSwitch Firmware: 02.02.00R
+Fingerprint 3Com / USR TotalSwitch Firmware: 02.02.00R
 TSeq(Class=C|TD%gcd=3D090%SI=0)
 T1(Resp=Y%DF=N%W=200%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -302,7 +302,8 @@ T6(DF=N%W=C00%ACK=S%Flags=AR%Ops=)
 T7(DF=N%W=C00%ACK=S++%Flags=AR%Ops=)
 PU(Resp=N)
 
-Fingerprint SonicWall SOHO firewall, Enterasys Matrix E1, or Accelerated Networks VoDSL
+# Cisco 350 Access Point, software rev 12.02T1
+Fingerprint SonicWall SOHO firewall, Enterasys Matrix E1, or Accelerated Networks VoDSL, or Cisco 360 Access Point
 TSeq(Class=64K)
 T1(DF=N%W=2000%ACK=S++%Flags=AS%Ops=MNW)
 T2(Resp=N)
@@ -718,7 +719,7 @@ PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 # Alcaltel Speed Touch Home running GV8BAA3.235 (992640)
 # Alcatel SpeedTouch Pro ADSL Router running NZ OS 3.281
 #  Alcatel Speed Touch Home ADSL Modem (POTS), Ver 3.2
-Fingerprint Alcaltel Speed Touch *DSL modem/router
+Fingerprint Alcatel Speed Touch *DSL modem/router
 TSeq(Class=64K%IPID=I%TS=2HZ)
 T1(DF=N%W=1000%ACK=S++%Flags=AS%Ops=MNWNNT)
 T2(Resp=N)
@@ -730,7 +731,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=0%UCK=E%ULEN=134%DAT=E)
 
 # Alcaltel Speed Touch 510 *DSL router (uses THOMSON Unix embeded Version 4.0.0.9.0)
-Fingerprint Alcaltel Speed Touch 510 *DSL modem/router
+Fingerprint Alcatel Speed Touch 510 *DSL modem/router
 TSeq(Class=64K%IPID=I%TS=2HZ)
 T1(DF=N%W=1000%ACK=S++%Flags=AS%Ops=MNWNNT)
 T2(Resp=N)
@@ -790,7 +791,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 # Alteon ACEswitch 184 Software Version 8.0.49
-Fingerprint Alteon ACEswitch 184 V. 8.0.49   
+Fingerprint Alteon ACEswitch 184 V. 8.0.49
 TSeq(Class=RI%gcd=<34%SI=<C698A&>215%IPID=I%TS=U)
 T1(DF=N%W=1000%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -940,7 +941,7 @@ T2(Resp=N)
 T3(Resp=Y%DF=N%W=640%ACK=S++%Flags=AS%Ops=ME)
 T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
-T6(DF=N%W=0%ACK=O%Flags=R%Ops=)   
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=F%ULEN=134%DAT=E)
 
@@ -1718,7 +1719,7 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=15C%RID=F%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
-Fingerprint BSDI 4.0-4.0.1  
+Fingerprint BSDI 4.0-4.0.1
 TSeq(Class=RI%gcd=<A%SI=<1974A&>16F)
 T1(DF=Y%W=2017%ACK=S++%Flags=AS%Ops=MNWNNT)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -1894,7 +1895,7 @@ T6(DF=N%W=C00%ACK=S%Flags=AR%Ops=WNMETL)
 T7(DF=N%W=C00%ACK=S++%Flags=AR%Ops=WNMETL)
 PU(Resp=N)
 
-Fingerprint Cisco 761 running c760-in.r.NET3 4.3(1)   
+Fingerprint Cisco 761 running c760-in.r.NET3 4.3(1)
 TSeq(Class=TD%gcd=<348004%SI=<14%IPID=I%TS=U)
 T1(DF=N%W=800%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -2040,7 +2041,7 @@ T3(Resp=Y%DF=N%W=1000%ACK=S++%Flags=AS%Ops=M)
 T4(Resp=Y%DF=N%W=1000%ACK=O%Flags=R%Ops=)
 T5(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(Resp=Y%DF=N%W=0%ACK=O%Flags=R%Ops=)
-T7(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)  
+T7(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(Resp=Y%DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
 # Again, the "True Random" is bogus, it is because of sequences
@@ -2512,7 +2513,7 @@ PU(Resp=N)
 
 # 3COM 4924 gigabit switch ver 2.04
 # Cisco VPN 3000 3.5
-Fingerprint Cisco VPN 3000 or 3COM 4924 GigE Switch
+Fingerprint Cisco VPN 3000 or 3Com 4924 GigE Switch
 TSeq(Class=RI%gcd=<6%SI=<59088&>B4F%IPID=I%TS=2HZ)
 T1(DF=N%W=2000%ACK=S++%Flags=AS%Ops=MNWNNT)
 T2(Resp=N)
@@ -2743,7 +2744,7 @@ T6(Resp=Y%DF=N%W=0%ACK=S%Flags=R%Ops=)
 T7(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(Resp=N)
 
-Fingerprint Cyclades PathRAS V 1.1.7 
+Fingerprint Cyclades PathRAS V 1.1.7
 TSeq(Class=RI%gcd=<6%SI=>BBBBB)
 T1(DF=N%W=6C2%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -2848,7 +2849,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(Resp=N)
 
 # Cisco 2621 running IOS 12.2.8T
-# Cisco SOHO 77 running IOS 12.2(8)T 
+# Cisco SOHO 77 running IOS 12.2(8)T
 Fingerprint Cisco IOS 12.2(8)T
 TSeq(Class=TR%gcd=<6%IPID=Z%TS=U)
 T1(DF=N%W=1020%ACK=S++%Flags=AS%Ops=ME)
@@ -3047,7 +3048,7 @@ T6(DF=N%W=0%ACK=O%Flags=AR%Ops=)
 T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(Resp=N)
 
-Fingerprint Compaq Prolian DL580 Integrated Lights-Out V1.06 14.5.2002
+Fingerprint Compaq Proliant DL580 Integrated Lights-Out V1.06 14.5.2002
 TSeq(Class=TD%gcd=<6%SI=<28%IPID=I%TS=U)
 T1(DF=N%W=400%ACK=O%Flags=R%Ops=)
 T2(Resp=Y%DF=N%W=400%ACK=O%Flags=R%Ops=)
@@ -3521,7 +3522,7 @@ T6(DF=N%W=1000%ACK=S%Flags=AR%Ops=)
 T7(Resp=N)
 PU(Resp=N)
 
-Fingerprint NetSilicon NetARM running ThreadX 2.0   
+Fingerprint NetSilicon NetARM running ThreadX 2.0
 TSeq(Class=TD%gcd=<1F502%SI=<14%IPID=I%TS=U)
 T1(DF=N%W=1000%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -4133,7 +4134,9 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=F%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
-Fingerprint HP JetDirect Card (J4169A) in an HP LaserJet 8150/8550
+# HP JetDirect Card (J4169A) in an HP LaserJet 8150/8550
+# HP LaserJet 2200 with JetDirect (J6057A)
+Fingerprint HP JetDirect Card in a LaserJet printer
 TSeq(Class=64K%IPID=I%TS=U)
 T1(DF=N%W=5B4%ACK=S++%Flags=AS%Ops=MNW)
 T2(Resp=N)
@@ -4190,7 +4193,7 @@ PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=0%UCK=E%ULEN=134%DAT=E)
 
 # Jet Direct Model J3113A, Firmware Rev G.07.20
 # HP Color LaserJet 4500N, Jet Direct J3113A/2100
-Fingerprint HP Printer w/Jet Direct J3113A/2100 card 
+Fingerprint HP Printer w/Jet Direct J3113A/2100 card
 T1(DF=N%W=16D0|0%ACK=S++%Flags=AS|AR%Ops=M|)
 T2(Resp=N)
 T3(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
@@ -4248,7 +4251,7 @@ PU(TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=0%UCK=E%ULEN=134%DAT=E)
 # Also it used to be 64K but they upgraded seq #
 # generation to true random!  I wonder if that was
 # because of me?
-# 
+#
 # XXX: It crashed the machine again, but I got a full
 # scan this time.
 Fingerprint HP-UX B.10.01 A 9000/715
@@ -4677,7 +4680,7 @@ T6(DF=N%W=C00%ACK=S%Flags=AR%Ops=)
 T7(DF=N%W=C00%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
-# D-Link Corp. DE-1800 Stackable Hub SNMP/Telnet Agent Compiled 
+# D-Link Corp. DE-1800 Stackable Hub SNMP/Telnet Agent Compiled
 # Date: Oct 14 1997, Time: 09:35:04  (claims software version 2.04B3,
 # boot PROM version 2.21)
 Fingerprint D-Link Corp. DE-1800 Stackable Hub SNMP/Telnet Agent Software version 2.04B3 boot PROM 2.21
@@ -4783,7 +4786,7 @@ PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=F%ULEN=134%DAT=E)
 
 # Intel Corporation, ER9100 Express Router 9100
 # FingerPrint by Ron van Daal (ronvdaal@syntonic.net)
-Fingerprint Intel Corporation, ER9100 Express Router 9100 
+Fingerprint Intel Corporation, ER9100 Express Router 9100
 TSeq(Class=TD%gcd=10|20|30%SI=1)
 T1(DF=N%W=400%ACK=S++%Flags=AS%Ops=ME)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -5323,7 +5326,7 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
-Fingerprint KRONOS Time clock   
+Fingerprint KRONOS Time clock
 TSeq(Class=TD%gcd=<7C%SI=<32%IPID=I%TS=U)
 T1(DF=N%W=1000%ACK=S++%Flags=AR%Ops=)
 T2(Resp=Y%DF=N%W=1000%ACK=S%Flags=AR%Ops=)
@@ -5383,7 +5386,7 @@ PU(Resp=N)
 # Epson Stylus Color 1520C with 100BTX-NIC from Epson
 # CISCO 6509 WS-C6509 Software, Version NmpSW: 5.3(3)CSX
 # Sonicwall firewall appliance 10meg firmware 3.3.1
-Fingerprint Router/Switch/Printer (LanPlex 2500/Cisco Catalyst 5505/CISCO 6509/Trancell Webramp/Xylan Omni Switch)/Epson Stylus (100BTX-NIC HP Secure Web Console, Sonicwall firewall appliance 3.3.1) 
+Fingerprint Router/Switch/Printer (LanPlex 2500/Cisco Catalyst 5505/CISCO 6509/Trancell Webramp/Xylan Omni Switch)/Epson Stylus (100BTX-NIC HP Secure Web Console, Sonicwall firewall appliance 3.3.1)
 TSeq(Class=64K)
 T1(DF=N%W=1000%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -5610,7 +5613,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=C0|A0|0|60%IPLEN=164%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 # On very rare cases, I get a T2 response back -- weird
-Fingerprint Linux 2.0.32-34 
+Fingerprint Linux 2.0.32-34
 TSeq(Class=TR)
 T1(DF=N%W=7FE0%ACK=S++%Flags=BAS%Ops=ME)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -6405,7 +6408,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
 
-Fingerprint NCR MP-RAS 3.0.x 
+Fingerprint NCR MP-RAS 3.0.x
 TSeq(Class=64K)
 T1(DF=Y%W=111C%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -6698,7 +6701,7 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
-Fingerprint NetBSD/Alpha 1.5.2 on a DEC 3000/300 LX 
+Fingerprint NetBSD/Alpha 1.5.2 on a DEC 3000/300 LX
 TSeq(Class=RI%gcd=<6%SI=<736B300&>106DED%IPID=I%TS=2HZ)
 T1(DF=N%W=4000%ACK=S++%Flags=AS%Ops=MNWNNT)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -7077,7 +7080,7 @@ T3(Resp=Y%DF=N%W=402E%ACK=S++%Flags=AS%Ops=MNWNNT)
 T4(DF=N%W=4000%ACK=O%Flags=R%Ops=)
 T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
-T7(DF=N%W=0%ACK=S%Flags=AR%Ops=) 
+T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
 # This fingerprint had LAND patch installed
@@ -7377,7 +7380,7 @@ T4(DF=N%W=1000%ACK=O%Flags=R%Ops=)
 T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
-PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=F%RIPCK=0%UCK=E%ULEN=134%DAT=E) 
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=F%RIPCK=0%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint OpenVMS V7.1 on VAX 6000-530
 TSeq(Class=64K%gcd=<6%SI=<14)
@@ -7578,7 +7581,7 @@ T6(DF=N%W=0%ACK=S%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(Resp=N)
 
-Fingerprint StackTools StackTos  1.0 embedded internet
+Fingerprint StackTools StackTos 1.0 embedded internet
 TSeq(Class=64K%IPID=I%TS=U)
 T1(DF=N%W=5AC%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=O%Flags=R%Ops=)
@@ -7721,7 +7724,7 @@ T4(Resp=Y%DF=N%W=1000%ACK=O%Flags=R%Ops=)
 T5(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(Resp=Y%DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
-PU(Resp=Y%DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=0%UCK=E%ULEN=134%DAT=E)  
+PU(Resp=Y%DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=0%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint PacketShaper 4000 v4.1.3b2 2000-04-05
 TSeq(Class=64K)
@@ -7867,7 +7870,7 @@ PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=F%ULEN=134%DAT=E)
 
 # Radionics Ram IV Alarm System
 # Lantronix CoBox DR1-IAP serial device server
-Fingerprint Lantronix CoBox serial device server or Radionics Ram IV Alarm 
+Fingerprint Lantronix CoBox serial device server or Radionics Ram IV Alarm
 TSeq(Class=TD%gcd=<404%SI=<6E%IPID=I%TS=U)
 T1(DF=Y%W=1FF%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=Y%W=0%ACK=S++%Flags=AR%Ops=)
@@ -7945,7 +7948,7 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
-Fingerprint RedBack SMS 1800
+Fingerprint Redback SMS 1800
 TSeq(Class=RI%gcd=<6%SI=<4CA7C&>C2F)
 T1(DF=N%W=2000%ACK=S++%Flags=AS%Ops=MNW)
 T2(Resp=N)
@@ -8167,7 +8170,7 @@ PU(DF=N%TOS=0%IPLEN=164%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 #  Shiva AccessPort Bridge/Router Software V 2.1.0
 #  3COM HiPer Access Router Card hardware 1.0.0 software 4.1.59
-Fingerprint Shiva AccessPort Bridge/Router Software V 2.1.0 or 3COM HiPer Access Router Card hardware V1.0.0 software V4.1.59
+Fingerprint Shiva AccessPort Bridge/Router Software V 2.1.0 or 3Com HiPer Access Router Card hardware V1.0.0 software V4.1.59
 TSeq(Class=TD%gcd=<6%SI=<F)
 T1(DF=N%W=244%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
