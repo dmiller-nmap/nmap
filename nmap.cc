@@ -1344,7 +1344,7 @@ void printusage(char *name, int rc) {
 	 "  -sR/-I RPC/Identd scan (use with other scan types)\n"
 	 "Some Common Options (none are required, most can be combined):\n"
 	 "* -O Use TCP/IP fingerprinting to guess remote operating system\n"
-	 "  -p <range> ports to scan.  Example range: '1-1024,1080,6666,31337'\n"
+	 "  -p <range> ports to scan.  Example range: 1-1024,1080,6666,31337\n"
 	 "  -F Only scans ports listed in nmap-services\n"
 	 "  -v Verbose. Its use is recommended.  Use twice for greater effect.\n"
 	 "  -P0 Don't ping hosts (needed to scan www.microsoft.com and others)\n"

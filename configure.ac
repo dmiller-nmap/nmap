@@ -247,25 +247,29 @@ if test "$use_openssl" = "yes" -a -z "$specialssldir"; then
     AC_MSG_WARN([Failed to find openssl/rand.h so OpenSSL will not be used. If it is installed you can try the --with-openssl=DIR argument]) ])
  fi
 
+# use_openssl="yes" given explicitly in next 2 rules to avoid adding lib to $LIBS
  if test "$use_openssl" = "yes"; then
    AC_CHECK_LIB(crypto, BIO_int_ctrl,
-    [],
+    [ use_openssl="yes"],
     [ use_openssl="no"
     AC_MSG_WARN([Failed to find libcrypto so OpenSSL will not be used. If it is installed you can try the --with-openssl=DIR argument]) ])
  fi
 
  if test "$use_openssl" = "yes"; then
    AC_CHECK_LIB(ssl, SSL_new,
-    [],
+    [ use_openssl="yes" ],
     [ use_openssl="no"
     AC_MSG_WARN([Failed to find libssl so OpenSSL will not be used. If it is installed you can try the --with-openssl=DIR argument]) ])
  fi
 fi
 
+OPENSSL_LIBS=
 if test "$use_openssl" = "yes"; then
   AC_DEFINE(HAVE_OPENSSL)
-  LIBS="$LIBS -lssl -lcrypto"
+  OPENSSL_LIBS="-lssl -lcrypto"
 fi
+
+AC_SUBST(OPENSSL_LIBS)
 
 dnl Check whether libpcap is already available
 have_libpcap=no
@@ -603,8 +607,6 @@ RECVFROM_ARG6_TYPE
 
 dnl AC_CHECK_FUNCS(gethostname gettimeofday select socket strdup strstr )
 
-
-
 AC_ARG_WITH(libnbase,
 [  --with-libnbase=DIR     Look for nbase include/libs in DIR],
 [  case "$with_libnbase" in
@@ -619,9 +621,10 @@ NBASEDIR="nbase"
 
 LDFLAGS="$LDFLAGS -L$NBASEDIR"
 CXXFLAGS="$CXXFLAGS -I$NBASEDIR"
-LIBS="$LIBS -lnbase"
+LIBNBASE_LIBS="-lnbase"
 
 AC_SUBST(NBASEDIR)
+AC_SUBST(LIBNBASE_LIBS)
 
 NSOCKDIR="nsock"
 AC_ARG_WITH(libnsock,
@@ -637,9 +640,10 @@ AC_ARG_WITH(libnsock,
 
 LDFLAGS="$LDFLAGS -L$NSOCKDIR/src/"
 CXXFLAGS="$CXXFLAGS -I$NSOCKDIR/include"
-LIBS="$LIBS -lnsock"
+LIBNSOCK_LIBS="-lnsock"
 
 AC_SUBST(NSOCKDIR)
+AC_SUBST(LIBNSOCK_LIBS)
 
 subdirs="$subdirs $NSOCKDIR/src"
 

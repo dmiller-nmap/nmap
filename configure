@@ -311,7 +311,7 @@ ac_includes_default="\
 
 ac_subdirs_all="$ac_subdirs_all libpcre"
 ac_subdirs_all="$ac_subdirs_all $subdirs"
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS libpcapdir pcredir CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT CXX CXXFLAGS ac_ct_CXX COMPAT_OBJS COMPAT_SRCS build build_cpu build_vendor build_os host host_cpu host_vendor host_os CPP EGREP TARGETNMAPFE INSTALLNMAPFE PCAP_DEPENDS PCAP_CLEAN PCAP_DIST_CLEAN LIBPCAP_LIBS subdirs LIBPCRE_LIBS LIBPCREDIR PCRE_DEPENDS PCRE_CLEAN PCRE_DIST_CLEAN NBASEDIR NSOCKDIR GTK_CONFIG LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS libpcapdir pcredir CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT CXX CXXFLAGS ac_ct_CXX COMPAT_OBJS COMPAT_SRCS build build_cpu build_vendor build_os host host_cpu host_vendor host_os CPP EGREP TARGETNMAPFE INSTALLNMAPFE OPENSSL_LIBS PCAP_DEPENDS PCAP_CLEAN PCAP_DIST_CLEAN LIBPCAP_LIBS subdirs LIBPCRE_LIBS LIBPCREDIR PCRE_DEPENDS PCRE_CLEAN PCRE_DIST_CLEAN NBASEDIR LIBNBASE_LIBS NSOCKDIR LIBNSOCK_LIBS GTK_CONFIG LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -5055,9 +5055,9 @@ fi
 
  fi
 
+# use_openssl="yes" given explicitly in next 2 rules to avoid adding lib to $LIBS
  if test "$use_openssl" = "yes"; then
-
-echo "$as_me:$LINENO: checking for BIO_int_ctrl in -lcrypto" >&5
+   echo "$as_me:$LINENO: checking for BIO_int_ctrl in -lcrypto" >&5
 echo $ECHO_N "checking for BIO_int_ctrl in -lcrypto... $ECHO_C" >&6
 if test "${ac_cv_lib_crypto_BIO_int_ctrl+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
@@ -5122,12 +5122,7 @@ fi
 echo "$as_me:$LINENO: result: $ac_cv_lib_crypto_BIO_int_ctrl" >&5
 echo "${ECHO_T}$ac_cv_lib_crypto_BIO_int_ctrl" >&6
 if test $ac_cv_lib_crypto_BIO_int_ctrl = yes; then
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_LIBCRYPTO 1
-_ACEOF
-
-  LIBS="-lcrypto $LIBS"
-
+   use_openssl="yes"
 else
    use_openssl="no"
     { echo "$as_me:$LINENO: WARNING: Failed to find libcrypto so OpenSSL will not be used. If it is installed you can try the --with-openssl=DIR argument" >&5
@@ -5137,8 +5132,7 @@ fi
  fi
 
  if test "$use_openssl" = "yes"; then
-
-echo "$as_me:$LINENO: checking for SSL_new in -lssl" >&5
+   echo "$as_me:$LINENO: checking for SSL_new in -lssl" >&5
 echo $ECHO_N "checking for SSL_new in -lssl... $ECHO_C" >&6
 if test "${ac_cv_lib_ssl_SSL_new+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
@@ -5203,12 +5197,7 @@ fi
 echo "$as_me:$LINENO: result: $ac_cv_lib_ssl_SSL_new" >&5
 echo "${ECHO_T}$ac_cv_lib_ssl_SSL_new" >&6
 if test $ac_cv_lib_ssl_SSL_new = yes; then
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_LIBSSL 1
-_ACEOF
-
-  LIBS="-lssl $LIBS"
-
+   use_openssl="yes"
 else
    use_openssl="no"
     { echo "$as_me:$LINENO: WARNING: Failed to find libssl so OpenSSL will not be used. If it is installed you can try the --with-openssl=DIR argument" >&5
@@ -5218,13 +5207,16 @@ fi
  fi
 fi
 
+OPENSSL_LIBS=
 if test "$use_openssl" = "yes"; then
   cat >>confdefs.h <<\_ACEOF
 #define HAVE_OPENSSL 1
 _ACEOF
 
-  LIBS="$LIBS -lssl -lcrypto"
+  OPENSSL_LIBS="-lssl -lcrypto"
 fi
+
+
 
 have_libpcap=no
 
@@ -7506,8 +7498,6 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 
-
-
 # Check whether --with-libnbase or --without-libnbase was given.
 if test "${with_libnbase+set}" = set; then
   withval="$with_libnbase"
@@ -7525,7 +7515,8 @@ fi;
 
 LDFLAGS="$LDFLAGS -L$NBASEDIR"
 CXXFLAGS="$CXXFLAGS -I$NBASEDIR"
-LIBS="$LIBS -lnbase"
+LIBNBASE_LIBS="-lnbase"
+
 
 
 
@@ -7546,7 +7537,8 @@ fi;
 
 LDFLAGS="$LDFLAGS -L$NSOCKDIR/src/"
 CXXFLAGS="$CXXFLAGS -I$NSOCKDIR/include"
-LIBS="$LIBS -lnsock"
+LIBNSOCK_LIBS="-lnsock"
+
 
 
 
@@ -8277,6 +8269,7 @@ s,@CPP@,$CPP,;t t
 s,@EGREP@,$EGREP,;t t
 s,@TARGETNMAPFE@,$TARGETNMAPFE,;t t
 s,@INSTALLNMAPFE@,$INSTALLNMAPFE,;t t
+s,@OPENSSL_LIBS@,$OPENSSL_LIBS,;t t
 s,@PCAP_DEPENDS@,$PCAP_DEPENDS,;t t
 s,@PCAP_CLEAN@,$PCAP_CLEAN,;t t
 s,@PCAP_DIST_CLEAN@,$PCAP_DIST_CLEAN,;t t
@@ -8288,7 +8281,9 @@ s,@PCRE_DEPENDS@,$PCRE_DEPENDS,;t t
 s,@PCRE_CLEAN@,$PCRE_CLEAN,;t t
 s,@PCRE_DIST_CLEAN@,$PCRE_DIST_CLEAN,;t t
 s,@NBASEDIR@,$NBASEDIR,;t t
+s,@LIBNBASE_LIBS@,$LIBNBASE_LIBS,;t t
 s,@NSOCKDIR@,$NSOCKDIR,;t t
+s,@LIBNSOCK_LIBS@,$LIBNSOCK_LIBS,;t t
 s,@GTK_CONFIG@,$GTK_CONFIG,;t t
 s,@LIBOBJS@,$LIBOBJS,;t t
 s,@LTLIBOBJS@,$LTLIBOBJS,;t t

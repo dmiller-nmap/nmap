@@ -2,8 +2,30 @@
 
 UNRELEASED:
 
+o Normalized many of the OS names in nmap-os-fingerprints (fixed
+  capitalization, typos, etc.).  Thanks to Royce Williams
+  (royce(a)alaska.net) and Ping Huang (pshuang(a)alum.mit.edu) for
+  sending patches.
+
+o Applied patch from Gisle Vanem (giva(a)bgnett.no) which allows the
+  Windows version of Nmap to work with WinPCAP 3.1BETA (and probably
+  future releases).  The Winpcap folks apparently changed the encoding
+  of adaptor names in this release.
+
 o Applied patch from Matt Selsky (selsky(a)columbia.edu) which helps
   Nmap build with OpenSSL.
+
+o Modified the configure/build system to fix library ordering problems
+  that prevented Nmap from building on certain platforms.  Thanks to
+  Greg A. Woods (woods(a)weird.com) for the suggestions.
+
+o Applied a patch to Makefile.in from Scott Mansfield
+  (thephantom(a)mac.com) which enables the use of a DESTDIR variable
+  to install the whole Nmap directory structure under a different root
+  directory.  The configure --prefix option would do the same thing in
+  this case, but DESTDIR is apparently a standard that package
+  maintainers like Scott are used to.  An example usage is 
+  "make DESTDIR=/tmp/packageroot".
 
 Nmap 3.50
 
@@ -68,7 +90,7 @@ o Upgraded to Autoconf 2.59 (from 2.57).  This should help HP-UX
   (pere(a)hungry.com) and may have other benefits as well.
 
 o Applied patch from Przemek Galczewski (sako(a)avet.com.pl) which
-  adds spaces to the XML output in places tha apparently help certain
+  adds spaces to the XML output in places that apparently help certain
   older XML parsers.
 
 o Made Ident-scan (-I) limits on the length and type of responses
@@ -124,7 +146,7 @@ o Added the ability to execute "helper functions" in version
   templates, to help clean up/manipulate data captured from a server
   response.  The first defined function is P() which includes only
   printable characters in a captured string.  The main impetus for
-  this is to deal with unicode strings like
+  this is to deal with Unicode strings like
   "W\0O\0R\0K\0G\0R\0O\0U\0P\0" that many MS protocols send.  Nmap can
   now decode that into "WORKGROUP".
 
@@ -154,9 +176,9 @@ o The tarball distribution of Nmap now strips the binary at install
 
 o Fixed a problem related to building Nmap on systems that lack PCRE
   libs (and thus have to use the ones included by Nmap).  Thanks to Remi
-  Denis-Courmont (deniscr6(a)cti.ecp.fr) for the repot and patch.
+  Denis-Courmont (deniscr6(a)cti.ecp.fr) for the report and patch.
 
-o Alphebetized the service names in each Probe section in
+o Alphabetized the service names in each Probe section in
   nmap-service-probes (makes them easier to find and add to).
 
 o Fixed the problem several people reported where Nmap would quit with
@@ -181,7 +203,7 @@ o Fixed a problem with XML output being invalid when service detection
   reported this - it means that folks are actually using the XML
   output :).
 
-o Fixed (I hope) some Solaris Sune ONE compiler compilation problems
+o Fixed (I hope) some Solaris Sun ONE compiler compilation problems
   reported (w/patches) by Mikael Mannstrom (candyman(a)penti.org)
 
 o Fixed the --with-openssl configure option for people who have
@@ -217,7 +239,7 @@ o Added new HTTPOptions and RTSPRequest probes suggested by MadHat
   (madhat(a)unspecific.com)
 
 o Changed the .spec file to compile Nmap RPMs without SSL support to
-  improve compatability (Some users might not have OpenSSL, and even
+  improve compatibility (Some users might not have OpenSSL, and even
   those who do might not have the right version (libopenssl.so.2 vs
   libopenssl.so.4, etc).
 
@@ -318,7 +340,7 @@ o Fixed a compilation problem on systems w/o OpenSSL that was
 o Integrated more services thanks to submissions from Niels Heinen
   (zillion(a)safemode.org).
 
-o Canonicalized the headers at the top of each Nmap/Nsock header src
+o Canonicalized the headers at the top of each Nmap/Nsock header source
   file.  This included clarifying our interpretation of derived works,
   updating the copyright date to 2003, making the header a bit wider,
   and a few other light changes.  I've been putting this off for a
@@ -644,7 +666,7 @@ Nmap 3.40PVT2
 
 o Nmap now has a simple VERSION detection scheme.  The 'match' lines in
   nmap-service-probes can specify a template version string
-  (referencing subexpression matches from the regex in a perl-like
+  (referencing subexpression matches from the regex in a Perl-like
   manner) so that the version is determined at the same time as the
   service.  This handles many common services in a highly efficient
   manner.  A more complex form of version detection (that initiates
@@ -657,7 +679,7 @@ o The Nmap port state table now wastes less whitespace due to using a new
   also leaves more room for version info and possibly other enhancements.
 
 o Added 's' option to match lines in nmap-service-probes.  Just as
-  with the perl 's' option, this one causes '.' in the regular
+  with the Perl 's' option, this one causes '.' in the regular
   expression to match any character INCLUDING newline.
 
 o The WinPcap header timestamp is no longer used on Windows as it
@@ -808,9 +830,9 @@ o SCO operating systems are no longer supported due to their recent
   (and absurd) attacks against Linux and IBM.  Bug reports relating to
   UnixWare will be ignored, or possibly even laughed at derisively.
   Note that I have no reason to believe anyone has ever used Nmap on
-  SCO systems.  Unixware and OpenServer suck.
+  SCO systems.  UnixWare and OpenServer suck.
 
-o Fixed a problem with small --max_parallism values when non-root ping
+o Fixed a problem with small --max_parallelism values when non-root ping
   scanning that would cause Nmap to say "sendconnecttcpquery: Could
   not scavenge a free socket!" and quit.  Problem was reported by
   Justin A (justin(a)bouncybouncy.net) as Debian Bug #195463.
@@ -827,7 +849,7 @@ o Changed many single-quotes (') into double quotes (") in the man
   (\') in nroff.
 
 o Included --packet_trace support for Explicit Congestion Notification
-  (rfc 2481/3168) flags thanks to a patch sent in by Maik Pfeil
+  (RFC 2481/3168) flags thanks to a patch sent in by Maik Pfeil
   (root(a)bundesspionageministerium.de)
 
 o Included --packet_trace support for a few (unusual) ICMP types in
@@ -915,9 +937,9 @@ o I'm now linking directly to the gzip compressed version of Nmap on
 
 o Fixed a portability problem that caused BSD Make to bail out.
 
-o Fixed a divide by zero error caused when nonroot users (on UNIX)
+o Fixed a divide by zero error caused when non-root users (on UNIX)
   explicitly request ICMP pings (which require root privileges).  Now it
-  prints a warning and uses the normal nonroot TCP connect() ping.
+  prints a warning and uses the normal non-root TCP connect() ping.
   Jaroslav Sladek (jup(a)matfyz.cz) found the bug and provided the patch.
 
 o Made Nmap more tolerant of corrupt nmap-services and nmap-protocols
@@ -957,7 +979,7 @@ Nmap 3.20
 
 o The random IP input option (-iR) now takes an argument specifying
   how many IPs you want to scan (e.g. -iR 1000).  Specify 0 for the old
-  neverending scan behavior.
+  never-ending scan behavior.
 
 o Fixed a tricky memory leak discovered by Mugz (mugz(a)x-mafia.com).
 
@@ -996,7 +1018,7 @@ o Nmap now comes by default in .tar.bz2 format, which compresses about
   20% further.  You can still find .tgz in the dist directory at
   http://download.insecure.org/nmap/dist/?M=D .
 
-o Various other minor bugfixes, new services, fingerprints, etc.
+o Various other minor bug fixes, new services, fingerprints, etc.
 
 Nmap 3.15BETA2
 
@@ -1036,7 +1058,7 @@ o Fixed Solaris compilation when Sun make is used rather than GNU
   make.  Thanks to Tom Duffy (tduffy(a)sun.com) for assistance.
 
 o Applied patch from Stephen Bishop (sbishop(a)idsec.co.uk) which
-  prevends certain false-positive responses when Nmap raw TCP ping scans
+  prevents certain false-positive responses when Nmap raw TCP ping scans
   are being run in parallel.
 
 o To emphasize the highly professional nature of Nmap, I changed all
@@ -1154,11 +1176,11 @@ o Applied patch by Max Schubert (nmap(a)webwizarddesign.com) which adds
   [addport state="open" portid="22" protocol="tcp"/]
   I also updated docs/nmap.dtd to recognize this new tag.
 
-o Added German translation of Nmap manpage by Marc Ruef
+o Added German translation of Nmap man page by Marc Ruef
   (marc.ruef(a)computec.ch).  It is also available at
   http://www.insecure.org/nmap/data/nmap_manpage-de.html
 
-o Includes a brand new French translation of the manpage by Sebastien
+o Includes a brand new French translation of the man page by Sebastien
   Blanchet.  You could probably guess that it is available at
   http://www.insecure.org/nmap/data/nmap_manpage-fr.html
 
@@ -1178,9 +1200,9 @@ o Added --min_parallelism option, which makes scans more aggressive
 
 o Added --packet_trace option, which tells Nmap to display all of the
   packets it sends and receives in a format similar to tcpdump.  I
-  mostly added this for debugging purposes, but ppl wishing to learn
+  mostly added this for debugging purposes, but people wishing to learn
   how Nmap works or for experts wanting to ensure Nmap is doing
-  exactly what they epect.  If you want this feature supported under
+  exactly what they expect.  If you want this feature supported under
   Windows, please send me a patch :).
 
 o Fixed a segmentation fault in Idlescan (-sI).
@@ -1192,7 +1214,7 @@ o Fixed an infinite-loop condition that could occur during certain
   dropped-packet scenarios in an Idle scan.
 
 o Nmap now reports execution times to millisecond precision (rather
-  than rouding to the nearest second).
+  than rounding to the nearest second).
 
 o Fixed an infinite loop caused by invalid port arguments.  Problem
   noted by fejed (fejed(a)uddf.net).
@@ -1220,22 +1242,22 @@ o IPv6 is now supported for TCP scan (-sT), connect()-style ping
   Sebastien Peterson's patch a try at http://nmap6.sourceforge.net/ .
   If there is demand, I may integrate more of that into Nmap.
 
-o Major code restructing, which included conversion to C++ -- so
-  you'll need g++ or another C++ compiler.  I accidently let a C++
+o Major code restructuring, which included conversion to C++ -- so
+  you'll need g++ or another C++ compiler.  I accidentally let a C++
   requirement slip in a while back and found that almost everyone has
   such a compiler.  Windows (VC++) users: see the README-WIN32 for new
   compilation instructions.
 
 o Applied patch from Axel Nennker (Axel.Nennker(a)t-systems.com) which
-  adds a --without-nmapfe option to the configure script.  This si
-  useful if your system doesn't have the proper libraries (eg GTK) or
+  adds a --without-nmapfe option to the configure script.  This is
+  useful if your system doesn't have the proper libraries (e.g. GTK) or
   if you think GUIs are for sissies :).
 
 o Removed arbitrary max_parallelism (-M) limitations, as suggested by
   William McVey ( wam(a)cisco.com ).
 
 o Added DEC OSF to the platforms that require the BSDFIX() macro due
-  to taking ip length and offset fields in host rather than network byte
+  to taking IP length and offset fields in host rather than network byte
   order.  Suggested by Dean Bennett (deanb(a)gbtn.net)
 
 o Fixed an debug statement C ambiguity discovered by Kronos

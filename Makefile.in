@@ -29,13 +29,18 @@ CPPFLAGS = @CPPFLAGS@
 # CFLAGS = $(DEFS) $(INCLS)
 STATIC =
 LDFLAGS = @LDFLAGS@ $(STATIC)
-LIBS =  @LIBS@ @LIBPCRE_LIBS@ @LIBPCAP_LIBS@
+LIBS =  @LIBNBASE_LIBS@ @LIBNSOCK_LIBS@ @LIBPCRE_LIBS@ @LIBPCAP_LIBS@ @OPENSSL_LIBS@ @LIBS@
 # LIBS =  -lefence @LIBS@
 # LIBS =  -lrmalloc @LIBS@
 SHTOOL = ./shtool
 INSTALL = $(SHTOOL) install 
 MAKEDEPEND = @MAKEDEPEND@
 RPMTDIR=$(HOME)/rpmdir
+
+# DESTDIR is used by some package maintainers to install Nmap under
+# its usual directory structure into a different tree.  See the 
+# CHANGELOG for more info.
+DESTDIR =
 
 TARGET = nmap
 TARGETNMAPFE=@TARGETNMAPFE@
@@ -217,7 +222,7 @@ distro:
 web:
 	test x$(wroot) != x
 	cp -a CHANGELOG HACKING COPYING INSTALL nmap-os-fingerprints nmap-service-probes nmap-protocols nmap-services nmap-rpc README-WIN32 $(wroot)/nmap/data
-	cd docs && cp -a nmap_manpage*.html nmap.usage.txt nmap.dtd $(wroot)/nmap/data/
+	cd docs && cp -a nmap_manpage*.html nmap*.1 xnmap.1 nmap.usage.txt nmap.dtd $(wroot)/nmap/data/
 	scripts/produceosclasschoosebox.pl nmap-os-fingerprints > $(wroot)/nmap/data/os-classes.txt
 	find $(wroot)/nmap/data/ -type f -exec chmod 644 '{}' \;
 
@@ -249,19 +254,19 @@ depend:
 	$(MAKEDEPEND) $(INCLS) -s "# DO NOT DELETE" -- $(DEFS) -- $(SRCS)
 
 install-nmap: $(TARGET)
-	$(SHTOOL) mkdir -f -p -m 755 $(bindir) $(mandir)/man1 $(nmapdatadir)
-	$(INSTALL) -c -m 755 nmap -s $(bindir)/nmap
-	$(INSTALL) -c -m 644 docs/$(TARGET).1 $(mandir)/man1/$(TARGET).1
-	$(INSTALL) -c -m 644 nmap-os-fingerprints  $(nmapdatadir)/nmap-os-fingerprints
-	$(INSTALL) -c -m 644 nmap-service-probes  $(nmapdatadir)/nmap-service-probes
-	$(INSTALL) -c -m 644 nmap-services  $(nmapdatadir)/nmap-services
-	$(INSTALL) -c -m 644 nmap-protocols  $(nmapdatadir)/nmap-protocols
-	$(INSTALL) -c -m 644 nmap-rpc  $(nmapdatadir)/nmap-rpc
+	$(SHTOOL) mkdir -f -p -m 755 $(DESTDIR)$(bindir) $(DESTDIR)$(mandir)/man1 $(DESTDIR)$(nmapdatadir)
+	$(INSTALL) -c -m 755 nmap -s $(DESTDIR)$(bindir)/nmap
+	$(INSTALL) -c -m 644 docs/$(TARGET).1 $(DESTDIR)$(mandir)/man1/$(TARGET).1
+	$(INSTALL) -c -m 644 nmap-os-fingerprints  $(DESTDIR)$(nmapdatadir)/nmap-os-fingerprints
+	$(INSTALL) -c -m 644 nmap-service-probes  $(DESTDIR)$(nmapdatadir)/nmap-service-probes
+	$(INSTALL) -c -m 644 nmap-services  $(DESTDIR)$(nmapdatadir)/nmap-services
+	$(INSTALL) -c -m 644 nmap-protocols  $(DESTDIR)$(nmapdatadir)/nmap-protocols
+	$(INSTALL) -c -m 644 nmap-rpc  $(DESTDIR)$(nmapdatadir)/nmap-rpc
 
 install-nmapfe: $(TARGETNMAPFE)
-	$(SHTOOL) mkdir -f -p -m 755 $(bindir) $(mandir)/man1 $(nmapdatadir) $(deskdir)
+	$(SHTOOL) mkdir -f -p -m 755 $(DESTDIR)$(bindir) $(DESTDIR)$(mandir)/man1 $(DESTDIR)$(nmapdatadir) $(DESTDIR)$(deskdir)
 	@echo "If the next command fails -- you cannot use the X front end"
-	-test -f nmapfe/nmapfe && $(INSTALL) -c -m 755 -s nmapfe/nmapfe $(bindir)/nmapfe && rm -f $(bindir)/xnmap && $(SHTOOL) mkln -f -s $(bindir)/nmapfe $(bindir)/xnmap && $(INSTALL) -c -m 644 nmapfe.desktop $(deskdir)/nmapfe.desktop && $(INSTALL) -c -m 644 docs/nmapfe.1 $(mandir)/man1/nmapfe.1 && $(INSTALL) -c -m 644 docs/xnmap.1 $(mandir)/man1/xnmap.1
+	-test -f nmapfe/nmapfe && $(INSTALL) -c -m 755 -s nmapfe/nmapfe $(DESTDIR)$(bindir)/nmapfe && rm -f $(DESTDIR)$(bindir)/xnmap && $(SHTOOL) mkln -f -s $(DESTDIR)$(bindir)/nmapfe $(DESTDIR)$(bindir)/xnmap && $(INSTALL) -c -m 644 nmapfe.desktop $(DESTDIR)$(deskdir)/nmapfe.desktop && $(INSTALL) -c -m 644 docs/nmapfe.1 $(DESTDIR)$(mandir)/man1/nmapfe.1 && $(INSTALL) -c -m 644 docs/xnmap.1 $(DESTDIR)$(mandir)/man1/xnmap.1
 
 install: install-nmap $(INSTALLNMAPFE)
 
