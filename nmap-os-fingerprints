@@ -3103,7 +3103,7 @@ PU(DF=N%TOS=D%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=0%ULEN=134%DAT=E)
 # Trancell Webramp router or Xylan Omni Switch 3.2.X.X - 3.4.X.X
 # Epson Stylus Color 1520C with 100BTX-NIC from Epson
 # CISCO 6509 WS-C6509 Software, Version NmpSW: 5.3(3)CSX
-Fingerprint Router/Switch/Printer (LanPlex 2500/Cisco Catalyst 5505/CISCO 6509/Trancell Webramp/Xylan Omni Switch)/Epson Stylus (100BTX-NIC)
+Fingerprint Router/Switch/Printer (LanPlex 2500/Cisco Catalyst 5505/CISCO 6509/Trancell Webramp/Xylan Omni Switch)/Epson Stylus (100BTX-NIC HP Secure Web Console) 
 TSeq(Class=64K)
 T1(DF=N%W=1000%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -3809,7 +3809,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=15C%RID=F%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
 # Thanks to Calle Dybedahl <qdtcall@esavionics.se>
-Fingerprint NetApp OnTap 5.1.2 - 5.2.2
+Fingerprint NetApp OnTap 5.1.2 - 5.3.5r2
 TSeq(Class=RI%gcd=<6%SI=>BBB)
 T1(Resp=Y%DF=Y%W=2017%ACK=S++%Flags=AS%Ops=MNWNNT)
 T2(Resp=N)
@@ -4629,7 +4629,7 @@ T6(Resp=N)
 T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
-# Contributed by Peter Johnson peter@johnson.org
+# Contributed by Peter Johnson peter@johnson.org and sellis@intergate.bc.ca
 Fingerprint Redback SMS 1000-2000 DSL Router
 TSeq(Class=RI%gcd=<4%SI=>1000&<FFFF)
 T1(DF=N%W=2000%ACK=S++%Flags=AS%Ops=MNW)
