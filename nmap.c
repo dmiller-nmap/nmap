@@ -2028,7 +2028,7 @@ if (o.debugging || o.verbose)
 		if (numqueries_ideal < 1) numqueries_ideal = 1;
 		if (o.debugging) { printf("Lost a packet, decreasing window to %d\n", (int) numqueries_ideal);
 		windowdecrease++;
-		if (scantype == UDP_SCAN) usleep(500000);
+		if (scantype == UDP_SCAN) usleep(250000);
 		}
 	      } else if (o.debugging > 1) { printf("Lost a packet, but not decreasing\n");
 	      }
