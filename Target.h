@@ -117,7 +117,7 @@ class Target {
   struct firewallmodeinfo firewallmode; /* For supporting "firewall mode" speed optimisations */
   int timedout; /* Nonzero if continued scanning should be aborted due to
 		   timeout  */
-  char device[64]; /* The device we transmit on */
+  char device[64]; /* The device we transmit on -- make sure to adjust some str* calls if I ever change this*/
 
  private:
   char *hostname; // Null if unable to resolve or unset

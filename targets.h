@@ -114,10 +114,10 @@ int get_ping_results(int sd, pcap_t *pd, Target *hostbatch[],
 		     struct timeout_info *to, int id, struct pingtech *ptech, 
 		     struct scan_lists *ports);
 int sendpingqueries(int sd, int rawsd, Target *target,  
-		  int seq, u16 seq_offset, unsigned short id, struct scanstats *ss, 
+		  u16 seq, unsigned short id, struct scanstats *ss, 
 		  struct timeval *time, int pingtype, struct pingtech ptech);
 int sendpingquery(int sd, int rawsd, Target *target,  
-		  int seq, u16 seq_offset, unsigned short id, struct scanstats *ss, 
+		  u16 seq, unsigned short id, struct scanstats *ss, 
 		  struct timeval *time, int pingtype, struct pingtech ptech);
 int sendrawtcpudppingqueries(int rawsd, Target *target, int pingtype,
 			  int seq, struct timeval *time, struct pingtune *pt);

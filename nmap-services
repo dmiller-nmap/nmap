@@ -1931,6 +1931,7 @@ cfengine          5308/tcp   #
 cfengine          5308/udp   # 
 pcduo-old         5400/tcp   # RemCon PC-Duo - old port
 pcduo             5405/tcp   # RemCon PC-Duo - new port
+connect-proxy     5490/tcp   # Many HTTP CONNECT proxies 
 postgres          5432/tcp   # postgres database server
 securid           5500/udp   # SecurID
 secureidprop      5510/tcp   # ACE/Server services

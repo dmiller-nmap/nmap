@@ -1430,7 +1430,7 @@ if (!pd) fatal("NULL packet device passed to readip_pcap");
    alignedbufsz = *len;
  }
  memcpy(alignedbuf, p, *len);
- PacketTrace::trace(PacketTrace::RCVD, (u8 *) alignedbuf, *len);
+
  // printf("Just got a packet at %li,%li\n", head.ts.tv_sec, head.ts.tv_usec);
  if (rcvdtime) {
  // FIXME: I eventually need to figure out why Windows head.ts time is sometimes BEFORE the time I
@@ -1441,9 +1441,13 @@ if (!pd) fatal("NULL packet device passed to readip_pcap");
  *rcvdtime = tv_end;
  #else
  *rcvdtime = head.ts;
+ assert(head.ts.tv_sec);
  #endif
-   assert(head.ts.tv_sec);
  }
+
+ if (rcvdtime)
+   PacketTrace::trace(PacketTrace::RCVD, (u8 *) alignedbuf, *len, rcvdtime);
+ else PacketTrace::trace(PacketTrace::RCVD, (u8 *) alignedbuf, *len);
 
  return alignedbuf;
 }

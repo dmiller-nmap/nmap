@@ -212,7 +212,7 @@ do {
       if (o.spoofsource) {
 	o.SourceSockAddr(&ss, &sslen);
 	hs->hostbatch[hidx]->setSourceSockAddr(&ss, sslen);
-	strcpy(hs->hostbatch[hidx]->device, o.device);
+	Strncpy(hs->hostbatch[hidx]->device, o.device, 64);
       } else {
 	/* We figure out the source IP/device IFF
 	   1) We are r00t AND
@@ -240,7 +240,7 @@ do {
 	      *pingtype = PINGTYPE_ICMP_PING;
 	    }
 	  } else {
-	    strcpy(hs->hostbatch[hidx]->device, device);
+	    Strncpy(hs->hostbatch[hidx]->device, device, 64);
 	  }
 	}
       }
@@ -471,7 +471,7 @@ gettimeofday(&start, NULL);
      direction = (pt.block_tries % 2 == 0)? 1 : -1;
      if (direction == 1) { group_start = pt.group_start; group_end = pt.group_end; }
      else { group_start = pt.group_end; group_end = pt.group_start; }
-     for(hostnum= group_start; hostnum != group_end + direction; hostnum += direction) {      
+     for(hostnum = group_start; hostnum != group_end + direction; hostnum += direction) {      
        /* If (we don't know whether the host is up yet) ... */
        if (!(hostbatch[hostnum]->flags & HOST_UP) && !hostbatch[hostnum]->wierd_responses && !(hostbatch[hostnum]->flags & HOST_DOWN)) {  
 	 /* Send a ping queries to it */
@@ -480,11 +480,11 @@ gettimeofday(&start, NULL);
 	   block_socket(sd); sd_blocking = 1; 
 	 }
 	 pt.block_unaccounted++;
-	 gettimeofday(&time[seq - pt.seq_offset], NULL);
+	 gettimeofday(&time[(seq - pt.seq_offset) & 0xFFFF], NULL);
 
 	 if (ptech.icmpscan || ptech.rawicmpscan)
 	   sendpingqueries(sd, rawpingsd, hostbatch[hostnum],  
-			   seq, pt.seq_offset, id, &ss, time, pingtype, ptech);
+			   seq, id, &ss, time, pingtype, ptech);
        
 	 if (ptech.rawtcpscan || ptech.rawudpscan) 
 	   sendrawtcpudppingqueries(rawsd, hostbatch[hostnum], pingtype, seq, time, &pt);
@@ -714,27 +714,27 @@ else {
 }
 
 int sendpingqueries(int sd, int rawsd, Target *target,  
-		  int seq, u16 seq_offset, unsigned short id, struct scanstats *ss, 
+		  u16 seq, unsigned short id, struct scanstats *ss, 
 		    struct timeval *time, int pingtype, struct pingtech ptech) {
   if (pingtype & PINGTYPE_ICMP_PING) {
     if (o.scan_delay) enforce_scan_delay(NULL);
-    sendpingquery(sd, rawsd, target, seq, seq_offset, id, ss, time, PINGTYPE_ICMP_PING, ptech);
+    sendpingquery(sd, rawsd, target, seq, id, ss, time, PINGTYPE_ICMP_PING, ptech);
   }
   if (pingtype & PINGTYPE_ICMP_MASK) {
     if (o.scan_delay) enforce_scan_delay(NULL);
-    sendpingquery(sd, rawsd, target, seq, seq_offset, id, ss, time, PINGTYPE_ICMP_MASK, ptech);
+    sendpingquery(sd, rawsd, target, seq, id, ss, time, PINGTYPE_ICMP_MASK, ptech);
 
   }
   if (pingtype & PINGTYPE_ICMP_TS) {
     if (o.scan_delay) enforce_scan_delay(NULL);
-    sendpingquery(sd, rawsd, target, seq, seq_offset, id, ss, time, PINGTYPE_ICMP_TS, ptech);
+    sendpingquery(sd, rawsd, target, seq, id, ss, time, PINGTYPE_ICMP_TS, ptech);
   }
 
   return 0;
 }
 
 int sendpingquery(int sd, int rawsd, Target *target,  
-		  int seq, u16 seq_offset, unsigned short id, struct scanstats *ss, 
+		  u16 seq, unsigned short id, struct scanstats *ss, 
 		  struct timeval *time, int pingtype, struct pingtech ptech) {
 struct ppkt {
   u8 type;
@@ -796,8 +796,10 @@ if (ptech.icmpscan) {
    if (ptech.icmpscan && decoy == o.decoyturn) {
      /* FIXME: If EHOSTUNREACH (Windows does that) then we were
 	probably unable to obtain an arp response from the machine.
-	We should just considering the host down rather than ignoring
+	We should just consider the host down rather than ignoring
 	the error */
+     // Can't currently do the tracer because 'ping' has no IP header
+     //     PacketTrace::trace(PacketTrace::SENT, (u8 *) ping, icmplen); 
      if ((res = sendto(sd,(char *) ping,icmplen,0,(struct sockaddr *)&sock,
 		       sizeof(struct sockaddr))) != icmplen && 
 		       errno != EHOSTUNREACH 
@@ -951,7 +953,10 @@ return 0;
 }
 
 
-int get_ping_results(int sd, pcap_t *pd, Target *hostbatch[], int pingtype, struct timeval *time,  struct pingtune *pt, struct timeout_info *to, int id, struct pingtech *ptech, struct scan_lists *ports) {
+int get_ping_results(int sd, pcap_t *pd, Target *hostbatch[], int pingtype, 
+		     struct timeval *time,  struct pingtune *pt, 
+		     struct timeout_info *to, int id, struct pingtech *ptech, 
+		     struct scan_lists *ports) {
   fd_set fd_r, fd_x;
   struct timeval myto, tmpto, start, end, rcvdtime;
   unsigned int bytes;
@@ -978,7 +983,7 @@ int get_ping_results(int sd, pcap_t *pd, Target *hostbatch[], int pingtype, stru
   u32 trynum = 0xFFFFFF;
   enum pingstyle pingstyle = pingstyle_unknown;
   int timeout = 0;
-  unsigned short sequence = 65534;
+  u16 sequence = 65534;
   unsigned long tmpl;
   unsigned short sportbase;
 
@@ -1012,8 +1017,12 @@ int get_ping_results(int sd, pcap_t *pd, Target *hostbatch[], int pingtype, stru
       FD_SET(sd, &fd_x);
       res = select(sd+1, &fd_r, NULL, &fd_x, &tmpto);
       if (res == 0) break;
-      bytes = read(sd,&response,sizeof(response));
-      ip = (struct ip *) &(response);
+      bytes = read(sd, response,sizeof(response));
+      ip = (struct ip *) response;
+      if (bytes > 0) {
+	gettimeofday(&rcvdtime, NULL);
+	PacketTrace::trace(PacketTrace::RCVD, (u8 *) response, bytes, &rcvdtime);
+      }
     }
 
     gettimeofday(&end, NULL);
