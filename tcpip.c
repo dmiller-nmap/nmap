@@ -891,7 +891,8 @@ char *routethrough(struct in_addr *dest, struct in_addr *source) {
     if (ifc.ifc_len == 0) 
       fatal("routethrough: SIOCGIFCONF claims you have no network interfaces!\n");
 #if HAVE_SOCKADDR_SA_LEN
-    len = MAX(sizeof(struct sockaddr), ifr->ifr_addr.sa_len);
+/*    len = MAX(sizeof(struct sockaddr), ifr->ifr_addr.sa_len);*/
+   len = ifr->ifr_addr.sa_len;
 #else
     len = sizeof(SA);
 #endif
@@ -907,6 +908,11 @@ char *routethrough(struct in_addr *dest, struct in_addr *source) {
       numinterfaces++;
       if (numinterfaces == 32) 
 	fatal("My god!  You seem to have WAY too many interfaces!\n");
+#if HAVE_SOCKADDR_SA_LEN
+      /* len = MAX(sizeof(struct sockaddr), ifr->ifr_addr.sa_len);*/
+      len = ifr->ifr_addr.sa_len;
+#endif 
+
     }
 
     /* Now we must go through several techniques to determine info */
