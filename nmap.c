@@ -1742,7 +1742,7 @@ portlist super_scan(struct hoststruct *target, unsigned short *portarray, stype 
   int scanflags = 0;
   pcap_t *pd;
   int bytes;
-  struct ip *ip;
+  struct ip *ip, *ip2;
   struct tcphdr *tcp;
   struct bpf_program fcode;
   char err0r[PCAP_ERRBUF_SIZE];
@@ -1755,6 +1755,7 @@ portlist super_scan(struct hoststruct *target, unsigned short *portarray, stype 
   int tries = 0;
   unsigned int localnet, netmask;
   int starttime, delta;
+  unsigned short newport;
   struct hostent *myhostent = NULL;
   struct timeout_info {
     int srtt; /* Smoothed rtt estimate (microseconds) */
@@ -1775,7 +1776,10 @@ portlist super_scan(struct hoststruct *target, unsigned short *portarray, stype 
   int decoy;
   struct timeval now;
   int i,j;
+  unsigned short *data;
+  int packet_trynum =0;
   int windowdecrease = 0; /* Has the window been decreased this round yet? */
+  struct icmp *icmp;
 
   memset(portlookup, 255, 65536); /* 0xffff better always be (short) -1 */
   scan = safe_malloc(o.numports * sizeof(struct f00));
@@ -1827,19 +1831,15 @@ if (!(pd = pcap_open_live(target->device, 92,  (o.spoofsource)? 1 : 0, 20, err0r
 if (pcap_lookupnet(target->device, &localnet, &netmask, err0r) < 0)
   fatal("Failed to lookup device subnet/netmask: %s", err0r);
 p = strdup(inet_ntoa(target->host));
-#ifdef HAVE_SNPRINTF
-snprintf(filter, sizeof(filter), "tcp and src host %s and dst host %s and (dst port %d or dst port %d)", p, inet_ntoa(target->source_ip), o.magic_port, o.magic_port +1 );
-#else
-sprintf(filter, "tcp and src host %s and dst host %s and ( dst port %d or dst port %d)", p, inet_ntoa(target->source_ip), o.magic_port , o.magic_port + 1);
-#endif
-free(p);
-if (o.debugging)
-  printf("Packet capture filter: %s\n", filter);
-if (pcap_compile(pd, &fcode, filter, 0, netmask) < 0)
-  fatal("Error compiling our pcap filter: %s\n", pcap_geterr(pd));
-if (pcap_setfilter(pd, &fcode) < 0 )
-  fatal("Failed to set the pcap filter: %s\n", pcap_geterr(pd));
-
+sprintf(filter, "(tcp or icmp) and src host %s and dst host %s and ( dst port %d or dst port %d)", p, inet_ntoa(target->source_ip), o.magic_port , o.magic_port + 1);
+ free(p);
+ if (o.debugging)
+   printf("Packet capture filter: %s\n", filter);
+ if (pcap_compile(pd, &fcode, filter, 0, netmask) < 0)
+   fatal("Error compiling our pcap filter: %s\n", pcap_geterr(pd));
+ if (pcap_setfilter(pd, &fcode) < 0 )
+   fatal("Failed to set the pcap filter: %s\n", pcap_geterr(pd));
+ 
 if (scantype == XMAS_SCAN) scanflags = TH_FIN|TH_URG|TH_PUSH;
 else if (scantype == NULL_SCAN) scanflags = 0;
 else if (scantype == FIN_SCAN) scanflags = TH_FIN;
@@ -1934,61 +1934,90 @@ if (o.debugging || o.verbose)
 	if (bytes < (4 * ip->ip_hl) + 4)
 	  continue;
 	if (ip->ip_src.s_addr == target->host.s_addr) {
-	  tcp = (struct tcphdr *) (((char *) ip) + 4 * ip->ip_hl);
-	  if (tcp->th_flags & TH_RST) {	    
-	    if (portlookup[ntohs(tcp->th_sport)] < 0) {
-	      if (o.debugging) {
-		printf("Strange packet from port %d:\n", ntohs(tcp->th_sport));
-		readtcppacket((char *)ip, bytes);
-	      }
-	    } else {
-	      gettimeofday(&now, NULL);
-	      /* We figure out the scan number (and put it in i) */
-	      current = &scan[portlookup[ntohs(tcp->th_sport)]];
-	      if (current->trynum == 0) i = 0;
-	      else if (!o.magic_port_set) {
-		i = ntohs(tcp->th_dport) - o.magic_port;
-		if ((i|1) != 1) i = -1;
-	      } else i = -1;
-	      current = &scan[portlookup[ntohs(tcp->th_sport)]];
-	      if (current->state == port_closed && (i < 0)) {
-		  to.rttvar *= 1.2;
-		  if (o.debugging) { printf("Late packet, couldn't figure out sendno so we do varianceincrease to %d\n", to.rttvar); 
-		  }
-	      } else if (i > -1) {		
-		/* Update our records */
-		delta = TIMEVAL_SUBTRACT(now,current->sent[i]) - to.srtt;
-		if (o.debugging > 1) printf("Got packet (trynum %d, packetnum %d), delta %d srtt %d rttvar %d timeout %d ->", current->trynum, i, delta, to.srtt, to.rttvar, to.timeout);
-		numqueries_ideal = MIN(numqueries_ideal + (4/numqueries_ideal), max_width);
-		to.srtt += delta >> 3;
-		to.rttvar += (ABS(delta) - to.rttvar) >> 2;
-		to.timeout = to.srtt + (to.rttvar << 2);
-		if (o.debugging > 1) printf("srtt %d rttvar %d timeout %d\n",  to.srtt, to.rttvar, to.timeout);
-		if (i > 0 && current->trynum > 0) {
-		  /* The first packet was apparently lost, slow down */
-		  if (windowdecrease == 0) {
-		    numqueries_ideal *= fallback_percent;
-		    if (numqueries_ideal < 1) numqueries_ideal = 1;
-		    if (o.debugging) { printf("Lost a packet, decreasing window to %d\n", (int) numqueries_ideal);
-		    windowdecrease++;
-		    }
-		    } else if (o.debugging > 1) { printf("Lost a packet, but not decreasing\n");
-		    }
+	  if (ip->ip_p == IPPROTO_TCP) {
+	    tcp = (struct tcphdr *) (((char *) ip) + 4 * ip->ip_hl);
+	    if (tcp->th_flags & TH_RST) {	    
+	      if (portlookup[ntohs(tcp->th_sport)] < 0) {
+		if (o.debugging) {
+		  printf("Strange packet from port %d:\n", ntohs(tcp->th_sport));
+		  readtcppacket((char *)ip, bytes);
 		}
-	      }	      	      
-	      if (current->state != port_closed) {
-		changed++;
-		numqueries_outstanding--;
-		current->state = port_closed;
-		if (current == testinglist)
-		  testinglist = (current->next >= 0)?  &scan[current->next] : NULL;
-		if (current->next >= 0) scan[current->next].prev = current->prev;
-		if (current->prev >= 0) scan[current->prev].next = current->next;
+		current = NULL;
+		continue;
+	      }
+
+	      /* We figure out the scan number (and put it in i) */
+	      newport = ntohs(tcp->th_sport);
+	      current = &scan[portlookup[newport]];
+	      if (current->trynum == 0) packet_trynum = 0;
+	      else if (!o.magic_port_set) {
+		packet_trynum = ntohs(tcp->th_dport) - o.magic_port;
+		if ((packet_trynum|1) != 1) packet_trynum = -1;
+	      } else packet_trynum = -1;
+	    } else { continue; }
+	  } else if (ip->ip_p == IPPROTO_ICMP) {
+	    icmp = (struct icmp *) ((char *)ip + sizeof(struct ip));
+	    ip2 = (struct ip *) (((char *) ip) + 4 * ip->ip_hl + sizeof(struct icmp));
+	    data = (unsigned short *) ((char *)ip2+ 4 * ip2->ip_hl);
+	    
+	    if (icmp->icmp_type == 3) {
+	      switch(icmp->icmp_code) {
+
+	      case 3: /* p0rt unreachable */		
+		newport = ntohs(data[1]);
+		if (portlookup[newport] > 0) {
+		  current = &scan[portlookup[newport]];
+		  if (!o.magic_port_set) {
+		    packet_trynum = ntohs(data[0]) - o.magic_port;
+		    if ((packet_trynum|1) != 1) packet_trynum = -1;
+		  } else if (current->trynum == 0) packet_trynum = 0;
+		  else packet_trynum = -1;
+		}
+		else { continue; }		
+		break;
+	      }	     
+	    }
+	  } else if (ip->ip_p == IPPROTO_UDP) {
+	    printf("Received udp packet back ... interesting\n");
+	    continue;
+	  }	
+	  gettimeofday(&now, NULL);
+	  if (current->state == port_closed && (packet_trynum < 0)) {
+	    to.rttvar *= 1.2;
+	    if (o.debugging) { printf("Late packet, couldn't figure out sendno so we do varianceincrease to %d\n", to.rttvar); 
+	    }
+	  } else if (packet_trynum > -1) {		
+	    /* Update our records */
+	    delta = TIMEVAL_SUBTRACT(now,current->sent[i]) - to.srtt;
+	    if (o.debugging > 1) printf("Got packet (trynum %d, packetnum %d), delta %d srtt %d rttvar %d timeout %d ->", current->trynum, packet_trynum, delta, to.srtt, to.rttvar, to.timeout);
+	    numqueries_ideal = MIN(numqueries_ideal + (4/numqueries_ideal), max_width);
+	    to.srtt += delta >> 3;
+	    to.rttvar += (ABS(delta) - to.rttvar) >> 2;
+	    to.timeout = to.srtt + (to.rttvar << 2);
+	    if (o.debugging > 1) printf("srtt %d rttvar %d timeout %d\n",  to.srtt, to.rttvar, to.timeout);
+	    if (packet_trynum > 0 && current->trynum > 0) {
+	      /* The first packet was apparently lost, slow down */
+	      if (windowdecrease == 0) {
+		numqueries_ideal *= fallback_percent;
+		if (numqueries_ideal < 1) numqueries_ideal = 1;
+		if (o.debugging) { printf("Lost a packet, decreasing window to %d\n", (int) numqueries_ideal);
+		windowdecrease++;
+		}
+	      } else if (o.debugging > 1) { printf("Lost a packet, but not decreasing\n");
 	      }
 	    }
+	  }      	      
+	  if (current->state != port_closed) {
+	    changed++;
+	    numqueries_outstanding--;
+	    current->state = port_closed;
+	    if (current == testinglist)
+	      testinglist = (current->next >= 0)?  &scan[current->next] : NULL;
+	    if (current->next >= 0) scan[current->next].prev = current->prev;
+	    if (current->prev >= 0) scan[current->prev].next = current->next;
 	  }
 	}
-      }
+      }	  
     }
     /* Prepare for retry */
     testinglist = openlist;
