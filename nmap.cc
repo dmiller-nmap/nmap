@@ -1838,6 +1838,8 @@ void reaper(int signo) {
 }
 
 void sigdie(int signo) {
+  int abt = 0;
+
   switch(signo) {
   case SIGINT:
     fprintf(stderr, "caught SIGINT signal, cleaning up\n");
@@ -1850,17 +1852,20 @@ void sigdie(int signo) {
     break;
   case SIGSEGV:
     fprintf(stderr, "caught SIGSEGV signal, cleaning up\n");
-    if (o.debugging) abort();
+    abt = 1;
     break;
   case SIGBUS:
     fprintf(stderr, "caught SIGBUS signal, cleaning up\n");
+    abt = 1;
     break;
   default:
     fprintf(stderr, "caught signal %d, cleaning up\n", signo);
+    abt = 1;
     break;
   }
   fflush(stdout);
   log_close(LOG_MACHINE|LOG_NORMAL|LOG_SKID);
+  if (abt) abort();
   exit(1);
 }
 
