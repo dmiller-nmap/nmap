@@ -440,7 +440,7 @@ int inet_aton(register const char *, struct in_addr *);
    parameters (if non-null) are filled with 0.  Remember that the
    correct way to check for errors is to look at the return value
    since a zero ts or echots could possibly be valid. */
-int gettcpopt_ts(struct tcphdr *tcp, u_int32_t *timestamp, u_int32_t *echots);
+int gettcpopt_ts(struct tcphdr *tcp, u32 *timestamp, u32 *echots);
 
 /* Maximize the receive buffer of a socket descriptor (up to 500K) */
 void max_rcvbuf(int sd);

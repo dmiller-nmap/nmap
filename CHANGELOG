@@ -1,10 +1,13 @@
 # Nmap Changelog
 
-** 2.54BETA20 
+** 2.54BETA20
+
 -- Cleaned up a few build/distribution issues that were reported 
    by LaMont Jones (lamont@hp.com) 
 
 -- Fixed compiler warning noted by Gabor Z. Papp (gzp@papp.hu) )
+
+** 2.54BETA20 
 
 -- Added TCP Timestamp sequence checking for OS detection and
    Netcraft-style uptime tests.
@@ -13,7 +16,7 @@
    bus errors on SPARC64 ( reported by H D Moore (hdm@secureaustin.com)
    and Matthew Franz (mfranz@cisco.com) )
 
--- Applied Darwin (Mac OS X) 1.2 portability patch from 
+-- Apple Darwin (Mac OS X) 1.2 portability patch from 
    Rob Braun <bbraun@synack.net>
 
 -- Added IPID sequence number predictability report (also now used in

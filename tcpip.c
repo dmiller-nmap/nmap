@@ -1629,7 +1629,7 @@ unsigned long calculate_sleep(struct in_addr target) {
    parameters (if non-null) are filled with 0.  Remember that the
    correct way to check for errors is to look at the return value
    since a zero ts or echots could possibly be valid. */
-int gettcpopt_ts(struct tcphdr *tcp, u_int32_t *timestamp, u_int32_t *echots) {
+int gettcpopt_ts(struct tcphdr *tcp, u32 *timestamp, u32 *echots) {
 
   unsigned char *p;
   int len = 0;

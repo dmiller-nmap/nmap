@@ -73,7 +73,7 @@ FingerPrint *FPtests[9];
 struct AVal *seq_AVs;
 unsigned short lastipid=0; /* For catching duplicate packets */
 int last;
-u_int32_t timestamp = 0; /* TCP timestamp we receive back */
+u32 timestamp = 0; /* TCP timestamp we receive back */
 struct ip *ip;
 struct tcphdr *tcp;
 struct icmp *icmp;
