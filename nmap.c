@@ -104,15 +104,16 @@ while((arg = getopt(argc,fakeargv,"Ab:D:de:Ffg:hiL:lM:Nno:P::p:qrRS:s:T:w:Vv")) 
       fatal("Failed to open output file %s for writing", optarg);
     break;
   case 'P': 
-    if (*optarg && *(optarg+1)) 
-      error("Too many arguments to -P, use -P0, -PI, or -PT");
     if (*optarg == '\0' || *optarg == 'I')
       o.pingtype = icmp;
     else if (*optarg == '0' || *optarg == 'N' || *optarg == 'D')
       o.pingtype = none;
-    else if (*optarg == 'T')
+    else if (*optarg == 'T') {
       o.pingtype = tcp;
-    else {printf("Illegal Argument to -P, use -P0, -PI, or -PT\n"); }
+      if (isdigit(*(optarg+1)))
+	o.tcp_probe_port = atoi(optarg+1);
+    }
+    else {fatal("Illegal Argument to -P, use -P0, -PI, -PT, or -PT80 (or whatever number you want for the TCP probe destination port)"); }
     break;
   case 'p': 
     if (ports)
@@ -199,6 +200,9 @@ if (o.max_sockets > MAX_SOCKETS_ALLOWED) {
    printf("Warning: You are limited to MAX_SOCKETS_ALLOWD (%d) paralell sockets.  If you really need more, change the #define and recompile.\n", MAX_SOCKETS_ALLOWED);
    o.max_sockets = MAX_SOCKETS_ALLOWED;
 }
+
+/* Default dest port for tcp probe */
+if (!o.tcp_probe_port) o.tcp_probe_port = o.magic_port;
 
 /* Set up our array of decoys! */
 o.decoyturn = (o.numdecoys == 0)?  0 : rand() % o.numdecoys; 

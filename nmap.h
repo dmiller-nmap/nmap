@@ -238,6 +238,7 @@ struct ops /* someone took struct options, <grrr> */ {
   int number_of_ports;
   unsigned short magic_port;
   unsigned short magic_port_set; /* Was this set by user? */
+  unsigned short tcp_probe_port;
   int max_sockets;
   int isr00t;
   struct in_addr decoys[MAX_DECOYS];
