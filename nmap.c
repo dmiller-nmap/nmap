@@ -1748,6 +1748,7 @@ portlist super_scan(struct hoststruct *target, unsigned short *portarray, stype 
   int changed = 0;  /* Have we found new ports (or rejected earlier "found" ones) this round? */
   int numqueries_outstanding = 0; /* How many unexpired queries are on the 'net right now? */
   double numqueries_ideal = initial_packet_width; /* How many do we WANT to be on the 'net right now? */
+  int max_width = 150; /* No more packets than this at once, pleeze */
   int tries = 0;
   unsigned int localnet, netmask;
   int starttime, delta;
@@ -1817,7 +1818,7 @@ portlist super_scan(struct hoststruct *target, unsigned short *portarray, stype 
  * header + 4 bytes of TCP port info.
  */
 
-if (!(pd = pcap_open_live(target->device, 92,  (o.spoofsource)? 1 : 0, 50, err0r)))
+if (!(pd = pcap_open_live(target->device, 92,  (o.spoofsource)? 1 : 0, 0, err0r)))
   fatal("pcap_open_live: %s", err0r);
 
 if (pcap_lookupnet(target->device, &localnet, &netmask, err0r) < 0)
@@ -1949,7 +1950,7 @@ if (o.debugging || o.verbose)
 		/* Update our records */
 		delta = TIMEVAL_SUBTRACT(now,current->sent[i]) - to.srtt;
 		printf("Got packet (trynum %d, packetnum %d), delta %d srtt %d rttvar %d timeout %d ->", current->trynum, i, delta, to.srtt, to.rttvar, to.timeout);
-		numqueries_ideal += (4/numqueries_ideal);
+		numqueries_ideal = MIN(numqueries_ideal + (4/numqueries_ideal), max_width);
 		to.srtt += delta >> 3;
 		to.rttvar += (ABS(delta) - to.rttvar) >> 2;
 		to.timeout = to.srtt + (to.rttvar << 2);
@@ -1958,6 +1959,7 @@ if (o.debugging || o.verbose)
 		  /* The first packet was apparently lost, slow down */
 		  if (windowdecrease == 0) {
 		    numqueries_ideal *= fallback_percent;
+		    if (numqueries_ideal < 1) numqueries_ideal = 1;
 		    if (o.debugging) { printf("Lost a packet, decreasing window to %d\n", (int) numqueries_ideal);
 		    windowdecrease++;
 		    }
