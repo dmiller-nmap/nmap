@@ -1,5 +1,7 @@
 # Nmap Changelog
 
+-- Added Lithuanian documentation fromAurimas Mikalauskas (inner at dammit.lt) 
+
 ** Version 2.53
 
 -- Fixed a commenting issue that could cause trouble for non-GNU compilers
