@@ -23,6 +23,8 @@
 
 #undef HAVE_STRINGS_H
 
+#undef HAVE_PWD_H
+
 #undef HAVE_BSTRING_H
 
 #undef WORDS_BIGENDIAN
