@@ -27,7 +27,7 @@ o Nmap now ships with and installs (in the same directory as other
   rendering, specify 
   --stylesheet http://www.insecure.org/nmap/data/nmap.xsl .
 
-o Fixed fragmentatation option (-f).  One -f now sets sends fragments
+o Fixed fragmentation option (-f).  One -f now sets sends fragments
   with just 8 bytes after the IP header, while -ff sends 16 bytes to
   reduce the number of fragments needed.  You can specify your own
   fragmentation offset (must be a multiple of 8) with the new --mtu
@@ -50,7 +50,7 @@ o Fixed (I hope) an error which would cause the Windows version of
   (biz(a)tonygolding.com).
 
 o Added new "closed|filtered" state.  This is used for Idlescan, since
-  that scan method can't distinguish between those two staes.  Nmap
+  that scan method can't distinguish between those two states.  Nmap
   previously just used "closed", but this is more accurate.
 
 o Null, FIN, Maimon, and Xmas scans now mark ports as "open|filtered"
@@ -68,7 +68,7 @@ o Change IP protocol scan (-sO) so that a response from the target
   host in any protocol at all will prove that protocol is open.  As
   before, no response means "open|filtered", an ICMP protocol
   unreachable means "closed", and most other ICMP error messages mean
-  "filered".
+  "filtered".
 
 o Patched a Winpcap issue that prevented read timeouts from being
   honored on Solaris (thus slowing down Nmap substantially).  The
@@ -77,13 +77,18 @@ o Patched a Winpcap issue that prevented read timeouts from being
 
 o Changed IP protocol scan (-sO) so that it sends valid ICMP, TCP, and
   UDP headers when scanning protocols 1, 6, and 17, respectively.  An
-  emtpy IP header is still sent for all other protocols.  This should
+  empty IP header is still sent for all other protocols.  This should
   prevent the error messages such as "sendto in send_ip_packet:
   sendto(3, packet, 20, 0, 192.31.33.7, 16) => Operation not
   permitted" that Linux (and perhaps other systems) would give when
   they try to interpret the raw packet.  This also makes it more
   likely that these protocols will elicit a response, proving that the
   protocol is "open".
+
+o The windows build now uses header and static library files from
+  Winpcap 3.1Beta4.  It also now prints out the DLL version you are
+  using when run with -d.  I would recommend upgrading to 3.1Beta4 if
+  you have an older Winpcap installed.
 
 o Added an NTP probe and matches to the version detection database
   (nmap-service-probes) thanks to a submission from Martin

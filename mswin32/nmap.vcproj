@@ -22,7 +22,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories=".;..;../nbase;../libpcre;winip;..\nsock\include"
+				AdditionalIncludeDirectories=".;..;../nbase;../libpcre;winip;..\nsock\include;&quot;pcap-include&quot;"
 				PreprocessorDefinitions="_DEBUG;WIN32;_CONSOLE"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -87,7 +87,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="1"
 				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories=".;..;../nbase;../libpcre;winip;..\nsock\include"
+				AdditionalIncludeDirectories=".;..;../nbase;../libpcre;winip;..\nsock\include;&quot;pcap-include&quot;"
 				PreprocessorDefinitions="NDEBUG;WIN32;_CONSOLE"
 				StringPooling="TRUE"
 				RuntimeLibrary="0"
@@ -448,16 +448,83 @@
 					RelativePath="winip\MibAccess.h">
 				</File>
 				<File
-					RelativePath="PACKET32.H">
-				</File>
-				<File
-					RelativePath="Pcap.h">
-				</File>
-				<File
 					RelativePath=".\winclude.h">
 				</File>
 				<File
 					RelativePath="winip\winip.h">
+				</File>
+			</Filter>
+			<Filter
+				Name="WinPcap Headers"
+				Filter="">
+				<File
+					RelativePath=".\pcap-include\bittypes.h">
+				</File>
+				<File
+					RelativePath=".\pcap-include\bucket_lookup.h">
+				</File>
+				<File
+					RelativePath=".\pcap-include\count_packets.h">
+				</File>
+				<File
+					RelativePath=".\pcap-include\Devioctl.h">
+				</File>
+				<File
+					RelativePath=".\pcap-include\Gnuc.h">
+				</File>
+				<File
+					RelativePath=".\pcap-include\ip6_misc.h">
+				</File>
+				<File
+					RelativePath=".\pcap-include\memory_t.h">
+				</File>
+				<File
+					RelativePath=".\pcap-include\normal_lookup.h">
+				</File>
+				<File
+					RelativePath=".\pcap-include\Ntddndis.h">
+				</File>
+				<File
+					RelativePath=".\pcap-include\Ntddpack.h">
+				</File>
+				<File
+					RelativePath=".\pcap-include\Packet32.h">
+				</File>
+				<File
+					RelativePath=".\pcap-include\pcap-bpf.h">
+				</File>
+				<File
+					RelativePath=".\pcap-include\pcap-int.h">
+				</File>
+				<File
+					RelativePath=".\pcap-include\pcap-stdinc.h">
+				</File>
+				<File
+					RelativePath=".\pcap-include\pcap.h">
+				</File>
+				<File
+					RelativePath=".\pcap-include\pthread.h">
+				</File>
+				<File
+					RelativePath=".\pcap-include\remote-ext.h">
+				</File>
+				<File
+					RelativePath=".\pcap-include\sched.h">
+				</File>
+				<File
+					RelativePath=".\pcap-include\semaphore.h">
+				</File>
+				<File
+					RelativePath=".\pcap-include\tcp_session.h">
+				</File>
+				<File
+					RelativePath=".\pcap-include\time_calls.h">
+				</File>
+				<File
+					RelativePath=".\pcap-include\tme.h">
+				</File>
+				<File
+					RelativePath=".\pcap-include\Win32-Extensions.h">
 				</File>
 			</Filter>
 		</Filter>
@@ -478,7 +545,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Copying $(InputName) to output directory..."
-						CommandLine="copy /y &quot;$(InputPath)&quot; &quot;$(TargetDir)$(InputName)&quot; &gt; nul"
+						CommandLine="copy /y &quot;$(InputPath)&quot; &quot;$(TargetDir)$(InputName)&quot; &gt; nul
+"
 						Outputs="$(TargetDir)$(InputName)"/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -486,7 +554,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Copying $(InputName) to output directory..."
-						CommandLine="copy /y &quot;$(InputPath)&quot; &quot;$(TargetDir)$(InputName)&quot; &gt; nul"
+						CommandLine="copy /y &quot;$(InputPath)&quot; &quot;$(TargetDir)$(InputName)&quot; &gt; nul
+"
 						Outputs="$(TargetDir)$(InputName)"/>
 				</FileConfiguration>
 			</File>
@@ -602,15 +671,17 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Copying $(InputName) to output directory..."
-						CommandLine="copy /y &quot;$(InputPath)&quot; &quot;$(TargetDir)$(InputName)&quot; &gt; nul"
+						CommandLine="copy /y &quot;$(InputPath)&quot; &quot;$(TargetDir)$(InputName)&quot; &gt; nul
+"
 						Outputs="$(TargetDir)$(InputName)"/>
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|Win32">
 					<Tool
 						Name="VCCustomBuildTool"
-						Description="Copying $(InputName) to output directory..."
-						CommandLine="copy /y &quot;$(InputPath)&quot; &quot;$(TargetDir)$(InputName)&quot; &gt; nul"
+						Description="Copying $(InputName).xsl to output directory..."
+						CommandLine="copy /y &quot;$(InputPath)&quot; &quot;$(TargetDir)$(InputName).xsl&quot; &gt; nul
+"
 						Outputs="$(TargetDir)$(InputName)"/>
 				</FileConfiguration>
 			</File>

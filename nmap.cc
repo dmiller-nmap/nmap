@@ -223,6 +223,7 @@ int nmap_main(int argc, char *argv[]) {
   Target *currenths;
   vector<Target *> Targets;
   char *proberr;
+  bool skip_winip_init = false;
   char emptystring[1];
   int sourceaddrwarning = 0; /* Have we warned them yet about unguessable
 				source addresses? */
@@ -290,6 +291,7 @@ int nmap_main(int argc, char *argv[]) {
       {"win_noiphlpapi", no_argument, 0, 0}, 
       {"win_help", no_argument, 0, 0},
       {"win_trace", no_argument, 0, 0},
+	  {"win_skip_winip_init", no_argument, 0, 0},
 #endif
       {0, 0, 0, 0}
     };
@@ -382,6 +384,8 @@ int nmap_main(int argc, char *argv[]) {
 	wo.noiphlpapi = 1; 
       } else if (strcmp(long_options[option_index].name, "win_trace") == 0 ) { 
 	wo.trace++; 
+      } else if (strcmp(long_options[option_index].name, "win_skip_winip_init") == 0 ) { 
+	skip_winip_init = true;
       } else if (strcmp(long_options[option_index].name, "win_help") == 0 ) { 
 	printf("Windows-specific options:\n\n"); 
 	printf(" --win_list_interfaces : list all network interfaces\n"); 
@@ -748,7 +752,7 @@ int nmap_main(int argc, char *argv[]) {
   }
 
 #ifdef WIN32
-  if (!o.listscan)
+  if (!skip_winip_init)
     winip_postopt_init();
 #endif
 

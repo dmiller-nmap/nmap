@@ -1,3 +1,4 @@
+/* -*- Mode: c; tab-width: 8; indent-tabs-mode: 1; c-basic-offset: 8; -*- */
 /*
  * Copyright (c) 1993, 1994, 1995, 1996, 1997
  *	The Regents of the University of California.  All rights reserved.
@@ -36,17 +37,35 @@
 #ifndef lib_pcap_h
 #define lib_pcap_h
 
-#include <sys/types.h>
 #ifdef WIN32
-#include <sys/timeb.h>
-#include <time.h>
-#else
+#include <pcap-stdinc.h>
+#else /* WIN32 */
+#include <sys/types.h>
 #include <sys/time.h>
+#endif /* WIN32 */
+
+#ifndef PCAP_DONT_INCLUDE_PCAP_BPF_H
+#include <pcap-bpf.h>
 #endif
 
-#include <net/bpf.h>
-
 #include <stdio.h>
+
+#ifdef HAVE_REMOTE
+	// We have to define the SOCKET here, although it has been defined in sockutils.h
+	// This is to avoid the distribution of the 'sockutils.h' file around
+	// (for example in the WinPcap developer's pack)
+	#ifndef SOCKET
+		#ifdef WIN32
+			#define SOCKET unsigned int
+		#else
+			#define SOCKET int
+		#endif
+	#endif
+#endif
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define PCAP_VERSION_MAJOR 2
 #define PCAP_VERSION_MINOR 4
@@ -64,12 +83,42 @@ typedef	u_int bpf_u_int32;
 
 typedef struct pcap pcap_t;
 typedef struct pcap_dumper pcap_dumper_t;
+typedef struct pcap_if pcap_if_t;
+typedef struct pcap_addr pcap_addr_t;
 
 /*
  * The first record in the file contains saved values for some
  * of the flags used in the printout phases of tcpdump.
  * Many fields here are 32 bit ints so compilers won't insert unwanted
  * padding; these files need to be interchangeable across architectures.
+ *
+ * Do not change the layout of this structure, in any way (this includes
+ * changes that only affect the length of fields in this structure).
+ *
+ * Also, do not change the interpretation of any of the members of this
+ * structure, in any way (this includes using values other than
+ * LINKTYPE_ values, as defined in "savefile.c", in the "linktype"
+ * field).
+ *
+ * Instead:
+ *
+ *	introduce a new structure for the new format, if the layout
+ *	of the structure changed;
+ *
+ *	send mail to "tcpdump-workers@tcpdump.org", requesting a new
+ *	magic number for your new capture file format, and, when
+ *	you get the new magic number, put it in "savefile.c";
+ *
+ *	use that magic number for save files with the changed file
+ *	header;
+ *
+ *	make the code in "savefile.c" capable of reading files with
+ *	the old file header as well as files with the new file header
+ *	(using the magic number to determine the header format).
+ *
+ * Then supply the changes to "patches@tcpdump.org", so that future
+ * versions of libpcap and programs that use it (such as tcpdump) will
+ * be able to read your new capture file format.
  */
 struct pcap_file_header {
 	bpf_u_int32 magic;
@@ -78,7 +127,7 @@ struct pcap_file_header {
 	bpf_int32 thiszone;	/* gmt to local correction */
 	bpf_u_int32 sigfigs;	/* accuracy of timestamps */
 	bpf_u_int32 snaplen;	/* max length saved portion of each pkt */
-	bpf_u_int32 linktype;	/* data link type (DLT_*) */
+	bpf_u_int32 linktype;	/* data link type (LINKTYPE_*) */
 };
 
 /*
@@ -99,29 +148,56 @@ struct pcap_stat {
 	u_int ps_recv;		/* number of packets received */
 	u_int ps_drop;		/* number of packets dropped */
 	u_int ps_ifdrop;	/* drops by interface XXX not yet supported */
+#ifdef HAVE_REMOTE
+	u_int ps_capt;		/* number of packets that are received by the application; please get rid off the Win32 ifdef */
+	u_int ps_sent;		/* number of packets sent by the server on the network */
+	u_int ps_netdrop;	/* number of packets lost on the network */
+#endif /* HAVE_REMOTE */
+};
+
+/*
+ * Item in a list of interfaces.
+ */
+struct pcap_if {
+	struct pcap_if *next;
+	char *name;		/* name to hand to "pcap_open_live()" */
+	char *description;	/* textual description of interface, or NULL */
+	struct pcap_addr *addresses;
+	bpf_u_int32 flags;	/* PCAP_IF_ interface flags */
+};
+
+#define PCAP_IF_LOOPBACK	0x00000001	/* interface is loopback */
+
+/*
+ * Representation of an interface address.
+ */
+struct pcap_addr {
+	struct pcap_addr *next;
+	struct sockaddr *addr;		/* address */
+	struct sockaddr *netmask;	/* netmask for that address */
+	struct sockaddr *broadaddr;	/* broadcast address for that address */
+	struct sockaddr *dstaddr;	/* P2P destination address for that address */
 };
 
 typedef void (*pcap_handler)(u_char *, const struct pcap_pkthdr *,
 			     const u_char *);
 
-#ifdef WIN32
-#ifdef __cplusplus
-extern "C"
-{		
-#endif				
-#endif				
-
 char	*pcap_lookupdev(char *);
-int	pcap_lookupnet(char *, bpf_u_int32 *, bpf_u_int32 *, char *);
-pcap_t	*pcap_open_live(char *, int, int, int, char *);
+int	pcap_lookupnet(const char *, bpf_u_int32 *, bpf_u_int32 *, char *);
+pcap_t	*pcap_open_live(const char *, int, int, int, char *);
+pcap_t	*pcap_open_dead(int, int);
 pcap_t	*pcap_open_offline(const char *, char *);
 void	pcap_close(pcap_t *);
 int	pcap_loop(pcap_t *, int, pcap_handler, u_char *);
 int	pcap_dispatch(pcap_t *, int, pcap_handler, u_char *);
 const u_char*
 	pcap_next(pcap_t *, struct pcap_pkthdr *);
+int 	pcap_next_ex(pcap_t *, struct pcap_pkthdr **, const u_char **);
+void	pcap_breakloop(pcap_t *);
 int	pcap_stats(pcap_t *, struct pcap_stat *);
 int	pcap_setfilter(pcap_t *, struct bpf_program *);
+int	pcap_getnonblock(pcap_t *, char *);
+int	pcap_setnonblock(pcap_t *, int, char *);
 void	pcap_perror(pcap_t *, char *);
 char	*pcap_strerror(int);
 char	*pcap_geterr(pcap_t *);
@@ -129,9 +205,13 @@ int	pcap_compile(pcap_t *, struct bpf_program *, char *, int,
 	    bpf_u_int32);
 int	pcap_compile_nopcap(int, int, struct bpf_program *,
 	    char *, int, bpf_u_int32);
-/* XXX */
-int	pcap_freecode(pcap_t *, struct bpf_program *);
+void	pcap_freecode(struct bpf_program *);
 int	pcap_datalink(pcap_t *);
+int	pcap_list_datalinks(pcap_t *, int **);
+int	pcap_set_datalink(pcap_t *, int);
+int	pcap_datalink_name_to_val(const char *);
+const char *pcap_datalink_val_to_name(int);
+const char *pcap_datalink_val_to_description(int);
 int	pcap_snapshot(pcap_t *);
 int	pcap_is_swapped(pcap_t *);
 int	pcap_major_version(pcap_t *);
@@ -142,30 +222,58 @@ FILE	*pcap_file(pcap_t *);
 int	pcap_fileno(pcap_t *);
 
 pcap_dumper_t *pcap_dump_open(pcap_t *, const char *);
+int	pcap_dump_flush(pcap_dumper_t *);
 void	pcap_dump_close(pcap_dumper_t *);
 void	pcap_dump(u_char *, const struct pcap_pkthdr *, const u_char *);
+FILE	*pcap_dump_file(pcap_dumper_t *);
+
+int	pcap_findalldevs(pcap_if_t **, char *);
+void	pcap_freealldevs(pcap_if_t *);
+
+const char *pcap_lib_version(void);
 
 /* XXX this guy lives in the bpf tree */
 u_int	bpf_filter(struct bpf_insn *, u_char *, u_int, u_int);
+int	bpf_validate(struct bpf_insn *f, int len);
 char	*bpf_image(struct bpf_insn *, int);
+void	bpf_dump(struct bpf_program *, int);
 
+#ifdef WIN32
 /*
  * Win32 definitions
  */
-#ifdef WIN32
 
 int pcap_setbuff(pcap_t *p, int dim);
 int pcap_setmode(pcap_t *p, int mode);
 int pcap_sendpacket(pcap_t *p, u_char *buf, int size);
 int pcap_setmintocopy(pcap_t *p, int size);
-HANDLE pcap_getevent(pcap_t *p);
 
-#ifdef __cplusplus
-}
-#endif				
+#ifdef WPCAP
+/* Include file with the wpcap-specific extensions */
+#include <Win32-Extensions.h>
+#endif
 
 #define MODE_CAPT 0
 #define MODE_STAT 1
+#define MODE_MON 2
 
+#else
+/*
+ * UN*X definitions
+ */
+
+int	pcap_get_selectable_fd(pcap_t *);
+
+#endif /* WIN32 */
+
+#ifdef HAVE_REMOTE
+/* Includes most of the public stuff that is needed for the remote capture */
+#include "remote-ext.h"
+#endif	 /* HAVE_REMOTE */
+
+
+#ifdef __cplusplus
+}
 #endif
+
 #endif

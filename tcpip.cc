@@ -179,7 +179,7 @@ static char *ll2shortascii(unsigned long long bytes, char *buf, int buflen) {
     snprintf(buf, buflen, "%.3gMB", bytes / 1000000.0);
   } else if (bytes > 10000) {
     snprintf(buf, buflen, "%.3gKB", bytes / 1000.0);
-  } else snprintf(buf, buflen, "%lldB", bytes);
+  } else snprintf(buf, buflen, "%uB", (unsigned int) bytes);
     
   return buf;
 }
@@ -193,7 +193,12 @@ char *getFinalPacketStats(char *buf, int buflen) {
   if (buflen <= 10 || !buf)
     fatal("getFinalPacketStats called with woefully inadequate parameters");
 
-  snprintf(buf, buflen, "Raw packets sent: %lli (%s) | Rcvd: %lli (%s)",
+  snprintf(buf, buflen, 
+#if WIN32
+	  "Raw packets sent: %I64u (%s) | Rcvd: %I64u (%s)",
+#else
+	  "Raw packets sent: %llu (%s) | Rcvd: %llu (%s)",
+#endif
 	   PC.sendPackets,
 	   ll2shortascii(PC.sendBytes, sendbytesasc, sizeof(sendbytesasc)),
 	   PC.recvPackets,

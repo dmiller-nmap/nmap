@@ -73,7 +73,6 @@
 #include <packet32.h>
 #include <netinet/tcp.h>  
 #include <netinet/udp.h>  
-#include <net/if.h>
 
 //#include <packet_types.h>
 #include "winip\winip.h"

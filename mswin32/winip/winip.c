@@ -40,6 +40,7 @@ If used outside nmap in a GPL'ed app, just copy them from wintcpip.c.
 #include "..\tcpip.h"
 #include "winip.h"
 #include "..\..\NmapOps.h"
+#include "ntddndis.h"
 
 #ifdef _MSC_VER
 # include <delayimp.h>
@@ -310,7 +311,7 @@ void winip_postopt_init()
    if(wo.trace) printf("***WinIP***  trying to initialize winpcap 2.1\n");
    PacketGetAdapterNames(pcaplist, &len);
    if(o.debugging || wo.trace)
-     printf("***WinIP***  winpcap present, version %s\n", pcap_lib_version());
+	   printf("***WinIP***  winpcap present, dynamic linked to: %s\n", pcap_lib_version());
  }
     }
 #ifdef _MSC_VER

@@ -198,10 +198,12 @@ void *realloc();
 #include <unistd.h>
 #endif
 #include <fcntl.h>
-#ifndef NET_IF_H  /* why the HELL does OpenBSD not do this? */
 #include <sys/socket.h>
+#if HAVE_NET_IF_H
+#ifndef NET_IF_H  /* why doesn't OpenBSD do this? */
 #include <net/if.h>
 #define NET_IF_H
+#endif
 #endif
 #if HAVE_NETINET_IF_ETHER_H
 #ifndef NETINET_IF_ETHER_H
@@ -298,11 +300,12 @@ class PacketTrace {
 class PacketCounter {
  public:
   PacketCounter() : sendPackets(0), sendBytes(0), recvPackets(0), recvBytes(0) {}
-
-  unsigned long long sendPackets;
-  unsigned long long sendBytes;
-  unsigned long long recvPackets;
-  unsigned long long recvBytes;
+#if WIN32
+  unsigned __int64
+#else
+  unsigned long long
+#endif
+	  sendPackets, sendBytes, recvPackets, recvBytes;
 };
 
 #define MAX_LINK_HEADERSZ 24
