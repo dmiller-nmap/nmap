@@ -701,7 +701,7 @@ char tmp[256];
 char *p;
 int i;
 int len;
- sprintf(report, "TCP Sequence Prediction: Class=%s\n                         Difficulty=%s; Seq Index=%d (lower=easier)\n", seqclass2ascii(seq->class), (seq->index < 10)? "Trivial joke" : (seq->index < 40)? "Easy" : (seq->index < 150)? "Medium" : (seq->index < 1000)? "Formidable" : (seq->index < 100000)? "Very difficult" : "Good luck!", seq->index);
+ sprintf(report, "TCP Sequence Prediction: Class=%s\n                         Difficulty=%s; Seq Index=%d (lower=easier)\n", seqclass2ascii(seq->class), (seq->index < 10)? "Trivial joke" : (seq->index < 80)? "Easy" : (seq->index < 3000)? "Medium" : (seq->index < 5000)? "Formidable" : (seq->index < 100000)? "Worthy challenge" : "Good luck!", seq->index);
  if (o.verbose) {
    tmp[0] = '\n';
    tmp[1] = '\0'; 

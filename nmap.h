@@ -195,14 +195,15 @@ void *realloc();
 #define MAXHOSTNAMELEN 64
 #endif
 
-#ifdef FREEBSD
+#ifndef BSDFIX
+#if FREEBSD || BSDI
 #define BSDFIX(x) x
 #define BSDUFIX(x) x
 #else
 #define BSDFIX(x) htons(x)
 #define BSDUFIX(x) ntohs(x)
 #endif
-
+#endif /* BSDFIX */
 /********************** LOCAL INCLUDES *****************************/
 
 #include "tcpip.h"

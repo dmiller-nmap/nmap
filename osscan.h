@@ -11,7 +11,7 @@
 
 /**********************  PROTOTYPES  ***********************************/
 int os_scan(struct hoststruct *target);
-FingerPrint *get_fingerprint(struct hoststruct *target);
+FingerPrint *get_fingerprint(struct hoststruct *target, struct seq_info *si);
 struct AVal *fingerprint_iptcppacket(struct ip *ip, int mss, unsigned long syn);
 unsigned long get_gcd_n_ulong(int numvalues, unsigned long *values);
 unsigned long euclid_gcd(unsigned long a, unsigned long b);

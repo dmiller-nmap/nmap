@@ -2,7 +2,7 @@
 
 extern struct ops o;
 
-FingerPrint *get_fingerprint(struct hoststruct *target) {
+FingerPrint *get_fingerprint(struct hoststruct *target, struct seq_info *si) {
 FingerPrint *FP = NULL, *FPtmp = NULL;
 FingerPrint *FPtests[8];
 struct AVal *seq_AVs;
@@ -104,10 +104,11 @@ if (o.verbose && openport != -1)
      /*     usleep(25000);*/
    }
    /* Now we collect  the replies */
-   target->seq.responses = 0;
+   si->responses = 0;
    timeout = 0; 
    gettimeofday(&t1,NULL);
-   while(target->seq.responses < NUM_SEQ_SAMPLES && !timeout) {
+   if (o.debugging > 1) printf("TMP1\n");
+   while(si->responses < NUM_SEQ_SAMPLES && !timeout) {
      ip = (struct ip*) readip_pcap(pd, &bytes);
      gettimeofday(&t2, NULL);
      if (!ip) { 
@@ -121,22 +122,22 @@ if (o.verbose && openport != -1)
        continue;
      if (ip->ip_p == IPPROTO_TCP) {
        tcp = ((struct tcphdr *) (((char *) ip) + 4 * ip->ip_hl));
-       if (ntohs(tcp->th_dport) < o.magic_port || ntohs(tcp->th_dport) - o.magic_port > NUM_SEQ_SAMPLES) {
+       if (ntohs(tcp->th_dport) < o.magic_port || ntohs(tcp->th_dport) - o.magic_port > NUM_SEQ_SAMPLES || ntohs(tcp->th_sport) != openport) {
 	 continue;
        }
        if ((tcp->th_flags & TH_RST)) {
-	 /*readtcppacket((char *) ip, ntohs(ip->ip_len));*/
-	 if (target->seq.responses == 0) {	 
-	   if (o.verbose || o.debugging) 
-	     printf("Port %d does not seem to really be open\n", openport);
-	   openport = -1;
-	   break; /* The port is not really open!! */
-	 } else continue;
+	 /*readtcppacket((char *) ip, ntohs(ip->ip_len));*/	 
+	 if (si->responses == 0) {	 
+	     printf("WARNING:  RST from port %d -- is this port really open?\n", openport);
+	     /* We used to quit in this case, but left-overs from a SYN
+		scan or lame-ass TCP wrappers can cause this! */
+	 } 
+	 continue;
       } else if ((tcp->th_flags & (TH_SYN|TH_ACK)) == (TH_SYN|TH_ACK)) {
 	/*readtcppacket((char *)ip, ntohs(ip->ip_len));*/
-	  target->seq.seqs[target->seq.responses++] = ntohl(tcp->th_seq);
-	  if (target->seq.responses > 1) {
-	    seq_diffs[target->seq.responses-2] = MOD_DIFF(ntohl(tcp->th_seq), target->seq.seqs[target->seq.responses-2]);
+	  si->seqs[si->responses++] = ntohl(tcp->th_seq);
+	  if (si->responses > 1) {
+	    seq_diffs[si->responses-2] = MOD_DIFF(ntohl(tcp->th_seq), si->seqs[si->responses-2]);
 	  }
 	if (!FP) {
 	  FP = safe_malloc(sizeof(FingerPrint));
@@ -148,16 +149,17 @@ if (o.verbose && openport != -1)
       }
      }
    }
-   if (target->seq.responses >= 4) {
-     seq_gcd = get_gcd_n_ulong(target->seq.responses -1, seq_diffs);
+   if (o.debugging > 1) printf("TMP2\n");
+   if (si->responses >= 4) {
+     seq_gcd = get_gcd_n_ulong(si->responses -1, seq_diffs);
      /*     printf("The GCD is %lu\n", seq_gcd);*/
      if (seq_gcd) {     
-       for(i=0; i < target->seq.responses - 1; i++)
+       for(i=0; i < si->responses - 1; i++)
 	 seq_diffs[i] /= seq_gcd;
-       for(i=0; i < target->seq.responses - 1; i++) {     
-	 if (MOD_DIFF(target->seq.seqs[i+1],target->seq.seqs[i]) > 50000000) {
-	   target->seq.class = SEQ_TR;
-	   target->seq.index = 9999999;
+       for(i=0; i < si->responses - 1; i++) {     
+	 if (MOD_DIFF(si->seqs[i+1],si->seqs[i]) > 50000000) {
+	   si->class = SEQ_TR;
+	   si->index = 9999999;
 	   /*	 printf("Target is a TR box\n");*/
 	   break;
 	 }	
@@ -165,34 +167,34 @@ if (o.verbose && openport != -1)
        }
      }
      if (seq_gcd == 0) {
-       target->seq.class = SEQ_CONSTANT;
-       target->seq.index = 0;
+       si->class = SEQ_CONSTANT;
+       si->index = 0;
      } else if (seq_gcd % 64000 == 0) {
-       target->seq.class = SEQ_64K;
+       si->class = SEQ_64K;
        /*       printf("Target is a 64K box\n");*/
-       target->seq.index = 1;
+       si->index = 1;
      } else if (seq_gcd % 800 == 0) {
-       target->seq.class = SEQ_i800;
+       si->class = SEQ_i800;
        /*       printf("Target is a i800 box\n");*/
-       target->seq.index = 10;
-     } else if (target->seq.class == SEQ_UNKNOWN) {
-       seq_avg_inc = (0.5) + seq_avg_inc / (target->seq.responses - 1);
+       si->index = 10;
+     } else if (si->class == SEQ_UNKNOWN) {
+       seq_avg_inc = (0.5) + seq_avg_inc / (si->responses - 1);
        /*       printf("seq_avg_inc=%lu\n", seq_avg_inc);*/
-       for(i=0; i < target->seq.responses -1; i++)       {     
+       for(i=0; i < si->responses -1; i++)       {     
 	 /*	 printf("The difference is %lu\n", seq_diffs[i]);
 		 printf("Adding %lu^2=%e", MOD_DIFF(seq_diffs[i], seq_avg_inc), pow(MOD_DIFF(seq_diffs[i], seq_avg_inc), 2));*/
 	 seq_inc_sum += pow(MOD_DIFF(seq_diffs[i], seq_avg_inc), 2);
        }
        /*       printf("The sequence sum is %e\n", seq_inc_sum);*/
-       seq_inc_sum /= (target->seq.responses - 1);
-       target->seq.index = (unsigned long) (0.5 + pow(seq_inc_sum, 0.5));
-       /*       printf("The sequence index is %d\n", target->seq.index);*/
-       if (target->seq.index < 75) {
-	 target->seq.class = SEQ_TD;
+       seq_inc_sum /= (si->responses - 1);
+       si->index = (unsigned long) (0.5 + pow(seq_inc_sum, 0.5));
+       /*       printf("The sequence index is %d\n", si->index);*/
+       if (si->index < 75) {
+	 si->class = SEQ_TD;
 	 /*	 printf("Target is a Micro$oft style time dependant box\n");*/
        }
        else {
-	 target->seq.class = SEQ_RI;
+	 si->class = SEQ_RI;
 	 /*	 printf("Target is a random incremental box\n");*/
        }
      }
@@ -207,12 +209,12 @@ if (o.verbose && openport != -1)
      bzero(seq_AVs, sizeof(struct AVal) * 3);
      FP->results = seq_AVs;
      seq_AVs[0].attribute = "Class";
-     switch(target->seq.class) {
+     switch(si->class) {
      case SEQ_CONSTANT:
        strcpy(seq_AVs[0].value, "C");
        seq_AVs[0].next = &seq_AVs[1];
        seq_AVs[1].attribute= "Val";     
-       sprintf(seq_AVs[1].value, "%lX", target->seq.seqs[0]);
+       sprintf(seq_AVs[1].value, "%lX", si->seqs[0]);
        break;
      case SEQ_64K:
        strcpy(seq_AVs[0].value, "64K");      
@@ -227,7 +229,7 @@ if (o.verbose && openport != -1)
        sprintf(seq_AVs[1].value, "%lu", seq_gcd);
        seq_AVs[1].next = &seq_AVs[2];
        seq_AVs[2].attribute="SI";
-       sprintf(seq_AVs[2].value, "%d", target->seq.index);
+       sprintf(seq_AVs[2].value, "%d", si->index);
        break;
      case SEQ_RI:
        strcpy(seq_AVs[0].value, "RI");
@@ -236,7 +238,7 @@ if (o.verbose && openport != -1)
        sprintf(seq_AVs[1].value, "%lu", seq_gcd);
        seq_AVs[1].next = &seq_AVs[2];
        seq_AVs[2].attribute="SI";
-       sprintf(seq_AVs[2].value, "%d", target->seq.index);
+       sprintf(seq_AVs[2].value, "%d", si->index);
        break;
      case SEQ_TR:
        strcpy(seq_AVs[0].value, "TR");
@@ -244,7 +246,7 @@ if (o.verbose && openport != -1)
      }
    }
    else {
-     nmap_log("Insufficient responses for TCP sequencing (%d), OS detection will be less reliable\n", target->seq.responses);
+     nmap_log("Insufficient responses for TCP sequencing (%d), OS detection will be less reliable\n", si->responses);
    }
  } else {
    nmap_log("Warning:  No ports found open on this machine, OS detection will be MUCH less reliable\n");
@@ -322,6 +324,7 @@ if (o.verbose && openport != -1)
        FPtests[testno]->name = (testno == 2)? "T2" : (testno == 3)? "T3" : (testno == 4)? "T4" : (testno == 5)? "T5" : (testno == 6)? "T6" : (testno == 7)? "T7" : "T8";
      }
    }     
+   if (o.debugging > 1) printf("TMP3\n");
  } while ( testsleft > 0 && (tries++ < 5 && (newcatches || tries == 1)));
  
 for(i=2; i < 8; i++)
@@ -338,8 +341,6 @@ for(i=2; i < 8; i++)
     FPtests[i]->results = seq_AVs;
     FPtests[i]->name =  (i == 2)? "T2" : (i == 3)? "T3" : (i == 4)? "T4" : (i == 5)? "T5" : (i == 6)? "T6" : (i == 7)? "T7" : "T8";
   }
-
-
 
  last = 0;
  FPtmp = NULL;
@@ -533,30 +534,58 @@ int AVal_match(struct AVal *reference, struct AVal *fprint) {
   struct AVal *current_fp;
   unsigned long number;
   unsigned long val;
+  char *p, *q;  /* OHHHH YEEEAAAAAHHHH!#!@#$!% */
+  char valcpy[512];
   char *endptr;
+  int andexp, orexp, expchar, numtrue;
 
   for(current_ref = reference; current_ref; current_ref = current_ref->next) {
-    current_fp = getattrbyname(fprint, current_ref->attribute);
+    current_fp = getattrbyname(fprint, current_ref->attribute);    
     if (!current_fp) continue;
-    if (!strcmp(current_ref->value, "+")) {
-      if (!*current_fp->value) return 0;
-      else {
-      val = strtol(current_fp->value, &endptr, 16);
-      if (val == 0 || *endptr) return 0;
-      }
-    } else if (*current_ref->value == '<' && isdigit((int) current_ref->value[1])) {
-      if (!*current_fp->value) return 0;
-      number = strtol(current_ref->value + 1, &endptr, 16);
-      val = strtol(current_fp->value, &endptr, 16);
-      if (val > number || *endptr) return 0;          
-    } else if (*current_ref->value == '>' && isdigit((int) current_ref->value[1])) {
-      if (!*current_fp->value) return 0;
-      number = strtol(current_ref->value + 1, &endptr, 16);
-      val = strtol(current_fp->value, &endptr, 16);
-      if (val < number || *endptr) return 0;
+    /* OK, we compare an attribute value in  cinrrent_fp->value to a 
+     potentially large expression in current_ref->value.  The syntax uses
+    < (less than), > (greather than), + (non-zero), | (or), and & (and) 
+    No parenthesis are allowed and an expression cannot have | AND & */
+    numtrue = andexp = orexp = 0;
+    strcpy(valcpy, current_ref->value);
+    p = valcpy;
+    if (strchr(current_ref->value, '|')) {
+      orexp = 1; expchar = '|';
+    } else {
+      andexp = 1; expchar = '&';
     }
-    else if (strcmp(current_ref->value, current_fp->value))
-      return 0;    
+    do {
+      q = strchr(p, expchar);
+      if (q) *q = '\0';
+      if (!strcmp(p, "+")) {
+	if (!*current_fp->value) { if (andexp) return 0; }
+	else {
+	  val = strtol(current_fp->value, &endptr, 16);
+	  if (val == 0 || *endptr) { if (andexp) return 0; }
+	  else { numtrue++; if (orexp) break; }
+	}
+      } else if (*p == '<' && isdigit((int) p[1])) {
+	if (!*current_fp->value) { if (andexp) return 0; }
+	number = strtol(p + 1, &endptr, 16);
+	val = strtol(current_fp->value, &endptr, 16);
+	if (val >= number || *endptr) { if (andexp) return 0; }
+	else { numtrue++; if (orexp) break; }
+      } else if (*p == '>' && isdigit((int) p[1])) {
+	if (!*current_fp->value) { if (andexp) return 0; }
+	number = strtol(p + 1, &endptr, 16);
+	val = strtol(current_fp->value, &endptr, 16);
+	if (val <= number || *endptr) { if (andexp) return 0; }
+	else { numtrue++; if (orexp) break; }
+      }
+      else {
+	if (strcmp(p, current_fp->value))
+	  { if (andexp) return 0; }
+	else { numtrue++; if (orexp) break; }
+      }
+      if (q) p = q + 1;
+    } while(q);
+      if (numtrue == 0) return 0;
+    /* Whew, we made it past one Attribute alive , on to the next! */
   }
   return 1;  
 }
@@ -580,10 +609,14 @@ return;
 int os_scan(struct hoststruct *target) {
 FingerPrint *FPs[3];
 FingerPrint **FP_matches[3];
+struct seq_info si[3];
 int try;
 int i;
+
+bzero(si, sizeof(si));
+
  for(try=0; try < 3; try++) {
-  FPs[try] = get_fingerprint(target); 
+  FPs[try] = get_fingerprint(target, &si[try]); 
   FP_matches[try] = match_fingerprint(FPs[try]);
   if (FP_matches[try][0]) 
     break;
@@ -596,7 +629,7 @@ int i;
       the first fingerprint */
    for(try=1; try < 3; try++) {
      if (o.debugging)
-       error("Killing fingerprint #%d (0 based):\n %s", try, 
+       error("Killing fingerprint #%d (0 based):\n%s", try, 
 	     fp2ascii(FPs[try]));
      if (FPs[try]) freeFingerPrint(FPs[try]);
    }
@@ -606,7 +639,7 @@ int i;
    for(i=0; i < try; i++) {
      if (FPs[i]) {
        if (o.debugging)
-	 error("Failed match #%d (0-based): %s\n", i, fp2ascii(FPs[i]));
+	 error("Failed match #%d (0-based):\n%s", i, fp2ascii(FPs[i]));
        freeFingerPrint(FPs[i]);
      }
    }
@@ -614,8 +647,8 @@ int i;
 
  target->FP = FPs[try];
  target->FP_matches = FP_matches[try];
-
-return 1;
+ memcpy(&(target->seq), &si[try], sizeof(struct seq_info));
+ return 1;
 }
 
 char *fp2ascii(FingerPrint *FP) {
@@ -644,7 +677,7 @@ for(current = FP; current ; current = current->next) {
     *p++='=';
     strcpy(p, AV->value);
     p += strlen(AV->value);
-    *p++ = '&';
+    *p++ = '%';
   }
   if(*(p-1) != '(')
     p--; /* Kill the final & */
@@ -772,7 +805,7 @@ struct AVal *AVs;
 if (!*str) return NULL;
 
 /* count the AVals */
-while((q = strchr(q, '&'))) {
+while((q = strchr(q, '%'))) {
   count++;
   q++;
 }
@@ -788,7 +821,7 @@ for(i=0; i < count; i++) {
   AVs[i].attribute = strdup(p);
   p = q+1;
   if (i != count - 1) {
-    q = strchr(p, '&');
+    q = strchr(p, '%');
     if (!q) {
       fatal("Parse error with AVal string (%s) in nmap-os-fingerprints file", str);
     }

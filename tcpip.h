@@ -114,12 +114,14 @@ void *realloc();
 #define TCPIP_DEBUGGING 0
 #endif
 
+#ifndef BSDFIX
 #if FREEBSD || BSDI
 #define BSDFIX(x) x
 #define BSDUFIX(x) x
 #else
 #define BSDFIX(x) htons(x)
 #define BSDUFIX(x) ntohs(x)
+#endif
 #endif
 
 /* Bogus TCP flag!!!  Krad! */
