@@ -271,7 +271,7 @@ void log_write(int logt, const char *fmt, ...)
 {
   va_list  ap;
   int i,l=logt,skid=1;
-  char buffer[1000];
+  char buffer[8192];
 
   va_start(ap, fmt);
   if (l & LOG_STDOUT) {

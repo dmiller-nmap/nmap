@@ -193,7 +193,7 @@ int nmap_main(int argc, char *argv[]) {
     {"oH", required_argument, 0, 0},  
     {"oX", required_argument, 0, 0},  
     {"iL", required_argument, 0, 0},  
-    {"iR", no_argument, 0, 0},
+    {"iR", required_argument, 0, 0},
     {"sI", required_argument, 0, 0},  
     {"initial_rtt_timeout", required_argument, 0, 0},
     {"randomize_hosts", no_argument, 0, 0},
@@ -370,6 +370,10 @@ int nmap_main(int argc, char *argv[]) {
 	}
       } else if (strcmp(long_options[option_index].name, "iR") == 0) {
 	o.generate_random_ips = 1;
+	o.max_ips_to_scan = atoi(optarg);
+	if (o.max_ips_to_scan < 0) {
+	  fatal("ERROR: -iR argument must be the maximum number of random IPs you wish to scan (use 0 for unlimited)");
+	}
       } else if (strcmp(long_options[option_index].name, "sI") == 0) {
 	o.idlescan = 1;
 	idleProxy = optarg;
@@ -806,10 +810,13 @@ int nmap_main(int argc, char *argv[]) {
      machines */
   host_exp_group = (char **) safe_malloc(o.host_group_sz * sizeof(char *));
 
-  while(1) {
+  while(!o.max_ips_to_scan || o.max_ips_to_scan > numhosts_scanned) {
     while(num_host_exp_groups < o.host_group_sz &&
 	  (host_spec = grab_next_host_spec(inputfd, argc, fakeargv))) {
       host_exp_group[num_host_exp_groups++] = strdup(host_spec);
+      // For purposes of random scan
+      if (o.max_ips_to_scan && o.max_ips_to_scan <= numhosts_scanned + num_host_exp_groups)
+	break;
     }
     if (num_host_exp_groups == 0)
       break;
@@ -938,6 +945,9 @@ int nmap_main(int argc, char *argv[]) {
   
       log_flush_all();
       delete currenths;
+
+      if (o.max_ips_to_scan && numhosts_scanned >= o.max_ips_to_scan) break;
+
     }
 
     delete hstate;
@@ -1493,8 +1503,8 @@ int ip_is_reserved(struct in_addr *ip)
 }
 
 char *grab_next_host_spec(FILE *inputfd, int argc, char **fakeargv) {
-  static char host_spec[512];
-  int host_spec_index;
+  static char host_spec[1024];
+  unsigned int host_spec_index;
   int ch;
   struct in_addr ip;
 
@@ -1512,7 +1522,7 @@ char *grab_next_host_spec(FILE *inputfd, int argc, char **fakeargv) {
 	if (host_spec_index == 0) continue;
 	host_spec[host_spec_index] = '\0';
 	return host_spec;
-      } else if (host_spec_index < 511) {
+      } else if (host_spec_index < sizeof(host_spec) / sizeof(char) -1) {
 	host_spec[host_spec_index++] = (char) ch;
       } else fatal("One of the host_specifications from your input file is too long (> %d chars)", sizeof(host_spec));
     }

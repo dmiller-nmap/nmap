@@ -103,6 +103,8 @@ class NmapOps {
   int max_rtt_timeout;
   int min_rtt_timeout;
   int initial_rtt_timeout;
+  int max_ips_to_scan; // Used for Random input (-iR) to specify how 
+                       // many IPs to try before stopping. 0 means unlimited.
   int extra_payload_length; /* These two are for --data_length op */
   char *extra_payload;
   unsigned long host_timeout;

@@ -785,9 +785,9 @@ if ( !victim || !sport || !dport || sd < 0) {
 
 /* Time to live */
 if (ttl == -1) {
-	        myttl = (get_random_uint() % 23) + 37;
+  myttl = (get_random_uint() % 23) + 37;
 } else {
-	        myttl = ttl;
+  myttl = ttl;
 }
 
 /* It was a tough decision whether to do this here for every packet
@@ -1570,7 +1570,6 @@ struct interface_info *getinterfaces(int *howmany) {
   struct sockaddr_in *sin;
 
   if (!initialized) {
-
     initialized = 1;
 
     ii_capacity = 32;

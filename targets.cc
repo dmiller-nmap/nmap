@@ -184,7 +184,7 @@ if (hs->next_batch_no < hs->current_batch_sz) {
   return hs->hostbatch[hs->next_batch_no++];
 }
 /* Doh, we need to refresh our array */
- for(i=0; i < hs->max_batch_sz; i++) hs->hostbatch[i] = new Target();
+/* for(i=0; i < hs->max_batch_sz; i++) hs->hostbatch[i] = new Target(); */
 
 hs->current_batch_sz = hs->next_batch_no = 0;
 do {
@@ -193,6 +193,7 @@ do {
 	 hs->current_expression.get_next_host(&ss, &sslen) == 0)
     {
       hidx = hs->current_batch_sz;
+      hs->hostbatch[hidx] = new Target();
       hs->hostbatch[hidx]->setTargetSockAddr(&ss, sslen);
 
       /* Lets figure out what device this IP uses ... */
@@ -238,9 +239,9 @@ do {
 	/* Cancel everything!  This guy must go in the next group and we are
 	   outtof here */
 	hs->current_expression.return_last_host();
+	delete hs->hostbatch[hidx];
 	goto batchfull;
       }
-
       hs->current_batch_sz++;
     }
 
@@ -405,7 +406,6 @@ if (o.numdecoys > 1 || ptech.rawtcpscan || ptech.rawicmpscan) {
   if ((rawsd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) < 0 )
     pfatal("socket trobles in massping");
   broadcast_socket(rawsd);
-
   
   if ((rawpingsd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) < 0 )
     pfatal("socket trobles in massping");

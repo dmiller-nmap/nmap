@@ -52,6 +52,10 @@
 #include "timing.h"
 #include "NmapOps.h"
 
+#ifdef MTRACE
+#include "mcheck.h"
+#endif
+
 /* global options */
 extern NmapOps o;  /* option structure */
 extern char **environ;
@@ -83,6 +87,17 @@ int main(int argc, char *argv[], char *envp[]) {
   int interactivemode = 0;
   int fd;
   struct timeval tv;
+
+#ifdef MTRACE
+  // This glibc extension enables memory tracing to detect memory
+  // leaks, frees of unallocated memory, etc.  
+  // See http://www.gnu.org/manual/glibc-2.2.5/html_node/Allocation-Debugging.html#Allocation%20Debugging .
+  // It only works if the environment variable MALLOC_TRACE is set to a file
+  // which a memory usage log will be written to.  After the program quits
+  // I can analyze the log via the command 'mtrace [binaryiran] [logfile]'
+  // MTRACE should only be defined during debug sessions.
+  mtrace();
+#endif
 
   /* You never know when "random" numbers will come in handy ... */
   gettimeofday(&tv, NULL);

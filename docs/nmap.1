@@ -544,12 +544,13 @@ stdin (like at the end of a pipe).  See the section
 .I target specification
 for more information on the expressions you fill the file with.
 .TP
-.B \-iR
+.B \-iR <num hosts>
 This option tells Nmap to generate its own hosts to scan by
-simply picking random numbers :).  It will never end.  This
-can be useful for statistical sampling of the Internet to
+simply picking random numbers :).  It will never end after the given
+number of IPs has been scanned -- use 0 for a never-ending scan.  This
+option can be useful for statistical sampling of the Internet to
 estimate various things.  If you are ever really bored, try
-.I nmap \-sS \-iR \-p 80
+.I nmap \-sS \-PS80 \-iR 0 \-p 80
 to find some web servers to look at.
 .TP
 .B \-p <port ranges>

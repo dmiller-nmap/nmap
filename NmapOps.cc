@@ -138,6 +138,7 @@ void NmapOps::Initialize() {
   max_rtt_timeout = MAX_RTT_TIMEOUT;
   min_rtt_timeout = MIN_RTT_TIMEOUT;
   initial_rtt_timeout = INITIAL_RTT_TIMEOUT;
+  max_ips_to_scan = 0;
   extra_payload_length = 0;
   extra_payload = NULL;
   host_timeout = HOST_TIMEOUT;

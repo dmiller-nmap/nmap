@@ -215,12 +215,25 @@ const struct in_addr *Target::v4sourceip() {
   /* You can set to NULL to erase a name or if it failed to resolve -- or 
      just don't call this if it fails to resolve */
 void Target::setHostName(char *name) {
+  char *p;
   if (hostname) {
     free(hostname);
     hostname = NULL;
   }
-  if (name)
-    hostname = strdup(name);
+  if (name) {
+    if (strchr(name, '%')) {
+    }
+    p = hostname = strdup(name);
+    while (*p) {
+      // I think only a-z A-Z 0-9 . and - are allowed, but I'l be a little more
+      // generous.
+      if (!isalnum(*p) && !strchr(".-+=:_~*", *p)) {
+	log_write(LOG_STDOUT, "Illegal character(s) in hostname -- replacing with '*'\n");
+	*p = '*';
+      }
+      p++;
+    }
+  }
 }
 
  /* Generates the a printable string consisting of the host's IP

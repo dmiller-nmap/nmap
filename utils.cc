@@ -67,6 +67,7 @@ void *safe_malloc(int size)
   mymem = malloc(size);
   if (mymem == NULL)
     fatal("Malloc Failed! Probably out of space.");
+  //  printf("Called safe_malloc(%d) -- returning %lX\n", size, (unsigned long) mymem);
   return mymem;
 }
 
@@ -79,6 +80,7 @@ void *safe_zalloc(int size)
   mymem = calloc(1, size);
   if (mymem == NULL)
     fatal("Malloc Failed! Probably out of space.");
+  //  printf("Called safe_zalloc(%d) -- returning %lX\n", size, (unsigned long) mymem);
   return mymem;
 }
 

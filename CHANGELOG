@@ -1,5 +1,11 @@
 # Nmap Changelog ($Id$)
 
+o The random IP input option (-iR) now takes an argument specifying
+  how many IPs you want to scan (e.g. -iR 1000).  Specify 0 for the old
+  neverending scan behavior.
+
+o Fixed output truncation problem noted by Lionel CONS (lionel.cons@cern.ch)
+
 Nmap 3.15BETA3
 
 o Made numerous improvements to the timing behavior of "-T Aggressive"
