@@ -1,8 +1,18 @@
 #ifndef TARGETS_H
 #define TARGETS_H
 
+#include "config.h"
 /* This contains pretty much everythign we need ... */
+#include <sys/time.h>
+#include <unistd.h>
+
+#ifdef HAVE_SYS_PARAM_H   
+#include <sys/param.h> /* Defines MAXHOSTNAMELEN on BSD*/
+#endif
+
+
 #include "nmap.h"
+#include "global_structures.h"
 
 /**************************STRUCTURES******************************/
 struct pingtune {
@@ -54,6 +64,23 @@ int get_connecttcpscan_results(struct tcpqueryinfo *tqi,
 			       struct timeout_info *to);
 char *readhoststate(int state);
 void massping(struct hoststruct *hostbatch, int numhosts);
+/* Fills up the hostgroup_state structure passed in (which must point
+   to valid memory).  Lookahead is the number of hosts that can be
+   checked (such as ping scanned) in advance.  Randomize causes each
+   group of up to lookahead hosts to be internally shuffled around.
+   The target_expressions array must remail valid in memory as long as
+   this hostgroup_state structure is used -- the array is NOT copied */
+int hostgroup_state_init(struct hostgroup_state *hs, int lookahead,
+			 int randomize, char *target_expressions[],
+			 int num_expressions);
+/* If there is at least one IP address left in t, one is pulled out and placed
+   in sin and then zero is returned and state information in t is updated
+   to reflect that the IP was pulled out.  If t is empty, -1 is returned */
+int target_struct_get(struct targets *t, struct in_addr *sin);
+/* Undoes the previous target_struct_get operation */
+void target_struct_return(struct targets *t);
+void hoststructfry(struct hoststruct *hostbatch, int nelem);
+struct hoststruct *nexthost(struct hostgroup_state *hs);
 #endif /* TARGETS_H */
 
 

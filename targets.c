@@ -2,136 +2,198 @@
 
 extern struct ops o;
 
-struct hoststruct *nexthost(char *hostexp, int lookahead) {
-static int lastindex = -1;
-static struct hoststruct *hostbatch  = NULL;
-char *device;
-int numhosts = 0;
-static int targets_valid = 0;
-static char *lastexp = NULL;
-static int i;
-static struct targets targets;
-static char *lasthostexp = NULL;
-if (!hostbatch) hostbatch = safe_malloc((lookahead + 1) * sizeof(struct hoststruct));
-
-if (!lastexp) {
-  lastexp = safe_malloc(1024);
-  *lastexp = '\0';
+/* Fills up the hostgroup_state structure passed in (which must point
+   to valid memory).  Lookahead is the number of hosts that can be
+   checked (such as ping scanned) in advance.  Randomize causes each
+   group of up to lookahead hosts to be internally shuffled around.
+   The target_expressions array must remail valid in memory as long as
+   this hostgroup_state structure is used -- the array is NOT copied */
+int hostgroup_state_init(struct hostgroup_state *hs, int lookahead,
+			 int randomize, char *target_expressions[],
+			 int num_expressions) {
+  bzero(hs, sizeof(struct hostgroup_state));
+  assert(lookahead > 0);
+  hs->hostbatch = safe_malloc(lookahead * sizeof(struct hostgroup_state));
+  hs->max_batch_sz = lookahead;
+  hs->current_batch_sz = 0;
+  hs->next_batch_no = 0;
+  hs->randomize = randomize;
+  hs->target_expressions = target_expressions;
+  hs->num_expressions = num_expressions;
+  hs->next_expression = 0;
+  hs->current_expression.nleft = 0; 
+  return 0;
 }
 
-if (strcmp(lastexp, hostexp)) {
- /* New expression -- reinit everything */
-  targets_valid = 0;
-  lastindex = -1;
-  strncpy(lastexp, hostexp, 1024);
-  lastexp[1023] = '\0';
-}
 
-if (!targets_valid) {
-  if (!parse_targets(&targets, hostexp)) 
-    return NULL;
-  targets_valid = 1;
-  lasthostexp = hostexp;
-}
-if (lastindex >= 0 && lastindex < lookahead  && hostbatch[lastindex + 1].host.s_addr)  
-  return &hostbatch[++lastindex];
+/* If there is at least one IP address left in t, one is pulled out and placed
+   in sin and then zero is returned and state information in t is updated
+   to reflect that the IP was pulled out.  If t is empty, -1 is returned */
+int target_struct_get(struct targets *t, struct in_addr *sin) {
+  int octet;
 
-/* OK, we need to refresh our target array */
+  if (t->nleft <= 0)
+    return -1;
 
-lastindex = 0;
-bzero((char *) hostbatch, (lookahead + 1) * sizeof(struct hoststruct));
-do {
-  if (targets.maskformat) {
-    for(i = 0; i < lookahead && targets.currentaddr.s_addr <= targets.end.s_addr; i++) {
-      if (!o.allowall && ((!(targets.currentaddr.s_addr % 256) 
-			 || targets.currentaddr.s_addr % 256 == 255)))
-	{
-	  struct in_addr iii;
-	  iii.s_addr = htonl(targets.currentaddr.s_addr);
-	  fprintf(stderr, "Skipping host %s because no '-A' and IGNORE_ZERO_AND_255_HOSTS is set in the source.\n", inet_ntoa(iii));
-	  targets.currentaddr.s_addr++;
-	  i--;
-	}
-      else
-	hostbatch[i].host.s_addr = htonl(targets.currentaddr.s_addr++);
+  if (t->maskformat) {
+    if (t->currentaddr.s_addr <= t->end.s_addr) {
+      sin->s_addr = htonl(t->currentaddr.s_addr++);
+    } else {
+      error("Bogus target structure passed to target_struct_get");
+      t->nleft = 0;
+      sin->s_addr = 0;
+      return -1;
     }
-    hostbatch[i].host.s_addr = 0;  
   }
   else {
-    for(i=0; targets.current[0] <= targets.last[0] && i < lookahead ;) {
-      for(; targets.current[1] <= targets.last[1] && i < lookahead ;) {
-	for(; targets.current[2] <= targets.last[2] && i < lookahead ;) {	
-	  for(; targets.current[3] <= targets.last[3]  && i < lookahead ; targets.current[3]++) {
-	    if (o.debugging > 1) 
-	      fprintf(o.nmap_stdout, "doing %d.%d.%d.%d = %d.%d.%d.%d\n", targets.current[0], targets.current[1], targets.current[2], targets.current[3], targets.addresses[0][targets.current[0]],targets.addresses[1][targets.current[1]],targets.addresses[2][targets.current[2]],targets.addresses[3][targets.current[3]]);
-	    hostbatch[i++].host.s_addr = htonl(targets.addresses[0][targets.current[0]] << 24 | targets.addresses[1][targets.current[1]] << 16 |
-					       targets.addresses[2][targets.current[2]] << 8 | targets.addresses[3][targets.current[3]]);
-	    if (!o.allowall && (!(ntohl(hostbatch[i - 1].host.s_addr) % 256) || ntohl(hostbatch[i - 1].host.s_addr) % 256 == 255))
-	      {
-		fprintf(stderr, "Skipping host %s because no '-A' and IGNORE_ZERO_AND_255_HOSTS is set in the source.\n", inet_ntoa(hostbatch[i - 1].host));
-		i--;
-	      }
-	  }
-	  if (i < lookahead && targets.current[3] > targets.last[3]) {
-	    targets.current[3] = 0;
-	    targets.current[2]++;
-	  }
-	}
-	if (i < lookahead && targets.current[2] > targets.last[2]) {
-	  targets.current[2] = 0;
-	  targets.current[1]++;
-	}
-      }
-      if (i < lookahead && targets.current[1] > targets.last[1]) {
-	targets.current[1] = 0;
-	targets.current[0]++;
+    if (o.debugging > 2) {
+      fprintf(o.nmap_stdout, "doing %d.%d.%d.%d = %d.%d.%d.%d\n", t->current[0], t->current[1], t->current[2], t->current[3], t->addresses[0][t->current[0]],t->addresses[1][t->current[1]],t->addresses[2][t->current[2]],t->addresses[3][t->current[3]]);
+    }
+    /* Set the IP to the current value of everything */
+    sin->s_addr = htonl(t->addresses[0][t->current[0]] << 24 | 
+			t->addresses[1][t->current[1]] << 16 |
+			t->addresses[2][t->current[2]] << 8 | 
+			t->addresses[3][t->current[3]]);
+
+    /* Now we nudge up to the next IP */
+    for(octet = 3; octet >= 0; octet--) {
+      if (t->current[octet] <= t->last[octet]) {
+	/* OK, this is the column I have room to nudge upwards */
+	t->current[octet]++;
+	break;
+      } else {
+	/* This octet is finished so I reset it to the beginning */
+	t->current[octet] = 0;
       }
     }
-    hostbatch[i].host.s_addr = 0;
+    assert(octet != -1);
   }
+  t->nleft--;
+  assert(t->nleft >= 0);
+  return 1;
+}
 
-  numhosts = i;
-  for(i=0; i < numhosts; i++) {  
-    /* If we were given an IP address & device, insert it now */
-    if (o.source) {
-      memcpy((char *)&hostbatch[i].source_ip,(char *) o.source, 
-	     sizeof(struct in_addr));
-      strcpy(hostbatch[i].device, o.device);
+/* Undoes the previous target_struct_get operation */
+void target_struct_return(struct targets *t) {
+  int octet;
+  t->nleft++;
+  if (t->maskformat) {
+    assert(t->currentaddr.s_addr > t->start.s_addr);
+    t->currentaddr.s_addr--;
+  }
+  else {
+    for(octet = 3; octet >= 0; octet--) {
+      if (t->current[octet] > 0) {
+	/* OK, this is the column I have room to nudge downwards */
+	t->current[octet]--;
+	break;
+      } else {
+	/* This octet is already at the beginning, so I set it to the end */
+	t->current[octet] = t->last[octet];
+      }
     }
-    /* If we still do not have a source IP, we create one IFF
-       1) We are r00t AND
-       2) We are doing tcp pingscan OR
-       3) We are doing NO scan AND we are doing a raw-mode portscan or osscan*/
-    else {
-      if (o.isr00t && ((o.pingtype & PINGTYPE_TCP) || (o.pingtype == PINGTYPE_NONE && (o.synscan || o.finscan || o.xmasscan || o.nullscan || o.maimonscan || o.udpscan || o.osscan )))) {
-	device = routethrough(&(hostbatch[i].host), &(hostbatch[i].source_ip));
-	if (!device) {
-	  if (o.pingtype == PINGTYPE_NONE) {
-	    fatal("Could not determine what interface to route packets through, run again with -e <device>");
-	  } else {
-	    error("WARNING:  Could not determine what interface to route packets through to %s, changing ping scantype to ICMP only", inet_ntoa(hostbatch[i].host));
-	    o.pingtype = PINGTYPE_ICMP;
-	  }
-	} else {
-	  strcpy(hostbatch[i].device, device);
-	}
-      }      
-    }    
+    assert(octet != -1);
   }
-
-if ((o.pingtype == PINGTYPE_ICMP) || (hostbatch[0].host.s_addr && (o.pingtype != PINGTYPE_NONE))) 
-  massping(hostbatch, i);
-else for(i=0; hostbatch[i].host.s_addr; i++)  {
-  hostbatch[i].to.srtt = -1;
-  hostbatch[i].to.rttvar = -1;
-  hostbatch[i].to.timeout = o.initial_rtt_timeout * 1000;
-  hostbatch[i].flags |= HOST_UP; /*hostbatch[i].up = 1;*/
 }
 
-} while(i != 0 && !hostbatch[0].host.s_addr);  /* Loop now unneeded */
-return &hostbatch[0];
+void hoststructfry(struct hoststruct *hostbatch, int nelem) {
+  genfry((unsigned char *)hostbatch, sizeof(struct hoststruct), nelem);
+  return;
 }
 
+struct hoststruct *nexthost(struct hostgroup_state *hs) {
+int hidx;
+char *device;
+int i;
+
+if (hs->next_batch_no < hs->current_batch_sz) {
+  /* Woop!  This is easy -- we just pass back the next host struct */
+  return &hs->hostbatch[hs->next_batch_no++];
+}
+/* Doh, we need to refresh our array */
+bzero(hs->hostbatch, hs->max_batch_sz * sizeof(struct hostgroup_state));
+hs->current_batch_sz = hs->next_batch_no = 0;
+do {
+  /* Grab anything we have in our current_expression */
+  while (hs->current_batch_sz < hs->max_batch_sz && 
+	 target_struct_get(&hs->current_expression, 
+	   &(hs->hostbatch[hs->current_batch_sz].host)) != -1)
+    {
+      hidx = hs->current_batch_sz;
+
+      /* Lets figure out what device this IP uses ... */
+      if (o.source) {
+	memcpy((char *)&hs->hostbatch[hidx].source_ip,(char *) o.source, 
+	       sizeof(struct in_addr));
+	strcpy(hs->hostbatch[hidx].device, o.device);
+      } else {
+	/* We figure out the source IP/device IFF
+	   1) We are r00t AND
+	   2) We are doing tcp pingscan OR
+	   3) We are doing NO scan AND we are doing a raw-mode portscan or 
+	   osscan */
+	if (o.isr00t && 
+	    ((o.pingtype & PINGTYPE_TCP) || 
+	     (o.pingtype == PINGTYPE_NONE && 
+	      (o.synscan || o.finscan || o.xmasscan || o.nullscan || 
+	       o.maimonscan || o.udpscan || o.osscan || o.windowscan)))) {
+	 device = routethrough(&(hs->hostbatch[hidx].host), &(hs->hostbatch[hidx].source_ip));
+	 if (!device) {
+	   if (o.pingtype == PINGTYPE_NONE) {
+	     fatal("Could not determine what interface to route packets through, run again with -e <device>");
+	   } else {
+	     error("WARNING:  Could not determine what interface to route packets through to %s, changing ping scantype to ICMP only", inet_ntoa(hs->hostbatch[hidx].host));
+	     o.pingtype = PINGTYPE_ICMP;
+	   }
+	 } else {
+	   strcpy(hs->hostbatch[hidx].device, device);
+	 }
+	}  
+      }
+
+      /* In some cases, we can only allow hosts that use the same device
+	 in a group. */
+      if (o.isr00t && hidx > 0 && *hs->hostbatch[hidx].device && hs->hostbatch[hidx].source_ip.s_addr != hs->hostbatch[0].source_ip.s_addr) {
+	/* Cancel everything!  This guy must go in the next group and we are
+	   outtof here */
+	target_struct_return(&(hs->current_expression));
+	goto batchfull;
+      }
+
+      hs->current_batch_sz++;
+    }
+
+  if (hs->current_batch_sz < hs->max_batch_sz &&
+      hs->next_expression < hs->num_expressions) {
+    /* We are going to have to plop in another expression. */
+    while (!parse_targets(&(hs->current_expression), hs->target_expressions[hs->next_expression++])) {
+      if (hs->next_expression >= hs->num_expressions)
+	break;
+    }     
+  } else break;
+} while(1);
+ batchfull:
+ 
+if (hs->current_batch_sz == 0)
+  return NULL;
+
+/* OK, now we have our complete batch of entries.  The next step is to
+   randomize them (if requested) */
+if (hs->randomize) {
+  hoststructfry(hs->hostbatch, hs->current_batch_sz);
+}
+
+/* Finally we do the mass ping (if required) */
+ if ((o.pingtype == PINGTYPE_ICMP) || (hs->hostbatch[0].host.s_addr && (o.pingtype != PINGTYPE_NONE))) 
+   massping(hs->hostbatch, hs->current_batch_sz);
+ else for(i=0; i < hs->current_batch_sz; i++)  {
+   hs->hostbatch[i].to.srtt = -1;
+   hs->hostbatch[i].to.rttvar = -1;
+   hs->hostbatch[i].to.timeout = o.initial_rtt_timeout * 1000;
+   hs->hostbatch[i].flags |= HOST_UP; /*hostbatch[i].up = 1;*/
+ }
+ return &hs->hostbatch[hs->next_batch_no++];
+}
 
 int parse_targets(struct targets *targets, char *h) {
 int i=0,j=0,k=0;
@@ -142,6 +204,9 @@ char *hostexp = strdup(h);
 struct hostent *target;
 unsigned long longtmp;
 int namedhost = 0;
+
+bzero(targets, sizeof(struct targets));
+targets->nleft = 0;
 /*struct in_addr current_in;*/
 addy[0] = addy[1] = addy[2] = addy[3] = addy[4] = NULL;
 addy[0] = r = hostexp;
@@ -174,7 +239,11 @@ if (targets->netmask != 32 || namedhost) {
  targets->start.s_addr = longtmp & (unsigned long) (0 - (1<<(32 - targets->netmask)));
  targets->end.s_addr = longtmp | (unsigned long)  ((1<<(32 - targets->netmask)) - 1);
  targets->currentaddr = targets->start;
- if (targets->start.s_addr <= targets->end.s_addr) { free(hostexp); return 1; }
+ if (targets->start.s_addr <= targets->end.s_addr) { 
+   targets->nleft = targets->end.s_addr - targets->start.s_addr + 1;
+   free(hostexp); 
+   return 1; 
+ }
  fprintf(stderr, "Host specification invalid");
  free(hostexp);
  return 0;
@@ -244,6 +313,8 @@ else {
   }
 }
   bzero((char *)targets->current, 4);
+  targets->nleft = (targets->last[0] + 1) * (targets->last[1] + 1) *
+    (targets->last[2] + 1) * (targets->last[3] + 1);
   free(hostexp);
   return 1;
 }
@@ -340,7 +411,7 @@ if (ptech.icmpscan) {
   sd_blocking = 0;
   if (num_hosts > 10)
     max_rcvbuf(sd);
-  if (o.allowall) broadcast_socket(sd);
+  broadcast_socket(sd);
 } else sd = -1;
 
 
@@ -355,12 +426,12 @@ if (!to.srtt && !to.rttvar && !to.timeout) {
 if (o.numdecoys > 1 || ptech.rawtcpscan || ptech.rawicmpscan) {
   if ((rawsd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) < 0 )
     pfatal("socket trobles in massping");
-  if (o.allowall) broadcast_socket(rawsd);
+  broadcast_socket(rawsd);
 
   
   if ((rawpingsd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) < 0 )
     pfatal("socket trobles in massping");
-  if (o.allowall) broadcast_socket(rawpingsd);
+  broadcast_socket(rawpingsd);
 
 }
  else { rawsd = -1; rawpingsd = -1; }
@@ -375,7 +446,7 @@ if (ptech.rawicmpscan || ptech.rawtcpscan) {
    = 104 byte snaplen */
   if (!(pd = pcap_open_live(hostbatch[0].device, 104, o.spoofsource, 20,
 			    err0r)))
-      fatal("pcap_open_live: %s\nIf you are on Linux and getting Socket type not supported, try modprobe af_packet or recompile your kernel with SOCK_PACKET enabled.  If you are on bsd and getting device not configured, you need to recompile your kernel with Berkeley Packet Filter support.", err0r);
+      fatal("pcap_open_live: %s\nIf you are on Linux and getting Socket type not supported, try modprobe af_packet or recompile your kernel with SOCK_PACKET enabled.  If you are on bsd and getting device not configured, you need to recompile your kernel with Berkeley Packet Filter support.  If you are getting No such file or directory, try creating the device (eg cd /dev; MAKEDEV <device>; or use mknod)", err0r);
 
   if (pcap_lookupnet(hostbatch[0].device, &localnet, &netmask, err0r) < 0)
     fatal("Failed to lookup device subnet/netmask: %s", err0r);
@@ -1009,7 +1080,7 @@ struct timeval tv;
 
 if (o.debugging)  {
   gettimeofday(&tv, NULL);
-  fprintf(o.nmap_stdout, "Hostupdate called for machne %s state %s -> %s (trynum %d, dotimeadj: %s time: %ld)\n", inet_ntoa(target->host), readhoststate(target->flags), readhoststate(newstate), trynum, (dotimeout)? "yes" : "no", (long) TIMEVAL_SUBTRACT(tv, *sent));
+  fprintf(o.nmap_stdout, "Hostupdate called for machine %s state %s -> %s (trynum %d, dotimeadj: %s time: %ld)\n", inet_ntoa(target->host), readhoststate(target->flags), readhoststate(newstate), trynum, (dotimeout)? "yes" : "no", (long) TIMEVAL_SUBTRACT(tv, *sent));
 }
 assert(hostnum <= pt->group_end);
 

@@ -1,37 +1,23 @@
-nmap V. 2.3BETA10 usage: nmap [Scan Type(s)] [Options] <host or net #1 ... [#N]>
-Scan types
-   -sT tcp connect() port scan
-   -sS tcp SYN stealth port scan (must be root)
-   -sF,-sX,-sN Stealth FIN, Xmas, or Null scan (only works against UNIX).
-   -sP ping "scan". Find which hosts on specified network(s) are up but don't 
-       port scan them
-   -sU UDP port scan, must be r00t
-   -sR RPC scan (use in addition to other TCP and/or UDP scan type(s)
-   -b <ftp_relay_host> ftp "bounce attack" port scan
-Options (none are required, most can be combined):
-   -f use tiny fragmented packets for SYN, FIN, Xmas, or NULL scan.
-   -P0 Don't ping hosts (needed to scan www.microsoft.com and others)
-   -PT Use only "TCP Ping" to see what hosts are up (for normal & ping scans).
-   -PI Use only ICMP ping to determines hosts that are up (default is ICMP&TCP)
-   -PS Use TCP SYN sweep rather than the default ACK sweep used in "TCP ping"
-   -O Use TCP/IP fingerprinting to guess what OS the remote host is running
-   -p <range> ports: ex: '-p 23' will only try port 23 of the host(s)
-                  '-p 20-30,63000-' scans 20-30 and 63000-65535. default: 1-1024 + /etc/services
-   -Ddecoy_host1,decoy2,decoy3[,...] Launch scans from decoy host(s) along
-      with the real one.
-   -T <Paranoid|Sneaky|Polite|Normal|Aggressive|Insane> Use specified timing policy.
-   -F fast scan. Only scans ports in /etc/services, a la strobe(1).
-   -I Get identd (rfc 1413) info on listening TCP processes.
-   -n Don't DNS resolve anything unless we have to (makes ping scans faster)
-   -R Try to resolve all hosts, even down ones (can take a lot of time)
-   -o <logfile> Output scan logs to <logfile> in human readable.
-   -m <logfile> Output scan logs to <logfile> in machine parseable format.
-   -i <inputfile> Grab IP numbers or hostnames from file.  Use '-' for stdin
-   -g <portnumber> Sets the source port used for scans.  20 and 53 are good choices.
-   -S <your_IP> If you want to specify the source address of SYN or FYN scan.
-   -v Verbose. Its use is recommended.  Use twice for greater effect.
-   -h help, print this junk.  Also see http://www.insecure.org/nmap/
-   -V Print version number and exit.
-   -e <devicename>. Send packets on interface <devicename> (eth0,ppp0,etc.).
-Hostnames specified as internet hostname or IP address.  Optional '/mask' specifies subnet. For example:  cert.org/24 or 192.88.209.5/24 or 192.88.209.0-255 or '128.88.209.*' all scan CERT's Class C.
-SEE THE MAN PAGE FOR MORE THOROUGH EXPLANATIONS AND EXAMPLES.
+nmap V. 2.3BETA13 Usage: nmap [Scan Type(s)] [Options] <host or net list>
+Some Common Scan Types ('*' options require root privileges)
+  -sT TCP connect() port scan (default)
+* -sS TCP SYN stealth port scan (best all-around TCP scan)
+* -sU UDP port scan
+  -sP ping scan (Find any reachable machines)
+* -sF,-sX,-sN Stealth FIN, Xmas, or Null scan (experts only)
+  -sR/-I RPC/Identd scan (use with other scan types)
+Some Common Options (none are required, most can be combined):
+* -O Use TCP/IP fingerprinting to guess remote operating system
+  -p <range> ports to scan.  Example range: '1-1024,1080,6666,31337'
+  -F Only scans ports listed in nmap-services
+  -v Verbose. Its use is recommended.  Use twice for greater effect.
+  -P0 Don't ping hosts (needed to scan www.microsoft.com and others)
+* -Ddecoy_host1,decoy2[,...] Hide scan using many decoys
+  -T <Paranoid|Sneaky|Polite|Normal|Aggressive|Insane> General timing policy
+  -n/-R Never do DNS resolution/Always resolve [default: sometimes resolve]
+  -oN/-oM <logfile> Output normal/machine parsable scan logs to <logfile>
+  -iL <inputfile> Get targets from file; Use '-' for stdin
+* -S <your_IP>/-e <devicename> Specify source address or network interface
+  --interactive Go into interactive mode (then press h for help)
+Example: nmap -v -sS -O www.my.com 192.168.0.0/16 '192.88-90.*.*'
+SEE THE MAN PAGE FOR MANY MORE OPTIONS, DESCRIPTIONS, AND EXAMPLES 

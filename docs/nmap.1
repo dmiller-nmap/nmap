@@ -235,6 +235,7 @@ networks/hosts that block ping packets.  For non root users, we use
 connect().  To set the destination port of the probe packets use
 -PT<port number>.  The default port is 80, since this port is often
 not filtered out.
+.TP
 .B \-PS
 This option uses SYN (connection request) packets instead of ACK
 packets for root users.  Hosts that are up should respond with a RST
@@ -321,12 +322,13 @@ This handy option display a quick reference screen of nmap usage
 options.  As you may have noticed, this man page is not exactly a 'quick 
 reference' :)
 .TP
-.B \-o <logfilename>
+.B \-oN <logfilename>
 This logs the results of your scans in a 
+normal 
 .B human readable 
 form into the file you specify as an argument.
 .TP
-.B \-m <logfilename>
+.B \-oM <logfilename>
 This logs the results of your scans in a
 .B machine parseable
 form into the file you specify as an argument.  You can give -m the
@@ -335,7 +337,7 @@ pipelines, etc).  In this case normal output will be suppressed.
 Watch out for error messages if you use this (they will still go to
 stderr).
 .TP
-.B \-i <inputfilename>
+.B \-iL <inputfilename>
 Reads target specifications from the file specified RATHER than from
 the command line.  The file should contain a list of host or network
 expressions seperated by spaces, tabs, or newlines.  Use a hyphen (-)
@@ -345,6 +347,14 @@ if you want nmap to read host expressions from
 stdin (like at the end of a pipe).  See the section
 .I target specification
 for more information on the expressions you fill the file with.
+.TP
+.B \-iR
+This option tells Nmap to generate its own hosts to scan by simply
+picking random numbers :).  It will never end.  This can be useful for
+statistical sampling of the Internet to estimate various things.  If
+you are ever really bored, try 
+.I nmap \-sS \-iR \-p 80
+to find some web servers to look at.
 .TP
 .B \-p <port ranges>
 This option specifies what ports you want to specify. For example '-p
@@ -443,6 +453,17 @@ you used -g.
 Be aware that there is a small performance penalty on some scans for using this
 option, because I sometimes store useful information in the source
 port number.
+.TP
+.B \-r
+Tells Nmap 
+.B NOT
+to randomize the order in which ports are scanned.
+.TP
+.B \-\-randomize_hosts
+Tells Nmap to shuffle each group of up to 2048 hosts before it scans
+them.  This can make the scans less obvious to various network
+monitoring systems, especially when you combine it with slow timing
+options (see below).
 .TP
 .B \-M <max sockets>
 Sets the maximum number of sockets that will be used in parallel for a
@@ -586,7 +607,7 @@ whether the systems run sshd, DNS, pop3d, imapd, or port 4564.  Note
 that Xmas scan doesn't work on Microsoft boxes due to their deficient
 TCP stack.  Same goes with CISCO, IRIX, HP/UX, and BSDI boxes.
 .Sp
-.B nmap -v -p 80 '*.*.2.3-5'
+.B nmap -v --randomize_hosts -p 80 '*.*.2.3-5'
 .Sp
 Rather than focus on a specific IP range, it is sometimes interesting
 to slice up the entire Internet and scan a small sample from each
@@ -597,7 +618,7 @@ starting at 127. so you might want to use '127-222' instead of the
 first asterict because that section has a greater density of
 interesting machines (IMHO).
 .Sp
-.B host -l company.com | cut '-d ' -f 4 | ./nmap -v -i -
+.B host -l company.com | cut '-d ' -f 4 | ./nmap -v -iL -
 .Sp
 Do a DNS zone transfer to find the hosts in company.com and then feed
 the IP addresses to 

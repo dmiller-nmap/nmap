@@ -9,6 +9,7 @@
 #include <netinet/in.h>
 #include <sys/time.h>
 #include <unistd.h>
+#include <assert.h>
 #include "config.h"
 
 #if TIME_WITH_SYS_TIME
@@ -49,6 +50,8 @@
         (((addr) >> 16) & 0xff), \
         (((addr) >> 24) & 0xff)
 
+#define MAX_PARSE_ARGS 254 /* +1 for integrity checking + 1 for null term */
+
 /* Timeval subtraction in microseconds */
 #define TIMEVAL_SUBTRACT(a,b) (((a).tv_sec - (b).tv_sec) * 1000000 + (a).tv_usec - (b).tv_usec)
 /* Timeval subtract in milliseconds */
@@ -66,10 +69,20 @@ int get_random_bytes(void *buf, int numbytes);
 int get_random_int();
 unsigned short get_random_ushort();
 unsigned int get_random_uint();
+/* Scramble the contents of an array*/
+void genfry(unsigned char *arr, int elem_sz, int num_elem);
 /* Like the perl equivialent -- It removes the terminating newline from string
    IF one exists.  It then returns the POSSIBLY MODIFIED string */
 char *chomp(char *string);
 ssize_t Write(int fd, const void *buf, size_t count);
+
+unsigned long gcd_ulong(unsigned long a, unsigned long b);
+unsigned int gcd_uint(unsigned int a, unsigned int b);
+unsigned long gcd_n_ulong(long nvals, unsigned long *val);
+unsigned int gcd_n_uint(int nvals, unsigned int *val);
+
+int arg_parse(const char *command, char ***argv);
+void arg_parse_free(char **argv);
 
 #ifndef HAVE_USLEEP
 #ifdef HAVE_NANOSLEEP

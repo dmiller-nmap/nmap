@@ -72,7 +72,7 @@ ossofttimeout = MAX(200000, target->to.timeout);
 oshardtimeout = MAX(500000, 5 * target->to.timeout);
 
 if (!(pd = pcap_open_live(target->device, 650,  (o.spoofsource)? 1 : 0, (ossofttimeout + 500)/ 1000, err0r)))
-  fatal("pcap_open_live: %s\nIf you are on Linux and getting Socket type not supported, try modprobe af_packet or recompile your kernel with SOCK_PACKET enabled.  If you are on bsd and getting device not configured, you need to recompile your kernel with Berkeley Packet Filter support.", err0r);
+  fatal("pcap_open_live: %s\nIf you are on Linux and getting Socket type not supported, try modprobe af_packet or recompile your kernel with SOCK_PACKET enabled.  If you are on bsd and getting device not configured, you need to recompile your kernel with Berkeley Packet Filter support.  If you are getting No such file or directory, try creating the device (eg cd /dev; MAKEDEV <device>; or use mknod)", err0r);
 
 if (o.debugging)
   fprintf(o.nmap_stdout, "Wait time is %d\n", (ossofttimeout +500)/1000);
@@ -324,7 +324,7 @@ if (o.verbose && openport != -1)
    }
      
    if (si->responses >= 4 && o.scan_delay <= 1000) {
-     seq_gcd = get_gcd_n_ulong(si->responses -1, seq_diffs);
+     seq_gcd = gcd_n_uint(si->responses -1, seq_diffs);
      /*     printf("The GCD is %u\n", seq_gcd);*/
      if (seq_gcd) {     
        for(i=0; i < si->responses - 1; i++)
@@ -399,7 +399,7 @@ if (o.verbose && openport != -1)
        strcpy(seq_AVs[0].value, "C");
        seq_AVs[0].next = &seq_AVs[1];
        seq_AVs[1].attribute= "Val";     
-       sprintf(seq_AVs[1].value, "%lX", si->seqs[0]);
+       sprintf(seq_AVs[1].value, "%X", si->seqs[0]);
        break;
      case SEQ_64K:
        strcpy(seq_AVs[0].value, "64K");      
@@ -882,27 +882,6 @@ for(current = FP; current ; current = current->next) {
 *p = '\0';
 return str;
 }
-
-
-unsigned int get_gcd_n_ulong(int numvalues, unsigned int *values) {
-  int gcd;
-  int i;
-
-  if (numvalues == 0) return 1;
-  gcd = values[0];
-  for(i=1; i < numvalues; i++)
-    gcd = euclid_gcd(gcd, values[i]);
-
-  return gcd;
-}
-
-unsigned int euclid_gcd(unsigned int a, unsigned int b) {
-  if (a < b) return euclid_gcd(b,a);
-  if (!b) return a;
-  return euclid_gcd(b, a % b);
-}
-
-
 
 FingerPrint **parse_fingerprint_reference_file() {
 FingerPrint **FPs;

@@ -95,6 +95,8 @@ rusersd              100002 rusers
 sadmind              100232 
 sample               100113 na.sample
 sched                100019 
+scopeux              805306352 # HP measureware scopeUX
+seagent              20000777  # Memco/Platinum/CA SeOS security product
 selection_svc        100015 selnsvc
 sender               100139 cc_sender               # Cooperative Consoles
 sgi.ha_ifa           391021 ha_ifa

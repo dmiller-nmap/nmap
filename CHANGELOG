@@ -1,8 +1,59 @@
 # Nmap Changelog
 
--- Provide more information in machine/human readable output files (start time, end time, RPC program name, Nmap version number)
+-- Added some more RPC numbers from <mmmorris@netscape.net>
+-- Added a couple ICMP unreachable messages Nmap was missing (found by
+Bifrost <bifrost@minions.com>).
 
--- The -o and -m options have been deprecated.  From now on, you should use -oN for normal (human readable) output and -oM for machine parseable output.  At some point I might add -oH (HTML output) or -oSK (sKr|pt |<iDdi3 0uTPut).
+** Version 2.3BETA12
+-- Added interactive mode which adds convenience for managing nmap
+   sessions and also enhances privacy.  Get to it with --interactive
+   and then type 'h' for help.
+
+-- Added/modified many fingerprints including the latest 2.3.X Linux
+   releases, the latest Win2000 builds, the Apple Airport Wireless
+   device, and several dozen more.
+
+-- Migrated to RPM .spec file sent in by Tim Powers
+   <timp@redhat.com>.  That is the file they will be using to package
+   Nmap with the power tools CD in the next Redhat release.  The most
+   important changes are that Nmap (only the RPM version) now installs
+   in /usr/* instead of /usr/local/* and the frontend is now
+   dynamically linked with GTK and comes in a separate rpm.
+
+-- The -i (input from list) option has been deprecated.  From now on
+   you should use -iL <filename> to read from a list or -iR to have
+   Nmap generate random IPs to scan.  This -iR option is new.
+
+-- The -o and -m options have been deprecated.  From now on, you
+   should use -oN for normal (human readable) output and -oM for
+   machine parseable output.  At some point I might add -oH (HTML
+   output) or -oSK (sKr|pt |<iDdi3 0uTPut).
+
+-- Added --randomize_hosts option, which causes hosts be be scanned in
+   non-sequential order.  This makes scans less conspicuous.  For
+   efficiency reasons, the hosts are chopped into groups of 2048 and
+   then each group is internally shuffled (the groups still go in
+   order).
+
+-- Rearranged the help ('nmap -h' or 'nmap' or 'nmap --help') screen
+   to be shorter (37 -> 23 lines!) and include some of the new
+   features of this release.  The man page was updated as well.
+
+-- Fixed longstanding bug where nmap -sS mylocalnetwork/24 would not
+   successfully scan the host running nmap.
+
+-- Internal improvements to make scanning faster with -i (input list)
+   or when you specify multiple machines on the command line.
+
+-- Uses faster GCD algorithm and fixed several typos (sent in by Peter
+   Kosinar).
+
+-- Provide more information in machine/human readable output files
+   (start time, end time, RPC program name, Nmap version number)
+
+-- Killed the -A option (if you don't know what that is then you won't
+   miss it.  In fact, even if you do know what it is you won't miss
+   it.)
 
 ** Version 2.3BETA10
 

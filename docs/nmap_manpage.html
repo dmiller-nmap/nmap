@@ -320,10 +320,12 @@
               non  root users, we use connect().  To set the des-
               tination port of the  probe  packets  use  -PT&lt;port
               number&gt;.   The  default port is 80, since this port
-              is often not filtered out.  <B>-PS</B>  This  option  uses
-              SYN  (connection  request)  packets  instead of ACK
-              packets for root users.  Hosts that are  up  should
-              respond with a RST (or, rarely, a SYN|ACK).
+              is often not filtered out.
+
+       <B>-PS</B>    This option uses SYN (connection  request)  packets
+              instead  of ACK packets for root users.  Hosts that
+              are up should respond with a  RST  (or,  rarely,  a
+              SYN|ACK).
 
        <B>-PI</B>    This  option  uses  a true ping (ICMP echo request)
               packet.  It finds hosts that are up and also  looks
@@ -337,8 +339,6 @@
 
        <B>-PB</B>    This  is  the  default ping type.  It uses both the
               ACK ( <B>-PT</B> ) and ICMP ( <B>-PI</B> )  sweeps  in  parallel.
-              This  way  you can get firewalls that filter either
-              one (but not both).
 
 
 
@@ -350,6 +350,9 @@
 
 <B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
 
+
+              This  way  you can get firewalls that filter either
+              one (but not both).
 
        <B>-O</B>     This option activates  remote  host  identification
               via TCP/IP fingerprinting.  In other words, it uses
@@ -401,10 +404,7 @@
               immediately  upon receiving the first 36-byte frag-
               ment. After that comes a 24 byte  one!  While  this
               method  won't  get  by packet filters and firewalls
-              that  queue  all  IP  fragments  (like   the   CON-
-              FIG_IP_ALWAYS_DEFRAG  option  in the Linux kernel),
-              some networks can't afford the performance hit this
-              causes and thus leave it disabled.
+              that   queue   all   IP   fragments    (like    the
 
 
 
@@ -416,6 +416,10 @@
 
 <B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
 
+
+              CONFIG_IP_ALWAYS_DEFRAG  option  in  the Linux ker-
+              nel), some networks can't  afford  the  performance
+              hit this causes and thus leave it disabled.
 
               Note  that I do not yet have this option working on
               all systems.  It works fine for my Linux,  FreeBSD,
@@ -432,12 +436,12 @@
               of  nmap  usage  options.  As you may have noticed,
               this man page is not exactly a 'quick reference' :)
 
-       <B>-o</B> <B>&lt;logfilename&gt;</B>
-              This  logs  the  results  of  your scans in a <B>human</B>
-              <B>readable</B> form into the file you specify as an argu-
-              ment.
+       <B>-oN</B> <B>&lt;logfilename&gt;</B>
+              This  logs  the  results  of your scans in a normal
+              <B>human</B> <B>readable</B> form into the file you specify as an
+              argument.
 
-       <B>-m</B> <B>&lt;logfilename&gt;</B>
+       <B>-oM</B> <B>&lt;logfilename&gt;</B>
               This  logs  the  results of your scans in a <B>machine</B>
               <B>parseable</B> form into the  file  you  specify  as  an
               argument.   You can give -m the argument '-' (with-
@@ -446,7 +450,7 @@
               be suppressed.  Watch out for error messages if you
               use this (they will still go to stderr).
 
-       <B>-i</B> <B>&lt;inputfilename&gt;</B>
+       <B>-iL</B> <B>&lt;inputfilename&gt;</B>
               Reads target specifications from the file specified
               RATHER than from the command line.  The file should
               contain  a  list  of  host  or  network expressions
@@ -457,20 +461,16 @@
               for more information on the  expressions  you  fill
               the file with.
 
+       <B>-iR</B>    This option tells Nmap to generate its own hosts to
+              scan by simply picking random numbers :).  It  will
+              never end.  This can be useful for statistical sam-
+              pling of the Internet to estimate  various  things.
+              If  you  are ever really bored, try <I>nmap</I> <I>-sS</I> <I>-iR</I> <I>-p</I>
+              <I>80</I> to find some web servers to look at.
+
        <B>-p</B> <B>&lt;port</B> <B>ranges&gt;</B>
-              This  option specifies what ports you want to spec-
-              ify. For example '-p 23' will only try port  23  of
-              the target host(s).  ports greater than 60000.  The
-              default is to scan all ports between 1 and 1024  as
-              well as any ports listed in the services file which
-              comes with nmap.
-
-       <B>-F</B> <B>Fast</B> <B>scan</B> <B>mode.</B>
-              Specifies that you only  wish  to  scan  for  ports
-              listed  in the services file which comes with nmap.
-              This is obviously much  faster  than  scanning  all
-              65535 ports on a host.
-
+              This option specifies what ports you want to  spec-
+              ify.  For  example '-p 23' will only try port 23 of
 
 
 
@@ -483,60 +483,60 @@
 <B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
 
 
+              the target host(s).  ports greater than 60000.  The
+              default  is to scan all ports between 1 and 1024 as
+              well as any ports listed in the services file which
+              comes with nmap.
+
+       <B>-F</B> <B>Fast</B> <B>scan</B> <B>mode.</B>
+              Specifies  that  you  only  wish  to scan for ports
+              listed in the services file which comes with  nmap.
+              This  is  obviously  much  faster than scanning all
+              65535 ports on a host.
+
        <B>-D</B> <B>&lt;decoy1</B> <B>[,decoy2][,ME],...&gt;</B>
-              Causes  a decoy scan to be performed which makes it
-              appear to the remote  host  that  the  host(s)  you
-              specify  as  decoys are scanning the target network
-              too.  Thus their IDS might report 5-10  port  scans
+              Causes a decoy scan to be performed which makes  it
+              appear  to  the  remote  host  that the host(s) you
+              specify as decoys are scanning the  target  network
+              too.   Thus  their IDS might report 5-10 port scans
               from unique IP addresses, but they won't know which
               IP  was  scanning  them  and  which  were  innocent
-              decoys.   While this can be defeated through router
+              decoys.  While this can be defeated through  router
               path tracing, response-dropping, and other "active"
-              mechanisms,  it is generally an extremely effective
+              mechanisms, it is generally an extremely  effective
               technique for hiding your IP address.
 
-              Separate each decoy host with commas, and  you  can
-              optionally  use 'ME' as one of the decoys to repre-
-              sent the position you want your IP  address  to  be
-              used.   If  your  put  'ME'  in the 6th position or
-              later, some common port  scan  detectors  (such  as
-              Solar  Designer's excellent scanlogd) are unlikeley
-              to show your IP address at all.  If you  don't  use
+              Separate  each  decoy host with commas, and you can
+              optionally use 'ME' as one of the decoys to  repre-
+              sent  the  position  you want your IP address to be
+              used.  If your put 'ME'  in  the  6th  position  or
+              later,  some  common  port  scan detectors (such as
+              Solar Designer's excellent scanlogd) are  unlikeley
+              to  show  your IP address at all.  If you don't use
               'ME', nmap will put you in a random position.
 
-              Note  that the hosts you use as decoys should be up
-              or you might accidently  SYN  flood  your  targets.
+              Note that the hosts you use as decoys should be  up
+              or  you  might  accidently  SYN flood your targets.
               Also it will be pretty easy to determine which host
-              is scanning if only one is actually up on the  net-
-              work.   You  might want to use IP addresses instead
-              of names (so the decoy networks don't  see  you  in
+              is  scanning if only one is actually up on the net-
+              work.  You might want to use IP  addresses  instead
+              of  names  (so  the decoy networks don't see you in
               their nameserver logs).
 
-              Also  note that some (stupid) "port scan detectors"
-              will firewall/deny routing to  hosts  that  attempt
+              Also note that some (stupid) "port scan  detectors"
+              will  firewall/deny  routing  to hosts that attempt
               port scans.  Thus you might inadvertantly cause the
-              machine you scan  to  lose  connectivity  with  the
+              machine  you  scan  to  lose  connectivity with the
               decoy machines you are using.  This could cause the
-              target machines major problems  if  the  decoy  is,
-              say,  its  internet  gateway  or  even "localhost".
-              Thus you might want to be careful of  this  option.
-              The  real  moral  of the story is that detectors of
+              target  machines  major  problems  if the decoy is,
+              say, its  internet  gateway  or  even  "localhost".
+              Thus  you  might want to be careful of this option.
+              The real moral of the story is  that  detectors  of
               spoofable port scans should not take action against
-              the  machine  that  seems  like it is port scanning
+              the machine that seems like  it  is  port  scanning
               them.  It could just be a decoy!
 
-              Decoys are used  both  in  the  initial  ping  scan
-              (using  ICMP, SYN, ACK, or whatever) and during the
-              actual port scanning phase.  Decoys are  also  used
-              during remote OS detection ( <B>-O</B> ).
-
-              It  is  worth noting that using too many decoys may
-              slow your scan and potentially even  make  it  less
-              accurate.   Also,  some  ISPs  will filter out your
-              spoofed packets, although many (currently most)  do
-              not restrict spoofed IP packets at all.
-
-
+              Decoys  are  used  both  in  the  initial ping scan
 
 
 
@@ -549,60 +549,60 @@
 <B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
 
 
+              (using ICMP, SYN, ACK, or whatever) and during  the
+              actual  port  scanning phase.  Decoys are also used
+              during remote OS detection ( <B>-O</B> ).
+
+              It is worth noting that using too many  decoys  may
+              slow  your  scan  and potentially even make it less
+              accurate.  Also, some ISPs  will  filter  out  your
+              spoofed  packets, although many (currently most) do
+              not restrict spoofed IP packets at all.
+
        <B>-S</B> <B>&lt;IP_Address&gt;</B>
-              In  some  circumstances,  <I>nmap</I>  may  not be able to
-              determine your source address ( <I>nmap</I> will tell  you
-              if  this  is  the case).  In this situation, use -S
-              with your IP address (of the interface you wish  to
+              In some circumstances, <I>nmap</I>  may  not  be  able  to
+              determine  your source address ( <I>nmap</I> will tell you
+              if this is the case).  In this  situation,  use  -S
+              with  your IP address (of the interface you wish to
               send packets through).
 
-              Another  possible  use of this flag is to spoof the
+              Another possible use of this flag is to  spoof  the
               scan to make the targets think that <B>someone</B> <B>else</B> is
-              scanning  them.  Imagine a company being repeatedly
-              port scanned by a competitor!  This is not  a  sup-
+              scanning them.  Imagine a company being  repeatedly
+              port  scanned  by a competitor!  This is not a sup-
               ported usage (or the main purpose) of this flag.  I
-              just think it  raises  an  interesting  possibility
-              that  people  should  be  aware  of  before they go
-              accusing others of port scanning  them.   <B>-e</B>  would
+              just  think  it  raises  an interesting possibility
+              that people should  be  aware  of  before  they  go
+              accusing  others  of  port scanning them.  <B>-e</B> would
               generally be required for this sort of usage.
 
        <B>-e</B> <B>&lt;interface&gt;</B>
               Tells nmap what interface to send and receive pack-
-              ets on.  Nmap should be able to detect this but  it
+              ets  on.  Nmap should be able to detect this but it
               will tell you if it cannot.
 
        <B>-g</B> <B>&lt;portnumber&gt;</B>
-              Sets  the  source  port number used in scans.  Many
+              Sets the source port number used  in  scans.   Many
               naive firewall and packet filter installations make
-              an  exception in their ruleset to allow DNS (53) or
+              an exception in their ruleset to allow DNS (53)  or
               FTP-DATA (20) packets to come through and establish
-              a  connection.   Obviously this completely subverts
+              a connection.  Obviously this  completely  subverts
               the  security  advantages  of  the  firewall  since
               intruders can just masquerade as FTP or DNS by mod-
               ifying their source port.  Obviously for a UDP scan
               you should try 53 first and TCP scans should try 20
-              before 53.  Note that this is  only  a  request  --
-              nmap  will honor it only if and when it is able to.
+              before  53.   Note  that  this is only a request --
+              nmap will honor it only if and when it is able  to.
               For example, you can't do TCP ISN sampling all from
               one host:port to one host:port, so nmap changes the
               source port even if you used -g.
 
-              Be aware that there is a small performance  penalty
-              on  some  scans  for  using  this option, because I
-              sometimes store useful information  in  the  source
+              Be  aware that there is a small performance penalty
+              on some scans for  using  this  option,  because  I
+              sometimes  store  useful  information in the source
               port number.
 
-       <B>-M</B> <B>&lt;max</B> <B>sockets&gt;</B>
-              Sets  the  maximum  number  of sockets that will be
-              used in parallel for  a  TCP  connect()  scan  (the
-              default).   This  is useful to slow down the scan a
-              little bit  and  avoid  crashing  remote  machines.
-              Another  approach is to use -sS, which is generally
-              easier for machines to handle.
-
-       <B>TIMING</B> <B>OPTIONS</B>
-              Generally Nmap does a good  job  at  adjusting  for
-              Network  characteristics at runtime and scanning as
+       <B>-r</B>     Tells Nmap <B>NOT</B> to  randomize  the  order  in  which
 
 
 
@@ -615,6 +615,26 @@
 <B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
 
 
+              ports are scanned.
+
+       <B>--randomize_hosts</B>
+              Tells  Nmap  to  shuffle  each  group of up to 2048
+              hosts before it scans  them.   This  can  make  the
+              scans  less  obvious  to various network monitoring
+              systems, especially when you combine it  with  slow
+              timing options (see below).
+
+       <B>-M</B> <B>&lt;max</B> <B>sockets&gt;</B>
+              Sets  the  maximum  number  of sockets that will be
+              used in parallel for  a  TCP  connect()  scan  (the
+              default).   This  is useful to slow down the scan a
+              little bit  and  avoid  crashing  remote  machines.
+              Another  approach is to use -sS, which is generally
+              easier for machines to handle.
+
+       <B>TIMING</B> <B>OPTIONS</B>
+              Generally Nmap does a good  job  at  adjusting  for
+              Network  characteristics at runtime and scanning as
               fast as possible while minimizing that  chances  of
               hosts/ports  going  undetected.  However, there are
               same cases where Nmap's default timing  policy  may
@@ -649,6 +669,18 @@
 
               These  canned  timing  modes  should NOT be used in
               combination with the  lower  level  controls  given
+
+
+
+                                                               10
+
+
+
+
+
+<B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
+
+
               below.
 
        <B>--host_timeout</B> <B>&lt;milliseconds&gt;</B>
@@ -668,22 +700,10 @@
               of responding very quickly, Nmap  will  shrink  the
               amount of time given per probe.  This speeds up the
               scan,  but  can  lead  to  missed  packets  when  a
-              response   takes  longer  than  usual.   With  this
-
-
-
-                                                               10
-
-
-
-
-
-<B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
-
-
-              parameter you can guarantee that Nmap will wait  at
-              least  the given amount of time before giving up on
-              a probe.
+              response takes longer than usual.  With this param-
+              eter you can guarantee that Nmap will wait at least
+              the  given  amount  of  time  before giving up on a
+              probe.
 
        <B>--initial_rtt_timeout</B> <B>&lt;milliseconds&gt;</B>
               Specifies the initial probe timeout.  This is  gen-
@@ -718,6 +738,17 @@
        and  32 (scan the single host specified).  Use /24 to scan
        a class 'C' address and /16 for a class 'B'.
 
+
+
+                                                               11
+
+
+
+
+
+<B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
+
+
        Nmap also has a more  powerful  notation  which  lets  you
        specify an IP address using lists/ranges for each element.
        Thus you can scan the whole class 'B' network  128.210.*.*
@@ -734,19 +765,6 @@
        in .5.6 or .5.7  Pick your own numbers.  For more informa-
        tion on specifying hosts to scan, see  the  <I>examples</I>  sec-
        tion.
-
-
-
-
-
-
-                                                               11
-
-
-
-
-
-<B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
 
 
 
@@ -788,24 +806,6 @@
        cient TCP stack.  Same goes with CISCO, IRIX,  HP/UX,  and
        BSDI boxes.
 
-       <B>nmap</B> <B>-v</B> <B>-p</B> <B>80</B> <B>'*.*.2.3-5'</B>
-
-       Rather  than focus on a specific IP range, it is sometimes
-       interesting to slice up the entire  Internet  and  scan  a
-       small  sample from each slice.  This command finds all web
-       servers on machines with  IP  addresses  ending  in  .2.3,
-       .2.4,  or  .2.5  .   If you are root you might as well add
-       -sS.  Also you will find more interesting machines  start-
-       ing  at 127. so you might want to use '127-222' instead of
-       the first asterict because that section has a greater den-
-       sity of interesting machines (IMHO).
-
-       <B>host</B> <B>-l</B> <B>company.com</B> <B>|</B> <B>cut</B> <B>'-d</B> <B>'</B> <B>-f</B> <B>4</B> <B>|</B> <B>./nmap</B> <B>-v</B> <B>-i</B> <B>-</B>
-
-       Do  a  DNS  zone transfer to find the hosts in company.com
-       and then feed the IP addresses to <I>nmap.</I>   The  above  com-
-       mands  are  for  my GNU/Linux box.  You may need different
-
 
 
                                                                12
@@ -817,6 +817,23 @@
 <B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
 
 
+       <B>nmap</B> <B>-v</B> <B>--randomize_hosts</B> <B>-p</B> <B>80</B> <B>'*.*.2.3-5'</B>
+
+       Rather  than focus on a specific IP range, it is sometimes
+       interesting to slice up the entire  Internet  and  scan  a
+       small  sample from each slice.  This command finds all web
+       servers on machines with  IP  addresses  ending  in  .2.3,
+       .2.4,  or  .2.5  .   If you are root you might as well add
+       -sS.  Also you will find more interesting machines  start-
+       ing  at 127. so you might want to use '127-222' instead of
+       the first asterict because that section has a greater den-
+       sity of interesting machines (IMHO).
+
+       <B>host</B> <B>-l</B> <B>company.com</B> <B>|</B> <B>cut</B> <B>'-d</B> <B>'</B> <B>-f</B> <B>4</B> <B>|</B> <B>./nmap</B> <B>-v</B> <B>-iL</B> <B>-</B>
+
+       Do  a  DNS  zone transfer to find the hosts in company.com
+       and then feed the IP addresses to <I>nmap.</I>   The  above  com-
+       mands  are  for  my GNU/Linux box.  You may need different
        commands/options on other operating systems.
 
 
@@ -860,6 +877,18 @@
        users have a right to know exactly what a program is going
        to  do  before they run it.  This also allows you to audit
        the software for security holes (none have been  found  so
+
+
+
+                                                               13
+
+
+
+
+
+<B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
+
+
        far).
 
        Source code also allows you to port nmap to new platforms,
@@ -876,20 +905,8 @@
        useful, but <B>WITHOUT</B> <B>ANY</B> <B>WARRANTY;</B> without even the implied
        warranty  of  <B>MERCHANTABILITY</B>  or <B>FITNESS</B> <B>FOR</B> <B>A</B> <B>PARTICULAR</B>
        <B>PURPOSE.</B>  See the GNU  General  Public  License  for  more
-       details   (it   is   in  the  COPYING  file  of  the  <I>nmap</I>
-
-
-
-                                                               13
-
-
-
-
-
-<B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
-
-
-       distribution).
+       details  (it  is in the COPYING file of the <I>nmap</I> distribu-
+       tion).
 
        It should also be noted that Nmap has been known to  crash
        certain  poorly  written  applications, TCP/IP stacks, and
@@ -905,23 +922,6 @@
        that  Nmap  comes with no warranty.  There is no reason to
        believe versions earlier than 2.0 are susceptible to prob-
        lems, but we have not tested them.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

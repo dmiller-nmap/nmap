@@ -243,6 +243,56 @@ bytesleft = 0;
 return get_random_bytes((char *)buf + tmp, numbytes - tmp);
 }
 
+/* Scramble the contents of an array*/
+void genfry(unsigned char *arr, int elem_sz, int num_elem) {
+int i;
+unsigned int pos;
+unsigned char *bytes;
+unsigned char *cptr;
+unsigned short *sptr;
+unsigned int *iptr;
+unsigned char *tmp;
+int bpe;
+
+if (sizeof(unsigned char) != 1)
+  fatal("genfry() requires 1 byte chars");
+
+if (num_elem < 2)
+  return;
+
+/* OK, so I am stingy with the random bytes! */
+if (num_elem < 256) 
+  bpe = sizeof(unsigned char);
+else if (num_elem < 65536)
+  bpe = sizeof(unsigned short);
+else bpe = sizeof(unsigned int);
+
+bytes = malloc(bpe * num_elem);
+tmp = malloc(elem_sz);
+
+get_random_bytes(bytes, bpe * num_elem);
+cptr = bytes;
+sptr = (unsigned short *)bytes;
+iptr = (unsigned int *) bytes;
+
+ for(i=0; i < num_elem; i++) {
+   if (num_elem < 256) {
+     pos = *cptr; cptr++;
+   }
+   else if (num_elem < 65536) {
+     pos = *sptr; sptr++;
+   } else {
+     pos = *iptr; iptr++;
+   }
+   pos %= num_elem;
+   memcpy(tmp, arr + elem_sz * i, elem_sz);
+   memcpy(arr + elem_sz * i, arr + elem_sz * pos, elem_sz);
+   memcpy(arr + elem_sz * pos, tmp, elem_sz);
+ }
+ free(bytes);
+ free(tmp);
+}
+
 ssize_t Write(int fd, const void *buf, size_t count) {
   int res;
   unsigned int len;
@@ -258,3 +308,138 @@ ssize_t Write(int fd, const void *buf, size_t count) {
 }
 
 
+/* gcd_1 and gcd_n_long were sent in by Peter Kosinar <goober@gjh.sk> 
+   Not needed for gcd_n_long, just for the case you'd want to have gcd
+   for two arguments too. */
+unsigned long gcd_ulong(unsigned long a, unsigned long b)
+{
+  /* Shorter
+     while (b) { a%=b; if (!a) return b; b%=a; } */
+  
+  /* Faster */
+  unsigned long c; 
+  if (a<b) { c=a; a=b; b=c; }
+  while (b) { c=a%b; a=b; b=c; }
+  
+  /* Common for both */
+  return a;
+}
+
+unsigned long gcd_n_ulong(long nvals, unsigned long *val)
+ {
+   unsigned long a,b,c;
+   
+   if (!nvals) return 1;
+   a=*val;
+   for (nvals--;nvals;nvals--)
+     {
+       b=*++val;
+       if (a<b) { c=a; a=b; b=c; }
+       while (b) { c=a%b; a=b; b=c; }
+     }
+   return a;
+ }
+
+unsigned int gcd_uint(unsigned int a, unsigned int b)
+{
+  /* Shorter
+     while (b) { a%=b; if (!a) return b; b%=a; } */
+  
+  /* Faster */
+  unsigned int c; 
+  if (a<b) { c=a; a=b; b=c; }
+  while (b) { c=a%b; a=b; b=c; }
+  
+  /* Common for both */
+  return a;
+}
+
+unsigned int gcd_n_uint(int nvals, unsigned int *val)
+ {
+   unsigned int a,b,c;
+   
+   if (!nvals) return 1;
+   a=*val;
+   for (nvals--;nvals;nvals--)
+     {
+       b=*++val;
+       if (a<b) { c=a; a=b; b=c; }
+       while (b) { c=a%b; a=b; b=c; }
+     }
+   return a;
+ }
+
+/* This function takes a command and the address of an uninitialized
+   char ** .  It parses the command (by seperating out whitespace)
+   into an argv[] style char **, which it sets the argv parameter to.
+   The function returns the number of items filled up in the array
+   (argc), or -1 in the case of an error.  This function allocates
+   memmory for argv and thus it must be freed -- use argv_parse_free()
+   for that.  If arg_parse returns <1, then argv does not need to be freed.
+   The returned arrays are always terminated with a NULL pointer */
+int arg_parse(const char *command, char ***argv) {
+  char **myargv = NULL;
+  int argc = 0;
+  char mycommand[4096];
+  char *start, *end;
+  char oldend;
+
+  *argv = NULL;
+  if (Strncpy(mycommand, command, 4096) == -1) {      
+    return -1;
+  }
+  myargv = malloc((MAX_PARSE_ARGS + 2) * sizeof(char *));
+  bzero(myargv, (MAX_PARSE_ARGS+2) * sizeof(char *));
+  myargv[0] = (char *) 0x123456; /* Integrity checker */
+  myargv++;
+  start = mycommand;
+  while(start && *start) {
+    while(*start && isspace(*start))
+      start++;
+    if (*start == '"') {
+      start++;
+      end = strchr(start, '"');
+    } else if (*start == '\'') {
+      start++;
+      end = strchr(start, '\'');      
+    } else if (!*start) {
+      continue;
+    } else {
+      end = start+1;
+      while(*end && !isspace(*end)) {      
+	end++;
+      }
+    }
+    if (!end) {
+      arg_parse_free(myargv);
+      return -1;
+    }
+    if (argc >= MAX_PARSE_ARGS) {
+      arg_parse_free(myargv);
+      return -1;
+    }
+    oldend = *end;
+    *end = '\0';
+    myargv[argc++] = strdup(start);
+    if (oldend)
+      start = end + 1;
+    else start = end;
+  }
+  myargv[argc+1] = 0;
+  *argv = myargv;
+  return argc;
+}
+
+/* Free an argv allocated inside arg_parse */
+void arg_parse_free(char **argv) {
+  char **current;
+  /* Integrity check */
+  argv--;
+  assert(argv[0] == (char *) 0x123456);
+  current = argv + 1;
+  while(*current) {
+    free(*current);
+    current++;
+  }
+  free(argv);
+}

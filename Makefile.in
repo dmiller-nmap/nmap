@@ -1,4 +1,4 @@
-VERSION = 2.3BETA10
+VERSION = 2.3BETA13
 prefix = @prefix@
 exec_prefix = @exec_prefix@
 bindir = @bindir@
@@ -6,6 +6,7 @@ sbindir = @sbindir@
 mandir = @mandir@
 srcdir = @srcdir@
 libdir = @libdir@/nmap
+deskdir = $(prefix)/share/gnome/apps/Utilities
 
 CC = @CC@
 CCOPT = 
@@ -80,7 +81,7 @@ distro:
 	$(MAKE) clean
 	rm -f $(LIBPCAPDIR)/config.cache $(LIBPCAPDIR)/Makefile
 	cp -ra $(SRCS) $(DEPS) inet_aton.c snprintf.c nmap-os-fingerprints \
-	getopt.h getopt.c getopt1.c nmap-services nmap-rpc \
+	nmapfe.desktop getopt.h getopt.c getopt1.c nmap-services nmap-rpc \
 	configure.in config.h.in Makefile.in configure $(SHTOOL) install-sh \
         config.guess nmap-$(VERSION)-1.spec config.sub INSTALL docs \
 	COPYING CHANGELOG \
@@ -98,6 +99,7 @@ distro:
 # Make the actual RPM
 	rpm -ta /usr/tmp/nmap-$(VERSION).tgz
 	cp -f $(RPMTDIR)/RPMS/i386/nmap-$(VERSION)-1.i386.rpm /usr/tmp
+	cp -f $(RPMTDIR)/RPMS/i386/nmap-frontend-$(VERSION)-1.i386.rpm /usr/tmp
 	cp -f $(RPMTDIR)/SRPMS/nmap-$(VERSION)-1.src.rpm /usr/tmp
 	rm -rf /usr/tmp/nmap-$(VERSION)
 
@@ -126,10 +128,10 @@ depend:
 	$(MAKEDEPEND) $(INCLS) -s "# DO NOT DELETE" -- $(DEFS) -- $(SRCS)
 
 install: all
-	$(SHTOOL) mkdir -f -p -m 755 $(bindir) $(mandir)/man1 $(libdir)
+	$(SHTOOL) mkdir -f -p -m 755 $(bindir) $(mandir)/man1 $(libdir) $(deskdir)
 	$(INSTALL) -c -m 755 nmap $(bindir)/nmap
 	@echo "If the next command failes -- you cannot use the X front end"
-	-test -f nmapfe/nmapfe && $(INSTALL) -c -m 755 nmapfe/nmapfe $(bindir)/nmapfe && $(SHTOOL) mkln -f -s $(bindir)/nmapfe $(bindir)/xnmap
+	-test -f nmapfe/nmapfe && $(INSTALL) -c -m 755 nmapfe/nmapfe $(bindir)/nmapfe && $(SHTOOL) mkln -f -s $(bindir)/nmapfe $(bindir)/xnmap && $(INSTALL) -c -m 644 nmapfe.desktop $(deskdir)/nmapfe.desktop
 	$(INSTALL) -c -m 644 docs/$(TARGET).1 $(mandir)/man1/$(TARGET).1
 	$(INSTALL) -c -m 644 nmap-os-fingerprints  $(libdir)/nmap-os-fingerprints
 	$(INSTALL) -c -m 644 nmap-services  $(libdir)/nmap-services

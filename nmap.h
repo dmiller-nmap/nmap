@@ -53,6 +53,8 @@ void *realloc();
 #include <ctype.h>
 #include <sys/types.h>
 
+#include <sys/wait.h>
+
 #ifdef HAVE_SYS_PARAM_H   
 #include <sys/param.h> /* Defines MAXHOSTNAMELEN on BSD*/
 #endif
@@ -136,9 +138,6 @@ void *realloc();
 /*******  DEFINES  ************/
 
 /* User configurable #defines: */
-/* #define to zero if you don't want to	ignore hosts of the form 
-   xxx.xxx.xxx.{0,255} (usually network and broadcast addresses) */
-#define IGNORE_ZERO_AND_255_HOSTS 0
 #ifndef VERSION
 #define VERSION "1.60-Beta"
 #endif
@@ -189,6 +188,8 @@ void *realloc();
 
 /* If nmap is called with one of the names below, it will start up in interactive mode -- alternatively, you can rename Nmap any of the following names to have it start up interactivey by default.  */
 #define INTERACTIVE_NAMES { "BitchX", "Calendar", "X", "awk", "bash", "bash2", "calendar", "cat", "csh", "elm", "emacs", "ftp", "fvwm", "g++", "gcc", "gimp", "httpd", "irc", "man", "mutt", "nc", "ncftp", "netscape", "perl", "pine", "ping", "sleep", "slirp", "ssh", "sshd", "startx", "tcsh", "telnet", "telnetd", "tia", "top", "vi", "vim", "xdvi", "xemacs", "xterm", "xv" }
+
+#define HOST_GROUP_SZ 512
 
 /* DO NOT change stuff after this point */
 #define UC(b)   (((int)b)&0xff)
@@ -252,6 +253,7 @@ void *realloc();
 #include "utils.h"
 #include "services.h"
 #include "rpc.h"
+#include "targets.h"
 
 /***********************STRUCTURES**********************************/
 
@@ -259,8 +261,10 @@ void *realloc();
 
 /***********************PROTOTYPES**********************************/
 
-/* print usage information */
-void printusage(char *name);
+/* print usage information and exit */
+void printusage(char *name, int rc);
+/* print Interactive usage information */
+void printinteractiveusage();
 
 /* our scanning functions */
 portlist super_scan(struct hoststruct *target, unsigned short *portarray, stype scantype);
@@ -323,12 +327,12 @@ void hdump(unsigned char *packet, int len);
 void *safe_malloc(int size);
 char *grab_next_host_spec(FILE *inputfd, int argc, char **fakeargv);
 int parse_targets(struct targets *targets, char *h);
-struct hoststruct *nexthost(char *hostexp, int lookahead);
 void options_init();
 void nmap_log(char *fmt, ...);
 void nmap_machine_log(char *fmt, ...);
 char *statenum2str(int state);
 void sigdie(int signo);
+void reaper(int signo);
 char *seqreport(struct seq_info *seq);
 char *seqclass2ascii(int clas);
 void invertfirewalled(portlist *pl, unsigned short *ports);

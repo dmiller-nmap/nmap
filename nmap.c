@@ -5,8 +5,9 @@
 extern char *optarg;
 extern int optind;
 struct ops o;  /* option structure */
+extern char **environ;
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[], char *envp[]) {
   /* The "real" main is nmap_main().  This function hijacks control at the
      beginning to do the following:
      1) Check if Nmap called under name listed in INTERACTIVE_NAMES or with
@@ -17,7 +18,34 @@ int main(int argc, char *argv[]) {
   int numinames = sizeof(interactive_names) / sizeof(char *);
   int nameidx;
   char *nmapcalledas;
+  char command[2048];
+  int myargc, fakeargc;
+  char **myargv = NULL, **fakeargv = NULL;
+  char *cptr;
+  int ret;
+  int i;
+  char nmapargs[1024];
+  char fakeargs[1024];
+  char nmappath[MAXPATHLEN];
+  char *pptr;
+  char path[4096];
+  struct stat st;
+  char *endptr;
   int interactivemode = 0;
+  int fd;
+
+  /* initialize our options */
+  options_init();
+
+
+
+  /* Trap these sigs for cleanup */
+  signal(SIGINT, sigdie);
+  signal(SIGTERM, sigdie);
+  signal(SIGHUP, sigdie); 
+  
+  signal(SIGCHLD, reaper);
+
 
   /* First we figure out whether the name nmap is called as qualifies it 
      for interactive mode treatment */
@@ -26,17 +54,184 @@ int main(int argc, char *argv[]) {
     nmapcalledas = argv[0];
   } else nmapcalledas++;
 
+  if ((cptr = getenv("NMAP_ARGS"))) {
+    snprintf(command, sizeof(command), "nmap %s", cptr);
+    myargc = arg_parse(command, &myargv);
+    if (myargc < 1) {
+      fatal("NMAP_ARG variable could not be parsed");
+    }
+    options_init();
+    ret = nmap_main(myargc, myargv);
+    arg_parse_free(myargv);
+    return ret;
+  }
+
   for(nameidx = 0; nameidx < numinames; nameidx++) {
     if (strcasecmp(nmapcalledas, interactive_names[nameidx]) == 0) {
-      printf("Entering interactive mode due to argv[0]\n");
+      printf("Entering Interactive Mode because argv[0] == %s\n", nmapcalledas);
       interactivemode = 1;
       break;
     }
   }
 
-  if (argc == 2 && strcmp("--interactive", argv[1]) == 0) {
+  if (interactivemode == 0 &&
+      argc == 2 && strcmp("--interactive", argv[1]) == 0) {
     interactivemode = 1;
   }
+
+  if (!interactivemode) {
+    options_init();
+    return nmap_main(argc, argv);
+  }
+  printf("\nStarting nmap V. %s by fyodor@insecure.org ( www.insecure.org/nmap/ )\n", VERSION);
+  printf("Welcome to Interactive Mode -- press h <enter> for help\n");
+  
+  while(1) {
+    printf("nmap> ");
+    fflush(stdout);
+    fgets(command, sizeof(command), stdin);
+    myargc = arg_parse(command, &myargv);
+    if (myargc < 1) {
+      printf("Bogus command -- press h <enter> for help\n");
+      continue;
+    }
+    if (strcasecmp(myargv[0], "h") == 0 ||
+	strcasecmp(myargv[0], "help") == 0) {
+      printinteractiveusage();
+      continue;
+    } else if (strcasecmp(myargv[0], "x") == 0 ||
+	       strcasecmp(myargv[0], "q") == 0 ||
+	       strcasecmp(myargv[0], "e") == 0 ||
+	       strcasecmp(myargv[0], ".") == 0 ||
+	       strcasecmp(myargv[0], "exit") == 0 ||
+	       strcasecmp(myargv[0], "quit") == 0) {
+      printf("Quitting by request.\n");
+      exit(0);
+    } else if (strcasecmp(myargv[0], "n") == 0 ||
+	       strcasecmp(myargv[0], "nmap") == 0) {
+      options_init();
+      o.interactivemode = 1;
+      nmap_main(myargc, myargv);
+    } else if (*myargv[0] == '!') {
+      cptr = strchr(command, '!');
+      system(cptr + 1);
+    } else if (*myargv[0] == 'd') {
+      o.debugging++;
+    } else if (strcasecmp(myargv[0], "f") == 0) {
+      switch((ret = fork())) {
+      case 0: /* Child */
+	/* My job is as follows:
+	   1) Go through arguments for the following 3 purposes:
+              A.  Build env variable nmap execution will read args from
+              B.  Find spoof and realpath variables
+              C.  If realpath var was not set, find an Nmap to use
+	      2) Exec the sucka!@#$! 
+	*/
+	fakeargs[0] = nmappath[0] = '\0';
+	strcpy(nmapargs, "NMAP_ARGS=");
+	for(i=1; i < myargc; i++) {
+	  if (strcasecmp(myargv[i], "--spoof") == 0) {
+	    if (++i > myargc -1) {
+	      fatal("Bad arguments to f!");
+	    }	    
+	    strncpy(fakeargs, myargv[i], sizeof(fakeargs));
+	  } else if (strcasecmp(myargv[i], "--nmap_path") == 0) {
+	    if (++i > myargc -1) {
+	      fatal("Bad arguments to f!");
+	    }	    
+	    strncpy(nmappath, myargv[i], sizeof(nmappath));
+	  } else {
+	    if (strlen(nmapargs) + strlen(myargv[i]) + 1 < sizeof(nmapargs)) {
+	      strcat(nmapargs, " ");
+	      strcat(nmapargs, myargv[i]);
+	    } else fatal("Arguments too long.");
+	  }	 
+	}
+	/* First we stick our arguments into envp */
+	if (o.debugging) {
+	  error("Adding to environment: %s", nmapargs);
+	}
+	if (putenv(nmapargs) == -1) {
+	  pfatal("Failed to add NMAP_ARGS to environment");
+	}
+	/* Now we figure out where the #@$#@ Nmap is located */
+	if (!*nmappath) {
+	  if (stat(argv[0], &st) != -1 && !S_ISDIR(st.st_mode)) {
+	    strncpy(nmappath, argv[0], sizeof(nmappath));
+	  } else {
+	    nmappath[0] = '\0';
+	    /* Doh!  We must find it in path */
+	    if ((pptr = getenv("PATH"))) {
+	      strncpy(path, pptr, sizeof(path));
+	      pptr = path;
+	      while(pptr && *pptr) {
+		endptr = strchr(pptr, ':');
+		if (endptr) { 
+		  *endptr = '\0';
+		}
+		snprintf(nmappath, sizeof(nmappath), "%s/%s", pptr, nmapcalledas);
+		if (stat(nmappath, &st) != -1)
+		  break;
+		nmappath[0] = '\0';
+		if (endptr) pptr = endptr + 1;
+		else pptr = NULL;
+	      }
+	    }
+	  }
+	}
+	if (!*nmappath) {
+	  fatal("Could not find Nmap -- you must add --nmap_path argument");
+	}       
+      
+	/* We should be courtious and give Nmap reasonable signal defaults */
+	signal(SIGINT, SIG_DFL);
+	signal(SIGTERM, SIG_DFL);
+	signal(SIGHUP, SIG_DFL);
+	signal(SIGSEGV, SIG_DFL);
+
+	/* Now I must handle spoofery */
+	if (*fakeargs) {
+	  fakeargc = arg_parse(fakeargs, &fakeargv);
+	  if (fakeargc < 1) {
+	    fatal("Bogus --spoof parameter");
+	  }
+	} else {
+	  fakeargc = 1;
+	  fakeargv = malloc(sizeof(char *) * 2);
+	  fakeargv[0] = nmappath;
+	  fakeargv[1] = NULL;
+	}
+
+	if (o.debugging) error("About to exec %s", nmappath);
+	/* Kill stdout & stderr */
+	if (!o.debugging) {	
+	  fd = open("/dev/null", O_WRONLY);
+	  if (fd != -1) {
+	    dup2(fd, STDOUT_FILENO);
+	    dup2(fd, STDERR_FILENO);
+	  }
+	}
+
+	/* OK, I think we are finally ready for the big exec() */
+	ret = execve(nmappath, fakeargv, environ);
+	if (ret == -1) {
+	  pfatal("Could not exec %s", nmappath);
+	}
+	break;
+      case -1:
+	gh_perror("fork() failed");
+	break;
+      default: /* Parent */
+	printf("[PID: %d]\n", ret);
+	break;
+      }
+    } else {
+      printf("Unknown command (%s) -- press h <enter> for help\n", myargv[0]);
+      continue;
+    }
+    arg_parse_free(myargv);
+  }
+  return 0;
 
 }
 
@@ -48,6 +243,9 @@ char *host_spec;
 short fastscan=0, randomize=1, resolve_all=0;
 short quashargv = 0;
 int numhosts_scanned = 0;
+char **host_exp_group;
+int num_host_exp_groups = 0;
+struct hostgroup_state hstate;
 int numhosts_up = 0;
 int starttime;
 unsigned short *ports = NULL;
@@ -60,7 +258,7 @@ struct ftpinfo ftp = { FTPUSER, FTPPASS, "",  { { { 0 } } } , 21, 0};
 struct ftpinfo ftp = { FTPUSER, FTPPASS, "", { 0 }, 21, 0};
 #endif
 struct hostent *target = NULL;
-char **fakeargv = (char **) safe_malloc(sizeof(char *) * (argc + 1));
+char **fakeargv;
 struct hoststruct *currenths;
 char emptystring[1];
 int sourceaddrwarning = 0; /* Have we warned them yet about unguessable
@@ -84,7 +282,11 @@ struct option long_options[] =
   {"oN", required_argument, 0, 0},
   {"oM", required_argument, 0, 0},  
   {"oH", required_argument, 0, 0},  
+  {"iL", required_argument, 0, 0},  
+  {"iR", no_argument, 0, 0},  
   {"initial_rtt_timeout", required_argument, 0, 0},
+  {"randomize_hosts", no_argument, 0, 0},
+  {"rH", no_argument, 0, 0},
   {0, 0, 0, 0}
 };
 
@@ -106,26 +308,19 @@ exit(0);
 #endif
 
 /* argv faking silliness */
+fakeargv = (char **) safe_malloc(sizeof(char *) * (argc + 1));
 for(i=0; i < argc; i++) {
-  fakeargv[i] = safe_malloc(strlen(argv[i]) + 1);
-  strncpy(fakeargv[i], argv[i], strlen(argv[i]) + 1);
+  fakeargv[i] = strdup(argv[i]);
 }
 fakeargv[argc] = NULL;
 
-/* Seed lame random number generator */
-srand(get_random_int());
-
-/* initialize our options */
-options_init();
-
 emptystring[0] = '\0'; /* It wouldn't be an emptystring w/o this ;) */
 
-
-if (argc < 2 ) printusage(argv[0]);
+if (argc < 2 ) printusage(argv[0], -1);
 
 /* OK, lets parse these args! */
-
-while((arg = getopt_long_only(argc,fakeargv,"Ab:D:d::e:Ffg:hIi:M:m:NnOo:P:p:qRrS:s:T:Vv", long_options, &option_index)) != EOF) {
+optind = 1; /* so it can be called multiple times */
+while((arg = getopt_long_only(argc,fakeargv,"b:D:d::e:Ffg:hIi:M:m:NnOo:P:p:qRrS:s:T:Vv", long_options, &option_index)) != EOF) {
   switch(arg) {
   case 0:
     if (strcmp(long_options[option_index].name, "max_rtt_timeout") == 0) {
@@ -149,6 +344,10 @@ while((arg = getopt_long_only(argc,fakeargv,"Ab:D:d::e:Ffg:hIi:M:m:NnOo:P:p:qRrS
 	fatal("scan_delay must be greater than 0");
       }   
       o.max_parallelism = 1;
+    } else if (strcmp(long_options[option_index].name, "randomize_hosts") == 0
+	       || strcmp(long_options[option_index].name, "rH") == 0) {
+      o.randomize_hosts = 1;
+      o.host_group_sz = 2048;
     } else if (strcmp(long_options[option_index].name, "initial_rtt_timeout") == 0) {
       o.initial_rtt_timeout = atoi(optarg);
       if (o.initial_rtt_timeout <= 0) {
@@ -160,7 +359,7 @@ while((arg = getopt_long_only(argc,fakeargv,"Ab:D:d::e:Ffg:hIi:M:m:NnOo:P:p:qRrS
 	o.logfd = stdout;
 	o.nmap_stdout = fopen("/dev/null", "w");
 	if (!o.nmap_stdout) {
-	  fatal("Could not open /dev/null for writing for use with -sN - ");
+	  fatal("Could not open /dev/null for writing for use with -oN - ");
 	}
       } else {    
 	o.logfd = fopen(optarg, "w");
@@ -174,7 +373,7 @@ while((arg = getopt_long_only(argc,fakeargv,"Ab:D:d::e:Ffg:hIi:M:m:NnOo:P:p:qRrS
 	o.machinelogfd = stdout;
 	o.nmap_stdout = fopen("/dev/null", "w");
 	if (!o.nmap_stdout) {
-	  fatal("Could not open /dev/null for writing for use with -sN - ");
+	  fatal("Could not open /dev/null for writing for use with -oN - ");
 	}
       } else {    
 	o.machinelogfd = fopen(optarg, "w");
@@ -184,11 +383,26 @@ while((arg = getopt_long_only(argc,fakeargv,"Ab:D:d::e:Ffg:hIi:M:m:NnOo:P:p:qRrS
 
     } else if (strcmp(long_options[option_index].name, "oH") == 0) {
       fatal("HTML output is not yet supported");
+    } else if (strcmp(long_options[option_index].name, "iL") == 0) {
+      if (inputfd) {
+	fatal("Only one input filename allowed");
+      }
+      if (!strcmp(optarg, "-")) {
+	inputfd = stdin;
+	fprintf(o.nmap_stdout, "Reading target specifications from stdin\n");
+      } else {    
+	inputfd = fopen(optarg, "r");
+	if (!inputfd) {
+	  fatal("Failed to open input file %s for reading", optarg);
+	}  
+	fprintf(o.nmap_stdout, "Reading target specifications from FILE: %s\n", optarg);
+      }
+    } else if (strcmp(long_options[option_index].name, "iR") == 0) {
+      o.generate_random_ips = 1;
     } else {
       fatal("Unknown long option (%s) given@#!$#$", long_options[option_index].name);
     }
     break;
-  case 'A': o.allowall++; break;
   case 'b': 
     o.bouncescan++;
     if (parse_bounce(&ftp, optarg) < 0 ) {
@@ -235,8 +449,8 @@ while((arg = getopt_long_only(argc,fakeargv,"Ab:D:d::e:Ffg:hIi:M:m:NnOo:P:p:qRrS
     o.magic_port_set = 1;
     if (!o.magic_port) fatal("-g needs nonzero argument");
     break;    
-  case 'h': 
-  case '?': printusage(argv[0]); break;
+  case 'h': printusage(argv[0], 0); break;
+  case '?': printusage(argv[0], -1); break;
   case 'I': o.identscan++; break;
   case 'i': 
     if (inputfd) {
@@ -351,7 +565,7 @@ while((arg = getopt_long_only(argc,fakeargv,"Ab:D:d::e:Ffg:hIi:M:m:NnOo:P:p:qRrS
   case 's': 
     if (!*optarg) {
       fprintf(stderr, "An option is required for -s, most common are -sT (tcp scan), -sS (SYN scan), -sF (FIN scan), -sU (UDP scan) and -sP (Ping scan)");
-      printusage(argv[0]);
+      printusage(argv[0], -1);
     }
       p = optarg;
       while(*p) {
@@ -370,7 +584,7 @@ while((arg = getopt_long_only(argc,fakeargv,"Ab:D:d::e:Ffg:hIi:M:m:NnOo:P:p:qRrS
 	  o.udpscan++;
 	  break;
 	case 'X':  o.xmasscan++;break;
-	default:  error("Scantype %c not supported\n",*p); printusage(argv[0]); break;
+	default:  error("Scantype %c not supported\n",*p); printusage(argv[0], -1); break;
 	}
 	p++;
       }
@@ -401,23 +615,18 @@ while((arg = getopt_long_only(argc,fakeargv,"Ab:D:d::e:Ffg:hIi:M:m:NnOo:P:p:qRrS
     }
     break;
   case 'V': 
-    printf("\nnmap V. %s by Fyodor (fyodor@dhp.com, www.insecure.org/nmap/)\n", VERSION); 
+    printf("\nnmap V. %s\n", VERSION); 
     exit(0);
     break;
   case 'v': o.verbose++; break;
   }
 }
 
-
-/* Trap these sigs for cleanup */
-signal(SIGINT, sigdie);
-signal(SIGTERM, sigdie);
-signal(SIGHUP, sigdie); 
 if (!o.debugging)
   signal(SIGSEGV, sigdie); 
 
-
- fprintf(o.nmap_stdout, "\nStarting nmap V. %s by Fyodor (fyodor@dhp.com, www.insecure.org/nmap/)\n", VERSION);
+  if (!o.interactivemode)
+     fprintf(o.nmap_stdout, "\nStarting nmap V. %s by fyodor@insecure.org ( www.insecure.org/nmap/ )\n", VERSION);
 
 if (o.pingtype == PINGTYPE_UNKNOWN) {
   if (o.isr00t) o.pingtype = PINGTYPE_TCP|PINGTYPE_TCP_USE_ACK|PINGTYPE_ICMP;
@@ -638,12 +847,25 @@ if (randomize)
 
 starttime = time(NULL);
 
-while((host_spec = grab_next_host_spec(inputfd, argc, fakeargv))) {
-  while((currenths = nexthost(host_spec, 500)) && currenths->host.s_addr) {
+/* Time to create a hostgroup state object filled with all the requested
+   machines */
+host_exp_group = safe_malloc(o.host_group_sz * sizeof(char *));
+
+while(1) {
+  while(num_host_exp_groups < o.host_group_sz &&
+	(host_spec = grab_next_host_spec(inputfd, argc, fakeargv))) {
+    host_exp_group[num_host_exp_groups++] = strdup(host_spec);
+  }
+  if (num_host_exp_groups == 0)
+    break;
+  hostgroup_state_init(&hstate, o.host_group_sz, o.randomize_hosts, 
+		       host_exp_group, num_host_exp_groups);
+  
+  while((currenths = nexthost(&hstate)) && currenths->host.s_addr) {
     numhosts_scanned++;
     if (currenths->flags & HOST_UP) 
       numhosts_up++;
-
+    
     /* Set timeout info */
     currenths->timedout = 0;
     if (o.host_timeout) {
@@ -652,178 +874,182 @@ while((host_spec = grab_next_host_spec(inputfd, argc, fakeargv))) {
       currenths->host_timeout.tv_sec += currenths->host_timeout.tv_usec / 1000000;
       currenths->host_timeout.tv_usec %= 1000000;
     }
-
+    
     /*    printf("Nexthost() returned: %s\n", inet_ntoa(currenths->host));*/
     target = NULL;
     if (((currenths->flags & HOST_UP) || resolve_all) && !o.noresolve)
       target = gethostbyaddr((char *) &currenths->host, 4, AF_INET);
     if (target) {
       currenths->name = strdup(target->h_name);
+  }
+  else {
+    currenths->name = emptystring;
+  }
+
+  if (o.source) memcpy(&currenths->source_ip, o.source, sizeof(struct in_addr));
+  if (!o.pingscan) {
+    if (o.pingtype != PINGTYPE_NONE && (currenths->flags & HOST_UP) && (o.verbose || o.debugging)) 
+      fprintf(o.nmap_stdout, "Host %s (%s) appears to be up ... good.\n", currenths->name, inet_ntoa(currenths->host));    
+    else if (o.verbose && o.pingtype != PINGTYPE_NONE && !(currenths->flags & HOST_UP)) {  
+      if (resolve_all)
+	nmap_log("Host %s (%s) appears to be down, skipping it.\n", currenths->name, inet_ntoa(currenths->host));
+      else fprintf(o.nmap_stdout, "Host %s (%s) appears to be down, skipping it.\n", currenths->name, inet_ntoa(currenths->host));
+    }
+
+  }
+  else {
+    if (currenths->flags & HOST_UP) {  
+      nmap_log("Host %s (%s) appears to be up.\n", currenths->name, inet_ntoa(currenths->host));    
+      nmap_machine_log("Host: %s (%s)\tStatus: Up\n", inet_ntoa(currenths->host), currenths->name);
+    }
+    else 
+      if (o.verbose || o.debugging || resolve_all) {    
+	if (resolve_all)
+	  nmap_log("Host %s (%s) appears to be down.\n", currenths->name, inet_ntoa(currenths->host));
+	else fprintf(o.nmap_stdout, "Host %s (%s) appears to be down.\n", currenths->name, inet_ntoa(currenths->host));
+      }
+  }
+
+  if (currenths->wierd_responses) {  
+    if (!(currenths->flags & HOST_UP))
+      nmap_log("Host  %s (%s) seems to be a subnet broadcast address (returned %d extra pings).  Skipping host.\n",  currenths->name, inet_ntoa(currenths->host), currenths->wierd_responses);
+    else
+      nmap_log("Host  %s (%s) seems to be a subnet broadcast address (returned %d extra pings).  Still scanning it.\n",  currenths->name, inet_ntoa(currenths->host), currenths->wierd_responses);
+    nmap_machine_log("Host: %s (%s)\tStatus: Smurf (%d responses)\n",  inet_ntoa(currenths->host), currenths->name, currenths->wierd_responses);
+  }
+ 
+  /* The !currenths->wierd_responses was commented out after I found
+     a smurf address which DID allow port scanninng and you could even
+     telnetthere.  wierd :0 
+     IGNORE THAT COMMENT!  The check is back again ... for now 
+     NOPE -- gone again */
+    
+  if (currenths->flags & HOST_UP /*&& !currenths->wierd_responses*/ &&
+      !o.pingscan) {
+   
+    if (currenths->flags & HOST_UP && !currenths->source_ip.s_addr && ( o.windowscan || o.synscan || o.finscan || o.maimonscan || o.udpscan || o.nullscan || o.xmasscan)) {
+      if (gethostname(myname, MAXHOSTNAMELEN) || 
+	  !(target = gethostbyname(myname)))
+	fatal("Cannot get hostname!  Try using -S <my_IP_address> or -e <interface to scan through>\n"); 
+      memcpy(&currenths->source_ip, target->h_addr_list[0], sizeof(struct in_addr));
+      if (! sourceaddrwarning) {
+	fprintf(stderr, "WARNING:  We could not determine for sure which interface to use, so we are guessing %s .  If this is wrong, use -S <my_IP_address>.\n", inet_ntoa(currenths->source_ip));
+	sourceaddrwarning = 1;
+      }
+    }
+   
+    /* Figure out what link-layer device (interface) to use (ie eth0, ppp0, etc) */
+    if (!*currenths->device && currenths->flags & HOST_UP && (o.nullscan || o.xmasscan || o.udpscan || o.finscan || o.maimonscan ||  o.synscan || o.osscan || o.windowscan) && (ipaddr2devname( currenths->device, &currenths->source_ip) != 0))
+      fatal("Could not figure out what device to send the packet out on!  You might possibly want to try -S (but this is probably a bigger problem).  If you are trying to sp00f the source of a SYN/FIN scan with -S <fakeip>, then you must use -e eth0 (or other devicename) to tell us what interface to use.\n");
+    /* Set up the decoy */
+    o.decoys[o.decoyturn] = currenths->source_ip;
+   
+    /* Time for some actual scanning! */    
+    if (o.synscan) pos_scan(currenths, ports, SYN_SCAN);
+    if (o.windowscan) pos_scan(currenths, ports, WINDOW_SCAN);
+    if (o.connectscan) pos_scan(currenths, ports, CONNECT_SCAN);      
+
+    if (o.finscan) super_scan(currenths, ports, FIN_SCAN);
+    if (o.xmasscan) super_scan(currenths, ports, XMAS_SCAN);
+    if (o.nullscan) super_scan(currenths, ports, NULL_SCAN);
+    if (o.maimonscan) super_scan(currenths, ports, MAIMON_SCAN);
+    if (o.udpscan) super_scan(currenths, ports, UDP_SCAN);
+   
+    if (o.bouncescan) {
+      if (ftp.sd <= 0) ftp_anon_connect(&ftp);
+      if (ftp.sd > 0) bounce_scan(currenths, ports, &ftp);
+    }
+
+    /* This scantype must be after any TCP or UDP scans ... */
+    if (o.rpcscan)  pos_scan(currenths, ports, RPC_SCAN);
+
+
+    if (o.osscan) {
+      os_scan(currenths, ports);
+    }
+
+    if (currenths->timedout) {
+      nmap_log("Skipping host  %s (%s) due to host timeout\n", currenths->name,
+	       inet_ntoa(currenths->host));
+      nmap_machine_log("Host: %s (%s)\tStatus: Timeout", 
+		       inet_ntoa(currenths->host), currenths->name);
+    }
+    else if (!currenths->ports && !o.pingscan) {
+      nmap_log("No ports open for host %s (%s)\n", currenths->name,
+	       inet_ntoa(currenths->host));
+      nmap_machine_log("Host: %s (%s)\tStatus: Up", 
+		       inet_ntoa(currenths->host), currenths->name);
     }
     else {
-      currenths->name = emptystring;
+      if (currenths->ports) {
+	nmap_log("Interesting ports on %s (%s):\n", currenths->name, 
+		 inet_ntoa(currenths->host));
+	nmap_machine_log("Host: %s (%s)", inet_ntoa(currenths->host), 
+			 currenths->name);
+	invertfirewalled(&currenths->ports, ports);
+	printandfreeports(currenths->ports);
+      }
+      if (o.osscan) {
+	if (currenths->seq.responses > 3) {
+	  nmap_log("%s", seqreport(&(currenths->seq)));
+	  nmap_machine_log("\tSeq Index: %d", currenths->seq.index);
+	}
+	if (currenths->FP_matches[0]) {
+	  nmap_machine_log("\tOS: %s",  currenths->FP_matches[0]->OS_name);
+	  i = 1;
+	  while(currenths->FP_matches[i]) {
+	    nmap_machine_log("|%s", currenths->FP_matches[i]->OS_name);
+	    i++;
+	  }
+	  if (!currenths->FP_matches[1])
+	    nmap_log("Remote operating system guess: %s", 
+		     currenths->FP_matches[0]->OS_name);
+	  else  {
+	    nmap_log("Remote OS guesses: %s", 
+		     currenths->FP_matches[0]->OS_name);
+	    i = 1;
+	    while(currenths->FP_matches[i]) {
+	      nmap_log(", %s", currenths->FP_matches[i]->OS_name);
+	      i++;
+	    }
+	  }
+	  nmap_log("\n");	  
+	  if (currenths->goodFP >= 0 && (o.debugging || o.verbose > 1)) {
+	    nmap_log("OS Fingerprint:\n%s\n", fp2ascii(currenths->FPs[currenths->goodFP]));
+	  }
+	  nmap_log("\n");
+	} else {
+	  if (currenths->goodFP == ENOMATCHESATALL && o.scan_delay < 500) {
+	    nmap_log("No OS matches for host (If you know what OS is running on it, see http://www.insecure.org/cgi-bin/nmap-submit.cgi).\nTCP/IP fingerprint:\n%s\n\n", mergeFPs(currenths->FPs, currenths->numFPs));
+	  } else if (currenths->goodFP == ETOOMANYMATCHES) {
+	    nmap_log("Too many fingerprints match this host for me to give an accurate OS guess\n");
+	    if (o.debugging || o.verbose) {
+	      nmap_log("TCP/IP fingerprint:\n%s\n\n",  mergeFPs(currenths->FPs, currenths->numFPs));
+	    }
+	  }
+	}
+	for(i=0; i < currenths->numFPs; i++)
+	  freeFingerPrint(currenths->FPs[i]);
+      }
     }
 
-    if (o.source) memcpy(&currenths->source_ip, o.source, sizeof(struct in_addr));
-if (!o.pingscan) {
-  if (o.pingtype != PINGTYPE_NONE && (currenths->flags & HOST_UP) && (o.verbose || o.debugging)) 
-    fprintf(o.nmap_stdout, "Host %s (%s) appears to be up ... good.\n", currenths->name, inet_ntoa(currenths->host));    
-  else if (o.verbose && o.pingtype != PINGTYPE_NONE && !(currenths->flags & HOST_UP)) {  
-    if (resolve_all)
-      nmap_log("Host %s (%s) appears to be down, skipping it.\n", currenths->name, inet_ntoa(currenths->host));
-    else fprintf(o.nmap_stdout, "Host %s (%s) appears to be down, skipping it.\n", currenths->name, inet_ntoa(currenths->host));
+    if (o.machinelogfd) fflush(o.machinelogfd);
+    if (o.debugging) fprintf(o.nmap_stdout, "Final times for host: srtt: %d rttvar: %d  to: %d\n", currenths->to.srtt, currenths->to.rttvar, currenths->to.timeout);
+    nmap_machine_log("\n");
   }
-
-}
-else {
-  if (currenths->flags & HOST_UP) {  
-    nmap_log("Host %s (%s) appears to be up.\n", currenths->name, inet_ntoa(currenths->host));    
-    nmap_machine_log("Host: %s (%s)\tStatus: Up\n", inet_ntoa(currenths->host), currenths->name);
+  fflush(stdout);
+  if (o.machinelogfd) fflush(o.machinelogfd);
+  if (o.logfd) fflush(o.logfd);
   }
-  else 
-    if (o.verbose || o.debugging || resolve_all) {    
-      if (resolve_all)
-	nmap_log("Host %s (%s) appears to be down.\n", currenths->name, inet_ntoa(currenths->host));
-      else fprintf(o.nmap_stdout, "Host %s (%s) appears to be down.\n", currenths->name, inet_ntoa(currenths->host));
-    }
+/* Free my host expressions */
+  for(i=0; i < num_host_exp_groups; i++)
+    free(host_exp_group[i]);
+  num_host_exp_groups = 0;
 }
-
- if (currenths->wierd_responses) {  
-   if (!(currenths->flags & HOST_UP))
-     nmap_log("Host  %s (%s) seems to be a subnet broadcast address (returned %d extra pings).  Skipping host.\n",  currenths->name, inet_ntoa(currenths->host), currenths->wierd_responses);
-   else
-     nmap_log("Host  %s (%s) seems to be a subnet broadcast address (returned %d extra pings).  Still scanning it.\n",  currenths->name, inet_ntoa(currenths->host), currenths->wierd_responses);
-   nmap_machine_log("Host: %s (%s)\tStatus: Smurf (%d responses)\n",  inet_ntoa(currenths->host), currenths->name, currenths->wierd_responses);
- }
- 
- /* The !currenths->wierd_responses was commented out after I found
-    a smurf address which DID allow port scanninng and you could even
-    telnetthere.  wierd :0 
-    IGNORE THAT COMMENT!  The check is back again ... for now 
-    NOPE -- gone again */
-    
- if (currenths->flags & HOST_UP /*&& !currenths->wierd_responses*/ &&
-     !o.pingscan) {
-   
-   if (currenths->flags & HOST_UP && !currenths->source_ip.s_addr && ( o.windowscan || o.synscan || o.finscan || o.maimonscan || o.udpscan || o.nullscan || o.xmasscan)) {
-     if (gethostname(myname, MAXHOSTNAMELEN) || 
-	 !(target = gethostbyname(myname)))
-       fatal("Cannot get hostname!  Try using -S <my_IP_address> or -e <interface to scan through>\n"); 
-     memcpy(&currenths->source_ip, target->h_addr_list[0], sizeof(struct in_addr));
-     if (! sourceaddrwarning) {
-       fprintf(stderr, "WARNING:  We could not determine for sure which interface to use, so we are guessing %s .  If this is wrong, use -S <my_IP_address>.\n", inet_ntoa(currenths->source_ip));
-       sourceaddrwarning = 1;
-     }
-   }
-   
-   /* Figure out what link-layer device (interface) to use (ie eth0, ppp0, etc) */
-   if (!*currenths->device && currenths->flags & HOST_UP && (o.nullscan || o.xmasscan || o.udpscan || o.finscan || o.maimonscan ||  o.synscan || o.osscan || o.windowscan) && (ipaddr2devname( currenths->device, &currenths->source_ip) != 0))
-     fatal("Could not figure out what device to send the packet out on!  You might possibly want to try -S (but this is probably a bigger problem).  If you are trying to sp00f the source of a SYN/FIN scan with -S <fakeip>, then you must use -e eth0 (or other devicename) to tell us what interface to use.\n");
-   /* Set up the decoy */
-   o.decoys[o.decoyturn] = currenths->source_ip;
-   
-   /* Time for some actual scanning! */    
-   if (o.synscan) pos_scan(currenths, ports, SYN_SCAN);
-   if (o.windowscan) pos_scan(currenths, ports, WINDOW_SCAN);
-   if (o.connectscan) pos_scan(currenths, ports, CONNECT_SCAN);      
-
-   if (o.finscan) super_scan(currenths, ports, FIN_SCAN);
-   if (o.xmasscan) super_scan(currenths, ports, XMAS_SCAN);
-   if (o.nullscan) super_scan(currenths, ports, NULL_SCAN);
-   if (o.maimonscan) super_scan(currenths, ports, MAIMON_SCAN);
-   if (o.udpscan) super_scan(currenths, ports, UDP_SCAN);
-   
-   if (o.bouncescan) {
-     if (ftp.sd <= 0) ftp_anon_connect(&ftp);
-     if (ftp.sd > 0) bounce_scan(currenths, ports, &ftp);
-   }
-
-   /* This scantype must be after any TCP or UDP scans ... */
-   if (o.rpcscan)  pos_scan(currenths, ports, RPC_SCAN);
-
-
-   if (o.osscan) {
-     os_scan(currenths, ports);
-   }
-
-   if (currenths->timedout) {
-      nmap_log("Skipping host  %s (%s) due to host timeout\n", currenths->name,
-	      inet_ntoa(currenths->host));
-     nmap_machine_log("Host: %s (%s)\tStatus: Timeout", 
-		      inet_ntoa(currenths->host), currenths->name);
-   }
-   else if (!currenths->ports && !o.pingscan) {
-     nmap_log("No ports open for host %s (%s)\n", currenths->name,
-	      inet_ntoa(currenths->host));
-     nmap_machine_log("Host: %s (%s)\tStatus: Up", 
-		      inet_ntoa(currenths->host), currenths->name);
-   }
-   else {
-     if (currenths->ports) {
-       nmap_log("Interesting ports on %s (%s):\n", currenths->name, 
-		inet_ntoa(currenths->host));
-       nmap_machine_log("Host: %s (%s)", inet_ntoa(currenths->host), 
-			currenths->name);
-       invertfirewalled(&currenths->ports, ports);
-       printandfreeports(currenths->ports);
-     }
-     if (o.osscan) {
-       if (currenths->seq.responses > 3) {
-	 nmap_log("%s", seqreport(&(currenths->seq)));
-	 nmap_machine_log("\tSeq Index: %d", currenths->seq.index);
-       }
-       if (currenths->FP_matches[0]) {
-	 nmap_machine_log("\tOS: %s",  currenths->FP_matches[0]->OS_name);
-	 i = 1;
-	 while(currenths->FP_matches[i]) {
-	   nmap_machine_log("|%s", currenths->FP_matches[i]->OS_name);
-	   i++;
-	 }
-	 if (!currenths->FP_matches[1])
-	   nmap_log("Remote operating system guess: %s", 
-		    currenths->FP_matches[0]->OS_name);
-	 else  {
-	   nmap_log("Remote OS guesses: %s", 
-		    currenths->FP_matches[0]->OS_name);
-	   i = 1;
-	   while(currenths->FP_matches[i]) {
-	     nmap_log(", %s", currenths->FP_matches[i]->OS_name);
-	     i++;
-	   }
-	 }
-	 nmap_log("\n");	  
-	 if (currenths->goodFP >= 0 && (o.debugging || o.verbose > 1)) {
-	   nmap_log("OS Fingerprint:\n%s\n", fp2ascii(currenths->FPs[currenths->goodFP]));
-	 }
-	 nmap_log("\n");
-       } else {
-	 if (currenths->goodFP == ENOMATCHESATALL && o.scan_delay < 500) {
-	   nmap_log("No OS matches for host (If you know what OS is running on it, see http://www.insecure.org/cgi-bin/nmap-submit.cgi).\nTCP/IP fingerprint:\n%s\n\n", mergeFPs(currenths->FPs, currenths->numFPs));
-	 } else if (currenths->goodFP == ETOOMANYMATCHES) {
-	   nmap_log("Too many fingerprints match this host for me to give an accurate OS guess\n");
-	   if (o.debugging || o.verbose) {
-	     nmap_log("TCP/IP fingerprint:\n%s\n\n",  mergeFPs(currenths->FPs, currenths->numFPs));
-	   }
-	 }
-       }
-       for(i=0; i < currenths->numFPs; i++)
-	 freeFingerPrint(currenths->FPs[i]);
-     }
-   }
-
-   if (o.machinelogfd) fflush(o.machinelogfd);
-   if (o.debugging) fprintf(o.nmap_stdout, "Final times for host: srtt: %d rttvar: %d  to: %d\n", currenths->to.srtt, currenths->to.rttvar, currenths->to.timeout);
-   nmap_machine_log("\n");
- }
- fflush(stdout);
- if (o.machinelogfd) fflush(o.machinelogfd);
- if (o.logfd) fflush(o.logfd);
-  }
-}
-
+free(host_exp_group);
 timep = time(NULL);
 i = timep - starttime;
- fprintf(o.nmap_stdout, "Nmap run completed -- %d %s (%d %s up) scanned in %d %s\n", numhosts_scanned, (numhosts_scanned == 1)? "IP address" : "IP addresses", numhosts_up, (numhosts_up == 1)? "host" : "hosts",  i, (i == 1)? "second": "seconds");
+fprintf(o.nmap_stdout, "Nmap run completed -- %d %s (%d %s up) scanned in %d %s\n", numhosts_scanned, (numhosts_scanned == 1)? "IP address" : "IP addresses", numhosts_up, (numhosts_up == 1)? "host" : "hosts",  i, (i == 1)? "second": "seconds");
 if (o.logfd || o.machinelogfd) {
 
   Strncpy(mytime, ctime(&timep), sizeof(mytime));
@@ -838,6 +1064,11 @@ if (o.logfd || o.machinelogfd) {
 
 }
 
+/* Free fake argv */
+for(i=0; i < argc; i++)
+     free(fakeargv[i]);
+free(fakeargv);
+
 return 0;
 }
 
@@ -848,13 +1079,10 @@ o.debugging = DEBUGGING;
 o.verbose = DEBUGGING;
 /*o.max_parallelism = MAX_SOCKETS;*/
 o.magic_port = 33000 + (get_random_uint() % 31000);
-#ifdef IGNORE_ZERO_AND_255_HOSTS
-o.allowall = !(IGNORE_ZERO_AND_255_HOSTS);
-#endif
 o.pingtype = PINGTYPE_UNKNOWN;
 o.decoyturn = -1;
 o.nmap_stdout = stdout;
-
+o.host_group_sz = HOST_GROUP_SZ;
 o.min_rtt_timeout = MIN_RTT_TIMEOUT;
 o.max_rtt_timeout = MAX_RTT_TIMEOUT;
 o.initial_rtt_timeout = INITIAL_RTT_TIMEOUT;
@@ -1050,47 +1278,54 @@ unsigned short *getpts(char *origexpr) {
   return ports;
 }
 
-void printusage(char *name) {
-printf("nmap V. %s usage: nmap [Scan Type(s)] [Options] <host or net #1 ... [#N]>\n\
-Scan types\n\
-   -sT tcp connect() port scan\n\
-   -sS tcp SYN stealth port scan (must be root)\n\
-   -sF,-sX,-sN Stealth FIN, Xmas, or Null scan (only works against UNIX).\n\
-   -sP ping \"scan\". Find which hosts on specified network(s) are up but don't \n\
-       port scan them\n\
-   -sU UDP port scan, must be r00t\n\
-   -sR RPC scan (use in addition to other TCP and/or UDP scan type(s)\n\
-   -b <ftp_relay_host> ftp \"bounce attack\" port scan\n\
-Options (none are required, most can be combined):\n\
-   -f use tiny fragmented packets for SYN, FIN, Xmas, or NULL scan.\n\
-   -P0 Don't ping hosts (needed to scan www.microsoft.com and others)\n\
-   -PT Use only \"TCP Ping\" to see what hosts are up (for normal & ping scans).\n\
-   -PI Use only ICMP ping to determines hosts that are up (default is ICMP&TCP)\n\
-   -PS Use TCP SYN sweep rather than the default ACK sweep used in \"TCP ping\"\n\
-   -O Use TCP/IP fingerprinting to guess what OS the remote host is running\n\
-   -p <range> ports: ex: \'-p 23\' will only try port 23 of the host(s)\n\
-                  \'-p 20-30,63000-\' scans 20-30 and 63000-65535. default: 1-1024 + /etc/services\n\
-   -Ddecoy_host1,decoy2,decoy3[,...] Launch scans from decoy host(s) along\n\
-      with the real one.\n\
-   -T <Paranoid|Sneaky|Polite|Normal|Aggressive|Insane> Use specified timing policy.\n\
-   -F fast scan. Only scans ports in /etc/services, a la strobe(1).\n\
-   -I Get identd (rfc 1413) info on listening TCP processes.\n\
-   -n Don't DNS resolve anything unless we have to (makes ping scans faster)\n\
-   -R Try to resolve all hosts, even down ones (can take a lot of time)\n\
-   -oN <logfile> Output scan logs to <logfile> in normal human readable format.\n\
-   -oM <logfile> Output scan logs to <logfile> in machine parseable format.\n\
-   -i <inputfile> Grab IP numbers or hostnames from file.  Use '-' for stdin\n\
-   -g <portnumber> Sets the source port used for scans.  20 and 53 are good choices.\n\
-   -S <your_IP> If you want to specify the source address of SYN or FYN scan.\n", VERSION);
-if (!o.allowall) printf("   -A Allow scanning .0 and .255 addresses" );
-printf("   -v Verbose. Its use is recommended.  Use twice for greater effect.\n\
-   -h help, print this junk.  Also see http://www.insecure.org/nmap/\n\
-   -V Print version number and exit.\n");
-printf("   -e <devicename>. Send packets on interface <devicename> (eth0,ppp0,etc.).\n"); 
-printf("Hostnames specified as internet hostname or IP address.  Optional '/mask' \
-specifies subnet. For example:  cert.org/24 or 192.88.209.5/24 or 192.88.209.0-255 or '128.88.209.*' all scan CERT's Class C.\n\
-SEE THE MAN PAGE FOR MORE THOROUGH EXPLANATIONS AND EXAMPLES.\n");
-exit(0);
+void printusage(char *name, int rc) {
+printf(
+"nmap V. %s Usage: nmap [Scan Type(s)] [Options] <host or net list>\n"
+"Some Common Scan Types ('*' options require root privileges)\n"
+"  -sT TCP connect() port scan (default)\n"
+"* -sS TCP SYN stealth port scan (best all-around TCP scan)\n"
+"* -sU UDP port scan\n"
+"  -sP ping scan (Find any reachable machines)\n"
+"* -sF,-sX,-sN Stealth FIN, Xmas, or Null scan (experts only)\n"
+"  -sR/-I RPC/Identd scan (use with other scan types)\n"
+"Some Common Options (none are required, most can be combined):\n"
+"* -O Use TCP/IP fingerprinting to guess remote operating system\n"
+"  -p <range> ports to scan.  Example range: '1-1024,1080,6666,31337'\n"
+"  -F Only scans ports listed in nmap-services\n"
+"  -v Verbose. Its use is recommended.  Use twice for greater effect.\n"
+"  -P0 Don't ping hosts (needed to scan www.microsoft.com and others)\n"
+"* -Ddecoy_host1,decoy2[,...] Hide scan using many decoys\n"
+"  -T <Paranoid|Sneaky|Polite|Normal|Aggressive|Insane> General timing policy\n"
+"  -n/-R Never do DNS resolution/Always resolve [default: sometimes resolve]\n"
+"  -oN/-oM <logfile> Output normal/machine parsable scan logs to <logfile>\n"
+"  -iL <inputfile> Get targets from file; Use '-' for stdin\n"
+"* -S <your_IP>/-e <devicename> Specify source address or network interface\n"
+"  --interactive Go into interactive mode (then press h for help)\n"
+"Example: nmap -v -sS -O www.my.com 192.168.0.0/16 '192.88-90.*.*'\n"
+"SEE THE MAN PAGE FOR MANY MORE OPTIONS, DESCRIPTIONS, AND EXAMPLES \n", VERSION);
+exit(rc);
+}
+
+void printinteractiveusage() {
+printf(
+"Nmap Interactive Commands:\n\
+n <nmap args> -- executes an nmap scan using the arguments given and\n\
+                 waits for nmap to finish.  Results are printed to the\n\
+		 screen (of course you can still use file output commands).\n\
+! <command>   -- runs shell command given in the foreground\n\
+x             -- Exit Nmap\n\
+f [--spoof <fakeargs>] [--nmap_path <path>] <nmap args>\n\
+              -- Executes nmap in the background (results are NOT\n\
+	      printed to the screen).  You should generally specify a\n\
+	      file for results (with -oM or -oN).  If you specify\n\
+	      fakeargs with --spoof, Nmap will try to make those\n\
+	      appear in ps listings.  If you wish to execute a special\n\
+	      version of Nmap, specify --nmap_path.\n\
+n -h          -- Obtain help with Nmap syntax\n\
+h             -- Prints this help screen.\n\
+Examples:\n\
+n -sS -O -v example.com/24\n\
+f --spoof \"/usr/local/bin/pico -z hello.c\" -sS -oN /tmp/e.log example.com/24\n\n");
 }
 
 char *seqreport(struct seq_info *seq) {
@@ -1107,7 +1342,7 @@ int i;
    strcpy(p, "Sequence numbers: ");
    p += 18;
    for(i=0; i < seq->responses; i++) {
-     p += snprintf(p, 16, "%lX ", seq->seqs[i]);
+     p += snprintf(p, 16, "%X ", seq->seqs[i]);
    }
    *--p = '\n';
    strcat(report, tmp);
@@ -1286,20 +1521,30 @@ char *grab_next_host_spec(FILE *inputfd, int argc, char **fakeargv) {
   static char host_spec[512];
   int host_spec_index;
   int ch;
-  if (!inputfd) {
+  unsigned char *ipc;
+  struct in_addr ip;
+
+  if (o.generate_random_ips) {
+    do {    
+      ipc = (unsigned char *) &ip.s_addr;
+      get_random_bytes(ipc, 4);
+    } while(ipc[0] == 10 || ipc[0] > 224 || ipc[0] == 127 || !ipc[0]); /* Skip these private, multicast, reserved, and localhost addresses */
+    strcpy(host_spec, inet_ntoa(ip));
+  } else if (!inputfd) {
     return( (optind < argc)?  fakeargv[optind++] : NULL);
+  } else { 
+    host_spec_index = 0;
+    while((ch = getc(inputfd)) != EOF) {
+      if (ch == ' ' || ch == '\n' || ch == '\t' || ch == '\0') {
+	if (host_spec_index == 0) continue;
+	host_spec[host_spec_index] = '\0';
+	return host_spec;
+      } else if (host_spec_index < 511) {
+	host_spec[host_spec_index++] = (char) ch;
+      } else fatal("One of the host_specifications from your input file is too long (> %d chars)", sizeof(host_spec));
+    }
+    host_spec[host_spec_index] = '\0';
   }
-  host_spec_index = 0;
-  while((ch = getc(inputfd)) != EOF) {
-    if (ch == ' ' || ch == '\n' || ch == '\t' || ch == '\0') {
-      if (host_spec_index == 0) continue;
-      host_spec[host_spec_index] = '\0';
-      return host_spec;
-    } else if (host_spec_index < 511) {
-      host_spec[host_spec_index++] = (char) ch;
-    } else fatal("One of the host_specifications from your input file is too long (> %d chars)", sizeof(host_spec));
-  }
-  host_spec[host_spec_index] = '\0';
   if (!*host_spec) return NULL;
   return host_spec;
 }
@@ -1856,7 +2101,7 @@ portlist super_scan(struct hoststruct *target, unsigned short *portarray, stype 
  */
 
 if (!(pd = pcap_open_live(target->device, 92,  (o.spoofsource)? 1 : 0, 10, err0r)))
-      fatal("pcap_open_live: %s\nIf you are on Linux and getting Socket type not supported, try modprobe af_packet or recompile your kernel with SOCK_PACKET enabled.  If you are on bsd and getting device not configured, you need to recompile your kernel with Berkeley Packet Filter support.", err0r);
+      fatal("pcap_open_live: %s\nIf you are on Linux and getting Socket type not supported, try modprobe af_packet or recompile your kernel with SOCK_PACKET enabled.  If you are on bsd and getting device not configured, you need to recompile your kernel with Berkeley Packet Filter support.  If you are getting No such file or directory, try creating the device (eg cd /dev; MAKEDEV <device>; or use mknod)", err0r);
 
 if (pcap_lookupnet(target->device, &localnet, &netmask, err0r) < 0)
   fatal("Failed to lookup device subnet/netmask: %s", err0r);
@@ -2075,6 +2320,8 @@ if (o.debugging || o.verbose)
 		  } else newstate = PORT_FIREWALLED;
 		  break;
 		  
+		case 9:
+		case 10:
 		case 13: /* Administratively prohibited packet */
 		  newstate = PORT_FIREWALLED;
 		  break;		
@@ -2326,7 +2573,7 @@ portlist pos_scan(struct hoststruct *target, unsigned short *portarray, stype sc
   /* Init our raw socket */
   if ((scantype == SYN_SCAN) || (scantype == WINDOW_SCAN)) {  
     if ((rawsd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) < 0 )
-      pfatal("socket troubles in super_scan");
+      pfatal("socket troubles in pos_scan");
     /* We do not wan't to unblock the socket since we want to wait 
        if kernel send buffers fill up rather than get ENOBUF, and
        we won't be receiving on the socket anyway 
@@ -2356,7 +2603,7 @@ portlist pos_scan(struct hoststruct *target, unsigned short *portarray, stype sc
     
     if (!(pd = pcap_open_live(target->device, 100,  (o.spoofsource)? 1 : 0, 
 			      20, err0r)))
-      fatal("pcap_open_live: %s\nIf you are on Linux and getting Socket type not supported, try modprobe af_packet or recompile your kernel with SOCK_PACKET enabled.  If you are on bsd and getting device not configured, you need to recompile your kernel with Berkeley Packet Filter support.", err0r);
+      fatal("pcap_open_live: %s\nIf you are on Linux and getting Socket type not supported, try modprobe af_packet or recompile your kernel with SOCK_PACKET enabled.  If you are on bsd and getting device not configured, you need to recompile your kernel with Berkeley Packet Filter support.  If you are getting No such file or directory, try creating the device (eg cd /dev; MAKEDEV <device>; or use mknod)", err0r);
     
     if (pcap_lookupnet(target->device, &localnet, &netmask, err0r) < 0)
       fatal("Failed to lookup device subnet/netmask: %s", err0r);
@@ -3248,7 +3495,8 @@ struct timeval tv;
 		    hdump(icmp, ntohs(ip->ip_len) - sizeof(struct ip)); */
 	  if (icmp->icmp_type == 3) {
 	    if (icmp->icmp_code != 1 && icmp->icmp_code != 2 && 
-		icmp->icmp_code != 3 && icmp->icmp_code != 13) {
+		icmp->icmp_code != 3 && icmp->icmp_code != 13 &&
+		icmp->icmp_code != 9 && icmp->icmp_code != 10) {
 	      error("Unexpected ICMP type/code 3/%d unreachable packet:", icmp->icmp_code);
 	      hdump((unsigned char *)icmp, ntohs(ip->ip_len) - sizeof(struct ip));
 	      continue;
@@ -3615,6 +3863,16 @@ va_end(ap);
 return;
 }
 
+void reaper(int signo) {
+  int status;
+  pid_t pid;
+
+  if ((pid = wait(&status)) == -1) {
+    gh_perror("waiting to reap child");
+  } else {
+    fprintf(stderr, "\n[%d finished status=%d (%s)]\nnmap> ", (int) pid, status, (status == 0)? "success"  : "failure");
+  }
+}
 
 void sigdie(int signo) {
  switch(signo) {

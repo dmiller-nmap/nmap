@@ -35,7 +35,6 @@ while(<>) {
 	$si = $4;
 	if (index($fp{tseq}{cls}, $cls) == -1) {
 	    if ($fp{tseq}{cls}) {
-		print "Appending |$cls to $fp{tseq}{cls}\n";
 		$fp{tseq}{cls} = $fp{tseq}{cls} . qq^|$cls^;
 	    } else {
 		$fp{tseq}{cls} = $cls;
