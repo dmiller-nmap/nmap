@@ -10704,7 +10704,7 @@ PU(Resp=N)
 
 # Cisco 350 Access Point, software rev 12.02T1
 # Accelerated Networks VoDSL - But what sort of device?
-Fingerprint SonicWall SOHO firewall, Enterasys Matrix E1, or Accelerated Networks VoDSL, or Cisco 360 Access Point
+Fingerprint SonicWall SOHO firewall, Enterasys Matrix E1, or Accelerated Networks VoDSL, or Cisco 350 Access Point
 Class SonicWall | embedded || firewall
 Class Enterasys | embedded || switch
 Class Cisco | embedded || WAP
@@ -11902,8 +11902,11 @@ T6(Resp=Y%DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RIPCK=E%UCK=0%ULEN=134%DAT=E)
 
+# Sun SunOS 4.1.1 - 4.1.4 (or derivative), or GatorBox CS LocalTalk/Ethernet bridge
+# GatorBox CS LocalTalk/Ethernet bridge running GatorShare version 3.0.3 (build X4) software
 Fingerprint Sun SunOS 4.1.1 - 4.1.4 (or derivative)
 Class Sun | SunOS || general purpose
+Class Gatorbox | GatorShare || bridge
 TSeq(Class=64K)
 T1(DF=N%W=1000|2000|6000|C000%ACK=S++%Flags=AS%Ops=|M)
 T2(Resp=N)

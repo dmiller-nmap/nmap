@@ -1,5 +1,9 @@
 # Nmap Changelog ($Id$)
 
+o Changed xmloutputversion in XML output from 1.0 to 1.01 to note that
+  there was a slight change (which was actually the MAC stuff in 3.55).
+  Thanks to Lionel CONS (lionel.cons(a)cern.ch) for the suggestion.
+
 Nmap 3.55
 
 o Added MAC address printing.  If Nmap receives packet from a target
