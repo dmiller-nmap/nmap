@@ -1818,7 +1818,7 @@ portlist super_scan(struct hoststruct *target, unsigned short *portarray, stype 
  * header + 4 bytes of TCP port info.
  */
 
-if (!(pd = pcap_open_live(target->device, 92,  (o.spoofsource)? 1 : 0, 0, err0r)))
+if (!(pd = pcap_open_live(target->device, 92,  (o.spoofsource)? 1 : 0, 20, err0r)))
   fatal("pcap_open_live: %s", err0r);
 
 if (pcap_lookupnet(target->device, &localnet, &netmask, err0r) < 0)
