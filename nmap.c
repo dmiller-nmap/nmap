@@ -2043,7 +2043,7 @@ if (o.debugging || o.verbose)
     openlist = NULL;
     numqueries_ideal = initial_packet_width;
     printf("Done with round %d\n", tries);
-  } while(changed && ++tries < 18);   
+  } while(changed && ++tries < 20);   
 
   openlist = testinglist;
 
