@@ -1831,7 +1831,7 @@ if (!(pd = pcap_open_live(target->device, 92,  (o.spoofsource)? 1 : 0, 20, err0r
 if (pcap_lookupnet(target->device, &localnet, &netmask, err0r) < 0)
   fatal("Failed to lookup device subnet/netmask: %s", err0r);
 p = strdup(inet_ntoa(target->host));
-sprintf(filter, "(icmp and src host %s and dst host %s) or (tcp and src host %s and dst host %s and ( dst port %d or dst port %d)", p, inet_ntoa(target->source_ip), p, inet_ntoa(target->source_ip), o.magic_port , o.magic_port + 1);
+sprintf(filter, "(icmp and src host %s and dst host %s) or (tcp and src host %s and dst host %s and ( dst port %d or dst port %d))", p, inet_ntoa(target->source_ip), p, inet_ntoa(target->source_ip), o.magic_port , o.magic_port + 1);
  free(p);
  if (o.debugging)
    printf("Packet capture filter: %s\n", filter);
