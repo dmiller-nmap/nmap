@@ -349,7 +349,7 @@ return 0;
 
 void options_init() {
 bzero( (char *) &o, sizeof(struct ops));
-o.isr00t = !(geteuid()|geteuid());
+o.isr00t = !(geteuid());
 o.debugging = DEBUGGING;
 o.verbose = DEBUGGING;
 o.max_sockets = MAX_SOCKETS;
