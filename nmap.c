@@ -1948,7 +1948,7 @@ if (o.debugging || o.verbose)
 		to.srtt += delta >> 3;
 		to.rttvar += (ABS(delta) - to.rttvar) >> 2;
 		to.timeout = to.srtt + (to.rttvar << 2);
-		printf("srtt %d rttvar %d timeout %d ->",  to.srtt, to.rttvar, to.timeout);
+		printf("srtt %d rttvar %d timeout %d\n",  to.srtt, to.rttvar, to.timeout);
 		if (i > 0 && current->trynum > 0) {
 		  /* The first packet was apparently lost, slow down */
 		  numqueries_ideal *= fallback_percent;
