@@ -938,7 +938,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=Y%TOS=0%IPLEN=38%RIPTL=148%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
 # Contributed by Felix Lindner (flindner@gmx.de)
-Fingerprint AXCENT Raptor Firewall running on Windows NT 4.0/SP3
+Fingerprint AXENT Raptor Firewall running on Windows NT
 TSeq(Class=TR)
 T1(Resp=Y%DF=Y%W=2017%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
