@@ -345,6 +345,8 @@ void *realloc();
   /* XXX: Apache didn't have this one,
           so watch it be wrong :)... */
 #  define NET_SIZE_T size_t
+#elif defined(OPENBSD)
+#  define NET_SIZE_T socklen_t
 #elif defined(OS390)
 #  define NET_SIZE_T size_t
 #elif defined(SOLARIS)

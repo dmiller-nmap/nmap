@@ -1,5 +1,7 @@
 # Nmap Changelog ($Id$)
 
+Nmap 3.10ALPHA4
+
 o Applied patch by Max Schubert (nmap@webwizarddesign.com) which adds
   an add-port XML tag whenever a new port is found open when Nmap is
   running in verbose mode.  The new tag looks like:
@@ -13,6 +15,10 @@ o Added German translation of Nmap manpage by Marc Ruef
 o Includes a brand new French translation of the manpage by Sebastien
   Blanchet.  You could probably guess that it is available at
   http://www.insecure.org/nmap/data/nmap_manpage-fr.html
+
+o Applied some patches from Chad Loder (cloder@loder.us) which update
+  the random IP allocation pool and improve OpenBSD support.  Some
+  were from the OBSD Nmap patchlist.
 
 o Fixed a compile problem on machines without PF_INET6.  Thanks to
   Josef 'Jupp' Schugt (deusxmachina@webmail.co.za) for noting this.

@@ -232,7 +232,8 @@ short *iptr;
 if (numbytes < 0 || numbytes > 0xFFFF) return -1;
 
 if (bytesleft == 0) {
-  fp = fopen("/dev/urandom", "r");
+  fp = fopen("/dev/arandom", "r");
+  if (!fp) fp = fopen("/dev/urandom", "r");
   if (!fp) fp = fopen("/dev/random", "r");
   if (fp) {
     res = fread(bytebuf, 1, sizeof(bytebuf), fp);

@@ -4417,7 +4417,9 @@ T6(Resp=Y%DF=N%W=0%ACK=S%Flags=R%Ops=)
 T7(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(Resp=N)
 
-Fingerprint Linksys BEFW11S4 802.11B WAP
+# Linksys BEFW11S4 802.11B WAP
+# Linksys BEFSR41 firmware ver. 1.40.2
+Fingerprint Linksys BEFW11S4 WAP or BEFSR41 (firmware 1.40.2) router
 TSeq(Class=TD%gcd=<F4%SI=<1E%IPID=Z%TS=U)
 T1(DF=N%W=1000|C00|400|800%ACK=S++%Flags=AR%Ops=)
 T2(Resp=Y%DF=N%W=1000|C00|400|800%ACK=S%Flags=AR%Ops=)
