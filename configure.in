@@ -1,4 +1,10 @@
 
+if test -d /usr/local/lib; then
+  LDFLAGS="$LDFLAGS -L/usr/local/lib"
+fi
+if test -d /usr/local/include; then
+  CFLAGS="$CLFAGS -I/usr/local/include"
+fi
 
 dnl Process this file with autoconf to produce a configure script.
 AC_INIT(nmap.c)
@@ -54,15 +60,56 @@ AC_CHECK_LIB(socket, socket)
 fi
 
 dnl Check whether libpcap is already available
-AC_CHECK_LIB(pcap, pcap_datalink, pcap_rules="#"; have_libpcap=yes;
-AC_DEFINE(HAVE_LIBPCAP), LIBS="$LIBS -L$libpcapdir"; have_libpcap=no; pcap_rules="@echo Compiling libpcap; cd \$(LIBPCAPDIR); ./configure; \$(MAKE)")
-dnl if test $already_has_pcap = yes; then
-dnl      pcap_rules = "#"
-dnl      CFLAGS="$CFLAGS -D__STDC__=2"
-dnl else
-dnl       pcap_rules = '@echo Compiling libpcap; cd \$(LIBPCAPDIR); \$(MAKE)'
-dnl fi
-AC_SUBST(pcap_rules)
+AC_CHECK_LIB(pcap, pcap_datalink, have_libpcap=yes, have_libpcap=no)
+if test $have_libpcap = yes; then
+  AC_MSG_CHECKING(if libpcap version is recent enough)
+  SAVELIBS="$LIBS"
+  LIBS="$LIBS -lpcap"
+  AC_TRY_RUN([
+#include <stdio.h>
+extern char pcap_version[];
+int main() {
+  int major, minor;
+  sscanf(pcap_version,"%d.%d", &major, &minor);
+  if (major > 0) 
+    exit(0);
+  if (minor > 4)
+    exit(0);
+  if (minor < 4)
+    exit(1);
+  if (pcap_version[3] > 'a')
+    exit(0);
+  if (pcap_version[3] == 'a') {
+    if(!sscanf(&pcap_version[4], "%d", &minor))
+      exit(1);
+    if (minor >= 6)
+      exit(0);
+    else
+      exit(1);
+  }
+  exit(1);
+}],
+[AC_MSG_RESULT(yes); have_libpcap=yes],
+[AC_MSG_RESULT(no); have_libpcap=no],
+[AC_MSG_RESULT(no); have_libpcap=no])
+fi
+LIBS="$SAVELIBS"
+if test $have_libpcap = yes; then
+  PCAP_DEPENDS=""
+  PCAP_CLEAN=""
+  PCAP_DIST_CLEAN=""
+  AC_DEFINE(HAVE_LIBPCAP)
+else
+  LDFLAGS="$LDFLAGS -L$libpcapdir"
+  CFLAGS="$CFLAGS -I$libpcapdir"
+  PCAP_DEPENDS='$(LIBPCAPDIR)/libpcap.a'
+  PCAP_CLEAN="pcap_clean"
+  PCAP_DIST_CLEAN="pcap_dist_clean"
+fi
+
+AC_SUBST(PCAP_DEPENDS)
+AC_SUBST(PCAP_CLEAN)
+AC_SUBST(PCAP_DIST_CLEAN)
 
 dnl Checks for header files.
 AC_HEADER_STDC

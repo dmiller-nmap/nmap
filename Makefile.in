@@ -9,7 +9,7 @@ srcdir = @srcdir@
 CC = @CC@
 CCOPT = 
 LIBPCAPDIR = @libpcapdir@
-INCLS = -I. -I$(LIBPCAPDIR)
+INCLS = -I.
 DEFS = @DEFS@
 CFLAGS = @CFLAGS@ $(CCOPT) $(DEFS) $(INCLS)
 LDFLAGS = @LDFLAGS@
@@ -26,14 +26,15 @@ OBJS = nmap.o targets.o tcpip.o error.o utils.o @COMPAT_OBJS@
 
 all: $(TARGET)
 
-$(TARGET): $(OBJS)
-#	@echo Compiling libpcap 
-#	$(MAKE) -C $(LIBPCAPDIR) #not all make's have this :( ...
-#	cd $(LIBPCAPDIR);  $(MAKE)
-	@pcap_rules@
+$(TARGET): $(OBJS) @PCAP_DEPENDS@
 	@echo Compiling nmap
 	rm -f $@
-	$(CC) -o $@ $(OBJS) $(LIBS)
+	$(CC) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
+
+$(LIBPCAPDIR)/libpcap.a: $(LIBPCAPDIR)/Makefile
+	@echo Compiling libpcap; cd $(LIBPCAPDIR); $(MAKE)
+$(LIBPCAPDIR)/Makefile:
+	@echo Configuring libpcap; cd $(LIBPCAPDIR); ./configure
 
 ci: checkin
 
@@ -71,14 +72,19 @@ static:
 	$(CC) $(CFLAGS) -static $(LDFLAGS) -o nmap.linux.bin  $(SRCS) $(LIBS)
 	strip nmap.linux.bin
 
-clean:
+clean: @PCAP_CLEAN@ my_clean
+my_clean:
 	rm -f $(OBJS) $(TARGET)
-#	$(MAKE) -C $(LIBPCAPDIR) clean
+pcap_clean:
 	cd $(LIBPCAPDIR); $(MAKE) clean
+pcap_dist_clean:
+	cd $(LIBPCAPDIR); $(MAKE) distclean
 
-distclean: clean
+distclean: my_clean my_distclean @PCAP_DIST_CLEAN@
+my_distclean:
 	rm -f Makefile Makefile.bak config.h stamp-h stamp-h.in \
 	         config.cache config.log config.status
+	
 
 depend:
 	$(MAKEDEPEND) $(INCLS) -s "# DO NOT DELETE" -- $(DEFS) -- $(SRCS)
