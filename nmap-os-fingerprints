@@ -3057,6 +3057,17 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
+# Thanks to Phil Wood, cpw@lanl.gov
+Fingerprint: IRIX 6.5 Origin2
+TSeq(Class=64K)
+T1(Resp=Y%DF=N%W=EF2A%ACK=S++%Flags=AS%Ops=MNWNNT)
+T2(Resp=N)
+T3(Resp=Y%DF=N%W=EF2A%ACK=O%Flags=A%Ops=NNT)
+T4(Resp=Y%DF=N%W=0%ACK=O%Flags=R%Ops=)
+T5(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(Resp=Y%DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
+PU(Resp=Y%DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 # Contributed by Roberto Totaro (roto@enigma.ethz.ch)
 # Fingerprint SGI O2 R5000 (IP32) running IRIX 6.5.7f
