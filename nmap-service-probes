@@ -1255,7 +1255,7 @@ match jabber m|^<stream:error>Invalid XML</stream:error>$| v/Jabber instant mess
 match kazaa-http m|^HTTP/1\.0 404 Not Found\r\nX-Kazaa-Username: ([-.+\w]+)\r\nX-Kazaa-Network: ([-.\w]+)\r\n| v/KaZaA P2P client//username: $1; network: $2/
 match kazaa-peerpoint m|^HTTP/1\.0 404 Not Found\n\r\n$| v/KaZaA P2P client Peer Point Manager///
 match msdtc m|^...\0..$|s v/Microsoft Distributed Transaction Coordinator///
-match msdtc m|^ERROR\n$|s v/(?) Microsoft Distributed Transaction Coordinator//error/
+match msdtc m|^ERROR\n$|s v/Microsoft Distributed Transaction Coordinator//error/
 
 # MLDonkey 2.5
 match napster m|^1INVALID REQUEST$| v/MLdonkey multi-network P2P client///

@@ -2,9 +2,18 @@
 
 UNRELEASED:
 
-o I hope to have fixed this compile problem: "checking for type of 6th
+o Applied a couple patches (with minor changes) from Oliver Eikemeier
+  (eikemeier(a)fillmore-labs.com) which fix an edge case relating to
+  decoy scanning IP ranges that must be sent through different
+  interfaces, and improves the Nmap response to certain error codes
+  returned by the FreeBSD firewall system.  The patches are from
+  http://cvsweb.freebsd.org/ports/security/nmap/files/ .
+
+o Many people have reported this error: "checking for type of 6th
   argument to recvfrom()... configure: error: Cannot find type for 6th
-  argument to recvfrom()"
+  argument to recvfrom()".  In most cases, the cause was a missing or
+  broken C++ compiler.  That should now be detected earlier with a
+  clearer message.
 
 o Fixed the FTP bounce scan to better detect filered ports on the
   target network.

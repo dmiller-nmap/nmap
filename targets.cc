@@ -259,7 +259,7 @@ do {
 	/* We figure out the source IP/device IFF
 	   1) We are r00t AND
 	   2) We are doing tcp or udp pingscan OR
-	   3) We are doing a raw-mode portscan or osscan OR 
+	   3) We are doing a raw-mode portscan or osscan OR
 	   4) We are on windows and doing ICMP ping */
 	if (o.isr00t && o.af() == AF_INET && 
 	    ((*pingtype & (PINGTYPE_TCP|PINGTYPE_UDP)) || 
@@ -279,7 +279,8 @@ do {
 	  device = routethrough(hs->hostbatch[hidx]->v4hostip(), 
 				&(sin->sin_addr));
 	  hs->hostbatch[hidx]->setSourceSockAddr(&ss, sslen);
-      o.decoys[o.decoyturn] = hs->hostbatch[hidx]->v4source();
+	  if (hidx == 0) /* Because later ones can have different src addy and be cut off group */
+	    o.decoys[o.decoyturn] = hs->hostbatch[hidx]->v4source();
 	  if (!device) {
 	    if (*pingtype == PINGTYPE_NONE) {
 	      fatal("Could not determine what interface to route packets through, run again with -e <device>");
