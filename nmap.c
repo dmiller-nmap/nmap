@@ -1928,6 +1928,7 @@ if (o.debugging || o.verbose)
 	      }
 	    } else {
 	      /* We figure out the scan number (and put it in i) */
+	      current = &scan[portlookup[ntohs(tcp->th_sport)]];
 	      if (current->trynum == 0) i = 0;
 	      else if (!o.magic_port_set) {
 		i = ntohs(tcp->th_dport) - o.magic_port;
