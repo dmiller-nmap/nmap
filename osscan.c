@@ -340,7 +340,7 @@ for(i=2; i < 8; i++)
     strcpy(seq_AVs->value, "N");
     seq_AVs->next = NULL;
     FPtests[i]->results = seq_AVs;
-    FPtests[i]->name =  (testno == 2)? "T2" : (testno == 3)? "T3" : (testno == 4)? "T4" : (testno == 5)? "T5" : (testno == 6)? "T6" : (testno == 7)? "T7" : "T8";
+    FPtests[i]->name =  (i == 2)? "T2" : (i == 3)? "T3" : (i == 4)? "T4" : (i == 5)? "T5" : (i == 6)? "T6" : (i == 7)? "T7" : "T8";
   }
 
 
@@ -348,7 +348,7 @@ for(i=2; i < 8; i++)
  last = 0;
  FPtmp = NULL;
  for(i=2; i < 8 ; i++) {
-   /*   if (!FPtests[i]) continue; */
+   if (!FPtests[i]) continue; 
    if (!FPtmp) FPtmp = FPtests[i];
    if (last) {
      FPtests[last]->next = FPtests[i];    
