@@ -1,19 +1,25 @@
 
 Nmap currently includes a modified version of the tcpdump.org release
-of libpcap version 0.7.1 (released November 16, 2002).  My
+of libpcap version 0.8.3 (released March 30, 2004).  My
 (fyodor@insecure.org) modifications are as follows:
 
--- Included this file, renamed directory from libpcap-0.7.1 to
-   libpcap-possiblymodified.
+o Included this file, renamed directory from libpcap-0.8.3 to
+  libpcap-possiblymodified.
 
--- Renamed configure.in to configure.ac, which is the name now
-   recommended by the autoconf project.
+o Renamed configure.in to configure.ac, which is the name now
+  recommended by the autoconf project.
 
--- Removed the .cvsignore file, all 'CVS' directories, the 'packaging' directory, and the install-sh script.
+o Removed the .cvsignore file, all 'CVS' directories, the 'packaging' directory, and the install-sh script.
   
--- Added the gcc debugging flag (-g) to aclocal.m4 if gcc is being used:
---- libpcap-0.7.1/aclocal.m4    Mon Dec 10 00:33:41 2001
-+++ libpcap-possiblymodified/aclocal.m4 Mon Dec 16 19:04:44 2002
+o Added the gcc debugging flag (-g) to aclocal.m4 if gcc is being used:
+--- libpcap-0.8.3/aclocal.m4    2003-11-16 01:45:51.000000000 -0800
++++ libpcap-possiblymodified/aclocal.m4 2004-07-31 22:34:47.000000000 -0700
+@@ -1,4 +1,4 @@
+-dnl @(#) $Header$ (LBL)
++dnl @(#) $Header$ (LBL)
+ dnl
+ dnl Copyright (c) 1995, 1996, 1997, 1998
+ dnl    The Regents of the University of California.  All rights reserved.
 @@ -76,7 +76,7 @@
      if test "$GCC" = yes ; then
             if test "$SHLICC2" = yes ; then
@@ -33,15 +39,24 @@ of libpcap version 0.7.1 (released November 16, 2002).  My
             fi
      else
 
--- The config.sub and config.guess have been upgraded (in the distribution
-   file they are just symlinks to the corresponding files in the nmap dir
+o The config.sub and config.guess have been upgraded (in the distribution
+  file they are just symlinks to the corresponding files in the nmap dir
 
--- Changed pcap-linux.c by adding a select() call guarding recvfrom()
-   to insure that it returns after the timeout period specified in
-   pcap_open_live() rather than blocking forever.
---- libpcap-0.7.1/pcap-linux.c  Sun Dec  9 23:14:16 2001
-+++ libpcap-possiblymodified/pcap-linux.c       Mon Dec 16 19:24:54 2002
-@@ -91,6 +91,7 @@
+o Changed pcap-linux.c by adding a select() call guarding recvfrom()
+  to insure that it returns after the timeout period specified in
+  pcap_open_live() rather than blocking forever.
+--- libpcap-0.8.3/pcap-linux.c  2003-11-21 02:20:46.000000000 -0800
++++ libpcap-possiblymodified/pcap-linux.c       2004-07-31 22:34:47.000000000 -0700
+@@ -27,7 +27,7 @@
+ 
+ #ifndef lint
+ static const char rcsid[] _U_ =
+-    "@(#) $Header$ (LBL)";
++    "@(#) $Header$ (LBL)";
+ #endif
+ 
+ /*
+@@ -96,6 +96,7 @@
  #include <netinet/in.h>
  #include <linux/if_ether.h>
  #include <net/if_arp.h>
@@ -49,9 +64,9 @@ of libpcap version 0.7.1 (released November 16, 2002).  My
  
  /*
   * If PF_PACKET is defined, we can use {SOCK_RAW,SOCK_DGRAM}/PF_PACKET
-@@ -425,6 +426,32 @@
-        bp = handle->buffer + handle->offset;
-        do {
+@@ -483,6 +484,32 @@
+                        return -2;
+                }
                 fromlen = sizeof(from);
 +               /* If the user specified a timeout in pcap_open_live(),
 +                  we will honor the timeout and return even if no packets
@@ -79,25 +94,26 @@ of libpcap version 0.7.1 (released November 16, 2002).  My
 +                 } while (1);
 +               }
 +
-                packet_len = recvfrom( 
+                packet_len = recvfrom(
                         handle->fd, bp + offset,
-                        handle->bufsize - offset, MSG_TRUNC, 
+                        handle->bufsize - offset, MSG_TRUNC,
 
--- Eliminated Lex/Yacc requirement (I now ship the generated .c
-   files).  This involved:
+o Eliminated Lex/Yacc requirement (I now ship the generated .c files).
+  This involved:
+
    o Changes to Makefile.in
---- libpcap-0.7.1/Makefile.in   Wed Jan 17 20:05:12 2001
-+++ libpcap-possiblymodified/Makefile.in        Mon Dec 16 19:01:48 2002
-@@ -47,7 +47,7 @@
- DEFS = @DEFS@
+--- libpcap-0.8.3/Makefile.in   2003-12-14 17:42:23.000000000 -0800
++++ libpcap-possiblymodified/Makefile.in        2004-07-31 22:34:47.000000000 -0700
+@@ -17,7 +17,7 @@
+ #  WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF
+ #  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+ #
+-# @(#) $Header$ (LBL)
++# @(#) $Header$ (LBL)
  
- # Standard CFLAGS
--CFLAGS = $(CCOPT) $(INCLS) $(DEFS)
-+CFLAGS = $(INCLS) $(CCOPT) $(DEFS)
- 
- INSTALL = @INSTALL@
- INSTALL_PROGRAM = @INSTALL_PROGRAM@
-@@ -59,8 +59,8 @@
+ #
+ # Various configurable paths (remember to edit Makefile.in, not Makefile)
+@@ -60,8 +60,8 @@
  # used by the generated parser.  This allows programs to use lex/yacc
  # and link against libpcap.  If you don't have flex or bison, get them.
  #
@@ -108,7 +124,7 @@ of libpcap version 0.7.1 (released November 16, 2002).  My
  
  # Explicitly define compilation rule since SunOS 4's make doesn't like gcc.
  # Also, gcc does not remove the .o before forking 'as', which can be a
-@@ -91,7 +91,7 @@
+@@ -94,7 +94,7 @@
  TAGFILES = \
         $(SRC) $(HDR) $(TAGHDR)
  
@@ -116,14 +132,30 @@ of libpcap version 0.7.1 (released November 16, 2002).  My
 +CLEANFILES = $(OBJ) libpcap.a version.c lex.yy.c
  
  all: libpcap.a
-
-  o Ripped LEX/YACC detection code from configure.in:
---- libpcap-0.7.1/configure.in  Mon Dec 10 00:33:42 2001
-+++ libpcap-possiblymodified/configure.in       Mon Dec 16 19:11:03 2002
-@@ -167,24 +167,6 @@
- fi
- AC_MSG_RESULT($ac_cv_lbl_proc_net_dev)
  
+  o Ripped LEX/YACC detection code from configure.in:
+--- libpcap-0.8.3/configure.in  2004-03-28 13:43:34.000000000 -0800
++++ libpcap-possiblymodified/configure.ac       2004-07-31 22:34:47.000000000 -0700
+@@ -1,4 +1,4 @@
+-dnl @(#) $Header$ (LBL)
++dnl @(#) $Header$ (LBL)
+ dnl
+ dnl Copyright (c) 1994, 1995, 1996, 1997
+ dnl    The Regents of the University of California.  All rights reserved.
+@@ -6,7 +6,7 @@
+ dnl Process this file with autoconf to produce a configure script.
+ dnl
+ 
+-AC_REVISION($Revision$)
++AC_REVISION($Revision$)
+ AC_PREREQ(2.50)
+ AC_INIT(pcap.c)
+ 
+@@ -341,25 +341,6 @@
+        AC_MSG_ERROR(Specifying the capture type as 'dag' requires the DAG API to be present; use --with-dag=DIR)
+ fi
+ 
+-
 -AC_LBL_LEX_AND_YACC(V_LEX, V_YACC, pcap_)
 -if test "$V_LEX" = lex ; then
 -# Some versions of lex can't handle the definitions section of scanner.l .
@@ -145,49 +177,16 @@ of libpcap version 0.7.1 (released November 16, 2002).  My
  case "$host_os" in
  
  aix*)
-@@ -241,10 +223,8 @@
- 
- AC_SUBST(V_CCOPT)
+@@ -420,11 +401,9 @@
+ AC_SUBST(V_DEFS)
  AC_SUBST(V_INCLS)
+ AC_SUBST(V_LIBS)
 -AC_SUBST(V_LEX)
  AC_SUBST(V_PCAP)
+ AC_SUBST(V_FINDALLDEVS)
  AC_SUBST(V_RANLIB)
 -AC_SUBST(V_YACC)
+ AC_SUBST(SSRC)
  
  AC_PROG_INSTALL
-
-
--- Added defomed(__sparc__) as a conditional for defining LBL_ALIGN:
---- libpcap-0.7.1/bpf/net/bpf_filter.c  Mon Oct 23 12:32:21 2000
-+++ libpcap-possiblymodified/bpf/net/bpf_filter.c       Mon Dec 16 20:46:08 2002
-@@ -69,8 +69,8 @@
- #define u_int32 bpf_u_int32
- 
- #ifndef LBL_ALIGN
--#if defined(sparc) || defined(mips) || defined(ibm032) || \
--    defined(__alpha) || defined(__hpux)
-+#if defined(sparc) || defined(__sparc__) || defined(mips) || \
-+    defined(ibm032) || defined(__alpha) || defined(__hpux)
- #define LBL_ALIGN
- #endif
- #endif
-
--- Modify pcap-linux.c to deal with the case where ARPHRD_HDLC (Cisco HDLC)
-   is not defined:
---- pcap-linux-orig.c   Sun Dec 22 11:49:51 2002
-+++ pcap-linux.c        Sun Dec 22 11:56:15 2002
-@@ -1003,6 +1003,13 @@
-                handle->linktype = DLT_LINUX_SLL;
-                break;
- 
-+#ifndef ARPHRD_CISCO /* Cisco HDLC - From Linux 2.4.17 include/linux/if_arp.h */
-+#define ARPHRD_CISCO 513
-+#endif
-+#ifndef ARPHRD_HDLC /* From Linux 2.4.17 */
-+#define ARPHRD_HDLC ARPHRD_CISCO
-+#endif
-+
-        case ARPHRD_HDLC:
-                handle->linktype = DLT_C_HDLC;
-                break;
 
