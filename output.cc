@@ -17,8 +17,9 @@
  * modify, and redistribute this software under certain conditions.  If    *
  * you wish to embed Nmap technology into proprietary software, we may be  *
  * willing to sell alternative licenses (contact sales@insecure.com).      *
- * Many security scanner vendors already licensed Nmap technology such as  *
- * our remote OS fingerprinting database and code.                         *
+ * Many security scanner vendors already license Nmap technology such as  *
+ * our remote OS fingerprinting database and code, service/version         *
+ * detection system, and port scanning code.                               *
  *                                                                         *
  * Note that the GPL places important restrictions on "derived works", yet *
  * it does not provide a detailed definition of that term.  To avoid       *
