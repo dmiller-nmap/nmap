@@ -1,5 +1,14 @@
 # Nmap Changelog ($Id$)
 
+o Applied patch from Rob Foehl (rwf(a)loonybin.net) which fixes the
+  --with_openssl=DIR configure argument.
+
+o Added configure option --with-libpcre=included which causes Nmap to
+  build with its included version of libpcre even if an acceptable
+  version is available on the system.
+
+Nmap 3.48
+
 o Integrated an enormous number of version detection service
   submissions.  The database has almost doubled in size to 663
   signatures representing the following 130 services: 

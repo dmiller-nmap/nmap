@@ -377,13 +377,17 @@ AC_SUBST(PCAP_DIST_CLEAN)
 AC_SUBST(LIBPCAP_LIBS)
 
 have_pcre=no
+requested_included_pcre=no
 LIBPCREDIR=libpcre
 
 # First we test whether they specified libpcre explicitly
 AC_ARG_WITH(libpcre,
-[  --with-libpcre=DIR    Use an existing (compiled) pcre lib from DIR/include and DIR/lib)],
+[  --with-libpcre=DIR    Use an existing (compiled) pcre lib from DIR/include and DIR/lib.  Specify --with-libpcre=included to always use the version included with Nmap],
 [  case "$with_libpcre" in
   yes)
+    ;;
+  included)
+    requested_included_pcre=yes
     ;;
   *)
     CXXFLAGS="-I$with_libpcre/include $CXXFLAGS"
@@ -394,7 +398,7 @@ AC_ARG_WITH(libpcre,
 )
 
 # If they didn't specify it, we try to find it
-if test $have_pcre != yes ; then
+if test $have_pcre != yes -a $requested_included_pcre != yes ; then
   AC_CHECK_HEADER(pcre.h,
     AC_CHECK_LIB(pcre, pcre_version, [have_pcre=yes ]),
     [AC_CHECK_HEADERS(pcre/pcre.h, 

@@ -302,8 +302,8 @@ support for UDP RPC scans.
 .TP
 .B \-sL
 List scan.  This method simply generates and prints a list of
-IPs/Names without actually pinging or port scanning them.  DNS name
-resolution will be performed unless you use -n.
+IP addresses or hostnames without actually pinging or port scanning 
+them.  DNS name resolution will be performed unless you use -n.
 .TP
 .B \-b <ftp relay host>
 FTP bounce attack: An interesting "feature" of the ftp
@@ -346,7 +346,7 @@ penetrating strict firewalls by sending many probe types using
 different TCP ports/flags and ICMP codes.
 .TP
 .B \-P0
-Do not try and ping hosts at all before scanning them.  This
+Do not try to ping hosts at all before scanning them.  This
 allows the scanning of networks that don't allow ICMP echo
 requests (or responses) through their firewall.
 microsoft.com is an example of such a network, and thus you

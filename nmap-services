@@ -1106,6 +1106,7 @@ mdbs_daemon       800/tcp    #
 mdbs_daemon       800/udp    # 
 device            801/tcp    # 
 device            801/udp    # 
+ccproxy-http      808/tcp    # CCProxy HTTP/Gopher/FTP (over HTTP) proxy
 supfilesrv        871/tcp    # SUP server
 rsync             873/tcp    # Rsync server ( http://rsync.samba.org )
 accessbuilder     888/tcp    # or Audio CD Database
@@ -1131,6 +1132,7 @@ garcon            999/tcp    #
 applix            999/udp    # Applix ac
 cadlock           1000/tcp   # 
 ock               1000/udp   # 
+windows-icfw      1002/tcp   # Windows Internet Connection Firewall or Internet Locator Server for NetMeeting.
 ufsd              1008/tcp   # ufsd		# UFS-aware server
 ufsd              1008/udp   # 
 sometimes-rpc1    1012/udp   # This is rstatd on my openBSD box
@@ -1785,6 +1787,7 @@ rkinit            2108/udp   # Kerberos (v4) remote initialization
 kx                2111/tcp   # X over kerberos
 kip               2112/tcp   # IP over kerberos
 kauth             2120/tcp   # Remote kauth
+ccproxy-ftp       2121/tcp   # CCProxy FTP Proxy
 ats               2201/tcp   # Advanced Training System Program
 ats               2201/udp   # Advanced Training System Program
 ivs-video         2232/tcp   # IVS Video default

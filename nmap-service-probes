@@ -655,7 +655,8 @@ match http m|^HTTP/1\.1 \d\d\d .*\r\nServer: Apt-proxy (\d[-.\w]+)\r\n|s v/Debia
 match http m|^HTTP/1\.0 \d\d\d .*\r\nServer: mini_httpd/(\d[-.\w]+) | v/Mini_httpd/$1//
 # HP ProCurve Switch 2650 / Firmware revision H.07.32
 match http m|^HTTP/1\.1 401 Unauthorized\r\nServer: eHTTP v(\d[-.\w]+)\r\nConnection: close\r\nWWW-Authenticate: Basic realm=\"HP ([-.\w]+)\"\r\n\r\n| v/HP admin webserver//HP $2; embedded eHTTP $1/
-match http m|^HTTP/1\.1 \d\d\d .*\r\nServer: Sun-ONE-Application-Server/(\d[-.\w]+)\r\n| v/Sun One Application Server/$1//
+match http m|^HTTP/1\.1 \d\d\d .*\r\nServer: Sun-ONE-Application-Server/(\d[-.\w]+)\r\n| v/SunONE Application Server/$1//
+match http m|^HTTP/1\.1 \d\d\d .*\r\nServer: SunONE WebServer (\d[-.\w]+)\r\n| v/SunONE WebServer/$1//
 match http m|^HTTP/1\.1 \d\d\d .*\r\nDate: .*\r\nServer: IBM_HTTP_Server/(\d[-.\w]+) +(Apache/)?(\d[-.\w]+) \(([^\r\n]+)\)\r\n|i v/IBM HTTP Server/$1/Derived from Apache $3; $4/
 # D-Link DWL-1000AP admin webserver
 match http m|^HTTP/1\.0 200 OK\r\nServer: PSIWBL/(\d[-.\w]+)\r\nDate: .*Title: www\r\n\r\n<HTML>\n <HEAD>\n   <meta http-equiv=\"Refresh\" content=\"0; url=/startup/startup\.shtml\">\n </HEAD>\n <BODY>\n </BODY>\n</HTML>$|s v/D-Link web admin server//Embedded webserver: PSIWBL $1/

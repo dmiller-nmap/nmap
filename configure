@@ -857,7 +857,7 @@ Optional Packages:
   --without-nmapfe    skip nmapfe X-window GUI
   --with-openssl=DIR    Use optional openssl libs and includes from DIR/lib/ and DIR/include/openssl/)
   --with-libpcap=DIR    Look for pcap in DIR/include and DIR/libs
-  --with-libpcre=DIR    Use an existing (compiled) pcre lib from DIR/include and DIR/lib)
+  --with-libpcre=DIR    Use an existing (compiled) pcre lib from DIR/include and DIR/lib.  Specify --with-libpcre=included to always use the version included with Nmap
   --with-libnbase=DIR     Look for nbase include/libs in DIR
   --with-libnsock=DIR     Compile and link to libnsock in DIR
 
@@ -5430,6 +5430,7 @@ fi
 
 
 have_pcre=no
+requested_included_pcre=no
 LIBPCREDIR=libpcre
 
 # First we test whether they specified libpcre explicitly
@@ -5439,6 +5440,9 @@ if test "${with_libpcre+set}" = set; then
   withval="$with_libpcre"
     case "$with_libpcre" in
   yes)
+    ;;
+  included)
+    requested_included_pcre=yes
     ;;
   *)
     CXXFLAGS="-I$with_libpcre/include $CXXFLAGS"
@@ -5450,7 +5454,7 @@ if test "${with_libpcre+set}" = set; then
 fi;
 
 # If they didn't specify it, we try to find it
-if test $have_pcre != yes ; then
+if test $have_pcre != yes -a $requested_included_pcre != yes ; then
   if test "${ac_cv_header_pcre_h+set}" = set; then
   echo "$as_me:$LINENO: checking for pcre.h" >&5
 echo $ECHO_N "checking for pcre.h... $ECHO_C" >&6
