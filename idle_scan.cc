@@ -146,7 +146,7 @@ int ipid_proxy_probe(struct idle_proxy_info *proxy, int *probes_sent,
     while((ipid == -1 || sent > rcvd) && to_usec >= 0) {
 
       to_usec = proxy->host.to.timeout - TIMEVAL_SUBTRACT(tv_end, tv_sent[tries-1]);
-    
+      if (to_usec < 0) to_usec = 0; // Final no-block poll
       ip = (struct ip *) readip_pcap(proxy->pd, &bytes, to_usec);      
       gettimeofday(&tv_end, NULL);
       if (ip) {

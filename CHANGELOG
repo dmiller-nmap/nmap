@@ -14,6 +14,9 @@ o Fixed a segmentation fault in Idlescan (-sI).
 o Made Idlescan timing more conservative when -P0 is specified to
   improve accuracy.
 
+o Fixed an infinite-loop condition that could occur during certain
+  dropped-packet scenarios in an Idle scan.
+
 o Nmap now reports execution times to millisecond precision (rather
   than rouding to the nearest second).
 
