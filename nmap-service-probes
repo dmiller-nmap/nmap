@@ -83,14 +83,14 @@ match time m|^[\xc0-\xc5]...$|
 match chargen m|^!"#\$%\&'\(\)\*\+,-\./0123456789:;<=>\?\@ABCDEFGHIJKLMNOPQRSTUVWXYZ\[\\\]\^_`abcdefgh\r\n"#\$%\&'\(\)\*\+,-\./0123456789:;<=>\?\@ABCDEF| v/Linux/
 match chargen m|^\ !"#\$%&'\(\)\*\+,-\./0123456789:;<=>\?@ABCDEFGHIJKLMNOPQRSTUVWXYZ\[\\\]\^_| v/Solaris/
 
-match ftp m/^220.*Microsoft FTP Service \(Version (\d[^)]+)/ v/Microsoft $1/
+match ftp m/^220.*Microsoft FTP Service \(Version (\d[^)]+)/ v/Microsoft ftpd $1/
 # This lame version doesn't give a version number
 match ftp m/^220 Microsoft FTP Service\r\n$/ v/Microsoft/
-match ftp m/^220 Serv-U FTP Server v(\d\S+) for WinSock ready/ v/Serv-U $1/
-match ftp m/^220 Serv-U FTP-Server v(\d\S+) for WinSock ready/ v/Serv-U $1/
-match ftp m/^220-Sambar FTP Server Version (\d\S+)\x0d\x0a/ v/Sambar $1/
-match ftp m/^220 JD FTP Server Ready/ v/HP JetDirect/
-match ftp m/^220.*Check Point FireWall-1 Secure FTP server running on/s v/Check Point Firewall-1/
+match ftp m/^220 Serv-U FTP Server v(\d\S+) for WinSock ready/ v/Serv-U ftpd $1/
+match ftp m/^220 Serv-U FTP-Server v(\d\S+) for WinSock ready/ v/Serv-U ftpd $1/
+match ftp m/^220-Sambar FTP Server Version (\d\S+)\x0d\x0a/ v/Sambar ftpd $1/
+match ftp m/^220 JD FTP Server Ready/ v/HP JetDirect ftpd/
+match ftp m/^220.*Check Point FireWall-1 Secure FTP server running on/s v/Check Point Firewall-1 ftpd/
 match ftp-proxy m/^220-Sidewinder ftp proxy\.  You must login to the proxy first/ v/Sidewinder FTP proxy/
 match ftp-proxy m/^220-\r\x0a220-Sidewinder ftp proxy/s v/Sidewinder FTP proxy/
 match ftp m/^220[- ].*FTP server \(Version (wu-[-.\w]+)\) /s v/WU-FTPD $1/
@@ -110,12 +110,21 @@ match ftp m/^220.*WS_FTP Server (\d\S+)/ v/WS FTP $1/
 match ftp m/^220 Features: a p \.\r\n$/ v/Publicfile/
 match ftp m/^220 [-.\w]+ FTP server \(Version (\S+) VFTPD, based on Version (\S+)\) ready\.\r\n$/ v/Virtual FTPD $1 (based on $2)/
 match ftp m|^220 [-.\w]+ FTP server \(Version (\S+)/OpenBSD, linux port (\S+)\) ready\.\r\n| v/OpenBSD ftpd $1 (Linux port $2)/
+match ftp m|^220 [-.\w]+ FTP server \(Version (\S+)/OpenBSD/Linux-ftpd-([-.\w]+)\) ready.\r\n$| v/OpenBSD ftpd $1 (Linux port $2)/
 match ftp m/^220 Interscan Version ([-\w.]+)/i v/Interscan Viruswall $1/
 match ftp m|^220 [-.\w]+ FTP server \(Version ([-.\w]+)/OpenBSD\) ready\.\r\n$| v/OpenBSD ftpd $1/
 match ftp m|^220-Welcome to [A-Z]+ FTP Service\.\r\n220 All unauthorized access is logged\.\r\n$| v/FileZilla/
 match ftp m|^220 [-.\w]+ FTP server \(Version (6.0\w+)\) ready.\r\n| v/FreeBSD ftpd $1/
 # OpenBSD 3.4 beta running Pure-FTPd 1.0.16 with SSL/TLS
 match ftp m|^220---------- Welcome to Pure-FTPd \[privsep\] \[TLS\] ----------\r\n220-You are user number| v|Pure-FTPd (with SSL/TLS)|
+match ftp m|^220---------- Welcome to Pure-FTPd ----------\r\n220-You are user number| v/Pure-FTPd/
+# Trolltech Troll-FTPD 1.28 (Only runs on Linux)
+match ftp m|^220-Setting memory limit to 1024\+1024kbytes\r\n220-Local time is now \d+:\d+ and the load is [.\d]+\.\r\n220 You will be disconnected after \d+ seconds of inactivity.\r\n$| v/Trolltech Troll-FTPd (Linux)/
+# Netware 6 - NWFTPD.NLM FTP Server Version 5.01w
+match ftp m|^220 Service Ready for new User\r\n$| v/Netware NWFTPD.NLM/
+match ftp m|^220 [-.\w]+ MultiNet FTP Server Process V(\S+) at .+\r\n$| v/DEC OpenVMS MultiNet FTPd $1/
+match ftp m|^220-\r\n220 [-.\w]+ FTP server \(NetBSD-ftpd ([-.\w]+)\) ready.\r\n$| v/NetBSD ftpd $1/
+match ftp m|^220 ([-.\w]+) Network Management Card AOS v([-.\w]+) FTP server ready.\r\n$| v/APC AOS ftpd $2 (on APC $1 network management card)/
 # 220 mirrors.midco.net FTP server ready.
 softmatch ftp m/^220 [-.\w ]+ftp.*\r\n$/i
 softmatch ftp m/^220-[-.\w ]+ftp.*\r\n220/i
@@ -147,6 +156,9 @@ match telnet m|^\r\n\r\nUser Access Verification\r\nPassword:\xff\xfb\x01$| v/Ci
 match telnet m|^\xff\xfd%$| v/OpenBSD/
 # Solaris 9
 match telnet m|^\xff\xfd\x18\xff\xfd\x1f\xff\xfd#\xff\xfd'\xff\xfd\$$| v/Solaris/
+# Redhat Linux 7.3 telnet
+match telnet m|^\xff\xfd\x18\xff\xfd \xff\xfd#\xff\xfd'$| v/Linux telnetd/
+match telnet m|^\xff\xfb\x01\n\rUser Name : $| v/APC network management card telnetd/
 
 match smtp m/^220 [-.+\w]+ \(IMail ([^)]+)\) NT-ESMTP Server/ v/IMail NT-ESMTP $1/
 match smtp m/^220 X1 NT-ESMTP Server [-.+\w]+ \(IMail ([^)]+)\)\r\n/ v/IMail NT-ESMTP $1/
@@ -155,6 +167,7 @@ match smtp m/^220 [-.+\w]+ Microsoft ESMTP MAIL Service, Version: ([-\w.]+) read
 match smtp m/^220 [-.+\w]+ ESMTP Server \(Microsoft Exchange Internet Mail Service ([-\w.]+)\) ready/ v/Microsoft Exchange $1/
 match smtp m/^220 [-.+\w]+ ESMTP Sendmail (\d[^;]+);/ v/Sendmail $1/
 match smtp m|^220 [-.+\w]+ SMTP Sendmail ([-/.+\w]+)\r\n| v/Sendmail $1/
+match smtp m|^220 [-.+\w]+ Sendmail (SMI-\S+) ready at .*\r\n$| v/Sendmail $1/
 match smtp m/^220[- ][-.+\w]+ ESMTP Exim (\d\S+)/ v/Exim $1/
 match smtp m/Failed to open configuration file.*exim/ v/Exim/
 match smtp m/^220 CheckPoint FireWall-1 secure ESMTP server\r\n$/ v/Checkpoint FireWall-1/
@@ -177,7 +190,10 @@ match smtp m|^220 ArGoSoft Mail Server Pro for WinNT/2000/XP, Version [-.\w]+ \(
 match smtp m|^220 [-.\w]+ ESMTP server \(Post.Office v([-.\w]+) release ([-.\w]+) ID# | v/Post.Office $1 (release $2)/
 match smtp m|^220 [-.\w]+ ESMTP VisNetic.MailServer.v([-.\w]+); | v/VisNetic MailServer $1/
 # CommuniGate Pro 4.0.5
-match smtp m|^220 df.ru ESMTP Service. Welcome.\r\n$| v/CommuniGate Pro/
+match smtp m|^220 [-.\w]+ ESMTP Service. Welcome.\r\n$| v/CommuniGate Pro/
+match smtp m|^220 [-.\w]+ Process Software ESMTP service V([-.\w]+) ready| v/Process Software smtpd $1 (on OpenVMS)/
+match smtp m|^220 [-.\w]+ Mercury (\d[-.\w]+) ESMTP server ready\.\r\n$| v/Mercury Mail $1/
+match smtp m|^220 [-.\w]+ ESMTP Service \(Lotus Domino Release (\d[-.\w]+)\) ready at | v/Lotus Domino smtpd $1/
 softmatch smtp m|^220 [-.\w ]+SMTP.*\r\n|
 
 match pop3 m/^\+OK X1 NT-POP3 Server [-\w.]+ \(IMail ([^)]+)\)\r\n/ v/IMail $1/
@@ -201,9 +217,15 @@ match pop3 m/^\+OK <\d{1,5}\.10\d{8}@[-.\w]+>\r\n$/ v/Qmail-pop3d/
 match pop3 m|^\+OK Hello there\.\r\n$| v/Courier/
 match pop3 m|^\+OK ArGoSoft Mail Server Pro for WinNT/2000/XP, Version [-.\w]+ \(([-.\w]+)\)\r\n$| v/ArGoSoft Mail Server Pro $1/
 match pop3 m/^\+OK [-.\w]+ VisNetic.MailServer.v([-.\w]+) POP3 / v/VisNetic MailServer $1/
-match pop3 m/^\+OK [-.\w]+ POP3 server \(Post\.Office v([-.\w]+) release ([-.\w]+) with ZPOP version ([-.\w]+)\) ready / v|Post.Office $1 (release $2 w/ZPOP $3)|
+match pop3 m/^\+OK [-.\w]+ POP3 server \(Post\.Office v([-.\w]+) release ([-.\w]+) with ZPOP version ([-.\w]+)\) ready / v|Post.Office pop3 $1 (release $2 w/ZPOP $3)|
 match pop3 m/^\+OK CommuniGate Pro POP3 Server ([-.\w]+) ready/ v/CommuniGate Pro $1/
-softmatch pop3 m/^\+OK [-.\w ]+\r\n$/
+match pop3 m/^\+OK\r\n$/ v/popa3d/
+match pop3 m|^\+OK [-.\w]+ MultiNet POP3 Server Process V(\S+) at| v/DEC OpenVMS MultiNet pop3d $1/
+match pop3 m|^\+OK <.*>, MercuryP/NLM v(\d[-.\w]+) ready.\r\n$| v/Mercury POP3 server $1 (on Novell Netware)/
+softmatch pop3 m|^\+OK [-\[\]\(\)!,/+:<>@.\w ]+\r\n$|
+
+match nntp m|^200 Lotus Domino NNTP Server for UNIX \(Release (\d[-.\w]+), .*\) - Not OK to post\r\n$| v/Lotus Domino nntpd $1 (posting denied)/
+softmatch nntp m|^200 [-\[\]\(\)!,/+:<>@.\w ]*nntp[-\[\]\(\)!,/+:<>@.\w ]*\r\n$|
 
 # Courier-Imap 1.4.3-2.3
 match imap2 m|^\* OK Courier-IMAP ready\. Copyright 1998-2002 Double Precision, Inc\.  See COPYING for distribution information\.\r\n$| v/Courier Imap/
@@ -212,16 +234,19 @@ match imap2 m|^\* OK \[CAPABILITY IMAP4rev1 NAMESPACE AUTH=CRAM-MD5 AUTH=CRAM-SH
 # Courier IMAP 1.7.2
 match imap2 m|\* OK \[CAPABILITY IMAP4rev1 CHILDREN NAMESPACE THREAD=ORDEREDSUBJECT THREAD=REFERENCES SORT QUOTA\] Courier-IMAP ready. Copyright 1998-2003 Double Precision, Inc.  See COPYING for distribution information.\r\n$| v/Courier IMAP 1.7.2/
 match imap2 m|^\* OK starvation.hungry.com IMAP4rev(\d) v([-.\w]+) server ready\r\n$| v/Courier IMAP4rev$1 $2/
-match imap2 m|^\* OK CommuniGate Pro IMAP Server ([-.\w]+) at df.ru ready\r\n$| v/CommuniGate Pro $1/
+match imap2 m|^\* OK CommuniGate Pro IMAP Server ([-.\w]+) at [-.\w]+ ready\r\n$| v/CommuniGate Pro $1/
 # W-Imapd-SSL v2001adebian-6
 match imap3 m|^\* OK \[CAPABILITY IMAP4REV1 X-NETSCAPE LOGIN-REFERRALS STARTTLS AUTH=LOGIN\] \S+ IMAP4rev1 ([-.\w]+) at| v/UW-Imapd-SSL $1/
+match imap4 m|^\* OK Domino IMAP4 Server Release (\d[-.\w]+) +ready| v/Lotus Domino imap4 $1/
 softmatch imap m/^\* OK [-.\w ]+\r\n$/
 
 match mysql m/^.\0\0\0\xffj\x04Host .* is not allowed to connect to this MySQL server$/ v/MySQL (unauthorized)/
+# MySQL 4.0.13
+match mysql m/^.\0\0\0...Al sistema '[-.\w]+' non e` consentita la connessione a questo server MySQL$/ v/MySQL/
 match mysql m/.\0\0\0.(3\.[-.\w]+)\0.*\x08\x02\0\0\0\0\0\0\0\0\0\0\0\0\0\0$/s v/MySQL $1/
 match mysql m/.\0\0\0\n(3\.[-.\w]+)\0.\0\0\0/s v/MySQL $1/
 # r(NULL,2B,"'\0\0\0\n4.0.13\0\xdf\xbc\x02\0SC7)fHu5\0, \x08\x02\0\0\0\0\0\0\0\0\0\0\0\0\0\0")
-match mysql m/.\0\0\0\n(4\.[-.\w]+)\0\xdf\xbc\x02\0/ v/MySQL $1/
+match mysql m/.\0\0\0\n(4\.[-.\w]+)\0...\0/s v/MySQL $1/
 
 match mud m|^\n\r\xff\xfbUDo you want ANSI color\? \(Y/n\) $| v|ROM-based MUD (http://rrp.rom.org/)|
 match winshell m/^Microsoft Windows ((2000)|(XP)|(NT 4\.0)) \[Version ([\d.]+)\]\r\n\(C\) Copyright 1985-20\d\d Microsoft Corp\.\r\n\r\n/ v/Microsoft Windows $1 $5 cmd.exe/
@@ -230,6 +255,12 @@ match ncacn_http m|^ncacn_http/([\d.]+)$| v/ncacn_http $1/
 match issrealsecure m|^\0\0\0\x9d\x08\x01\x03\x01\0\x95\x02\0\0\x03\xe6\0\0\xac\0\0\0f\x04\0\0\x80\x04\0\xef\0\xa8\0\xa06ISS ECNRA Built-In Provider, Strong Encryption Version\0\0\0\0| v/ISS RealSecure/
 # TightVNC 1.2.6
 match vnc m|^RFB 003.003\n$| v/VNC/
+match irc-proxy m|^:Welcome!psyBNC@lam3rz\.de NOTICE \* :psyBNC([-.\w]+)\r\n| v/psyBNC $1/
+match hylafax m|^220 [-.\w]+ server \(HylaFAX \(tm\) Version ([\d.]+)\) ready\.\r\n$| v/HylaFAX $1/
+match snpp m|^220 [-.\w]+ SNPP server \(HylaFAX \(tm\) Version ([-.\w]+)\) ready.\r\n| v/HylaFAX SNPP $1/
+match snpp m|^220 QuickPage v(\d[-.\w]+) SNPP server ready at | v/QuickPage SNPP $1/
+# RedHat 7.3 - rsync server version 2.5.4  protocol version 26
+match rsync m|^@RSYNCD: (\d+)\n\n| v/(protocol version $1)/
 
 Probe TCP GenericLines q|\r\n\r\n|
 ports 21,43,110,113,540
@@ -244,15 +275,18 @@ match ident m|^0 , 0 : ERROR : INVALID-PORT\r\n$| v/FreeBSD identd/
 # pidentd-3.1a19-157
 match ident m|^ : ERROR : UNKNOWN-ERROR\r\n$| v/pidentd/
 match ident m|^0, 0 : ERROR : X-INVALID-REQUEST\r\n$| v/Minidentd/
-
 # Solaris 9
 match ftp m|^220 [-.\w]+ FTP server ready\.\r\n530 Please login with USER and PASS\.\r\n530 Please login with USER and PASS\.\r\n$| v/Solaris/
+# vsftpd (Very Secure FTP Daemon) 1.0.0 on linux with custom ftpd_banner
+# We'll have to see if this match is unique enough
+match ftp m|^220 .*\r\n530 Please login with USER and PASS\.\r\n530 Please login with USER and PASS\.\r\n| v/vsFTPd/
 # Solaris 9
 match uucp m|^login: Please enter user name: Password: $| v/Solaris/
 match whois m|^%  No entries found for the selected source\(s\)\.\n$| v/Merit IRRD/
 
+
 Probe TCP GetRequest q|GET / HTTP/1.0\r\n\r\n|
-ports 79,80-85,139,143,515,554,631,783,993,995,1220,5432,5900,8000-8010,8080-8085
+ports 79,80-85,139,143,515,554,631,783,993,995,1220,5432,5900,8000-8010,8080-8085,40193
 # Server: CUPS/1.1
 match ipp m|^HTTP/1\.0.*Server: CUPS/(\S+)|s v/CUPS $1/
 # My junbuster proxy gives me this.
@@ -266,6 +300,12 @@ match http m|^HTTP/1\.0 200 OK\r\nDate: .+\r\nServer: Tomcat/([-.\w]+)\r\nConten
 match http m|^HTTP/1.1 200 OK\r\n.+Server: CommuniGatePro/([-.\w]+)\r\n|s v/CommuniGate Pro $1/
 match http m|^HTTP/1.0 401 Unauthorized\r\nDate: .*\r\nServer: DSS ([-.\w]+) Admin Server/([-.\w]+)| v/DarwinStreamingServer $1 Admin Server (Admin Server $2)/
 match http m|^HTTP/1.0 404 Not Found\r\nContent-Type: text/html\r\nConnection: close\r\n\r\n<title>Not Found</title>This host is not served here\.$| v/Fnord httpd/
+# Webmin 1.100
+match http m|^HTTP/1.0 200 Document follows\r\nDate: .*\r\nServer: MiniServ/0.01\r\n| v/Webmin/
+match http m|^HTTP/1.1 200 OK\r\nServer: NetWare-Enterprise-Web-Server/([-.\w]+)\r\n| v/Novell Netware enterprise web server $1/
+match http m|^HTTP/1.1 302 Object Moved Temporarily\r\nServer: NetWare HTTP Stack\r\n| v/Novell Netware HTTP Stack (HTTPSTK.NLM)/
+match http m|^HTTP/1\.0 \d\d\d .*\r\nServer: HTTPd-WASD/([-.\w]+) OpenVMS/VAX\r\n| v|HTTPd-WASD $1 (on OpenVMS/VAX)|
+match http m|^HTTP/1.1 \d\d\d .*\r\nServer: Lotus-Domino/0\r\n| v/Lotus Domino httpd/
 softmatch http m|^HTTP/1.[01] \d\d\d|
 
 match http-proxy m|^HTTP/1\.0 400 Bad Request\r\nServer: Squid/([-.\w]+)\r\n| v/Squid $1/
@@ -290,6 +330,8 @@ match imaps m|^\* BYE Fatal error: tls_start_servertls\(\) failed\r\n$| v/Cyrus 
 match pop3s m|^-ERR \[SYS/PERM\] Fatal error: tls_start_servertls\(\) failed\r\n$| v/Cyrus IMAP/
 # Postgresql-server-7.3.2-3
 match postgres m|^EFATAL:  invalid length of startup packet\n\0$| v/Postgresql/
+# Netware 6 NetWare/IP
+match netwareip m|^\xfb\xff\xfe\xff\xfb\xff\xfe\xff\xfb\xff\xfe\xff$| v|Novell Netware/IP|
 
 Probe UDP DNSVersionBindReq q|\0\x06\x01\0\0\x01\0\0\0\0\0\0\x07version\x04bind\0\0\x10\0\x03|
 ports 53
@@ -302,13 +344,15 @@ match domain m|^\0\x06\x81\x04\0\x01\0\0\0\0\0\0\x07version\x04bind\0\0\x10\0\x0
 
 
 Probe TCP DNSVersionBindReq q|\0\x1E\0\x06\x01\0\0\x01\0\0\0\0\0\0\x07version\x04bind\0\0\x10\0\x03|
-ports 53,512,513
+ports 53,512,513,1521
 match domain m|\x07version\x04bind.*[\x03-\x10]([-\w._]{3,16})$|s v/Bind $1/
 # Windows 2000 SP4
 match domain m|^\0\x1e\0\x06\x81\x04\0\x01\0\0\0\0\0\0\x07version\x04bind\0\0\x10\0\x03$| v/Microsoft DNS/
 # OpenBSD 2.3
 match rlogind m|^\x01rlogind: Permission denied\.\r\n$| v/OpenBSD/
 match exec m|^\x01Login incorrect\.\n$| v/Solaris/
+# RedHat 7.3 - Oracle TNS Listener Oracle 8.1.7
+match oracle-tns m|^\0\x1c\0\0\x04\x01\0\0\0X\0\0\xc4W\xdc3\x04\xc38\x81\xe00\xe6\x83\x05\xfa\n;$| v/Oracle TNS listener/
 
 # DNS Server status request: http://www.crynwr.com/crynwr/rfc1035/rfc1035.html
 Probe UDP DNSStatusRequest q|\0\0\x10\0\0\0\0\0\0\0\0\0|
@@ -372,6 +416,8 @@ Probe TCP LPDString q|\x01default\n|
 ports 515
 match printer m|^\0$|
 match printer m|^default: unknown printer\n$| v/Solaris/
+# Redhat Linux 7.3 LPRng-3.8.9
+match printer m|^\x01no connect permissions\n$| v/LPRng/
 
 # From xlsclients
 Probe TCP X11Probe q|\x6C\0\x0B\0\0\0\0\0\0\0\0\0|
@@ -411,6 +457,9 @@ match landesk-rc m|^TNMP.\0\0\0TNME.\0\0\0USER.\x08\x04\0\x08\0.{9}\0R\0\x03\0W\
 # Being Controled w/o User
 match landesk-rc m|^TNMP.\0\0\0TNME.\0\0\0USER.\x08\x04\0\x08\0.{9}\0R\0\x03\0W\0\xff\xff\0\0\0\xfd..\0\0\0\0\x02\0\0\0\0\x01\x04\0\0\0\0\0...\0\xb5\x01\xbb\0Desktop\x20Manager\x20(\d\.\d)\0\x02\x04\x01\x02\x01\0\0\W+([\w\d\.\:]+)\W+(\w+)\0(\w+)\0\0$| v/LANDesk RC ($1) Host:$3 Controler: $2/
 match landesk-rc m|^TNMP\x16\0\0\0TNME\x80\0\xfe\xff..([\w\d\.]+):(\d)$| v/LANDesk RC (Busy, From $1 on port 176$2)/
+
+Probe TCP ldap q|\x30\x0c\x02\x01\x01\x60\x07\x02\x01\x02\x04\0\x80\0|
+ports 389
 
 Probe UDP Sqlping q|\x02|
 ports 1434
