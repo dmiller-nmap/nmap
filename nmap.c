@@ -1787,7 +1787,7 @@ portlist super_scan(struct hoststruct *target, unsigned short *portarray, stype 
   int windowdecrease = 0; /* Has the window been decreased this round yet? */
   struct icmp *icmp;
 
-  memset(portlookup, 255, 65536); /* 0xffff better always be (short) -1 */
+  memset(portlookup, 255, 65536 * sizeof(int)); /* 0xffffffff better always be (int) -1 */
   scan = safe_malloc(o.numports * sizeof(struct f00));
 
   /* Initialize timeout info */
