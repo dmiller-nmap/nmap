@@ -1774,8 +1774,8 @@ portlist super_scan(struct hoststruct *target, unsigned short *portarray, stype 
     short trynum;
     struct timeval sent[2]; 
     enum { port_open, port_closed, port_testing, port_fresh } state;
-    short next;
-    short prev;
+    int next;
+    int prev;
   } *scan, *openlist, *current, *fresh, *testinglist, *next;
   int portlookup[65536]; /* Indexes port number -> scan[] index */
   int next_unused_port = 0;
