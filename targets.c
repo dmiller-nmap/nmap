@@ -293,8 +293,10 @@ FD_ZERO(&fd_r);
 FD_ZERO(&fd_x);
 
 /* Init our raw socket */
-if ((rawsd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) < 0 )
-  pfatal("socket trobles in massping");
+if (o.numdecoys > 1)
+  if ((rawsd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) < 0 )
+    pfatal("socket trobles in massping");
+
 unblock_socket(rawsd);
 
 bzero((char *)&sock,sizeof(struct sockaddr_in));
@@ -323,13 +325,11 @@ gettimeofday(&start, NULL);
 	 gettimeofday(&time[pingpkt.seq], NULL);
 	 for(decoy=0; decoy < o.numdecoys; decoy++) {
 	   if (decoy == o.decoyturn) {
-	     block_socket(sd);
 	     if ((res = sendto(sd,(char *) ping,8,0,(struct sockaddr *)&sock,
 			       sizeof(struct sockaddr))) != 8) {
 	       fprintf(stderr, "sendto in massping returned %d (should be 8)!\n", res);
 	       perror("sendto");
 	     }
-	     unblock_socket(sd);
 	   } else {
 	     send_ip_raw( rawsd, &o.decoys[decoy], &(sock.sin_addr), IPPROTO_ICMP, ping, 8);
 	   }
@@ -369,7 +369,7 @@ gettimeofday(&start, NULL);
 	     }
 	     hostbatch[hostnum].to = to;
 	     if (!(hostbatch[hostnum].flags & HOST_UP)) {	  
-	       if (hostnum > group_start) {	       
+	       if (hostnum >= group_start) {	       
 		 up_this_block++;
 		 block_unaccounted--;
 	       }
@@ -458,7 +458,8 @@ gettimeofday(&start, NULL);
 }
  alldone:
  close(sd);
- close(rawsd);
+ if (o.numdecoys > 1)
+   close(rawsd);
  free(time);
  if (o.debugging) 
    printf("massping done:  num_hosts: %d  num_responses: %d\n", num_hosts, num_responses);
