@@ -560,8 +560,7 @@ int AVal_match(struct AVal *reference, struct AVal *fprint) {
 
 
 int os_scan(struct hoststruct *target) {
-FingerPrint *current;
-int i;
+
 target->FP = get_fingerprint(target);
 target->FP_matches = match_fingerprint(target->FP);
 
