@@ -281,19 +281,30 @@ AC_ARG_WITH(libpcre,
 )
 
 # If they didn't specify it, we try to find it
-if test $have_pcre != yes ; then
-  AC_CHECK_HEADER(pcre.h,
-  AC_CHECK_LIB(pcre, pcre_version,
-  [have_pcre=yes ]))
-fi
+#if test $have_pcre != yes ; then
+#  AC_CHECK_HEADER(pcre.h,
+#  AC_CHECK_LIB(pcre, pcre_version,
+#  [have_pcre=yes ]))
+#fi
 
 # If we still don't have it, we use our own
 if test $have_pcre != yes ; then
   subdirs="$LIBPCREDIR $subdirs"
-  LIBPCRE_INC=$LIBPCREDIR/include
-  LIBPCRE_LIB=$LIBPCREDIR/lib
+  LIBPCRE_INC="$LIBPCREDIR"
+  LIBPCRE_LIB="$LIBPCREDIR/.libs"
+  PCRE_DEPENDS="$LIBPCRE_LIB/libpcre.a"
+  PCRE_CLEAN="pcre_clean"
+  PCRE_DIST_CLEAN="pcre_dist_clean"
+else
+  PCRE_DEPENDS=""
+  PCRE_CLEAN=""
+  PCRE_DIST_CLEAN=""
 fi
 
+AC_SUBST(LIBPCREDIR)
+AC_SUBST(PCRE_DEPENDS)
+AC_SUBST(PCRE_CLEAN)
+AC_SUBST(PCRE_DIST_CLEAN)
 LIBS="-lpcre $LIBS"
 
 

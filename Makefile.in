@@ -17,6 +17,7 @@ CC = @CC@
 CXX = @CXX@
 CCOPT = 
 LIBPCAPDIR = @libpcapdir@
+LIBPCREDIR = @LIBPCREDIR@
 INCLS = -I$(LIBPCAPDIR) 
 DEFS = @DEFS@ -DNMAP_VERSION=\"$(NMAP_VERSION)\" -DNMAP_NAME=\"$(NMAP_NAME)\" -DNMAP_URL=\"$(NMAP_URL)\" -DNMAP_PLATFORM=\"$(NMAP_PLATFORM)\" -DNMAPDATADIR=\"$(nmapdatadir)\"
 # For mtrace debugging -- see MTRACE define in main.cc for instructions
@@ -51,19 +52,26 @@ DEPS = nmap.h nmap_amigaos.h nmap_error.h targets.h idle_scan.h osscan.h output.
 
 all: $(TARGET) $(TARGETNMAPFE)
 
-$(TARGET): $(DEPS) @PCAP_DEPENDS@ $(NBASEDIR)/libnbase.a $(NSOCKDIR)/src/libnsock.a $(OBJS)
+$(TARGET): $(DEPS) @PCAP_DEPENDS@ @PCRE_DEPENDS@ $(NBASEDIR)/libnbase.a $(NSOCKDIR)/src/libnsock.a $(OBJS)
 	@echo Compiling nmap
 	rm -f $@
 	$(CXX) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
 
-$(LIBPCAPDIR)/libpcap.a: $(LIBPCAPDIR)/Makefile
+# This empty rule is used to force execution of certain rules where I can't conveniently specify
+# all of the prerequisites (e.g. recursive makes and such)
+FORCE:
+
+$(LIBPCREDIR)/.libs/libpcre.a: $(LIBPCREDIR)/Makefile FORCE
+	@echo Compiling libpcre; cd $(LIBPCREDIR) && $(MAKE)
+
+$(LIBPCAPDIR)/libpcap.a: $(LIBPCAPDIR)/Makefile FORCE
 	@echo Compiling libpcap; cd $(LIBPCAPDIR) && $(MAKE)
 
-$(NBASEDIR)/libnbase.a: $(NBASEDIR)/Makefile
+$(NBASEDIR)/libnbase.a: $(NBASEDIR)/Makefile FORCE
 	@echo Compiling libnbase;
 	cd $(NBASEDIR) && $(MAKE)
 
-$(NSOCKDIR)/src/libnsock.a: $(NSOCKDIR)/src/Makefile
+$(NSOCKDIR)/src/libnsock.a: $(NSOCKDIR)/src/Makefile FORCE
 	@echo Compiling libnsock;
 	cd $(NSOCKDIR)/src && $(MAKE)
 
@@ -111,19 +119,20 @@ distro:
 	$(MAKE) clean
 	rm -f $(LIBPCAPDIR)/config.cache $(LIBPCAPDIR)/Makefile
 	unix2dos README-WIN32
-	cp -ra $(SRCS) $(DEPS) nmap-os-fingerprints \
+	cp -ra $(SRCS) $(DEPS) nmap-os-fingerprints nmap-service-probes \
 	nmapfe.desktop nmap-services nmap-rpc nmap-protocols \
 	configure.ac config.h.in nmap_winconfig.h Makefile.in configure \
         $(SHTOOL) install-sh config.guess nmap-$(NMAP_VERSION)-1.spec \
             config.sub INSTALL README-WIN32 COPYING CHANGELOG HACKING \
             /usr/tmp/nmap-$(NMAP_VERSION)
+
 	$(SHTOOL) mkdir /usr/tmp/nmap-$(NMAP_VERSION)/mswin32
 	cd mswin32; cp -ra *.[hHcC] *.cc ARPA NET NETINET RPC icon1.ico \
                     ifaddrlist.h lib libpcap-note.txt nmap.dsp \
                     nmap.dsw nmap.rc winip \
                     /usr/tmp/nmap-$(NMAP_VERSION)/mswin32
-	$(SHTOOL) mkdir /usr/tmp/nmap-$(NMAP_VERSION)/$(LIBPCAPDIR)
 
+	$(SHTOOL) mkdir /usr/tmp/nmap-$(NMAP_VERSION)/$(LIBPCAPDIR)
 	cd $(LIBPCAPDIR); cp -ra acconfig.h aclocal.m4 arcnet.h bpf \
                           bpf_dump.c bpf_filter.c bpf_image.c CHANGES \
                           config.guess config.h.in config.sub configure \
@@ -139,6 +148,7 @@ distro:
                           README.tru64 savefile.c scanner.c scanner.l sll.h \
                           SUNOS4 TODO tokdefs.h VERSION \
                           /usr/tmp/nmap-$(NMAP_VERSION)/$(LIBPCAPDIR)
+
 	$(SHTOOL) mkdir /usr/tmp/nmap-$(NMAP_VERSION)/docs
 	cd docs; cp -ra README copying.html nmap-fingerprinting-article.txt \
                     nmap.deprecated.txt nmap.usage.txt nmap_doc.html \
@@ -150,15 +160,42 @@ distro:
                     nmap_italian.1 nmap_lithuanian.1 nmap_portuguese.1 \
                     nmap_spanish.1 nmap_russian.1 xnmap.1 nmap.dtd \
                     /usr/tmp/nmap-$(NMAP_VERSION)/docs
+
 	$(SHTOOL) mkdir /usr/tmp/nmap-$(NMAP_VERSION)/nmapfe
 	cd nmapfe; cp -ra Makefile.in aclocal.m4 configure configure.ac \
 	              nmapfe.c nmapfe.h nmapfe_sig.c nmapfe_sig.h \
 	              nmapfe_error.c nmapfe_error.h NmapFE.dsp nmapfe.dsw \
 	              /usr/tmp/nmap-$(NMAP_VERSION)/nmapfe
+
 	$(SHTOOL) mkdir /usr/tmp/nmap-$(NMAP_VERSION)/nbase
 	cd $(NBASEDIR); cp -ra Makefile.in aclocal.m4 configlocal.m4 \
                         configure configure.ac nbase_config.h.in \
                         *.c *.h CHANGELOG /usr/tmp/nmap-$(NMAP_VERSION)/nbase
+
+	$(SHTOOL) mkdir /usr/tmp/nmap-$(NMAP_VERSION)/libpcre
+	cd $(NBASEDIR); cp -ra AUTHORS config.guess config.in config.sub \
+                        configure configure.ac COPYING dftables.c get.c \
+                        INSTALL install-sh internal.h LICENCE ltmain.sh \
+                        Makefile.in maketables.c makevp.bat mkinstalldirs \
+                        NEWS NMAP_MODIFICATIONS NON-UNIX-USE pcre.c \
+                        pcre-config.in pcre.def pcre.in pcreposix.c \
+                        pcreposix.h perltest printint.c README RunTest \
+                        RunTest.in study.c \
+                        /usr/tmp/nmap-$(NMAP_VERSION)/libpcre
+
+	$(SHTOOL) mkdir /usr/tmp/nmap-$(NMAP_VERSION)/nsock
+	$(SHTOOL) mkdir /usr/tmp/nmap-$(NMAP_VERSION)/nsock/include
+	$(SHTOOL) mkdir /usr/tmp/nmap-$(NMAP_VERSION)/nsock/src
+	cd $(NBASEDIR)/include; cp -ra nsock.h /usr/tmp/nmap-$(NMAP_VERSION)/nsock/include/
+	cd $(NBASEDIR)/src; cp -ra  aclocal.m4 config.guess config.sub \
+                            configure configure.ac error.c error.h \
+                            filespace.c filespace.h gh_list.c gh_list.h \
+                            install-sh Makefile.in netutils.c netutils.h \
+                            nsock_config.h.in nsock_connect.c nsock_core.c \
+                            nsock_event.c nsock_internal.h nsock_iod.c \
+                            nsock_pool.c nsock_read.c nsock_timers.c \
+                            nsock_write.c utils.c utils.h \
+                            /usr/tmp/nmap-$(NMAP_VERSION)/nsock/src/
 
 	rm -f /usr/tmp/nmap-$(NMAP_VERSION)/nbase/nbase_config.h 
 # Kill the CVS crap
@@ -176,7 +213,7 @@ distro:
 # Update the web site
 web:
 	test x$(wroot) != x
-	cp -a CHANGELOG HACKING COPYING INSTALL nmap-os-fingerprints nmap-protocols nmap-services nmap-rpc README-WIN32 $(wroot)/nmap/data
+	cp -a CHANGELOG HACKING COPYING INSTALL nmap-os-fingerprints nmap-service-probes nmap-protocols nmap-services nmap-rpc README-WIN32 $(wroot)/nmap/data
 	cd docs && cp -a nmap_manpage*.html nmap.usage.txt nmap.dtd $(wroot)/nmap/data/
 	scripts/produceosclasschoosebox.pl nmap-os-fingerprints > $(wroot)/nmap/data/os-classes.txt
 	find $(wroot)/nmap/data/ -type f -exec chmod 644 '{}' \;
@@ -187,12 +224,14 @@ static:
 	$(CC) $(CXXFLAGS) -static $(LDFLAGS) -o nmap.linux.bin  $(SRCS) $(LIBS)
 	strip nmap.linux.bin
 
-clean: @PCAP_CLEAN@ nmapfe_clean nsock_clean nbase_clean my_clean
+clean: @PCAP_CLEAN@ @PCRE_CLEAN@ nmapfe_clean nsock_clean nbase_clean my_clean
 
 my_clean:
 	rm -f $(OBJS) $(TARGET) config.cache
 pcap_clean:
 	-cd $(LIBPCAPDIR) && $(MAKE) clean
+pcre_clean:
+	-cd $(LIBPCREDIR) && $(MAKE) clean
 nmapfe_clean:
 	-cd nmapfe && $(MAKE) clean
 nbase_clean:
@@ -201,8 +240,10 @@ nsock_clean:
 	-cd $(NSOCKDIR)/src && $(MAKE) clean
 pcap_dist_clean:
 	-cd $(LIBPCAPDIR) && $(MAKE) distclean
+pcre_dist_clean:
+	-cd $(LIBPCREDIR) && $(MAKE) distclean
 
-distclean: my_clean my_distclean @PCAP_DIST_CLEAN@
+distclean: my_clean my_distclean @PCAP_DIST_CLEAN@ @PCRE_DIST_CLEAN@
 my_distclean:
 	rm -f Makefile Makefile.bak config.h stamp-h stamp-h.in \
 	         config.cache config.log config.status
@@ -215,6 +256,7 @@ install-nmap: $(TARGET)
 	$(INSTALL) -c -m 755 nmap $(bindir)/nmap
 	$(INSTALL) -c -m 644 docs/$(TARGET).1 $(mandir)/man1/$(TARGET).1
 	$(INSTALL) -c -m 644 nmap-os-fingerprints  $(nmapdatadir)/nmap-os-fingerprints
+	$(INSTALL) -c -m 644 nmap-service-probes  $(nmapdatadir)/nmap-service-probes
 	$(INSTALL) -c -m 644 nmap-services  $(nmapdatadir)/nmap-services
 	$(INSTALL) -c -m 644 nmap-protocols  $(nmapdatadir)/nmap-protocols
 	$(INSTALL) -c -m 644 nmap-rpc  $(nmapdatadir)/nmap-rpc

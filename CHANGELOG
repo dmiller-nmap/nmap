@@ -1,5 +1,7 @@
 # Nmap Changelog ($Id$)
 
+Nmap 3.40BETA1
+
 o Initial implementation of service detection.  Nmap will now probe
   ports to determine what is listening, rather than guessing based on
   the nmap-services table lookup.  This can be very useful for
