@@ -1,6 +1,3 @@
-# CHANGE NOTICE as required by GNU General Public License 2.a:
-# 2000/05/28 Gerhard Rieger: added files protocols.[hc], nmap-protocols
-
 NMAP_VERSION = 2.54BETA1
 NMAP_NAME= nmap
 NMAP_URL= www.insecure.org/nmap/
