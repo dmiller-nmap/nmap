@@ -977,7 +977,10 @@ int service_scan(Target *targets[], int num_targets) {
     log_write(LOG_STDOUT, "The service scan took %ld %s to scan %d %s on %d %s.\n", nsec, (nsec == 1)? "second" : "seconds", SG->services_finished.size(),  (SG->services_finished.size() == 1)? "service" : "services", num_targets, (num_targets == 1)? "host" : "hosts");
     }
 
-  // TODO:  Before I delete SG, I really need to 
+  // Yeah - done with the service scan.  Now I go through the results
+  // discovered, store the important info away, and free up everything
+  // else.
+  
 
   delete SG;
 
