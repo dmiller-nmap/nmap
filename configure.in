@@ -40,16 +40,12 @@ case "$host" in
     ;;
   *-sgi-irix5*)
     AC_DEFINE(IRIX)
-    no_libsocket=yes
-    no_libnsl=yes
     if test -z "$GCC"; then
       sgi_cc=yes
     fi
     ;;
   *-sgi-irix6*)
     AC_DEFINE(IRIX)
-    no_libsocket=yes
-    no_libnsl=yes
     if test -z "$GCC"; then
       sgi_cc=yes
     fi
@@ -84,8 +80,6 @@ case "$host" in
   *-sunos4*)
     AC_DEFINE(SUNOS)
     AC_DEFINE(SPRINTF_RETURNS_STRING)
-    no_libnsl=yes
-    no_libsocket=yes
     ;;
   *-linux*)
     linux=yes
@@ -103,23 +97,59 @@ esac
 
 dnl Checks for libraries.
 dnl AC_CHECK_LIB(m, pow)
-if test -z "$no_libnsl"; then
-AC_CHECK_LIB(nsl, inet_ntoa)
-fi
-if test -z "$no_libsocket"; then
-AC_CHECK_LIB(socket, socket)
-fi
+
+dnl If any socket libraries needed
+AC_CHECK_FUNC(gethostent, , AC_CHECK_LIB(nsl, gethostent))
+AC_CHECK_FUNC(setsockopt, , AC_CHECK_LIB(socket, setsockopt))
 
 dnl need posix4/nanosleep for solaris 2.4
-AC_CHECK_LIB(posix4, nanosleep)
+AC_CHECK_FUNC(nanosleep, , AC_CHECK_LIB(posix4, nanosleep))
 
 dnl Check whether libpcap is already available
-AC_CHECK_LIB(pcap, pcap_datalink, [ have_libpcap=yes, 
-  LIBS="-lpcap $LIBS" ], have_libpcap=no)
+have_libpcap=no
+
+# By default, search for pcap library
+test "${with_libpcap+set}" != "set" && with_libpcap=yes
+
+AC_ARG_WITH(libpcap,
+[  --with-libpcap[=DIR]    Look for pcap include/libs in DIR],
+[  case "$with_libpcap" in
+  yes)
+    AC_CHECK_HEADER(pcap.h,
+      AC_CHECK_LIB(pcap, pcap_datalink,
+      [have_libpcap=yes LIBS="-lpcap $LIBS"]))
+    ;;
+  *)
+    _cppflags=$CPPFLAGS
+    _ldflags=$LDFLAGS
+
+    CPPFLAGS="-I$with_libpcap/include $CPPFLAGS"
+    LDFLAGS="-L$with_libpcap/lib $LDFLAGS"
+
+    AC_CHECK_HEADER(pcap.h,[
+      AC_CHECK_LIB(pcap, pcap_datalink,
+	[have_libpcap=yes LIBS="-lpcap $LIBS"
+	LIBPCAP_INC=$with_libpcap/include
+	LIBPCAP_LIB=$with_libpcap/lib])])
+
+    LDFLAGS=$_ldflags
+    CPPFLAGS=$_cppflags
+    ;;
+  esac]
+)
 if test $linux = yes; then
   have_libpcap=no
 fi
+
 if test $have_libpcap = yes; then
+  if test "${LIBPCAP_INC+set}" = "set"; then
+    _cflags=$CFLAGS
+    _ldflags=$LDFLAGS
+
+    CFLAGS="-I$LIBPCAP_INC $CFLAGS"
+    LDFLAGS="-L$LIBPCAP_LIB $LDFLAGS"
+  fi
+
   AC_MSG_CHECKING(if libpcap version is recent enough)
   AC_TRY_RUN([
 #include <stdio.h>
@@ -155,8 +185,13 @@ if test $have_libpcap = yes; then
   PCAP_DIST_CLEAN=""
   AC_DEFINE(HAVE_LIBPCAP)
 else
-  LDFLAGS="-L$libpcapdir $LDFLAGS"
-  CFLAGS="$CFLAGS -I$libpcapdir"
+  if test "${LIBPCAP_INC+set}" = "set"; then
+    LDFLAGS="-L$libpcapdir $_ldflags"
+    CFLAGS="$_cflags -I$libpcapdir"
+  else
+    LDFLAGS="-L$libpcapdir $LDFLAGS"
+    CFLAGS="$CFLAGS -I$libpcapdir"
+  fi
   PCAP_DEPENDS='$(LIBPCAPDIR)/libpcap.a'
   PCAP_CLEAN="pcap_clean"
   PCAP_DIST_CLEAN="pcap_dist_clean"

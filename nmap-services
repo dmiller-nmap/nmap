@@ -1,6 +1,8 @@
 # This list of services is from the
 # Nmap security scanner ( http://www.insecure.org/nmap/ )
 #
+# For a HUGE list of services (including these and others), 
+# see http://www.graffiti.com/services
 tcpmux            1/tcp      # TCP Port Service Multiplexer [rfc-1078]
 tcpmux            1/udp      # TCP Port Service Multiplexer
 compressnet       2/tcp      # Management Utility
@@ -1986,6 +1988,7 @@ stel              10005/tcp  # Secure telnet
 amanda            10080/udp  # Amanda Backup Util
 amandaidx         10082/tcp  # Amanda indexing
 amidxtape         10083/tcp  # Amanda tape indexing
+pksd              11371/tcp  # PGP Public Key Server
 NetBus            12345/tcp  # NetBus backdoor trojan
 NetBus            12346/tcp  # NetBus backdoor trojan
 isode-dua         17007/tcp  # 

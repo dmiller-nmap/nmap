@@ -1166,6 +1166,7 @@ struct interface_info *getinterfaces(int *howmany) {
    source parameter.   Some of the stuff is
    from Stevens' Unix Network Programming V2.  He had an easier suggestion
    for doing this (in the book), but it isn't portable :( */
+#define ROUTETHROUGH_MAXROUTES 512
 char *routethrough(struct in_addr *dest, struct in_addr *source) {
   static int initialized = 0;
   int i;
@@ -1177,7 +1178,7 @@ char *routethrough(struct in_addr *dest, struct in_addr *source) {
     struct interface_info *dev;
     unsigned int mask;
     unsigned int dest;
-  } myroutes[128];
+  } myroutes[ROUTETHROUGH_MAXROUTES];
   int numinterfaces = 0;
   char *p, *endptr;
   char iface[64];
@@ -1246,7 +1247,7 @@ char *routethrough(struct in_addr *dest, struct in_addr *source) {
 	  if (i == numinterfaces) 
 	    fatal("Failed to find interface %s mentioned in /proc/net/route\n", iface);
 	  numroutes++;
-	  if (numroutes == 128)
+	  if (numroutes == ROUTETHROUGH_MAXROUTES)
 	    fatal("My god!  You seem to have WAY to many routes!\n");
       }
       fclose(routez);

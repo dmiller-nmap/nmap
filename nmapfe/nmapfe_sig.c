@@ -230,8 +230,8 @@ on_ok_button1_clicked                  (GtkButton       *button,
     g_error("couldn't allocate green");
   }
 	  
-  bold = gdk_font_load("-misc-fixed-bold-r-normal-*-*-120-*-*-*-*-*-*");  
-  fixed = gdk_font_load ("-misc-fixed-medium-r-*-*-*-120-*-*-*-*-*-*");
+  bold = gdk_fontset_load("-misc-fixed-bold-r-normal-*-*-120-*-*-*-*-*-*");  
+  fixed = gdk_fontset_load ("-misc-fixed-medium-r-*-*-*-120-*-*-*-*-*-*");
   filename = gtk_file_selection_get_filename(GTK_FILE_SELECTION (window));
 
   if(save_open == 0) {
@@ -606,7 +606,8 @@ void display_nmap_command() {
   char buf[80];
   int len;
 
-  len = snprintf(buf, sizeof(buf), "Output from:  %s", build_command());
+  /* Need to use the snprintf which comes with nmap ... */
+  len = sprintf(buf, "Output from:  %s", build_command());
   if (len < 0 || len >= sizeof(buf)) {
     strcpy(buf, "Output from Nmap");
   }
@@ -727,8 +728,8 @@ gint read_data(gpointer data)
   }  
   
   
-  fixed = gdk_font_load ("-misc-fixed-medium-r-*-*-*-120-*-*-*-*-*-*");
-  bold = gdk_font_load("-misc-fixed-bold-r-normal-*-*-120-*-*-*-*-*-*");
+  fixed = gdk_fontset_load ("-misc-fixed-medium-r-*-*-*-120-*-*-*-*-*-*");
+  bold = gdk_fontset_load("-misc-fixed-bold-r-normal-*-*-120-*-*-*-*-*-*");
 
   while(pipes[0] != -1 && (count = read(pipes[0], buf, sizeof(buf)-1))) {
     /*    fprintf(stderr, "Count was %d\n", count); */
@@ -981,7 +982,7 @@ void build_tree(char *buf)
   /******************************* THIS IS BROKE RIGHT NOW :) *************************
 				   char *str, *token;
 				   GdkFont *fixed;
-				   fixed = gdk_font_load ("-misc-fixed-medium-r-*-*-*-120-*-*-*-*-*-*");
+				   fixed = gdk_fontset_load ("-misc-fixed-medium-r-*-*-*-120-*-*-*-*-*-*");
 	
 				   str = buf;
 				   token = strtok(str, " ");

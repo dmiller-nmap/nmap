@@ -2,6 +2,47 @@
 
 ** Version 2.3BETA21
 
+-- A number of people reported problems with nmapfe in various
+   environments (specifically gdk errors, hangs, and crashes).  I
+   think that is now fixed.  Let me know if you still have the problem
+   (make sure the title bar says BETA21).
+
+-- Added a bunch of OS fingerprints based on all the contributions in
+   the last month or so.
+
+-- Fixed a bug that completely broke RPC scanning in BETA19.
+
+-- Added list of ports scanned near the top of each machine log WHEN
+   -v was specified.  Here is an example of the format:
+   # Ports scanned: TCP(13;1-10,22,25) UDP(0;)
+   The "13" above is the number of TCP ports being scanned.
+
+-- Got rid of a snprintf() from nmapfe sine some systems don't have it
+   :( and I'm to lazy to integrate in the snprintf that comes with
+   nmap right now.
+
+-- Fixed important target IP range parsing bug found by Jean-Yves
+   Simon ( lethalwp@linuxbe.org ).
+
+-- Applied patch by albert chin (china at thewrittenword.com) which
+   adds --with-libpcap[=DIR] option to configure and and adds an
+   elegant approach for -lnsl and -lsocket checking to configure .
+
+-- Fixed a bug which could cause Nmap to mark a port filtered based on ICMP
+   dest. unreachable packets relating to a different host than the one
+   being scanned.
+
+-- Fixed output problem relating to ident scan noted by Peter
+   Marschall ( peter.marschall at mayn.de )
+
+-- Applied patch to services.c by Andrew Brown (atatat@atatdot.net)
+   which prevents some useless debugging (-d) output when reading some
+   kindss of /etc/services files.
+
+-- Added "Host: [machinename] (ip) Status: Down" to machine logs when
+   the verbose option is given (just like down hosts are reported to
+   stdout when verbose is given).  Suggested by Alek Komarnitsky.
+
 -- Applied NetBSD compatability patch provided by Mipam (reinoud at
    ibbnet.org) which changes an autoconf macro to check for
    getopt_long_only instead of getopt_long.
@@ -17,15 +58,9 @@ state name in machine parseable logs.  It used to looke like:
  "Ignored State: closed (1508)" Meaning that 1508 ports were closed
  and thus are not specifically enumerated.
 
--- Added list of ports scanned near the top of each machine log.  Here
-   is an example of the format:
-   # Ports scanned: TCP(13;1-10,22,25) UDP(0;)
-   The "13" above is the number of TCP ports being scanned.
-
--- A number of people reported problems with nmapfe in various
-   environments (specifically gdk errors, hangs, and crashes).  I
-   think that is now fixed.  Let me know if you still have the problem
-   (make sure the title bar says BETA21).
+-- Changed all nmapfe calls to gdk_font_load into gdk_fontset_load .
+   Bennett Feitell (bfeitell at panix.com) suggested that this fixed
+   some nmapfe font problems.
 
 ** Version 2.3BETA20
 

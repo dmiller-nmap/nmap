@@ -133,7 +133,7 @@
 
               The idea is that closed ports are required to reply
               to  your probe packet with an RST, while open ports
-              must ignore the packets in question (see RFC 973 pp
+              must ignore the packets in question (see RFC 793 pp
               64).   The  FIN  scan  uses  a  bare (surprise) FIN
               packet as the probe, while the Xmas tree scan turns
               on  the  FIN,  URG,  and PUSH flags.  The Null scan
@@ -488,7 +488,9 @@
               quotes)  to  shoot  output  into  stdout (for shell
               pipelines, etc).  In this case normal  output  will
               be suppressed.  Watch out for error messages if you
-              use this (they will still go to stderr).
+              use this (they will still go to stderr).  Also note
+              that  '-v'  will cause some extra information to be
+              printed.
 
        <B>-oS</B> <B>&lt;logfilename&gt;</B>
               thIs l0gz th3 r3suLtS of YouR  ScanZ  iN  a  <B>s|&lt;ipT</B>
@@ -535,8 +537,6 @@
 
        <B>-F</B> <B>Fast</B> <B>scan</B> <B>mode.</B>
               Specifies that you only  wish  to  scan  for  ports
-              listed  in the services file which comes with nmap.
-              This is obviously much  faster  than  scanning  all
 
 
 
@@ -549,6 +549,8 @@
 <B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
 
 
+              listed  in the services file which comes with nmap.
+              This is obviously much  faster  than  scanning  all
               65535 ports on a host.
 
        <B>-D</B> <B>&lt;decoy1</B> <B>[,decoy2][,ME],...&gt;</B>
@@ -601,8 +603,6 @@
               It  is  worth noting that using too many decoys may
               slow your scan and potentially even  make  it  less
               accurate.   Also,  some  ISPs  will filter out your
-              spoofed packets, although many (currently most)  do
-              not restrict spoofed IP packets at all.
 
 
 
@@ -614,6 +614,9 @@
 
 <B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
 
+
+              spoofed packets, although many (currently most)  do
+              not restrict spoofed IP packets at all.
 
        <B>-S</B> <B>&lt;IP_Address&gt;</B>
               In  some  circumstances,  <I>nmap</I>  may  not be able to
@@ -666,9 +669,6 @@
               hosts  before  it  scans  them.   This can make the
               scans less obvious to  various  network  monitoring
               systems,  especially  when you combine it with slow
-              timing options (see below).
-
-
 
 
 
@@ -680,6 +680,8 @@
 
 <B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
 
+
+              timing options (see below).
 
        <B>-M</B> <B>&lt;max</B> <B>sockets&gt;</B>
               Sets the maximum number of  sockets  that  will  be
@@ -733,8 +735,6 @@
               spend  scanning  a  single host before giving up on
               that IP.  The default timing mode has no host time-
               out.
-
-
 
 
 

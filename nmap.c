@@ -788,7 +788,8 @@ int nmap_main(int argc, char *argv[]) {
 
   /* Before we randomize the ports scanned, lets output them to machine 
      parseable output */
-  output_ports_to_machine_parseable_output(ports, o.numports, o.windowscan|o.synscan|o.connectscan|o.fragscan|o.finscan|o.maimonscan|o.bouncescan|o.nullscan|o.xmasscan|o.ackscan,o.udpscan);
+  if (o.verbose)
+    output_ports_to_machine_parseable_output(ports, o.numports, o.windowscan|o.synscan|o.connectscan|o.fragscan|o.finscan|o.maimonscan|o.bouncescan|o.nullscan|o.xmasscan|o.ackscan,o.udpscan);
 
   /* more fakeargv junk, BTW malloc'ing extra space in argv[0] doesn't work */
   if (quashargv) {
@@ -863,33 +864,42 @@ int nmap_main(int argc, char *argv[]) {
 
       if (o.source) memcpy(&currenths->source_ip, o.source, sizeof(struct in_addr));
       if (!o.pingscan) {
-	if (o.pingtype != PINGTYPE_NONE && (currenths->flags & HOST_UP) && (o.verbose || o.debugging)) 
-	  log_write(LOG_STDOUT, "Host %s (%s) appears to be up ... good.\n", currenths->name, inet_ntoa(currenths->host));
-	else if (o.verbose && o.pingtype != PINGTYPE_NONE && !(currenths->flags & HOST_UP)) {  
-	  if (resolve_all)
-	    log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Host %s (%s) appears to be down, skipping it.\n", currenths->name, inet_ntoa(currenths->host));
-	  else log_write(LOG_STDOUT,"Host %s (%s) appears to be down, skipping it.\n", currenths->name, inet_ntoa(currenths->host));
+	if (o.pingtype != PINGTYPE_NONE && o.verbose && 
+	    !currenths->wierd_responses) {
+	  if (currenths->flags & HOST_UP) 
+	    log_write(LOG_STDOUT, "Host %s (%s) appears to be up ... good.\n", currenths->name, inet_ntoa(currenths->host));
+	  else  {  
+	    if (resolve_all) {	  
+	      log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Host %s (%s) appears to be down, skipping it.\n", currenths->name, inet_ntoa(currenths->host));
+	    }
+	    else {
+	      log_write(LOG_STDOUT,"Host %s (%s) appears to be down, skipping it.\n", currenths->name, inet_ntoa(currenths->host));
+	    }
+	    log_write(LOG_MACHINE, "Host: %s (%s)\tStatus: Down\n", currenths->name, inet_ntoa(currenths->host));
+	  }
 	}
-
       }
       else {
-	if (currenths->flags & HOST_UP) {  
-	  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Host %s (%s) appears to be up.\n", currenths->name, inet_ntoa(currenths->host));
-	  log_write(LOG_MACHINE,"Host: %s (%s)\tStatus: Up\n", inet_ntoa(currenths->host), currenths->name);
-	}
-	else 
-	  if (o.verbose || o.debugging || resolve_all) {    
-	    if (resolve_all)
-	      log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Host %s (%s) appears to be down.\n", currenths->name, inet_ntoa(currenths->host));
-	    else log_write(LOG_STDOUT,"Host %s (%s) appears to be down.\n", currenths->name, inet_ntoa(currenths->host));
+	if (!currenths->wierd_responses) {	
+	  if (currenths->flags & HOST_UP) {  
+	    log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Host %s (%s) appears to be up.\n", currenths->name, inet_ntoa(currenths->host));
+	    log_write(LOG_MACHINE,"Host: %s (%s)\tStatus: Up\n", inet_ntoa(currenths->host), currenths->name);
 	  }
+	  else 
+	    if (o.verbose || o.debugging || resolve_all) {    
+	      if (resolve_all)
+		log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Host %s (%s) appears to be down.\n", currenths->name, inet_ntoa(currenths->host));
+	      else log_write(LOG_STDOUT,"Host %s (%s) appears to be down.\n", currenths->name, inet_ntoa(currenths->host));
+	      log_write(LOG_MACHINE, "Host: %s (%s)\tStatus: Down\n", currenths->name, inet_ntoa(currenths->host));
+	    }
+	}
       }
 
       if (currenths->wierd_responses) {  
 	if (!(currenths->flags & HOST_UP))
 	  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Host  %s (%s) seems to be a subnet broadcast address (returned %d extra pings).  Skipping host.\n",  currenths->name, inet_ntoa(currenths->host), currenths->wierd_responses);
 	else
-	  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Host  %s (%s) seems to be a subnet broadcast address (returned %d extra pings).  Still scanning it.\n",  currenths->name, inet_ntoa(currenths->host), currenths->wierd_responses);
+	  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Host  %s (%s) seems to be a subnet broadcast address (returned %d extra pings).  Still scanning it due to positive ping response from its own IP.\n",  currenths->name, inet_ntoa(currenths->host), currenths->wierd_responses);
 	log_write(LOG_MACHINE,"Host: %s (%s)\tStatus: Smurf (%d responses)\n",  inet_ntoa(currenths->host), currenths->name, currenths->wierd_responses);
       }
  
@@ -1516,7 +1526,7 @@ void printportoutput(struct hoststruct *currenths, portlist *plist) {
   } else {
     log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Port       State       Service (RPC)");
   }
-  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"%s", (o.identscan)?"         Owner\n":"\n");
+  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"%s", (o.identscan)? ((o.rpcscan)? "           Owner\n" : "                 Owner\n") :"\n");
   log_write(LOG_MACHINE,"\tPorts: ");
   
   protoarrays[0] = plist->tcp_ports;
@@ -2438,7 +2448,7 @@ void pos_scan(struct hoststruct *target, unsigned short *portarray, stype scanty
     }
     current = pil.testinglist = &scan[0]; 
     rawsd = -1;
-    rsi.rpc_current_port = nextport(&target->ports, NULL, 0, PORT_OPEN);
+    rsi.rpc_current_port = NULL; /*nextport(&target->ports, NULL, 0, PORT_OPEN); */
   }
 
   starttime = time(NULL);
@@ -2753,8 +2763,10 @@ void pos_scan(struct hoststruct *target, unsigned short *portarray, stype scanty
       
       /* Next let us increment the port we are working on, since
 	 this one is done ... */
-      rsi.rpc_current_port = rsi.rpc_current_port->next;
-
+      /*      rsi.rpc_current_port = nextport(&target->ports, rsi.rpc_current_port,
+       				      0, PORT_OPEN);
+       if (!rsi.rpc_current_port)
+      break; */
       /* Time to put our RPC program scan list back together for the
 	 next port ... */
       for(i = 0; i < rsi.rpc_number; i++) {
@@ -2847,7 +2859,7 @@ void posportupdate(struct hoststruct *target, struct portinfo *current,
   owner[0] = '\0';
   if (current->state != PORT_OPEN && current->state != PORT_CLOSED &&
       current->state != PORT_FIREWALLED && current->state != PORT_TESTING) {
-    if (o.debugging) error("Whacked packet to port %lu passed to posportupdate with state %d\n", current->portno, current->state);
+    if (o.debugging) error("Whacked packet to port %lu passed to posportupdate with state %s (%d)\n", current->portno, statenum2str(current->state), current->state);
     return;
   }
 
@@ -3234,7 +3246,6 @@ void get_syn_results(struct hoststruct *target, struct portinfo *scan,
 	return;
       }
     }
-
     if (ip->ip_src.s_addr == target->host.s_addr && ip->ip_p == IPPROTO_TCP) {
       tcp = (struct tcphdr *) (((char *) ip) + 4 * ip->ip_hl);
       i = ntohs(tcp->th_dport);
@@ -3275,12 +3286,11 @@ void get_syn_results(struct hoststruct *target, struct portinfo *scan,
 	trynum = -1;
       }
       if (scantype == SYN_SCAN) {
-	if ((tcp->th_flags & (TH_SYN|TH_ACK)) == (TH_SYN|TH_ACK)) {	  
+	if (tcp->th_flags & TH_RST) {
+	  newstate = PORT_CLOSED;
+	} else if ((tcp->th_flags & (TH_SYN|TH_ACK)) == (TH_SYN|TH_ACK)) {
 	  newstate = PORT_OPEN;
 	}
-	else if (tcp->th_flags & TH_RST) {	  
-	  newstate = PORT_CLOSED;
-	}	
       }
       else if (scantype == WINDOW_SCAN) {
 	if (tcp->th_win) {
@@ -3306,6 +3316,15 @@ void get_syn_results(struct hoststruct *target, struct portinfo *scan,
 	  }
 	  continue;
 	}
+
+      /* Lets ensure this packet relates to a packet to the host
+	 we are scanning ... */
+      if (ip2->ip_dst.s_addr != target->host.s_addr) {
+	if (o.debugging > 1)
+	  error("Got an ICMP message which does not relate to a packet sent to the host being scanned");
+	continue;
+      }
+
       data = (unsigned short *) ((char *)ip2 + 4 * ip2->ip_hl);
       /*	    log_write(LOG_STDOUT, "Caught ICMP packet:\n");
 		    hdump(icmp, ntohs(ip->ip_len) - sizeof(struct ip)); */
@@ -3317,6 +3336,10 @@ void get_syn_results(struct hoststruct *target, struct portinfo *scan,
 	  hdump((unsigned char *)icmp, ntohs(ip->ip_len) - sizeof(struct ip));
 	  continue;
 	}
+
+
+	
+
 	newport = ntohs(data[1]);
 	if (portlookup[newport] >= 0) {
 	  current = &scan[portlookup[newport]];

@@ -197,7 +197,7 @@ unsigned int current_proto = IPPROTO_TCP;
 
 if (afterthisport) {
   current_portno = afterthisport->portno;
-  current_proto = (afterthisport->proto == IPPROTO_TCP)? 0 : 1;
+  current_proto = afterthisport->proto;  /* (afterthisport->proto == IPPROTO_TCP)? IPPROTO_TCP : IPPROTO_UDP; */
 } 
 
  current_portno++; /* Start on the port after the one we were given */

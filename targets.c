@@ -60,7 +60,7 @@ int target_struct_get(struct targets *t, struct in_addr *sin) {
     
     /* Now we nudge up to the next IP */
     for(octet = 3; octet >= 0; octet--) {
-      if (t->current[octet] <= t->last[octet]) {
+      if (t->current[octet] < t->last[octet]) {
 	/* OK, this is the column I have room to nudge upwards */
 	t->current[octet]++;
 	break;
@@ -69,7 +69,8 @@ int target_struct_get(struct targets *t, struct in_addr *sin) {
 	t->current[octet] = 0;
       }
     }
-    assert(octet != -1);
+    /* Octet can only be -1 if I just used the last IP */
+    assert(octet != -1 || t->nleft == 1);
   }
   t->nleft--;
   assert(t->nleft >= 0);
