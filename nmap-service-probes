@@ -603,7 +603,7 @@ match sourceoffice m|^200\r\nProtocol-Version:(\d[.\d]+)\r\nMessage-ID:\d+\r\nDa
 match ssh m|^\0\0\0\$\0\0\0\0\x01\0\0\0\x1bNo host key is configured!\n\r!\"v| v/Foundry Networks switch sshd//broken: No host key configured/
 match ssh m|^SSH-(\d[\d.]+)-SSF-(\d[-.\w]+)\n| v/SSF French SSH/$2/protocol $1/
 match ssh m|^SSH-(\d[\d.]+)-lshd_(\d[-.\w]+) lsh - a free ssh\r\n\0\0| v/lshd secure shell/$2/protocol $1/
-match ssh m/^SSH-([.\d]+)-OpenSSH[_-](\S+)/ v/OpenSSH/$2/protocol $1/
+match ssh m/^SSH-([.\d]+)-OpenSSH[_-]([\S ]+)/ v/OpenSSH/$2/protocol $1/
 match ssh m/^SSH-([.\d]+)-Sun_SSH_(\S+)/ v/SunSSH/$2/protocol $1/
 match ssh m/^SSH-([.\d]+)-meow roototkt by rebel/ v/meow SSH ROOTKIT//protocol $1/
 match ssh m/^SSH-([.\d]+)-(\d+\.\d+\.\d+) SSH Secure Shell/ v/F-Secure SSH Secure Shell/$2/protocol $1/
@@ -1805,12 +1805,20 @@ ports 1352
 # Lotus Server 6.0.1
 # Lotus Domino (r) Server (Release 6.0.1CF1 for Windows/32
 match lotusnotes m|^.\0\0\0.\0\0\0\x03\0\0@\x02\x0f\0.*\x03\0\0\0\0\x02\0/\0.\0\0\0\0\0\0\0@\x1f.*CN=([-.\w ]+)/O=([-.\w ]+)[^-.\w ]|s v/Lotus Domino server//CN=$1;Org=$2/
+
 ##############################NEXT PROBE##############################
 Probe UDP Sqlping q|\x02|
 ports 1434
 match ms-sql-m m|^\x05..ServerName;([\w\-]+);InstanceName;[\w\-]+;IsClustered;\w{2,3};Version;([\d\.]+);np;.+;tcp;(\d{1,5});| v/Microsoft SQL Server/$2/ServerName: $1; TCPPort: $3/
 match ms-sql-m m|^\x05..ServerName;([\w\-]+);InstanceName;[\w\-]+;IsClustered;\w{2,3};Version;([\d\.]+);tcp;(\d{1,5});np;(.+);$| v/Microsoft SQL Server/$2/ServerName: $1; TCPPort: $3/
 
+##############################NEXT PROBE##############################
+Probe UDP NTPRequest q|\xe3\x00\x04\xfa\x00\x01\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xc5\x4f\x23\x4b\x71\xb1\x52\xf3|
+ports 123
+match ntp m|^\$[\x01-\x0f]..............................................$|s  v/NTP/v4//
+match ntp m|^\xe4\0..............................................$|s  v/NTP/v4/unsynchronized/
+
+##############################NEXT PROBE##############################
 Probe TCP WMSRequest q|\x01\0\0\xfd\xce\xfa\x0b\xb0\xa0\0\0\0MMS\x14\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x12\0\0\0\x01\0\x03\0\xf0\xf0\xf0\xf0\x0b\0\x04\0\x1c\0\x03\0N\0S\0P\0l\0a\0y\0e\0r\0/\09\0.\00\0.\00\0.\02\09\08\00\0;\0 \0{\00\00\00\00\0A\0A\00\00\0-\00\0A\00\00\0-\00\00\0a\00\0-\0A\0A\00\0A\0-\00\00\00\00\0A\00\0A\0A\00\0A\0A\00\0}\0\0\0\xe0\x6d\xdf\x5f|
 ports 1549,1755
 match shivahose m|^\x02\x06$| v///Shiva network modem access/

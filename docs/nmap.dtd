@@ -74,8 +74,6 @@
 --> 
 <!ENTITY % service_confs  "( 3 | 5 | 10)" >
 
-
-
 <!-- This element was started in nmap.c:nmap_main().
      It represents to the topmost element of the output document.
 -->
@@ -84,6 +82,7 @@
 			scanner		(nmap)		#REQUIRED
 			args		CDATA		#IMPLIED
 			start		%attr_numeric;	#IMPLIED
+			startstr	CDATA	        #IMPLIED
 			version		CDATA		#REQUIRED
 			xmloutputversion (1.01)		#REQUIRED
 >
@@ -96,7 +95,6 @@
 			numservices	%attr_numeric;	#REQUIRED
 			services	CDATA		#REQUIRED
 >
-
 
 <!-- these elements are written in nmap.c:nmap_main() -->
 <!ELEMENT verbose	EMPTY >
@@ -111,7 +109,9 @@
      output.c:write_host_status(), output.c:printportoutput(), and
      output.c:printosscanoutput()
 -->
-<!ELEMENT host		( status, address , (address | hostnames | smurf | ports | addport | os | uptime | tcpsequence | ipidsequence | tcptssequence )* ) >
+<!ELEMENT host		( status, address , (address | hostnames |
+                          smurf | ports | addport | os | uptime | 
+                          tcpsequence | ipidsequence | tcptssequence )* ) >
 
 
 <!-- these elements are written by output.c:write_xml_initial_hostinfo() -->
@@ -240,7 +240,9 @@
 <!ELEMENT runstats	(finished, hosts) >
 
 <!ELEMENT finished	EMPTY >
-<!ATTLIST finished	time		%attr_numeric;	#REQUIRED >
+<!ATTLIST finished	time		%attr_numeric;	#REQUIRED 
+                        timestr		CDATA	        #IMPLIED
+>
 
 <!ELEMENT hosts		EMPTY >
 <!ATTLIST hosts

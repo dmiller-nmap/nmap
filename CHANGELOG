@@ -1,5 +1,15 @@
 # Nmap Changelog ($Id$)
 
+UNRELEASED:
+
+o The XML nmaprun element now has a startstr attribute which gives the
+  human readable calendar time format that a scan started.  Similarly
+  the finished element now has a timestr attribute describing when the
+  scan finished.  These are in addition to the existing nmaprun/start
+  and finished/time attributes that provided the start and finish time
+  in UNIX time_t notation.  This should help in development of better
+  XSLT stylesheets for Nmap XML output.
+
 o Added new "closed|filtered" state.  This is used for Idlescan, since
   that scan method can't distinguish between those two staes.  Nmap
   previously just used "closed", but this is more accurate.
@@ -60,6 +70,10 @@ o Fixed compilation on soem HP-UX 11 boxes thanks to a patch by Petter
 
 o Fixed a portability problem on some OpenBSD and FreeBSD machines
   thanks to a patch by Okan Demirmen (okan(a)demirmen.com).
+
+o Added an NTP probe and matches to the version detection database
+  (nmap-service-probes) thanks to a submission from Martin
+  Maèok (martin.macok@underground.cz).
 
 Nmap 3.75
 
