@@ -1,7 +1,10 @@
 
+
 #include "portlist.h"
 #include "error.h"
 #include "nmap.h"
+
+#include <strings.h>
 
 struct ops o;  /* option structure */
 static struct port *freeportlist = NULL;
@@ -19,12 +22,16 @@ int addport(portlist *plist, unsigned short portno, unsigned short protocol,
     fatal("addport: attempt to add port number %d with illegal state %d\n", portno, state);
 
   if (protocol == IPPROTO_TCP) {
-    if (!plist->tcp_ports)
+    if (!plist->tcp_ports) {
       plist->tcp_ports = safe_malloc(65536 * sizeof(struct port *));
+      bzero(plist->tcp_ports, 65536 * sizeof(struct port *));
+    }
     portarray = plist->tcp_ports;
   } else if (protocol == IPPROTO_UDP) {
-    if (!plist->udp_ports)
+    if (!plist->udp_ports) {
       plist->udp_ports = safe_malloc(65536 * sizeof(struct port *));
+      bzero(plist->udp_ports, 65536 * sizeof(struct port *));
+    }
     portarray = plist->udp_ports;
   } else fatal("addport: attempted port insertion with invalid protocol");
 

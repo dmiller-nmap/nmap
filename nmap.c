@@ -2944,9 +2944,10 @@ void posportupdate(struct hoststruct *target, struct portinfo *current,
   current->state = newstate;
   current->next = -1;
   current->prev = -1;
-  if (newstate == PORT_OPEN && o.verbose)
+  if (newstate == PORT_OPEN && o.verbose) {
     log_write(LOG_STDOUT, "Adding TCP port %lu (state %s).\n", current->portno, statenum2str(current->state));
-  
+    log_flush(LOG_STDOUT);
+  }
   addport(&target->ports, current->portno, IPPROTO_TCP, owner, newstate);
   return;
 }
@@ -3701,6 +3702,26 @@ void log_close(int logt)
   int i;
   if (logt<0 || logt>LOG_MASK) return;
   for (i=0;logt;logt>>=1,i++) if (o.logfd[i] && (logt&1)) fclose(o.logfd[i]);
+}
+
+void log_flush(int logt) {
+  int i;
+
+  if (logt & LOG_STDOUT) {
+    fflush(o.nmap_stdout);
+    logt -= LOG_STDOUT;
+  }
+  if (logt & LOG_SKID_NOXLT)
+    fatal("You are not allowed to log_flush() with LOG_SKID_NOXLT");
+
+  if (logt<0 || logt>LOG_MASK) return;
+
+  for (i=0;logt;logt>>=1,i++)
+    {
+      if (!o.logfd[i] || !(logt&1)) continue;
+      fflush(o.logfd[i]);
+    }
+
 }
 
 void log_flush_all() {

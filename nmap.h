@@ -346,6 +346,7 @@ int gather_logfile_resumption_state(char *fname, int *myargc, char ***myargv);
 
 void log_write(int logt, char *fmt, ...);
 void log_close(int logt);
+void log_flush(int logt);
 void log_flush_all();
 void skid_output(unsigned char *s);
 
