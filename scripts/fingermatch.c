@@ -69,6 +69,9 @@ int main(int argc, char *argv[]) {
   char line[512];
   int linelen;
   int i;
+  char lasttestname[32];
+  char *p;
+  int adjusted = 0; /* Flags if we have adjusted the entered fingerprint */
 
   if (argc != 2)
     usage();
@@ -82,14 +85,39 @@ int main(int argc, char *argv[]) {
   /* Now we read in the user-provided fingerprint */
   printf("Enter the fingerprint you would like to match, followed by a blank single-dot line:\n");
 
+  lasttestname[0] = '\0';
   while(fgets(line, sizeof(line), stdin)) {
     if (*line == '\n' || *line == '.')
       break;
     linelen = strlen(line);
+    /* Check if it is a duplicate testname */
+    p = strchr(line, '(');
+    if (p) {
+      *p = '\0';
+      if (strcmp(line, lasttestname) == 0) {
+	adjusted = 1;
+	continue;
+      }
+      Strncpy(lasttestname, line, sizeof(lasttestname));
+      *p = '(';
+    }
     if (printlen + linelen >= sizeof(fprint) - 5)
       fatal("Overflow!");
     strcpy(fprint + printlen, line);
     printlen += linelen;
+  }
+
+  if (adjusted) {
+    printf("\n**WARNING**: Adjusted fingerprint due to duplicated tests (we only look at the first).  Results are based on this adjusted fingerprint:\n%s\n", fprint);
+  }
+
+  /* Now we validate that all elements are present */
+  if (!strstr(fprint, "TSeq(") || !strstr(fprint, "T1(") || 
+      !strstr(fprint, "T2(") || !strstr(fprint, "T3(") || 
+      !strstr(fprint, "T4(") || !strstr(fprint, "T5(") || 
+      !strstr(fprint, "T6(") || !strstr(fprint, "T7(") ||
+      !strstr(fprint, "PU(")) {
+    printf("\n\n***WARNING: Fingerprint is missing at least 1 element***\n\n");
   }
 
   testFP = parse_single_fingerprint(fprint);
