@@ -51,7 +51,7 @@ class NmapOps {
   void setaf(int af) { addressfamily = af; }
   int af() { return addressfamily; }
   // no setpf() because it is based on setaf() values
-  int pf() { return (af() == AF_INET)? PF_INET : PF_INET6; }
+  int pf();
   /* Returns 0 for success, nonzero if no source has been set or any other
      failure */
   int SourceSockAddr(struct sockaddr_storage *ss, size_t *ss_len);

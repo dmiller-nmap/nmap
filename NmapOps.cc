@@ -44,7 +44,7 @@
 
 /* $Id$ */
 #include "nmap.h"
-
+#include "nbase.h"
 #include "NmapOps.h"
 
 NmapOps o;
@@ -55,6 +55,11 @@ NmapOps::NmapOps() {
 
 void NmapOps::ReInit() {
   Initialize();
+}
+
+// no setpf() because it is based on setaf() values
+int NmapOps::pf() {
+  return (af() == AF_INET)? PF_INET : PF_INET6;
 }
 
 int NmapOps::SourceSockAddr(struct sockaddr_storage *ss, size_t *ss_len) {

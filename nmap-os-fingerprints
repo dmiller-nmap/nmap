@@ -986,7 +986,7 @@ T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
-PU(DF=Y%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=0%ULEN=134%DAT=E)
+PU(DF=N|Y%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=0%ULEN=134%DAT=E)
 
 # Actually it is not constant seq class -- it just seems that way
 # because it takes so long to increment
@@ -1694,6 +1694,17 @@ T4(Resp=N)
 T5(DF=N%W=800|C00%ACK=S++%Flags=AR%Ops=WNMETL)
 T6(DF=N%W=800|C00%ACK=S%Flags=AR%Ops=WNMETL)
 T7(DF=N%W=800|C00%ACK=S++%Flags=UAPR%Ops=WNMETL)
+PU(Resp=N)
+
+Fingerprint Cisco PIX Firewall Version 6.2(1)
+TSeq(Class=TR%gcd=<6%IPID=I%TS=U)
+T1(DF=N%W=1000%ACK=S++%Flags=AS%Ops=M)
+T2(Resp=N)
+T3(Resp=Y%DF=N%W=1000%ACK=S++%Flags=AS%Ops=M)
+T4(Resp=N)
+T5(Resp=N)
+T6(Resp=N)
+T7(Resp=N)
 PU(Resp=N)
 
 Fingerprint Cisco 766 non-IOS software 4.2(3.5)
@@ -2849,7 +2860,10 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
-Fingerprint Nokia IPSO 3.2-3.2.1 releng 783-849
+# Nokia IPSO 3.2-3.2.1 releng 783-849
+# IPSO 3.4-FCS4A releng 767  Running CheckPoint 4.1 SP6
+# Nokia IPSO 3.2-fcs4 releng 783 (FreeBSD Based)
+Fingerprint Nokia IPSO 3.2-3.4 Running checkpoint FW1
 TSeq(Class=RI%gcd=<6%SI=<77DC6&>1319)
 T1(DF=N%W=4000%ACK=O|S++%Flags=A|AS%Ops=NNT|MNWNNT)
 T2(Resp=N)
@@ -2860,7 +2874,9 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=E0%IPLEN=164%RIPTL=134%RID=E%RIPCK=F%UCK=0%ULEN=134%DAT=E)
 
-Fingerprint Nokia IPSO 3.2 Running Checkpoint Firewall-1
+# Nokia IPSO 3.2 Running Checkpoint Firewall-1
+# IPSO 3.5-FCS8 releng 1020  Running Checkpoint NG FP2
+Fingerprint Nokia IPSO 3.2-3.5 Running Checkpoint Firewall-1 or NG FP2
 TSeq(Class=RI%gcd=<6%SI=<E4656&>2476)
 T1(DF=N%W=4000%ACK=O|S++%Flags=A|AS%Ops=NNT|MNWNNT)
 T2(Resp=N)
@@ -2968,9 +2984,9 @@ T1(DF=N%W=1000%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
 T3(Resp=Y%DF=N%W=1000%ACK=S++%Flags=AS%Ops=M)
 T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
-T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
-T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
-T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T5(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(Resp=Y%DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(Resp=Y%DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=15C%RID=E%RIPCK=F|E%UCK=0%ULEN=134%DAT=E)
 
 Fingerprint FreeBSD 2.2.1 - 4.1
@@ -4755,8 +4771,9 @@ T6(DF=Y%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=Y%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=Y%TOS=C0%IPLEN=164%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
-# Debain GNU/Linux 3.0 (Linux 2.4.19-pre4 running on a DECpc AXP 150
-Fingerprint Linux 2.4.19-pre4 on Alpha
+# Debian GNU/Linux 3.0 (Linux 2.4.19-pre4 running on a DECpc AXP 150
+# Linux 2.5.31bk5 on x86
+Fingerprint Linux 2.4.19 - 2.5.31 on x86 or Alpha
 TSeq(Class=RI%gcd=<6%SI=<266A1F0&>62546%IPID=Z%TS=1000HZ)
 T1(DF=Y%W=16A0%ACK=S++%Flags=AS%Ops=MNNTNW)
 T2(Resp=N)
@@ -4799,7 +4816,7 @@ T6(DF=Y%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=Y%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=C0%IPLEN=164%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
-Fingerprint Linux 2.5.25 or Gentoo 1.2 Linux 2.4.19 rc1-rc7)
+Fingerprint Linux 2.5.25 - 2.5.31 or Gentoo 1.2 Linux 2.4.19 rc1-rc7)
 TSeq(Class=RI%gcd=<6%SI=<244F6FE&>5CF30%IPID=Z%TS=1000HZ)
 T1(DF=Y%W=7FFF%ACK=S++%Flags=AS%Ops=MNNTNW)
 T2(Resp=N)
@@ -5609,17 +5626,6 @@ T6(Resp=Y%DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(Resp=Y%DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
-Fingerprint Nokia IPSO 3.2-fcs4 releng 783 (FreeBSD Based)
-TSeq(Class=RI%gcd=<6%SI=<10F72&>2A2)
-T1(DF=N%W=4000%ACK=O|S++%Flags=A|AS%Ops=NNT|MNWNNT)
-T2(Resp=N)
-T3(Resp=Y%DF=N%W=4000%ACK=O|S++%Flags=A|AS%Ops=NNT|MNWNNT)
-T4(DF=N%W=4000%ACK=O%Flags=R%Ops=)
-T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
-T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
-T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
-PU(DF=N%TOS=E0%IPLEN=164%RIPTL=134%RID=E%RIPCK=F%ULEN=134%DAT=E)
-
 Fingerprint Nokia IP530 Network Appliance (IPSO 3.4-3.4.2)
 TSeq(Class=RI%gcd=<8%SI=<85DD6&>987%IPID=I%TS=2HZ)
 T1(DF=N%W=4000%ACK=S++%Flags=AS%Ops=MNWNNT)
@@ -6337,6 +6343,17 @@ T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=0%UCK=E%ULEN=134%DAT=E)
+
+Fingerprint Panasonic IP Technology Broadband Networking Gateway, KX-HGW200
+TSeq(Class=RI%gcd=<6%SI=<27BE484&>16928%IPID=Z%TS=100HZ)
+T1(DF=Y%W=16A0%ACK=S++%Flags=AS%Ops=MNNTNW)
+T2(Resp=N)
+T3(Resp=N)
+T4(Resp=N)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(Resp=N)
+T7(Resp=N)
+PU(Resp=N)
 
 Fingerprint Panasonic panafax DX2000 SuperG3
 TSeq(Class=TD|RI%gcd=<18%SI=<177A&>27)
@@ -7123,17 +7140,6 @@ T6(Resp=Y%DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(Resp=Y%DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=0%ULEN=134%DAT=E)
 
-Fingerprint Turtle Beach AudioTron Firmware 3.0
-TSeq(Class=TD%gcd=<68%SI=<1E%IPID=BI%TS=U)
-T1(DF=Y%W=2017%ACK=S++%Flags=AS%Ops=M)
-T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
-T3(Resp=Y%DF=Y%W=2017%ACK=S++%Flags=AS%Ops=M)
-T4(DF=N%W=0%ACK=S++|O%Flags=R%Ops=)
-T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
-T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
-T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
-PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
-
 Fingerprint Ultrix 4.1
 TSeq(Class=64K)
 T1(DF=N%W=4000%ACK=S++|O%Flags=AS%Ops=)
@@ -7289,7 +7295,7 @@ T6(DF=N%W=0%ACK=O|S++%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
-Fingerprint Windows NT4 / Win95 / Win98
+Fingerprint Windows 95/98/NT4 or PocketPC
 TSeq(Class=TD|RI%gcd=1|2|3|4|5|8|A|14|1E|28|5A|17C%SI=<1F4)
 T1(DF=Y%W=2017|16D0|860|8000|869F%ACK=S++%Flags=AS%Ops=M|MNWNNT)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)

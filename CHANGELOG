@@ -1,5 +1,16 @@
 # Nmap Changelog ($Id$)
 
+o Added German translation of Nmap manpage by Marc Ruef
+  (marc.ruef@computec.ch).  It is also available at
+  http://www.insecure.org/nmap/data/nmap_manpage-de.html
+
+o Includes a brand new French translation of the manpage by Sebastien
+  Blanchet.  You could probably guess that it is available at
+  http://www.insecure.org/nmap/data/nmap_manpage-fr.html
+
+o Fixed a compile problem on machines without PF_INET6.  Thanks to
+  Josef 'Jupp' Schugt (deusxmachina@webmail.co.za) for noting this.
+
 Nmap 3.10ALPHA3
 
 o Added --min_parallelism option, which makes scans more aggressive
