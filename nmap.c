@@ -103,16 +103,19 @@ if (!o.isr00t && pingscan) fatal("You can't do a ping scan if you aren't root");
 if (pingscan && o.dontping) fatal("ICMP ping scan -P and don't ping -D are incompatible options, Duh.");
 if (!o.isr00t) o.dontping++;
 if (bouncescan && !o.dontping) printf("Hint: if your bounce scan target hosts aren't reachable from here, remember to use -D\n");
-if (tcpscan && o.synscan) 
-  fatal("The -t and -s options can't be used together.\
- If you are trying to do TCP SYN scanning, just use -s.\
- For normal connect() style scanning, use -t");
+if (tcpscan && (o.synscan || o.finscan)) 
+  fatal("Pick one of -t, -s, and -U.  They all do a TCP portscan.\
+ If you are trying to do TCP SYN scanning, just use -s, for FIN use -U, and \
+ for normal connect() style scanning, use -t");
+if ((o.fragscan && !o.synscan && !o.finscan)) {
+  printf("Specified -f but don't know whether to fragment SYN (-s) scan or FIN (-U) scan.  Doing fragmented SYN scan\n");
+}
 if ((o.synscan || o.finscan || o.fragscan || pingscan) && !o.isr00t)
   fatal("Options specified require r00t privileges.  You don't have them!");
 if (!tcpscan && !udpscan && !o.synscan && !o.finscan && !bouncescan && !pingscan) {
   tcpscan++;
   if (o.verbose) error("No scantype specified, assuming vanilla tcp connect()\
- scan. Use -P if you really don't want to portscan.");
+ scan. Use -P if you really don't want to portscan (and just want to ping).");
 if (fastscan && ports)
   fatal("You can use -F (fastscan) OR -p for explicit port specification.\
   Not both!\n");
@@ -139,6 +142,9 @@ if (bouncescan) {
     printf("Resolved ftp bounce attack proxy to %s (%s).\n", 
 	   ftp.server_name, inet_ntoa(ftp.server)); 
 }
+
+fflush(stdout);
+
 printf("\nStarting nmap V. %s by Fyodor (fyodor@dhp.com, www.dhp.com/~fyodor/nmap/)\n", VERSION);
 /* I seriously doubt anyone likes this "feature"
 if (!o.verbose) 
@@ -433,7 +439,7 @@ options (none are required, most can be combined):\n\
    -b <ftp_relay_host> ftp \"bounce attack\" port scan\n\
    -f use tiny fragmented packets for SYN or FIN scan.\n\
    -i Get identd (rfc 1413) info on listening TCP processes.\n\
-   -n Don't DNS resolve anything unless we have too (makes ping scans faster)\n\
+   -n Don't DNS resolve anything unless we have to (makes ping scans faster)\n\
    -p <range> ports: ex: \'-p 23\' will only try port 23 of the host(s)\n\
                   \'-p 20-30,63000-\' scans 20-30 and 63000-65535 default: 1-1024\n\
    -F fast scan. Only scans ports in /etc/services, a la strobe(1).\n\
