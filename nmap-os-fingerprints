@@ -4205,7 +4205,7 @@ PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 # Contributed by marco@tecnogi.com
 # With more info provided by Theo De Raadt
 # OpenBSD 2.6
-Fingerprint OpenBSD 2.6
+Fingerprint OpenBSD 2.6-2.7
 TSeq(Class=RI%gcd=<6%SI=<1869F6&>3E6B)
 T1(DF=N%W=403D%ACK=S++%Flags=AS%Ops=MNWNNT)
 T2(Resp=N)
