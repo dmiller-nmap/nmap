@@ -13,7 +13,7 @@ INCLS = -I. -I$(LIBPCAPDIR)
 DEFS = @DEFS@
 CFLAGS = @CFLAGS@ $(CCOPT) $(DEFS) $(INCLS)
 LDFLAGS = @LDFLAGS@
-LIBS = -L./$(LIBPCAPDIR) @LIBS@ -lpcap
+LIBS =  @LIBS@ -lpcap
 VERSION = 1.49
 INSTALL = @INSTALL@
 MAKEDEPEND = @MAKEDEPEND@
@@ -27,9 +27,10 @@ OBJS = nmap.o targets.o tcpip.o error.o utils.o @COMPAT_OBJS@
 all: $(TARGET)
 
 $(TARGET): $(OBJS)
-	@echo Compiling libpcap 
+#	@echo Compiling libpcap 
 #	$(MAKE) -C $(LIBPCAPDIR) #not all make's have this :( ...
-	cd $(LIBPCAPDIR);  $(MAKE)
+#	cd $(LIBPCAPDIR);  $(MAKE)
+	@pcap_rules@
 	@echo Compiling nmap
 	rm -f $@
 	$(CC) -o $@ $(OBJS) $(LIBS)

@@ -51,6 +51,17 @@ if test -z "$no_libsocket"; then
 AC_CHECK_LIB(socket, socket)
 fi
 
+dnl Check whether libpcap is already available
+AC_CHECK_LIB(pcap, pcap_datalink, pcap_rules="#"; have_libpcap=yes;
+AC_DEFINE(HAVE_LIBPCAP), LIBS="$LIBS -L$libpcapdir"; have_libpcap=no; pcap_rules="@echo Compiling libpcap; cd \$(LIBPCAPDIR); ./configure; \$(MAKE)")
+dnl if test $already_has_pcap = yes; then
+dnl      pcap_rules = "#"
+dnl      CFLAGS="$CFLAGS -D__STDC__=2"
+dnl else
+dnl       pcap_rules = '@echo Compiling libpcap; cd \$(LIBPCAPDIR); \$(MAKE)'
+dnl fi
+AC_SUBST(pcap_rules)
+
 dnl Checks for header files.
 AC_HEADER_STDC
 AC_CHECK_HEADERS(string.h strings.h memory.h sys/param.h sys/sockio.h netinet/if_ether.h )
@@ -207,7 +218,12 @@ AC_CHECK_FUNC(inet_aton, ,
 
 dnl AC_CHECK_FUNCS(gethostname gettimeofday select socket strdup strstr)
 
-dnl Configure libpcap since a lot of lamers don't already have it installed ...
-AC_CONFIG_SUBDIRS( $libpcapdir )
+dnl Configure libpcap if we need to since a lot of lamers don't
+dnl already have it installed ...
+dnl if test $have_libpcap = nsadf ; then
+dnl    echo "Have libpcap is set to $have_libpcap ";
+dnl    asdfasdf sdsdf sfd sdfsd
+dnl    AC_CONFIG_SUBDIRS( $libpcapdir )
+dnl fi
 
 AC_OUTPUT(Makefile)
