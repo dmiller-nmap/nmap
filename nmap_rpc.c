@@ -174,7 +174,7 @@ int send_rpc_query(struct in_addr *target_host, unsigned short portno,
     rpc_xid_base = (unsigned long) get_random_uint();
   
   if (o.debugging > 1) {
-    printf("Sending RPC probe for program %li to %hi/%s -- scan_offset=%d trynum=%d xid=%lX\n", program, portno, (ipproto == IPPROTO_TCP)? "tcp" : "udp", scan_offset, trynum, rpc_xid_base + ((portno & 0x3FFF) << 16) + (trynum << 30) +  scan_offset);
+    printf("Sending RPC probe for program %li to %hu/%s -- scan_offset=%d trynum=%d xid=%lX\n", program, portno, (ipproto == IPPROTO_TCP)? "tcp" : "udp", scan_offset, trynum, rpc_xid_base + ((portno & 0x3FFF) << 16) + (trynum << 30) +  scan_offset);
   }
 
   /* First we check whether we have to create a new connection -- we 
@@ -286,7 +286,7 @@ int rpc_are_we_done(char *msg, int msg_len, struct hoststruct *target,
     /* This is not a valid reply -- we kill the port 
        (from an RPC perspective) */ 
     if (o.debugging > 1) {
-      printf("Port %hi/%s labelled NON_RPC because of invalid sized message (%d)\n", rsi->rpc_current_port->portno, (rsi->rpc_current_port->proto == IPPROTO_TCP)? "TPC" : "UDP", msg_len);
+      printf("Port %hu/%s labelled NON_RPC because of invalid sized message (%d)\n", rsi->rpc_current_port->portno, (rsi->rpc_current_port->proto == IPPROTO_TCP)? "TPC" : "UDP", msg_len);
     }
     rsi->rpc_status = RPC_STATUS_NOT_RPC;
     ss->numqueries_outstanding = 0;
@@ -299,7 +299,7 @@ int rpc_are_we_done(char *msg, int msg_len, struct hoststruct *target,
   if (((scan_offset >> 16) & 0x3FFF) != (unsigned long) (rsi->rpc_current_port->portno & 0x3FFF)) {
     /* Doh -- this doesn't seem right */
     if (o.debugging > 1) {
-      printf("Port %hi/%s labelled NON_RPC because ((scan_offset >> 16) & 0x3FFF) is %li\n", rsi->rpc_current_port->portno, (rsi->rpc_current_port->proto == IPPROTO_TCP)? "TPC" : "UDP", ((scan_offset >> 16) & 0x3FFF));
+      printf("Port %hu/%s labelled NON_RPC because ((scan_offset >> 16) & 0x3FFF) is %li\n", rsi->rpc_current_port->portno, (rsi->rpc_current_port->proto == IPPROTO_TCP)? "TPC" : "UDP", ((scan_offset >> 16) & 0x3FFF));
     }
     rsi->rpc_status = RPC_STATUS_NOT_RPC;
     ss->numqueries_outstanding = 0;
@@ -378,13 +378,13 @@ int rpc_are_we_done(char *msg, int msg_len, struct hoststruct *target,
   if (ntohl(rpc_pack->accept_stat) == PROG_UNAVAIL) {
     current->state = PORT_CLOSED;
     if (o.debugging > 1) {
-      error("Port %hi/%s claims that it is not RPC service %li", rsi->rpc_current_port->portno, (rsi->rpc_current_port->proto == IPPROTO_TCP)? "TCP" : "UDP",  current->portno);
+      error("Port %hu/%s claims that it is not RPC service %li", rsi->rpc_current_port->portno, (rsi->rpc_current_port->proto == IPPROTO_TCP)? "TCP" : "UDP",  current->portno);
     }
     rsi->valid_responses_this_port++;
     return 0;
   } else if (ntohl(rpc_pack->accept_stat) == PROG_MISMATCH) {
     if (o.debugging > 1) {
-      error("Port %hi/%s claims IT IS RPC service %li", rsi->rpc_current_port->portno, (rsi->rpc_current_port->proto == IPPROTO_TCP)? "TCP" : "UDP",  current->portno);
+      error("Port %hu/%s claims IT IS RPC service %li", rsi->rpc_current_port->portno, (rsi->rpc_current_port->proto == IPPROTO_TCP)? "TCP" : "UDP",  current->portno);
     }
     current->state = PORT_OPEN;
     rsi->rpc_status = RPC_STATUS_GOOD_PROG;
@@ -478,7 +478,7 @@ unsigned long current_msg_len;
      if (from.sin_addr.s_addr != target->host.s_addr ||
 	 from.sin_port != htons(rsi->rpc_current_port->portno)) {
        if (o.debugging > 1) {
-	 printf("Received UDP packet from %d.%d.%d.%d/%hi when expecting packet from %d.%d.%d.%d/%hi\n", NIPQUAD(from.sin_addr.s_addr), ntohs(from.sin_port), NIPQUAD(target->host.s_addr), rsi->rpc_current_port->portno);
+	 printf("Received UDP packet from %d.%d.%d.%d/%hu when expecting packet from %d.%d.%d.%d/%hu\n", NIPQUAD(from.sin_addr.s_addr), ntohs(from.sin_port), NIPQUAD(target->host.s_addr), rsi->rpc_current_port->portno);
        }
        continue;
      }
@@ -509,7 +509,7 @@ unsigned long current_msg_len;
        /* This is suspiciously small -- I'm assuming this is not the first
 	  part of a valid RPC packet */
        if (o.debugging > 1) {
-	 printf("Port %hi/%s labelled NON_RPC because tcp_readlen is %d (should be at least 28)\n", rsi->rpc_current_port->portno, (rsi->rpc_current_port->proto == IPPROTO_TCP)? "TCP" : "UDP", tcp_readlen);
+	 printf("Port %hu/%s labelled NON_RPC because tcp_readlen is %d (should be at least 28)\n", rsi->rpc_current_port->portno, (rsi->rpc_current_port->proto == IPPROTO_TCP)? "TCP" : "UDP", tcp_readlen);
        }
        ss->numqueries_outstanding = 0;
        rsi->rpc_status = RPC_STATUS_NOT_RPC;
@@ -520,7 +520,7 @@ unsigned long current_msg_len;
 						     
      if (current_msg_len > tcp_readlen - 4) {
        if (o.debugging > 1) {
-	 printf("Port %hi/%s labelled NON_RPC because current_msg_len is %li while tcp_readlen is %d\n", rsi->rpc_current_port->portno, (rsi->rpc_current_port->proto == IPPROTO_TCP)? "TCP" : "UDP", current_msg_len, tcp_readlen);
+	 printf("Port %hu/%s labelled NON_RPC because current_msg_len is %li while tcp_readlen is %d\n", rsi->rpc_current_port->portno, (rsi->rpc_current_port->proto == IPPROTO_TCP)? "TCP" : "UDP", current_msg_len, tcp_readlen);
        }
        ss->numqueries_outstanding = 0;
        rsi->rpc_status = RPC_STATUS_NOT_RPC;
@@ -548,7 +548,7 @@ unsigned long current_msg_len;
        if (current_msg_len < 24 || current_msg_len > 32) {
 	 ss->numqueries_outstanding = 0;
 	 if (o.debugging > 1) {
-	   printf("Port %hi/%s labelled NON_RPC because current_msg_len is %li\n", rsi->rpc_current_port->portno, (rsi->rpc_current_port->proto == IPPROTO_TCP)? "TCP" : "UDP", current_msg_len);
+	   printf("Port %hu/%s labelled NON_RPC because current_msg_len is %li\n", rsi->rpc_current_port->portno, (rsi->rpc_current_port->proto == IPPROTO_TCP)? "TCP" : "UDP", current_msg_len);
 	 }
 	 rsi->rpc_status = RPC_STATUS_NOT_RPC;
 	 return;

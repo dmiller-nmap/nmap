@@ -382,13 +382,13 @@ if (o.verbose && openport != (unsigned long) -1)
 	 if ((tcp->th_flags & TH_RST)) {
 	   /*	 readtcppacket((char *) ip, ntohs(ip->ip_len));*/	 
 	   if (si->responses == 0) {	 
-	     fprintf(stderr, "WARNING:  RST from port %hi -- is this port really open?\n", openport);
+	     fprintf(stderr, "WARNING:  RST from port %hu -- is this port really open?\n", openport);
 	     /* We used to quit in this case, but left-overs from a SYN
 		scan or lame-ass TCP wrappers can cause this! */
 	   } 
 	   continue;
 	 } else if ((tcp->th_flags & (TH_SYN|TH_ACK)) == (TH_SYN|TH_ACK)) {
-	   /*	error("DEBUG: response is SYN|ACK to port %hi\n", ntohs(tcp->th_dport)); */
+	   /*	error("DEBUG: response is SYN|ACK to port %hu\n", ntohs(tcp->th_dport)); */
 	   /*readtcppacket((char *)ip, ntohs(ip->ip_len));*/
 	   /* We use the ACK value to match up our sent with rcv'd packets */
 	   seq_response_num = (ntohl(tcp->th_ack) - 2 - 
@@ -412,7 +412,7 @@ if (o.verbose && openport != (unsigned long) -1)
 	     }
 	   }
 	   si->timestamps[seq_response_num] = timestamp;
-	   /*           printf("Response #%d -- ipid=%hi ts=%i\n", seq_response_num, ntohs(ip->ip_id), timestamp); */
+	   /*           printf("Response #%d -- ipid=%hu ts=%i\n", seq_response_num, ntohs(ip->ip_id), timestamp); */
 	   if (si->responses > 1) {
 	     seq_diffs[si->responses-2] = MOD_DIFF(ntohl(tcp->th_seq), si->seqs[si->responses-2]);
 	   }      
@@ -435,7 +435,7 @@ if (o.verbose && openport != (unsigned long) -1)
 	 ts_diffs[si->responses - 1] = MOD_DIFF(si->timestamps[si->responses], si->timestamps[si->responses - 1]);
 	 time_usec_diffs[si->responses - 1] = TIMEVAL_SUBTRACT(seq_send_times[si->responses], seq_send_times[si->responses - 1]);
 	 if (!time_usec_diffs[si->responses - 1]) time_usec_diffs[si->responses - 1]++; /* We divide by this later */
-	 /*	 printf("MOD_DIFF_USHORT(%hi, %hi) == %hi\n", si->ipids[si->responses], si->ipids[si->responses - 1], MOD_DIFF_USHORT(si->ipids[si->responses], si->ipids[si->responses - 1])); */
+	 /*	 printf("MOD_DIFF_USHORT(%hu, %hu) == %hu\n", si->ipids[si->responses], si->ipids[si->responses - 1], MOD_DIFF_USHORT(si->ipids[si->responses], si->ipids[si->responses - 1])); */
        }
 
        si->responses++;

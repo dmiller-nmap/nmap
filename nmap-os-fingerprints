@@ -5168,6 +5168,18 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=15C%RID=F%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
+# Contributed by Mike Killebrew  <mkillebrew@austin.rr.com>
+Fingerprint QNX 6.00 x86
+TSeq(Class=TD%gcd=<7D4%SI=<8C%IPID=I%TS=U)
+T1(DF=N%W=C00%ACK=S++%Flags=AR%Ops=WNMETL)
+T2(Resp=N)
+T3(Resp=Y%DF=N%W=C00%ACK=S++%Flags=AR%Ops=WNMETL)
+T4(DF=N%W=C00%ACK=S++%Flags=AR%Ops=WNMETL)
+T5(DF=N%W=C00%ACK=S++%Flags=AR%Ops=WNMETL)
+T6(DF=N%W=C00%ACK=S++%Flags=AR%Ops=WNMETL)
+T7(DF=N%W=C00%ACK=S++%Flags=AR%Ops=WNMETL)
+PU(Resp=N)
+
 Fingerprint Raptor firewall 5.03 on NT 4
 TSeq(Class=TR)
 T1(Resp=Y%DF=Y%W=2017%ACK=S++%Flags=AS%Ops=M)

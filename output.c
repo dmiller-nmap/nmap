@@ -365,11 +365,11 @@ char outpbuf[128];
    if (port != previous_port + 1) {
      outpbuf[0] = '\0';
      if (range_start != previous_port && range_start != -2)
-       sprintf(outpbuf, "-%hi", previous_port);
+       sprintf(outpbuf, "-%hu", previous_port);
      if (port != 0xABCDE) {
        if (range_start != -2)
 	 strcat(outpbuf, ",");
-       sprintf(outpbuf + strlen(outpbuf), "%hi", port);
+       sprintf(outpbuf + strlen(outpbuf), "%hu", port);
      }
      log_write(logt, "%s", outpbuf);
      range_start = port;
@@ -515,12 +515,12 @@ void printosscanoutput(struct hoststruct *currenths) {
     log_write(LOG_XML, "<os>");
     if (currenths->osscan_openport > 0) {
       log_write(LOG_XML, 
-		"<portused state=\"open\" proto=\"tcp\" portid=\"%hi\" />\n",
+		"<portused state=\"open\" proto=\"tcp\" portid=\"%hu\" />\n",
 		currenths->osscan_openport);
     }
     if (currenths->osscan_closedport > 0) {
       log_write(LOG_XML, 
-		"<portused state=\"closed\" proto=\"tcp\" portid=\"%hi\" />\n",
+		"<portused state=\"closed\" proto=\"tcp\" portid=\"%hu\" />\n",
 		currenths->osscan_closedport);
     }
     

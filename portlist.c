@@ -66,7 +66,7 @@ int addport(portlist *plist, u16 portno, u8 protocol, char *owner, int state) {
       snprintf(msg, sizeof(msg), " (owner: %s)", owner);
     } else msg[0] = '\0';
 
-    log_write(LOG_STDOUT, "Adding %s port %hi/%s%s\n",
+    log_write(LOG_STDOUT, "Adding %s port %hu/%s%s\n",
 	      statenum2str(state), portno, 
 	      (protocol == IPPROTO_TCP)? "tcp" : "udp", msg);
     log_flush(LOG_STDOUT);
@@ -160,7 +160,7 @@ int deleteport(portlist *plist, u16 portno, u8 protocol) {
     return -1;
 
   if (o.verbose) {  
-    log_write(LOG_STDOUT, "Deleting port %hi/%s, which we thought was %s\n",
+    log_write(LOG_STDOUT, "Deleting port %hu/%s, which we thought was %s\n",
 	      portno, (answer->proto == IPPROTO_TCP)? "tcp" : "udp", 
 	      statenum2str(answer->state));
     log_flush(LOG_STDOUT);

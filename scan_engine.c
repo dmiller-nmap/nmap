@@ -276,15 +276,15 @@ static int get_connect_results(struct hoststruct *target,
 	      posportupdate(target, current, trynum, scan, ss, CONNECT_SCAN, PORT_CLOSED, pil, csi);
 	    } else {
 	      if (getpeername(sd, (struct sockaddr *) &sin, &sinlen) < 0) {
-		pfatal("error in getpeername of connect_results for port %hi", current->portno);
+		pfatal("error in getpeername of connect_results for port %hu", current->portno);
 	      } else {
 		if (current->portno != ntohs(sin.sin_port)) {
-		  error("Mismatch!!!! we think we have port %hi but we really have %hi", current->portno, ntohs(sin.sin_port));
+		  error("Mismatch!!!! we think we have port %hu but we really have %hu", current->portno, ntohs(sin.sin_port));
 		}
 	      }
 
 	      if (getsockname(sd, (struct sockaddr *) &sout, &soutlen) < 0) {
-		pfatal("error in getsockname for port %hi", current->portno);
+		pfatal("error in getsockname for port %hu", current->portno);
 	      }
 	      if (htons(sout.sin_port) == current->portno) {
 		/* Linux 2.2 bug can lead to bogus successful connect()ions
@@ -419,7 +419,7 @@ static void get_syn_results(struct hoststruct *target, struct portinfo *scan,
       }
       if (current->trynum < trynum) {
 	if (o.debugging) 	    
-	  error("Received SYN packet implying trynum %d from port %hi even though that port is only on trynum %d (could be from an earlier round)", trynum, newport, current->trynum);
+	  error("Received SYN packet implying trynum %d from port %hu even though that port is only on trynum %d (could be from an earlier round)", trynum, newport, current->trynum);
 	trynum = -1;
       }
       if (scantype == SYN_SCAN) {
@@ -759,7 +759,7 @@ void pos_scan(struct hoststruct *target, u16 *portarray, stype scantype) {
 		if (scantype == RPC_SCAN) {
 		  if (rsi.valid_responses_this_port == 0) {	       
 		    if (o.debugging) {
-		      log_write(LOG_STDOUT, "RPC Scan giving up on port %hi proto %d due to repeated lack of response\n", rsi.rpc_current_port->portno,  rsi.rpc_current_port->proto);
+		      log_write(LOG_STDOUT, "RPC Scan giving up on port %hu proto %d due to repeated lack of response\n", rsi.rpc_current_port->portno,  rsi.rpc_current_port->proto);
 		    }
 		    rsi.rpc_status = RPC_STATUS_NOT_RPC;
 		    break;

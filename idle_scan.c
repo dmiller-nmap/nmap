@@ -282,7 +282,7 @@ void initialize_idleproxy(struct idle_proxy_info *proxy, char *proxyName,
 
   p = strdup(inet_ntoa(proxy->host.host));
   q = strdup(inet_ntoa(proxy->host.source_ip));
-  snprintf(filter, sizeof(filter), "tcp and src host %s and dst host %s and src port %hi", p, q, proxy->probe_port);
+  snprintf(filter, sizeof(filter), "tcp and src host %s and dst host %s and src port %hu", p, q, proxy->probe_port);
  free(p); 
  free(q);
  set_pcap_filter(&(proxy->host), proxy->pd, flt_icmptcp, filter);
@@ -385,10 +385,10 @@ void initialize_idleproxy(struct idle_proxy_info *proxy, char *proxyName,
   switch(proxy->seqclass) {
   case IPID_SEQ_INCR:
   case IPID_SEQ_BROKEN_INCR:
-    log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT, "Idlescan using zombie %s (%s:%hi); Class: %s\n", proxy->host.name, inet_ntoa(proxy->host.host), proxy->probe_port, ipidclass2ascii(proxy->seqclass));
+    log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT, "Idlescan using zombie %s (%s:%hu); Class: %s\n", proxy->host.name, inet_ntoa(proxy->host.host), proxy->probe_port, ipidclass2ascii(proxy->seqclass));
     break;
   default:
-    fatal("Idlescan zombie %s (%s) port %hi cannot be used because IPID sequencability class is: %s.  Try another proxy.", proxy->host.name, inet_ntoa(proxy->host.host), proxy->probe_port, ipidclass2ascii(proxy->seqclass));
+    fatal("Idlescan zombie %s (%s) port %hu cannot be used because IPID sequencability class is: %s.  Try another proxy.", proxy->host.name, inet_ntoa(proxy->host.host), proxy->probe_port, ipidclass2ascii(proxy->seqclass));
   }
 
   proxy->latestid = ipids[probes_returned - 1];
@@ -687,7 +687,7 @@ int idlescan_countopen(struct idle_proxy_info *proxy,
     fatal("Idlescan is unable to obtain meaningful results from proxy %s (%s).  I'm sorry it didn't work out.", proxy->host.name, inet_ntoa(proxy->host.host));
   }
 
-  if (o.debugging > 2) error("idlescan_countopen: %d ports found open out of %d, starting with %hi", openports, numports, ports[0]);
+  if (o.debugging > 2) error("idlescan_countopen: %d ports found open out of %d, starting with %hu", openports, numports, ports[0]);
 
   return openports;
 }
@@ -708,7 +708,7 @@ int idle_treescan(struct idle_proxy_info *proxy, struct hoststruct *target,
   /* Scan the first half of the range */
 
   if (o.debugging > 1) {  
-    error("idle_treescan: Called against %s with %d ports, starting with %hi. expectedopen: %d", inet_ntoa(target->host), numports, ports[0], expectedopen);
+    error("idle_treescan: Called against %s with %d ports, starting with %hu. expectedopen: %d", inet_ntoa(target->host), numports, ports[0], expectedopen);
     error("IDLESCAN TIMING: grpsz: %.3f delay: %d srtt: %d rttvar: %d\n",
 	  proxy->current_groupsz, proxy->senddelay, target->to.srtt,
 	  target->to.rttvar);
@@ -749,14 +749,14 @@ int idle_treescan(struct idle_proxy_info *proxy, struct hoststruct *target,
     
     if (flatcount1 > 0) {    
       if (o.debugging > 1) {
-	error("Adjusting timing -- idlescan_countopen correctly found %d open ports (out of %d, starting with %hi)", flatcount1, firstHalfSz, ports[0]);
+	error("Adjusting timing -- idlescan_countopen correctly found %d open ports (out of %d, starting with %hu)", flatcount1, firstHalfSz, ports[0]);
       }
       adjust_timeouts2(&sentTime1, &rcvTime1, &(target->to));
     }
     
     if (flatcount2 > 0) {    
       if (o.debugging > 2) {
-	error("Adjusting timing -- idlescan_countopen correctly found %d open ports (out of %d, starting with %hi)", flatcount2, secondHalfSz, 
+	error("Adjusting timing -- idlescan_countopen correctly found %d open ports (out of %d, starting with %hu)", flatcount2, secondHalfSz, 
 	      ports[firstHalfSz]);
       }
       adjust_timeouts2(&sentTime2, &rcvTime2, &(target->to));
@@ -777,7 +777,7 @@ int idle_treescan(struct idle_proxy_info *proxy, struct hoststruct *target,
 	  adjust_idle_timing(proxy, target, retry2, retrycount);
 	} else {
 	  if (o.debugging)
-	    error("Adjusting timing because my first scan of %d ports, starting with %hi found %d open, while second scan yielded %d", firstHalfSz, ports[0], flatcount1, retrycount);
+	    error("Adjusting timing because my first scan of %d ports, starting with %hu found %d open, while second scan yielded %d", firstHalfSz, ports[0], flatcount1, retrycount);
 	  adjust_idle_timing(proxy, target, flatcount1, retrycount);
 	}
 	totalfound += retrycount - flatcount1;
@@ -802,7 +802,7 @@ int idle_treescan(struct idle_proxy_info *proxy, struct hoststruct *target,
 	  adjust_idle_timing(proxy, target, retry2, retrycount);
 	} else {
 	  if (o.debugging)
-	    error("Adjusting timing because my first scan of %d ports, starting with %hi found %d open, while second scan yeilded %d", secondHalfSz, ports[firstHalfSz], flatcount2, retrycount);
+	    error("Adjusting timing because my first scan of %d ports, starting with %hu found %d open, while second scan yeilded %d", secondHalfSz, ports[firstHalfSz], flatcount2, retrycount);
 	  adjust_idle_timing(proxy, target, flatcount2, retrycount);
 	}
 

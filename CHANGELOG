@@ -1,6 +1,11 @@
 # Nmap Changelog
 
--- I hope that I have fixed the "Unknown datalink type" problem that
+-- Fixed port number printing bug found by "Stephen Leavitt"
+   <stephen_j_leavitt@hotmail.com>
+
+** 2.54BETA28
+
+-- I hope that I have fixed the Libpcap "Unknown datalink type" problem that
    many people reported.  If you still receive this error, please send
    me the following info:
    1) Full output of Nmap including the command you typed
@@ -8,6 +13,9 @@
    3) What type of interface is the scan going through (PPP, ISDN, ethernet,
       PPPoE, etc)
    4) Whether you compiled from source or used the RPM version
+
+-- Hopefully fixed Libpcap lex/yacc generated file problem that
+   plagued a few folks.
 
 -- Various minor fixes/changes/updates
 
@@ -18,8 +26,7 @@
    ( dugely@yahoo.com ).
 
 -- Fixed bug in zombie:port option parsing in Idlescan as well a few
-   other bugs in patch sent by Germano Caronni 
-   (caronni@batfax.olymp.org)
+   other bugs in patch sent by Germano Caronni (gec@acm.org)
 
 -- Fixed Windows compilation (I broke it when I added Idlescan).
 
@@ -163,7 +170,7 @@
    (you need -O as well).
 
 -- Applied Solaris 8 compilation fixes from Germano Caronni 
-   ( caronni@batfax.olymp.org )
+   ( gec@acm.org )
 
 -- Applied configure.in variable name typo fixes from Christian
    Weisgerber (naddy@openbsd.org)

@@ -224,10 +224,11 @@ if (bytesleft == 0) {
     if (badrandomwarning == 0) {
       badrandomwarning++;
       /*      error("WARNING: your system apparently does not offer /dev/urandom or /dev/random.  Reverting to less secure version."); */
+
+      /* Seed our random generator */
+      gettimeofday(&tv, NULL);
+      srand((tv.tv_sec ^ tv.tv_usec) ^ getpid());
     }
-    /* Seed our random generator */
-    gettimeofday(&tv, NULL);
-    srand((tv.tv_sec ^ tv.tv_usec) ^ getpid());
 
     for(i=0; i < sizeof(bytebuf) / sizeof(short); i++) {
       iptr = (short *) ((char *)bytebuf + i * sizeof(short));
