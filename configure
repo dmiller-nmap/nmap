@@ -1307,7 +1307,7 @@ fi
 libpcapdir=libpcap-possiblymodified
 
 
-pcredir=pcre
+pcredir=libpcre
 
 
           ac_config_headers="$ac_config_headers config.h"
@@ -3928,10 +3928,10 @@ fi
 
     ;;
   *)
-    _cppflags=$CPPFLAGS
+    _cppflags=$CXXFLAGS
     _ldflags=$LDFLAGS
 
-    CPPFLAGS="-I$with_libpcap/include $CPPFLAGS"
+    CXXFLAGS="-I$with_libpcap/include $CXXFLAGS"
     LDFLAGS="-L$with_libpcap/lib $LDFLAGS"
 
     if test "${ac_cv_header_pcap_h+set}" = set; then
@@ -4130,7 +4130,7 @@ fi
 
 
     LDFLAGS=$_ldflags
-    CPPFLAGS=$_cppflags
+    CXXFLAGS=$_cppflags
     ;;
   esac
 
@@ -4255,7 +4255,7 @@ if test "${with_libpcre+set}" = set; then
   yes)
     ;;
   *)
-    CPPFLAGS="-I$with_libpcre/include $CPPFLAGS"
+    CXXFLAGS="-I$with_libpcre/include $CXXFLAGS"
     LDFLAGS="-L$with_libpcre/lib $LDFLAGS"
     have_pcre=yes
     ;;
@@ -4461,12 +4461,14 @@ fi
 # If we still don't have it, we use our own
 if test $have_pcre != yes ; then
   subdirs="$LIBPCREDIR $subdirs"
-  CPPFLAGS="-I$LIBPCREDIR $CPPFLAGS"
+  CXXFLAGS="-I$LIBPCREDIR $CXXFLAGS"
   LIBPCRE_LIB="$LIBPCREDIR/.libs"
+  LIBS="$LIBS $LIBPCRE_LIB/libpcre.a"
   PCRE_DEPENDS="$LIBPCRE_LIB/libpcre.a"
   PCRE_CLEAN="pcre_clean"
   PCRE_DIST_CLEAN="pcre_dist_clean"
 else
+  LIBS="-lpcre $LIBS"
   PCRE_DEPENDS=""
   PCRE_CLEAN=""
   PCRE_DIST_CLEAN=""
@@ -4476,7 +4478,7 @@ fi
 
 
 
-LIBS="-lpcre $LIBS"
+
 
 
 echo "$as_me:$LINENO: checking for ANSI C header files" >&5

@@ -767,6 +767,7 @@ static void startNextProbe(nsock_pool nsp, nsock_iod nsi, ServiceGroup *SG,
     // if the last probe was the NULL probe.
     probe = svc->nextProbe();
     if (probe) {
+      svc->currentprobe_exec_time = *nsock_gettimeofday();
       send_probe_text(nsp, nsi, svc, probe);
       nsock_read(nsp, nsi, servicescan_read_handler, 
 		 svc->currentprobe_timemsleft(nsock_gettimeofday()), svc);

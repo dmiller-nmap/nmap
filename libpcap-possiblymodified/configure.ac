@@ -25,7 +25,27 @@ dnl in "AC_LBL_FIXINCLUDES" in "aclocal.m4" uses it, so we have to
 dnl test for it and set "HAVE_SYS_IOCCOM_H" if we have it, otherwise
 dnl "AC_LBL_FIXINCLUDES" won't work on some platforms such as Solaris.
 dnl
-AC_CHECK_HEADERS(sys/ioccom.h sys/sockio.h ifaddrs.h limits.h netinet/if_ether.h)
+AC_CHECK_HEADERS(sys/ioccom.h sys/sockio.h ifaddrs.h limits.h)
+AC_CHECK_HEADERS(sys/socket.h)
+AC_CHECK_HEADERS([net/if.h],[],[],
+[#if HAVE_SYS_TYPES_H
+# include <sys/types.h>
+# endif
+#if HAVE_SYS_SOCKET_H
+# include <sys/socket.h>
+# endif
+])
+AC_CHECK_HEADERS([netinet/if_ether.h],[],[],
+[#if HAVE_SYS_TYPES_H
+# include <sys/types.h>
+# endif
+#if HAVE_SYS_SOCKET_H
+# include <sys/socket.h>
+# endif
+# if HAVE_NET_IF_H
+# include <net/if.h>
+# endif
+])
 
 AC_LBL_FIXINCLUDES
 

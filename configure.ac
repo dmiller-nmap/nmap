@@ -31,7 +31,7 @@ fi
 libpcapdir=libpcap-possiblymodified
 AC_SUBST(libpcapdir)
 
-pcredir=pcre
+pcredir=libpcre
 AC_SUBST(pcredir)
 
 dnl use config.h instad of -D macros
@@ -175,10 +175,10 @@ AC_ARG_WITH(libpcap,
       [have_libpcap=yes ]))
     ;;
   *)
-    _cppflags=$CPPFLAGS
+    _cppflags=$CXXFLAGS
     _ldflags=$LDFLAGS
 
-    CPPFLAGS="-I$with_libpcap/include $CPPFLAGS"
+    CXXFLAGS="-I$with_libpcap/include $CXXFLAGS"
     LDFLAGS="-L$with_libpcap/lib $LDFLAGS"
 
     AC_CHECK_HEADER(pcap.h,[
@@ -188,7 +188,7 @@ AC_ARG_WITH(libpcap,
 	LIBPCAP_LIB=$with_libpcap/lib])])
 
     LDFLAGS=$_ldflags
-    CPPFLAGS=$_cppflags
+    CXXFLAGS=$_cppflags
     ;;
   esac]
 )
@@ -273,7 +273,7 @@ AC_ARG_WITH(libpcre,
   yes)
     ;;
   *)
-    CPPFLAGS="-I$with_libpcre/include $CPPFLAGS"
+    CXXFLAGS="-I$with_libpcre/include $CXXFLAGS"
     LDFLAGS="-L$with_libpcre/lib $LDFLAGS"
     have_pcre=yes
     ;;
@@ -290,12 +290,14 @@ fi
 # If we still don't have it, we use our own
 if test $have_pcre != yes ; then
   subdirs="$LIBPCREDIR $subdirs"
-  CPPFLAGS="-I$LIBPCREDIR $CPPFLAGS"
+  CXXFLAGS="-I$LIBPCREDIR $CXXFLAGS"
   LIBPCRE_LIB="$LIBPCREDIR/.libs"
+  LIBS="$LIBS $LIBPCRE_LIB/libpcre.a"
   PCRE_DEPENDS="$LIBPCRE_LIB/libpcre.a"
   PCRE_CLEAN="pcre_clean"
   PCRE_DIST_CLEAN="pcre_dist_clean"
 else
+  LIBS="-lpcre $LIBS"
   PCRE_DEPENDS=""
   PCRE_CLEAN=""
   PCRE_DIST_CLEAN=""
@@ -305,12 +307,36 @@ AC_SUBST(LIBPCREDIR)
 AC_SUBST(PCRE_DEPENDS)
 AC_SUBST(PCRE_CLEAN)
 AC_SUBST(PCRE_DIST_CLEAN)
-LIBS="-lpcre $LIBS"
+
 
 
 dnl Checks for header files.
 AC_HEADER_STDC
-AC_CHECK_HEADERS(string.h getopt.h strings.h memory.h sys/param.h sys/sockio.h  netinet/if_ether.h bstring.h sys/time.h pwd.h unistd.h )
+AC_CHECK_HEADERS(string.h getopt.h strings.h memory.h sys/param.h sys/sockio.h bstring.h sys/time.h pwd.h unistd.h )
+AC_CHECK_HEADERS(netinet/in.h)
+AC_CHECK_HEADERS(sys/socket.h)
+AC_CHECK_HEADERS([net/if.h],[],[],
+[#if HAVE_SYS_TYPES_H
+# include <sys/types.h>
+# endif
+#if HAVE_SYS_SOCKET_H
+# include <sys/socket.h>
+# endif
+])
+AC_CHECK_HEADERS([netinet/if_ether.h],[],[],
+[#if HAVE_SYS_TYPES_H
+# include <sys/types.h>
+# endif
+#if HAVE_NETINET_IN_H
+# include <netinet/in.h>
+# endif
+# if HAVE_SYS_SOCKET_H
+# include <sys/socket.h>
+# endif
+# if HAVE_NET_IF_H
+# include <net/if.h>
+# endif
+])
 AC_HEADER_TIME
 
 dnl Checks for typedefs, structures, and compiler characteristics.

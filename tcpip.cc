@@ -1451,17 +1451,19 @@ if (!pd) fatal("NULL packet device passed to readip_pcap");
 
  // printf("Just got a packet at %li,%li\n", head.ts.tv_sec, head.ts.tv_usec);
  if (rcvdtime) {
- // FIXME: I eventually need to figure out why Windows head.ts time is sometimes BEFORE the time I
- // sent the packet (which is according to gettimeofday() in nbase).  For now, I will sadly have to
- // use gettimeofday() for Windows in this case
- // Actually I now allow .05 discrepancy.   So maybe this isn't needed.  I'll comment out for now.
-   //  #if defined(WIN32) || defined(__amigaos__)
-   // gettimeofday(&tv_end, NULL);
-   // *rcvdtime = tv_end;
-   // #else
- *rcvdtime = head.ts;
- assert(head.ts.tv_sec);
-   // #endif
+   // FIXME: I eventually need to figure out why Windows head.ts time is sometimes BEFORE the time I
+   // sent the packet (which is according to gettimeofday() in nbase).  For now, I will sadly have to
+   // use gettimeofday() for Windows in this case
+   // Actually I now allow .05 discrepancy.   So maybe this isn't needed.  I'll comment out for now.
+   // Nope: it is still needed at least for Windows.  Sometimes the time from he pcap header is a 
+   // COUPLE SECONDS before the gettimeofday() results :(.
+#if defined(WIN32) || defined(__amigaos__)
+   gettimeofday(&tv_end, NULL);
+   *rcvdtime = tv_end;
+#else
+   *rcvdtime = head.ts;
+   assert(head.ts.tv_sec);
+#endif
  }
 
  if (rcvdtime)

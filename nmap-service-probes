@@ -76,6 +76,7 @@ match ftp m/^220 .*ftp/i
 # 220 core.foo.com ESMTP
 match smtp m/^220 .*smtp/i
 match ssh m/^SSH-/
+match chargen q| !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ|a0
 
 Probe TCP GetRequest q|GET / HTTP/1.0\r\n\r\n|
 ports 80,81,8000-8010,8080-8085
@@ -120,6 +121,7 @@ match rpc q|\x72\xFE\x1D\x13\0\0\0\x01\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x02|a0
 Probe UDP EchoTest q|help\r\n\r\n|
 ports 7
 match echo m|^help\r\n\r\n|
+match chargen q|@ABCDEFGHIJKLMNOPQRSTUVWXYZ|
 
 # ftp://ftp.rfc-editor.org/in-notes/rfc1179.txt
 Probe TCP LPDString q|\x01default\n|

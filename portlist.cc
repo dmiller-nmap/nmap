@@ -118,7 +118,7 @@ void Port::setServiceProbeResults(enum serviceprobestate sres, const char *sname
 }
 
 PortList::PortList() {
-  udp_ports = tcp_ports = ip_prots;
+  udp_ports = tcp_ports = ip_prots = NULL;
   bzero(state_counts, sizeof(state_counts));
   bzero(state_counts_udp, sizeof(state_counts_udp));
   bzero(state_counts_tcp, sizeof(state_counts_tcp));

@@ -7,6 +7,8 @@ o rm -rf doc testdata pcretest.c pcregrep.c pcredemo.c ChangeLog
 
 o Renamed configure.in to configure.ac
 
+o Regenerated configure script by running 'aclocal; autoconf'
+
 o Removed pcretest and pcregrep from the Makefile.in all target:
 
 --- Makefile.in.old     Sun Jul 20 23:00:56 2003

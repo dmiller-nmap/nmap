@@ -1,5 +1,14 @@
 # Nmap Changelog ($Id$)
 
+o The WinPcap header timestamp is no longer used on Windows as it
+  sometimes can be a couple seconds different than gettimeofday() (which
+  is really _ftime() on Windows) for some reason.  Thanks to Scott
+  Egbert (scott.egbert(a)citigroup.com) for the report.
+
+o Applied a patch by Matt Selsky (selsky(a)columbia.edu) which fixes
+  configure.in in such a way that the annoying header file "present but
+  cannot be compiled" warning for Solaris.
+
 Nmap 3.40BETA1
 
 o Initial implementation of service detection.  Nmap will now probe
