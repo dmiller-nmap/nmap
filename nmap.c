@@ -1964,6 +1964,7 @@ if (o.debugging || o.verbose)
 	      switch(icmp->icmp_code) {
 
 	      case 3: /* p0rt unreachable */		
+		printf("Got port unreachable newport %hi\n", ntohs(data[1]));
 		newport = ntohs(data[1]);
 		if (portlookup[newport] > 0) {
 		  current = &scan[portlookup[newport]];
