@@ -885,17 +885,17 @@ int res;
 struct sockaddr_in sock;
 char *ping = (char *) &pingpkt;
 
- if (pingtype == PINGTYPE_ICMP_PING) {
+ if (pingtype & PINGTYPE_ICMP_PING) {
    icmplen = 8; 
    pingpkt.type = 8;
  }
- else if (pingtype == PINGTYPE_ICMP_MASK) {
+ else if (pingtype & PINGTYPE_ICMP_MASK) {
    icmplen = 12;
    *datastart++ = 0;
    datalen -= 4;
    pingpkt.type = 17;
  }
- else if (pingtype == PINGTYPE_ICMP_TS) {   
+ else if (pingtype & PINGTYPE_ICMP_TS) {   
    icmplen = 20;
    bzero(datastart, 12);
    datastart += 12;
