@@ -2102,7 +2102,7 @@ sd                9876/udp   # Session Director
 issa              9991/tcp   # ISS System Scanner Agent
 issc              9992/tcp   # ISS System Scanner Console
 abyss             9999/tcp   # Abyss web server remote web management interface
-snet-sensor-mgmt  10000/tcp  # SecureNet Pro Sensor https management server
+snet-sensor-mgmt  10000/tcp  # SecureNet Pro Sensor https management server or apple airport admin
 stel              10005/tcp  # Secure telnet
 amanda            10080/udp  # Amanda Backup Util
 amandaidx         10082/tcp  # Amanda indexing

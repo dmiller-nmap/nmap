@@ -1788,7 +1788,9 @@ void servicescan_read_handler(nsock_pool nsp, nsock_event nse, void *mydata) {
       // something else nasty during the scan.  Shrug.  I'll give up on this port
       end_svcprobe(nsp, PROBESTATE_INCOMPLETE, SG, svc, nsi);
       break;
+#ifndef WIN32
     case EPIPE:
+#endif
     case EIO:
       // Usually an SSL error of some sort (those are presently
       // hardcoded to EIO).  I'll just try the next probe.
