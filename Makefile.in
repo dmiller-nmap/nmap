@@ -1,4 +1,4 @@
-NMAP_VERSION = 2.54BETA8
+NMAP_VERSION = 2.54BETA9
 NMAP_NAME= nmap
 NMAP_URL= www.insecure.org/nmap/
 NMAP_PLATFORM=@host@
@@ -94,7 +94,7 @@ distro:
 	configure.in config.h.in Makefile.in configure $(SHTOOL) install-sh \
         config.guess nmap-$(NMAP_VERSION)-1.spec config.sub INSTALL \
 	COPYING CHANGELOG HACKING \
-	$(LIBPCAPDIR) /usr/tmp/nmap-$(NMAP_VERSION)
+	$(LIBPCAPDIR) mswin32 /usr/tmp/nmap-$(NMAP_VERSION)
 	$(SHTOOL) mkdir /usr/tmp/nmap-$(NMAP_VERSION)/docs
 	cd docs; cp README copying.html nmap-fingerprinting-article.txt \
                     nmap.1 nmap.deprecated.txt nmap.usage.txt nmap_doc.html \
