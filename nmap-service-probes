@@ -720,7 +720,7 @@ match http m|^HTTP/1\.1 \d\d\d .*\r\nServer: Insight Manager (\d)\r\n\r\n|s v/Co
 match http m|^HTTP/1\.1 200 OK\r\nContent-Length: \d+\r\nConnection: close\r\nPragma: no-cache\r\nCache-Control: no-cache, no-store, must-revalidate\r\nExpires: 0\r\nContent-Type: text/html\r\n\r\n| v/GNU Httptunnel///
 # Blue Coat Port 80 Security Appliance Model: Blue Coat SG400 Software Version: SGOS 2.1.6044 Software Release id: 19480 Service Pack 4
 match http m|^HTTP/1\.0 301 Moved Permanently\r\nLocation: /Secure/Local/console/index\.htm\r\n\r\n$| v/Blue Coat Security Appliance HTTP admin interface///
-match http m|^HTTP/1\.0 400 Bad Request\r\nServer: AkamaiGHost\r\n| v|AkamiGHost||Akamai's HTTP Acceleration/Mirror service|
+match http m|^HTTP/1\.0 400 Bad Request\r\nServer: AkamaiGHost\r\n| v|AkamaiGHost||Akamai's HTTP Acceleration/Mirror service|
 match http m|^HTTP/1\.0 \d\d\d .*\r\nServer: Netscape-Enterprise/([-.\w]+)\r\n| v/Netscape Enterprise webserver/$1//
 match http m|^HTTP/1\.1 \d\d\d .*\r\nServer: Netscape-Enterprise/([-. \w]+)\r\n| v/Netscape Enterprise webserver/$1//
 match http m|^HTTP/1\.0 \d\d\d .*\nDate: .*\nServer: NCSA/(1\.\d)\n| v/NCSA httpd/$1//

@@ -10326,7 +10326,7 @@ Fingerprint Sun Solaris 2.6 - 7 (SPARC)
 Class Sun | Solaris | 2.X | general purpose
 Class Sun | Solaris | 7 | general purpose
 TSeq(Class=RI%gcd=<6%SI=<57A26&>DF1)
-T1(DF=Y%W=2297|2788|4431|8371|8F4D|ABCD|FFF7|FFFF|2297|212%ACK=S++%Flags=AS%Ops=NNTNWME)
+T1(DF=Y%W=109|212|2297|2788|4431|8371|8F4D|ABCD|FFF7|FFFF|2297%ACK=S++%Flags=AS%Ops=NNTNWME)
 T2(DF=N%W=0%ACK=O%Flags=R%Ops=WNMETL)
 T3(Resp=N)
 T4(DF=Y|N%W=0%ACK=O%Flags=R%Ops=|WNMETL)
