@@ -143,7 +143,7 @@ int ipid_proxy_probe(struct idle_proxy_info *proxy, int *probes_sent,
     /* Now it is time to wait for the response ... */
     to_usec = proxy->host.to.timeout;
     gettimeofday(&tv_end, NULL);
-    while((ipid == -1 || sent > rcvd) && to_usec >= 0) {
+    while((ipid == -1 || sent > rcvd) && to_usec > 0) {
 
       to_usec = proxy->host.to.timeout - TIMEVAL_SUBTRACT(tv_end, tv_sent[tries-1]);
       if (to_usec < 0) to_usec = 0; // Final no-block poll
