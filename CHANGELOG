@@ -8,8 +8,11 @@ o Added MAC address printing.  If Nmap receives packet from a target
   also now contains a database (derived from the official IEEE
   version) which it uses to determine the vendor name of the target
   ethernet interface.  The Windows version of Nmap does not yet have
-  this capability.  Here are examples from normal and XML
-  output (angle brackets replaced with [] for HTML changelog compatability):
+  this capability.  If any Windows developer types are interesting in
+  adding it, you just need to implement IPisDirectlyConnected() in
+  tcpip.cc and then please send me the patch.  Here are examples from
+  normal and XML output (angle brackets replaced with [] for HTML
+  changelog compatability):
   MAC Address: 08:00:20:8F:6B:2F (SUN Microsystems)
   [address addr="00:A0:CC:63:85:4B" vendor="Lite-on Communications" addrtype="mac" /]
 

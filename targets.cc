@@ -195,12 +195,12 @@ static int hostupdate(Target *hostbatch[], Target *target,
     target->flags &= ~HOST_DOWN; /* Kill the host_down flag */
     target->flags |= HOST_UP;
     if (hostnum >= pt->group_start) {  
-      /* The pt.block_tries was added because it is possible for a
+      /* The pt->block_tries was added because it is possible for a
 	 host to be marked down in the first block try, then
 	 down_this_block will be reset to 0 for the next try, in which
 	 a late packet could cause the box to be marked up.  In that
 	 case, down_this_block could legitimately be 0. */
-      assert(pt.block_tries > 0 || pt->down_this_block > 0);
+      assert(pt->block_tries > 0 || pt->down_this_block > 0);
       if (pt->down_this_block > 0)
 	pt->down_this_block--;
       pt->up_this_block++;

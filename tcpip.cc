@@ -1391,7 +1391,7 @@ static char *alignedbuf = NULL;
 static unsigned int alignedbufsz=0;
 static int warning = 0;
 
-if (linknfo) { bzero(linknfo, sizeof(*linknfo)); }
+if (linknfo) { memset(linknfo, 0, sizeof(*linknfo)); }
 
 #ifdef WIN32
 long to_left;
@@ -1592,7 +1592,7 @@ int setTargetMACIfAvailable(Target *target, struct link_header *linkhdr,
     return 5;
 
   target->TargetSockAddr(&ss, &sslen);
-  if (IPisDirectlyConnected(&ss, sslen)) {
+  if (IPisDirectlyConnected(&ss, sslen) == 1) {
     /* Yay!  This MAC address seems valid */
     target->setMACAddress(linkhdr->header + 6);
     return 0;
@@ -1834,8 +1834,13 @@ struct interface_info *getinterfaces(int *howmany) {
 
 /* Check whether an IP address appears to be directly connected to an
    interface on the computer (e.g. on the same ethernet network rather
-   than having to route).  Returns 1 if yes, -1 if maybe, 0 if not. */
+   than having to route).  Returns 1 if yes, -1 if maybe, 0 if not. Windows
+   machines always return -1, because nobody has written a windows version.
+   Any volunteers? */
 int IPisDirectlyConnected(struct sockaddr_storage *ss, size_t ss_len) {
+#if WIN32
+return -1;
+#else
   struct interface_info *interfaces;
   int numinterfaces;
   int i;
@@ -1851,6 +1856,7 @@ int IPisDirectlyConnected(struct sockaddr_storage *ss, size_t ss_len) {
       return 1;
   }
   return 0;
+#endif /* !WIN32 */
 }
 
 

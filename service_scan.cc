@@ -1110,7 +1110,7 @@ ServiceNFO::ServiceNFO(AllProbes *newAP) {
   softMatchFound = false;
   servicefplen = servicefpalloc = 0;
   servicefp = NULL;
-  bzero(&currentprobe_exec_time, sizeof(currentprobe_exec_time));
+  memset(&currentprobe_exec_time, 0, sizeof(currentprobe_exec_time));
 }
 
 ServiceNFO::~ServiceNFO() {

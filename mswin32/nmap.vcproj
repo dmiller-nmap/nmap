@@ -156,6 +156,9 @@
 				RelativePath="..\idle_scan.cc">
 			</File>
 			<File
+				RelativePath="..\MACLookup.cc">
+			</File>
+			<File
 				RelativePath="..\main.cc">
 			</File>
 			<File
@@ -376,6 +379,9 @@
 				RelativePath="NETINET\IP.H">
 			</File>
 			<File
+				RelativePath="..\MACLookup.h">
+			</File>
+			<File
 				RelativePath="..\nmap.h">
 			</File>
 			<File
@@ -466,6 +472,17 @@
 			Name="Files to copy"
 			Filter="">
 			<File
+				RelativePath="..\nmap-mac-prefixes">
+				<FileConfiguration
+					Name="Release|Win32">
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="Copying $(InputName) to output directory..."
+						CommandLine="copy /y &quot;$(InputPath)&quot; &quot;$(TargetDir)$(InputName)&quot; &gt; nul"
+						Outputs="$(TargetDir)$(InputName)"/>
+				</FileConfiguration>
+			</File>
+			<File
 				RelativePath="..\nmap-os-fingerprints">
 				<FileConfiguration
 					Name="Debug|Win32">
@@ -535,7 +552,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Copying $(InputName) to output directory..."
-						CommandLine="copy /y &quot;$(InputPath)&quot; &quot;$(TargetDir)$(InputName)&quot; &gt; nul"
+						CommandLine="copy /y &quot;$(InputPath)&quot; &quot;$(TargetDir)$(InputName)&quot; &gt; nul
+"
 						Outputs="$(TargetDir)$(InputName)"/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -543,7 +561,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Copying $(InputName) to output directory..."
-						CommandLine="copy /y &quot;$(InputPath)&quot; &quot;$(TargetDir)$(InputName)&quot; &gt; nul"
+						CommandLine="copy /y &quot;$(InputPath)&quot; &quot;$(TargetDir)$(InputName)&quot; &gt; nul
+"
 						Outputs="$(TargetDir)$(InputName)"/>
 				</FileConfiguration>
 			</File>
