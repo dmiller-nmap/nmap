@@ -1,0 +1,8 @@
+The libpcap in this folder is _not_ the binary from
+netgroup-serv.polito.it/winpcap.
+
+It has been recompiled w/ /Zl to allow correct linkage.
+I have submitted a bug report to the winpcap folks,
+who say they'll fix this in the next version.
+
+(source is available at the above-mentioned website)
