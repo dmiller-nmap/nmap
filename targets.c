@@ -7,12 +7,20 @@ static struct hoststruct *hostbatch  = NULL;
 static int targets_valid = 0;
 static int i;
 static struct targets targets;
-
+static char *lasthostexp = NULL;
 if (!hostbatch) hostbatch = safe_malloc((lookahead + 1) * sizeof(struct hoststruct));
+
+if (lasthostexp && lasthostexp != hostexp) {
+ /* New expression -- reinit everything */
+  targets_valid = 0;
+  lastindex = -1;
+}
+
 if (!targets_valid) {
   if (!parse_targets(&targets, hostexp)) 
-    return 0;
-  else targets_valid = 1;
+    return NULL;
+  targets_valid = 1;
+  lasthostexp = hostexp;
 }
 if (lastindex >= 0 && lastindex < lookahead  && hostbatch[lastindex + 1].host.s_addr)  
   return &hostbatch[++lastindex];
@@ -20,7 +28,7 @@ if (lastindex >= 0 && lastindex < lookahead  && hostbatch[lastindex + 1].host.s_
 /* OK, we need to refresh our target array */
 
 lastindex = 0;
-bzero(hostbatch, (lookahead + 1) * sizeof(struct hoststruct));
+bzero((char *) hostbatch, (lookahead + 1) * sizeof(struct hoststruct));
 do {
   if (targets.maskformat) {
     for(i = 0; i < lookahead && targets.currentaddr.s_addr <= targets.end.s_addr; i++) {
@@ -190,7 +198,7 @@ else {
     
   }
 }
-  bzero(targets->current, 4);
+  bzero((char *)targets->current, 4);
   free(hostexp);
   return 1;
 }
@@ -212,7 +220,7 @@ unsigned char *ping; /*[64] = { 0x8, 0x0, 0x8e, 0x85, 0x69, 0x7A };*/
 unsigned short ushorttmp;
 int prod;
 int sd;
-struct timeval time[(retries + 1) * num_hosts];
+struct timeval *time = safe_malloc(sizeof(struct timeval) * ((retries + 1) * num_hosts));
 struct timeval start, end;
 unsigned short pid;
 struct ppkt {
@@ -328,6 +336,7 @@ for(;;) {
 }
 alldone:
 close(sd);
+free(time);
 if (o.debugging) printf("massping done:  num_hosts: %d  num_responses: %d\n", num_hosts, num_responses);
 }
 
