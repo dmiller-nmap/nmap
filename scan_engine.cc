@@ -267,9 +267,11 @@ public:
    flooding). If when is non-NULL, fills it with the time that sending
    will be OK (will be now if it already is)  */
   bool sendOK(struct timeval *when); 
-/* Returns the soonest timeout out of the probes in this host.
-   Returns true if their is a valid nextTimeout, false if there isn't
-   (because no active probes) */
+
+/* Returns the soonest timeout out of the probes in this host, or the
+   send delay timeout, if that is the bottle neck.  Returns true if
+   their is a valid nextTimeout, false if there isn't (because no
+   active probes) */
   bool HostScanStats::nextTimeout(struct timeval *when);
   UltraScanInfo *USI; /* The USI which contains this HSS */
 
@@ -729,6 +731,9 @@ bool HostScanStats::nextTimeout(struct timeval *when) {
   struct timeval probe_to, earliest_to;
   list<UltraProbe *>::iterator probeI;
   bool firstgood = true;
+  struct timeval sendTime;
+  unsigned long tdiff;
+  struct ultra_timing_vals tmng;
 
   assert(when);
   memset(&probe_to, 0, sizeof(probe_to));
@@ -740,6 +745,27 @@ bool HostScanStats::nextTimeout(struct timeval *when) {
       TIMEVAL_MSEC_ADD(probe_to, (*probeI)->sent, probeTimeout() / 1000);
       if (firstgood || TIMEVAL_SUBTRACT(probe_to, earliest_to) < 0) {
 	earliest_to = probe_to;
+	firstgood = false;
+      }
+    }
+  }
+
+  if (sdn.delayms) {    
+    TIMEVAL_MSEC_ADD(sendTime, lastprobe_sent, sdn.delayms);
+    if (TIMEVAL_MSEC_SUBTRACT(sendTime, USI->now) < 0)
+      sendTime = USI->now;
+    tdiff = TIMEVAL_MSEC_SUBTRACT(earliest_to, sendTime);
+    
+    /* Timeouts previous to the sendTime requirement are pointless,
+       and those later than sendTime are not needed if we can send a
+       new packet at sendTime */
+    if (firstgood || tdiff > 0) {
+      earliest_to = sendTime;
+      firstgood = false;
+    } else {
+      getTiming(&tmng);
+      if (tdiff < 0 && tmng.cwnd < num_probes_active + .5) {
+	earliest_to = sendTime;
 	firstgood = false;
       }
     }
