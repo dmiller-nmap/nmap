@@ -75,13 +75,22 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#if HAVE_SYS_WAIT_H
 #include <sys/wait.h>
+#endif
 #include <fcntl.h>
+#if HAVE_STRINGS_H
 #include <strings.h>
+#endif
 #include <assert.h>
 #include <ctype.h>
 #include <errno.h>
 #include <signal.h>
+
+
+#ifdef WIN32
+#include <windows.h>
+#endif
 
 #include "nmapfe.h"
 #include "nmapfe_sig.h"
@@ -96,10 +105,18 @@ extern int our_uid;
 extern int view_type;
 int machine_yn = 0;
 /* Variables for piping */
+/* FIXME: All this should be redone in a much more elegant manner <sigh> */
 int nmap_pid = 0;
+#ifdef WIN32
+HANDLE NmapHandle;
+#endif
 int pid;
 int pid2;
-int pipes[2];
+#ifdef WIN32
+HANDLE pipes[2]; /* 0 == read; 1 == write */
+#else
+int pipes[2] = {-1,-1};
+#endif
 int count = 0;
 char buf[9024] = "hello";
 char buf2[9024] = "hello";
@@ -120,13 +137,16 @@ main (int argc, char *argv[])
 
   MW = (struct MyWidgets *) malloc(sizeof(struct MyWidgets));
   bzero(MW, sizeof(struct MyWidgets));
-  pipes[0] = pipes[1] = -1;
-  signal(SIGPIPE, SIG_IGN);
 
+#ifndef WIN32
+  signal(SIGPIPE, SIG_IGN);
+  our_uid = getuid();
+#else
+  our_uid = 0; /* With Windows (in general), ever user is a Super User! */
+#endif
   main_win = create_main_win ();
   gtk_widget_show (main_win);
 
-  our_uid = getuid();
 
   if(our_uid == 0){
     gtk_text_insert(GTK_TEXT(MW->output), NULL, NULL, NULL, "You are root - All options granted.", -1);
@@ -494,23 +514,44 @@ void kill_output()
   gtk_text_backward_delete (GTK_TEXT(MW->output), length);
 }
 
+/* The idea of execute() is to create an Nmap process running in the background with its stdout
+    connected to a pipe we can poll many times per second to collect any new output.  Admittedly 
+	there are much more elegant ways to do this, but this is how it works now.  The functions
+	return the process ID of nmap.  This process is
+	different enough between windows & UNIX that I have two functions for doing it: */
+int execute_unix(char *command);
+int execute_win(char *command);
 int execute(char *command) {
+   int pid;
+#ifdef WIN32
+    pid = execute_win(command);
+#else
+	pid = execute_unix(command);
+#endif /* WIN32 */
+
+	/* Add a timer for calling our read function to poll for new data */
+   tag = gtk_timeout_add(time_out, read_data, data);
+
+  return(pid);
+}
+
+int execute_unix(char *command) {
+#ifdef WIN32
+	fatal("The execute_unix function should not be called from Windows!");
+	return -1;
+#else
   /* Many thanks to Fyodor for helping with the piping */
-  if(pipe(pipes) == -1)
+	if(pipe(pipes) == -1) {
     perror("poopy pipe error");
+		exit(1);
+	}
 
   if (!(pid = fork())) {
     char **argv;
     int argc;
-    /*
-    char *argv[4];
 
-    argv[0] = "sh";
-    argv[1] = "-c";     
-    argv[2] = command;
-    argv[3] = 0;
-    */
     argc = arg_parse(command, &argv);
+		
     if (argc <= 0)
       exit(1);
     dup2(pipes[1], 1);
@@ -530,10 +571,56 @@ int execute(char *command) {
   }
   close(pipes[1]);
   pipes[1] = -1;
-  tag = gtk_timeout_add(time_out, read_data, data);
 
   return(pid);
+#endif /* WIN32 exclusion */
 }
+
+/* Parts cribbed from _Win32 System Programming Second Edition_ pp 304 */
+int execute_win(char *command) {
+#ifndef WIN32
+	fatal("The execute_win function should ONLY be called from Windows!");
+	return -1;
+#else
+/* For pipes[] array:  0 == READ; 1 == WRITE */
+
+	/* To ensure pipe handles are inheritable */
+	SECURITY_ATTRIBUTES PipeSA = { sizeof(SECURITY_ATTRIBUTES), NULL, TRUE };
+	PROCESS_INFORMATION Nmap_Proc;
+	STARTUPINFO Nmap_Start;
+
+	GetStartupInfo(&Nmap_Start);
+
+	/* Create our pipe for reading Nmap output */
+	if (!CreatePipe(&pipes[0], &pipes[1], &PipeSA, 8196)) {
+		pfatal("execute_win: Failed to create pipes!");
+	}
+
+	/* Insure that stdout/stderr for Nmap will go to our pipe */
+	Nmap_Start.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
+	Nmap_Start.hStdError = pipes[1];
+	Nmap_Start.hStdOutput = pipes[1];
+	Nmap_Start.dwFlags = STARTF_USESTDHANDLES;
+
+	/* Start up Nmap! */
+	if (!CreateProcess ( NULL, command, NULL, NULL, TRUE, 0, NULL, NULL, &Nmap_Start,
+		&Nmap_Proc)) {
+		pfatal("execute_win: Failed to start Nmap process with command '%s'", command);
+	}
+
+     /* I don't care about the thread handle or the write pipe anymore */
+	 CloseHandle(Nmap_Proc.hThread);
+     CloseHandle(pipes[1]);
+
+	 /* I'm gonna squirrel away the Nmap process handle in a global variable.  All this nonsense
+	    needs to be redone */
+     NmapHandle = Nmap_Proc.hProcess;
+
+	 return Nmap_Proc.dwProcessId;
+
+#endif /* UNIX Exclusion */
+}
+
 
 char *build_command() {
 
@@ -747,6 +834,44 @@ void scan_options(GtkWidget *widget, int *the_option)
   which_scan = (int)the_option;
 }
 
+
+/* The read_from_pipe functions (UNIX & Win versions) do a non-blocking read from the pipe
+   given into the buffer given up to a maximum read length of bufsz.  The number of bytes 
+   read is returned.  -1 is returned in the case of heinous error.  Returned buffer is NOT
+   NUL terminated */
+#ifdef WIN32
+
+static int read_from_pipe(HANDLE pipe, char *buf, int bufsz) {
+	int ret;
+	int count = 0;
+	/* First lets check if anything is ready for us (Note: I don't know if this technique
+	even works! */
+	ret = WaitForSingleObject(pipe, 0);
+	if ( ret == WAIT_OBJECT_0 ) {
+		/* Apparently the pipe is available for reading -- Read up to # of bytes in buffer */
+		if (!ReadFile(pipe, buf, bufsz, &count, NULL)) {
+			if (GetLastError() != ERROR_BROKEN_PIPE)
+				pfatal("ReadFile on Nmap process pipe failed!");
+		}
+	}
+	return count;
+}
+
+#else
+/* NOTE:  pipefd must be in O_NONBLOCK mode ( via fcntl ) */
+static int read_from_pipe(int pipefd, char *buf, int bufsz) {
+	int count;
+
+	if (pipefd == -1) return -1;
+	count = read(pipefd, buf, bufsz);
+	if (count == -1 && errno != EINTR && errno != EAGAIN) {
+		pfatal("Failed to read from nmap process pipe");
+	}
+	return count;
+}
+#endif /* read_from_pipe Win32/UNIX selector */
+
+
 gint read_data(gpointer data)
 {
   char *str;
@@ -756,7 +881,10 @@ gint read_data(gpointer data)
   GdkFont *bold;
   GdkColormap *cmap;
   GdkColor red, blue, green;
-
+#ifdef WIN32
+  int rc;
+  char *p=NULL, *q=NULL;
+#endif /* WIN32 */
   /* Get fonts ready */
 
   cmap = gdk_colormap_get_system();
@@ -785,9 +913,16 @@ gint read_data(gpointer data)
   fixed = gdk_fontset_load ("-misc-fixed-medium-r-*-*-*-120-*-*-*-*-*-*");
   bold = gdk_fontset_load("-misc-fixed-bold-r-normal-*-*-120-*-*-*-*-*-*");
 
-  while(pipes[0] != -1 && (count = read(pipes[0], buf, sizeof(buf)-1))) {
+
+  while((count = read_from_pipe(pipes[0], buf, sizeof(buf) - 1 )) > 0) {
     /*    fprintf(stderr, "Count was %d\n", count); */
     buf[count] = '\0';
+#ifdef WIN32
+/* For windows, I have to squeeze \r\n back into \n */
+p = q = buf;
+while(*q) { if (*q == '\r') q++; else *p++ = *q++; }
+*p = '\0';
+#endif /* WIN32 */
     if((strcmp(buf, buf2)) == 0) {
       return(1);
     } else {
@@ -958,27 +1093,54 @@ gint read_data(gpointer data)
 		
     } /*end if*/
   } 
+
   /*  fprintf(stderr, "Below loop: Count was %d\n", count); */
+
+#ifdef WIN32
+  if (nmap_pid) {
+	rc = WaitForSingleObject(NmapHandle, 0);
+	if (rc == WAIT_FAILED) {
+		pfatal("Failed in WaitForSingleObject to see if Nmap process has died");
+	}
+  }
+  if (!nmap_pid || rc == WAIT_OBJECT_0) {
+	  CloseHandle(NmapHandle);
+	  CloseHandle(pipes[0]);
+	  nmap_pid = 0;
+	  gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(MW->start_scan), 0);
+	  return 0;
+  }
+
+#else
   if (!nmap_pid || (waitpid(0, NULL, WNOHANG) == nmap_pid)) {
     /*    fprintf(stderr, "Program gone, dead, kablooey!\n"); */
     nmap_pid = 0;
+	if (pipes[0] != -1) { close(pipes[0]); pipes[0] = -1; }
     gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(MW->start_scan), 0);
     return 0;
   }
+#endif /* waitpid unix/windoze selector */
+
   return(1);	
 }
 
 void stop_scan()
 {
   /*  fprintf(stderr, "stop scan called -- pid == %d\n", nmap_pid); */
-  if (nmap_pid)
+	if (nmap_pid) {
+#ifdef WIN32
+		TerminateProcess(NmapHandle, 1);
+		CloseHandle(NmapHandle);
+		CloseHandle(pipes[0]);
+#else
     kill(nmap_pid, 9);
-  nmap_pid = 0;
   if (pipes[0] != -1) {
     close(pipes[0]);
     pipes[0] = -1;
   }
-    
+#endif /* Win32/UNIX Selector for killing Nmap */
+		nmap_pid = 0;
+	}
 }
 
 void

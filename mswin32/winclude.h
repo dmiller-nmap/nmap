@@ -1,6 +1,8 @@
 #ifndef WINCLUDE_H
 #define WINCLUDE_H
 
+#define _INC_ERRNO  /* supress errno.h */
+
 #include "nbase.h"
 #include <windows.h>
 #include <string.h>
@@ -32,6 +34,7 @@
 
 typedef unsigned char u_int8_t;
 typedef unsigned short u_int16_t;
+
 typedef unsigned long u_int32_t;
 typedef unsigned int ssize_t;
 
@@ -63,6 +66,24 @@ int nmapwin_isroot();
 
 #undef errno
 #define errno WSAGetLastError()
+
+/* Windows error message names */
+#define ECONNABORTED    WSAECONNABORTED
+#define ECONNRESET      WSAECONNRESET
+#define ECONNREFUSED    WSAECONNREFUSED
+#define EAGAIN		WSAEWOULDBLOCK
+#define EHOSTUNREACH	WSAEHOSTUNREACH
+#define ENETDOWN	WSAENETDOWN
+#define ENETUNREACH	WSAENETUNREACH
+#define ENETRESET	WSAENETRESET
+#define ETIMEDOUT	WSAETIMEDOUT
+#define EHOSTDOWN	WSAEHOSTDOWN
+#define EINPROGRESS	WSAEINPROGRESS
+#define EINVAL          WSAEINVAL      /* Invalid argument */
+#define EPERM           WSAEACCES      /* Operation not permitted */
+#define EINTR           WSAEINTR      /* Interrupted system call */
+#define ENOBUFS         WSAENOBUFS     /* No buffer space available */
+#define ENOENT          WSAENOENT      /* No such file or directory */
 
 #define close my_close
 #define read(x,y,z) recv(x,(char*)(y),z,0)

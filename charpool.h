@@ -49,7 +49,7 @@
 #define CHARPOOL_H
 
 #include "utils.h"
-#include "error.h"
+#include "nmap_error.h"
 
 void *cp_alloc(int sz);
 char *cp_strdup(const char *src);

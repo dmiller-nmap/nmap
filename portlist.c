@@ -47,7 +47,7 @@
 
 
 #include "portlist.h"
-#include "error.h"
+#include "nmap_error.h"
 #include "nmap.h"
 
 #include <strings.h>

@@ -5673,7 +5673,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 # Contributed by Brian Ecton - serk@serk.net
-Fingerprint Windows 2000 RC1 through final release
+Fingerprint Windows Me or Windows 2000 RC1 through final release
 TSeq(Class=RI%gcd=<5%SI=>BBB&<FFFF)
 T1(DF=Y%W=402E%ACK=S++%Flags=AS%Ops=NNT|MNWNNT)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)

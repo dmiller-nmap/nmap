@@ -55,7 +55,7 @@
 #include "nmap.h"
 #include "global_structures.h"
 #include "charpool.h"
-#include "error.h"
+#include "nmap_error.h"
 #include "utils.h"
 
 #define PROTOCOL_TABLE_SIZE 256

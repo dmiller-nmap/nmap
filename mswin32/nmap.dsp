@@ -152,11 +152,15 @@ SOURCE=..\charpool.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\error.c
+SOURCE=..\nmap.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\nmap.c
+SOURCE=..\nmap_error.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\nmap_rpc.c
 # End Source File
 # Begin Source File
 
@@ -173,10 +177,6 @@ SOURCE=..\portlist.c
 # Begin Source File
 
 SOURCE=..\protocols.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\rpc.c
 # End Source File
 # Begin Source File
 
@@ -260,10 +260,6 @@ SOURCE=..\charpool.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\error.h
-# End Source File
-# Begin Source File
-
 SOURCE=..\global_structures.h
 # End Source File
 # Begin Source File
@@ -273,6 +269,14 @@ SOURCE=.\NETINET\IP.H
 # Begin Source File
 
 SOURCE=..\nmap.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\nmap_error.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\nmap_rpc.h
 # End Source File
 # Begin Source File
 
@@ -293,10 +297,6 @@ SOURCE=..\portlist.h
 # Begin Source File
 
 SOURCE=..\protocols.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\rpc.h
 # End Source File
 # Begin Source File
 
@@ -350,7 +350,7 @@ SOURCE="..\nmap-os-fingerprints"
 
 # PROP Ignore_Default_Tool 1
 # Begin Custom Build - Copying $(InputName) to output directory...
-InputPath=..\nmap-os-fingerprints
+InputPath="..\nmap-os-fingerprints"
 InputName=nmap-os-fingerprints
 
 "Release\$(InputName)" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
@@ -362,7 +362,7 @@ InputName=nmap-os-fingerprints
 
 # PROP Ignore_Default_Tool 1
 # Begin Custom Build - Copying $(InputName) to output directory...
-InputPath=..\nmap-os-fingerprints
+InputPath="..\nmap-os-fingerprints"
 InputName=nmap-os-fingerprints
 
 "Debug\$(InputName)" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
@@ -381,7 +381,7 @@ SOURCE="..\nmap-protocols"
 
 # PROP Ignore_Default_Tool 1
 # Begin Custom Build - Copying $(InputName) to output directory...
-InputPath=..\nmap-protocols
+InputPath="..\nmap-protocols"
 InputName=nmap-protocols
 
 "Release\$(InputName)" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
@@ -393,7 +393,7 @@ InputName=nmap-protocols
 
 # PROP Ignore_Default_Tool 1
 # Begin Custom Build - Copying $(InputName) to output directory...
-InputPath=..\nmap-protocols
+InputPath="..\nmap-protocols"
 InputName=nmap-protocols
 
 "Debug\$(InputName)" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
@@ -412,7 +412,7 @@ SOURCE="..\nmap-rpc"
 
 # PROP Ignore_Default_Tool 1
 # Begin Custom Build - Copying $(InputName) to output directory...
-InputPath=..\nmap-rpc
+InputPath="..\nmap-rpc"
 InputName=nmap-rpc
 
 "Release\$(InputName)" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
@@ -424,7 +424,7 @@ InputName=nmap-rpc
 
 # PROP Ignore_Default_Tool 1
 # Begin Custom Build - Copying $(InputName) to output directory...
-InputPath=..\nmap-rpc
+InputPath="..\nmap-rpc"
 InputName=nmap-rpc
 
 "Debug\$(InputName)" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
@@ -443,7 +443,7 @@ SOURCE="..\nmap-services"
 
 # PROP Ignore_Default_Tool 1
 # Begin Custom Build - Copying $(InputName) to output directory...
-InputPath=..\nmap-services
+InputPath="..\nmap-services"
 InputName=nmap-services
 
 "Release\$(InputName)" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
@@ -455,7 +455,7 @@ InputName=nmap-services
 
 # PROP Ignore_Default_Tool 1
 # Begin Custom Build - Copying $(InputName) to output directory...
-InputPath=..\nmap-services
+InputPath="..\nmap-services"
 InputName=nmap-services
 
 "Debug\$(InputName)" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"

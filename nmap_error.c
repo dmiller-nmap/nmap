@@ -46,6 +46,10 @@
 
 #include "nmap_error.h"
 
+#ifdef WIN32
+#include <windows.h>
+#endif /* WIN32 */
+
 void fatal(char *fmt, ...) {
 va_list  ap;
 va_start(ap, fmt);
@@ -66,18 +70,27 @@ va_end(ap);
 return;
 }
 
-
-
 void pfatal(char *err, ...) {
-va_list  ap;va_start(ap, err);
-fflush(stdout);
-vfprintf(stderr, err, ap);
-va_end(ap);
-perror(" ");
-fflush(stderr);
-exit(1);
+#ifdef WIN32
+	int lasterror =0;
+	char *errstr = NULL;
+#endif
+	va_list  ap;va_start(ap, err);
+	fflush(stdout);
+	vfprintf(stderr, err, ap);
+	va_end(ap);
+#ifdef WIN32
+	lasterror = GetLastError();
+	FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER|FORMAT_MESSAGE_FROM_SYSTEM, NULL, lasterror, MAKELANGID (LANG_NEUTRAL, SUBLANG_DEFAULT),
+		(LPTSTR) &errstr,  0, NULL);
+	fprintf(stderr, ": %s (%d)\n", errstr, lasterror);
+	HeapFree(GetProcessHeap(), 0, errstr);
+#else
+	perror(" ");
+#endif /* WIN32 perror() compatability switch */
+	fflush(stderr);
+	exit(1);
 }
-
 
 void gh_perror(char *err, ...) {
 va_list  ap;va_start(ap, err);

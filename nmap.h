@@ -346,11 +346,11 @@ void *realloc();
 #include "portlist.h"
 #include "tcpip.h"
 #include "global_structures.h"
-#include "error.h"
+#include "nmap_error.h"
 #include "utils.h"
 #include "services.h"
 #include "protocols.h"
-#include "rpc.h"
+#include "nmap_rpc.h"
 #include "targets.h"
 
 

@@ -1,5 +1,13 @@
 # Nmap Changelog
 
+** 2.54BETA19
+
+-- I ported NmapFE to Windows so that Win32 users can use the
+   graphical interface.  It generally works, although I haven't tested
+   much.  Patches welcome!
+
+-- Various little fixes and cleanups, especially to the Windows port.
+
 -- Applied patch from Andy Lutomirski (Luto@mailandnews.com) which
    enhances some of the Win* error messages and adds the --win_trace
    debugging option.
@@ -11,6 +19,12 @@
    detection, RPC, or connect() scan packets.
    -- Windows portability fixes
    -- Various other little fixes.
+
+-- Renamed rpc.h and error.h because they conflict with Windows
+   include files.  By the way, this was a pain to figure out because
+   VC++ is such a crappy compiler!  It basically just says problem in
+   "foobar.h" without giving you any idea how foobar.h got included!
+   gcc gives you a nice message tracing the chain of include files!
 
 ** 2.54BETA16
 

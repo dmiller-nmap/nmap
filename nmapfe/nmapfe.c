@@ -60,17 +60,20 @@
 #error "Your system does not appear to have GTK (www.gtk.org) installed.  Thus the Nmap X Front End will not compile.  You should still be able to use Nmap the normal way (via text console).  GUIs are for wimps anyway :)"
 #else
 
-#include "nmapfe.h"
-#include "nmapfe_sig.h"
+
 
 #include <gtk/gtk.h>
 #include <gdk/gdkkeysyms.h>
-#include <nbase.h>
+
 #if HAVE_UNISTD_H
 #include <unistd.h>
 #endif
 #include <stdio.h>
 
+#include <nbase.h>
+
+#include "nmapfe.h"
+#include "nmapfe_sig.h"
 
 /* Keep this global */
 int our_uid;
@@ -154,7 +157,14 @@ create_main_win ()
   GtkWidget *label1;
   char title[256];
 
+#ifdef WIN32
+  our_uid = 0;
+  /* for nmap version */
+#include "nmap_winconfig.h"
+#define VERSION "0." NMAP_VERSION
+#else
   our_uid = getuid();
+#endif
 
   main_win = gtk_window_new (GTK_WINDOW_TOPLEVEL);
   gtk_object_set_data (GTK_OBJECT (main_win), "main_win", main_win);

@@ -184,7 +184,7 @@ extern "C" {
 #endif /* WIN32 */
 
 #include "nbase.h"
-#include "error.h"
+#include "nmap_error.h"
 #include "utils.h"
 #include "nmap.h"
 #include "global_structures.h"

@@ -1,7 +1,7 @@
 
 /***********************************************************************/
 /* nmapfe_error.c -- Some simpilar error handling routines.  Similar   */
-/* to those used in Nmap.
+/* to those used in Nmap.                                              */
 /*                                                                     */
 /***********************************************************************/
 /*  The Nmap Security Scanner is (C) 1995-2000 Insecure.Org.  This     */
