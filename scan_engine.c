@@ -64,7 +64,7 @@ static void posportupdate(struct hoststruct *target, struct portinfo *current,
 		   struct scanstats *ss ,stype scantype, int newstate,
 		   struct portinfolist *pil, struct connectsockinfo *csi) {
   static int tryident = -1;
-  static unsigned int lasttarget = 0;
+  static u32 lasttarget = 0;
   struct sockaddr_in mysock;
   NET_SIZE_T sockaddr_in_len = sizeof(SA);
   int i;
@@ -108,7 +108,7 @@ static void posportupdate(struct hoststruct *target, struct portinfo *current,
 		    &sockaddr_in_len )) {
       pfatal("getsockname");
     }
-    if (getidentinfoz(target->host, ntohs(mysock.sin_port), current->portno, owner) == -1)
+    if (getidentinfoz(target->host, ntohs(mysock.sin_port), current->portno, owner, sizeof(owner)) == -1)
       tryident = 0;
   }
 
@@ -191,7 +191,7 @@ static void posportupdate(struct hoststruct *target, struct portinfo *current,
 static int get_connect_results(struct hoststruct *target, 
 			       struct portinfo *scan, 
 			       struct scanstats *ss, struct portinfolist *pil, 
-			       int *portlookup, unsigned long *sequences, 
+			       int *portlookup, u32 *sequences, 
 			       struct connectsockinfo *csi) {
   fd_set fds_rtmp, fds_wtmp, fds_xtmp;
   int selectres;
@@ -341,7 +341,7 @@ static int get_connect_results(struct hoststruct *target,
    and we sniff for SYN|ACK or RST packets */
 static void get_syn_results(struct hoststruct *target, struct portinfo *scan,
 		     struct scanstats *ss, struct portinfolist *pil, 
-		     int *portlookup, pcap_t *pd, unsigned long *sequences, 
+		     int *portlookup, pcap_t *pd, u32 *sequences, 
 		     stype scantype) {
 
   struct ip *ip;
@@ -354,7 +354,7 @@ static void get_syn_results(struct hoststruct *target, struct portinfo *scan,
   struct portinfo *current = NULL;
   struct icmp *icmp;
   struct ip *ip2;
-  unsigned short *data;
+  u16 *data;
   struct timeval tv;
   struct timeval start;
   int quit = 0;
@@ -482,7 +482,7 @@ static void get_syn_results(struct hoststruct *target, struct portinfo *scan,
 	continue;
       }
 
-      data = (unsigned short *) ((char *)ip2 + 4 * ip2->ip_hl);
+      data = (u16 *) ((char *)ip2 + 4 * ip2->ip_hl);
       /*	    log_write(LOG_STDOUT, "Caught ICMP packet:\n");
 		    hdump(icmp, ntohs(ip->ip_len) - sizeof(struct ip)); */
       if (icmp->icmp_type == 3) {
@@ -525,7 +525,7 @@ static void get_syn_results(struct hoststruct *target, struct portinfo *scan,
 /* Handles the "positive-response" scans (where we get a response
    telling us that the port is open based on the probe.  This includes
    SYN Scan, Connect Scan, RPC scan, Window Scan, and ACK scan */
-void pos_scan(struct hoststruct *target, unsigned short *portarray, stype scantype) {
+void pos_scan(struct hoststruct *target, u16 *portarray, stype scantype) {
   int initial_packet_width;  /* How many scan packets in parallel (to start with) */
   struct scanstats ss;
   int rawsd;
@@ -536,7 +536,7 @@ void pos_scan(struct hoststruct *target, unsigned short *portarray, stype scanty
   pcap_t *pd = NULL;
   char filter[512];
   char *p;
-  unsigned int ack_number = 0;
+  u32 ack_number = 0;
   int tries = 0;
   int  res;
   int connecterror = 0;
@@ -549,7 +549,7 @@ void pos_scan(struct hoststruct *target, unsigned short *portarray, stype scanty
   struct timeval now;
   struct connectsockinfo csi;
   struct rpcscaninfo rsi;
-  unsigned long sequences[3]; /* for various reasons we use 3 separate
+  u32 sequences[3]; /* for various reasons we use 3 separate
 				 ones rather than simply incrementing from
 				 a base */
   int i;
@@ -1080,7 +1080,7 @@ void pos_scan(struct hoststruct *target, unsigned short *portarray, stype scanty
 /* FTP bounce attack scan.  This function is rather lame and should be
    rewritten.  But I don't think it is used much anyway.  If I'm going to
    allow FTP bounce scan, I should really allow SOCKS proxy scan.  */
-void bounce_scan(struct hoststruct *target, unsigned short *portarray,
+void bounce_scan(struct hoststruct *target, u16 *portarray,
 		 struct ftpinfo *ftp) {
   int starttime,  res , sd = ftp->sd,  i=0;
   char *t = (char *)&target->host; 
@@ -1209,7 +1209,7 @@ void bounce_scan(struct hoststruct *target, unsigned short *portarray,
 /* Handles the scan types where no positive-acknowledgement of open
    port is received (those scans are in pos_scan).  Super_scan
    includes scans such as FIN/XMAS/NULL/Maimon/UDP and IP Proto scans */
-void super_scan(struct hoststruct *target, unsigned short *portarray, 
+void super_scan(struct hoststruct *target, u16 *portarray, 
 		stype scantype) {
   int initial_packet_width;  /* How many scan packets in parallel (to start with) */
   int packet_incr = 4; /* How much we increase the parallel packets by each round */
@@ -1234,7 +1234,7 @@ void super_scan(struct hoststruct *target, unsigned short *portarray,
   int tries = 0;
   int tmp = 0;
   int starttime;
-  unsigned short newport;
+  u16 newport;
   int newstate = 999; /* This ought to break something if used illegally */
   struct hostent *myhostent = NULL;
   struct portinfo *scan, *openlist, *current, *testinglist, *next;
@@ -1243,7 +1243,7 @@ void super_scan(struct hoststruct *target, unsigned short *portarray,
   int packcount, timedout;
   int UDPPacketWarning = 0;
   int i;
-  unsigned short *data;
+  u16 *data;
   int packet_trynum = 0;
   int windowdecrease = 0; /* Has the window been decreased this round yet? */
   struct icmp *icmp;
@@ -1500,7 +1500,7 @@ void super_scan(struct hoststruct *target, unsigned short *portarray,
 		ip2 = (struct ip *) (((char *) icmp) + 8);
 		if (ip2->ip_dst.s_addr != target->host.s_addr)
 		  continue;
-		data = (unsigned short *) ((char *)ip2 + 4 * ip2->ip_hl);
+		data = (u16 *) ((char *)ip2 + 4 * ip2->ip_hl);
 		/*	    log_write(LOG_STDOUT, "Caught ICMP packet:\n");
 			    hdump(icmp, ntohs(ip->ip_len) - sizeof(struct ip)); */
 

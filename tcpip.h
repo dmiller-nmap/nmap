@@ -363,39 +363,34 @@ int resolve(char *hostname, struct in_addr *ip);
    interface is found, oterwise it returns the device name and fills in the
    source parameter */
 char *routethrough(struct in_addr *dest, struct in_addr *source);
-unsigned short in_cksum(unsigned short *ptr,int nbytes);
-int send_tcp_raw( int sd, struct in_addr *source, 
-		  struct in_addr *victim, unsigned short sport, 
-		  unsigned short dport, unsigned int seq,
-		  unsigned int ack, unsigned char flags,
-		  unsigned short window, char *options, int optlen,
-		  char *data, unsigned short datalen);
-int send_udp_raw( int sd, struct in_addr *source, 
-		  struct in_addr *victim, unsigned short sport, 
-		  unsigned short dport, char *data, unsigned short datalen);
+unsigned short in_cksum(u16 *ptr,int nbytes);
+int send_tcp_raw( int sd, struct in_addr *source, struct in_addr *victim, 
+		  u16 sport, u16 dport, u32 seq, u32 ack, u8 flags,
+		  u16 window, u8 *options, int optlen, char *data, 
+		  u16 datalen);
+int send_udp_raw( int sd, struct in_addr *source, struct in_addr *victim, 
+		  u16 sport, u16 dport, u8 *data, u16 datalen);
+
+int send_ip_raw( int sd, struct in_addr *source, struct in_addr *victim, 
+		 u8 proto, u8 *data, u16 datalen);
+
+/* Much of this is swiped from my send_tcp_raw function above, which 
+   doesn't support fragmentation */
 int send_small_fragz(int sd, struct in_addr *source, struct in_addr *victim,
-                     unsigned long seq, int sport, int dport, int flags);
-int send_ip_raw( int sd, struct in_addr *source, 
-		  struct in_addr *victim, unsigned char proto,
-		  char *data, unsigned short datalen);
-
+		     u32 seq, u16 sport, u16 dport, int flags);
 /* Decoy versions of the raw packet sending functions ... */
-int send_tcp_raw_decoys( int sd, struct in_addr *victim, unsigned short sport, 
-                         unsigned short dport, unsigned int seq,
-                         unsigned int ack, unsigned char flags,
-                         unsigned short window, char *options, int optlen,
-                         char *data, unsigned short datalen);
+int send_tcp_raw_decoys( int sd, struct in_addr *victim, u16 sport, 
+			 u16 dport, u32 seq, u32 ack, u8 flags, u16 window, 
+                         u8 *options, int optlen, u8 *data, u16 datalen);
 
-int send_udp_raw_decoys( int sd, struct in_addr *victim, unsigned short sport, 
-			 unsigned short dport, char *data, 
-			 unsigned short datalen);
+int send_udp_raw_decoys( int sd, struct in_addr *victim, u16 sport, 
+			 u16 dport, u8 *data, u16 datalen);
 
-int send_small_fragz_decoys(int sd, struct in_addr *victim, unsigned long seq, 
-                            int sport, int dport, int flags);
+int send_small_fragz_decoys(int sd, struct in_addr *victim, u32 seq, 
+			    u16 sport, u16 dport, int flags);
 
-
-int send_ip_raw_decoys( int sd, struct in_addr *victim, unsigned char proto,
-                        char *data, unsigned short datalen);
+int send_ip_raw_decoys( int sd, struct in_addr *victim, u8 proto,
+			u8 *data, u16 datalen);
 
 /* Calls pcap_open_live and spits out an error (and quits) if the call fails.
    So a valid pcap_t will always be returned. */

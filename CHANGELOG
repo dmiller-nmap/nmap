@@ -1,6 +1,18 @@
 # Nmap Changelog
 
-** 2.54BETA20
+** 2.54BETA22
+
+-- Eliminated usage of u_int32_t (was causing compilation errors on
+   some Sun and HP boxes).  Problem first noted by Nick Munger
+   (nmunger@Oswego.EDU) and Ralf Hildebrandt
+   (Ralf.Hildebrandt@innominate.com) and Antonin Sprinzl
+   (Antonin.Sprinzl@tuwien.ac.at)
+
+-- Defined integer-width typedefs such as u32/s32/u16/etc. in Nbase.
+   Went through much of the Nmap code and substituted these in where
+   correct lengths are important (port numbers, IP addresses, etc).
+
+** 2.54BETA21
 
 -- Cleaned up a few build/distribution issues that were reported 
    by LaMont Jones (lamont@hp.com) 

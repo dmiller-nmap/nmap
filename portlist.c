@@ -56,8 +56,7 @@ static struct port *freeportlist = NULL;
 
 /* gawd, my next project will be in c++ so I don't have to deal with
    this crap ... simple linked list implementation */
-int addport(portlist *plist, unsigned short portno, unsigned short protocol,
-	    char *owner, int state) {
+int addport(portlist *plist, u16 portno, u8 protocol, char *owner, int state) {
   struct port *current = NULL;
   struct port **portarray = NULL;
 
@@ -135,8 +134,7 @@ int addport(portlist *plist, unsigned short portno, unsigned short protocol,
   return 0; /*success */
 }
 
-int deleteport(portlist *plist, unsigned short portno,
-	       unsigned short protocol) {
+int deleteport(portlist *plist, u16 portno, u8 protocol) {
   struct port *answer = NULL;
 
   if (protocol == IPPROTO_TCP && plist->tcp_ports) {
@@ -159,7 +157,7 @@ int deleteport(portlist *plist, unsigned short portno,
 }
 
 
-struct port *lookupport(portlist *ports, unsigned short portno, unsigned short protocol) {
+struct port *lookupport(portlist *ports, u16 portno, u8 protocol) {
 
   if (protocol == IPPROTO_TCP && ports->tcp_ports)
     return ports->tcp_ports[portno];
@@ -262,7 +260,7 @@ void assignignoredportstate(portlist *plist) {
    ports */
 
 struct port *nextport(portlist *plist, struct port *afterthisport, 
-		      int allowed_protocol, int allowed_state) {
+		      u8 allowed_protocol, int allowed_state) {
 
   /* These two are chosen because they come right "before" port 1/tcp */
 unsigned int current_portno = 0;

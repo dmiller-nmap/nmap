@@ -47,6 +47,8 @@
 #ifndef PORTLIST_H
 #define PORTLIST_H
 
+#include <nbase.h>
+
 /* struct port stuff */
 #define PORT_UNKNOWN 0
 #define PORT_CLOSED 1
@@ -64,8 +66,8 @@
 
 
 struct port {
-  unsigned short portno;
-  unsigned char proto;
+  u16 portno;
+  u8 proto;
   char *owner;
   char *rpc_name;
   int rpc_status; /* RPC_STATUS_UNTESTED means we haven't checked
@@ -99,10 +101,8 @@ typedef struct portlist {
   int numports; /* Total number of ports in list in ANY state */
 } portlist;
 
-int addport(portlist *plist, unsigned short portno, unsigned short protocol,
-	    char *owner, int state);
-int deleteport(portlist *plist, unsigned short portno,
-	       unsigned short protocol);
+int addport(portlist *plist, u16 portno, u8 protocol, char *owner, int state);
+int deleteport(portlist *plist, u16 portno, u8 protocol);
 
 /* A function for iterating through the ports.  Give NULL for the
    first "afterthisport".  Then supply the most recent returned port
@@ -115,10 +115,10 @@ int deleteport(portlist *plist, unsigned short portno,
    UDP, every TCP port will be returned before we start returning UDP
    ports */
 struct port *nextport(portlist *plist, struct port *afterthisport, 
-		      int allowed_protocol, int allowed_state);
+		      u8 allowed_protocol, int allowed_state);
 
-struct port *lookupport(portlist *ports, unsigned short portno, 
-			unsigned short protocol);
+struct port *lookupport(portlist *ports, u16 portno, u8 protocol);
+
 /* Decide which port we want to ignore in output (for example, we don't want
  to show closed ports if there are 40,000 of them.) */
 void assignignoredportstate(portlist *plist);

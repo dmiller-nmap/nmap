@@ -49,7 +49,7 @@
 #define GLOBAL_STRUCTURES_H
 
 /* Stores "port info" which is TCP/UDP ports or RPC program ids */
- struct portinfo {
+struct portinfo {
    unsigned long portno; /* TCP/UDP port or RPC program id or IP protocool */
    short trynum;
    int sd[3]; /* Socket descriptors for connect_scan */
@@ -57,7 +57,7 @@
    int state;
    int next; /* not struct portinfo * for historical reasons */
    int prev;
-  };
+};
 
 struct portinfolist {
    struct portinfo *openlist;
@@ -66,14 +66,14 @@ struct portinfolist {
 };
 
 struct udpprobeinfo {
-  unsigned short iptl;
-  unsigned short ipid;
-  unsigned short ipck;
-  unsigned short sport;
-  unsigned short dport;
-  unsigned short udpck;
-  unsigned short udplen;
-  unsigned char patternbyte;
+  u16 iptl;
+  u16 ipid;
+  u16 ipck;
+  u16 sport;
+  u16 dport;
+  u16 udpck;
+  u16 udplen;
+  u8 patternbyte;
   struct in_addr target;
 };
 
@@ -112,7 +112,7 @@ struct ftpinfo {
   char pass[256]; /* methinks you're paranoid if you need this much space */
   char server_name[MAXHOSTNAMELEN + 1];
   struct in_addr server;
-  unsigned short port;
+  u16 port;
   int sd; /* socket descriptor */
 };
 
@@ -154,24 +154,24 @@ struct seq_info {
   int ts_seqclass; /* TS_SEQ_* defines in nmap.h */
   time_t uptime; /* time of latest system boot (or 0 if unknown ) */
   int ipid_seqclass; /* IPID_SEQ_* defines in nmap.h */
-  unsigned int seqs[NUM_SEQ_SAMPLES];
-  unsigned int timestamps[NUM_SEQ_SAMPLES];
+  u32 seqs[NUM_SEQ_SAMPLES];
+  u32 timestamps[NUM_SEQ_SAMPLES];
   int index;
-  unsigned short ipids[NUM_SEQ_SAMPLES];
+  u16 ipids[NUM_SEQ_SAMPLES];
   time_t lastboot; /* 0 means unknown */
 };
 
 struct targets {
   /* These 4 are used for the '/mask' style of specifying target net*/
-  unsigned int netmask;
+  u32 netmask;
   unsigned int maskformat;
   struct in_addr start;
   struct in_addr currentaddr;
   struct in_addr end;
   /* These two are for the '138.[1-7,16,91-95,200-].12.1 style */
-  unsigned char addresses[4][256];
+  u8 addresses[4][256];
   unsigned int current[4];
-  unsigned char last[4];  
+  u8 last[4];  
   int nleft; /* Number of IPs left in this structure -- set to 0 if 
 		the fields are not valid */
 };
@@ -236,9 +236,9 @@ struct ops /* someone took struct options, <grrr> */ {
   int host_group_sz;
   int generate_random_ips; /* -iR option */
   FingerPrint **reference_FPs;
-  unsigned short magic_port;
+  u16 magic_port;
   unsigned short magic_port_set; /* Was this set by user? */
-  unsigned short tcp_probe_port;
+  u16 tcp_probe_port;
 
   /* Scan timing/politeness issues */
   int max_parallelism;

@@ -67,11 +67,11 @@ extern unsigned long flt_dsthost, flt_srchost, flt_baseport;
 
 
 FingerPrint *get_fingerprint(struct hoststruct *target, struct seq_info *si, 
-			     unsigned short *portarray) {
+			     u16 *portarray) {
 FingerPrint *FP = NULL, *FPtmp = NULL;
 FingerPrint *FPtests[9];
 struct AVal *seq_AVs;
-unsigned short lastipid=0; /* For catching duplicate packets */
+u16 lastipid=0; /* For catching duplicate packets */
 int last;
 u32 timestamp = 0; /* TCP timestamp we receive back */
 struct ip *ip;
@@ -91,7 +91,7 @@ int testno;
 int  timeout;
 int avnum;
 unsigned int sequence_base;
-unsigned long openport;
+unsigned int openport;
 unsigned int bytes;
 unsigned int closedport = 31337;
 struct port *tport = NULL;
@@ -101,10 +101,10 @@ char filter[512];
 double seq_inc_sum = 0;
 unsigned int  seq_avg_inc = 0;
 struct udpprobeinfo *upi = NULL;
-unsigned int seq_gcd = 1;
-unsigned int seq_diffs[NUM_SEQ_SAMPLES];
-unsigned short ipid_diffs[NUM_SEQ_SAMPLES];
-unsigned int ts_diffs[NUM_SEQ_SAMPLES];
+u32 seq_gcd = 1;
+u32 seq_diffs[NUM_SEQ_SAMPLES];
+u16 ipid_diffs[NUM_SEQ_SAMPLES];
+u32 ts_diffs[NUM_SEQ_SAMPLES];
 unsigned long time_usec_diffs[NUM_SEQ_SAMPLES];
 struct timeval seq_send_times[NUM_SEQ_SAMPLES];
 int ossofttimeout, oshardtimeout;
@@ -752,11 +752,11 @@ for(i=0; i < 9; i++) {
 }
 
 
-struct AVal *fingerprint_iptcppacket(struct ip *ip, int mss, unsigned int syn) {
+struct AVal *fingerprint_iptcppacket(struct ip *ip, int mss, u32 syn) {
   struct AVal *AVs;
   int length;
   int opcode;
-  unsigned short tmpshort;
+  u16 tmpshort;
   char *p,*q;
   struct tcphdr *tcp = ((struct tcphdr *) (((char *) ip) + 4 * ip->ip_hl));
 
@@ -837,7 +837,7 @@ struct AVal *fingerprint_iptcppacket(struct ip *ip, int mss, unsigned int syn) {
     } else if (opcode == 2) {
       *p++ = 'M'; /* MSS */
       q++;
-      memcpy(&tmpshort, q, sizeof(unsigned short));
+      memcpy(&tmpshort, q, 2);
       if(ntohs(tmpshort) == mss)
 	*p++ = 'E'; /* Echoed */
       q += 2;
@@ -1100,7 +1100,7 @@ return;
 }
 
 
-int os_scan(struct hoststruct *target, unsigned short *portarray) {
+int os_scan(struct hoststruct *target, u16 *portarray) {
 struct FingerPrintResults FP_matches[3];
 struct seq_info si[3];
 int itry;
@@ -1442,13 +1442,13 @@ return AVs;
 
 
 struct udpprobeinfo *send_closedudp_probe(int sd, struct in_addr *victim,
-unsigned short sport, unsigned short dport) {
+					  u16 sport, u16 dport) {
 
 static struct udpprobeinfo upi;
 static int myttl = 0;
-static unsigned char patternbyte = 0;
-static unsigned short id = 0; 
-unsigned char packet[328]; /* 20 IP hdr + 8 UDP hdr + 300 data */
+static u8 patternbyte = 0;
+static u16 id = 0; 
+u8 packet[328]; /* 20 IP hdr + 8 UDP hdr + 300 data */
 struct ip *ip = (struct ip *) packet;
 udphdr_bsd *udp = (udphdr_bsd *) (packet + sizeof(struct ip));
 struct in_addr *source;
@@ -1461,9 +1461,9 @@ int decoy;
 struct pseudo_udp_hdr {
   struct in_addr source;
   struct in_addr dest;        
-  char zero;
-  char proto;        
-  unsigned short length;
+  u8 zero;
+  u8 proto;        
+  u16 length;
 } *pseudo = (struct pseudo_udp_hdr *) ((char *)udp - 12) ;
 
 if (!patternbyte) patternbyte = (get_random_uint() % 60) + 65;
@@ -1724,6 +1724,4 @@ AVs[current_testno].next = NULL;
 
 return AVs;
 }
-
-
 

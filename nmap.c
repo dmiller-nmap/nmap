@@ -351,11 +351,12 @@ int nmap_main(int argc, char *argv[]) {
   int numhosts_scanned = 0;
   char **host_exp_group;
   int num_host_exp_groups = 0;
-  char *machinefilename = NULL, *kiddiefilename = NULL, *normalfilename = NULL, *xmlfilename = NULL;
+  char *machinefilename = NULL, *kiddiefilename = NULL, 
+       *normalfilename = NULL, *xmlfilename = NULL;
   struct hostgroup_state hstate;
   int numhosts_up = 0;
   int starttime;
-  unsigned short *ports = NULL;
+  u16 *ports = NULL;
   char myname[MAXHOSTNAMELEN + 1];
 #if (defined(IN_ADDR_DEEPSTRUCT) || defined( SOLARIS))
   /* Note that struct in_addr in solaris is 3 levels deep just to store an
@@ -411,7 +412,7 @@ int nmap_main(int argc, char *argv[]) {
     {"win_nt4route", no_argument, 0, 0}, 
     {"win_noiphlpapi", no_argument, 0, 0}, 
     {"win_help", no_argument, 0, 0},
-	{"win_trace", no_argument, 0, 0},
+    {"win_trace", no_argument, 0, 0},
 #endif
     {0, 0, 0, 0}
   };
@@ -1331,13 +1332,13 @@ void init_socket(int sd) {
    of port numbers. Note that one trailing comma is OK -- this is actually
    useful for machine generated lists */
 unsigned short *getpts(char *origexpr) {
-  unsigned char porttbl[65536];
+  u8 porttbl[65536];
   int portwarning = 0; /* have we warned idiot about dup ports yet? */
   long rangestart = -2343242, rangeend = -9324423;
   char *current_range;
   char *endptr;
   int i;
-  unsigned short *ports;
+  u16 *ports;
 
   bzero(porttbl, sizeof(porttbl));
   o.numports = 0;
@@ -1403,8 +1404,8 @@ unsigned short *getpts(char *origexpr) {
   if (o.numports == 0)
     fatal("No ports specified -- If you really don't want to scan any ports use ping scan...");
 
-  ports = (unsigned short *) safe_malloc(sizeof(unsigned short) * (o.numports + 1));
-  bzero(ports, sizeof(unsigned short) * (o.numports + 1));
+  ports = (unsigned short *) safe_malloc(2 * (o.numports + 1));
+  bzero(ports, 2 * (o.numports + 1));
 
   /* I is the next index into which we should add good ports */
   for(i=0, rangestart = 1; i < o.numports ; rangestart++) {
@@ -1484,6 +1485,8 @@ char *seqreport(struct seq_info *seq) {
     strcpy(p, "TCP ISN Seq. Numbers: ");
     p += 22;
     for(i=0; i < seq->responses; i++) {
+      if (p - tmp + 20 > (sizeof(tmp)))
+	fatal("0verfl0w Error #234112");
       p += snprintf(p, 16, "%X ", seq->seqs[i]);
     }
     *--p = '\n';
@@ -1687,8 +1690,8 @@ int check_ident_port(struct in_addr target) {
 
 /* returns 0 for possibly temporary error, -1 means we shouldn't attempt
    inetd again on this host */
-int getidentinfoz(struct in_addr target, int localport, int remoteport,
-		  char *owner) {
+int getidentinfoz(struct in_addr target, u16 localport, u16 remoteport,
+		  char *owner, int ownersz) {
   int sd;
   struct sockaddr_in sock;
   int res;
@@ -1697,6 +1700,7 @@ int getidentinfoz(struct in_addr target, int localport, int remoteport,
   char *p,*q;
   char  *os;
 
+  if (ownersz == 0) return 0;
   owner[0] = '\0';
   if ((sd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) == -1)
     {perror("Socket troubles"); exit(1);}
@@ -1721,7 +1725,7 @@ int getidentinfoz(struct in_addr target, int localport, int remoteport,
     close(sd);
     return 0;
   }
-  else if ((res = read(sd, response, 1024)) == -1) {
+  else if ((res = read(sd, response, sizeof(response))) == -1) {
     perror("reading from identd");
     close(sd);
     return 0;
@@ -1744,8 +1748,7 @@ int getidentinfoz(struct in_addr target, int localport, int remoteport,
 	  if ((p = strtok(NULL, " :"))) {
 	    if ((q = strchr(p, '\r'))) *q = '\0';
 	    if ((q = strchr(p, '\n'))) *q = '\0';
-	    strncpy(owner, p, 512);
-	    owner[512] = '\0';
+	    Strncpy(owner, p, ownersz);
 	  }
 	}
       } 
@@ -1814,7 +1817,7 @@ int ftp_anon_connect(struct ftpinfo *ftp) {
     exit(1);
   }
   if (o.verbose || o.debugging) log_write(LOG_STDOUT, "Connected:");
-  while ((res = recvtime(sd, recvbuf, 2048,7)) > 0) 
+  while ((res = recvtime(sd, recvbuf, sizeof(recvbuf) - 1,7)) > 0) 
     if (o.debugging || o.verbose) {
       recvbuf[res] = '\0';
       log_write(LOG_STDOUT, "%s", recvbuf);
@@ -1827,7 +1830,7 @@ int ftp_anon_connect(struct ftpinfo *ftp) {
   snprintf(command, 511, "USER %s\r\n", ftp->user);
 
   send(sd, command, strlen(command), 0);
-  res = recvtime(sd, recvbuf, 2048,12);
+  res = recvtime(sd, recvbuf, sizeof(recvbuf) - 1,12);
   if (res <= 0) {
     perror("recv problem from ftp bounce server");
     exit(1);
@@ -1843,7 +1846,7 @@ int ftp_anon_connect(struct ftpinfo *ftp) {
   snprintf(command, 511, "PASS %s\r\n", ftp->pass);
 
   send(sd, command, strlen(command), 0);
-  res = recvtime(sd, recvbuf, 2048,12);
+  res = recvtime(sd, recvbuf, sizeof(recvbuf) - 1,12);
   if (res < 0) {
     perror("recv problem from ftp bounce server\n");
     exit(1);
@@ -1858,7 +1861,7 @@ int ftp_anon_connect(struct ftpinfo *ftp) {
       exit(1);
     }
   }
-  while ((res = recvtime(sd, recvbuf, 2048,2)) > 0) 
+  while ((res = recvtime(sd, recvbuf, sizeof(recvbuf) - 1,2)) > 0) 
     if (o.debugging) {
       recvbuf[res] = '\0';
       log_write(LOG_STDOUT, "%s", recvbuf);
@@ -2001,7 +2004,4 @@ int fileexistsandisreadable(char *pathname) {
   if (fp) fclose(fp);
   return (fp == NULL)? 0 : 1;
 }
-
-
-
 

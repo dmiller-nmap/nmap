@@ -116,12 +116,12 @@ pcap_t *my_pcap_open_live(char *device, int snaplen, int promisc, int to_ms)
   return pt;
 }
 
-/* Standard swiped internet checksum routine */
-unsigned short in_cksum(unsigned short *ptr,int nbytes) {
+/* Standard BSD internet checksum routine */
+unsigned short in_cksum(u16 *ptr,int nbytes) {
 
-register int            sum;            /* XXX assumes long == 32 bits */
-u_short                 oddbyte;
-register u_short        answer;         /* assumes u_short == 16 bits */
+register u32 sum;
+u16 oddbyte;
+register u16 answer;
 
 /*
  * Our algorithm is simple, using a 32-bit accumulator (sum),
@@ -173,11 +173,9 @@ int resolve(char *hostname, struct in_addr *ip) {
   return 0;
 }
 
-int send_tcp_raw_decoys( int sd, struct in_addr *victim, unsigned short sport, 
-			 unsigned short dport, unsigned int seq,
-			 unsigned int ack, unsigned char flags,
-			 unsigned short window, char *options, int optlen,
-			 char *data, unsigned short datalen) 
+int send_tcp_raw_decoys( int sd, struct in_addr *victim, u16 sport, 
+			 u16 dport, u32 seq, u32 ack, u8 flags, u16 window, 
+                         u8 *options, int optlen, u8 *data, u16 datalen) 
 {
   int decoy;
 
@@ -190,23 +188,21 @@ int send_tcp_raw_decoys( int sd, struct in_addr *victim, unsigned short sport,
 }
 
 
-int send_tcp_raw( int sd, struct in_addr *source, 
-		  struct in_addr *victim, unsigned short sport, 
-		  unsigned short dport, unsigned int seq,
-		  unsigned int ack, unsigned char flags,
-		  unsigned short window, char *options, int optlen,
-		  char *data, unsigned short datalen) 
+int send_tcp_raw( int sd, struct in_addr *source, struct in_addr *victim, 
+		  u16 sport, u16 dport, u32 seq, u32 ack, u8 flags,
+		  u16 window, u8 *options, int optlen, char *data, 
+		  u16 datalen) 
 {
 
 struct pseudo_header { 
   /*for computing TCP checksum, see TCP/IP Illustrated p. 145 */
-  unsigned int s_addy;
-  unsigned int d_addr;
-  char zer0;
-  unsigned char protocol;
-  unsigned short length;
+  u32 s_addy;
+  u32 d_addr;
+  u8 zer0;
+  u8 protocol;
+  u16 length;
 };
-unsigned char *packet = (unsigned char *) safe_malloc(sizeof(struct ip) + sizeof(struct tcphdr) + optlen + datalen);
+u8 *packet = (u8 *) safe_malloc(sizeof(struct ip) + sizeof(struct tcphdr) + optlen + datalen);
 struct ip *ip = (struct ip *) packet;
 struct tcphdr *tcp = (struct tcphdr *) (packet + sizeof(struct ip));
 struct pseudo_header *pseudo =  (struct pseudo_header *) (packet + sizeof(struct ip) - sizeof(struct pseudo_header)); 
@@ -465,8 +461,8 @@ if (ip->ip_p== IPPROTO_UDP) {
  return 0;
 }
 
-int send_udp_raw_decoys( int sd, struct in_addr *victim, unsigned short sport, 
-		  unsigned short dport, char *data, unsigned short datalen) {
+int send_udp_raw_decoys( int sd, struct in_addr *victim, u16 sport, 
+			 u16 dport, u8 *data, u16 datalen) {
   int decoy;
   
   for(decoy = 0; decoy < o.numdecoys; decoy++) 
@@ -479,9 +475,8 @@ int send_udp_raw_decoys( int sd, struct in_addr *victim, unsigned short sport,
 
 
 
-int send_udp_raw( int sd, struct in_addr *source, 
-		  struct in_addr *victim, unsigned short sport, 
-		  unsigned short dport, char *data, unsigned short datalen) 
+int send_udp_raw( int sd, struct in_addr *source, struct in_addr *victim, 
+		  u16 sport, u16 dport, u8 *data, u16 datalen) 
 {
 
 unsigned char *packet = (unsigned char *) safe_malloc(sizeof(struct ip) + sizeof(udphdr_bsd) + datalen);
@@ -497,9 +492,9 @@ int source_malloced = 0;
 struct pseudo_udp_hdr {
   struct in_addr source;
   struct in_addr dest;        
-  char zero;
-  char proto;        
-  unsigned short length;
+  u8 zero;
+  u8 proto;        
+  u16 length;
 } *pseudo = (struct pseudo_udp_hdr *) ((char *)udp - 12) ;
 
 /* check that required fields are there and not too silly */
@@ -591,8 +586,8 @@ free(packet);
 return res;
 }
 
-int send_small_fragz_decoys(int sd, struct in_addr *victim, unsigned long seq, 
-			    int sport, int dport, int flags) {
+int send_small_fragz_decoys(int sd, struct in_addr *victim, u32 seq, 
+			    u16 sport, u16 dport, int flags) {
   int decoy;
 
   for(decoy = 0; decoy < o.numdecoys; decoy++) 
@@ -607,16 +602,16 @@ int send_small_fragz_decoys(int sd, struct in_addr *victim, unsigned long seq,
 /* Much of this is swiped from my send_tcp_raw function above, which 
    doesn't support fragmentation */
 int send_small_fragz(int sd, struct in_addr *source, struct in_addr *victim,
-		     unsigned long seq, int sport, int dport, int flags)
+		     u32 seq, u16 sport, u16 dport, int flags)
  {
 
 struct pseudo_header { 
 /*for computing TCP checksum, see TCP/IP Illustrated p. 145 */
-  unsigned long s_addy;
-  unsigned long d_addr;
-  char zer0;
-  unsigned char protocol;
-  unsigned short length;
+  u32 s_addy;
+  u32 d_addr;
+  u8 zer0;
+  u8 protocol;
+  u16 length;
 };
 /*In this placement we get data and some field alignment so we aren't wasting
   too much to compute the TCP checksum.*/
@@ -736,8 +731,8 @@ if ((res = sendto(sd, (const char *)ip2,sizeof(struct ip) + 4 , 0,
 return 1;
 }
 
-int send_ip_raw_decoys( int sd, struct in_addr *victim, unsigned char proto,
-			char *data, unsigned short datalen) {
+int send_ip_raw_decoys( int sd, struct in_addr *victim, u8 proto,
+			u8 *data, u16 datalen) {
 
   int decoy;
 
@@ -751,9 +746,8 @@ int send_ip_raw_decoys( int sd, struct in_addr *victim, unsigned char proto,
 
 }
 
-int send_ip_raw( int sd, struct in_addr *source, 
-		  struct in_addr *victim, unsigned char proto,
-		  char *data, unsigned short datalen) 
+int send_ip_raw( int sd, struct in_addr *source, struct in_addr *victim, 
+		 u8 proto, u8 *data, u16 datalen) 
 {
 
 unsigned char *packet = (unsigned char *) safe_malloc(sizeof(struct ip) + datalen);
@@ -850,13 +844,13 @@ return 1;
 #if 0
 char *getsourceif(struct in_addr *src, struct in_addr *dst) {
 int sd, sd2;
-unsigned short p1;
+u16 p1;
 struct sockaddr_in sock;
 int socklen = sizeof(struct sockaddr_in);
 struct sockaddr sa;
 int sasize = sizeof(struct sockaddr);
 int ports, res;
-char buf[65536];
+u8 buf[65536];
 struct timeval tv;
 unsigned int start;
 int data_offset, ihl, *intptr;
@@ -941,8 +935,9 @@ int getsourceip(struct in_addr *src, struct in_addr *dst) {
   int sd;
   struct sockaddr_in sock;
   NET_SIZE_T socklen = sizeof(struct sockaddr_in);
-  unsigned short p1;
-  get_random_bytes(&p1, 2);
+  u16 p1;
+
+  get_random_bytes(&p1, sizeof(p1));
   if (p1 < 5000) p1 += 5000;
 
   if ((sd = socket(AF_INET, SOCK_DGRAM, 0)) == -1)
@@ -1344,8 +1339,8 @@ char *routethrough(struct in_addr *dest, struct in_addr *source) {
   struct interface_info *mydevs;
   static struct myroute {
     struct interface_info *dev;
-    unsigned int mask;
-    unsigned int dest;
+    u32 mask;
+    u32 dest;
   } myroutes[ROUTETHROUGH_MAXROUTES];
   int numinterfaces = 0;
   char *p, *endptr;
@@ -1668,10 +1663,4 @@ if (timestamp) *timestamp = 0;
 if (echots) *echots = 0;
 return 0;
 }
-
-
-
-
-
-
 

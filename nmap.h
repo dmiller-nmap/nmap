@@ -385,12 +385,13 @@ void printinteractiveusage();
 /* Scan helper functions */
 unsigned long calculate_sleep(struct in_addr target);
 int check_ident_port(struct in_addr target);
-int getidentinfoz(struct in_addr target, int localport, int remoteport,
-		  char *owner);
+
 int ftp_anon_connect(struct ftpinfo *ftp);
 
 /* port manipulators */
 unsigned short *getpts(char *expr); /* someone stole the name getports()! */
+int getidentinfoz(struct in_addr target, u16 localport, u16 remoteport,
+		  char *owner, int ownersz);
 
 /* socket manipulation functions */
 void init_socket(int sd);
