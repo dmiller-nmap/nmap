@@ -4548,7 +4548,7 @@ T7(DF=N%W=400%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 # Thanks to sena <root@decoy.pt.eu.org>
-Fingerprint Plan9 (can anyone give me a version number?)
+Fingerprint Plan9 Second Edition
 TSeq(Class=TR)
 T1(DF=N%W=FFFF%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)

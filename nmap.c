@@ -877,7 +877,7 @@ int nmap_main(int argc, char *argv[]) {
 	    else {
 	      log_write(LOG_STDOUT,"Host %s (%s) appears to be down, skipping it.\n", currenths->name, inet_ntoa(currenths->host));
 	    }
-	    log_write(LOG_MACHINE, "Host: %s (%s)\tStatus: Down\n", currenths->name, inet_ntoa(currenths->host));
+	    log_write(LOG_MACHINE, "Host: %s (%s)\tStatus: Down\n", inet_ntoa(currenths->host), currenths->name);
 	  }
 	}
       }
@@ -892,7 +892,7 @@ int nmap_main(int argc, char *argv[]) {
 	      if (resolve_all)
 		log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Host %s (%s) appears to be down.\n", currenths->name, inet_ntoa(currenths->host));
 	      else log_write(LOG_STDOUT,"Host %s (%s) appears to be down.\n", currenths->name, inet_ntoa(currenths->host));
-	      log_write(LOG_MACHINE, "Host: %s (%s)\tStatus: Down\n", currenths->name, inet_ntoa(currenths->host));
+	      log_write(LOG_MACHINE, "Host: %s (%s)\tStatus: Down\n", inet_ntoa(currenths->host), currenths->name);
 	    }
 	}
       }

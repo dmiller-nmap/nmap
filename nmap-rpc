@@ -5,12 +5,13 @@
 # All the rpc services we could find as of Feb22, 1999
 # Tweaked a bit by Fyodor <fyodor@dhp.com>
 # NOTE:  Eilon Gishri <eilon@aristo.tau.ac.il> has merged the nmap-rpc
-# with his massive rpc file (see comments below).  So as of 4/28/00,
+# with his massive rpc file (see comments below).  So as of 4/30/00,
 # this is an exact copy (except for these comments) of 
 # ftp://ftp.tau.ac.il/pub/users/eilon/rpc/rpc
 #
 # Someday I would like to reorder this with the most popular services
 # first to make scans faster
+#
 #
 # ident "@(#)rpc        1.11    95/07/14 SMI"   /* SVr4.0 1.2   */
 #
@@ -18,7 +19,16 @@
 #
 # $Revision$
 #
+# Master RPC program number data base (/etc/rpc).
+#
 # Maintained by Eilon Gishri <eilon@aristo.tau.ac.il>
+#
+# DISCLAIMER: This is provided as a public service. Neither I nor
+#             anyone else guarantees the correctness of these entries.
+#
+# The latest version of this file is available at:
+#
+#            ftp://ftp.tau.ac.il/pub/users/eilon/rpc/
 #
 # Program numbers are assigned in groups of 0x20000000 (decimal 536870912)
 # according to the following chart: 
@@ -135,6 +145,7 @@ nisd		100300	rpc.nisd
 nis_cache	100301
 nis_callback	100302
 nispasswd	100303	rpc.nispasswdd
+fnsypd          100304			# Federated Naming Service (FNS)
 rpc.pts         105004  Protoserver	# Advanced Printing Software
 nf_snmd		120126			# SunNet Manager
 nf_snmd		120127
@@ -142,7 +153,7 @@ pcnfsd		150001	pcnfs
 # Pyramid
 PyramidLock	200000
 PyramidSys5	200001 # Sys5
-
+#
 CADDS_Image     200002 			# CV CADDS images.
 #
 pdbDA		200005
@@ -157,18 +168,28 @@ rpc.dbserv      211637  dbserv rpc.dbserv_dir
 rpc.taped       217854  taped  rpc.taped_dir
 #
 ADTFileLock     300001			# ADT file locking service.
-stdfm		300009			# Online help with
+# FrameMaker
+fmclient	300006				# FrameMaker Client
+fmeditor	300007				# FrameMaker Editor
+fmserver	300009  stdfm FrameServer	# FrameMaker Server
+#
 amd		300019  amq
 rpc.ldmd	300029  ldm		# Unidata LDM
+dr_daemon       300326	# Sun Enterprise Server Alternate Pathing
+# FrameMaker
+fm_flb          300214			# FrameMaker
+fm_fls          300215			# FrameMaker licnese server
 # FA&O Command Post App
 rmd		300375
 agcd		300376
 #
 bssd		300433	bss
 drdd		300434	drd
+ap_daemon       300473                  # SUNWapu - Alternate Pathing (AP)
 cnxmond		300483		# cluster node monitor (Digital UNIX)
 cnxagentd	300484		# cluster agent (Digital UNIX)
 cluinfod	300527		# cluster information server (Digital UNIX)
+dmispd		300598     # Sun Solstice Enterprise DMI Service Provider
 prpasswd	300632
 prestoctl_svc	390100	presto	# Prestoserve control daemon
 # Legato Networker
@@ -296,8 +317,11 @@ inetray         555555559
 inetray         555555560
 #
 fypxfrd		600100069	freebsd-ypxfrd
+bwnfsd          788585389	# (PC)NFS server by Beame & Whiteside, Inc.
+dmispd		805306368  # Sun Solstice Enterprise DMI Service Provider
 cfsd		824395111
-rpc.nisd_resolv	1073741824
+fmproduct	1073741824  _Frame_RPC		# FrameMaker
 cfsd		1092830567
+dtcm		1289637086
 ttsession	1342177279
 
