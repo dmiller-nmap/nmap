@@ -149,6 +149,23 @@ to ping sweep
 .B without
 doing any actual port scans.
 .TP
+.B \-sV
+Version detection:  Afer TCP and/or UDP ports are discovered using one
+of the other scan methods, version detection communicates with those
+ports to try and determine more about what is actually running.  A
+file called nmap-service-probes is used to determine the best probes
+for detecting various services and the match strings to expect.  Nmap
+tries to determine the service protocol (e.g. ftp, ssh, telnet, http),
+the application name (e.g. ISC Bind, Apache httpd, Solaris telnetd),
+the version number, and sometimes miscellaneous details like whether
+an X server is open to connections or the SSH protocol version).  If
+Nmap was compiled with OpenSSL support, it will connect to SSL servers
+to deduce the service listening behind the encryption.  When RPC
+services are discovered, the Nmap RPC grinder is used to determine the
+RPC program and version numbers.  Note that the Nmap -A option also
+enables this feature.  For a much more detailed description of Nmap
+service detection, read our paper at http://www.insecure.org/nmap/versionscan.html .
+.TP
 .B \-sU
 UDP scans: This method is used to determine which UDP (User Datagram
 Protocol, RFC 768) ports are open on a host.  The technique is to send
@@ -333,7 +350,11 @@ should always use
 .B \-P0
 or
 .B \-PT80
-when portscanning microsoft.com.
+when portscanning microsoft.com.  Note tht "ping" in this contect may
+involve more than the traditional ICMP echo request packet.  Nmap
+supports many such probes, including arbitrary combinations of TCP,
+UDP, and ICMP probes.  By default, Nmap sends an ICMP echo request and
+a TCP ACK packet to port 80.
 .TP
 .B \-PT [portlist]
 Use TCP "ping" to determine what hosts are up.  Instead of
@@ -426,6 +447,16 @@ classification such as "worthy challenge" or "trivial joke".  This is
 only reported in normal output with -v.
 .Sp
 When verbose mode (\-v) is on with \-O, IPID Sequence Generation is also reported.  Most machines are in the "incremental" class, which means that they increment the "ID" field in the IP header for each packet they send.  This makes them vulnerable to several advanced information gathering and spoofing attacks.
+.TP
+.B \-A
+This option enables _a_dditional _a_dvanced and _a_ggressive options.
+I haven't decided exactly which it stands for yet :).  Presently
+this enables OS Detection (-O) and version scanning (-sV).  More
+features may be added in the future.  The point is to enable a
+comprehensive set of scan options without people having to remember a
+large set of flags.  This option only enables features, and not timing
+options (such as -T4) or verbosity options (-v) that you might wan't
+as well.
 .TP
 .B \-6
 This options enables IPv6 support.  All targets must be IPv6 if this
@@ -926,13 +957,24 @@ can be obtained from
 .I nmap 
 is (C) 1995-2003 by Insecure.Com LLC
 .Sp
-This program is free software; you can redistribute it
-and/or modify it under the terms of the GNU General Public
-License as published by the Free Software Foundation;
-Version 2.  This guarantees your right to use, modify, and
-redistribute Nmap under certain conditions.  If this license
-is unacceptable to you, Insecure.Org may be willing to sell
-alternative licenses (contact fyodor@insecure.org).
+The Nmap Security Scanner is (C) 1995-2003 Insecure.Com LLC. This
+program is free software; you may redistribute and/or modify it under
+the terms of the GNU General Public License as published by the Free
+Software Foundation; Version 2.  This guarantees your right to use,
+modify, and redistribute this software under certain conditions.  If
+you wish to embed Nmap technology into proprietary software, we may be
+willing to sell alternative licenses (contact sales@insecure.com).
+Many security scanner vendors already license Nmap technology such as
+our remote OS fingerprinting database and code.
+.Sp
+Note that we consider aggregation/inclusion/integration of Nmap into
+an executable installer to constitute a derived work and thus subject
+to the GPL restrictions.  We also consider certain programs that
+tightly integrate with Nmap to constitute derivative works, even if
+they only interface with Nmap by executing the Nmap binary and
+interpreting its output rather than by direct linking.  If you are
+interested in including Nmap with your proprietary software or
+appliance, please contact us first to ensure proper licensing.
 .Sp
 Source is provided to this software because we believe users
 have a right to know exactly what a program is going to do
@@ -943,13 +985,15 @@ Source code also allows you to port Nmap to new platforms, fix bugs,
 and add new features.  You are highly encouraged to send your changes
 to fyodor@insecure.org for possible incorporation into the main
 distribution.  By sending these changes to Fyodor or one the
-insecure.org development mailing lists, it is assumed that you are
-offering Fyodor the unlimited, non-exclusive right to reuse, modify,
-and relicense the code.  This is important because the inability to
+Insecure.Org development mailing lists, it is assumed that you are
+offering Fyodor and Insecure.Com LLC the unlimited, non-exclusive
+right to reuse, modify, and relicense the code.  Nmap will always be
+available Open Source, but this is important because the inability to
 relicense code has caused devastating problems for other Free Software
-projects (such as KDE and NASM).  Nmap will always be available Open
-Source.  If you wish to specify special license conditions of your
-contributions, just say so when you send them.
+projects (such as KDE and NASM).  We also occasionally relicense the
+code to third parties as discussed above.  If you wish to specify
+special license conditions of your contributions, just say so when you
+send them.
 .Sp
 This program is distributed in the hope that it will be useful, but
 .B WITHOUT ANY WARRANTY;

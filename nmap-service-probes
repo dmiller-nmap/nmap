@@ -24,66 +24,11 @@
 # selected commercial/proprietary vendors under less restrictive
 # terms.  Contact sales@insecure.com for more information.
 #
-# Grammar of this file is as follows:
-#
-# Probe {protocol} {name} {probestring}
-#   This directive defines a new probe definition.  The variables are:
-#     {protocol} must be TCP|UDP
-#     {name} is just an arbitrary name for the probe (for debugging)
-#     {probestring} must start with a q, then a delimiter character which
-#       begins and ends the string.  The string between the delimiters is
-#       formatted mostly like a "C" string.  The supported escape characters 
-#       are: \\ \a \b \f \n \r \t \v \xHH 
-#   Note that exactly one Probe line has an empty probestring.  This is
-#   the TCP NULL probe which just listens for the initial banners that
-#   some services send.  Note that Probes are executed in parallel and
-#   that a new connection is established between non-NULL TCP probes.
-#
-# match {service} {pattern} {versioninfo}
-#   This directive comes within a Probe section and does a pattern match 
-#   against any response received from the target service.  If the
-#   {pattern} matches, than the port is deemed to be running {service}
-#   and detection ceases for that port.  The pattern must be of he form
-#
-#   SERVICEMATCH_REGEX: m/{regex}/{options}
-#     This format takes a perl-compatable regular expression ( see
-#     http://www.libpcre.org/ ) between two delimiters (slash in this
-#     case, but you can use whatever you would like).  {options} is a
-#     string of one-character options.  The only ones supported now is
-#     'i', which makes a match case-insensitive and 's' which includes
-#     newlines in the '.' specifier.  Both of these are the same as
-#     their perl equivalents.  The Perl regex format is documented at
-#     http://www.perldoc.com/perl5.8.0/pod/perlre.html
+# For details on how Nmap version detection works, why it was added,
+# the grammar of this file, and how to detect and contribute new
+# services, see our paper at
+# http://www.insecure.org/nmap/versionscan.html .
 
-#
-#  The {versioninfo} is of the form v/vendorproductname/version/info/
-#  Where the slash can be replace by any character.  All 3 fields are
-#  optional, and you can skip the whole v//// if no further
-#  information on the service is available.  The versionproductname
-#  includes the vendor and often service name when relevant and is of
-#  the form "Sun Solaris rexecd", "ISC Bind named", or "Apache httpd".
-#  The version string is the version "number" (may include non-numeric
-#  characters, and even multiple words), while "info" is miscelaneous
-#  further information that was immediately available and might be
-#  useful (like whether an X server is open, or the protocol number of
-#  ssh servers).
-#
-# ports {portlist}
-#   This line tells Nmap what ports the services identified by this
-#   Probe are commonly found on.  The syntax is the same as the Nmap
-#   -p option (example: 1-11,24,38-70).
-#
-# sslports {portlist}
-#   This is the same as 'ports' described above, except that these ports
-# are often used to wrap a service in SSL.  For example, the HTTP
-# probe has an 'sslports 443' line and SMTP-detecting probes have an
-# 'sslports 465' line.
-# totalwaitms {milliseconds}
-#   This directive specifies the amount of time Nmap should wait before
-#   giving up on a particular probe against a particular service.  You can
-#   skip this directive to use the Nmap default.  I may replace this with
-#   a new parameter to the match directive which specifies the amount of 
-#   time, bytes, or lines to wait for before giving up.
 
 # This is the NULL probe that just compares any banners given to us
 Probe TCP NULL q||
@@ -121,6 +66,8 @@ match ftp m/^220.*Check Point FireWall-1 Secure FTP server running on/s v/Check 
 match ftp-proxy m/^220-Sidewinder ftp proxy\.  You must login to the proxy first/ v/Sidewinder FTP proxy///
 match ftp-proxy m/^220-\r\x0a220-Sidewinder ftp proxy/s v/Sidewinder FTP proxy///
 match ftp m/^220[- ].*FTP server \(Version (wu-[-.\w]+)/s v/WU-FTPD/$1//
+match ftp m|^220-\r\n220 [-.\w]+ FTP server \(Version ([-.+\w()]+)\) ready\.\r\n$| v/WU-FTPD/$1//
+match ftp m|^220 [-.\w]+ FTP server \(Version ([-.+\w()]+)\) ready\.\r\n$| v/WU-FTPD/$1//
 match ftp m/^220 ProFTPD (\d\S+) Server/ v/ProFTPD/$1//
 match ftp m/^220.*ProFTP[dD].*Server ready/ v/ProFTPD///
 match ftp m/^220.*NcFTPd Server / v/NcFTPd///
@@ -167,6 +114,8 @@ match ssh m/^SSH-([.\d]+)-Sun_SSH_(\S+)/ v/SunSSH/$2/protocol $1/
 match ssh m/^SSH-([.\d]+)-meow roototkt by rebel/ v/meow SSH ROOTKIT//protocol $1/
 match ssh m/^SSH-([.\d]+)-(\d+\.\d+\.\d+) SSH Secure Shell/ v/SSH/$2/protocol $1/
 match ssh m/^SSH-([.\d]+)-(\d+\.\d+\.[-.\w]+)/ v/SSH/$2/protocol $1/
+# Akamai hosted systems tend to run this - found on www.microsoft.com
+match ssh m|^SSH-(\d[.\d]*)-AKAMAI-I\n$| v/Akamai-I SSH//protocol $1/
 softmatch ssh m/^SSH-([.\d]+)-/
 
 match telnet m/^Check Point FireWall-1 authenticated Telnet server running on/ v/Check Point Firewall-1 telnetd///
@@ -298,10 +247,10 @@ match ident m|^flock\(\) on closed filehandle .*midentd| v/midentd//broken/
 match mysql m/^.\0\0\0\xffj\x04Host .* is not allowed to connect to this MySQL server$/ v/MySQL//unauthorized/
 # MySQL 4.0.13
 match mysql m/^.\0\0\0...Al sistema '[-.\w]+' non e` consentita la connessione a questo server MySQL$/ v/MySQL///
-match mysql m/.\0\0\0.(3\.[-.\w]+)\0.*\x08\x02\0\0\0\0\0\0\0\0\0\0\0\0\0\0$/s v/MySQL/$1//
-match mysql m/.\0\0\0\n(3\.[-.\w]+)\0..\0\0/s v/MySQL/$1//
+match mysql m/^.\0\0\0.(3\.[-.\w]+)\0.*\x08\x02\0\0\0\0\0\0\0\0\0\0\0\0\0\0$/s v/MySQL/$1//
+match mysql m/^.\0\0\0\n(3\.[-.\w]+)\0..\0\0/s v/MySQL/$1//
 # r(NULL,2B,"'\0\0\0\n4.0.13\0\xdf\xbc\x02\0SC7)fHu5\0, \x08\x02\0\0\0\0\0\0\0\0\0\0\0\0\0\0")
-match mysql m/.\0\0\0\n(4\.[-.\w]+)\0...\0/s v/MySQL/$1//
+match mysql m/^.\0\0\0\n(4\.[-.\w]+)\0...\0/s v/MySQL/$1//
 
 match mud m|^\n\r\xff\xfbUDo you want ANSI color\? \(Y/n\) $| v|ROM-based MUD||http://rrp.rom.org/|
 match winshell m/^Microsoft Windows ((2000)|(XP)|(NT 4\.0)) \[Version ([\d.]+)\]\r\n\(C\) Copyright 1985-20\d\d Microsoft Corp\.\r\n\r\n/ v/Microsoft Windows $1 $5 cmd.exe///
@@ -330,6 +279,7 @@ match pop3 m|^\+OK POP3 \[[-.\w]+\] v(200[-.\w]+) server ready\r\n-ERR Null comm
 # Solid POP3d 0.15
 match pop3 m|^\+OK Solid POP3 server ready\r\n-ERR unknown command\r\n-ERR unknown command\r\n$| v/Solid POP3d///
 # OpenBSD 3.2 identd
+# May apply to Linux too -- need to investigate further.
 match ident m|^0 , 0 : ERROR : UNKNOWN-ERROR\r\n$| v/OpenBSD identd///
 # FreeBSD 4.8-RC inetd internal identd
 match ident m|^0 , 0 : ERROR : INVALID-PORT\r\n$| v/FreeBSD identd///
@@ -374,7 +324,7 @@ match http m|^HTTP/1\.1.*\r\nServer: Netscape-Enterprise/([-.\w]+)\r\n| v/Netsca
 match http m|^HTTP/1\.1.*\r\nServer: Microsoft-IIS/([-.\w]+)\r\n|s v/Microsoft IIS httpd/$1//
 match http m|^HTTP/1\.0 200 OK\r\nDate: .+\r\nServer: Tomcat/([-.\w]+)\r\nContent-Type: text/html\r\nContent-Length: \d+\r\nServlet-Engine: Tomcat/[-.\w]+ \(Java ([-.\w]+); SunOS ([-.\w]+) (\w+); java\.vendor=Sun Microsystems Inc\.\)\r\n| v/Solaris management console server//SunOS $3 $4; Java $2; Tomcat $1/
 match http m|^HTTP/1.1 200 OK\r\n.+Server: CommuniGatePro/([-.\w]+)\r\n|s v/CommuniGate Pro httpd/$1//
-match http m|^HTTP/1.0 401 Unauthorized\r\nDate: .*\r\nServer: DSS ([-.\w]+) Admin Server/([-.\w]+)| v/DarwinStreamingServer/$1/Admin Server $2/
+match http m|^HTTP/1.0 \d\d\d .*\r\nDate: .*\r\nServer: DSS ([-.\w]+) Admin Server/([-.\w]+)| v/DarwinStreamingServer/$1/Admin Server $2/
 match http m|^HTTP/1.0 404 Not Found\r\nContent-Type: text/html\r\nConnection: close\r\n\r\n<title>Not Found</title>This host is not served here\.$| v/Fnord httpd///
 # Webmin 1.100
 match http m|^HTTP/1.0 200 Document follows\r\nDate: .*\r\nServer: MiniServ/0.01\r\n| v/Webmin httpd///
@@ -392,13 +342,17 @@ match http m|^HTTP/1\.1 \d\d\d .*\r\nServer: Insight Manager (\d)\r\n\r\n|s v/Co
 match http m|^HTTP/1\.1 200 OK\r\nContent-Length: \d+\r\nConnection: close\r\nPragma: no-cache\r\nCache-Control: no-cache, no-store, must-revalidate\r\nExpires: 0\r\nContent-Type: text/html\r\n\r\n| v/GNU Httptunnel///
 # Blue Coat Port 80 Security Appliance Model: Blue Coat SG400 Software Version: SGOS 2.1.6044 Software Release id: 19480 Service Pack 4
 match http m|^HTTP/1\.0 301 Moved Permanently\r\nLocation: /Secure/Local/console/index\.htm\r\n\r\n$| v/Blue Coat Security Appliance HTTP admin interface///
+match http m|^HTTP/1\.0 400 Bad Request\r\nServer: AkamaiGHost\r\n| v|AkamiGHost||Akamai's HTTP Acceleration/Mirror service|
+match http m|^HTTP/1\.0 \d\d\d .*\r\nServer: Netscape-Enterprise/([-.\w]+)\r\n| v/Netscape Enterprise httpd/$1//
+match http m|^HTTP/1\.0 \d\d\d .*\nDate: .*\nServer: NCSA/(1\.\d)\n| v/NCSA httpd/$1//
+match http m|^HTTP/1\.0 \d\d\d .*\r\nServer: Netscape-FastTrack/(\d[-.\w]+)\r\n| v/Netscape FastTrack web server/$1//
+match http m|^HTTP/1\.1 \d\d\d .*\r\nServer: (Oracle[-.\w/]+) Oracle HTTP Server ([-.\w]+)|s v/Oracle HTTP Server/$1/$2/
 # No more HTTP softmatch because many services that I don't think are
 # best classified 'http' use http-like semantics (for example UPnP,
 # some https servers, etc).  Maybe I should make softmatch allow
 # future services that start with the service name, and relable all of
 # those.  Shrug.  For now it is gone.
 # softmatch http m|^HTTP/1.[01] \d\d\d|
-
 match http-proxy m|^HTTP/1\.0 400 Bad Request\r\nServer: [sS]quid/([-.\w]+)\r\n| v/Squid webproxy/$1//
 # Blue Coat Port 80 Security Appliance  Model: Blue Coat SG400 Software Version: SGOS 2.1.6044 Software Release id: 19480 Service Pack 4
 match http-proxy m|^HTTP/1\.1 504 Gateway Time-out\r\nConnection: close\r\nCache-Control: no-cache\r\nPragma: no-cache\r\nContent-Length: 2976\r\nContent-Type: text/html\r\n\r\n<DIV class=Section1> \n\t\t<P class=MsoNormal| v/Blue Coat Security Appliance http proxy///
@@ -547,9 +501,6 @@ match ssl m|^\x16\x03\0\0\*\x02\0\0&\x03\0\xd10:\xbd\\\x8e\xe3\x15\x1c\x0fZ\xe4\
 #Probe TCP SSLSessionReq q|\x80\x67\x01\x03\x01\0\x4e\0\0\0\x10\x01\0\x80\x03\0\x80\x07\0\xc0\x06\0\x40\x02\0\x80\x04\0\x80\0\0\x39\0\0\x38\0\0\x35\0\0\x33\0\0\x32\0\0\x04\0\0\x05\0\0\x2f\0\0\x16\0\0\x13\0\xfe\xff\0\0\x0a\0\0\x15\0\0\x12\0\xfe\xfe\0\0\x09\0\0\x64\0\0\x62\0\0\x03\0\0\x06\xc8\xd5\x5a\x76\x5c\x0a\x7d\x9e\x9d\x47\xcd\x7d\xce\x4a\x06\x9a|
 #ports 443
 
-Probe UDP Sqlping q|\x02|
-ports 1434
-
 # SMB Negotiate Protocol
 Probe TCP SMBProgNeg q|\0\0\0\xa4\xff\x53\x4d\x42\x72\0\0\0\0\x08\x01\x40\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x40\x06\0\0\x01\0\0\x81\0\x02PC NETWORK PROGRAM 1.0\0\x02MICROSOFT NETWORKS 1.03\0\x02MICROSOFT NETWORKS 3.0\0\x02LANMAN1.0\0\x02LM1.2X002\0\x02Samba\0\x02NT LANMAN 1.0\0\x02NT LM 0.12\0|
 ports 135,139,445
@@ -621,3 +572,7 @@ match ncp m|^\x74\x4e\x63\x50\0\0\0\x10\x33\x33| v/Novell Netware NCP///
 Probe TCP NotesRPC q|\x3A\x00\x00\x00\x2F\x00\x00\x00\x02\x00\x00\x40\x02\x0F\x00\x01\x00\x3D\x05\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x2F\x00\x00\x00\x00\x00\x00\x00\x00\x00\x40\x1F\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00|
 ports 1352
 match lotusnotes m|^`\0\0\0U\0\0\0\x03\0\0@\x02\x0f\0\x05\x009\x05.....\x03\0\0\0\0\x02\0/\0\x12|s
+
+Probe UDP Sqlping q|\x02|
+ports 1434
+

@@ -1,10 +1,36 @@
 # Nmap Changelog ($Id$)
 
+o Wrote and posted a new paper on version scanning to
+  http://www.insecure.org/nmap/versionscan.html .  Updated
+  nmap-service-probes and the Nmap man page to simply refer to this
+  URL.
+
+o Updated the Nmap man page to discuss the new version scanning
+  options (-sV, -A).
+
+o Integrated more service signatures from my own scanning as well as
+  contributions from Max Vision (vision(a)whitehats.com).
+
+o Updated all the header text again to clarify our interpretation of
+  "derived works" after some suggestions from Brian Hatch
+  (bri(a)ifokr.org)
+
+Nmap 3.40PVT16
+
 o Fixed a compilation problem on systems w/o OpenSSL that was
-  discovered by Solar Designer.
+  discovered by Solar Designer.  I also fixed some compilation
+  problems on non-IPv6 systems.  It now compiles and runs on my
+  Solaris and ancient OpenBDS systems.
 
 o Integrated more services thanks to submissions from Niels Heinen
   (zillion(a)safemode.org).
+
+o Canonicalized the headers at the top of each Nmap/Nsock header src
+  file.  This included clarifying our interpretation of derived works,
+  updating the copyright date to 2003, making the header a bit wider,
+  and a few other light changes.  I've been putting this off for a
+  while, because it required editing about a hundred !#$# files!
+
 
 Nmap 3.40PVT15
 
@@ -270,7 +296,7 @@ o Changed the service fingerprint format slightly for easier
   processing by scripts.
 
 o Applied a large portability patch from Albert Chin-A-Young
-  (china(at)thewrittenword.com).  This cleans up a number of things,
+  (china(a)thewrittenword.com).  This cleans up a number of things,
   particularly for IRIX, Tru64, and Solaris.
 
 o Applied NmapFE patch from Peter Marschall (peter(a)adpm.de) which
