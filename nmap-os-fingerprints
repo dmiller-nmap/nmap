@@ -1,7 +1,7 @@
 # Nmap OS FingerPrint List.  If you add stuff to this, please send the
 # fingerprints or (even better) the OS name and IP address to
 # fyodor@DHP.com .  Actually the best thing to do now is to
-# use the fingerprint CGI at:  http://www.insecure.org/cgi-bin/
+# use the fingerprint CGI at:  http://www.insecure.org/cgi-bin/nmap-submit.cgi
 
 # By submitting fingerprints you are transfering any and all copyright
 # interest in the data to Fyodor so that he can modify it, relicense it,
@@ -5563,7 +5563,7 @@ T7(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 # Contributed by Mike Barnard (mike@bleeding-head.com)
-Fingerprint Windows for Workgroups 3.11 / TCP/IP-32 3.11b stack
+Fingerprint Windows for Workgroups 3.11 / TCP/IP-32 3.11b stack or Win98
 TSeq(Class=TD%gcd=<F%SI=<F)
 T1(DF=Y%W=2017%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -5576,9 +5576,9 @@ PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Windows NT4 / Win95 / Win98
 TSeq(Class=TD|RI%gcd=1|2|3|4|5|A|14|1E|28|5A%SI=<1F4)
-T1(DF=Y%W=2017|16D0|860|8000|869F%ACK=S++%Flags=A|AS%Ops=|M|MNWNNT)
+T1(DF=Y%W=2017|16D0|860|4470|8000|869F%ACK=S++%Flags=A|AS%Ops=|M|MNWNNT)
 T2(DF=N%W=0%ACK=S%Flags=AR%Ops=)
-T3(Resp=Y%DF=Y%W=2017|16D0|860|8000|869F%ACK=S++%Flags=AS%Ops=M|MNWNNT)
+T3(Resp=Y%DF=Y%W=2017|16D0|860|4470|8000|869F%ACK=S++%Flags=AS%Ops=M|MNWNNT)
 T4(DF=N%W=0%ACK=S++|O%Flags=R%Ops=)
 T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=S++|O%Flags=R%Ops=)

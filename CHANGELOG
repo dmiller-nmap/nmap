@@ -1,12 +1,20 @@
 # Nmap Changelog
 
+-- Fixed a SYN scan problem that could cause a major slowdown on some
+   busy networks.
+
+-- Fixed a crash problem in NmapFE reported by sverre ( sverre@gmx.net )
+
+-- Fixed a configure.in error found by Vacuum
+   (vacuum@technotronic.com) which could cause compilation errors.
+
+-- Fingerprint file adjustments for better Win* detection
+
 -- Fixed RPCGrind (-sR) scan.  It has been almost completely broken
    since 2.54BETA2 (which has been out for two weeks) and nobody
    reported it!  I noticed the problem myself during testing of
    something else.  I am disappointed that nobody bothered to even let
-   me know that this was broken.  Feedback is why I go through the
-   trouble of making beta releases.
-   
+   me know that this was broken.  Does anyone even use RPC Scan?
 
 ** Version 2.54BETA3
 
