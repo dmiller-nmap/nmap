@@ -771,18 +771,19 @@ char *next_token(char *buf, char *token, int tokensz)
               : strcspn(buf, "\t ");
 
     if (count > 0) {
-      count = MIN(count, tokensz - 1);
-
       char *bol = buf;
-      char *eol = buf+count;
+      char *eoline;
+
+      count = MIN(count, tokensz - 1);
+      eoline = buf+count;
 
       /* copy token  */
       memcpy(token, buf, count);
       token[count] = '\0';
 
       /* remove token from str */
-      while (*eol != '\0')
-        *bol++ = *eol++;
+      while (*eoline != '\0')
+        *bol++ = *eoline++;
       *bol = '\0';
 
       return(token);

@@ -1,5 +1,22 @@
 # Nmap Changelog ($Id$)
 
+o Went through every one of the 850+ fingerprints to normalize the
+  descriptions a bit.  I also looked up what all of the devices are
+  (thanks E*Bay and Google!).  Results like "Nexland ISB Pro800 Turbo"
+  and "Siemens 300E Release 6.5" are much more useful when you add the
+  words "cable modem" and "business phone system"
+
+o Added a new classification system to nmap-os-fingerprints.  In
+  addition to the standard text description, each entry is now
+  classified by vendor name (e.g. Sun), underlying OS (e.g. Solaris),
+  OS generation (e.g. 7), and device type ("general purpose", router,
+  switch, game console, etc).  This can be useful if you want to (say)
+  locate and eliminate the SCO systems on a network, or find the
+  wireless access points (WAPs) by scanning from the wired side.
+
+o Windows and Amiga ports now use packet receive times from libpcap.
+  Let me know if you get any "time computation problem" errors.
+
 Nmap 3.28
 
 o Fixed (I hope) an issue that would cause Nmap to print "Serious time
@@ -10,20 +27,20 @@ o Fixed (I hope) an issue that would cause Nmap to print "Serious time
   RCVD (0.0450s) ICMP 127.0.0.1 > 127.0.0.1 Echo reply (type=0/code=0) ...
   As you can see, the ping reply appears to come BEFORE the request
   was sent(!).  This sort of thing happens on at least Linux and
-  Windows.  The send time is obtained from gettimeofday(NULL), while
-  receive time libpcap packet header.  If anyone knows why this
+  Windows.  The send time is obtained from gettimeofday(timeval, NULL),
+  while receive time libpcap packet header.  If anyone knows why this
   occurs, or (even better) knows a good way to fix it, let me know.
   For now, I am allowing the response to come up to .05s "before" the
   request.  That is gross.
 
 o For years, Nmap has added -I/usr/local/include and -L/usr/local/lib
   to the compiler line to grab local libraries.  I have removed this
-  behavior by default, and added a '--with_localdirs' configure option
+  behavior by default, and added a '--with-localdirs' configure option
   that adds it back.  If Nmap fails to compile now without the above
   option, please let me know.  I can change the default back if this
   change causes more problems than it solves.  People (such as certain
   ports tree packagers) who know they don't want /usr/local should
-  specify --without_localdirs rather than relying on that always being
+  specify --without-localdirs rather than relying on that always being
   the default.
 
 o Fixed (I hope) a problem that led to the error message "Assertion
@@ -53,7 +70,7 @@ o SCO operating systems are no longer supported due to their recent
   (and absurd) attacks against Linux and IBM.  Bug reports relating to
   UnixWare will be ignored, or possibly even laughed at derisively.
   Note that I have no reason to believe anyone has ever used Nmap on
-  SCO systems.  Unixware sucks.
+  SCO systems.  Unixware and OpenServer suck.
 
 o Fixed a problem with small --max_parallism values when non-root ping
   scanning that would cause Nmap to say "sendconnecttcpquery: Could
@@ -91,7 +108,7 @@ o I spam-protected the email addresses in this file.  I fervently hope
   openly without fear of abuse by criminal spammers.  Oh, and it would
   be a shame if the spiders went through this whole page and only
   found uce@ftc.gov, rhundt@fcc.gov, jquello@fcc.gov, sness@fcc.gov,
-  president@whitehouse.gov, and rchong@fcc.gov.
+  president@whitehouse.gov, haesslich@loyalty.org, and rchong@fcc.gov.
 
 Nmap 3.27
 

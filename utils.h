@@ -87,15 +87,6 @@
 #include "nmap.h"
 #include "global_structures.h"
 
-#ifndef MAX
-#define MAX(x,y) (((x)>(y))?(x):(y))
-#endif
-#ifndef MIN
-#define MIN(x,y) (((x)<(y))?(x):(y))
-#endif
-#ifndef ABS
-#define ABS(x) (((x) >= 0)?(x):(-x)) 
-#endif
 #ifndef MOD_DIFF
 #define MOD_DIFF(a,b) ((unsigned long) (MIN((unsigned long)(a) - (unsigned long ) (b), (unsigned long )(b) - (unsigned long) (a))))
 #endif

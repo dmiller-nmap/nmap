@@ -1454,13 +1454,14 @@ if (!pd) fatal("NULL packet device passed to readip_pcap");
  // FIXME: I eventually need to figure out why Windows head.ts time is sometimes BEFORE the time I
  // sent the packet (which is according to gettimeofday() in nbase).  For now, I will sadly have to
  // use gettimeofday() for Windows in this case
- #if defined(WIN32) || defined(__amigaos__)
- gettimeofday(&tv_end, NULL);
- *rcvdtime = tv_end;
- #else
+ // Actually I now allow .05 discrepancy.   So maybe this isn't needed.  I'll comment out for now.
+   //  #if defined(WIN32) || defined(__amigaos__)
+   // gettimeofday(&tv_end, NULL);
+   // *rcvdtime = tv_end;
+   // #else
  *rcvdtime = head.ts;
  assert(head.ts.tv_sec);
- #endif
+   // #endif
  }
 
  if (rcvdtime)
