@@ -301,12 +301,12 @@ bzero((char *)&sock,sizeof(struct sockaddr_in));
 sock.sin_family=AF_INET;
 gettimeofday(&start, NULL);
 
-/*if (num_hosts > 10) 
-  max_rcvbuf(sd);*/
-if (o.allowall) broadcast_socket(sd);
-
-group_end = MIN(group_start + group_size -1, num_hosts -1);
-
+ if (num_hosts > 10) 
+   max_rcvbuf(sd);
+ if (o.allowall) broadcast_socket(sd);
+ 
+ group_end = MIN(group_start + group_size -1, num_hosts -1);
+ 
  while(group_start < num_hosts) { /* while we have hosts left to scan */
    do { /* one block */
      up_this_block = 0;
@@ -323,11 +323,13 @@ group_end = MIN(group_start + group_size -1, num_hosts -1);
 	 gettimeofday(&time[pingpkt.seq], NULL);
 	 for(decoy=0; decoy < o.numdecoys; decoy++) {
 	   if (decoy == o.decoyturn) {
+	     block_socket(sd);
 	     if ((res = sendto(sd,(char *) ping,8,0,(struct sockaddr *)&sock,
 			       sizeof(struct sockaddr))) != 8) {
 	       fprintf(stderr, "sendto in massping returned %d (should be 8)!\n", res);
 	       perror("sendto");
 	     }
+	     unblock_socket(sd);
 	   } else {
 	     send_ip_raw( rawsd, &o.decoys[decoy], &(sock.sin_addr), IPPROTO_ICMP, ping, 8);
 	   }
@@ -442,7 +444,7 @@ group_end = MIN(group_start + group_size -1, num_hosts -1);
    } while ((up_this_block > 0 || group_end - group_start <= 3) && block_unaccounted > 0 && ++block_tries < max_tries);
 
    if (o.debugging)
-     printf("Finished block: srtt: %d rttvar: %d timeout: %d block_tries: %d up_this_block: %d down_this_block: %d\n", to.srtt, to.rttvar, to.timeout, block_tries, up_this_block, down_this_block);
+     printf("Finished block: srtt: %d rttvar: %d timeout: %d block_tries: %d up_this_block: %d down_this_block: %d group_sz: %d\n", to.srtt, to.rttvar, to.timeout, block_tries, up_this_block, down_this_block, group_end - group_start + 1);
 
    if ((block_tries == 1) || (block_tries == 2 && up_this_block == 0 && down_this_block == 0)) 
      /* Then it did not miss any hosts (that we know of)*/
