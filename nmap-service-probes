@@ -194,6 +194,7 @@ match ftp m|^220 FTP Server \(Version 1.0\) ready.\r\n$| v/G-Net DSL Modem ftpd/
 match ftp m|^220 [-.\w ]+ FTP server \(Version (1.1.2[.\d]+) [A-Z][a-z]{2} [A-Z][a-z]{2} .*\) ready.\r\n| v/HP-UX ftpd/$1//
 # 220 mirrors.midco.net FTP server ready.
 match ftp m|^220-.*\r\n    WarFTPd (\d[-.\w]+) \([\w ]+\) Ready\r\n|s v/WarFTPd/$1//
+match ftp m|^220 Welcome to Windows FTP Server| v|Windows Ftp Server||Not from Microsoft - http://srv.nease.net/|
 match ftp-proxy m|^220 Ftp service of Jana-Server ready\r\n| v/JanaServer ftp proxy///
 match ftp-proxy m|^220 [-.\w]+ FTP proxy \(Version (\d[-.\w]+)\) ready\.\r\n| v/Guantlet FTP proxy/$1//
 # Frox FTP Proxy (frox-0.6.5) on Linux 2.2.X - http://frox.sourceforge.net/
@@ -332,7 +333,10 @@ match mysql m/^.\0\0\0\n(3\.[-.\w]+)\0...\0/s v/MySQL/$1//
 # r(NULL,2B,"'\0\0\0\n4.0.13\0\xdf\xbc\x02\0SC7)fHu5\0, \x08\x02\0\0\0\0\0\0\0\0\0\0\0\0\0\0")
 match mysql m/^.\0\0\0\n(4\.[-.\w]+)\0...\0/s v/MySQL/$1//
 
-match ncacn_http m|^ncacn_http/([\d.]+)$| v/ncacn_http/$1//
+# Hmmm ... http://seclists.org/lists/incidents/2002/Mar/0047.html
+# So "ncacn_http" may be used by multiple services.  I'll take this
+# one out for now.
+# match ncacn_http m|^ncacn_http/([\d.]+)$| v/ncacn_http/$1//
 # NCD Thinstar 300 running NCD Software 2.31 build 6
 match ncd-diag m|^WinCE/WBT Diagnostic port\n\rSerial Number: (\w+)  MAC Address: 0000(\w+)\s+.*CPU info: ([ -.+\w/ ]+)\r\n.*(Windows CE Kernel[-.+:\w ]+)\r|s v|NCD Thinster Terminal Diagnostic port||Serial# $1; MAC: $2; CPU: $3; $4|
 
@@ -568,6 +572,7 @@ match smtp m|^220 [-.\w]+ ESMTP Service \(Lotus Domino Release (\d[-.\w]+)\) rea
 match smtp m|^relaylock: Error: PRODUCT_ROOT_D not defined\nrelaylock: Error: PRODUCT_ROOT_D not defined\n1\n$| v/Plesk relaylock smtp wrapper//broken/
 match smtp m|^220 [-.\w]+ WebSTAR Mail Simple Mail Transfer Service Ready\r\n| v/WebSTAR SMTP server///
 match smtp m|^220 [-.\w]+ Lotus SMTP MTA Service Ready\r\n$| v/Lotus Notes SMTP///
+match smtp m|^220 [-.\w]+ SMTP NAVGW (\d[-.\w]+);| v/Norton Antivirus Gateway NAVGW/$1//
 softmatch smtp m|^220 [-.\w ]+SMTP.*\r\n|
 
 match snpp m|^220 [-.\w]+ SNPP server \(HylaFAX \(tm\) Version ([-.\w]+)\) ready.\r\n| v/HylaFAX SNPP/$1//
@@ -595,6 +600,8 @@ match ssh m|^SSH-(\d[.\d]+)-VShell_(\d[._\d]+) VShell\r\n$| v/VanDyke VShell/$SU
 match ssh m/^SSH-([.\d]+)-(\d[-.\w]+) sshlib: WinSSHD (\d[-.\w]+)\r\n/ v/Bitvise WinSSHD/$3/protocol $1/
 # Cisco VPN 3000 Concentrator
 # Cisco VPN Concentrator 3005 - Cisco Systems, Inc./VPN 3000 Concentrator Version 4.0.1.B Jun 20 2003
+match ssh m/^SSH-([.\d]+)-OpenSSH\n$/ v/OpenSSH//protocol $1/
+match ssh m/^SSH-([.\d]+)-([.\d]+) Radware\n$/ v/Radware Linkproof SSH/$2/protocol $1/
 match ssh m|^SSH-1\.5-X\n| v/Cisco VPN Concentrator SSHd//protocol 1.5/
 softmatch ssh m/^SSH-([.\d]+)-/
 
@@ -1049,7 +1056,7 @@ match http m|^HTTP/1\.1 401 Unauthorized\r\nWWW-Authenticate: Basic realm=\"(RP[
 # Netgear MR814 wireless router remote administration, Firmware 4.13 Aug 20 2003
 match http m|^HTTP/1\.0 401 Unauthorized\r\nWWW-Authenticate: Basic realm=\"(MR[-.+\w]+)\"\r\nServer: Embedded HTTPD v(\d[-.\w]+), (.*)\r\n| v/NetGear MR-series WAP//$1; Embedded HTTPD $2, $3/
 match http m|^HTTP/1\.1 401 Unauthorized\r\nWWW-Authenticate: Basic realm=\"Prestige ([-.\w ]+)\"\r\nContent-Type: text/html\r\nServer: ZyXEL-RomPager/(\d[-.\w ]+)\r\n\r\n| v|ZyXEL Prestige webadmin|$2|Prestige model $1|
-match mttp m|^HTTP/1\.1 401 Unauthorized\r\nWWW-Authenticate: Basic realm=\"Prestige ([-.\w ]+)\"\r\nContent-Type: text/html\r\nServer: RomPager/(\d[-.\w ]+) ([-./\w]+)\r\n\r\n| v|ZyXEL Prestige webadmin|$2|Prestige model $1; $3|
+match http m|^HTTP/1\.1 401 Unauthorized\r\nWWW-Authenticate: Basic realm=\"Prestige ([-.\w ]+)\"\r\nContent-Type: text/html\r\nServer: RomPager/(\d[-.\w ]+) ([-./\w]+)\r\n\r\n| v|ZyXEL Prestige webadmin|$2|Prestige model $1; $3|
 match http m|^HTTP/1\.0 \d\d\d .*\r\nServer: Roxen/(\d[-.\w]+)\r\n|s v/Roxen webserver/$1//
 # A-link (Avaks) Hasbani Web Server on RoadRunner 44b ADSL Router
 match http m|^HTTP/1\.1 403 Forbidden\r\nServer: WindWeb/(\d[-.\w]+)\r\nConnection: close\r\nWWW-Authenticate: Basic realm=\"Home Gateway\"\r\nContent-Type: text/html\r\n\r\nHasbani Web Server| v/A-link Hasbani webadmin//Runs WindWeb $1 embedded httpd; Often a DSL router/
@@ -1230,7 +1237,7 @@ match omninames m|^GIOP\x01\0\x01\x06\0\0\0\0$| v/omniORB omniNames//Corba namin
 # Oracle MTS Recovery Service 9.2.0.1 on Windows 2000 Professional
 match oracle-mts m|^HTTP/1\.0 200 OK\r\nContent-length: 7\r\n\r\nunknown$| v/Oracle MTS Recovery Service///
 
-match pop3s m|^-ERR \[SYS/PERM\] Fatal error: tls_start_servertls\(\) failed\r\n$| v/Cyrus pop3sd///
+match ssl/pop3 m|^-ERR \[SYS/PERM\] Fatal error: tls_start_servertls\(\) failed\r\n$| v/Cyrus pop3sd///
 # Postgresql-server-7.3.2-3
 match postgresql m|^EFATAL:  invalid length of startup packet\n\0$| v/PostgreSQL///
 # Netware 6 NetWare/IP
@@ -1542,8 +1549,8 @@ ports 427,443,444,548,636,1241,2000,8009
 match afp m|^\x01\x03\0\0\xff\xff\xecQ\0\0\x01.\0\0\0\0\0.\0.\0.\0.\x80\xfb.([-.\w]+)[^-.\w].*\tMacintosh\x05\x06AFPX03\x06AFP2\.2\x0eAFPVersion 2\.1\x0eAFPVersion 2\.0\x0eAFPVersion 1\.1.\tDHCAST128|s v/Apple AFP//name: $1; protocol 2.2; Mac OS X 10.1.*/
 match afp m|^\x01\x03\0\0\xff\xff\xecQ\0\0\x01.\0\0\0\0\0.\0.\0.\0.\x83\xfb.([-.\w]+)[^-.\w].*\tMacintosh\x06\x06AFP3\.1\x06AFPX03\x06AFP2\.2\x0eAFPVersion 2\.1\x0eAFPVersion 2\.0\x0eAFPVersion 1\.1\x04\tDHCAST128| v/Apple AFP//name: $1; protocol 3.1; Mac OS X 10.2.*;/
 # OpenSSL/0.9.7aa
-match ssl m|^\x16\x03\0\0J\x02\0\0F\x03\0\?| v/OpenSSL///
-# Microsoft-IIS/5.0
+match ssl m|^\x16\x03\0\0J\x02\0\0F\x03\0| v/OpenSSL///
+# Microsoft-IIS/5.0 - note that OpenSSL must go above this one because this is more general
 match ssl m|^\x16\x03\0..\x02\0\0F\x03\0|s v/Microsoft IIS SSL///
 # Novell Netware 6 Enterprise Web server 5.1 https
 # Novell Netware Ldap over SSL or enterprise web server 5.1 over SSL
@@ -1707,7 +1714,7 @@ ports 3389
 # I don't know why this stupid service is answering to TerminalServer probe,
 # but that has been verified.  I'm not going to add 515 to the TerminalServer
 # ports line unless I see more like this.
-match lpd m/^no entries\n$/ v/Xerox LPD///
+match printer m/^no entries\n$/ v/Xerox LPD///
 # Windows 2000 Server
 # Windows 2000 Advanced Server
 match microsoft-rdp m|^\x03\0\0\x0b\x06\xd0\0\0\x12.\0$|s v/Microsoft Terminal Service//Windows 2000 Server/

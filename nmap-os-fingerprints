@@ -11511,7 +11511,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 #  UnixWare 7.1.1 i386 x86at SCO UNIX_SVR5
-Fingerprint UnixWare 7.1.1
+Fingerprint SCO UnixWare 7.1.1
 Class SCO | UnixWare || general purpose
 TSeq(Class=RI%gcd=<6%SI=<874330&>B9D5%IPID=I%TS=U)
 T1(DF=Y%W=60F4%ACK=S++%Flags=AS%Ops=M)

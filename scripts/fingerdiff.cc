@@ -143,9 +143,13 @@ int readFP(FILE *filep, char *newFP, int newFPsz ) {
       lastlinelen = linelen;
       *p = '(';
     } else {
-      /* The only legitimate non-comment line that doesn't have a ( is the      	   initial Fingerprint line */
-      if (strncmp(line, "Fingerprint ", 12) != 0 &&
-	  strncmp(line, "Class ", 6) != 0) {
+     /* The only legitimate non-comment line that doesn't have a ( is the 
+	 initial Fingerprint and the following Class line(s) */
+      if (strncmp(line, "Class ", 6) == 0) {
+	char *q = line + 6;
+	while(*q && isspace(*q)) q++;
+	if (!*q) continue; // Empty class line
+      } else if (strncmp(line, "Fingerprint ", 12) != 0) {
 	printf("Warning: Bogus line skipped\n");
 	continue;
       }

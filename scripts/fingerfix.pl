@@ -51,12 +51,11 @@ while(<>) {
 	    }
 	}
 
-	if ($fp{tseq}{gcd} =~ /<(\d+)/) {
+	if ($fp{tseq}{gcd} =~ /<([0-9A-F]+)/) {
 	    $oldgcd = hex($1);
 	} else { $oldgcd = 6; }
 	
 	$newgcd = max($oldgcd, $gcd * 2 + 4);
-	
 	$fp{tseq}{gcd} = sprintf ("<%X", $newgcd);
 
         $newhighlim = $newlowlim = -1;

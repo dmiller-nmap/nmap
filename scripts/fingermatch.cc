@@ -155,8 +155,11 @@ int main(int argc, char *argv[]) {
     } else {
       /* The only legitimate non-comment line that doesn't have a ( is the 
 	 initial Fingerprint and the following Class line(s) */
-      if (strncmp(line, "Fingerprint ", 12) != 0 &&
-	  strncmp(line, "Class ", 6) != 0) {
+      if (strncmp(line, "Class ", 6) == 0) {
+	char *q = line + 6;
+	while(*q && isspace(*q)) q++;
+	if (!*q) continue; // Empty class line
+      } else if (strncmp(line, "Fingerprint ", 12) != 0) {
 	printf("Warning: Bogus line skipped\n");
 	continue;
       }

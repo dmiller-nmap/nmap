@@ -1,5 +1,30 @@
 # Nmap Changelog ($Id$)
 
+o Integrated a ton of service fingerprints, increasing the number of
+  signatures more than 50%.  It has now exceeded 1,000 for the first
+  time, and represents 180 unique service protocols from acap, afp,
+  and aim to xml-rpc, zebedee, and zebra.
+
+o Implemented a huge OS fingerprint update.  The number of
+  fingerprints has increased more than 13% to 1,121.  This is the first
+  time it has exceeded 1000.  Notable updates include Linux 2.6.0, Mac
+  OS X up to 10.3.2 (Panther), OpenBSD 3.4 (normal and pf "scrub all"),
+  FreeBSD 5.2, the latest Windows Longhorn warez, and Cisco PIX 6.3.3.
+  As usual, there are a ton of new consumer devices from ubiquitous
+  D-Link, Linksys, and Netgear broadband routers to a number of new IP
+  phones including the Cisco devices commonly used by Vonage.  Linksys
+  has apparently gone special-purpose with some of their devices, such
+  as their WGA54G "Wireless Game Adapter" and WPS54GU2 wireless print
+  server.  A cute little MP3 player called the Rio Karma was submitted
+  multiple times and I also received and integrated fingerprints for the
+  Handspring Treo 600 (PalmOS).
+
+o Fixed a crash that could happen during SSL version detection due to
+  SSL session ID cache reference counting issues.
+
+o Applied some man page fixes from Eric S. Raymond
+  (esr(a)snark.thyrsus.com).
+
 o Added version scan information to grepable output between the last
   two '/' delimiters (that space was previously unused).  So the format
   is now "portnum/state/protocol/owner/servicename/rpcinfo/versioninfo"
@@ -23,8 +48,9 @@ o Added configure option --with-libpcre=included which causes Nmap to
   build with its included version of libpcre even if an acceptable
   version is available on the system.
 
-o Applied some man page fixes from Eric S. Raymond
-  (esr(a)snark.thyrsus.com).
+o Upgraded to Autoconf 2.59 (from 2.57).  This should help HP-UX
+  compilation problems reported by Petter Reinholdtsen
+  (pere(a)hungry.com) and may have other benefits as well.
 
 o Applied patch from Przemek Galczewski (sako(a)avet.com.pl) which
   adds spaces to the XML output in places tha apparently help certain
@@ -39,6 +65,13 @@ o Fingerprints for unrecognized services can now be a bit longer to
   avoid truncating as much useful response information.  While the
   fingerprints can be longer now, I hope they will be less frequent
   because of all the newly recognized services in this version.
+
+o The nmap-service-probes "match" directive can now take a service
+  name like "ssl/vmware-auth".  The service will then be reported as
+  vmware-auth (or whatever follows "ssl/") tunneled by SSL, yet Nmap
+  won't actually bother initiating an SSL connection.  This is useful
+  for SSL services which can be fully recognized without the overhead
+  of making an SSL connection.
 
 o Version scan now chops commas and whitespace from the end of
   vendorproductname, version, and info fields.  This makes it easier to
@@ -84,7 +117,7 @@ o Added SUBST() helper function, which replaces strings in matched
   appname/version/extrainfo strings with something else.  For example,
   VanDyke Vshell gives a banner that includes
   "SSH-2\.0-VShell_2_2_0_528".  A substring match is used to pick out
-  the string "2_2_0_528", and then SUBST(1,"_",".") is called on that
+  the string "2_2_0_528", and then SUB21ST(1,"_",".") is called on that
   match to form the version number 2.2.0.528.
 
 o If responses to a probe fail to match any of the registered match

@@ -111,7 +111,7 @@ int doMatch(AllProbes *AP, char *fprint, int fplen, char *ipaddystr) {
   char *p;
   char *currentprobe = NULL;
   char probename[128];
-  char resptext[2048];
+  char resptext[3048];
   char *endp = NULL;
   unsigned long fullrlen;
   bool trunc = false; // Was at least one response truncated due to length?
