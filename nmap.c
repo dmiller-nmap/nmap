@@ -1777,7 +1777,7 @@ portlist super_scan(struct hoststruct *target, unsigned short *portarray, stype 
     short next;
     short prev;
   } *scan, *openlist, *current, *fresh, *testinglist, *next;
-  short portlookup[65536]; /* Indexes port number -> scan[] index */
+  int portlookup[65536]; /* Indexes port number -> scan[] index */
   int next_unused_port = 0;
   int decoy;
   struct timeval now;
