@@ -1,4 +1,6 @@
-
+[ NOTE -- A more up-to-date version of this paper and translations to
+  many other languages are available from
+  http://www.insecure.org/nmap/nmap-fingerprinting-article.html ]
 
 	 Remote OS detection via TCP/IP Stack FingerPrinting
 	    by Fyodor <fyodor@insecure.org> (www.insecure.org)
