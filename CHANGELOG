@@ -55,6 +55,12 @@ o Changed to Nmap XML DTD to use the same xmloutputversion (1.01) as
   newer versions of Nmap.  Thanks to Laurent Estieux
   (laurent.estieux(a)free.fr) for reporting the problem.
 
+o Fixed compilation on soem HP-UX 11 boxes thanks to a patch by Petter
+  Reinholdtsen (pere(a)hungry.com).
+
+o Fixed a portability problem on some OpenBSD and FreeBSD machines
+  thanks to a patch by Okan Demirmen (okan(a)demirmen.com).
+
 Nmap 3.75
 
 o Implemented a huge OS fingerprint database update.  The number of

@@ -113,7 +113,8 @@
 # include <pcre.h>
 #endif
 
-
+/* Workaround for lack of namespace std on HP-UX 11.00 */
+namespace std {};
 using namespace std;
 
 /**********************  DEFINES/ENUMS ***********************************/

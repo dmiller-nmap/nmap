@@ -290,7 +290,7 @@ public:
 /* If there are pending probe timeouts, fills in when with the time of
    the earliest one and returns true.  Otherwise returns false and
    puts now in when. */
-  bool HostScanStats::nextTimeout(struct timeval *when);
+  bool nextTimeout(struct timeval *when);
   UltraScanInfo *USI; /* The USI which contains this HSS */
 
   /* Removes a probe from probes_outstanding, adjusts HSS and USS
@@ -328,7 +328,7 @@ public:
      probe_bench, and decrements num_probes_waiting_retransmit accordingly */
   void moveProbeToBench(list<UltraProbe *>::iterator probeI);
 /* Clears the bench -- returning all of its members to probes_outstanding */
-  void HostScanStats::clearBench();
+  void clearBench();
   bool completed(); /* Whether or not the scan of this Target has completed */
 
   /* This function provides the proper cwnd and ccthresh to use.  It

@@ -47,7 +47,6 @@
 
 -->
 
-
 <!-- parameter entities to specify common "types" used elsewhere in the DTD -->
 <!ENTITY % attr_numeric "CDATA" >
 <!ENTITY % attr_ipaddr "CDATA" >
@@ -57,7 +56,9 @@
 <!ENTITY % host_states "(up|down|unknown|skipped)" >
 
 <!-- see: nmap.c:statenum2str for list of port states -->
-<!ENTITY % port_states "(open|closed|filtered|UNfiltered|unknown)" >
+<!-- Maybe they should be enumerated as in scan_types below , but I -->
+<!-- don't know how to escape states like open|filtered -->
+<!ENTITY % port_states "CDATA" >
 
 <!ENTITY % hostname_types "(PTR)" >
 

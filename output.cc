@@ -111,6 +111,10 @@
 
 #include <string>
 
+/* Workaround for lack of namespace std on HP-UX 11.00 */
+namespace std {};
+using namespace std;
+
 extern NmapOps o;
 static char *logtypes[LOG_TYPES]=LOG_NAMES;
 
@@ -120,7 +124,7 @@ static char *logtypes[LOG_TYPES]=LOG_NAMES;
 // returns 0 for success.
 static int getServiceXMLBuf(struct serviceDeductions *sd, char *xmlbuf, 
 		     unsigned int xmlbuflen) {
-  std::string versionxmlstring;
+  string versionxmlstring;
   char rpcbuf[128];
   char *xml_product = NULL, *xml_version = NULL, *xml_extrainfo = NULL;
 
