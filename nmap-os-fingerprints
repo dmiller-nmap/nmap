@@ -4983,7 +4983,9 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=0%ULEN=134%DAT=E)
 
-Fingerprint FreeBSD 5.0-RELEASE (x86)
+# FreeBSD 5.0-RELEASE X86
+# sparc64 running FreeBSD 5.1-RELEASE
+Fingerprint FreeBSD 5.0 - 5.1
 Class FreeBSD | FreeBSD | 5.X | general purpose
 TSeq(Class=TR%gcd=<6%IPID=I%TS=100HZ)
 T1(DF=Y%W=4000|FFFF%ACK=S++%Flags=AS%Ops=MNWNNT)
