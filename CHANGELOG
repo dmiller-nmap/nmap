@@ -1,5 +1,8 @@
 # Nmap Changelog
 
+-- Fixed dangling nroff symlink in xnmap man page (noted by Debian
+   Nmap package maintainer LaMont Jones (lamont@security.hp.com)
+
 -- Included latest nmap-rpc from Eilon Gishri (eilon at aristo.tau.ac.il)
 
 -- Fixed an uninitialized variable problem in NmapFE (found by Alvin
