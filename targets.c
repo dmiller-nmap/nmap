@@ -354,7 +354,7 @@ void masstcpping(struct hoststruct *hostbatch, int num_hosts, int pingtimeout) {
   int sockets[MAX_SOCKETS_ALLOWED];
   int hostindex = 0;
   struct timeval start, waittime, tmptv;
-  int numretries = 1;
+  int numretries = 3;
   int maxsock = 0;
   int res;
   char buf[255];
