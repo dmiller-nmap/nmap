@@ -247,7 +247,7 @@ unsigned short ushorttmp;
 int decoy;
 int sd,rawsd;
 struct timeval *time;
-struct timeval start, end;
+struct timeval start, end, t1, t2;
 unsigned short id;
 struct ppkt {
   unsigned char type;
@@ -328,11 +328,14 @@ gettimeofday(&start, NULL);
          if (!sd_blocking) { block_socket(sd); sd_blocking = 1; }
 	 for(decoy=0; decoy < o.numdecoys; decoy++) {
 	   if (decoy == o.decoyturn) {
+	     gettimeofday(&t1, NULL);
 	     if ((res = sendto(sd,(char *) ping,8,0,(struct sockaddr *)&sock,
 			       sizeof(struct sockaddr))) != 8) {
 	       fprintf(stderr, "sendto in massping returned %d (should be 8)!\n", res);
 	       perror("sendto");
 	     }
+	     gettimeofday(&t2, NULL);
+	     printf("sendto took %lu microsecs\n", TIMEVAL_SUBTRACT(t2, t1));
 	   } else {
 	     send_ip_raw( rawsd, &o.decoys[decoy], &(sock.sin_addr), IPPROTO_ICMP, ping, 8);
 	   }
