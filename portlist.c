@@ -49,7 +49,9 @@
 #include "nmap_error.h"
 #include "nmap.h"
 
+#if HAVE_STRINGS_H
 #include <strings.h>
+#endif /* HAVE_STRINGS_H */
 
 extern struct ops o;  /* option structure */
 static struct port *freeportlist = NULL;
