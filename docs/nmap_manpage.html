@@ -584,11 +584,14 @@
               for more information on the  expressions  you  fill
               the file with.
 
-       <B>-iR</B>    This option tells Nmap to generate its own hosts to
+       <B>-iR</B> <B>&lt;num</B> <B>hosts&gt;</B>
+              This option tells Nmap to generate its own hosts to
               scan by simply picking random numbers :).  It  will
-              never end.  This can be useful for statistical sam­
-              pling of the Internet to estimate  various  things.
-              If  you  are ever really bored, try <I>nmap</I> <I>-sS</I> <I>-iR</I> <I>-p</I>
+              never  end  after  the given number of IPs has been
+              scanned -- use 0 for  a  never-ending  scan.   This
+              option  can  be  useful for statistical sampling of
+              the Internet to estimate various  things.   If  you
+              are  ever really bored, try <I>nmap</I> <I>-sS</I> <I>-PS80</I> <I>-iR</I> <I>0</I> <I>-p</I>
               <I>80</I> to find some web servers to look at.
 
        <B>-p</B> <B>&lt;port</B> <B>ranges&gt;</B>
@@ -803,13 +806,13 @@
               loading  the  network   or   missing   hosts/ports.
               <B>Aggressive</B>  This  option  can  make  certain  scans
               (especially  SYN  scans  against  heavily  filtered
-              hosts)  much  faster.   It is recommended for impa­
-              tient folks with a fast net connection.  <B>Insane</B>  is
-              only  suitable  for very fast networks or where you
-              don't mind losing some information.  It  times  out
-              hosts  in  15  minutes and won´t wait more than 0.3
-              seconds for individual probes.  It does  allow  for
-              very quick network sweeps though :).
+              hosts)   much   faster.    It  is  recommended  for
+              impatient folks with a fast net connection.  <B>Insane</B>
+              is  only  suitable  for very fast networks or where
+              you don't mind losing some information.   It  times
+              out  hosts  in  15 minutes and won´t wait more than
+              0.3 seconds for individual probes.  It  does  allow
+              for very quick network sweeps though :).
 
               You  can also reference these by number (0-5).  For
               example, ´-T0´ gives you Paranoid mode and ´-T5´ is
@@ -869,9 +872,9 @@
        <B>TARGET</B> <B>SPECIFICATION</B>
               Everything  that  isn't  an option (or option argu­
               ment) in nmap is treated as a target host  specifi­
-              cation.   The simplest case is listing single host­
-              names or IP addresses on the command line.  If  you
-              want  to  scan  a  subnet  of IP addresses, you can
+              cation.    The  simplest  case  is  listing  single
+              hostnames or IP addresses on the command line.   If
+              you  want to scan a subnet of IP addresses, you can
               append <B>´/mask´</B> to the hostname or IP address.  <B>mask</B>
               must  be between 0 (scan the whole internet) and 32
               (scan the single host specified).  Use /24 to  scan

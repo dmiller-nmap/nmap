@@ -1,10 +1,17 @@
 # Nmap Changelog ($Id$)
 
+Nmap 3.20
+
 o The random IP input option (-iR) now takes an argument specifying
   how many IPs you want to scan (e.g. -iR 1000).  Specify 0 for the old
   neverending scan behavior.
 
+o Fixed a tricky memory leak discovered by Mugz (mugz@x-mafia.com).
+
 o Fixed output truncation problem noted by Lionel CONS (lionel.cons@cern.ch)
+
+o Fixed a bug that would cause certain incoming ICMP error messages to
+  be improperly ignored.
 
 Nmap 3.15BETA3
 

@@ -1054,7 +1054,7 @@ while(pt->block_unaccounted > 0 && !timeout) {
       
       if (ip2->ip_p == IPPROTO_ICMP) {
 	/* The response was based on a ping packet we sent */
-	if (!ptech->icmpscan) {
+	if (!ptech->icmpscan && !ptech->rawicmpscan) {
 	  if (o.debugging)
 	    error("Got ICMP error referring to ICMP msg which we did not send");
 	  continue;
