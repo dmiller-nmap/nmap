@@ -3309,7 +3309,7 @@ T6(Resp=Y%DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=C0|A0|0%IPLEN=164%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
-Fingerprint Linux 2.1.122 - 2.2.14
+Fingerprint Linux 2.1.122 - 2.2.16
 TSeq(Class=RI%gcd=<8%SI=>10000)
 T1(DF=Y%W=3F25|7F53|7C38%ACK=S++%Flags=AS%Ops=MENNTNW)
 T2(Resp=N)
