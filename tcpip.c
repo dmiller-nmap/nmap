@@ -326,7 +326,7 @@ free(packet);
 return res;
 }
 
-int Sendto(char *functionname, int sd, unsigned char *packet, int len, 
+int Sendto(char *functionname, int sd, const unsigned char *packet, int len, 
 	   unsigned int flags, struct sockaddr *to, int tolen) {
 
 struct sockaddr_in *sin = (struct sockaddr_in *) to;
