@@ -1931,7 +1931,6 @@ if (o.debugging || o.verbose)
       /* Now that we have sent the packets we wait for responses */
       windowdecrease = 0;
       while (( ip = (struct ip*) readip_pcap(pd, &bytes))) {
-	printf("G0t packet\n");
 	if (bytes < (4 * ip->ip_hl) + 4)
 	  continue;
 	if (ip->ip_src.s_addr == target->host.s_addr) {
@@ -1960,7 +1959,8 @@ if (o.debugging || o.verbose)
 	    icmp = (struct icmp *) ((char *)ip + sizeof(struct ip));
 	    ip2 = (struct ip *) (((char *) ip) + 4 * ip->ip_hl + sizeof(struct icmp));
 	    data = (unsigned short *) ((char *)ip2+ 4 * ip2->ip_hl);
-	    printf("Caught ICMP packet\n");
+	    printf("Caught ICMP packet:\n");
+	    hdump(icmp, ntohs(ip->ip_len) - sizeof(struct ip));
 	    if (icmp->icmp_type == 3) {
 	      switch(icmp->icmp_code) {
 
