@@ -1,3 +1,4 @@
+/* Character pool memory allocation */
 #include "charpool.h"
 
 static char *charpool[16];
