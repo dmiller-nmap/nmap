@@ -1736,7 +1736,7 @@ portlist super_scan(struct hoststruct *target, unsigned short *portarray, stype 
   double fallback_percent = 0.5;
   int rawsd;
   char myname[513];
-  int scanflags;
+  int scanflags = 0;
   pcap_t *pd;
   int bytes;
   struct ip *ip;
@@ -1751,7 +1751,7 @@ portlist super_scan(struct hoststruct *target, unsigned short *portarray, stype 
   int tries = 0;
   unsigned int localnet, netmask;
   int starttime, delta;
-  struct hostent *myhostent;
+  struct hostent *myhostent = NULL;
   struct timeout_info {
     int srtt; /* Smoothed rtt estimate (microseconds) */
     int rttvar; /* Rout trip time variance */
@@ -1761,7 +1761,7 @@ portlist super_scan(struct hoststruct *target, unsigned short *portarray, stype 
   struct f00 {
     unsigned short portno;
     short trynum;
-    struct timeval sent; 
+    struct timeval sent[2]; 
     enum { port_open, port_closed, port_testing, port_fresh } state;
     short next;
     short prev;
@@ -1776,8 +1776,8 @@ portlist super_scan(struct hoststruct *target, unsigned short *portarray, stype 
   scan = safe_malloc(o.numports * sizeof(struct f00));
 
   /* Initialize timeout info */
-  to.srtt = (target->rtt > 0)? 4 * target->rtt : 1e6;
-  to.rttvar = (target->rtt > 0)? target->rtt / 2 : 1e5;
+  to.srtt = (target->rtt > 0)? 4 * target->rtt : 1000000;
+  to.rttvar = (target->rtt > 0)? target->rtt / 2 : 1000000;
   to.timeout = to.srtt + 4 * to.rttvar;
 
   /* Initialize our portlist (scan) */
@@ -1801,8 +1801,7 @@ portlist super_scan(struct hoststruct *target, unsigned short *portarray, stype 
 
   /* Do we have a correct source address? */
   if (!target->source_ip.s_addr) {
-    if (gethostname(myname, MAXHOSTNAMELEN) || 
-	!(myhostent = gethostbyname(myname)))
+    if (gethostname(myname, MAXHOSTNAMELEN) != 0 && (myhostent = gethostbyname(myname) == NULL))
       fatal("Your system is messed up.\n"); 
     memcpy(&target->source_ip, myhostent->h_addr_list[0], sizeof(struct in_addr));
     if (o.debugging || o.verbose) 
@@ -1822,9 +1821,9 @@ if (pcap_lookupnet(target->device, &localnet, &netmask, err0r) < 0)
   fatal("Failed to lookup device subnet/netmask: %s", err0r);
 p = strdup(inet_ntoa(target->host));
 #ifdef HAVE_SNPRINTF
-snprintf(filter, sizeof(filter), "tcp and src host %s and dst host %s and dst port %d", p, inet_ntoa(target->source_ip), o.magic_port );
+snprintf(filter, sizeof(filter), "tcp and src host %s and dst host %s and (dst port %d or dst port %d)", p, inet_ntoa(target->source_ip), o.magic_port, o.magic_port +1 );
 #else
-sprintf(filter, "tcp and src host %s and dst host %s and dst port %d", p, inet_ntoa(target->source_ip), o.magic_port );
+sprintf(filter, "tcp and src host %s and dst host %s and ( dst port %d or dst port %d)", p, inet_ntoa(target->source_ip), o.magic_port , o.magic_port + 1);
 #endif
 free(p);
 if (o.debugging)
@@ -1837,6 +1836,7 @@ if (pcap_setfilter(pd, &fcode) < 0 )
 if (scantype == XMAS_SCAN) scanflags = TH_FIN|TH_URG|TH_PUSH;
 else if (scantype == NULL_SCAN) scanflags = 0;
 else if (scantype == FIN_SCAN) scanflags = TH_FIN;
+else { fatal("Unknown scna type for super_scan"); }
 
 starttime = time(NULL);
 
@@ -1851,7 +1851,7 @@ if (o.debugging || o.verbose)
       gettimeofday(&now, NULL);
       for( current = testinglist; current && (current != fresh); 
 	   current = (current->next >= 0)? &scan[current->next] : NULL) {
-	if ( TIMEVAL_SUBTRACT(now, current->sent) > to.timeout) {
+	if ( TIMEVAL_SUBTRACT(now, current->sent[current->trynum]) > to.timeout) {
 	  if (current->trynum > 0) {
 	    /* We consider this port valid, move it to open list */
 	    current->state = port_open;
@@ -1867,13 +1867,16 @@ if (o.debugging || o.verbose)
 	      openlist = current;
 	      scan[current->next].prev = current - scan;	      
 	    }
-
 	    numqueries_outstanding -= 1;
 	    changed = 1;
 	  } else {
 	    /* Initial timeout ... we've got to resend */
 	    current->trynum++;
-	    current->sent = now;
+	    /* If they didn't specify the magic port, we use magic_port +1
+	       so we can tell that it was a retransmit later */
+	    i = (o.magic_port_set)? o.magic_port : o.magic_port + 1;
+	    gettimeofday(&current->sent[1], NULL);
+	    now = current->sent[1];
 	    for(decoy=0; decoy < o.numdecoys; decoy++) {
 	      if (o.fragscan)
 		send_small_fragz(rawsd, &o.decoys[decoy], &target->host, o.magic_port, current->portno, scanflags);
@@ -1887,12 +1890,12 @@ if (o.debugging || o.verbose)
       }
       /* OK, now we have gone through our list of in-transit queries, so now
 	 we try to send off new queries if we can ... */
-      for(current = fresh; current;  current = (current->next >= 0)? &scan[current->next] : NULL) {
+      for (current = fresh; current;  current = (current->next >= 0)? &scan[current->next] : NULL) {
 	if (numqueries_outstanding > (int) numqueries_ideal) break;
 	/* Otherwise lets send a packet! */
 	current->state = port_testing;
-	current->sent = now;
 	numqueries_outstanding++;
+	gettimeofday(&current->sent[0], NULL);
 	for(decoy=0; decoy < o.numdecoys; decoy++) {
 	  if (o.fragscan)
 	    send_small_fragz(rawsd, &o.decoys[decoy], &target->host, o.magic_port, current->portno, scanflags);
@@ -1909,15 +1912,30 @@ if (o.debugging || o.verbose)
 	if (ip->ip_src.s_addr == target->host.s_addr) {
 	  tcp = (struct tcphdr *) (((char *) ip) + 4 * ip->ip_hl);
 	  if (tcp->th_flags & TH_RST) {	    
-	    if (portlookup[ntohs(tcp->th_sport)] < 0 && o.debugging) {
-	      printf("Strange packet from port %d:\n", ntohs(tcp->th_sport));
-	      readtcppacket(ip, bytes);
+	    if (portlookup[ntohs(tcp->th_sport)] < 0) {
+	      if (o.debugging) {
+		printf("Strange packet from port %d:\n", ntohs(tcp->th_sport));
+		readtcppacket((char *)ip, bytes);
+	      }
 	    } else {
 	      current = &scan[portlookup[ntohs(tcp->th_sport)]];
 	      if (current->state == port_closed) {
 		/* We've got a latecomer */
-		to.rttvar *= 1.2;
-		if (o.debugging) { printf("Late packet, varianceincrease to %d\n", to.rttvar); }
+		if (o.magic_port_set) {
+		  to.rttvar *= 1.2;
+		  if (o.debugging) { printf("Late packet, magic_port_set so we just do varianceincrease to %d\n", to.rttvar); }
+		}
+		else {
+		  gettimeofday(&now,NULL);
+		  if ((ntohs(tcp->th_dport) - o.magic_port) == 0 ||
+		      (ntohs(tcp->th_dport) - o.magic_port) == 1) { 
+		    delta = TIMEVAL_SUBTRACT(now,current->sent[(ntohs(tcp->th_dport) - o.magic_port)]) - to.srtt;
+		    numqueries_ideal += (4/numqueries_ideal);
+		    to.srtt += delta >> 3;
+		    to.rttvar += (ABS(delta) - to.rttvar) >> 2;
+		    to.timeout = to.srtt + (to.rttvar << 2);
+		  }
+		}
 	      }
 	      else if (current->trynum > 0) {
 		/* Doh! our last packet was apparently lost, slow down */
@@ -1926,32 +1944,44 @@ if (o.debugging || o.verbose)
 	      } else {
 		/* Yeah, just what we were hoping for ... */
 		gettimeofday(&now,NULL);
-		delta = TIMEVAL_SUBTRACT(now,current->sent) - to.srtt;
+		delta = TIMEVAL_SUBTRACT(now,current->sent[0]) - to.srtt;
 		numqueries_ideal += (4/numqueries_ideal);
-		to.srtt += delta >> 3);
+		to.srtt += delta >> 3;
 		to.rttvar += (ABS(delta) - to.rttvar) >> 2;
 		to.timeout = to.srtt + (to.rttvar << 2);
+	      }
+	      if (current->state != port_closed) {
+		changed++;
+	      numqueries_outstanding--;
+	      current->state = port_closed;
+	      if (current->next >= 0) scan[current->next].prev = current->prev;
+	      if (current->prev >= 0) scan[current->prev].next = current->next;
+	      }
 	    }
-	      
-	    }
-	    if (o.debugging > 1) printf("Nothing open on port %d\n", badport);
-	    /* delete the port from active scanning */
-	    for(i=0; i < o.max_sockets; i++)
-	      if (portno[i] == badport) {
-		if (o.debugging && trynum[i] > 0)
-		  printf("Bad port %d caught on fin scan, try number %d\n",
-			 badport, trynum[i] + 1);
-		trynum[i] = 0;
-		portno[i] = 0;
-		break;
-	      }	  	  
 	  }
-	  
 	}
-      } while(changed && tries < 8);
-      return NULL;
+      }
     }
+    /* Prepare for retry */
+    fresh = openlist;
+    for(current = openlist; current; current = &scan[current->next]) {
+      current->state = port_fresh;
+      if (current->next < 0) current = NULL;
+    }    
+    openlist = NULL;
+  } while(changed && ++tries < 8);   
+
+  if (o.debugging || o.verbose)
+    printf("The TCP stealth FIN/NULL/XMAS scan took %ld seconds to scan %d ports.\n", 
+	   (long) time(NULL) - starttime, o.numports);
+  
+  for (current = openlist; current;  current = (current->next >= 0)? &scan[current->next] : NULL) {
+    addport(&target->ports, current->portno, IPPROTO_TCP, NULL);
   }
+    free(scan);
+    close(rawsd);
+    pcap_close(pd);
+    return target->ports;
 }
 
 portlist fin_scan(struct hoststruct *target, unsigned short *portarray) {
