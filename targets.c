@@ -446,6 +446,7 @@ void masstcpping(struct hoststruct *hostbatch, int num_hosts, int pingtimeout) {
 	    if (res == -1) {
 	      switch(errno) {
 	      case ECONNREFUSED:
+	      case EAGAIN:
 		hostbatch[hostindex].flags |= HOST_UP;	
 		break;
 	      case ENETDOWN:
