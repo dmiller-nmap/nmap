@@ -1857,6 +1857,7 @@ if (o.debugging || o.verbose)
 	  if ( TIMEVAL_SUBTRACT(now, current->sent[current->trynum]) > to.timeout) {
 	    if (current->trynum > 0) {
 	      /* We consider this port valid, move it to open list */
+	      if (o.debugging) { printf("Moving port %hi to the open list\n", current->portno); }
 	      current->state = port_open;	    
 	      /* First delete from old list */
 	      if (current->next > -1) scan[current->next].prev = current->prev;
@@ -1876,6 +1877,7 @@ if (o.debugging || o.verbose)
 	      changed = 1;
 	    } else {
 	      /* Initial timeout ... we've got to resend */
+	      if (o.debugging) { printf("Initial timeout, resending to portno %hi\n", current->portno); }
 	      current->trynum++;
 	      /* If they didn't specify the magic port, we use magic_port +1
 		 so we can tell that it was a retransmit later */
@@ -1973,6 +1975,7 @@ if (o.debugging || o.verbose)
     testinglist = openlist;
     for(current = openlist; current; current = &scan[current->next]) {
       current->state = port_fresh;
+      if (o.debugging) { printf("Preparing for retry, open port %d noted\n", current->portno); }
       if (current->next < 0) current = NULL;
     }    
     openlist = NULL;
