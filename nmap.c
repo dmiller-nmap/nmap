@@ -1915,6 +1915,8 @@ if (o.debugging || o.verbose)
 	  }
 	}
       }
+
+      printf("Ideal number of queries: %d\n", numqueries_ideal);
       /* Now that we have sent the packets we wait for responses */
       while (( ip = (struct ip*) readip_pcap(pd, &bytes))) {
 	if (bytes < (4 * ip->ip_hl) + 4)
