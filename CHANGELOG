@@ -6,12 +6,28 @@ o I added support for a brand new "port" that many of you may have
   would still scan ports 1-40.  Unlike ports, protocol 0 IS now scanned
   by default.  This now works for ping probes too (e.g., -PS, -PA).
 
+o Applied patch by Martin Kluge (martin@elxsi.info) which adds --ttl
+  option, which sets the outgoing IPv4 TTL field in packets sent via
+  all raw scan types (including ping scans and OS detection).  The
+  patch "should work" on Windows, but hasn't been tested.  A TTL of 0
+  is supported, and even tends to work on a LAN:
+    14:17:19.474293 192.168.0.42.60214 > 192.168.0.40.135: S 3265375623:3265375623(0) win 1024 [ttl 0] (id 35919, len 40)
+    14:17:19.474456 192.168.0.40.135 > 192.168.0.42.60214: S 2805154856:2805154856(0) ack 3265375624 win 64240 <mss 1460> (DF) (ttl 128, id 49889, len 44)
+
+o Included new Latvian man page translation by 
+  "miscelerious options" (misc@inbox.lv)
+
 o Applied patch from Stephen Bishop (sbishop@idsec.co.uk) which
   prevends certain false-positive responses when Nmap raw TCP ping scans
   are being run in parallel.
 
 o To emphasize the highly professional nature of Nmap, I changed all
   instances of "fucked up" in error message text into "b0rked".
+
+o Fixed a problem with nmap-frontend RPMs that would cause a bogus
+  /bin/xnmap link to be created (it should only create
+  /usr/bin/xnmap).  Thanks to Juho Schultz
+  (juho.schultz@astro.helsinki.fi) for reporting the problem.
 
 o I made the maximum number of allowed routes and interfaces allowed
   on the scanning machine dynamic rather than hardcoded #defines of 1024

@@ -146,6 +146,7 @@ class NmapOps {
   int append_output; /* Append to any output files rather than overwrite */
   FILE *logfd[LOG_TYPES];
   FILE *nmap_stdout; /* Nmap standard output */
+  int ttl; // Time to live
  private:
   void Initialize();
   int addressfamily; /*  Address family:  AF_INET or AF_INET6 */  

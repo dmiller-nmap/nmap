@@ -27,7 +27,7 @@ int if2nameindex(int ifi);
 //	based on, ryan@eeye.com's wintcpip.c
 
 int send_ip_raw( int sd, struct in_addr *source, const struct in_addr *victim, 
-	u8 proto, char *data, u16 datalen)
+		 int ttl, u8 proto, char *data, u16 datalen)
 {
 	char *packet = (char *) safe_malloc(sizeof(struct ip) + datalen);
 	struct ip *ip = (struct ip *) packet;
@@ -42,8 +42,14 @@ int send_ip_raw( int sd, struct in_addr *source, const struct in_addr *victim,
 		free(packet);
 		return -1;
 	}
-	if (!myttl) myttl = (get_random_uint() % 23) + 37;
 
+	/* Time to live */
+	if (ttl == -1) {
+		                myttl = (get_random_uint() % 23) + 37;
+	} else {
+		                myttl = ttl;
+	}
+	
 	//	No sethdrinclude since it is implied by the WinIP library
 
 	/* if they didn't give a source address, fill in our first address */
@@ -95,7 +101,8 @@ int send_ip_raw( int sd, struct in_addr *source, const struct in_addr *victim,
 	return res;
 }
 
-int send_tcp_raw( int sd, const struct in_addr *source, const struct in_addr *victim, 
+int send_tcp_raw( int sd, const struct in_addr *source,
+		  const struct in_addr *victim, int ttl,
 		  u16 sport, u16 dport, u32 seq, u32 ack, u8 flags,
 		  u16 window, u8 *options, int optlen, char *data, 
 		  u16 datalen)
@@ -135,8 +142,12 @@ int send_tcp_raw( int sd, const struct in_addr *source, const struct in_addr *vi
 		fatal("send_tcp_raw called with an option length argument of %d which is illegal because it is not divisible by 4", optlen);
 	}
 
-
-	if (!myttl) myttl = (get_random_uint() % 23) + 37;
+	/* Time to live */
+	if (ttl == -1) {
+		                myttl = (get_random_uint() % 23) + 37;
+	} else {
+		                myttl = ttl;
+	}
 
 	//	No sethdrinclude since it is implied by the WinIP library
     assert(source);
@@ -212,7 +223,7 @@ int send_tcp_raw( int sd, const struct in_addr *source, const struct in_addr *vi
 }
 
 int send_udp_raw( int sd, struct in_addr *source, const struct in_addr *victim, 
-		  u16 sport, u16 dport, char *data, u16 datalen) 
+		  int ttl, u16 sport, u16 dport, char *data, u16 datalen) 
 {
 
 	unsigned char *packet = (unsigned char *) safe_malloc(sizeof(struct ip) + sizeof(udphdr_bsd) + datalen);
@@ -239,7 +250,13 @@ int send_udp_raw( int sd, struct in_addr *source, const struct in_addr *victim,
 		free(packet);
 		return -1;
 	}
-	if (!myttl) myttl = (get_random_uint() % 23) + 37;
+
+	/* Time to live */
+	if (ttl == -1) {
+		                myttl = (get_random_uint() % 23) + 37;
+	} else {
+		                myttl = ttl;
+	}
 
 	//	No sethdrinclude since it is implied by the WinIP library
 
@@ -305,8 +322,9 @@ int send_udp_raw( int sd, struct in_addr *source, const struct in_addr *victim,
 
 /* Much of this is swiped from my send_tcp_raw function above, which 
    doesn't support fragmentation */
-int send_small_fragz(int sd, struct in_addr *source, const struct in_addr *victim,
-		     u32 seq, u16 sport, u16 dport, int flags)
+int send_small_fragz( int sd, struct in_addr *source,
+		      const struct in_addr *victim, u32 seq,
+		      int ttl, u16 sport, u16 dport, int flags)
 {
 	struct pseudo_header 
 	{ 
@@ -331,7 +349,12 @@ int send_small_fragz(int sd, struct in_addr *source, const struct in_addr *victi
 	int id;
 	int source_malloced = 0;
 
-	if (!myttl)  myttl = (time(NULL) % 14) + 51;
+	/* Time to live */
+	if (ttl == -1) {
+		myttl = (time(NULL) % 14) + 51;
+	} else {
+		myttl = ttl;
+	}
 
 	/* It was a tough decision whether to do this here for every packet
 	or let the calling function deal with it.  In the end I grudgingly decided
@@ -638,49 +661,50 @@ char *readip_pcap_real(pcap_t *pd, unsigned int *len, long to_usec)
 
 
 //	The decoy helpers
-int send_tcp_raw_decoys( int sd, const struct in_addr *victim, u16 sport, 
-			 u16 dport, u32 seq, u32 ack, u8 flags, u16 window, 
-                         u8 *options, int optlen, char *data, u16 datalen) 
+int send_tcp_raw_decoys( int sd, const struct in_addr *victim, int ttl,
+			 u16 sport, u16 dport, u32 seq, u32 ack, u8 flags,
+			 u16 window, u8 *options, int optlen, char *data,
+			 u16 datalen) 
 {
 	int decoy;
 	for(decoy = 0; decoy < o.numdecoys; decoy++) 
 	{
-		if (send_tcp_raw(sd, &o.decoys[decoy], victim, sport, dport, seq, ack, flags, window, options, optlen, (char *) data, datalen) == -1) return -1;
+		if (send_tcp_raw(sd, &o.decoys[decoy], victim, ttl, sport, dport, seq, ack, flags, window, options, optlen, (char *) data, datalen) == -1) return -1;
 	}
 	return 0;
 }
 
-int send_udp_raw_decoys( int sd, const struct in_addr *victim, u16 sport, 
-			 u16 dport, char *data, u16 datalen) 
+int send_udp_raw_decoys( int sd, const struct in_addr *victim, int ttl,
+			 u16 sport, u16 dport, char *data, u16 datalen) 
 {
 	int decoy;
   
 	for(decoy = 0; decoy < o.numdecoys; decoy++)
 	{
-		if (send_udp_raw(sd, &o.decoys[decoy], victim, sport, dport, data, datalen) == -1) return -1;
+		if (send_udp_raw(sd, &o.decoys[decoy], victim, ttl, sport, dport, data, datalen) == -1) return -1;
 	}
 	return 0;
 }
 
-int send_small_fragz_decoys(int sd, const struct in_addr *victim, u32 seq, 
-			    u16 sport, u16 dport, int flags)
+int send_small_fragz_decoys( int sd, const struct in_addr *victim, u32 seq, 
+			     int ttl, u16 sport, u16 dport, int flags)
 {
 	int decoy;
 
 	for(decoy = 0; decoy < o.numdecoys; decoy++)
 	{
-		if (send_small_fragz(sd, &o.decoys[decoy], victim, seq, sport, dport, flags) == -1) return -1;
+		if (send_small_fragz(sd, &o.decoys[decoy], victim, seq, ttl, sport, dport, flags) == -1) return -1;
 	}
 	return 0;
 }
 
-int send_ip_raw_decoys( int sd, const struct in_addr *victim, u8 proto,
+int send_ip_raw_decoys( int sd, const struct in_addr *victim, int ttl, u8 proto,
 			char *data, u16 datalen) 
 {
 	int decoy;
 	for(decoy = 0; decoy < o.numdecoys; decoy++)
 	{
-		if (send_ip_raw(sd, &o.decoys[decoy], victim, proto, data, datalen) == -1) return -1;
+		if (send_ip_raw(sd, &o.decoys[decoy], victim, ttl, proto, data, datalen) == -1) return -1;
 	}
 	return 0;
 }

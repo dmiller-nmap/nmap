@@ -130,7 +130,7 @@ test "${with_nmapfe+set}" != "set" && with_nmapfe=yes
  
 TARGETNMAPFE=nmapfe/nmapfe
 INSTALLNMAPFE=install-nmapfe
-AC_ARG_WITH(nmapfe, [  --with-nmapfe    use nmapfe],
+AC_ARG_WITH(nmapfe, [  --without-nmapfe    skip nmapfe X-window GUI],
  [  case "$with_nmapfe" in
   no)
     TARGETNMAPFE=""; INSTALLNMAPFE=""

@@ -135,7 +135,8 @@ int ipid_proxy_probe(struct idle_proxy_info *proxy, int *probes_sent,
 
     /* Time to send the pr0be!*/
     send_tcp_raw(proxy->rawsd, proxy->host.v4sourceip(), 
-		 proxy->host.v4hostip(), base_port + tries, proxy->probe_port, 
+		 proxy->host.v4hostip(), o.ttl, base_port + tries,
+		 proxy->probe_port,
 		 seq_base + (packet_send_count++ * 500) + 1, ack, 
 		 TH_SYN|TH_ACK, 0, 
 		 NULL, 0, NULL, 0);
@@ -336,7 +337,7 @@ void initialize_idleproxy(struct idle_proxy_info *proxy, char *proxyName,
        think I'll use TH_SYN, although it is a tough call. */
     /* We can't use decoys 'cause that would screw up the IPIDs */
     send_tcp_raw(proxy->rawsd, proxy->host.v4sourceip(), 
-		 proxy->host.v4hostip(), 
+		 proxy->host.v4hostip(), o.ttl, 
 		 o.magic_port + probes_sent + 1, proxy->probe_port, 
 		 sequence_base + probes_sent + 1, 0, TH_SYN|TH_ACK, 
 		 ack, NULL, 0, NULL, 0);
@@ -453,7 +454,7 @@ void initialize_idleproxy(struct idle_proxy_info *proxy, char *proxyName,
     for (probes_sent = 0; probes_sent < 4; probes_sent++) {  
       if (probes_sent) usleep(50000);
       send_tcp_raw(proxy->rawsd, first_target, proxy->host.v4hostip(), 
-		   o.magic_port, proxy->probe_port, 
+		   o.ttl, o.magic_port, proxy->probe_port, 
 		   sequence_base + probes_sent + 1, 0, TH_SYN|TH_ACK, 
 		   ack, NULL, 0, NULL, 0);
 
@@ -596,9 +597,9 @@ int idlescan_countopen2(struct idle_proxy_info *proxy,
        but doing it the straightforward way (using the same decoys as
        we use in probing the proxy box is risky.  I'll have to think
        about this more. */
-    send_tcp_raw(proxy->rawsd, proxy->host.v4hostip(), target->v4hostip(), 
-		 proxy->probe_port, ports[pr0be], seq, 0, TH_SYN, 0, NULL, 0, 
-		 o.extra_payload, o.extra_payload_length);
+    send_tcp_raw(proxy->rawsd, proxy->host.v4hostip(), target->v4hostip(),
+		 o.ttl, proxy->probe_port, ports[pr0be], seq, 0, TH_SYN, 0,
+		 NULL, 0, o.extra_payload, o.extra_payload_length);
   }
   gettimeofday(&end, NULL);
 

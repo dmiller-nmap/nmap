@@ -205,6 +205,7 @@ int nmap_main(int argc, char *argv[]) {
     {"vv", no_argument, 0, 0},
     {"append_output", no_argument, 0, 0},
     {"noninteractive", no_argument, 0, 0},
+    {"ttl", required_argument, 0, 0}, /* Time to live */
 #ifdef WIN32
     {"win_list_interfaces", no_argument, 0, 0},
     {"win_norawsock", no_argument, 0, 0}, 
@@ -264,6 +265,11 @@ int nmap_main(int argc, char *argv[]) {
 	o.host_timeout = strtoul(optarg, NULL, 10);
 	if (o.host_timeout <= 200) {
 	  fatal("host_timeout is given in milliseconds and must be greater than 200");
+	}
+      } else if (strcmp(long_options[option_index].name, "ttl") == 0) {
+	o.ttl = atoi(optarg);
+	if (o.ttl < 0 || o.ttl > 255) {
+	  fatal("ttl option must be a number between 0 and 255 (inclusive)");
 	}
 #ifdef WIN32
       } else if (strcmp(long_options[option_index].name, "win_list_interfaces") == 0 ) { 

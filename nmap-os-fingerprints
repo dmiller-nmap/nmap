@@ -5908,19 +5908,6 @@ T6(DF=Y%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=Y%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=Y%TOS=C0%IPLEN=164%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
-# Debian GNU/Linux 3.0 (Linux 2.4.19-pre4 running on a DECpc AXP 150
-# Linux 2.5.31bk5 on x86
-Fingerprint Linux 2.4.19 - 2.5.31 on x86 or Alpha
-TSeq(Class=RI%gcd=<6%SI=<266A1F0&>62546%IPID=Z%TS=1000HZ)
-T1(DF=Y%W=16A0%ACK=S++%Flags=AS%Ops=MNNTNW)
-T2(Resp=N)
-T3(Resp=Y%DF=Y%W=16A0%ACK=S++%Flags=AS%Ops=MNNTNW)
-T4(DF=Y%W=0%ACK=O%Flags=R%Ops=)
-T5(DF=Y%W=0%ACK=S++%Flags=AR%Ops=)
-T6(DF=Y%W=0%ACK=O%Flags=R%Ops=)
-T7(DF=Y%W=0%ACK=S++%Flags=AR%Ops=)
-PU(DF=N%TOS=C0%IPLEN=164%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
-
 Fingerprint Linux Kernel 2.4.0 - 2.5.20 w/o tcp_timestamps
 TSeq(Class=RI%gcd=<8%SI=<2D870AA&>10000%IPID=Z|C|I%TS=U)
 T1(DF=Y%W=5B4|1140|2D24|16A0|16B0|16D0|1680|4000|400C|7FFF%ACK=S++%Flags=AS%Ops=MNW)
@@ -6660,7 +6647,11 @@ T6(Resp=Y%DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
-Fingerprint NetBSD 1.3I (after 19990119) to 1.4 x86 or 1.6L/Alpha
+# NetBSD 1.3I (after 19990119)
+# NetBSD 1.4 x86
+# NetBSD 1.6L/Alpha
+# NetBSD 1.6 NetBSD 1.6 (GENERIC) #0 Sun Sep 8 2002 i386
+Fingerprint NetBSD 1.3I through 1.6
 TSeq(Class=RI%gcd=<6%SI=>18000)
 T1(Resp=Y%DF=N|Y%W=4000%ACK=S++%Flags=AS%Ops=MNWNNT|M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
@@ -9098,6 +9089,17 @@ TSeq(Class=RI%gcd=<6%SI=<2425C&>383%IPID=I)
 T1(DF=N%W=5B40%ACK=S++%Flags=AS%Ops=MNWNNT)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
 T3(Resp=Y%DF=N%W=5B40%ACK=S++%Flags=AS%Ops=MNWNNT)
+T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
+T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
+
+Fingerprint Windows 2000 Pro SP2
+TSeq(Class=RI%gcd=<6%SI=<270D8&>3E9%IPID=I)
+T1(DF=Y%W=FD80%ACK=S++%Flags=AS%Ops=MNWNNT)
+T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
+T3(Resp=Y%DF=Y%W=FD80%ACK=S++%Flags=AS%Ops=MNWNNT)
 T4(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)

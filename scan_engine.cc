@@ -817,9 +817,10 @@ void pos_scan(Target *target, u16 *portarray, int numports, stype scantype) {
 		now = current->sent[current->trynum];
 		if ((scantype == SYN_SCAN) || (scantype == WINDOW_SCAN) || (scantype == ACK_SCAN)) {	      
 		  if (o.fragscan)
-		    send_small_fragz_decoys(rawsd, target->v4hostip(), sequences[current->trynum], o.magic_port + tries * 3 + current->trynum, current->portno, scanflags);
+		    send_small_fragz_decoys(rawsd, target->v4hostip(), o.ttl, sequences[current->trynum], o.magic_port + tries * 3 + current->trynum, current->portno, scanflags);
 		  else 
-		    send_tcp_raw_decoys(rawsd, target->v4hostip(), o.magic_port + 
+		    send_tcp_raw_decoys(rawsd, target->v4hostip(), o.ttl,
+		    			o.magic_port + 
 					tries * 3 + current->trynum, 
 					current->portno, 
 					sequences[current->trynum], 
@@ -917,9 +918,9 @@ void pos_scan(Target *target, u16 *portarray, int numports, stype scantype) {
 	    if ((scantype == SYN_SCAN) || (scantype == WINDOW_SCAN) || 
 		(scantype == ACK_SCAN)) {	  
 	      if (o.fragscan)
-		send_small_fragz_decoys(rawsd, target->v4hostip(), sequences[current->trynum], o.magic_port + tries * 3, current->portno, scanflags);
+		send_small_fragz_decoys(rawsd, target->v4hostip(), o.ttl, sequences[current->trynum], o.magic_port + tries * 3, current->portno, scanflags);
 	      else
-		send_tcp_raw_decoys(rawsd, target->v4hostip(), 
+		send_tcp_raw_decoys(rawsd, target->v4hostip(), o.ttl, 
 				    o.magic_port + tries * 3, current->portno,
 				    sequences[current->trynum], ack_number, 
 				    scanflags, 0, NULL, 0, o.extra_payload, 
@@ -1390,14 +1391,14 @@ void super_scan(Target *target, u16 *portarray, int numports,
 		gettimeofday(&current->sent[1], NULL);
 		now = current->sent[1];
 		if (o.fragscan)
-		  send_small_fragz_decoys(rawsd, target->v4hostip(), 0,i, current->portno, scanflags);
+		  send_small_fragz_decoys(rawsd, target->v4hostip(), 0, o.ttl, i, current->portno, scanflags);
 		else if (scantype == UDP_SCAN)
-		  send_udp_raw_decoys(rawsd, target->v4hostip(), i,
+		  send_udp_raw_decoys(rawsd, target->v4hostip(), o.ttl, i,
 				      current->portno, o.extra_payload, o.extra_payload_length);
 		else if (scantype == IPPROT_SCAN)
-		  send_ip_raw_decoys(rawsd, target->v4hostip(), current->portno, o.extra_payload, o.extra_payload_length);
+		  send_ip_raw_decoys(rawsd, target->v4hostip(), o.ttl, current->portno, o.extra_payload, o.extra_payload_length);
 		else
-		  send_tcp_raw_decoys(rawsd, target->v4hostip(), i, 
+		  send_tcp_raw_decoys(rawsd, target->v4hostip(), o.ttl, i,
 				      current->portno, 0, 0, scanflags, 0, NULL, 0,
 				      o.extra_payload, o.extra_payload_length);
 		if (senddelay &&
@@ -1419,15 +1420,17 @@ void super_scan(Target *target, u16 *portarray, int numports,
 	    numqueries_outstanding++;
 	    gettimeofday(&current->sent[0], NULL);
 	    if (o.fragscan)
-	      send_small_fragz_decoys(rawsd, target->v4hostip(), 0, o.magic_port, current->portno, scanflags);
+	      send_small_fragz_decoys(rawsd, target->v4hostip(), 0, o.ttl, o.magic_port, current->portno, scanflags);
 	    else if (scantype == UDP_SCAN)
-	      send_udp_raw_decoys(rawsd, target->v4hostip(), o.magic_port,
-				  current->portno, o.extra_payload, o.extra_payload_length);
+	      send_udp_raw_decoys(rawsd, target->v4hostip(), o.ttl,
+			      	  o.magic_port, current->portno,
+				  o.extra_payload, o.extra_payload_length);
 	    else if (scantype == IPPROT_SCAN)
-	      send_ip_raw_decoys(rawsd, target->v4hostip(),
+	      send_ip_raw_decoys(rawsd, target->v4hostip(), o.ttl,
 				 current->portno, o.extra_payload, o.extra_payload_length);
 	    else
-	      send_tcp_raw_decoys(rawsd, target->v4hostip(), o.magic_port, 
+	      send_tcp_raw_decoys(rawsd, target->v4hostip(), o.ttl,
+	      			  o.magic_port, 
 				  current->portno, 0, 0, scanflags, 0, NULL, 0,
 				  o.extra_payload, o.extra_payload_length);
 	    if ((scantype == UDP_SCAN || scantype == IPPROT_SCAN) &&

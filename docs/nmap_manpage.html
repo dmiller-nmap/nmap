@@ -729,208 +729,209 @@
        <B>-r</B>     Tells Nmap <B>NOT</B> to  randomize  the  order  in  which
               ports are scanned.
 
-       <B>-ttl</B> <B>&lt;time</B> <B>to</B> <B>live&gt;</B>
-              Sets the time to live field in the IPv4 header.
+       <B>-ttl</B> <B>&lt;value&gt;</B>
+              Sets the IPv4 time to live field in sent packets to
+              the given value.
 
        <B>--randomize_hosts</B>
-              Tells  Nmap  to  shuffle  each  group of up to 2048
-              hosts before it scans  them.   This  can  make  the
-              scans  less  obvious  to various network monitoring
-              systems, especially when you combine it  with  slow
+              Tells Nmap to shuffle each  group  of  up  to  2048
+              hosts  before  it  scans  them.   This can make the
+              scans less obvious to  various  network  monitoring
+              systems,  especially  when you combine it with slow
               timing options (see below).
 
        <B>-M</B> <B>&lt;max</B> <B>sockets&gt;</B>
-              Sets  the  maximum  number  of sockets that will be
-              used in parallel for  a  TCP  connect()  scan  (the
-              default).   This  is useful to slow down the scan a
-              little bit  and  avoid  crashing  remote  machines.
-              Another  approach is to use -sS, which is generally
+              Sets the maximum number of  sockets  that  will  be
+              used  in  parallel  for  a  TCP connect() scan (the
+              default).  This is useful to slow down the  scan  a
+              little  bit  and  avoid  crashing  remote machines.
+              Another approach is to use -sS, which is  generally
               easier for machines to handle.
 
        <B>TIMING</B> <B>OPTIONS</B>
-              Generally Nmap does a good  job  at  adjusting  for
-              Network  characteristics at runtime and scanning as
-              fast as possible while minimizing that  chances  of
-              hosts/ports  going  undetected.  However, there are
-              same cases where Nmap's default timing  policy  may
-              not  meet  your  objectives.  The following options
-              provide a fine level of control over the scan  tim­
+              Generally  Nmap  does  a  good job at adjusting for
+              Network characteristics at runtime and scanning  as
+              fast  as  possible while minimizing that chances of
+              hosts/ports going undetected.  However,  there  are
+              same  cases  where Nmap's default timing policy may
+              not meet your objectives.   The  following  options
+              provide  a fine level of control over the scan tim­
               ing:
 
        <B>-T</B> <B>&lt;Paranoid|Sneaky|Polite|Normal|Aggressive|Insane&gt;</B>
-              These  are  canned timing policies for conveniently
-              expressing your priorities to Nmap.  <B>Paranoid</B>  mode
-              scans  <B>very</B>  slowly in the hopes of avoiding detec­
-              tion by IDS systems.  It serializes all  scans  (no
-              parallel  scanning)  and generally waits at least 5
-              minutes between sending packets.  <B>Sneaky</B>  is  simi­
-              lar,  except it only waits 15 seconds between send­
-              ing packets.  <B>Polite</B> is meant to ease load  on  the
-              network   and   reduce   the  chances  of  crashing
-              machines.  It serializes the probes  and  waits  <B>at</B>
-              <B>least</B>  0.4  seconds  between  them.   <B>Normal</B> is the
-              default Nmap  behaviour,  which  tries  to  run  as
+              These are canned timing policies  for  conveniently
+              expressing  your priorities to Nmap.  <B>Paranoid</B> mode
+              scans <B>very</B> slowly in the hopes of  avoiding  detec­
+              tion  by  IDS systems.  It serializes all scans (no
+              parallel scanning) and generally waits at  least  5
+              minutes  between  sending packets.  <B>Sneaky</B> is simi­
+              lar, except it only waits 15 seconds between  send­
+              ing  packets.   <B>Polite</B> is meant to ease load on the
+              network  and  reduce  the   chances   of   crashing
+              machines.   It  serializes  the probes and waits <B>at</B>
+              <B>least</B> 0.4 seconds  between  them.   <B>Normal</B>  is  the
+              default  Nmap  behaviour,  which  tries  to  run as
               quickly as possible without overloading the network
-              or missing hosts/ports.  <B>Aggressive</B> mode adds  a  5
-              minute  timeout  per  host  and it never waits more
-              than 1.25 seconds for probe responses.   <B>Insane</B>  is
-              only  suitable  for very fast networks or where you
-              don't mind losing some information.  It  times  out
-              hosts  in 75 seconds and only waits 0.3 seconds for
-              individual probes.  It does allow  for  very  quick
-              network  sweeps  though :).  You can also reference
-              these by number (0-5).  For example, ´-T  0´  gives
+              or  missing  hosts/ports.  <B>Aggressive</B> mode adds a 5
+              minute timeout per host and  it  never  waits  more
+              than  1.25  seconds for probe responses.  <B>Insane</B> is
+              only suitable for very fast networks or  where  you
+              don't  mind  losing some information.  It times out
+              hosts in 75 seconds and only waits 0.3 seconds  for
+              individual  probes.   It  does allow for very quick
+              network sweeps though :).  You can  also  reference
+              these  by  number (0-5).  For example, ´-T 0´ gives
               you Paranoid mode and ´-T 5´ is Insane mode.
 
-              These  canned  timing  modes  should NOT be used in
-              combination with the  lower  level  controls  given
+              These canned timing modes should  NOT  be  used  in
+              combination  with  the  lower  level controls given
               below.
 
        <B>--host_timeout</B> <B>&lt;milliseconds&gt;</B>
-              Specifies  the  amount  of  time Nmap is allowed to
-              spend scanning a single host before  giving  up  on
+              Specifies the amount of time  Nmap  is  allowed  to
+              spend  scanning  a  single host before giving up on
               that IP.  The default timing mode has no host time­
               out.
 
        <B>--max_rtt_timeout</B> <B>&lt;milliseconds&gt;</B>
               Specifies  the  maximum  amount  of  time  Nmap  is
-              allowed   to  wait  for  a  probe  response  before
+              allowed  to  wait  for  a  probe  response   before
               retransmitting or timing out that particular probe.
               The default mode sets this to about 9000.
 
        <B>--min_rtt_timeout</B> <B>&lt;milliseconds&gt;</B>
-              When  the target hosts start to establish a pattern
-              of responding very quickly, Nmap  will  shrink  the
+              When the target hosts start to establish a  pattern
+              of  responding  very  quickly, Nmap will shrink the
               amount of time given per probe.  This speeds up the
               scan,  but  can  lead  to  missed  packets  when  a
               response takes longer than usual.  With this param­
               eter you can guarantee that Nmap will wait at least
-              the  given  amount  of  time  before giving up on a
+              the given amount of time  before  giving  up  on  a
               probe.
 
        <B>--initial_rtt_timeout</B> <B>&lt;milliseconds&gt;</B>
-              Specifies the initial probe timeout.  This is  gen­
-              erally  only  useful  when scanning firwalled hosts
-              with -P0.  Normally Nmap can obtain good RTT  esti­
-              mates  from the ping and the first few probes.  The
+              Specifies  the initial probe timeout.  This is gen­
+              erally only useful when  scanning  firwalled  hosts
+              with  -P0.  Normally Nmap can obtain good RTT esti­
+              mates from the ping and the first few probes.   The
               default mode uses 6000.
 
        <B>--max_parallelism</B> <B>&lt;number&gt;</B>
-              Specifies the  maximum  number  of  scans  Nmap  is
-              allowed  to  perform  in parallel.  Setting this to
-              one means Nmap will never try to scan more  than  1
-              port  at  a  time.   It also effects other parallel
+              Specifies  the  maximum  number  of  scans  Nmap is
+              allowed to perform in parallel.   Setting  this  to
+              one  means  Nmap will never try to scan more than 1
+              port at a time.  It  also  effects  other  parallel
               scans such as ping sweep, RPC scan, etc.
 
        <B>--min_parallelism</B> <B>&lt;number&gt;</B>
-              Tells Nmap to scan at least  the  given  number  of
+              Tells  Nmap  to  scan  at least the given number of
               ports in parallel.  This can speed up scans against
-              certain firewalled hosts by an order of  magnitude.
+              certain  firewalled hosts by an order of magnitude.
               But be careful -- results will become unreliable if
               you push it too far.
 
        <B>--scan_delay</B> <B>&lt;milliseconds&gt;</B>
               Specifies the <B>minimum</B> amount of time Nmap must wait
-              between  probes.   This  is mostly useful to reduce
-              network load or to slow the scan way down to  sneak
+              between probes.  This is mostly  useful  to  reduce
+              network  load or to slow the scan way down to sneak
               under IDS thresholds.
 
        <B>--packet_trace</B>
-              Tells  Nmap  to  show  all the packets it sends and
-              receives in a tcpdump-like  format.   This  can  be
-              tremendously  useful  for  debugging, and is also a
+              Tells Nmap to show all the  packets  it  sends  and
+              receives  in  a  tcpdump-like  format.  This can be
+              tremendously useful for debugging, and  is  also  a
               good learning tool.
 
 
 
 </PRE>
 <H2>TARGET SPECIFICATION</H2><PRE>
-       Everything that isn't an option (or  option  argument)  in
-       nmap  is treated as a target host specification.  The sim­
-       plest case is listing single hostnames or IP addresses  on
-       the  command  line.   If  you  want to scan a subnet of IP
-       addresses, you can append <B>´/mask´</B> to the  hostname  or  IP
+       Everything  that  isn't  an option (or option argument) in
+       nmap is treated as a target host specification.  The  sim­
+       plest  case is listing single hostnames or IP addresses on
+       the command line.  If you want to  scan  a  subnet  of  IP
+       addresses,  you  can  append <B>´/mask´</B> to the hostname or IP
        address.  <B>mask</B> must be between 0 (scan the whole internet)
-       and 32 (scan the single host specified).  Use /24 to  scan
+       and  32 (scan the single host specified).  Use /24 to scan
        a class ´C´ address and /16 for a class ´B´.
 
-       Nmap  also  has  a  more  powerful notation which lets you
+       Nmap also has a more  powerful  notation  which  lets  you
        specify an IP address using lists/ranges for each element.
-       Thus  you can scan the whole class ´B´ network 192.168.*.*
-       by specifying ´192.168.*.*´  or  ´192.168.0-255.0-255´  or
-       even  ´192.168.1-50,51-255.1,2,3,4,5-255´.   And of course
-       you can use the mask  notation:  ´192.168.0.0/16´.   These
-       are  all equivalent.  If you use asterisks (´*´), remember
-       that most shells require you  to  escape  them  with  back
+       Thus you can scan the whole class ´B´ network  192.168.*.*
+       by  specifying  ´192.168.*.*´  or ´192.168.0-255.0-255´ or
+       even ´192.168.1-50,51-255.1,2,3,4,5-255´.  And  of  course
+       you  can  use  the mask notation: ´192.168.0.0/16´.  These
+       are all equivalent.  If you use asterisks (´*´),  remember
+       that  most  shells  require  you  to escape them with back
        slashes or protect them with quotes.
 
-       Another  interesting thing to do is slice the Internet the
-       other way.  Instead of scanning all the hosts in  a  class
-       ´B´,  scan  ´*.*.5.6-7´ to scan every IP address that ends
+       Another interesting thing to do is slice the Internet  the
+       other  way.   Instead of scanning all the hosts in a class
+       ´B´, scan ´*.*.5.6-7´ to scan every IP address  that  ends
        in specifying hosts to scan, see the <I>examples</I> section.
 
 
 </PRE>
 <H2>EXAMPLES</H2><PRE>
        Here are some examples of using nmap, from simple and nor­
-       mal  to  a little more complex/esoteric.  Note that actual
-       numbers and some actual domain  names  are  used  to  make
-       things  more  concrete.  In their place you should substi­
-       tute addresses/names from <B>your</B>  <B>own</B>  <B>network.</B>   I  do  not
-       think  portscanning  other networks is illegal; nor should
-       portscans be construed by others as  an  attack.   I  have
-       scanned   hundreds  of  thousands  of  machines  and  have
-       received only one complaint.  But I am not  a  lawyer  and
-       some  (anal)  people  may  be annoyed by <I>nmap</I> probes.  Get
+       mal to a little more complex/esoteric.  Note  that  actual
+       numbers  and  some  actual  domain  names are used to make
+       things  more  concrete.   In  their   place   you   should
+       substitute  addresses/names  from  <B>your</B> <B>own</B> <B>network.</B>  I do
+       not think portscanning  other  networks  is  illegal;  nor
+       should  portscans  be construed by others as an attack.  I
+       have scanned hundreds of thousands of  machines  and  have
+       received  only  one  complaint.  But I am not a lawyer and
+       some (anal) people may be annoyed  by  <I>nmap</I>  probes.   Get
        permission first or use at your own risk.
 
        <B>nmap</B> <B>-v</B> <B>target.example.com</B>
 
-       This option scans all reserved TCP ports  on  the  machine
+       This  option  scans  all reserved TCP ports on the machine
        target.example.com .  The -v means turn on verbose mode.
 
        <B>nmap</B> <B>-sS</B> <B>-O</B> <B>target.example.com/24</B>
 
-       Launches  a  stealth SYN scan against each machine that is
+       Launches a stealth SYN scan against each machine  that  is
        up out of the 255 machines on class ´C´ where target.exam­
-       ple.com  resides.  It also tries to determine what operat­
+       ple.com resides.  It also tries to determine what  operat­
        ing system is running on each host that is up and running.
-       This  requires root privileges because of the SYN scan and
+       This requires root privileges because of the SYN scan  and
        the OS detection.
 
        <B>nmap</B> <B>-sX</B> <B>-p</B> <B>22,53,110,143,4564</B> <B>198.116.*.1-127</B>
 
-       Sends an Xmas tree scan to the first half of each  of  the
-       255  possible  8  bit  subnets  in  the  198.116 class ´B´
-       address space.  We are testing  whether  the  systems  run
-       sshd,  DNS,  pop3d,  imapd,  or port 4564.  Note that Xmas
-       scan doesn't work on Microsoft boxes due  to  their  defi­
-       cient  TCP  stack.  Same goes with CISCO, IRIX, HP/UX, and
+       Sends  an  Xmas tree scan to the first half of each of the
+       255 possible 8  bit  subnets  in  the  198.116  class  ´B´
+       address  space.   We  are  testing whether the systems run
+       sshd, DNS, pop3d, imapd, or port  4564.   Note  that  Xmas
+       scan  doesn't  work  on Microsoft boxes due to their defi­
+       cient TCP stack.  Same goes with CISCO, IRIX,  HP/UX,  and
        BSDI boxes.
 
        <B>nmap</B> <B>-v</B> <B>--randomize_hosts</B> <B>-p</B> <B>80</B> <B>´*.*.2.3-5´</B>
 
-       Rather than focus on a specific IP range, it is  sometimes
-       interesting  to  slice  up  the entire Internet and scan a
-       small sample from each slice.  This command finds all  web
-       servers  on  machines  with  IP  addresses ending in .2.3,
-       .2.4, or .2.5 find more interesting machines  starting  at
-       127.  so  you  might  want to use ´127-222´ instead of the
+       Rather  than focus on a specific IP range, it is sometimes
+       interesting to slice up the entire  Internet  and  scan  a
+       small  sample from each slice.  This command finds all web
+       servers on machines with  IP  addresses  ending  in  .2.3,
+       .2.4,  or  .2.5 find more interesting machines starting at
+       127. so you might want to use  ´127-222´  instead  of  the
        first asterisks because that section has a greater density
        of interesting machines (IMHO).
 
        <B>host</B> <B>-l</B> <B>company.com</B> <B>|</B> <B>cut</B> <B>´-d</B> <B>´</B> <B>-f</B> <B>4</B> <B>|</B> <B>./nmap</B> <B>-v</B> <B>-iL</B> <B>-</B>
 
-       Do  a  DNS  zone transfer to find the hosts in company.com
-       and then feed the IP addresses to <I>nmap.</I>   The  above  com­
-       mands  are  for  my GNU/Linux box.  You may need different
+       Do a DNS zone transfer to find the  hosts  in  company.com
+       and  then  feed  the IP addresses to <I>nmap.</I>  The above com­
+       mands are for my GNU/Linux box.  You  may  need  different
        commands/options on other operating systems.
 
 
 </PRE>
 <H2>BUGS</H2><PRE>
        Bugs?  What bugs?  Send me any that you find.  Patches are
-       nice  too  :) Remember to also send in new OS fingerprints
+       nice too :) Remember to also send in new  OS  fingerprints
        so we can grow the database.  Nmap will give you a submis­
        sion URL when an appropriate fingerprint is found.
 
@@ -942,82 +943,82 @@
 
 </PRE>
 <H2>DISTRIBUTION</H2><PRE>
-       The   newest   version   of  <I>nmap</I>  can  be  obtained  from
+       The  newest  version  of  <I>nmap</I>  can   be   obtained   from
        <I>http://www.insecure.org/nmap/</I>
 
        <I>nmap</I> is (C) 1995-2003 by Insecure.Com LLC
 
-       This program is free software;  you  can  redistribute  it
+       This  program  is  free  software; you can redistribute it
        and/or modify it under the terms of the GNU General Public
        License as published by the Free Software Foundation; Ver­
-       sion  2.   This  guarantees your right to use, modify, and
+       sion 2.  This guarantees your right to  use,  modify,  and
        redistribute  Nmap  under  certain  conditions.   If  this
-       license  is unacceptable to you, Insecure.Org may be will­
-       ing to sell  alternative  licenses  (contact  fyodor@inse­
+       license is unacceptable to you, Insecure.Org may be  will­
+       ing  to  sell  alternative  licenses (contact fyodor@inse­
        cure.org).
 
-       Source  is  provided  to  this software because we believe
+       Source is provided to this  software  because  we  believe
        users have a right to know exactly what a program is going
-       to  do  before they run it.  This also allows you to audit
-       the software for security holes (none have been  found  so
+       to do before they run it.  This also allows you  to  audit
+       the  software  for security holes (none have been found so
        far).
 
        Source code also allows you to port Nmap to new platforms,
        fix bugs, and add new features.  You are highly encouraged
-       to  send  your changes to fyodor@insecure.org for possible
-       incorporation into  the  main  distribution.   By  sending
-       these  changes  to Fyodor or one the insecure.org develop­
-       ment mailing lists, it is assumed that  you  are  offering
-       Fyodor  the  unlimited, non-exclusive right to reuse, mod­
-       ify, and relicense the code.  This  is  important  because
-       the  inability  to  relicense  code has caused devastating
+       to send your changes to fyodor@insecure.org  for  possible
+       incorporation  into  the  main  distribution.   By sending
+       these changes to Fyodor or one the  insecure.org  develop­
+       ment  mailing  lists,  it is assumed that you are offering
+       Fyodor the unlimited, non-exclusive right to  reuse,  mod­
+       ify,  and  relicense  the code.  This is important because
+       the inability to relicense  code  has  caused  devastating
        problems for other Free Software projects (such as KDE and
        NASM).  Nmap will always be available Open Source.  If you
        wish to specify special license conditions of your contri­
        butions, just say so when you send them.
 
-       This  program  is  distributed in the hope that it will be
+       This program is distributed in the hope that  it  will  be
        useful, but <B>WITHOUT</B> <B>ANY</B> <B>WARRANTY;</B> without even the implied
-       warranty  of  <B>MERCHANTABILITY</B>  or <B>FITNESS</B> <B>FOR</B> <B>A</B> <B>PARTICULAR</B>
-       <B>PURPOSE.</B>  See the GNU  General  Public  License  for  more
-       details  (it  is in the COPYING file of the <I>nmap</I> distribu­
+       warranty of <B>MERCHANTABILITY</B> or <B>FITNESS</B>  <B>FOR</B>  <B>A</B>  <B>PARTICULAR</B>
+       <B>PURPOSE.</B>   See  the  GNU  General  Public License for more
+       details (it is in the COPYING file of the  <I>nmap</I>  distribu­
        tion).
 
-       It should also be noted that Nmap has been known to  crash
-       certain  poorly  written  applications, TCP/IP stacks, and
-       even operating systems.  <B>Nmap</B> <B>should</B> <B>never</B> <B>be</B> <B>run</B>  <B>against</B>
+       It  should also be noted that Nmap has been known to crash
+       certain poorly written applications,  TCP/IP  stacks,  and
+       even  operating systems.  <B>Nmap</B> <B>should</B> <B>never</B> <B>be</B> <B>run</B> <B>against</B>
        <B>mission</B> <B>critical</B> <B>systems</B> unless you are prepared to suffer
-       downtime.  We acknowledge here that Nmap  may  crash  your
-       systems  or networks and we disclaim all liability for any
+       downtime.   We  acknowledge  here that Nmap may crash your
+       systems or networks and we disclaim all liability for  any
        damage or problems Nmap could cause.
 
-       Because of the slight risk of crashes and  because  a  few
-       black  hats  like  to use Nmap for reconnaissance prior to
-       attacking systems, there  are  administrators  who  become
-       upset  and  may  complain  when  their  system is scanned.
-       Thus, it is often advisable to request  permission  before
+       Because  of  the  slight risk of crashes and because a few
+       black hats like to use Nmap for  reconnaissance  prior  to
+       attacking  systems,  there  are  administrators who become
+       upset and may  complain  when  their  system  is  scanned.
+       Thus,  it  is often advisable to request permission before
        doing even a light scan of a network.
 
-       Nmap  should  never  be run with privileges (eg suid root)
+       Nmap should never be run with privileges  (eg  suid  root)
        for security reasons.
 
 
-       This product includes software  developed  by  the  Apache
+       This  product  includes  software  developed by the Apache
        Software Foundation (http://www.apache.org/).  The <I>Libpcap</I>
-       portable packet capture library is distributed along  with
+       portable  packet capture library is distributed along with
        nmap.  Libpcap was originally copyrighted by Van Jacobson,
        Craig Leres and Steven McCanne, all of the Lawrence Berke­
-       ley  National Laboratory, University of California, Berke­
+       ley National Laboratory, University of California,  Berke­
        ley, CA.  It is now maintained by http://www.tcpdump.org .
 
-       US  Export  Control:  Insecure.Com  LLC believes that Nmap
+       US Export Control: Insecure.Com  LLC  believes  that  Nmap
        falls under US ECCN (export control classification number)
-       5D992.   This  category  is called '"Information Security"
+       5D992.  This category is  called  '"Information  Security"
        "software" not controlled by 5D002'.  The only restriction
        of  this  classification  is  AT  (anti-terrorism),  which
        applies to almost all goods and denies export to a handful
-       of  rogue  nations  such  as  Iraq  and North Korea.  Thus
-       exporting Nmap does not require any special license,  per­
+       of rogue nations such  as  Iraq  and  North  Korea.   Thus
+       exporting  Nmap does not require any special license, per­
        mit, or other governmental authorization.
 
 

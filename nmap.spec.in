@@ -63,13 +63,10 @@ gzip $RPM_BUILD_ROOT%{prefix}/share/man/man1/* || :
 
 %if "%{buildfe}" == "1"
 %post frontend
-rm -f ${prefix}/bin/xnmap
-ln -s nmapfe ${prefix}/bin/xnmap
 %endif
 
 %if "%{buildfe}" == "1"
 %postun frontend
-rm -f ${prefix}/bin/xnmap
 %endif
 
 %clean

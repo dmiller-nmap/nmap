@@ -421,14 +421,15 @@ int resolve(char *hostname, struct in_addr *ip) {
   return 0;
 }
 
-int send_tcp_raw_decoys( int sd, const struct in_addr *victim, u16 sport, 
-			 u16 dport, u32 seq, u32 ack, u8 flags, u16 window, 
-                         u8 *options, int optlen, char *data, u16 datalen) 
+int send_tcp_raw_decoys( int sd, const struct in_addr *victim, int ttl,
+			 u16 sport, u16 dport, u32 seq, u32 ack, u8 flags,
+			 u16 window, u8 *options, int optlen, char *data,
+			 u16 datalen) 
 {
   int decoy;
 
   for(decoy = 0; decoy < o.numdecoys; decoy++) 
-    if (send_tcp_raw(sd, &o.decoys[decoy], victim, sport, dport, seq, ack,
+    if (send_tcp_raw(sd, &o.decoys[decoy], victim, ttl, sport, dport, seq, ack,
 		     flags, window, options, optlen, data, datalen) == -1)
       return -1;
 
@@ -437,7 +438,7 @@ int send_tcp_raw_decoys( int sd, const struct in_addr *victim, u16 sport,
 
 
 int send_tcp_raw( int sd, const struct in_addr *source, 
-		  const struct in_addr *victim, 
+		  const struct in_addr *victim, int ttl, 
 		  u16 sport, u16 dport, u32 seq, u32 ack, u8 flags,
 		  u16 window, u8 *options, int optlen, char *data, 
 		  u16 datalen) 
@@ -455,7 +456,6 @@ u8 *packet = (u8 *) safe_malloc(sizeof(struct ip) + sizeof(struct tcphdr) + optl
 struct ip *ip = (struct ip *) packet;
 struct tcphdr *tcp = (struct tcphdr *) (packet + sizeof(struct ip));
 struct pseudo_header *pseudo =  (struct pseudo_header *) (packet + sizeof(struct ip) - sizeof(struct pseudo_header)); 
-static int myttl = 0;
 
  /*With these placement we get data and some field alignment so we aren't
    wasting too much in computing the checksum */
@@ -464,6 +464,8 @@ struct sockaddr_in sock;
 char myname[MAXHOSTNAMELEN + 1];
 struct hostent *myhostent = NULL;
 int source_malloced = 0;
+
+static int myttl = 0;
 
 /* check that required fields are there and not too silly */
 /* We used to check that sport and dport were nonzer0, but scr3w that! */
@@ -477,8 +479,12 @@ if (optlen % 4) {
   fatal("send_tcp_raw called with an option length argument of %d which is illegal because it is not divisible by 4", optlen);
 }
 
-
-if (!myttl) myttl = (get_random_uint() % 23) + 37;
+/* Time to live */
+if (ttl == -1) {
+	myttl = (get_random_uint() % 23) + 37;
+} else {
+	myttl = ttl;
+}
 
 /* It was a tough decision whether to do this here for every packet
    or let the calling function deal with it.  In the end I grudgingly decided
@@ -734,12 +740,12 @@ if (ip->ip_p== IPPROTO_UDP) {
  return 0;
 }
 
-int send_udp_raw_decoys( int sd, const struct in_addr *victim, u16 sport, 
-			 u16 dport, char *data, u16 datalen) {
+int send_udp_raw_decoys( int sd, const struct in_addr *victim, int ttl, 
+			 u16 sport, u16 dport, char *data, u16 datalen) {
   int decoy;
   
   for(decoy = 0; decoy < o.numdecoys; decoy++) 
-    if (send_udp_raw(sd, &o.decoys[decoy], victim, sport, dport, data, 
+    if (send_udp_raw(sd, &o.decoys[decoy], victim, ttl, sport, dport, data, 
 		     datalen) == -1)
       return -1;
 
@@ -749,7 +755,7 @@ int send_udp_raw_decoys( int sd, const struct in_addr *victim, u16 sport,
 
 
 int send_udp_raw( int sd, struct in_addr *source, const struct in_addr *victim,
- 		  u16 sport, u16 dport, char *data, u16 datalen) 
+ 		  int ttl, u16 sport, u16 dport, char *data, u16 datalen) 
 {
 
 unsigned char *packet = (unsigned char *) safe_malloc(sizeof(struct ip) + sizeof(udphdr_bsd) + datalen);
@@ -777,8 +783,12 @@ if ( !victim || !sport || !dport || sd < 0) {
   return -1;
 }
 
-
-if (!myttl) myttl = (get_random_uint() % 23) + 37;
+/* Time to live */
+if (ttl == -1) {
+	        myttl = (get_random_uint() % 23) + 37;
+} else {
+	        myttl = ttl;
+}
 
 /* It was a tough decision whether to do this here for every packet
    or let the calling function deal with it.  In the end I grudgingly decided
@@ -859,12 +869,12 @@ free(packet);
 return res;
 }
 
-int send_small_fragz_decoys(int sd, const struct in_addr *victim, u32 seq, 
-			    u16 sport, u16 dport, int flags) {
+int send_small_fragz_decoys(int sd, const struct in_addr *victim, u32 seq,
+			    int ttl, u16 sport, u16 dport, int flags) {
   int decoy;
 
   for(decoy = 0; decoy < o.numdecoys; decoy++) 
-    if (send_small_fragz(sd, &o.decoys[decoy], victim, seq, sport, 
+    if (send_small_fragz(sd, &o.decoys[decoy], victim, seq, ttl, sport, 
 				dport, 
 				flags) == -1)
       return -1;
@@ -875,8 +885,8 @@ int send_small_fragz_decoys(int sd, const struct in_addr *victim, u32 seq,
 /* Much of this is swiped from my send_tcp_raw function above, which 
    doesn't support fragmentation */
 int send_small_fragz(int sd, struct in_addr *source, 
-		     const struct in_addr *victim, u32 seq, u16 sport, 
-		     u16 dport, int flags)
+		     const struct in_addr *victim, u32 seq, int ttl,
+		     u16 sport, u16 dport, int flags)
  {
 
 struct pseudo_header { 
@@ -901,7 +911,12 @@ int res;
 struct sockaddr_in sock;
 int id;
 
-if (!myttl)  myttl = (time(NULL) % 14) + 51;
+/* Time to live */
+if (ttl == -1) {
+	        myttl = (time(NULL) % 14) + 51;
+} else {
+	        myttl = ttl;
+}
 
 /* It was a tough decision whether to do this here for every packet
    or let the calling function deal with it.  In the end I grudgingly decided
@@ -1005,13 +1020,13 @@ if ((res = sendto(sd, (const char *)ip2,sizeof(struct ip) + 4 , 0,
 return 1;
 }
 
-int send_ip_raw_decoys( int sd, const struct in_addr *victim, u8 proto,
-			char *data, u16 datalen) {
+int send_ip_raw_decoys( int sd, const struct in_addr *victim, int ttl,
+			u8 proto, char *data, u16 datalen) {
 
   int decoy;
 
   for(decoy = 0; decoy < o.numdecoys; decoy++) 
-    if (send_ip_raw(sd, &o.decoys[decoy], victim, proto, data, 
+    if (send_ip_raw(sd, &o.decoys[decoy], victim, ttl, proto, data, 
 			   datalen) == -1)
       return -1;
 
@@ -1021,7 +1036,7 @@ int send_ip_raw_decoys( int sd, const struct in_addr *victim, u8 proto,
 }
 
 int send_ip_raw( int sd, struct in_addr *source, const struct in_addr *victim, 
-		 u8 proto, char *data, u16 datalen) 
+		 int ttl, u8 proto, char *data, u16 datalen) 
 {
 
 unsigned char *packet = (unsigned char *) safe_malloc(sizeof(struct ip) + datalen);
@@ -1041,7 +1056,12 @@ if ( !victim || sd < 0) {
   return -1;
 }
 
-if (!myttl) myttl = (get_random_uint() % 23) + 37;
+/* Time to live */
+if (ttl == -1) {
+	        myttl = (get_random_uint() % 23) + 37;
+} else {
+	        myttl = ttl;
+}
 
 /* It was a tough decision whether to do this here for every packet
    or let the calling function deal with it.  In the end I grudgingly decided

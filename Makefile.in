@@ -1,4 +1,4 @@
-NMAP_VERSION = 3.15BETA1
+NMAP_VERSION = 3.15BETA2
 NMAP_NAME= nmap
 NMAP_URL= www.insecure.org/nmap/
 NMAP_PLATFORM=@host@
@@ -83,6 +83,7 @@ distro:
 	nroff -man docs/nmap_french.1 | man2html -nodepage -title 'Nmap network security scanner man page (French translation)' > docs/nmap_manpage-fr.html
 	nroff -man docs/nmap_german.1 | man2html -nodepage -title 'Nmap network security scanner man page (German translation)' > docs/nmap_manpage-de.html
 	nroff -man docs/nmap_italian.1 | man2html -nodepage -title 'Nmap network security scanner man page (Italian translation)' > docs/nmap_manpage-it.html
+	nroff -man docs/nmap_latvian.1 | man2html -nodepage -title 'Nmap network security scanner man page (Latvian translation)' > docs/nmap_manpage-lv.html
 	nroff -Tlatin1 -man docs/nmap_lithuanian.1 | man2html -nodepage -title 'Nmap network security scanner man page (Lithuanian translation)' > docs/nmap_manpage-lt.html
 # We need a content-type for the Lithuanian version
 	sr '<HEAD>' '<HEAD><META http-equiv="Content-Type" content="text/html; charset=windows-1257">' docs/nmap_manpage-lt.html

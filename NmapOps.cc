@@ -150,6 +150,7 @@ void NmapOps::Initialize() {
   maimonscan = idlescan = finscan = udpscan = ipprotscan = noresolve = 0;
   force = append_output = 0;
   bzero(logfd, sizeof(FILE *) * LOG_TYPES);
+  ttl = -1;
   nmap_stdout = stdout;
   gettimeofday(&start_time, NULL);
   pTrace = false;
@@ -201,7 +202,7 @@ void NmapOps::ValidateOptions() {
  if ((pingtype & PINGTYPE_TCP) && (!o.isr00t || o.af() != AF_INET)) {
    /* We will have to do a connect() style ping */
    if (num_ping_synprobes && num_ping_ackprobes) {
-     fatal("WARNING:  Cannot use both SYN and ACK ping probes if you are nonroot or using IPv6");
+     fatal("ERROR:  Cannot use both SYN and ACK ping probes if you are nonroot or using IPv6");
    }
    if (num_ping_synprobes > 1 || num_ping_ackprobes > 1) {
      error("WARNING:  Multiple probe ports were given, but only the first one will be used for your connect()-style TCP ping.");
