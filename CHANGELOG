@@ -8,9 +8,17 @@ o Added configure option --with-libpcre=included which causes Nmap to
   build with its included version of libpcre even if an acceptable
   version is available on the system.
 
+o Applied some man page fixes from Eric S. Raymond
+  (esr(a)snark.thyrsus.com).
+
 o Applied patch from Przemek Galczewski (sako(a)avet.com.pl) which
   adds spaces to the XML output in places tha apparently help certain
   older XML parsers.
+
+o Made Ident-scan (-I) limits on the length and type of responses
+  stricter so that rogue servers can't flood your screen with 1024
+  characters.  The new length limit is 32.  Thanks to Tom Rune Flo
+  (tom(a)x86.no) for the suggestion and a patch.
 
 Nmap 3.48
 

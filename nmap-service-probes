@@ -867,6 +867,7 @@ match rtsp m|^RTSP/1\.0 200 OK\r\nCSeq: 0\r\nDate: .*\r\nServer: RealServer Vers
 match rtsp m|^RTSP/1\.0 200 OK\r\n.*Server: RealMedia EncoderServer Version (\d[-.\w]+) \(win32\)\r\n|s v/RealMedia EncoderServer/$1/win32/
 # APC PowerChute Business Edition Agent 6.1.0.0 on Windows 2000 Server
 match powerchute m|^RTSP/1\.0 400 Bad request\r\nContent-type: text/html\r\n\r\n| v/APC PowerChute Agent///
+
 # This probe sends an RPC "Null command" to the port for service
 # 100000 (portmapper).
 # Some of these numbers are abitrary (such as ID).  I could consider
@@ -987,13 +988,16 @@ match netbios-ns m|^\x80\xf0\x84\0\0\0\0\x01\0\0\0\0 CKAAAAAAAAAAAAAAAAAAAAAAAAA
 # Samba has a version too
 # nmbd version 2.2.7 on Linux 2.4.20
 match netbios-ns m|^\x80\xf0\x84\0\0\0\0\x01\0\0\0\0 CKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\0\0!\0\x01\0\0\0\0...([\w\-]{1,15}).*\x04\0([\w\-]{1,15}) *\x1e\x84\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0| v/Samba nmbd//host: $1 workgroup: $2/
+
 ##############################NEXT PROBE##############################
 Probe UDP Help q|help\r\n\r\n|
-ports 7,13
+ports 7,13,37
 match chargen m|@ABCDEFGHIJKLMNOPQRSTUVWXYZ|
 match echo m|^help\r\n\r\n$|
 # Solaris 8, 9
 match daytime m|^[A-Z][a-z]{2} [A-Z][a-z]{2} +\d{1,2} +\d\d:\d\d:\d\d 20\d\d\n\r| v/Sun Solaris daytime///
+# Will last until 0xC5FFFFFF, in April 2005 - need to shift in advance.
+match time m|^[\xc0-\xc5]...$|
 
 ##############################NEXT PROBE##############################
 Probe TCP Help q|HELP\r\n|

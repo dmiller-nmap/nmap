@@ -113,7 +113,7 @@ static void posportupdate(Target *target, struct portinfo *current,
   struct sockaddr_in mysock;
   recvfrom6_t sockaddr_in_len = sizeof(SA);
   int i;
-  char owner[1024];
+  char owner[32];
   struct timeval tv;
 
   if (tryident == -1 || target->v4host().s_addr != lasttarget) 

@@ -8641,7 +8641,9 @@ T6(DF=Y%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=Y%W=0%ACK=S++%Flags=AR%Ops=)
 PU(Resp=N)
 
-Fingerprint Netopia R3100-I DSL Router Firmware version v4.7.2
+# Netopia R3100-I DSL Router Firmware version v4.7.2
+# Netopia 7100-C with firmware v4.6.3
+Fingerprint Netopia DSL Router
 Class Netopia | embedded || broadband router
 TSeq(Class=TD%gcd=<EA64%SI=<10E%IPID=I%TS=U)
 T1(DF=N%W=400%ACK=S++%Flags=AS%Ops=M)
@@ -10256,7 +10258,9 @@ PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=F%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
 # Sun Remote System Console version 1.12
 # Brocade Fibre Switch, Firmware 2.6.0
-Fingerprint Brocade Fibre Switch or Sun Remote System Console
+# Cisco Aironet 340 WAP running v 12.03T of the firmware (and vxworks OS)
+Fingerprint Cisco Aironet WAP, Brocade Fibre Switch, or Sun Remote System Console
+Class Cisco | vxworks || WAP
 Class Brocade | embedded || switch
 Class Sun | embedded || specialized
 TSeq(Class=64K%IPID=I%TS=U)
