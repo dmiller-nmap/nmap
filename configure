@@ -1813,6 +1813,12 @@ macosx=no
 needs_cpp_precomp=no
 
 case "$host" in
+  *alpha-dec-osf*)
+    cat >>confdefs.h <<\_ACEOF
+#define DEC 1
+_ACEOF
+
+    ;;
   *-netbsd*)
     cat >>confdefs.h <<\_ACEOF
 #define NETBSD 1

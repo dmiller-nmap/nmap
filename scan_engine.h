@@ -56,18 +56,18 @@
 /* Handles the "positive-response" scans (where we get a response
    telling us that the port is open based on the probe.  This includes
    SYN Scan, Connect Scan, RPC scan, Window Scan, and ACK scan */
-void pos_scan(struct hoststruct *target, u16 *portarray, int numports, stype scantype);
+void pos_scan(Target *target, u16 *portarray, int numports, stype scantype);
 
 /* FTP bounce attack scan.  This function is rather lame and should be
    rewritten.  But I don't think it is used much anyway.  If I'm going to
    allow FTP bounce scan, I should really allow SOCKS proxy scan.  */
-void bounce_scan(struct hoststruct *target, u16 *portarray, int numports,
+void bounce_scan(Target *target, u16 *portarray, int numports,
 		 struct ftpinfo *ftp);
 
 /* Handles the scan types where no positive-acknowledgement of open
    port is received (those scans are in pos_scan).  Super_scan
    includes scans such as FIN/XMAS/NULL/Maimon/UDP and IP Proto scans */
-void super_scan(struct hoststruct *target, u16 *portarray, int numports,
+void super_scan(Target *target, u16 *portarray, int numports,
 		stype scantype);
 
 #endif /* SCAN_ENGINE_H */

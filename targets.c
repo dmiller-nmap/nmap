@@ -52,6 +52,413 @@
 
 extern struct ops o;
 
+Targets::Targets() {
+  Initialize();
+}
+
+// Bring back (or start with) original state
+void Targets::Initialize() {
+  targets_type = TYPE_NONE;
+  bzero(addresses, sizeof(addresses));
+  bzero(current, sizeof(current));
+  bzero(last, sizeof(last));
+  ipsleft = 0;
+}
+
+ /* Initializes (or reinitializes) the object with a new expression, such
+    as 192.168.0.0/16 , 10.1.0-5.1-254 , or fe80::202:e3ff:fe14:1102 .  
+    Returns 0 for success */  
+int Targets::parse_expr(const char * const target_expr, int af) {
+
+  int i=0,j=0,k=0;
+  int start, end;
+  char *r,*s, *target_net;
+  char *addy[5];
+  char *hostexp = strdup(target_expr);
+  struct hostent *target;
+  unsigned long longtmp;
+  int namedhost = 0;
+  int rc = 0;
+
+  if (targets_type != TYPE_NONE)
+    Initialize();
+
+  ipsleft = 0;
+
+  if (af == AF_INET) {
+  
+    if (strchr(hostexp, ':'))
+      fatal("Invalid host expression: %s -- colons only allowed in IPv6 addresses, and then you need the -6 switch", hostexp);
+
+    /*strauct in_addr current_in;*/
+    addy[0] = addy[1] = addy[2] = addy[3] = addy[4] = NULL;
+    addy[0] = r = hostexp;
+    /* First we break the expression up into the four parts of the IP address
+       + the optional '/mask' */
+    target_net = strtok(hostexp, "/");
+    s = strtok(NULL, "");    /* find the end of the token from hostexp */
+    netmask  = ( s ) ? atoi(s) : 32;
+    if ((int) netmask < 0 || netmask > 32) {
+      fprintf(stderr, "Illegal netmask value (%d), must be /0 - /32 .  Assuming /32 (one host)\n", netmask);
+      netmask = 32;
+    }
+    for(i=0; *(hostexp + i); i++) 
+      if (isupper((int) *(hostexp +i)) || islower((int) *(hostexp +i))) {
+	namedhost = 1;
+	break;
+      }
+    if (netmask != 32 || namedhost) {
+      targets_type = IPV4_NETMASK;
+      if (!inet_aton(target_net, &(startaddr))) {
+	if ((target = gethostbyname(target_net)))
+	  memcpy(&(startaddr), target->h_addr_list[0], sizeof(struct in_addr));
+	else {
+	  fprintf(stderr, "Failed to resolve given hostname/IP: %s.  Note that you can't use '/mask' AND '[1-4,7,100-]' style IP ranges\n", target_net);
+	  free(hostexp);
+	  return 1;
+	}
+      } 
+      longtmp = ntohl(startaddr.s_addr);
+      startaddr.s_addr = longtmp & (unsigned long) (0 - (1<<(32 - netmask)));
+      endaddr.s_addr = longtmp | (unsigned long)  ((1<<(32 - netmask)) - 1);
+      currentaddr = startaddr;
+      if (startaddr.s_addr <= endaddr.s_addr) { 
+	ipsleft = endaddr.s_addr - startaddr.s_addr + 1;
+	free(hostexp); 
+	return 0; 
+      }
+      fprintf(stderr, "Host specification invalid");
+      free(hostexp);
+      return 1;
+    }
+    else {
+      i=0;
+      targets_type = IPV4_RANGES;
+      while(*++r) {
+	if (*r == '.' && ++i < 4) {
+	  *r = '\0';
+	  addy[i] = r + 1;
+	}
+	else if (*r == '[') {
+	  *r = '\0';
+	  addy[i]++;
+	}
+	else if (*r == ']') *r = '\0';
+	/*else if ((*r == '/' || *r == '\\') && i == 3) {
+	 *r = '\0';
+	 addy[4] = r + 1;
+	 }*/
+	else if (*r != '*' && *r != ',' && *r != '-' && !isdigit((int)*r)) fatal("Invalid character in  host specification.");
+      }
+      if (i != 3) fatal("Target host specification is illegal.");
+      
+      for(i=0; i < 4; i++) {
+	j=0;
+	while((s = strchr(addy[i],','))) {
+	  *s = '\0';
+	  if (*addy[i] == '*') { start = 0; end = 255; } 
+	  else if (*addy[i] == '-') {
+	    start = 0;
+	    if (!addy[i] + 1) end = 255;
+	    else end = atoi(addy[i]+ 1);
+	  }
+	  else {
+	    start = end = atoi(addy[i]);
+	    if ((r = strchr(addy[i],'-')) && *(r+1) ) end = atoi(r + 1);
+	    else if (r && !*(r+1)) end = 255;
+	  }
+	  if (o.debugging)
+	    log_write(LOG_STDOUT, "The first host is %d, and the last one is %d\n", start, end);
+	  if (start < 0 || start > end) fatal("Your host specifications are illegal!");
+	  for(k=start; k <= end; k++)
+	    addresses[i][j++] = k;
+	  addy[i] = s + 1;
+	}
+	if (*addy[i] == '*') { start = 0; end = 255; } 
+	else if (*addy[i] == '-') {
+	  start = 0;
+	  if (!addy[i] + 1) end = 255;
+	  else end = atoi(addy[i]+ 1);
+	}
+	else {
+	  start = end = atoi(addy[i]);
+	  if ((r =  strchr(addy[i],'-')) && *(r+1) ) end = atoi(r+1);
+	  else if (r && !*(r+1)) end = 255;
+	}
+	if (o.debugging)
+	  log_write(LOG_STDOUT, "The first host is %d, and the last one is %d\n", start, end);
+	if (start < 0 || start > end) fatal("Your host specifications are illegal!");
+	if (j + (end - start) > 255) fatal("Your host specifications are illegal!");
+	for(k=start; k <= end; k++) 
+	  addresses[i][j++] = k;
+	last[i] = j - 1;
+	
+      }
+    }
+  bzero((char *)current, 4);
+  ipsleft = (last[0] + 1) * (last[1] + 1) *
+    (last[2] + 1) * (last[3] + 1);
+  }
+  else {
+    assert(af == AF_INET6);
+    if (strchr(hostexp, '/')) {
+      fatal("Invalid host expression: %s -- slash not allowed.  IPv6 addresses can currently only be specified individually", hostexp);
+    }
+    targets_type = IPV6_ADDRESS;
+    struct addrinfo hints;
+    struct addrinfo *result = NULL;
+    bzero(&hints, sizeof(hints));
+    hints.ai_family = PF_INET6;
+    rc = getaddrinfo(hostexp, NULL, &hints, &result);
+    if (!rc) {
+      fprintf(stderr, "Failed to resolve given IPv6 hostname/IP: %s.  Note that you can't use '/mask' or '[1-4,7,100-]' style ranges for IPv6.  Error cod %d: %s\n", hostexp, rc, gai_strerror(rc));
+      free(hostexp);
+      if (result) freeaddrinfo(result);
+      return 1;
+    }    
+    assert(result->ai_addrlen == 16);
+    memcpy(ip6.s6_addr, result->ai_addr, 16);
+    ipsleft = 1;
+    freeaddrinfo(result);
+  }
+
+  free(hostexp);
+  return 0;
+}
+
+ /* Grab the next host from this expression (if any) and uptdates its internal
+    state to reflect the the IP was given out.  Returns 0 and
+    fills in ss if successful.  ss must point to a pre-allocated
+    sockaddr_storage structure */
+int Targets::get_next_host(struct sockaddr_storage *ss, size_t *sslen) {
+
+  int octet;
+  struct sockaddr_in *sin = (struct sockaddr_in *) ss;
+  struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *) ss;
+  startover: /* to handle nmap --resume where I have already
+		scanned many of the IPs */  
+  assert(ss);
+  assert(sslen);
+
+
+  if (ipsleft <= 0)
+    return -1;
+  
+  if (targets_type == IPV4_NETMASK) {
+    bzero(sin, sizeof(struct sockaddr_in));
+    sin->sin_family = AF_INET;
+    *sslen = sizeof(struct sockaddr_in);
+#if HAVE_SOCKADDR_SA_LEN
+    sin->sin_len = *sslen;
+#endif
+    
+    if (currentaddr.s_addr <= endaddr.s_addr) {
+      sin->sin_addr.s_addr = htonl(currentaddr.s_addr++);
+    } else {
+      error("Bogus target structure passed to Targets::get_next_host");
+      ipsleft = 0;
+      return -1;
+    }
+  }
+  else if (targets_type == IPV4_RANGES) {
+    bzero(sin, sizeof(struct sockaddr_in));
+    sin->sin_family = AF_INET;
+    *sslen = sizeof(struct sockaddr_in);
+#if HAVE_SOCKADDR_SA_LEN
+    sin->sin_len = *sslen;
+#endif
+    if (o.debugging > 2) {
+      log_write(LOG_STDOUT, "doing %d.%d.%d.%d = %d.%d.%d.%d\n", current[0], current[1], current[2], current[3], addresses[0][current[0]],addresses[1][current[1]],addresses[2][current[2]],addresses[3][current[3]]);
+    }
+    /* Set the IP to the current value of everything */
+    sin->sin_addr.s_addr = htonl(addresses[0][current[0]] << 24 | 
+			addresses[1][current[1]] << 16 |
+			addresses[2][current[2]] << 8 | 
+			addresses[3][current[3]]);
+    
+    /* Now we nudge up to the next IP */
+    for(octet = 3; octet >= 0; octet--) {
+      if (current[octet] < last[octet]) {
+	/* OK, this is the column I have room to nudge upwards */
+	current[octet]++;
+	break;
+      } else {
+	/* This octet is finished so I reset it to the beginning */
+	current[octet] = 0;
+      }
+    }
+    if (octet == -1) {
+      /* It didn't find anything to bump up, I muast have taken the last IP */
+      assert(ipsleft == 1);
+      /* So I set current to last with the very final octet up one ... */
+      /* Note that this may make current[3] == 256 */
+      current[0] = last[0]; current[1] = last[1];
+      current[2] = last[2]; current[3] = last[3] + 1;
+    } else {
+      assert(ipsleft > 1); /* There must be at least one more IP left */
+    }
+  } else {
+    assert(targets_type == IPV6_ADDRESS);
+    assert(ipsleft == 1);
+    ipsleft = 0;
+    bzero(sin6, sizeof(struct sockaddr_in6));
+    sin6->sin6_family = AF_INET6;
+#ifdef SIN_LEN
+    sin6->sin6_len = sizeof(struct sockaddr_in6);
+#endif
+    memcpy(sin6->sin6_addr.s6_addr, ip6.s6_addr, 16);
+  }
+  ipsleft--;
+  assert(ipsleft >= 0);
+  
+  /* If we are resuming from a previous scan, we have already finished
+     scans up to o.resume_ip.  */
+  if (sin->sin_family == AF_INET && o.resume_ip.s_addr) {
+    if (o.resume_ip.s_addr == sin->sin_addr.s_addr)
+      o.resume_ip.s_addr = 0; /* So that we will KEEP the next one */
+    goto startover; /* Try again */
+  }
+
+  return 0;
+}
+
+/* Returns the last given host, so that it will be given again next
+     time get_next_host is called.  Obviously, you should only call
+     this if you have fetched at least 1 host since parse_expr() was
+     called */
+int Targets::return_last_host() {
+  int octet;
+
+  ipsleft++;
+  if (targets_type == IPV4_NETMASK) {
+    assert(currentaddr.s_addr > startaddr.s_addr);
+    currentaddr.s_addr--;
+  } else if (targets_type == IPV4_RANGES) {
+    for(octet = 3; octet >= 0; octet--) {
+      if (current[octet] > 0) {
+	/* OK, this is the column I have room to nudge downwards */
+	current[octet]--;
+	break;
+      } else {
+	/* This octet is already at the beginning, so I set it to the end */
+	current[octet] = last[octet];
+      }
+    }
+    assert(octet != -1);
+  } else {
+    assert(targets_type == IPV6_ADDRESS);
+    assert(ipsleft == 1);    
+  }
+  return 0;
+}
+
+Target::Target() {
+  Initialize();
+}
+
+void Target::Initialize() {
+  name = NULL;
+  bzero(&seq, sizeof(seq));
+  bzero(&FPR, sizeof(FPR));
+  bzero(FPs, sizeof(FPs));
+  osscan_performed = 0;
+  osscan_openport = osscan_closedport = -1;
+  numFPs = goodFP = 0;
+  bzero(&ports, sizeof(struct portlist));
+  wierd_responses = flags = 0;
+  bzero(&to, sizeof(to));
+  bzero(&host_timeout, sizeof(host_timeout));
+  bzero(&firewallmode, sizeof(struct firewallmodeinfo));
+  timedout = 0;
+  device[0] = '\0';
+  bzero(&targetsock, sizeof(targetsock));
+  targetsocklen = 0;
+  targetipstring[0] = '\0';
+}
+
+void Target::Recycle() {
+  FreeInternal();
+  Initialize();
+}
+
+Target::~Target() {
+  FreeInternal();
+}
+
+void Target::FreeInternal() {
+  int i;
+
+  /* Free the DNS name if we resolved one */
+  if (name && *name)
+    free(name);
+
+  /* Free OS fingerprints of OS scanning was done */
+  for(i=0; i < numFPs; i++) {
+    freeFingerPrint(FPs[i]);
+    FPs[i] = NULL;
+  }
+  numFPs = 0;
+
+  /* Free the port lists */
+  resetportlist(&ports);
+}
+
+/*  Creates a "presentation" formatted string out of the IPv4/IPv6 address.
+    Called when the IP changes */
+void Target::GenerateIPString() {
+  struct sockaddr_in *sin = (struct sockaddr_in *) &targetsock;
+  struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *) &targetsock;
+
+  if (inet_ntop(sin->sin_family, (sin->sin_family == AF_INET)? 
+                (char *) &sin->sin_addr : (char *) &sin6->sin6_addr, 
+		targetipstring, sizeof(targetipstring)) == NULL) {
+    fatal("Failed to convert target address to presentation format!?!  Error: %s", strerror(errno));
+  }
+}
+
+/* Fills a sockaddr_storage with the AF_INET or AF_INET6 address
+     information of the target.  This is a preferred way to get the
+     address since it is portable for IPv6 hosts.  Returns 0 for
+     success. */
+int Target::TargetSockAddr(struct sockaddr_storage *ss, size_t *ss_len) {
+  assert(ss);
+  assert(ss_len);  
+  if (targetsocklen <= 0)
+    return 1;
+  assert(targetsocklen <= sizeof(*ss));
+  memcpy(ss, &targetsock, targetsocklen);
+  *ss_len = targetsocklen;
+  return 0;
+}
+
+/* Note that it is OK to pass in a sockaddr_in or sockaddr_in6 casted
+     to sockaddr_storage */
+void Target::setTargetSockAddr(struct sockaddr_storage *ss, size_t ss_len) {
+
+  assert(ss_len > 0 && ss_len <= sizeof(*ss));
+  memcpy(&targetsock, ss, ss_len);
+  targetsocklen = ss_len;
+  GenerateIPString();
+}
+
+// Returns IPv4 host address or {0} if unavailable.
+struct in_addr Target::v4host() {
+  const struct in_addr *addy = v4hostip();
+  struct in_addr in;
+  if (addy) return *addy;
+  in.s_addr = 0;
+  return in;
+}
+
+// Returns IPv4 host address or NULL if unavailable.
+const struct in_addr *Target::v4hostip() {
+  struct sockaddr_in *sin = (struct sockaddr_in *) &targetsock;
+  if (sin->sin_family == AF_INET) {
+    return &(sin->sin_addr);
+  }
+  return NULL;
+}
+
 enum pingstyle { pingstyle_unknown, pingstyle_rawtcp, pingstyle_connecttcp, 
 		 pingstyle_icmp };
 
@@ -59,16 +466,30 @@ enum pingstyle { pingstyle_unknown, pingstyle_rawtcp, pingstyle_connecttcp,
 extern unsigned long flt_dsthost, flt_srchost;
 extern unsigned short flt_baseport;
 
+/* Gets the host number (index) of target in the hostbatch array of
+ pointers.  Note that the target MUST EXIST in the array or all
+ heck will break loose. */
+static inline int gethostnum(Target *hostbatch[], Target *target) {
+  int i = 0;
+  do {
+    if (hostbatch[i] == target)
+      return i;
+  } while(++i);
+
+  fatal("fluxx0red");
+  return 0; // Unreached
+}
+
 /* Internal function to update the state of machine (up/down/etc) based on
    ping results */
-static int hostupdate(struct hoststruct *hostbatch, struct hoststruct *target, 
+static int hostupdate(Target *hostbatch[], Target *target, 
 	       int newstate, int dotimeout, int trynum, 
 	       struct timeout_info *to, struct timeval *sent, 
 	       struct pingtune *pt, struct tcpqueryinfo *tqi, 
 	       enum pingstyle style)
 {
 
-  int hostnum = target - hostbatch;
+  int hostnum = gethostnum(hostbatch, target);
   int i;
   int seq;
   int tmpsd;
@@ -76,7 +497,7 @@ static int hostupdate(struct hoststruct *hostbatch, struct hoststruct *target,
   
   if (o.debugging)  {
     gettimeofday(&tv, NULL);
-    log_write(LOG_STDOUT, "Hostupdate called for machine %s state %s -> %s (trynum %d, dotimeadj: %s time: %ld)\n", inet_ntoa(target->host), readhoststate(target->flags), readhoststate(newstate), trynum, (dotimeout)? "yes" : "no", (long) TIMEVAL_SUBTRACT(tv, *sent));
+    log_write(LOG_STDOUT, "Hostupdate called for machine %s state %s -> %s (trynum %d, dotimeadj: %s time: %ld)\n", target->targetipstr(), readhoststate(target->flags), readhoststate(newstate), trynum, (dotimeout)? "yes" : "no", (long) TIMEVAL_SUBTRACT(tv, *sent));
   }
   assert(hostnum <= pt->group_end);
   
@@ -87,10 +508,10 @@ static int hostupdate(struct hoststruct *hostbatch, struct hoststruct *target,
   /* If this is a tcp connect() pingscan, close all sockets */
   
   if (style == pingstyle_connecttcp) {
-    seq = (target - hostbatch) * pt->max_tries + trynum;
+    seq = hostnum * pt->max_tries + trynum;
     assert(tqi->sockets[seq] >= 0);
     for(i=0; i <= pt->block_tries; i++) {  
-      seq = (target - hostbatch) * pt->max_tries + i;
+      seq = hostnum * pt->max_tries + i;
       tmpsd = tqi->sockets[seq];
       if (tmpsd >= 0) {
 	assert(tqi->sockets_out > 0);
@@ -149,170 +570,62 @@ static int hostupdate(struct hoststruct *hostbatch, struct hoststruct *target,
   return 0;
 }
 
-
-/* Fills up the hostgroup_state structure passed in (which must point
-   to valid memory).  Lookahead is the number of hosts that can be
+/* Lookahead is the number of hosts that can be
    checked (such as ping scanned) in advance.  Randomize causes each
    group of up to lookahead hosts to be internally shuffled around.
-   The target_expressions array must remail valid in memory as long as
-   this hostgroup_state structure is used -- the array is NOT copied.
-   Also, REMEMBER TO CALL hostgroup_state_destroy() when you are done
-   with the hostgroup_state (the latter function only frees internal
-   resources -- you still have to free the alocated memory (if any)
-   for the struct hostgroup_state itself.  */
-int hostgroup_state_init(struct hostgroup_state *hs, int lookahead,
-			 int randomize, char *target_expressions[],
-			 int num_expressions) {
-  bzero(hs, sizeof(*hs));
+   The target_expressions array MUST REMAIN VALID IN MEMMORY as long as
+   this class instance is used -- the array is NOT copied.
+ */
+HostGroupState::HostGroupState(int lookahead, int rnd, 
+			       char *expr[], int numexpr) {
   assert(lookahead > 0);
-  hs->hostbatch = (struct hoststruct *) safe_malloc(lookahead * sizeof(struct hoststruct));
-  hs->max_batch_sz = lookahead;
-  hs->current_batch_sz = 0;
-  hs->next_batch_no = 0;
-  hs->randomize = randomize;
-  hs->target_expressions = target_expressions;
-  hs->num_expressions = num_expressions;
-  hs->next_expression = 0;
-  hs->current_expression.nleft = 0; 
-  return 0;
+  hostbatch = (Target **) safe_zalloc(sizeof(Target *) * lookahead);
+  max_batch_sz = lookahead;
+  current_batch_sz = 0;
+  next_batch_no = 0;
+  randomize = rnd;
+  target_expressions = expr;
+  num_expressions = numexpr;
+  next_expression = 0;
 }
 
-/* Free the *internal state* of a hostgroup_state structure -- it is
-   important to note that this does not free the actual memory
-   allocated for the "struct hostgroup_state" you pass in.  It only
-   frees internal stuff -- after all, your hostgroup_state could be on
-   the stack */
-void hostgroup_state_destroy(struct hostgroup_state *hs) {
-  if (!hs) fatal("NULL hostgroup_state passed to hostgroup_state_destroy()!");
-  if (!hs->hostbatch) fatal("hostgroup_state passed to hostgroup_state_destroy() contains NULL hostbatch!");
-  free(hs->hostbatch);
+HostGroupState::~HostGroupState() {
+  free(hostbatch);
 }
 
-
-/* If there is at least one IP address left in t, one is pulled out and placed
-   in sin and then zero is returned and state information in t is updated
-   to reflect that the IP was pulled out.  If t is empty, -1 is returned */
-int target_struct_get(struct targets *t, struct in_addr *sin) {
-  int octet;
-
-  startover: /* to hande nmap --resume where I have already
-		scanned many of the IPs */  
-
-  if (t->nleft <= 0)
-    return -1;
-  
-  if (t->maskformat) {
-    if (t->currentaddr.s_addr <= t->end.s_addr) {
-      sin->s_addr = htonl(t->currentaddr.s_addr++);
-    } else {
-      error("Bogus target structure passed to target_struct_get");
-      t->nleft = 0;
-      sin->s_addr = 0;
-      return -1;
-    }
-  }
-  else {
-    if (o.debugging > 2) {
-      log_write(LOG_STDOUT, "doing %d.%d.%d.%d = %d.%d.%d.%d\n", t->current[0], t->current[1], t->current[2], t->current[3], t->addresses[0][t->current[0]],t->addresses[1][t->current[1]],t->addresses[2][t->current[2]],t->addresses[3][t->current[3]]);
-    }
-    /* Set the IP to the current value of everything */
-    sin->s_addr = htonl(t->addresses[0][t->current[0]] << 24 | 
-			t->addresses[1][t->current[1]] << 16 |
-			t->addresses[2][t->current[2]] << 8 | 
-			t->addresses[3][t->current[3]]);
-    
-    /* Now we nudge up to the next IP */
-    for(octet = 3; octet >= 0; octet--) {
-      if (t->current[octet] < t->last[octet]) {
-	/* OK, this is the column I have room to nudge upwards */
-	t->current[octet]++;
-	break;
-      } else {
-	/* This octet is finished so I reset it to the beginning */
-	t->current[octet] = 0;
-      }
-    }
-    if (octet == -1) {
-      /* It didn't find anything to bump up, I muast have taken the last IP */
-      assert(t->nleft == 1);
-      /* So I set current to last with the very final octet up one ... */
-      /* Note that this may make t->current[3] == 256 */
-      t->current[0] = t->last[0]; t->current[1] = t->last[1];
-      t->current[2] = t->last[2]; t->current[3] = t->last[3] + 1;
-    } else {
-      assert(t->nleft > 1); /* There must be at least one more IP left */
-    }
-  }
-  t->nleft--;
-  assert(t->nleft >= 0);
-  
-  /* If we are resuming from a previous scan, we have already finished
-     scans up to o.resume_ip.  */
-  if (o.resume_ip.s_addr) {
-    if (o.resume_ip.s_addr == sin->s_addr)
-      o.resume_ip.s_addr = 0; /* So that we will KEEP the next one */
-    goto startover; /* Try again */
-  }
-
-  return 1;
-}
-
-/* Undoes the previous target_struct_get operation */
-void target_struct_return(struct targets *t) {
-  int octet;
-  t->nleft++;
-  if (t->maskformat) {
-    assert(t->currentaddr.s_addr > t->start.s_addr);
-    t->currentaddr.s_addr--;
-  }
-  else {
-    for(octet = 3; octet >= 0; octet--) {
-      if (t->current[octet] > 0) {
-	/* OK, this is the column I have room to nudge downwards */
-	t->current[octet]--;
-	break;
-      } else {
-	/* This octet is already at the beginning, so I set it to the end */
-	t->current[octet] = t->last[octet];
-      }
-    }
-    assert(octet != -1);
-  }
-}
-
-void hoststructfry(struct hoststruct *hostbatch, int nelem) {
-  genfry((unsigned char *)hostbatch, sizeof(struct hoststruct), nelem);
+void hoststructfry(Target *hostbatch[], int nelem) {
+  genfry((unsigned char *)hostbatch, sizeof(Target *), nelem);
   return;
 }
 
-/* REMEMBER TO CALL hoststruct_free() on the hoststruct when you are done
-   with it!!! */
-struct hoststruct *nexthost(struct hostgroup_state *hs, 
+Target *nexthost(HostGroupState *hs, 
 			    struct scan_lists *ports, int *pingtype) {
 int hidx;
 char *device;
 int i;
+struct sockaddr_storage ss;
+size_t sslen;
 
 if (hs->next_batch_no < hs->current_batch_sz) {
   /* Woop!  This is easy -- we just pass back the next host struct */
-  return &hs->hostbatch[hs->next_batch_no++];
+  return hs->hostbatch[hs->next_batch_no++];
 }
 /* Doh, we need to refresh our array */
-bzero(hs->hostbatch, hs->max_batch_sz * sizeof(struct hoststruct));
+ for(i=0; i < hs->max_batch_sz; i++) hs->hostbatch[i] = new Target();
+
 hs->current_batch_sz = hs->next_batch_no = 0;
 do {
   /* Grab anything we have in our current_expression */
   while (hs->current_batch_sz < hs->max_batch_sz && 
-	 target_struct_get(&hs->current_expression, 
-	   &(hs->hostbatch[hs->current_batch_sz].host)) != -1)
+	 hs->current_expression.get_next_host(&ss, &sslen) == 0)
     {
       hidx = hs->current_batch_sz;
+      hs->hostbatch[hidx]->setTargetSockAddr(&ss, sslen);
 
       /* Lets figure out what device this IP uses ... */
       if (o.source) {
-	memcpy((char *)&hs->hostbatch[hidx].source_ip,(char *) o.source, 
-	       sizeof(struct in_addr));
-	strcpy(hs->hostbatch[hidx].device, o.device);
+	hs->hostbatch[hidx]->source_ip.s_addr = o.source->s_addr;
+	strcpy(hs->hostbatch[hidx]->device, o.device);
       } else {
 	/* We figure out the source IP/device IFF
 	   1) We are r00t AND
@@ -323,26 +636,26 @@ do {
 	     o.synscan || o.finscan || o.xmasscan || o.nullscan || 
 	     o.ipprotscan || o.maimonscan || o.idlescan || o.ackscan || 
 	     o.udpscan || o.osscan || o.windowscan)) {
-	  device = routethrough(&(hs->hostbatch[hidx].host), &(hs->hostbatch[hidx].source_ip));
+	  device = routethrough(hs->hostbatch[hidx]->v4hostip(), &(hs->hostbatch[hidx]->source_ip));
 	  if (!device) {
 	    if (*pingtype == PINGTYPE_NONE) {
 	      fatal("Could not determine what interface to route packets through, run again with -e <device>");
 	    } else {
-	      error("WARNING:  Could not determine what interface to route packets through to %s, changing ping scantype to ICMP ping only", inet_ntoa(hs->hostbatch[hidx].host));
+	      error("WARNING:  Could not determine what interface to route packets through to %s, changing ping scantype to ICMP ping only", hs->hostbatch[hidx]->targetipstr());
 	      *pingtype = PINGTYPE_ICMP_PING;
 	    }
 	  } else {
-	    strcpy(hs->hostbatch[hidx].device, device);
+	    strcpy(hs->hostbatch[hidx]->device, device);
 	  }
 	}
       }
 
       /* In some cases, we can only allow hosts that use the same device
 	 in a group. */
-      if (o.isr00t && hidx > 0 && *hs->hostbatch[hidx].device && hs->hostbatch[hidx].source_ip.s_addr != hs->hostbatch[0].source_ip.s_addr) {
+      if (o.isr00t && hidx > 0 && *hs->hostbatch[hidx]->device && hs->hostbatch[hidx]->source_ip.s_addr != hs->hostbatch[0]->source_ip.s_addr) {
 	/* Cancel everything!  This guy must go in the next group and we are
 	   outtof here */
-	target_struct_return(&(hs->current_expression));
+	hs->current_expression.return_last_host();
 	goto batchfull;
       }
 
@@ -352,12 +665,12 @@ do {
   if (hs->current_batch_sz < hs->max_batch_sz &&
       hs->next_expression < hs->num_expressions) {
     /* We are going to have to plop in another expression. */
-    while (!parse_targets(&(hs->current_expression), hs->target_expressions[hs->next_expression++])) {
+    while(hs->current_expression.parse_expr(hs->target_expressions[hs->next_expression++], o.af) != 0) 
       if (hs->next_expression >= hs->num_expressions)
 	break;
-    }     
   } else break;
 } while(1);
+
  batchfull:
  
 if (hs->current_batch_sz == 0)
@@ -372,168 +685,20 @@ if (hs->randomize) {
 /* Finally we do the mass ping (if required) */
  if ((*pingtype & 
       (PINGTYPE_ICMP_PING|PINGTYPE_ICMP_MASK|PINGTYPE_ICMP_TS) ) || 
-     ((hs->hostbatch[0].host.s_addr || !o.isr00t) && 
+     ((hs->hostbatch[0]->v4host().s_addr || !o.isr00t) && 
       (*pingtype != PINGTYPE_NONE))) 
    massping(hs->hostbatch, hs->current_batch_sz, ports, *pingtype);
  else for(i=0; i < hs->current_batch_sz; i++)  {
-   hs->hostbatch[i].to.srtt = -1;
-   hs->hostbatch[i].to.rttvar = -1;
-   hs->hostbatch[i].to.timeout = o.initial_rtt_timeout * 1000;
-   hs->hostbatch[i].flags |= HOST_UP; /*hostbatch[i].up = 1;*/
+   hs->hostbatch[i]->to.srtt = -1;
+   hs->hostbatch[i]->to.rttvar = -1;
+   hs->hostbatch[i]->to.timeout = o.initial_rtt_timeout * 1000;
+   hs->hostbatch[i]->flags |= HOST_UP; /*hostbatch[i].up = 1;*/
  }
- return &hs->hostbatch[hs->next_batch_no++];
-}
-
-/* Frees the *INTERNAL STRUCTURES* inside a hoststruct -- does not
-   free the actual memory allocated to the hoststruct itself (for all
-   this function knows, you could have declared it on the stack */
-void hoststruct_free(struct hoststruct *currenths) {
-  int i;
-
-  /* Free the DNS name if we resolved one */
-  if (currenths->name && *currenths->name)
-    free(currenths->name);
-
-  /* Free OS fingerprints of OS scanning was done */
-  for(i=0; i < currenths->numFPs; i++) {
-    freeFingerPrint(currenths->FPs[i]);
-    currenths->FPs[i] = NULL;
-  }
-  currenths->numFPs = 0;
-
-  /* Free the port lists */
-  resetportlist(&currenths->ports);
-
+ return hs->hostbatch[hs->next_batch_no++];
 }
 
 
-
-int parse_targets(struct targets *targets, char *h) {
-int i=0,j=0,k=0;
-int start, end;
-char *r,*s, *target_net;
-char *addy[5];
-char *hostexp = strdup(h);
-struct hostent *target;
-unsigned long longtmp;
-int namedhost = 0;
-
-bzero(targets, sizeof(*targets));
-targets->nleft = 0;
-/*struct in_addr current_in;*/
-addy[0] = addy[1] = addy[2] = addy[3] = addy[4] = NULL;
-addy[0] = r = hostexp;
-/* First we break the expression up into the four parts of the IP address
-   + the optional '/mask' */
-target_net = strtok(hostexp, "/");
-s = strtok(NULL, "");    /* find the end of the token from hostexp */
-targets->netmask  = ( s ) ? atoi(s) : 32;
-if ((int) targets->netmask < 0 || targets->netmask > 32) {
-  fprintf(stderr, "Illegal netmask value (%d), must be /0 - /32 .  Assuming /32 (one host)\n", targets->netmask);
-  targets->netmask = 32;
-}
-for(i=0; *(hostexp + i); i++) 
-  if (isupper((int) *(hostexp +i)) || islower((int) *(hostexp +i))) {
-  namedhost = 1;
-  break;
-}
-if (targets->netmask != 32 || namedhost) {
-  targets->maskformat = 1;
- if (!inet_aton(target_net, &(targets->start))) {
-    if ((target = gethostbyname(target_net)))
-      memcpy(&(targets->start), target->h_addr_list[0], sizeof(struct in_addr));
-    else {
-      fprintf(stderr, "Failed to resolve given hostname/IP: %s.  Note that you can't use '/mask' AND '[1-4,7,100-]' style IP ranges\n", target_net);
-      free(hostexp);
-      return 0;
-    }
- } 
- longtmp = ntohl(targets->start.s_addr);
- targets->start.s_addr = longtmp & (unsigned long) (0 - (1<<(32 - targets->netmask)));
- targets->end.s_addr = longtmp | (unsigned long)  ((1<<(32 - targets->netmask)) - 1);
- targets->currentaddr = targets->start;
- if (targets->start.s_addr <= targets->end.s_addr) { 
-   targets->nleft = targets->end.s_addr - targets->start.s_addr + 1;
-   free(hostexp); 
-   return 1; 
- }
- fprintf(stderr, "Host specification invalid");
- free(hostexp);
- return 0;
-}
-else {
-  i=0;
-  targets->maskformat = 0;
-  while(*++r) {
-    if (*r == '.' && ++i < 4) {
-      *r = '\0';
-      addy[i] = r + 1;
-    }
-    else if (*r == '[') {
-      *r = '\0';
-      addy[i]++;
-    }
-    else if (*r == ']') *r = '\0';
-    /*else if ((*r == '/' || *r == '\\') && i == 3) {
-     *r = '\0';
-     addy[4] = r + 1;
-     }*/
-    else if (*r != '*' && *r != ',' && *r != '-' && !isdigit((int)*r)) fatal("Invalid character in  host specification.");
-  }
-  if (i != 3) fatal("Target host specification is illegal.");
-  
-  for(i=0; i < 4; i++) {
-    j=0;
-    while((s = strchr(addy[i],','))) {
-      *s = '\0';
-      if (*addy[i] == '*') { start = 0; end = 255; } 
-      else if (*addy[i] == '-') {
-	start = 0;
-	if (!addy[i] + 1) end = 255;
-	else end = atoi(addy[i]+ 1);
-      }
-      else {
-	start = end = atoi(addy[i]);
-	if ((r = strchr(addy[i],'-')) && *(r+1) ) end = atoi(r + 1);
-	else if (r && !*(r+1)) end = 255;
-      }
-      if (o.debugging)
-	log_write(LOG_STDOUT, "The first host is %d, and the last one is %d\n", start, end);
-      if (start < 0 || start > end) fatal("Your host specifications are illegal!");
-      for(k=start; k <= end; k++)
-	targets->addresses[i][j++] = k;
-      addy[i] = s + 1;
-    }
-    if (*addy[i] == '*') { start = 0; end = 255; } 
-    else if (*addy[i] == '-') {
-      start = 0;
-      if (!addy[i] + 1) end = 255;
-      else end = atoi(addy[i]+ 1);
-    }
-    else {
-      start = end = atoi(addy[i]);
-      if ((r =  strchr(addy[i],'-')) && *(r+1) ) end = atoi(r+1);
-      else if (r && !*(r+1)) end = 255;
-    }
-    if (o.debugging)
-      log_write(LOG_STDOUT, "The first host is %d, and the last one is %d\n", start, end);
-    if (start < 0 || start > end) fatal("Your host specifications are illegal!");
-    if (j + (end - start) > 255) fatal("Your host specifications are illegal!");
-    for(k=start; k <= end; k++) 
-      targets->addresses[i][j++] = k;
-    targets->last[i] = j - 1;
-    
-  }
-}
-  bzero((char *)targets->current, 4);
-  targets->nleft = (targets->last[0] + 1) * (targets->last[1] + 1) *
-    (targets->last[2] + 1) * (targets->last[3] + 1);
-  free(hostexp);
-  return 1;
-}
-
-
-void massping(struct hoststruct *hostbatch, int num_hosts, 
+void massping(Target *hostbatch[], int num_hosts, 
               struct scan_lists *ports, int pingtype) {
 static struct timeout_info to = { 0,0,0};
 static int gsize = LOOKAHEAD;
@@ -585,7 +750,7 @@ else sportbase = o.magic_port + 20;
 
 /* What kind of scans are we doing? */
  if ((pingtype & (PINGTYPE_ICMP_PING|PINGTYPE_ICMP_MASK|PINGTYPE_ICMP_TS)) && 
-     hostbatch[0].source_ip.s_addr) 
+     hostbatch[0]->source_ip.s_addr) 
   ptech.rawicmpscan = 1;
 else if (pingtype & (PINGTYPE_ICMP_PING|PINGTYPE_ICMP_MASK|PINGTYPE_ICMP_TS)) 
   ptech.icmpscan = 1;
@@ -656,17 +821,17 @@ if (ptech.rawicmpscan || ptech.rawtcpscan) {
      16 bytes of the TCP header
      ---
    = 104 byte snaplen */
-  pd = my_pcap_open_live(hostbatch[0].device, 104, o.spoofsource, 20);
+  pd = my_pcap_open_live(hostbatch[0]->device, 104, o.spoofsource, 20);
 
-  flt_dsthost = hostbatch[0].source_ip.s_addr;
+  flt_dsthost = hostbatch[0]->source_ip.s_addr;
   flt_baseport = sportbase;
 
   snprintf(filter, sizeof(filter), "(icmp and dst host %s) or (tcp and dst host %s and ( dst port %d or dst port %d or dst port %d or dst port %d or dst port %d))", 
-	  inet_ntoa(hostbatch[0].source_ip),inet_ntoa(hostbatch[0].source_ip),
+	  inet_ntoa(hostbatch[0]->source_ip),inet_ntoa(hostbatch[0]->source_ip),
 	  sportbase , sportbase + 1, sportbase + 2, sportbase + 3, 
 	  sportbase + 4);
 
-  set_pcap_filter(hostbatch, pd, flt_icmptcp_5port, filter); 
+  set_pcap_filter(hostbatch[0], pd, flt_icmptcp_5port, filter); 
 }
 
  if (ptech.rawicmpscan + ptech.icmpscan + ptech.connecttcpscan +
@@ -687,7 +852,7 @@ gettimeofday(&start, NULL);
      pt.block_unaccounted = 0;
      for(hostnum=pt.group_start; hostnum <= pt.group_end; hostnum++) {      
        /* If (we don't know whether the host is up yet) ... */
-       if (!(hostbatch[hostnum].flags & HOST_UP) && !hostbatch[hostnum].wierd_responses && !(hostbatch[hostnum].flags & HOST_DOWN)) {  
+       if (!(hostbatch[hostnum]->flags & HOST_UP) && !hostbatch[hostnum]->wierd_responses && !(hostbatch[hostnum]->flags & HOST_DOWN)) {  
 	 /* Send a ping packet to it */
 	 seq = hostnum * pt.max_tries + pt.block_tries;
 	 if (ptech.icmpscan && !sd_blocking) { 
@@ -695,15 +860,15 @@ gettimeofday(&start, NULL);
 	 }
 	 if (o.scan_delay) enforce_scan_delay(NULL);
 	 if (ptech.icmpscan || ptech.rawicmpscan)
-	   sendpingquery(sd, rawpingsd, &hostbatch[hostnum],  
+	   sendpingquery(sd, rawpingsd, hostbatch[hostnum],  
 			 seq, id, &ss, time, pingtype, ptech);
        
 	 if (ptech.rawtcpscan) {
-	   sendrawtcppingquery(rawsd, &hostbatch[hostnum],  pingtype, seq, 
+	   sendrawtcppingquery(rawsd, hostbatch[hostnum],  pingtype, seq, 
 			       time, &pt);
 	 }
 	 else if (ptech.connecttcpscan) {
-	   sendconnecttcpquery(hostbatch, &tqi, &hostbatch[hostnum], seq, time, &pt, &to, max_width);
+	   sendconnecttcpquery(hostbatch, &tqi, hostbatch[hostnum], seq, time, &pt, &to, max_width);
 	 }
 	 pt.block_unaccounted++;
 	 gettimeofday(&t2, NULL);
@@ -765,8 +930,8 @@ gettimeofday(&start, NULL);
  return;
 }
 
-int sendconnecttcpquery(struct hoststruct *hostbatch, struct tcpqueryinfo *tqi,
-			struct hoststruct *target, int seq, 
+int sendconnecttcpquery(Target *hostbatch[], struct tcpqueryinfo *tqi,
+			Target *target, int seq, 
 			struct timeval *time, struct pingtune *pt, 
 			struct timeout_info *to, int max_width) {
 
@@ -810,7 +975,7 @@ int sendconnecttcpquery(struct hoststruct *hostbatch, struct tcpqueryinfo *tqi,
   bzero(&sock, sizeof(sock));
   sock.sin_family = AF_INET;
   sock.sin_port = htons(o.tcp_probe_port);
-  sock.sin_addr.s_addr = target->host.s_addr;
+  sock.sin_addr.s_addr = target->v4host().s_addr;
   
   res = connect(tqi->sockets[seq],(struct sockaddr *)&sock,sizeof(struct sockaddr));
   gettimeofday(&time[seq], NULL);
@@ -837,7 +1002,7 @@ int sendconnecttcpquery(struct hoststruct *hostbatch, struct tcpqueryinfo *tqi,
 return 0;
 }
 
-int sendrawtcppingquery(int rawsd, struct hoststruct *target, int pingtype, 
+int sendrawtcppingquery(int rawsd, Target *target, int pingtype, 
 			int seq, struct timeval *time, struct pingtune *pt) {
 int trynum;
 int myseq;
@@ -851,10 +1016,10 @@ trynum = seq % pt->max_tries;
  myseq = (get_random_uint() << 19) + (seq << 3) + 3; /* Response better end in 011 or 100 */
  memcpy((char *)&(o.decoys[o.decoyturn]), (char *)&target->source_ip, sizeof(struct in_addr));
  if (pingtype & PINGTYPE_TCP_USE_SYN) {   
-   send_tcp_raw_decoys( rawsd, &(target->host), sportbase + trynum, o.tcp_probe_port, myseq, myack, TH_SYN, 0, NULL, 0, o.extra_payload, 
+   send_tcp_raw_decoys( rawsd, target->v4hostip(), sportbase + trynum, o.tcp_probe_port, myseq, myack, TH_SYN, 0, NULL, 0, o.extra_payload, 
 			o.extra_payload_length);
  } else {
-   send_tcp_raw_decoys( rawsd, &(target->host), sportbase + trynum, o.tcp_probe_port, myseq, myack, TH_ACK, 0, NULL, 0, o.extra_payload, 
+   send_tcp_raw_decoys( rawsd, target->v4hostip(), sportbase + trynum, o.tcp_probe_port, myseq, myack, TH_ACK, 0, NULL, 0, o.extra_payload, 
 			o.extra_payload_length);
  }
 
@@ -863,7 +1028,7 @@ trynum = seq % pt->max_tries;
 }
 
 
-int sendpingquery(int sd, int rawsd, struct hoststruct *target,  
+int sendpingquery(int sd, int rawsd, Target *target,  
 		  int seq, unsigned short id, struct scanstats *ss, 
 		  struct timeval *time, int pingtype, struct pingtech ptech) {
 struct ppkt {
@@ -917,7 +1082,7 @@ pingpkt.checksum = in_cksum((unsigned short *)ping, icmplen);
 if (ptech.icmpscan) {
   bzero((char *)&sock, sizeof(sock));
   sock.sin_family= AF_INET;
-  sock.sin_addr = target->host;
+  sock.sin_addr = target->v4host();
   
   memcpy((char *) &(o.decoys[o.decoyturn]), (char *)&target->source_ip, sizeof(struct in_addr));
 }
@@ -941,7 +1106,7 @@ if (ptech.icmpscan) {
        perror("sendto");
      }
    } else {
-     send_ip_raw( rawsd, &o.decoys[decoy], &(target->host), IPPROTO_ICMP, ping, icmplen);
+     send_ip_raw( rawsd, &o.decoys[decoy], target->v4hostip(), IPPROTO_ICMP, ping, icmplen);
    }
  }
  gettimeofday(&time[seq], NULL);
@@ -949,7 +1114,7 @@ if (ptech.icmpscan) {
 }
 
 int get_connecttcpscan_results(struct tcpqueryinfo *tqi, 
-			       struct hoststruct *hostbatch, 
+			       Target *hostbatch[], 
 			       struct timeval *time, struct pingtune *pt, 
 			       struct timeout_info *to) {
 
@@ -981,13 +1146,13 @@ while(pt->block_unaccounted) {
 	if (tqi->sockets[seq] >= 0) {
 	  if (o.debugging > 1) {
 	    if (FD_ISSET(tqi->sockets[seq], &(myfds_r))) {
-	      log_write(LOG_STDOUT, "WRITE selected for machine %s\n", inet_ntoa(hostbatch[hostindex].host));  
+	      log_write(LOG_STDOUT, "WRITE selected for machine %s\n", hostbatch[hostindex]->targetipstr());  
 	    }
 	    if ( FD_ISSET(tqi->sockets[seq], &myfds_w)) {
-	      log_write(LOG_STDOUT, "READ selected for machine %s\n", inet_ntoa(hostbatch[hostindex].host)); 
+	      log_write(LOG_STDOUT, "READ selected for machine %s\n", hostbatch[hostindex]->targetipstr()); 
 	    }
 	    if  ( FD_ISSET(tqi->sockets[seq], &myfds_x)) {
-	      log_write(LOG_STDOUT, "EXC selected for machine %s\n", inet_ntoa(hostbatch[hostindex].host));
+	      log_write(LOG_STDOUT, "EXC selected for machine %s\n", hostbatch[hostindex]->targetipstr());
 	    }
 	  }
 	  if (FD_ISSET(tqi->sockets[seq], &myfds_r) || FD_ISSET(tqi->sockets[seq], &myfds_w) ||  FD_ISSET(tqi->sockets[seq], &myfds_x)) {
@@ -1001,7 +1166,7 @@ while(pt->block_unaccounted) {
 //		  case WSAENOTCONN:	//	needed?  this fails around here on my system
 #endif
 		if (errno == EAGAIN && o.verbose) {
-		  log_write(LOG_STDOUT, "Machine %s MIGHT actually be listening on probe port %d\n", inet_ntoa(hostbatch[hostindex].host), o.tcp_probe_port);
+		  log_write(LOG_STDOUT, "Machine %s MIGHT actually be listening on probe port %d\n", hostbatch[hostindex]->targetipstr(), o.tcp_probe_port);
 		}
 		foundsomething = 1;
 		newstate = HOST_UP;	
@@ -1017,7 +1182,7 @@ while(pt->block_unaccounted) {
 		newstate = HOST_DOWN;
 		break;
 	      default:
-		snprintf (buf, sizeof(buf), "Strange read error from %s", inet_ntoa(hostbatch[hostindex].host));
+		snprintf (buf, sizeof(buf), "Strange read error from %s", hostbatch[hostindex]->targetipstr());
 		perror(buf);
 		break;
 	      }
@@ -1028,16 +1193,16 @@ while(pt->block_unaccounted) {
 		buf[res2] = '\0';
 		if (res2 == 0)
 		  log_write(LOG_STDOUT, "Machine %s is actually LISTENING on probe port %d\n",
-			 inet_ntoa(hostbatch[hostindex].host), 
+			 hostbatch[hostindex]->targetipstr(), 
 			 o.tcp_probe_port);
 		else 
 		  log_write(LOG_STDOUT, "Machine %s is actually LISTENING on probe port %d, banner: %s\n",
-			 inet_ntoa(hostbatch[hostindex].host), 
+			 hostbatch[hostindex]->targetipstr(), 
 			 o.tcp_probe_port, buf);
 	      }
 	    }
 	    if (foundsomething) {
-	      hostupdate(hostbatch, &hostbatch[hostindex], newstate, 1, trynum,
+	      hostupdate(hostbatch, hostbatch[hostindex], newstate, 1, trynum,
 			 to,  &time[seq], pt, tqi, pingstyle_connecttcp);
 	      /*	      break;*/
 	    }
@@ -1077,7 +1242,7 @@ return 0;
 }
 
 
-int get_ping_results(int sd, pcap_t *pd, struct hoststruct *hostbatch, int pingtype, struct timeval *time,  struct pingtune *pt, struct timeout_info *to, int id, struct pingtech *ptech, struct scan_lists *ports) {
+int get_ping_results(int sd, pcap_t *pd, Target *hostbatch[], int pingtype, struct timeval *time,  struct pingtune *pt, struct timeout_info *to, int id, struct pingtech *ptech, struct scan_lists *ports) {
 fd_set fd_r, fd_x;
 struct timeval myto, tmpto, start, end;
 unsigned int bytes;
@@ -1176,11 +1341,11 @@ while(pt->block_unaccounted > 0 && !timeout) {
 	  error("Ping sequence %d leads to hostnum %d which is beyond the end of this group (%d)", ping->seq, hostnum, pt->group_end);
 	continue;
       }
-      if (!hostbatch[hostnum].source_ip.s_addr)
-	hostbatch[hostnum].source_ip.s_addr = ip->ip_dst.s_addr;
+      if (!hostbatch[hostnum]->source_ip.s_addr)
+	hostbatch[hostnum]->source_ip.s_addr = ip->ip_dst.s_addr;
       if (o.debugging) 
 	log_write(LOG_STDOUT, "We got a ping packet back from %s: id = %d seq = %d checksum = %d\n", inet_ntoa(ip->ip_src), ping->id, ping->seq, ping->checksum);
-      if (hostbatch[hostnum].host.s_addr == ip->ip_src.s_addr) {
+      if (hostbatch[hostnum]->v4host().s_addr == ip->ip_src.s_addr) {
 	foundsomething = 1;
 	pingstyle = pingstyle_icmp;
 	sequence = ping->seq;
@@ -1190,7 +1355,7 @@ while(pt->block_unaccounted > 0 && !timeout) {
 	  dotimeout = 1;
 	else dotimeout = 0;
       }
-      else hostbatch[hostnum].wierd_responses++;
+      else hostbatch[hostnum]->wierd_responses++;
     }
     else if (ping->type == 3 || ping->type == 11 || ping->type == 4 || 
 	     o.debugging) {
@@ -1273,7 +1438,7 @@ while(pt->block_unaccounted > 0 && !timeout) {
         
       if (ping->type == 3) {
 	if (o.debugging) 
-	  log_write(LOG_STDOUT, "Got destination unreachable for %s\n", inet_ntoa(hostbatch[hostnum].host));
+	  log_write(LOG_STDOUT, "Got destination unreachable for %s\n", hostbatch[hostnum]->targetipstr());
 	/* Since this gives an idea of how long it takes to get an answer,
 	   we add it into our times */
 	if (pt->discardtimesbefore < sequence)
@@ -1284,7 +1449,7 @@ while(pt->block_unaccounted > 0 && !timeout) {
 	newportstate = PORT_FIREWALLED;
       } else if (ping->type == 11) {
 	if (o.debugging) 
-	  log_write(LOG_STDOUT, "Got Time Exceeded for %s\n", inet_ntoa(hostbatch[hostnum].host));
+	  log_write(LOG_STDOUT, "Got Time Exceeded for %s\n", hostbatch[hostnum]->targetipstr());
 	dotimeout = 0; /* I don't want anything to do with timing this */
 	foundsomething = 1;
 	pingstyle = pingstyle_icmp;
@@ -1330,7 +1495,7 @@ while(pt->block_unaccounted > 0 && !timeout) {
 	/* FUDGE!  This ACK scan is cool but we don't get sequence numbers
 	   back! We'll have to brute force lookup to find the hostnum */
 	for(hostnum = pt->group_end; hostnum >= 0; hostnum--) {
-	  if (hostbatch[hostnum].host.s_addr == ip->ip_src.s_addr)
+	  if (hostbatch[hostnum]->v4host().s_addr == ip->ip_src.s_addr)
 	    break;
 	}
 	if (hostnum < 0) {	
@@ -1365,14 +1530,14 @@ while(pt->block_unaccounted > 0 && !timeout) {
       error("Found whacked packet protocol %d in get_ping_results", ip->ip_p);
     }
     if (foundsomething) {  
-      hostupdate(hostbatch, &hostbatch[hostnum], newstate, dotimeout, 
+      hostupdate(hostbatch, hostbatch[hostnum], newstate, dotimeout, 
 		 trynum, to, &time[sequence], pt, NULL,pingstyle);
     }
     if (newport && newportstate != PORT_UNKNOWN) {
       /* OK, we can add it, but that is only appropriate if this is one
 	 of the ports the user ASKED for */
       if (ports && ports->tcp_count == 1 && ports->tcp_ports[0] == newport)
-	addport(&(hostbatch[hostnum].ports), newport, IPPROTO_TCP, NULL, 
+	addport(&(hostbatch[hostnum]->ports), newport, IPPROTO_TCP, NULL, 
 		newportstate);
     }
 }

@@ -71,7 +71,7 @@
    ports found on the machine.  It also handles the Machine/Greppable
    output and the XML output.  It is pretty ugly -- in particular I
    should write helper functions to handle the table creation */
-void printportoutput(struct hoststruct *currenths, portlist *plist);
+void printportoutput(Target *currenths, portlist *plist);
 
 /* Write some information (printf style args) to the given log stream(s) */
 void log_write(int logt, const char *fmt, ...);
@@ -118,11 +118,11 @@ void output_xml_scaninfo_records(struct scan_lists *ports);
    example is "Host: 10.11.12.13 (foo.bar.example.com)\tStatus: Up\n" to 
    machine log.  resolve_all should be passed nonzero if the user asked
    for all hosts (even down ones) to be resolved */
-void write_host_status(struct hoststruct *currenths, int resolve_all);
+void write_host_status(Target *currenths, int resolve_all);
 
 /* Prints the formatted OS Scan output to stdout, logfiles, etc (but only
    if an OS Scan was performed */
-void printosscanoutput(struct hoststruct *currenths);
+void printosscanoutput(Target *currenths);
 
 /* Prints the statistics and other information that goes at the very end
    of an Nmap run */

@@ -104,54 +104,28 @@ struct pingtech {
 };
 
 
-int get_ping_results(int sd, pcap_t *pd, struct hoststruct *hostbatch, 
+int get_ping_results(int sd, pcap_t *pd, Target *hostbatch[], 
 		     int pingtype, struct timeval *time,  struct pingtune *pt,
 		     struct timeout_info *to, int id, struct pingtech *ptech, 
 		     struct scan_lists *ports);
-int sendpingquery(int sd, int rawsd, struct hoststruct *target,  
+int sendpingquery(int sd, int rawsd, Target *target,  
 		  int seq, unsigned short id, struct scanstats *ss, 
 		  struct timeval *time, int pingtype, struct pingtech ptech);
-int sendrawtcppingquery(int rawsd, struct hoststruct *target, int pingtype,
+int sendrawtcppingquery(int rawsd, Target *target, int pingtype,
 			int seq, struct timeval *time, struct pingtune *pt);
-int sendconnecttcpquery(struct hoststruct *hostbatch, struct tcpqueryinfo *tqi, struct hoststruct *target, 
+int sendconnecttcpquery(Target *hostbatch[], struct tcpqueryinfo *tqi, Target *target, 
 			int seq, struct timeval *time, struct pingtune *pt, struct timeout_info *to, int max_width);
 int get_connecttcpscan_results(struct tcpqueryinfo *tqi, 
-			       struct hoststruct *hostbatch, 
+			       Target *hostbatch[], 
 			       struct timeval *time, struct pingtune *pt, 
 			       struct timeout_info *to);
 char *readhoststate(int state);
-void massping(struct hoststruct *hostbatch, int numhosts, 
+void massping(Target *hostbatch[], int numhosts, 
 		struct scan_lists *ports, int pingtype);
-/* Fills up the hostgroup_state structure passed in (which must point
-   to valid memory).  Lookahead is the number of hosts that can be
-   checked (such as ping scanned) in advance.  Randomize causes each
-   group of up to lookahead hosts to be internally shuffled around.
-   The target_expressions array must remail valid in memory as long as
-   this hostgroup_state structure is used -- the array is NOT copied */
-int hostgroup_state_init(struct hostgroup_state *hs, int lookahead,
-			 int randomize, char *target_expressions[],
-			 int num_expressions);
-/* Free the *internal state* of a hostgroup_state structure -- it is
-   important to note that this does not free the actual memory
-   allocated for the "struct hostgroup_state" you pass in.  It only
-   frees internal stuff -- after all, your hostgroup_state could be on
-   the stack */
-void hostgroup_state_destroy(struct hostgroup_state *hs);
-/* If there is at least one IP address left in t, one is pulled out and placed
-   in sin and then zero is returned and state information in t is updated
-   to reflect that the IP was pulled out.  If t is empty, -1 is returned */
-int target_struct_get(struct targets *t, struct in_addr *sin);
-/* Undoes the previous target_struct_get operation */
-void target_struct_return(struct targets *t);
-void hoststructfry(struct hoststruct *hostbatch, int nelem);
+void hoststructfry(Target *hostbatch[], int nelem);
 /* Ports is the list of ports the user asked to be scanned (0 terminated),
    you can just pass NULL (it is only a stupid optimization that needs it) */
-struct hoststruct *nexthost(struct hostgroup_state *hs, 
-			    struct scan_lists *ports, int *pingtype);
-/* Frees the *INTERNAL STRUCTURES* inside a hoststruct -- does not
-   free the actual memory allocated to the hoststruct itself (for all
-   this function knows, you could have declared it on the stack */
-void hoststruct_free(struct hoststruct *currenths);
+Target *nexthost(HostGroupState *hs, struct scan_lists *ports, int *pingtype);
 #endif /* TARGETS_H */
 
 

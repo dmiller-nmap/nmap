@@ -60,7 +60,7 @@ extern unsigned short flt_baseport;
    to be open trynum is the try number that was successful 
    I USE CURRENT->STATE TO DETERMINE WHETHER THE PORT IS OPEN
    OR FIREWALLED */
-static void posportupdate(struct hoststruct *target, struct portinfo *current, 
+static void posportupdate(Target *target, struct portinfo *current, 
 		   int trynum, struct portinfo *scan,
 		   struct scanstats *ss ,stype scantype, int newstate,
 		   struct portinfolist *pil, struct connectsockinfo *csi) {
@@ -71,9 +71,9 @@ static void posportupdate(struct hoststruct *target, struct portinfo *current,
   int i;
   char owner[1024];
 
-  if (tryident == -1 || target->host.s_addr != lasttarget) 
+  if (tryident == -1 || target->v4host().s_addr != lasttarget) 
     tryident = o.identscan;
-  lasttarget = target->host.s_addr;
+  lasttarget = target->v4host().s_addr;
   owner[0] = '\0';
   if (current->state != PORT_OPEN && current->state != PORT_CLOSED &&
       current->state != PORT_FIREWALLED && current->state != PORT_TESTING) {
@@ -109,7 +109,7 @@ static void posportupdate(struct hoststruct *target, struct portinfo *current,
 		    &sockaddr_in_len )) {
       pfatal("getsockname");
     }
-    if (getidentinfoz(target->host, ntohs(mysock.sin_port), current->portno, owner, sizeof(owner)) == -1)
+    if (getidentinfoz(target->v4host(), ntohs(mysock.sin_port), current->portno, owner, sizeof(owner)) == -1)
       tryident = 0;
   }
 
@@ -185,7 +185,7 @@ static void posportupdate(struct hoststruct *target, struct portinfo *current,
 
 /* Grab results from a connect() scan (eg check all the non-blocking
    outstanding connect requests for completion.  */
-static int get_connect_results(struct hoststruct *target, 
+static int get_connect_results(Target *target, 
 			       struct portinfo *scan, 
 			       struct scanstats *ss, struct portinfolist *pil, 
 			       int *portlookup, u32 *sequences, 
@@ -318,12 +318,12 @@ static int get_connect_results(struct hoststruct *target,
 	case ENETUNREACH:
 	case ENETRESET:
 	case ECONNABORTED:
-	  snprintf(buf, sizeof(buf), "Strange SO_ERROR from connection to %s (%d) -- bailing scan", inet_ntoa(target->host), optval);
+	  snprintf(buf, sizeof(buf), "Strange SO_ERROR from connection to %s (%d) -- bailing scan", target->targetipstr(), optval);
 	  perror(buf);
 	  return -1;
 	  break;
 	default:
-	  snprintf(buf, sizeof(buf), "Strange read error from %s (%d)", inet_ntoa(target->host), optval);
+	  snprintf(buf, sizeof(buf), "Strange read error from %s (%d)", target->targetipstr(), optval);
 	  perror(buf);
 	  break;
 	}
@@ -336,7 +336,7 @@ static int get_connect_results(struct hoststruct *target,
 
 /* Grab results for a SYN scan.  We assume the SYNs have already been sent,
    and we sniff for SYN|ACK or RST packets */
-static void get_syn_results(struct hoststruct *target, struct portinfo *scan,
+static void get_syn_results(Target *target, struct portinfo *scan,
 		     struct scanstats *ss, struct portinfolist *pil, 
 		     int *portlookup, pcap_t *pd, u32 *sequences, 
 		     stype scantype) {
@@ -384,7 +384,8 @@ static void get_syn_results(struct hoststruct *target, struct portinfo *scan,
       quit = 1;
     }
 
-    if (ip->ip_src.s_addr == target->host.s_addr && ip->ip_p == IPPROTO_TCP) {
+    if (ip->ip_src.s_addr == target->v4host().s_addr && 
+	ip->ip_p == IPPROTO_TCP) {
       tcp = (struct tcphdr *) (((char *) ip) + 4 * ip->ip_hl);
       i = ntohs(tcp->th_dport);
       if (i < o.magic_port || i > o.magic_port + 15) {
@@ -473,7 +474,7 @@ static void get_syn_results(struct hoststruct *target, struct portinfo *scan,
 
       /* Lets ensure this packet relates to a packet to the host
 	 we are scanning ... */
-      if (ip2->ip_dst.s_addr != target->host.s_addr) {
+      if (ip2->ip_dst.s_addr != target->v4host().s_addr) {
 	if (o.debugging > 1)
 	  error("Got an ICMP message which does not relate to a packet sent to the host being scanned");
 	continue;
@@ -522,7 +523,7 @@ static void get_syn_results(struct hoststruct *target, struct portinfo *scan,
 /* Handles the "positive-response" scans (where we get a response
    telling us that the port is open based on the probe.  This includes
    SYN Scan, Connect Scan, RPC scan, Window Scan, and ACK scan */
-void pos_scan(struct hoststruct *target, u16 *portarray, int numports, stype scantype) {
+void pos_scan(Target *target, u16 *portarray, int numports, stype scantype) {
   int initial_packet_width;  /* How many scan packets in parallel (to start with) */
   struct scanstats ss;
   int rawsd = -1;
@@ -532,7 +533,6 @@ void pos_scan(struct hoststruct *target, u16 *portarray, int numports, stype sca
   int senddelay = 0;
   pcap_t *pd = NULL;
   char filter[512];
-  char *p;
   u32 ack_number = 0;
   int tries = 0;
   int  res;
@@ -658,12 +658,10 @@ void pos_scan(struct hoststruct *target, u16 *portarray, int numports, stype sca
     
     pd = my_pcap_open_live(target->device, 100,  (o.spoofsource)? 1 : 0, 20);
     
-    flt_srchost = target->host.s_addr;
+    flt_srchost = target->v4host().s_addr;
     flt_dsthost = target->source_ip.s_addr;
 
-    p = strdup(inet_ntoa(target->host));
-    snprintf(filter, sizeof(filter), "dst host %s and (icmp or (tcp and src host %s))", inet_ntoa(target->source_ip), p);
-    free(p);
+    snprintf(filter, sizeof(filter), "dst host %s and (icmp or (tcp and src host %s))", inet_ntoa(target->source_ip), target->targetipstr());
 
     set_pcap_filter(target, pd, flt_icmptcp, filter);
 
@@ -676,7 +674,7 @@ void pos_scan(struct hoststruct *target, u16 *portarray, int numports, stype sca
     rawsd = -1;
     /* Init our sock */
     bzero((char *)&sock,sizeof(sock));
-    sock.sin_addr.s_addr = target->host.s_addr;
+    sock.sin_addr.s_addr = target->v4host().s_addr;
     sock.sin_family=AF_INET;
   } else if (scantype == RPC_SCAN) {
     get_rpc_procs(&(rsi.rpc_progs), &(rsi.rpc_number));
@@ -704,7 +702,7 @@ void pos_scan(struct hoststruct *target, u16 *portarray, int numports, stype sca
   else ack_number = 0;
 
   if (o.debugging || o.verbose) {  
-    log_write(LOG_STDOUT, "Initiating %s against %s (%s)\n", scantype2str(scantype), target->name, inet_ntoa(target->host));
+    log_write(LOG_STDOUT, "Initiating %s against %s (%s)\n", scantype2str(scantype), target->name, target->targetipstr());
   }
 
   do {
@@ -815,9 +813,9 @@ void pos_scan(struct hoststruct *target, u16 *portarray, int numports, stype sca
 		now = current->sent[current->trynum];
 		if ((scantype == SYN_SCAN) || (scantype == WINDOW_SCAN) || (scantype == ACK_SCAN)) {	      
 		  if (o.fragscan)
-		    send_small_fragz_decoys(rawsd, &target->host, sequences[current->trynum], o.magic_port + tries * 3 + current->trynum, current->portno, scanflags);
+		    send_small_fragz_decoys(rawsd, target->v4hostip(), sequences[current->trynum], o.magic_port + tries * 3 + current->trynum, current->portno, scanflags);
 		  else 
-		    send_tcp_raw_decoys(rawsd, &target->host, o.magic_port + 
+		    send_tcp_raw_decoys(rawsd, target->v4hostip(), o.magic_port + 
 					tries * 3 + current->trynum, 
 					current->portno, 
 					sequences[current->trynum], 
@@ -826,7 +824,7 @@ void pos_scan(struct hoststruct *target, u16 *portarray, int numports, stype sca
 					o.extra_payload_length);
 
 		} else if (scantype == RPC_SCAN) {
-		  if (send_rpc_query(&target->host, rsi.rpc_current_port->portno,
+		  if (send_rpc_query(target->v4hostip(), rsi.rpc_current_port->portno,
 				     rsi.rpc_current_port->proto, 
 				     current->portno, current - scan, 
 				     current->trynum) == -1) {
@@ -911,15 +909,15 @@ void pos_scan(struct hoststruct *target, u16 *portarray, int numports, stype sca
 	    if ((scantype == SYN_SCAN) || (scantype == WINDOW_SCAN) || 
 		(scantype == ACK_SCAN)) {	  
 	      if (o.fragscan)
-		send_small_fragz_decoys(rawsd, &target->host, sequences[current->trynum], o.magic_port + tries * 3, current->portno, scanflags);
+		send_small_fragz_decoys(rawsd, target->v4hostip(), sequences[current->trynum], o.magic_port + tries * 3, current->portno, scanflags);
 	      else
-		send_tcp_raw_decoys(rawsd, &target->host, 
+		send_tcp_raw_decoys(rawsd, target->v4hostip(), 
 				    o.magic_port + tries * 3, current->portno,
 				    sequences[current->trynum], ack_number, 
 				    scanflags, 0, NULL, 0, o.extra_payload, 
 				    o.extra_payload_length);
 	    } else if (scantype == RPC_SCAN) {
-	      if (send_rpc_query(&target->host, rsi.rpc_current_port->portno,
+	      if (send_rpc_query(target->v4hostip(), rsi.rpc_current_port->portno,
 				 rsi.rpc_current_port->proto, current->portno, 
 				 current - scan, current->trynum) == -1) {
 		/* Futz, I'll give up on this guy ... */
@@ -1081,10 +1079,10 @@ void pos_scan(struct hoststruct *target, u16 *portarray, int numports, stype sca
 /* FTP bounce attack scan.  This function is rather lame and should be
    rewritten.  But I don't think it is used much anyway.  If I'm going to
    allow FTP bounce scan, I should really allow SOCKS proxy scan.  */
-void bounce_scan(struct hoststruct *target, u16 *portarray, int numports,
+void bounce_scan(Target *target, u16 *portarray, int numports,
 		 struct ftpinfo *ftp) {
   int starttime,  res , sd = ftp->sd,  i=0;
-  char *t = (char *)&target->host; 
+  const char *t = (const char *)target->v4hostip(); 
   int retriesleft = FTP_RETRIES;
   char recvbuf[2048]; 
   char targetstr[20];
@@ -1099,7 +1097,7 @@ void bounce_scan(struct hoststruct *target, u16 *portarray, int numports,
   starttime = time(NULL);
   if (o.verbose || o.debugging)
     log_write(LOG_STDOUT, "Initiating TCP ftp bounce scan against %s (%s)\n",
-	    target->name,  inet_ntoa(target->host));
+	    target->name,  target->targetipstr());
   for(i=0; portarray[i]; i++) {
 
     /* Check for timeout */
@@ -1210,7 +1208,7 @@ void bounce_scan(struct hoststruct *target, u16 *portarray, int numports,
 /* Handles the scan types where no positive-acknowledgement of open
    port is received (those scans are in pos_scan).  Super_scan
    includes scans such as FIN/XMAS/NULL/Maimon/UDP and IP Proto scans */
-void super_scan(struct hoststruct *target, u16 *portarray, int numports,
+void super_scan(Target *target, u16 *portarray, int numports,
 		stype scantype) {
   int initial_packet_width;  /* How many scan packets in parallel (to start with) */
   int packet_incr = 4; /* How much we increase the parallel packets by each round */
@@ -1227,7 +1225,6 @@ void super_scan(struct hoststruct *target, u16 *portarray, int numports,
   struct ip *ip, *ip2;
   struct tcphdr *tcp;
   char filter[512];
-  char *p;
   int changed = 0;  /* Have we found new ports (or rejected earlier "found" ones) this round? */
   int numqueries_outstanding = 0; /* How many unexpired queries are on the 'net right now? */
   double numqueries_ideal; /* How many do we WANT to be on the 'net right now? */
@@ -1318,13 +1315,11 @@ void super_scan(struct hoststruct *target, u16 *portarray, int numports,
   pd = my_pcap_open_live(target->device, 92,  (o.spoofsource)? 1 : 0, 10);
 
 
-  flt_srchost = target->host.s_addr;
+  flt_srchost = target->v4host().s_addr;
   flt_dsthost = target->source_ip.s_addr;
   flt_baseport = o.magic_port;
 
-  p = strdup(inet_ntoa(target->host));
-  snprintf(filter, sizeof(filter), "(icmp and dst host %s) or (tcp and src host %s and dst host %s and ( dst port %d or dst port %d))", inet_ntoa(target->source_ip), p, inet_ntoa(target->source_ip), o.magic_port , o.magic_port + 1);
-  free(p);
+  snprintf(filter, sizeof(filter), "(icmp and dst host %s) or (tcp and src host %s and dst host %s and ( dst port %d or dst port %d))", inet_ntoa(target->source_ip), target->targetipstr(), inet_ntoa(target->source_ip), o.magic_port , o.magic_port + 1);
 
   set_pcap_filter(target, pd, flt_icmptcp_2port, filter);
 
@@ -1339,7 +1334,7 @@ void super_scan(struct hoststruct *target, u16 *portarray, int numports,
   starttime = time(NULL);
 
   if (o.debugging || o.verbose)
-    log_write(LOG_STDOUT, "Initiating %s against %s (%s)\n", scantype2str(scantype), target->name, inet_ntoa(target->host));
+    log_write(LOG_STDOUT, "Initiating %s against %s (%s)\n", scantype2str(scantype), target->name, target->targetipstr());
   
 
   do {
@@ -1393,14 +1388,14 @@ void super_scan(struct hoststruct *target, u16 *portarray, int numports,
 		gettimeofday(&current->sent[1], NULL);
 		now = current->sent[1];
 		if (o.fragscan)
-		  send_small_fragz_decoys(rawsd, &target->host, 0,i, current->portno, scanflags);
+		  send_small_fragz_decoys(rawsd, target->v4hostip(), 0,i, current->portno, scanflags);
 		else if (scantype == UDP_SCAN)
-		  send_udp_raw_decoys(rawsd, &target->host, i,
+		  send_udp_raw_decoys(rawsd, target->v4hostip(), i,
 				      current->portno, o.extra_payload, o.extra_payload_length);
 		else if (scantype == IPPROT_SCAN)
-		  send_ip_raw_decoys(rawsd, &target->host, current->portno, o.extra_payload, o.extra_payload_length);
+		  send_ip_raw_decoys(rawsd, target->v4hostip(), current->portno, o.extra_payload, o.extra_payload_length);
 		else
-		  send_tcp_raw_decoys(rawsd, &target->host, i, 
+		  send_tcp_raw_decoys(rawsd, target->v4hostip(), i, 
 				      current->portno, 0, 0, scanflags, 0, NULL, 0,
 				      o.extra_payload, o.extra_payload_length);
 		if (senddelay &&
@@ -1422,15 +1417,15 @@ void super_scan(struct hoststruct *target, u16 *portarray, int numports,
 	    numqueries_outstanding++;
 	    gettimeofday(&current->sent[0], NULL);
 	    if (o.fragscan)
-	      send_small_fragz_decoys(rawsd, &target->host, 0, o.magic_port, current->portno, scanflags);
+	      send_small_fragz_decoys(rawsd, target->v4hostip(), 0, o.magic_port, current->portno, scanflags);
 	    else if (scantype == UDP_SCAN)
-	      send_udp_raw_decoys(rawsd, &target->host, o.magic_port,
+	      send_udp_raw_decoys(rawsd, target->v4hostip(), o.magic_port,
 				  current->portno, o.extra_payload, o.extra_payload_length);
 	    else if (scantype == IPPROT_SCAN)
-	      send_ip_raw_decoys(rawsd, &target->host,
+	      send_ip_raw_decoys(rawsd, target->v4hostip(),
 				 current->portno, o.extra_payload, o.extra_payload_length);
 	    else
-	      send_tcp_raw_decoys(rawsd, &target->host, o.magic_port, 
+	      send_tcp_raw_decoys(rawsd, target->v4hostip(), o.magic_port, 
 				  current->portno, 0, 0, scanflags, 0, NULL, 0,
 				  o.extra_payload, o.extra_payload_length);
 	    if ((scantype == UDP_SCAN || scantype == IPPROT_SCAN) &&
@@ -1463,7 +1458,7 @@ void super_scan(struct hoststruct *target, u16 *portarray, int numports,
 	      continue;	
 	    current = NULL;
 	    if (ip->ip_p == IPPROTO_ICMP ||
-		ip->ip_src.s_addr == target->host.s_addr) {
+		ip->ip_src.s_addr == target->v4host().s_addr) {
 	      if (ip->ip_p == IPPROTO_TCP) {
 		tcp = (struct tcphdr *) (((char *) ip) + 4 * ip->ip_hl);
 		if (tcp->th_flags & TH_RST) {	    
@@ -1502,7 +1497,7 @@ void super_scan(struct hoststruct *target, u16 *portarray, int numports,
 	      } else if (ip->ip_p == IPPROTO_ICMP) {
 		icmp = (struct icmp *) ((char *)ip + 4 * ip->ip_hl);
 		ip2 = (struct ip *) (((char *) icmp) + 8);
-		if (ip2->ip_dst.s_addr != target->host.s_addr)
+		if (ip2->ip_dst.s_addr != target->v4host().s_addr)
 		  continue;
 		data = (u16 *) ((char *)ip2 + 4 * ip2->ip_hl);
 		/*	    log_write(LOG_STDOUT, "Caught ICMP packet:\n");

@@ -151,7 +151,7 @@ int get_rpc_procs(unsigned long **programs, unsigned long *num_programs) {
 /* Send an RPC query to the specified host/port on the specified protocol
    looking for the specified RPC program.  We cache our sending sockets
    to avoid recreating and (with TCP) reconnect() ing them each time */
-int send_rpc_query(struct in_addr *target_host, unsigned short portno,
+int send_rpc_query(const struct in_addr *target_host, unsigned short portno,
 		   int ipproto, unsigned long program, int scan_offset, 
 		   int trynum) {
   static struct in_addr last_target_host;
@@ -272,7 +272,7 @@ int send_rpc_query(struct in_addr *target_host, unsigned short portno,
   return 0;
 }
 
-int rpc_are_we_done(char *msg, int msg_len, struct hoststruct *target, 
+int rpc_are_we_done(char *msg, int msg_len, Target *target, 
 		    struct portinfo *scan, struct scanstats *ss, 
 		    struct portinfolist *pil, struct rpcscaninfo *rsi) {
 
@@ -408,7 +408,7 @@ int rpc_are_we_done(char *msg, int msg_len, struct hoststruct *target,
   return 0;
 }
 
-void get_rpc_results(struct hoststruct *target, struct portinfo *scan,
+void get_rpc_results(Target *target, struct portinfo *scan,
 		     struct scanstats *ss, struct portinfolist *pil, 
 		     struct rpcscaninfo *rsi) {
 
@@ -475,10 +475,10 @@ unsigned long current_msg_len;
      if (o.debugging > 1)
        printf("Received %d byte UDP packet\n", res);
      /* Now we check that the response is from the expected host/port */
-     if (from.sin_addr.s_addr != target->host.s_addr ||
+     if (from.sin_addr.s_addr != target->v4host().s_addr ||
 	 from.sin_port != htons(rsi->rpc_current_port->portno)) {
        if (o.debugging > 1) {
-	 printf("Received UDP packet from %d.%d.%d.%d/%hu when expecting packet from %d.%d.%d.%d/%hu\n", NIPQUAD(from.sin_addr.s_addr), ntohs(from.sin_port), NIPQUAD(target->host.s_addr), rsi->rpc_current_port->portno);
+	 printf("Received UDP packet from %d.%d.%d.%d/%hu when expecting packet from %d.%d.%d.%d/%hu\n", NIPQUAD(from.sin_addr.s_addr), ntohs(from.sin_port), NIPQUAD(target->v4host().s_addr), rsi->rpc_current_port->portno);
        }
        continue;
      }

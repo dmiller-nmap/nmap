@@ -58,7 +58,7 @@ static char *logtypes[LOG_TYPES]=LOG_NAMES;
    ports found on the machine.  It also handles the Machine/Greppable
    output and the XML output.  It is pretty ugly -- in particular I
    should write helper functions to handle the table creation */
-void printportoutput(struct hoststruct *currenths, portlist *plist) {
+void printportoutput(Target *currenths, portlist *plist) {
   char protocol[4];
   char rpcinfo[64];
   char rpcmachineinfo[64];
@@ -89,19 +89,19 @@ void printportoutput(struct hoststruct *currenths, portlist *plist) {
               "%s %d scanned %s on %s (%s) %s: %s\n",
 	      (numignoredports == 1)? "The" : "All", numignoredports,
 	      (numignoredports == 1)? "port" : "ports", currenths->name, 
-	      inet_ntoa(currenths->host), 
+	      currenths->targetipstr(), 
 	      (numignoredports == 1)? "is" : "are", 
 	      statenum2str(currenths->ports.ignored_port_state));
     log_write(LOG_MACHINE,"Host: %s (%s)\tStatus: Up", 
-	      inet_ntoa(currenths->host), currenths->name);
+	      currenths->targetipstr(), currenths->name);
     log_write(LOG_XML, "</ports>\n");
     return;
   }
 
   log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Interesting %s on %s (%s):\n",
 	    (o.ipprotscan)? "protocols" : "ports", currenths->name, 
-	    inet_ntoa(currenths->host));
-  log_write(LOG_MACHINE,"Host: %s (%s)", inet_ntoa(currenths->host), 
+	    currenths->targetipstr());
+  log_write(LOG_MACHINE,"Host: %s (%s)", currenths->targetipstr(), 
 	    currenths->name);
   
   if (numignoredports > 0) {
@@ -474,9 +474,9 @@ void output_xml_scaninfo_records(struct scan_lists *scanlist) {
 
 /* Helper function to write the status and address/hostname info of a host 
    into the XML log */
-static void write_xml_initial_hostinfo(struct hoststruct *currenths,
+static void write_xml_initial_hostinfo(Target *currenths,
 				  const char *status) {
-  log_write(LOG_XML, "<status state=\"%s\" />\n<address addr=\"%s\" addrtype=\"ipv4\" />\n", status,inet_ntoa(currenths->host));
+  log_write(LOG_XML, "<status state=\"%s\" />\n<address addr=\"%s\" addrtype=\"ipv4\" />\n", status,currenths->targetipstr());
   if (currenths->name && *currenths->name) {
     log_write(LOG_XML, "<hostnames><hostname name=\"%s\" type=\"PTR\" /></hostnames>\n", currenths->name);
   } else /* If machine is up, put blank hostname so front ends know that
@@ -488,12 +488,12 @@ static void write_xml_initial_hostinfo(struct hoststruct *currenths,
    example is "Host: 10.11.12.13 (foo.bar.example.com)\tStatus: Up\n" to 
    machine log.  resolve_all should be passed nonzero if the user asked
    for all hosts (even down ones) to be resolved */
-void write_host_status(struct hoststruct *currenths, int resolve_all) {
+void write_host_status(Target *currenths, int resolve_all) {
 
   if (o.listscan) {
     /* write "unknown" to stdout, machine, and xml */
-    log_write(LOG_STDOUT|LOG_NORMAL|LOG_SKID, "Host %s (%s) not scanned\n", currenths->name, inet_ntoa(currenths->host));
-    log_write(LOG_MACHINE, "Host: %s (%s)\tStatus: Unknown\n", inet_ntoa(currenths->host), currenths->name);
+    log_write(LOG_STDOUT|LOG_NORMAL|LOG_SKID, "Host %s (%s) not scanned\n", currenths->name, currenths->targetipstr());
+    log_write(LOG_MACHINE, "Host: %s (%s)\tStatus: Unknown\n", currenths->targetipstr(), currenths->name);
     write_xml_initial_hostinfo(currenths, "unknown");
   } 
 
@@ -503,14 +503,14 @@ void write_host_status(struct hoststruct *currenths, int resolve_all) {
 			       (currenths->flags & HOST_UP)? "up" : "down");
     log_write(LOG_XML, "<smurf responses=\"%d\" />\n", 
 	      currenths->wierd_responses);
-    log_write(LOG_MACHINE,"Host: %s (%s)\tStatus: Smurf (%d responses)\n",  inet_ntoa(currenths->host), currenths->name, currenths->wierd_responses);
+    log_write(LOG_MACHINE,"Host: %s (%s)\tStatus: Smurf (%d responses)\n",  currenths->targetipstr(), currenths->name, currenths->wierd_responses);
     
     if (o.pingscan)
-      log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Host  %s (%s) seems to be a subnet broadcast address (returned %d extra pings).%s\n",  currenths->name, inet_ntoa(currenths->host), currenths->wierd_responses, 
+      log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Host  %s (%s) seems to be a subnet broadcast address (returned %d extra pings).%s\n",  currenths->name, currenths->targetipstr(), currenths->wierd_responses, 
 		(currenths->flags & HOST_UP)? " Note -- the actual IP also responded." : "");
     else {
       log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Host  %s (%s) seems to be a subnet broadcast address (returned %d extra pings). %s.\n",  currenths->name, 
-		inet_ntoa(currenths->host), currenths->wierd_responses,
+		currenths->targetipstr(), currenths->wierd_responses,
 		(currenths->flags & HOST_UP)? 
 		" Still scanning it due to ping response from its own IP" 
 		: "Skipping host");
@@ -521,13 +521,13 @@ void write_host_status(struct hoststruct *currenths, int resolve_all) {
     write_xml_initial_hostinfo(currenths, 
 			       (currenths->flags & HOST_UP)? "up" : "down");
     if (currenths->flags & HOST_UP) {
-      log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Host %s (%s) appears to be up.\n", currenths->name, inet_ntoa(currenths->host));
-      log_write(LOG_MACHINE,"Host: %s (%s)\tStatus: Up\n", inet_ntoa(currenths->host), currenths->name);
+      log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Host %s (%s) appears to be up.\n", currenths->name, currenths->targetipstr());
+      log_write(LOG_MACHINE,"Host: %s (%s)\tStatus: Up\n", currenths->targetipstr(), currenths->name);
     } else if (o.verbose || resolve_all) {
       if (resolve_all)
-	log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Host %s (%s) appears to be down.\n", currenths->name, inet_ntoa(currenths->host));
-      else log_write(LOG_STDOUT,"Host %s (%s) appears to be down.\n", currenths->name, inet_ntoa(currenths->host));
-      log_write(LOG_MACHINE, "Host: %s (%s)\tStatus: Down\n", inet_ntoa(currenths->host), currenths->name);
+	log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Host %s (%s) appears to be down.\n", currenths->name, currenths->targetipstr());
+      else log_write(LOG_STDOUT,"Host %s (%s) appears to be down.\n", currenths->name, currenths->targetipstr());
+      log_write(LOG_MACHINE, "Host: %s (%s)\tStatus: Down\n", currenths->targetipstr(), currenths->name);
     }
   } 
 
@@ -537,16 +537,16 @@ void write_host_status(struct hoststruct *currenths, int resolve_all) {
     if (o.verbose) {
       if (currenths->flags & HOST_UP) {
 	log_write(LOG_STDOUT, "Host %s (%s) appears to be up ... good.\n", 
-		  currenths->name, inet_ntoa(currenths->host));
+		  currenths->name, currenths->targetipstr());
       } else {
 
 	if (resolve_all) {   
-	  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Host %s (%s) appears to be down, skipping it.\n", currenths->name, inet_ntoa(currenths->host));
+	  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Host %s (%s) appears to be down, skipping it.\n", currenths->name, currenths->targetipstr());
 	}
 	else {
-	  log_write(LOG_STDOUT,"Host %s (%s) appears to be down, skipping it.\n", currenths->name, inet_ntoa(currenths->host));
+	  log_write(LOG_STDOUT,"Host %s (%s) appears to be down, skipping it.\n", currenths->name, currenths->targetipstr());
 	}
-	log_write(LOG_MACHINE, "Host: %s (%s)\tStatus: Down\n", inet_ntoa(currenths->host), currenths->name);
+	log_write(LOG_MACHINE, "Host: %s (%s)\tStatus: Down\n", currenths->targetipstr(), currenths->name);
       }
     }
   }
@@ -555,7 +555,7 @@ void write_host_status(struct hoststruct *currenths, int resolve_all) {
 
 /* Prints the formatted OS Scan output to stdout, logfiles, etc (but only
    if an OS Scan was performed */
-void printosscanoutput(struct hoststruct *currenths) {
+void printosscanoutput(Target *currenths) {
   int i;
   char numlst[512]; /* For creating lists of numbers */
   char *p; /* Used in manipulating numlst above */

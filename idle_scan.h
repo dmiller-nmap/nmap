@@ -59,7 +59,7 @@
 /* Handles the scan types where no positive-acknowledgement of open
    port is received (those scans are in pos_scan).  Super_scan
    includes scans such as FIN/XMAS/NULL/Maimon/UDP and IP Proto scans */
-void idle_scan(struct hoststruct *target, u16 *portarray, int numports,
+void idle_scan(Target *target, u16 *portarray, int numports,
 	       char *proxy);
 
 #endif /* IDLE_SCAN_H */

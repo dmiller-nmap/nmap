@@ -64,11 +64,12 @@
 /* moved to global_structures.h */
 
 /**********************  PROTOTYPES  ***********************************/
-int os_scan(struct hoststruct *target);
-FingerPrint *get_fingerprint(struct hoststruct *target, struct seq_info *si);
+int os_scan(Target *target);
+FingerPrint *get_fingerprint(Target *target, struct seq_info *si);
 struct AVal *fingerprint_iptcppacket(struct ip *ip, int mss, unsigned int syn);
 struct AVal *fingerprint_portunreach(struct ip *ip, struct udpprobeinfo *upi);
-struct udpprobeinfo *send_closedudp_probe(int rawsd, struct in_addr *dest,
+struct udpprobeinfo *send_closedudp_probe(int rawsd, 
+					  const struct in_addr *dest,
 					  u16 sport, u16 dport);
 
 unsigned int get_gcd_n_ulong(int numvalues, unsigned int *values);

@@ -143,7 +143,7 @@ int nmap_main(int argc, char *argv[]) {
   int num_host_exp_groups = 0;
   char *machinefilename = NULL, *kiddiefilename = NULL, 
        *normalfilename = NULL, *xmlfilename = NULL;
-  struct hostgroup_state hstate;
+  HostGroupState *hstate;
   int numhosts_up = 0;
   int starttime;
   struct scan_lists *ports = NULL;
@@ -157,10 +157,15 @@ int nmap_main(int argc, char *argv[]) {
 #endif
   struct hostent *target = NULL;
   char **fakeargv;
-  struct hoststruct *currenths;
+  Target *currenths;
   char emptystring[1];
   int sourceaddrwarning = 0; /* Have we warned them yet about unguessable
 				source addresses? */
+  char addr_buf[INET6_ADDRSTRLEN];
+  char hostname[MAXHOSTNAMELEN + 1] = "";
+  char *host;
+  struct addrinfo hints, *result;
+  int fail=1;
   time_t timep;
   char mytime[128];
   int option_index;
@@ -241,7 +246,7 @@ int nmap_main(int argc, char *argv[]) {
 
   /* OK, lets parse these args! */
   optind = 1; /* so it can be called multiple times */
-  while((arg = getopt_long_only(argc,fakeargv,"b:D:d::e:Ffg:hIi:M:m:NnOo:P:p:qRrS:s:T:Vv", long_options, &option_index)) != EOF) {
+  while((arg = getopt_long_only(argc,fakeargv,"6b:D:d::e:Ffg:hIi:M:m:NnOo:P:p:qRrS:s:T:Vv", long_options, &option_index)) != EOF) {
     switch(arg) {
     case 0:
       if (strcmp(long_options[option_index].name, "max_rtt_timeout") == 0) {
@@ -372,6 +377,10 @@ int nmap_main(int argc, char *argv[]) {
       } else {
 	fatal("Unknown long option (%s) given@#!$#$", long_options[option_index].name);
       }
+      break;
+    case '6':
+      o.af = AF_INET6;
+      o.pf = PF_INET6;
       break;
     case 'b': 
       o.bouncescan++;
@@ -912,11 +921,11 @@ int nmap_main(int argc, char *argv[]) {
     }
     if (num_host_exp_groups == 0)
       break;
-
-    hostgroup_state_init(&hstate, o.host_group_sz, o.randomize_hosts, 
-			 host_exp_group, num_host_exp_groups);
   
-    while((currenths = nexthost(&hstate, ports, &(o.pingtype)))) {
+    hstate = new HostGroupState(o.host_group_sz, o.randomize_hosts,
+				host_exp_group, num_host_exp_groups);
+
+    while((currenths = nexthost(hstate, ports, &(o.pingtype)))) {
       numhosts_scanned++;
       if (currenths->flags & HOST_UP && !o.listscan) 
 	numhosts_up++;
@@ -933,14 +942,36 @@ int nmap_main(int argc, char *argv[]) {
 	currenths->host_timeout.tv_usec %= 1000000;
       }
       
-      /*    printf("Nexthost() returned: %s\n", inet_ntoa(currenths->host));*/
-      target = NULL;
-      if (((currenths->flags & HOST_UP) || resolve_all) && !o.noresolve)
-	target = gethostbyaddr((char *) &currenths->host, 4, AF_INET);
-      if (target && *target->h_name) {
-	currenths->name = strdup(target->h_name);
+      /* target = NULL; */
+
+      if (((currenths->flags & HOST_UP) || resolve_all) && !o.noresolve) {
+	struct addrinfo tmp_addrinfo;
+	if (o.af == AF_INET) { /* IPv4 */
+	  struct sockaddr_in tmp_sin;
+	  tmp_sin.sin_family = AF_INET;
+	  tmp_sin.sin_addr = currenths->v4host();
+	  tmp_addrinfo.ai_family = AF_INET;
+	  tmp_addrinfo.ai_addr = (struct sockaddr *)&tmp_sin;
+	  tmp_addrinfo.ai_addrlen = sizeof(struct sockaddr_in);		
+	  
+	}
+#if 0
+	else if(o.af == AF_INET6){      /*IPv6*/
+	  struct sockaddr_in6 tmp_sin6;
+	  tmp_sin6.sin6_family = AF_INET6;
+	  memcpy(&(tmp_sin6.sin6_addr),  &(currenths->host6), sizeof(struct in6_addr));
+	  tmp_addrinfo.ai_family = AF_INET6;
+	  tmp_addrinfo.ai_addr = (struct sockaddr *)&tmp_sin6;
+	  tmp_addrinfo.ai_addrlen = sizeof(struct sockaddr_in6);	
+	} 
+#endif
+	else { fatal("Unknown o.af address family"); }
+	fail = getnameinfo((struct sockaddr *) tmp_addrinfo.ai_addr, tmp_addrinfo.ai_addrlen, hostname, sizeof(hostname), NULL, 0,0);
       }
-      else {
+
+      if ( !fail && *hostname) {
+	currenths->name = strdup(hostname);
+      } else {
 	currenths->name = emptystring;
       }
       
@@ -1011,9 +1042,9 @@ int nmap_main(int argc, char *argv[]) {
 	
 	if (currenths->timedout) {
 	  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Skipping host  %s (%s) due to host timeout\n", currenths->name,
-		    inet_ntoa(currenths->host));
+		    currenths->targetipstr());
 	  log_write(LOG_MACHINE,"Host: %s (%s)\tStatus: Timeout", 
-		    inet_ntoa(currenths->host), currenths->name);
+		    currenths->targetipstr(), currenths->name);
 	} else {
 	  assignignoredportstate(&currenths->ports);
 	  printportoutput(currenths, &currenths->ports);
@@ -1028,10 +1059,10 @@ int nmap_main(int argc, char *argv[]) {
       log_write(LOG_XML, "</host>\n");
   
       log_flush_all();
-      hoststruct_free(currenths);
+      delete currenths;
     }
 
-    hostgroup_state_destroy(&hstate);
+    delete hstate;
 
     /* Free my host expressions */
     for(i=0; i < num_host_exp_groups; i++)
@@ -1164,6 +1195,8 @@ void options_init() {
 #else
   winip_init();	/* wrapper for all win32 initialization */
 #endif
+  o.af = AF_INET;
+  o.pf = PF_INET;
   o.debugging = DEBUGGING;
   o.verbose = DEBUGGING;
   /*o.max_parallelism = MAX_SOCKETS;*/
@@ -1802,7 +1835,7 @@ int getidentinfoz(struct in_addr target, u16 localport, u16 remoteport,
 /* Determine whether firewall mode should be on for a scan */
 /* If firewall mode is active, we increase the scan group size every
    30 seconds */
-int check_firewallmode(struct hoststruct *target, struct scanstats *ss) {
+int check_firewallmode(Target *target, struct scanstats *ss) {
   struct firewallmodeinfo *fm = &(target->firewallmode);
   struct timeval current_time;
   static struct timeval last_adjust;
@@ -1815,7 +1848,7 @@ int check_firewallmode(struct hoststruct *target, struct scanstats *ss) {
 
   if (fm->nonresponsive_ports > 50 && ((double)fm->responsive_ports / (fm->responsive_ports + fm->nonresponsive_ports)) < 0.05) {  
     if (fm->active == 0 && o.debugging)
-      error("Activating firewall speed-optimization mode for host %s (%s)", target->name, inet_ntoa(target->host)); 
+      error("Activating firewall speed-optimization mode for host %s (%s)", target->name, target->targetipstr()); 
     fm->active = 1;
   }
 

@@ -67,7 +67,7 @@ extern unsigned long flt_dsthost, flt_srchost;
 extern unsigned short flt_baseport;
 
 
-FingerPrint *get_fingerprint(struct hoststruct *target, struct seq_info *si) {
+FingerPrint *get_fingerprint(Target *target, struct seq_info *si) {
 FingerPrint *FP = NULL, *FPtmp = NULL;
 FingerPrint *FPtests[9];
 struct AVal *seq_AVs;
@@ -95,7 +95,6 @@ unsigned int openport;
 unsigned int bytes;
 unsigned int closedport = 31337;
 struct port *tport = NULL;
-char *p;
 char filter[512];
 double seq_inc_sum = 0;
 unsigned int  seq_avg_inc = 0;
@@ -150,13 +149,10 @@ oshardtimeout = MAX(500000, 5 * target->to.timeout);
 if (o.debugging)
    log_write(LOG_STDOUT, "Wait time is %dms\n", (ossofttimeout +500)/1000);
 
- flt_srchost = target->host.s_addr;
+ flt_srchost = target->v4host().s_addr;
  flt_dsthost = target->source_ip.s_addr;
 
- p = strdup(inet_ntoa(target->host));
-
-snprintf(filter, sizeof(filter), "dst host %s and (icmp or (tcp and src host %s))", inet_ntoa(target->source_ip), p);
- free(p);
+snprintf(filter, sizeof(filter), "dst host %s and (icmp or (tcp and src host %s))", inet_ntoa(target->source_ip), target->targetipstr());
  
  set_pcap_filter(target, pd, flt_icmptcp, filter);
  target->osscan_performed = 1; /* Let Nmap know that we did try an OS scan */
@@ -203,28 +199,28 @@ if (o.verbose && openport != (unsigned long) -1)
      /* Test 1 */
      if (!FPtests[1]) {     
        if (o.scan_delay) enforce_scan_delay(NULL);
-       send_tcp_raw_decoys(rawsd, &target->host, current_port, 
+       send_tcp_raw_decoys(rawsd, target->v4hostip(), current_port, 
 			   openport, sequence_base, 0,TH_BOGUS|TH_SYN, 0, (u8 *) "\003\003\012\001\002\004\001\011\010\012\077\077\077\077\000\000\000\000\000\000" , 20, NULL, 0);
      }
      
      /* Test 2 */
      if (!FPtests[2]) {     
        if (o.scan_delay) enforce_scan_delay(NULL);
-       send_tcp_raw_decoys(rawsd, &target->host, current_port +1, 
+       send_tcp_raw_decoys(rawsd, target->v4hostip(), current_port +1, 
 			   openport, sequence_base, 0,0, 0, (u8 *) "\003\003\012\001\002\004\001\011\010\012\077\077\077\077\000\000\000\000\000\000" , 20, NULL, 0);
      }
 
      /* Test 3 */
      if (!FPtests[3]) {     
        if (o.scan_delay) enforce_scan_delay(NULL);
-       send_tcp_raw_decoys(rawsd, &target->host, current_port +2, 
+       send_tcp_raw_decoys(rawsd, target->v4hostip(), current_port +2, 
 			   openport, sequence_base, 0,TH_SYN|TH_FIN|TH_URG|TH_PUSH, 0,(u8 *) "\003\003\012\001\002\004\001\011\010\012\077\077\077\077\000\000\000\000\000\000" , 20, NULL, 0);
      }
 
      /* Test 4 */
      if (!FPtests[4]) {     
        if (o.scan_delay) enforce_scan_delay(NULL);
-       send_tcp_raw_decoys(rawsd, &target->host, current_port +3, 
+       send_tcp_raw_decoys(rawsd, target->v4hostip(), current_port +3, 
 			   openport, sequence_base, 0,TH_ACK, 0, (u8 *) "\003\003\012\001\002\004\001\011\010\012\077\077\077\077\000\000\000\000\000\000" , 20, NULL, 0);
      }
    }
@@ -232,28 +228,28 @@ if (o.verbose && openport != (unsigned long) -1)
    /* Test 5 */
    if (!FPtests[5]) {   
      if (o.scan_delay) enforce_scan_delay(NULL);
-     send_tcp_raw_decoys(rawsd, &target->host, current_port +4,
+     send_tcp_raw_decoys(rawsd, target->v4hostip(), current_port +4,
 			 closedport, sequence_base, 0,TH_SYN, 0, (u8 *) "\003\003\012\001\002\004\001\011\010\012\077\077\077\077\000\000\000\000\000\000" , 20, NULL, 0);
    }
 
      /* Test 6 */
    if (!FPtests[6]) {   
      if (o.scan_delay) enforce_scan_delay(NULL);
-     send_tcp_raw_decoys(rawsd, &target->host, current_port +5, 
+     send_tcp_raw_decoys(rawsd, target->v4hostip(), current_port +5, 
 			 closedport, sequence_base, 0,TH_ACK, 0, (u8 *) "\003\003\012\001\002\004\001\011\010\012\077\077\077\077\000\000\000\000\000\000" , 20, NULL, 0);
    }
 
      /* Test 7 */
    if (!FPtests[7]) {
      if (o.scan_delay) enforce_scan_delay(NULL);   
-     send_tcp_raw_decoys(rawsd, &target->host, current_port +6, 
+     send_tcp_raw_decoys(rawsd, target->v4hostip(), current_port +6, 
 			 closedport, sequence_base, 0,TH_FIN|TH_PUSH|TH_URG, 0, (u8 *) "\003\003\012\001\002\004\001\011\010\012\077\077\077\077\000\000\000\000\000\000" , 20, NULL, 0);
    }
 
    /* Test 8 */
    if (!FPtests[8]) {
      if (o.scan_delay) enforce_scan_delay(NULL);
-     upi = send_closedudp_probe(rawsd, &target->host, o.magic_port, closedport);
+     upi = send_closedudp_probe(rawsd, target->v4hostip(), o.magic_port, closedport);
    }
    gettimeofday(&t1, NULL);
    timeout = 0;
@@ -326,7 +322,7 @@ if (o.verbose && openport != (unsigned long) -1)
    seq_packets_sent = 0;
    while (seq_packets_sent < NUM_SEQ_SAMPLES) {
      if (o.scan_delay) enforce_scan_delay(NULL);
-     send_tcp_raw_decoys(rawsd, &target->host, 
+     send_tcp_raw_decoys(rawsd, target->v4hostip(), 
 			 o.magic_port + seq_packets_sent + 1, 
 			 openport, 
 			 sequence_base + seq_packets_sent + 1, 0, 
@@ -442,7 +438,7 @@ if (o.verbose && openport != (unsigned long) -1)
      
 
    si->ipid_seqclass = ipid_sequence(si->responses, si->ipids, 
-				     islocalhost(&(target->host)));
+				     islocalhost(target->v4hostip()));
 
    /* Now we look at TCP Timestamp sequence prediction */
    /* Battle plan:
@@ -1067,7 +1063,7 @@ return;
 }
 
 
-int os_scan(struct hoststruct *target) {
+int os_scan(Target *target) {
 struct FingerPrintResults FP_matches[3];
 struct seq_info si[3];
 int itry;
@@ -1087,7 +1083,7 @@ int bestaccidx;
       target->ports.state_counts_tcp[PORT_UNFIREWALLED] == 0)) {
    if (o.osscan_limit) {
      if (o.verbose)
-       log_write(LOG_STDOUT|LOG_NORMAL|LOG_SKID, "Skipping OS Scan due to absence of open (or perhaps closed) ports\n", target->host);
+       log_write(LOG_STDOUT|LOG_NORMAL|LOG_SKID, "Skipping OS Scan due to absence of open (or perhaps closed) ports\n");
      return 1;
    } else {   
      log_write(LOG_STDOUT|LOG_NORMAL|LOG_SKID,"Warning:  OS detection will be MUCH less reliable because we did not find at least 1 open and 1 closed TCP port\n");
@@ -1486,7 +1482,7 @@ return AVs;
 }
 
 
-struct udpprobeinfo *send_closedudp_probe(int sd, struct in_addr *victim,
+struct udpprobeinfo *send_closedudp_probe(int sd, const struct in_addr *victim,
 					  u16 sport, u16 dport) {
 
 static struct udpprobeinfo upi;

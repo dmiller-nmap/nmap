@@ -856,7 +856,7 @@ char *readip_pcap(pcap_t *pd, unsigned int *len, long to_usec)
 	else return readip_pcap_real(pd, len, to_usec);
 }
 
-void set_pcap_filter(struct hoststruct *target,
+void set_pcap_filter(Target *target,
 					 pcap_t *pd, PFILTERFN filter, char *bpf, ...)
 {
 	va_list ap;

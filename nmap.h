@@ -425,7 +425,7 @@ char *tsseqclass2ascii(int seqclass);
 const char *seqidx2difficultystr(unsigned long idx);
 int nmap_fetchfile(char *filename_returned, int bufferlen, char *file);
 int fileexistsandisreadable(char *pathname);
-int check_firewallmode(struct hoststruct *target, struct scanstats *ss);
+int check_firewallmode(Target *target, struct scanstats *ss);
 int gather_logfile_resumption_state(char *fname, int *myargc, char ***myargv);
 
 /* From glibc 2.0.6 because Solaris doesn't seem to have this function */

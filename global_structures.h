@@ -162,26 +162,70 @@ struct seq_info {
   time_t lastboot; /* 0 means unknown */
 };
 
-struct targets {
-  /* These 4 are used for the '/mask' style of specifying target net*/
+class Targets {
+ public:
+  Targets();
+
+ /* Initializes (or reinitializes) the object with a new expression,
+    such as 192.168.0.0/16 , 10.1.0-5.1-254 , or
+    fe80::202:e3ff:fe14:1102 .  The af parameter is AF_INET or
+    AF_INET6 Returns 0 for success */
+  int parse_expr(const char * const target_expr, int af);
+  /* Grab the next host from this expression (if any).  Returns 0 and
+     fills in ss if successful.  ss must point to a pre-allocated
+     sockaddr_storage structure */
+  int get_next_host(struct sockaddr_storage *ss, size_t *sslen);
+  /* Returns the last given host, so that it will be given again next
+     time get_next_host is called.  Obviously, you should only call
+     this if you have fetched at least 1 host since parse_expr() was
+     called */
+  int return_last_host();
+ private:
+  enum { TYPE_NONE, IPV4_NETMASK, IPV4_RANGES, IPV6_ADDRESS } targets_type;
+
+  void Initialize();
+
+  // For IPV6_ADDRESS type
+  struct in6_addr ip6;
+
+  /* These 4 are used for the '/mask' style of specifying target 
+     net (IPV4_NETMASK) */
   u32 netmask;
-  unsigned int maskformat;
-  struct in_addr start;
+  struct in_addr startaddr;
   struct in_addr currentaddr;
-  struct in_addr end;
-  /* These two are for the '138.[1-7,16,91-95,200-].12.1 style */
+  struct in_addr endaddr;
+
+  // These three are for the '138.[1-7,16,91-95,200-].12.1 style (IPV4_RANGES)
   u8 addresses[4][256];
   unsigned int current[4];
   u8 last[4];  
-  int nleft; /* Number of IPs left in this structure -- set to 0 if 
-		the fields are not valid */
+
+  int ipsleft; /* Number of IPs left in this structure -- set to 0 if 
+		  the fields are not valid */
 };
 
-
-struct hoststruct {
-  struct in_addr host;
+class Target {
+ public: /* For now ... a lot of the data members should be made private */
+  Target();
+  ~Target();
+  /* Recycles the object by freeing internal objects and reinitializing
+     to default state */
+  void Recycle();
+  /* Fills a sockaddr_storage with the AF_INET or AF_INET6 address
+     information of the target.  This is a preferred way to get the
+     address since it is portable for IPv6 hosts.  Returns 0 for
+     success. */
+  int TargetSockAddr(struct sockaddr_storage *ss, size_t *ss_len);
+  /* Note that it is OK to pass in a sockaddr_in or sockaddr_in6 casted
+     to sockaddr_storage */
+  void setTargetSockAddr(struct sockaddr_storage *ss, size_t ss_len);
+  struct in_addr v4host(); // Returns IPv4 host address or {0} if unavailable.
+  const struct in_addr *v4hostip();
+  /* The IPv4 or IPv6 literal string for the target host */
+  const char *targetipstr() { return targetipstring; }
   struct in_addr source_ip;
   char *name;
+
   struct seq_info seq;
   struct FingerPrintResults FPR;
   FingerPrint *FPs[10]; /* Fingerprint data obtained from host */
@@ -192,7 +236,7 @@ struct hoststruct {
 			    otherwise -1) */
   int numFPs;
   int goodFP;
-  portlist ports;
+  struct portlist ports;
   /*
   unsigned int up;
   unsigned int down; */
@@ -204,10 +248,23 @@ struct hoststruct {
   int timedout; /* Nonzero if continued scanning should be aborted due to
 		   timeout  */
   char device[64]; /* The device we transmit on */
+
+ private:
+  void Initialize();
+  void FreeInternal(); // Free memory allocated inside this object
+ // Creates a "presentation" formatted string out of the IPv4/IPv6 address
+  void GenerateIPString();
+  struct sockaddr_storage targetsock;
+  size_t targetsocklen;
+  char targetipstring[INET6_ADDRSTRLEN];
 };
 
-struct hostgroup_state {
-  struct hoststruct *hostbatch;
+class HostGroupState {
+ public:
+  HostGroupState(int lookahead, int randomize, char *target_expressions[],
+		 int num_expressions);
+  ~HostGroupState();
+  Target **hostbatch;
   int max_batch_sz; /* The size of the hostbatch[] array */
   int current_batch_sz; /* The number of VALID members of hostbatch[] */
   int next_batch_no; /* The index of the next hostbatch[] member to be given 
@@ -223,10 +280,13 @@ struct hostgroup_state {
 				target_expressions member above */
   int next_expression;   /* The index of the next expression we have
 			    to handle */
-  struct targets current_expression; /* For batch chunking */
+  Targets current_expression; /* For batch chunking -- targets in queue */
 };
 
 struct ops /* someone took struct options, <grrr> */ {
+  int af; /*  Address family:  AF_INET or AF_INET6 */  
+  int pf; /* Protocol family: PF_INET or PF_INET6 -- remember to set this
+	     whenever you set af */
   int debugging;
   int verbose;
   int randomize_hosts;

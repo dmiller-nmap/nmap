@@ -124,10 +124,10 @@ struct rpcscaninfo {
 
 int get_rpc_procs(unsigned long **programs, unsigned long *num_programs);
 char *nmap_getrpcnamebynum(unsigned long num);
-int send_rpc_query(struct in_addr *target_host, unsigned short portno,
+int send_rpc_query(const struct in_addr *target_host, unsigned short portno,
 		   int ipproto, unsigned long program, int scan_offset, 
 		   int trynum);
-void get_rpc_results(struct hoststruct *target, struct portinfo *scan,
+void get_rpc_results(Target *target, struct portinfo *scan,
 		     struct scanstats *ss, struct portinfolist *pil, 
 		     struct rpcscaninfo *rsi);
 void close_rpc_query_sockets();

@@ -354,7 +354,15 @@ struct icmp
 
 /* Prototypes */
 
-/* Tries to resolve given hostname and stores
+/* Tries to resolve the given name (or literal IP) into a sockaddr
+   structure.  The af should be PF_INET (for IPv4) or PF_INET6.  Returns 0
+   if hostname cannot be resolved.  It is OK to pass in a sockaddr_in or 
+   sockaddr_in6 casted to a sockaddr_storage as long as you use the matching 
+   pf.*/
+int resolve(char *hostname, struct sockaddr_storage *ss, size_t *sslen,
+	    int pf);
+/* LEGACY resolve() function that only supports IPv4 -- see IPv6 version
+   above.  Tries to resolve given hostname and stores
    result in ip .  returns 0 if hostname cannot
    be resolved */
 int resolve(char *hostname, struct in_addr *ip);
@@ -362,34 +370,36 @@ int resolve(char *hostname, struct in_addr *ip);
    destination should be routed through.  It returns NULL if no appropriate
    interface is found, oterwise it returns the device name and fills in the
    source parameter */
-char *routethrough(struct in_addr *dest, struct in_addr *source);
+char *routethrough(const struct in_addr * const dest, struct in_addr *source);
 unsigned short in_cksum(u16 *ptr,int nbytes);
-int send_tcp_raw( int sd, struct in_addr *source, struct in_addr *victim, 
+int send_tcp_raw( int sd, const struct in_addr *source, 
+		  const struct in_addr *victim, 
 		  u16 sport, u16 dport, u32 seq, u32 ack, u8 flags,
 		  u16 window, u8 *options, int optlen, char *data, 
 		  u16 datalen);
-int send_udp_raw( int sd, struct in_addr *source, struct in_addr *victim, 
-		  u16 sport, u16 dport, char *data, u16 datalen);
+int send_udp_raw( int sd, struct in_addr *source, const struct in_addr *victim,
+ 		  u16 sport, u16 dport, char *data, u16 datalen);
 
-int send_ip_raw( int sd, struct in_addr *source, struct in_addr *victim, 
+int send_ip_raw( int sd, struct in_addr *source, const struct in_addr *victim, 
 		 u8 proto, char *data, u16 datalen);
 
 /* Much of this is swiped from my send_tcp_raw function above, which 
    doesn't support fragmentation */
-int send_small_fragz(int sd, struct in_addr *source, struct in_addr *victim,
+int send_small_fragz(int sd, struct in_addr *source, 
+		     const struct in_addr *victim,
 		     u32 seq, u16 sport, u16 dport, int flags);
 /* Decoy versions of the raw packet sending functions ... */
-int send_tcp_raw_decoys( int sd, struct in_addr *victim, u16 sport, 
+int send_tcp_raw_decoys( int sd, const struct in_addr *victim, u16 sport, 
 			 u16 dport, u32 seq, u32 ack, u8 flags, u16 window, 
                          u8 *options, int optlen, char *data, u16 datalen);
 
-int send_udp_raw_decoys( int sd, struct in_addr *victim, u16 sport, 
+int send_udp_raw_decoys( int sd, const struct in_addr *victim, u16 sport, 
 			 u16 dport, char *data, u16 datalen);
 
-int send_small_fragz_decoys(int sd, struct in_addr *victim, u32 seq, 
+int send_small_fragz_decoys(int sd, const struct in_addr *victim, u32 seq, 
 			    u16 sport, u16 dport, int flags);
 
-int send_ip_raw_decoys( int sd, struct in_addr *victim, u8 proto,
+int send_ip_raw_decoys( int sd, const struct in_addr *victim, u8 proto,
 			char *data, u16 datalen);
 
 /* Calls pcap_open_live and spits out an error (and quits) if the call fails.
@@ -401,18 +411,18 @@ pcap_t *my_pcap_open_live(char *device, int snaplen, int promisc, int to_ms);
 int readtcppacket(unsigned char *packet, int readdata);
 int readudppacket(unsigned char *packet, int readdata);
 /* Convert an IP address to the device (IE ppp0 eth0) using that address */
-int ipaddr2devname( char *dev, struct in_addr *addr );
+int ipaddr2devname( char *dev, const struct in_addr *addr );
 /* And vice versa */
 int devname2ipaddr(char *dev, struct in_addr *addr);
 /* Where the above 2 functions get their info */
 struct interface_info *getinterfaces(int *howmany);
 void sethdrinclude(int sd);
-int getsourceip(struct in_addr *src, struct in_addr *dst);
+int getsourceip(struct in_addr *src, const struct in_addr * const dst);
 /* Get the source IP and interface name that a packet
    to dst should be sent to.  Interface name is dynamically
    assigned and thus should be freed */
 char *getsourceif(struct in_addr *src, struct in_addr *dst);
-int islocalhost(struct in_addr *addr);
+int islocalhost(const struct in_addr * const addr);
 int unblock_socket(int sd);
 int Sendto(char *functionname, int sd, const unsigned char *packet, int len, 
 	   unsigned int flags, struct sockaddr *to, int tolen);
@@ -466,7 +476,7 @@ unsigned long calculate_sleep(struct in_addr target);
 /* Sets a pcap filter function -- makes SOCK_RAW reads easier */
 #ifndef WINIP_H
 typedef int (*PFILTERFN)(const char *packet, unsigned int len); /* 1 to keep */
-void set_pcap_filter(struct hoststruct *target, pcap_t *pd, PFILTERFN filter, char *bpf, ...);
+void set_pcap_filter(Target *target, pcap_t *pd, PFILTERFN filter, char *bpf, ...);
 #endif
 
 int flt_icmptcp(const char *packet, unsigned int len);

@@ -80,7 +80,7 @@ setsockopt(sd, IPPROTO_IP, IP_HDRINCL, (const char *) &one, sizeof(one));
  through the kernel localhost interface */
 #ifndef WIN32 /* This next group of functions are already defined in 
                  wintcpip.c for now */
-int islocalhost(struct in_addr *addr) {
+int islocalhost(const struct in_addr * const addr) {
 char dev[128];
   /* If it is 0.0.0.0 or starts with 127.0.0.1 then it is 
      probably localhost */
@@ -153,10 +153,54 @@ answer = ~sum;          /* ones-complement, then truncate to 16 bits */
 return(answer);
 }
 
+/* Tries to resolve the given name (or literal IP) into a sockaddr
+   structure.  The af should be PF_INET (for IPv4) or PF_INET6.  Returns 0
+   if hostname cannot be resolved.  It is OK to pass in a sockaddr_in or 
+   sockaddr_in6 casted to a sockaddr_storage as long as you use the matching 
+   pf.*/
+int resolve(char *hostname, struct sockaddr_storage *ss, size_t *sslen,
+	    int pf) {
+
+  struct addrinfo hints;
+  struct addrinfo *result;
 
 
+  int rc;
 
-/* Tries to resolve given hostname and stores
+  assert(ss);
+  assert(sslen);
+
+  bzero(&hints, sizeof(hints));
+  hints.ai_family = pf;
+  rc = getaddrinfo(hostname, NULL, &hints, &result);
+  if (!rc)
+    return 0;
+  if (pf == PF_INET) {
+    struct sockaddr_in *sin = (struct sockaddr_in *) ss;
+    sin->sin_family = AF_INET;
+    *sslen = sizeof(struct sockaddr_in);
+#if HAVE_SOCKADDR_SA_LEN
+    sin->sa_len = *sslen;
+#endif
+    assert(result->ai_addrlen == 4);
+    memcpy(&(sin->sin_addr), result->ai_addr, 4);
+  } 
+  else {
+    struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *) ss;
+    sin6->sin6_family = AF_INET6;
+    *sslen = sizeof(struct sockaddr_in6);
+#ifdef SIN_LEN
+    sin->sin6_len = *sslen;
+#endif
+    assert(result->ai_addrlen == 16);
+    memcpy(&(sin6->sin6_addr), result->ai_addr, 16);
+  }
+  freeaddrinfo(result);
+  return 1;
+}
+
+/* LEGACY resolve() function that only supports IPv4 -- see IPv6 version
+   above.  Tries to resolve given hostname and stores
    result in ip .  returns 0 if hostname cannot
    be resolved */
 int resolve(char *hostname, struct in_addr *ip) {
@@ -174,7 +218,7 @@ int resolve(char *hostname, struct in_addr *ip) {
   return 0;
 }
 
-int send_tcp_raw_decoys( int sd, struct in_addr *victim, u16 sport, 
+int send_tcp_raw_decoys( int sd, const struct in_addr *victim, u16 sport, 
 			 u16 dport, u32 seq, u32 ack, u8 flags, u16 window, 
                          u8 *options, int optlen, char *data, u16 datalen) 
 {
@@ -189,7 +233,8 @@ int send_tcp_raw_decoys( int sd, struct in_addr *victim, u16 sport,
 }
 
 
-int send_tcp_raw( int sd, struct in_addr *source, struct in_addr *victim, 
+int send_tcp_raw( int sd, const struct in_addr *source, 
+		  const struct in_addr *victim, 
 		  u16 sport, u16 dport, u32 seq, u32 ack, u8 flags,
 		  u16 window, u8 *options, int optlen, char *data, 
 		  u16 datalen) 
@@ -244,7 +289,7 @@ if (!source) {
   if (gethostname(myname, MAXHOSTNAMELEN) || 
       !(myhostent = gethostbyname(myname)))
        fatal("Cannot get hostname!  Try using -S <my_IP_address> or -e <interface to scan through>\n");
-  memcpy(source, myhostent->h_addr_list[0], sizeof(struct in_addr));
+  memcpy( (void *) source, myhostent->h_addr_list[0], sizeof(struct in_addr));
 #if ( TCPIP_DEBUGGING )
     printf("We skillfully deduced that your address is %s\n", 
 	   inet_ntoa(*source));
@@ -324,7 +369,7 @@ if (TCPIP_DEBUGGING > 1) {
 res = Sendto("send_tcp_raw", sd, packet, BSDUFIX(ip->ip_len), 0,
 	     (struct sockaddr *)&sock,  (int)sizeof(struct sockaddr_in));
 
-if (source_malloced) free(source);
+if (source_malloced) free((void *) source);
 free(packet);
 return res;
 }
@@ -468,7 +513,7 @@ if (ip->ip_p== IPPROTO_UDP) {
  return 0;
 }
 
-int send_udp_raw_decoys( int sd, struct in_addr *victim, u16 sport, 
+int send_udp_raw_decoys( int sd, const struct in_addr *victim, u16 sport, 
 			 u16 dport, char *data, u16 datalen) {
   int decoy;
   
@@ -482,8 +527,8 @@ int send_udp_raw_decoys( int sd, struct in_addr *victim, u16 sport,
 
 
 
-int send_udp_raw( int sd, struct in_addr *source, struct in_addr *victim, 
-		  u16 sport, u16 dport, char *data, u16 datalen) 
+int send_udp_raw( int sd, struct in_addr *source, const struct in_addr *victim,
+ 		  u16 sport, u16 dport, char *data, u16 datalen) 
 {
 
 unsigned char *packet = (unsigned char *) safe_malloc(sizeof(struct ip) + sizeof(udphdr_bsd) + datalen);
@@ -593,7 +638,7 @@ free(packet);
 return res;
 }
 
-int send_small_fragz_decoys(int sd, struct in_addr *victim, u32 seq, 
+int send_small_fragz_decoys(int sd, const struct in_addr *victim, u32 seq, 
 			    u16 sport, u16 dport, int flags) {
   int decoy;
 
@@ -608,8 +653,9 @@ int send_small_fragz_decoys(int sd, struct in_addr *victim, u32 seq,
 
 /* Much of this is swiped from my send_tcp_raw function above, which 
    doesn't support fragmentation */
-int send_small_fragz(int sd, struct in_addr *source, struct in_addr *victim,
-		     u32 seq, u16 sport, u16 dport, int flags)
+int send_small_fragz(int sd, struct in_addr *source, 
+		     const struct in_addr *victim, u32 seq, u16 sport, 
+		     u16 dport, int flags)
  {
 
 struct pseudo_header { 
@@ -738,7 +784,7 @@ if ((res = sendto(sd, (const char *)ip2,sizeof(struct ip) + 4 , 0,
 return 1;
 }
 
-int send_ip_raw_decoys( int sd, struct in_addr *victim, u8 proto,
+int send_ip_raw_decoys( int sd, const struct in_addr *victim, u8 proto,
 			char *data, u16 datalen) {
 
   int decoy;
@@ -753,7 +799,7 @@ int send_ip_raw_decoys( int sd, struct in_addr *victim, u8 proto,
 
 }
 
-int send_ip_raw( int sd, struct in_addr *source, struct in_addr *victim, 
+int send_ip_raw( int sd, struct in_addr *source, const struct in_addr *victim, 
 		 u8 proto, char *data, u16 datalen) 
 {
 
@@ -938,7 +984,7 @@ return NULL;
 #endif /* 0 */
 #endif /* WIN32 */
 
-int getsourceip(struct in_addr *src, struct in_addr *dst) {
+int getsourceip(struct in_addr *src, const struct in_addr * const dst) {
   int sd;
   struct sockaddr_in sock;
   NET_SIZE_T socklen = sizeof(struct sockaddr_in);
@@ -1136,7 +1182,7 @@ if (!pd) fatal("NULL packet device passed to readip_pcap");
 }
 
 /* Set a pcap filter */
-void set_pcap_filter(struct hoststruct *target,
+void set_pcap_filter(Target *target,
 		     pcap_t *pd, PFILTERFN filter, char *bpf, ...)
 {
   va_list ap;
@@ -1156,7 +1202,7 @@ void set_pcap_filter(struct hoststruct *target,
     log_write(LOG_STDOUT, "Packet capture filter (device %s): %s\n", target->device, buf);
   
   /* Due to apparent bug in libpcap */
-  if (islocalhost(&(target->host)))
+  if (islocalhost(target->v4hostip()))
     buf[0] = '\0';
   
   if (pcap_compile(pd, &fcode, buf, 0, netmask) < 0)
@@ -1221,7 +1267,7 @@ int flt_icmptcp_5port(const char *packet, unsigned int len)
 #ifndef WIN32 /* Currently the Windows code for next few functions is 
                  in wintcpip.c -- should probably be merged at some
 				 point */
-int ipaddr2devname( char *dev, struct in_addr *addr ) {
+int ipaddr2devname( char *dev, const struct in_addr *addr ) {
 struct interface_info *mydevs;
 int numdevs;
 int i;
@@ -1353,7 +1399,7 @@ struct interface_info *getinterfaces(int *howmany) {
                  should probably be merged at some point */
 
 #define ROUTETHROUGH_MAXROUTES 1024
-char *routethrough(struct in_addr *dest, struct in_addr *source) {
+char *routethrough(const struct in_addr * const dest, struct in_addr *source) {
   static int initialized = 0;
   int i;
   struct in_addr addy;

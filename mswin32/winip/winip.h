@@ -125,8 +125,8 @@ typedef int (*PFILTERFN)(const char *packet, int len); /* 1 to keep */
 
 //	Makes gcc happy
 //	One wonders why VC doesn't complain...
-struct hoststruct;
-EXTERNC void set_pcap_filter(struct hoststruct *target, pcap_t *pd, PFILTERFN filter, char *bpf, ...);
+class Target;
+EXTERNC void set_pcap_filter(Target *target, pcap_t *pd, PFILTERFN filter, char *bpf, ...);
 
 
 typedef struct _IPNODE {

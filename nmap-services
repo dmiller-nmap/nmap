@@ -1002,6 +1002,8 @@ npmp-local        610/tcp    #
 npmp-local        610/udp    # 
 npmp-gui          611/tcp    # 
 npmp-gui          611/udp    # 
+sco-dtmgr         617/tcp    # SCO Desktop Administration Server
+sco-dtmgr         617/udp    # SCO Desktop Administration Server
 qmqp              628/tcp    # Qmail Quick Mail Queueing
 ipp               631/tcp    # Internet Printing Protocol -- for one implementation see http://www.cups.org (Common UNIX Printing System)
 ginad             634/tcp    # 
