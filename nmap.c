@@ -405,13 +405,13 @@ o.decoys[o.decoyturn] = currenths->source_ip;
 	  nmap_log("Host  %s (%s) seems to be a subnet broadcast address (returned %d extra pings)\n",  currenths->name, inet_ntoa(currenths->host), currenths->wierd_responses);
       } if (o.osscan) {
 	if (currenths->seq.responses > 3) {
-	  nmap_log("Sequenceability report:  %s\n", seqreport(&(currenths->seq)));
+	  nmap_log("TCP Seq prediction report:  %s\n", seqreport(&(currenths->seq)));
 	}
 	if (currenths->FP_matches[0]) {
 	  i=0;
 	  if (!currenths->FP_matches[1])
-	    nmap_log("Suspected operating system: ");
-	  else  nmap_log("Suspected operating systems:");
+	    nmap_log("Remote operating system guess: ");
+	  else  nmap_log("Remote OS guesses: ");
 	  while(currenths->FP_matches[i]) {
 	    nmap_log(" %s", currenths->FP_matches[i]->OS_name);
 	    i++;
@@ -950,18 +950,17 @@ char tmp[256];
 char *p;
 int i;
 int len;
- sprintf(report, "Class: %s; Difficulty category: %s; index: %d  (lower=easier)\n", seqclass2ascii(seq->class), (seq->index < 10)? "Trivial joke" : (seq->index < 40)? "Easy" : (seq->index < 150)? "Medium" : (seq->index < 1000)? "Formidable" : (seq->index < 100000)? "Very difficult" : "Good luck!", seq->index);
+ sprintf(report, "Class=%s; Difficulty=%s;Index=%d  (lower=easier)", seqclass2ascii(seq->class), (seq->index < 10)? "Trivial joke" : (seq->index < 40)? "Easy" : (seq->index < 150)? "Medium" : (seq->index < 1000)? "Formidable" : (seq->index < 100000)? "Very difficult" : "Good luck!", seq->index);
  if (o.verbose) {
-   tmp[0] = '\0'; 
-   p = tmp;
+   tmp[0] = '\n';
+   tmp[1] = '\0'; 
+   p = tmp + 1;
    strcpy(p, "Sequence numbers: ");
    p += 18;
    for(i=0; i < seq->responses; i++) {
      len = sprintf(p, "%lX ", seq->seqs[i]);
      p += len;
    }
-   *p++ = '\n';
-   *p = '\0';
    strcat(report, tmp);
  }
 return report;

@@ -128,7 +128,7 @@ T6(DF=N&W=0&ACK=O&Flags=R&Ops=)
 T7(DF=N&W=0&ACK=S&Flags=AR&Ops=)
 
 FingerPrint  Linux 2.1.122
-TSeq(Class=RI&gcd=1&SI=>750000)
+TSeq(Class=RI&gcd=1&SI=>500000)
 T1(DF=Y&W=7F53&ACK=S++&Flags=AS&Ops=MENNTNW)
 T2(Resp=N)
 T3(DF=Y&W=7F53&ACK=S++&Flags=AS&Ops=MNNTNW)

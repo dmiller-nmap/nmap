@@ -60,7 +60,8 @@ unsigned long seq_diffs[NUM_SEQ_SAMPLES];
 if (!(pd = pcap_open_live(target->device, 152,  (o.spoofsource)? 1 : 0, (target->to.timeout + 500)/ 1000, err0r)))
   fatal("pcap_open_live: %s", err0r);
 
-printf("Wait time is %d\n", (target->to.timeout +500)/1000);
+if (o.debugging)
+  printf("Wait time is %d\n", (target->to.timeout +500)/1000);
 
 if (pcap_lookupnet(target->device, &localnet, &netmask, err0r) < 0)
   fatal("Failed to lookup device subnet/netmask: %s", err0r);
@@ -123,7 +124,7 @@ if (o.verbose && openport != -1)
 	 continue;
        }
        if ((tcp->th_flags & TH_RST)) {
-	 readtcppacket((char *) ip, ntohs(ip->ip_len));
+	 /*readtcppacket((char *) ip, ntohs(ip->ip_len));*/
 	 if (target->seq.responses == 0) {	 
 	   if (o.verbose || o.debugging) 
 	     printf("Port %d does not seem to really be open\n", openport);
@@ -131,7 +132,7 @@ if (o.verbose && openport != -1)
 	   break; /* The port is not really open!! */
 	 } else continue;
       } else if ((tcp->th_flags & (TH_SYN|TH_ACK)) == (TH_SYN|TH_ACK)) {
-	readtcppacket((char *)ip, ntohs(ip->ip_len));
+	/*readtcppacket((char *)ip, ntohs(ip->ip_len));*/
 	  target->seq.seqs[target->seq.responses++] = ntohl(tcp->th_seq);
 	  if (target->seq.responses > 1) {
 	    seq_diffs[target->seq.responses-2] = MOD_DIFF(ntohl(tcp->th_seq), target->seq.seqs[target->seq.responses-2]);
@@ -363,7 +364,6 @@ for(i=2; i < 8; i++)
    FPtests[0]->next = FPtmp;	
  }
 
- printf("DONE!  Here is the FingerPrint:\n%s\n", fp2ascii(FP)); 
  close(rawsd);
  pcap_close(pd);
  return FP;
