@@ -24,7 +24,9 @@ o Fixed an "assertion failure" which would cause Nmap to exit when you
 
 o Packet receive times are now obtained from libpcap rather than
   simply using the time the packets are passed to Nmap.  This should
-  improve performance slightly.
+  improve performance slightly.  I was not able to get this to work
+  properly on Windows (either pcap or raw) -- join the nmap-dev list
+  if you have ideas.
 
 o Fixed bug that caused Nmap to ignore certain RST responses when you
   do both -PS and -PA.
@@ -50,8 +52,13 @@ o Added some more port numbers sent in by Seth Master
   (smaster@stanford.edu).  He has been a frequent nmap-services
   contributor in the last couple months.
 
+o Added --packet_trace support to Windows
+
 o Removed superfluous "addport" line in the XML output (patch from Max
   Schubert (nmap@webwizarddesign.com)).
+
+o Merged wintcpip.cc into tcpip.cc to avoid the headache of
+  maintaining many nearly-identical functions.
 
 o Fixed an assertion failure crash related to combining port 0 scans
   and OS scan.  Thanks to A.Jones@mvv.de for reporting this.
