@@ -305,7 +305,7 @@ for(;;) {
 	    perror("sendto");
 	  }
 	} else {
-	    int send_ip_raw( rawsd, &o.decoys[decoy], &(sock.sin_addr), IPPROTO_ICMP, ping, 8);
+	    send_ip_raw( rawsd, &o.decoys[decoy], &(sock.sin_addr), IPPROTO_ICMP, ping, 8);
 	}
       }
     }    
