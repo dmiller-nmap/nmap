@@ -42,6 +42,8 @@
 
 #undef HAVE_VSNPRINTF
 
+#undef HAVE_INET_ATON
+
 #undef HAVE_STRCASESTR
 
 #undef HAVE_GETOPT_LONG
