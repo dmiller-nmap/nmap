@@ -54,21 +54,33 @@ extern struct ops o;
 /* Adjust our timeout values based on the time the latest probe took for a 
    response.  We update our RTT averages, etc. */
 void adjust_timeouts(struct timeval sent, struct timeout_info *to) {
+  struct timeval received;
+  gettimeofday(&received, NULL);
+
+  adjust_timeouts2(&sent, &received, to);
+  return;
+}
+
+/* Same as adjust_timeouts(), except this one allows you to specify
+ the receive time too (which could be because it was received a while
+ back or it could be for efficiency because the caller already knows
+ the current time */
+void adjust_timeouts2(const struct timeval *sent, 
+		      const struct timeval *received, 
+		      struct timeout_info *to) {
   int delta = 0;
-  struct timeval end;
-  gettimeofday(&end, NULL);
 
   if (o.debugging > 1) {
     log_write(LOG_STDOUT, "Timeout vals: srtt: %d rttvar: %d to: %d ", to->srtt, to->rttvar, to->timeout);
   }
   if (to->srtt == -1 && to->rttvar == -1) {
     /* We need to initialize the sucker ... */
-    to->srtt = TIMEVAL_SUBTRACT(end, sent);
+    to->srtt = TIMEVAL_SUBTRACT(*received, *sent);
     to->rttvar = MAX(5000, MIN(to->srtt, 2000000));
     to->timeout = to->srtt + (to->rttvar << 2);
   }
   else {
-    delta = TIMEVAL_SUBTRACT(end, sent);
+    delta = TIMEVAL_SUBTRACT(*received, *sent);
     if (delta >= 8000000 || delta < 0) {
       if (o.verbose)
 	error("adjust_timeout: packet supposedly had rtt of %lu microseconds.  Ignoring time.", delta);
@@ -105,7 +117,7 @@ void adjust_timeouts(struct timeval sent, struct timeout_info *to) {
   }
 
   if (to->srtt < 0 || to->rttvar < 0 || to->timeout < 0 || delta < -50000000) {
-    fatal("Serious time computation problem in adjust_timeout ... end = (%d, %d) sent=(%d,%d) delta = %d srtt = %d rttvar = %d to = %d", end.tv_sec, end.tv_usec, sent.tv_sec, sent.tv_usec, delta, to->srtt, to->rttvar, to->timeout);
+    fatal("Serious time computation problem in adjust_timeout ... received = (%d, %d) sent=(%d,%d) delta = %d srtt = %d rttvar = %d to = %d", received->tv_sec, received->tv_usec, sent->tv_sec, sent->tv_usec, delta, to->srtt, to->rttvar, to->timeout);
   }
 }
 

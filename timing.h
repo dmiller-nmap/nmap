@@ -53,9 +53,18 @@
 #include "tcpip.h"
 #include "global_structures.h"
 
+/* Same as adjust_timeouts(), except this one allows you to specify
+ the receive time too (which could be because it was received a while
+ back or it could be for efficiency because the caller already knows
+ the current time */
+void adjust_timeouts2(const struct timeval *sent, 
+		      const struct timeval *received, 
+		      struct timeout_info *to);
+
 /* Adjust our timeout values based on the time the latest probe took for a 
    response.  We update our RTT averages, etc. */
 void adjust_timeouts(struct timeval sent, struct timeout_info *to);
+
 
 /* Sleeps if necessary to ensure that it isn't called twice withen less
    time than o.send_delay.  If it is passed a non-null tv, the POST-SLEEP

@@ -123,6 +123,9 @@
 /* Timeval subtract in seconds */
 #define TIMEVAL_SEC_SUBTRACT(a,b) ((a).tv_sec - (b).tv_sec + ((a).tv_usec - (b).tv_usec + 500)/1000)
 
+/* assign one timeval to another timeval plus some msecs: a = b + msecs */
+#define TIMEVAL_MSEC_ADD(a, b, msecs) (a).tv_sec = (b).tv_sec + ((msecs) / 1000); (a).tv_usec = (b).tv_usec + ((msecs) % 1000) * 1000; (a).tv_sec += (a).tv_usec / 1000000; (a).tv_usec %= 1000000
+
 
 void *safe_malloc(int size);
 void hdump(unsigned char *packet, unsigned int len);
@@ -132,6 +135,8 @@ int get_random_int();
 unsigned short get_random_ushort();
 unsigned int get_random_uint();
 u32 get_random_u32();
+u8 get_random_u8();
+
 /* Scramble the contents of an array*/
 void genfry(unsigned char *arr, int elem_sz, int num_elem);
 void shortfry(unsigned short *arr, int num_elem);

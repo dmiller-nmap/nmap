@@ -183,6 +183,12 @@ u32 get_random_u32() {
   return i;
 }
 
+u8 get_random_u8() {
+  u8 i;
+  get_random_bytes(&i, sizeof(i));
+  return i;
+}
+
 unsigned short get_random_ushort() {
 unsigned short s;
 get_random_bytes(&s, sizeof(unsigned short));

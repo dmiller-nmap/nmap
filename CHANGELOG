@@ -1,5 +1,8 @@
 # Nmap Changelog
 
+-- Added Idlescan (IPID blind scan).  IMHO, this is one of the coolest
+   scan types in existance!  The options is "-sI <proxyhost>".
+
 -- Added some debug code to help diagnose the "Unknown datalink type"
    error.  If Nmap is giving you this error, please send the following
    info to fyodor@insecure.org :
