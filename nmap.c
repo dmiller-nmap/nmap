@@ -1981,7 +1981,10 @@ if (o.debugging || o.verbose)
       }
     }    
     openlist = NULL;
+    printf("Done with round %d\n", tries);
   } while(changed && ++tries < 8);   
+
+  openlist = testinglist;
 
   if (o.debugging || o.verbose)
     printf("The TCP stealth FIN/NULL/XMAS scan took %ld seconds to scan %d ports.\n", 
