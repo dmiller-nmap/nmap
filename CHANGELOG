@@ -1,5 +1,9 @@
 # Nmap Changelog
 
+-- Give a warning when no targets at all are specified
+
+-- Updated 'make uninstall' so that it deletes all relevant files
+
 -- Fixed dangling nroff symlink in xnmap man page (noted by Debian
    Nmap package maintainer LaMont Jones (lamont@security.hp.com)
 
