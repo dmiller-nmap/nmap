@@ -148,14 +148,14 @@ int ipid_proxy_probe(struct idle_proxy_info *proxy, int *probes_sent,
 	  if (ntohs(tcp->th_dport) < base_port || ntohs(tcp->th_dport) - base_port >= tries  || ntohs(tcp->th_sport) != proxy->probe_port || ((tcp->th_flags & TH_RST) == 0)) {
 	    if (ntohs(tcp->th_dport) > o.magic_port && ntohs(tcp->th_dport) < (o.magic_port + 260)) {
 	      if (o.debugging) {
-		error("Received IPID proxy probe response which probably came from an earlier prober instance ... increasing rttvar from %d to %d", 
+		error("Received IPID zombie probe response which probably came from an earlier prober instance ... increasing rttvar from %d to %d", 
 		      proxy->host.to.rttvar, (int) (proxy->host.to.rttvar * 1.2));
 	      }
 	      proxy->host.to.rttvar *= 1.2;
 	      rcvd++;
 	    }
 	    else if (o.debugging > 1) {
-	      error("Received unexpected response packet from %s during ipid proxy probing:", inet_ntoa(ip->ip_src));
+	      error("Received unexpected response packet from %s during ipid zombie probing:", inet_ntoa(ip->ip_src));
 	      readtcppacket((char *)ip,BSDUFIX(ip->ip_len));
 	    }
 	    continue;
@@ -247,14 +247,14 @@ void initialize_idleproxy(struct idle_proxy_info *proxy, char *proxyName,
     *q++ = '\0';
     proxy->probe_port = strtoul(q, &endptr, 10);
     if (*q || !endptr || *endptr != '\0' || !proxy->probe_port) {
-      fatal("Invalid port number given in IPID proxy specification: %s", proxyName);
+      fatal("Invalid port number given in IPID zombie specification: %s", proxyName);
     }
   } else proxy->probe_port = o.tcp_probe_port;
 
   proxy->host.name = strdup(name);
 
   if (resolve(proxyName, &(proxy->host.host)) == 0) {
-    fatal("Could not resolve idlescan proxy host: %s", proxyName);
+    fatal("Could not resolve idlescan zombie host: %s", proxyName);
   }
 
   /* Lets figure out the appropriate source address to use when sending
@@ -345,7 +345,7 @@ void initialize_idleproxy(struct idle_proxy_info *proxy, char *proxyName,
 	/*       readtcppacket((char *) ip, ntohs(ip->ip_len));  */
 	tcp = ((struct tcphdr *) (((char *) ip) + 4 * ip->ip_hl));
 	if (ntohs(tcp->th_dport) < (o.magic_port+1) || ntohs(tcp->th_dport) - o.magic_port > NUM_IPID_PROBES  || ntohs(tcp->th_sport) != proxy->probe_port || ((tcp->th_flags & TH_RST) == 0)) {
-	  if (o.debugging > 1) error("Received unexpected response packet from %s during initial ipid proxy testing", inet_ntoa(ip->ip_src));
+	  if (o.debugging > 1) error("Received unexpected response packet from %s during initial ipid zombie testing", inet_ntoa(ip->ip_src));
 	  continue;
 	}
 	
@@ -385,10 +385,10 @@ void initialize_idleproxy(struct idle_proxy_info *proxy, char *proxyName,
   switch(proxy->seqclass) {
   case IPID_SEQ_INCR:
   case IPID_SEQ_BROKEN_INCR:
-    log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT, "Idlescan using proxy %s (%s:%hi); Class: %s\n", proxy->host.name, inet_ntoa(proxy->host.host), proxy->probe_port, ipidclass2ascii(proxy->seqclass));
+    log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT, "Idlescan using zombie %s (%s:%hi); Class: %s\n", proxy->host.name, inet_ntoa(proxy->host.host), proxy->probe_port, ipidclass2ascii(proxy->seqclass));
     break;
   default:
-    fatal("Idlescan proxy %s (%s) port %hi cannot be used because IPID sequencability class is: %s.  Try another proxy.", proxy->host.name, inet_ntoa(proxy->host.host), proxy->probe_port, ipidclass2ascii(proxy->seqclass));
+    fatal("Idlescan zombie %s (%s) port %hi cannot be used because IPID sequencability class is: %s.  Try another proxy.", proxy->host.name, inet_ntoa(proxy->host.host), proxy->probe_port, ipidclass2ascii(proxy->seqclass));
   }
 
   proxy->latestid = ipids[probes_returned - 1];
@@ -397,7 +397,7 @@ void initialize_idleproxy(struct idle_proxy_info *proxy, char *proxyName,
   if (probes_returned < NUM_IPID_PROBES) {
     /* Yies!  We're already losing packets ... clamp down a bit ... */
     if (o.debugging)
-      error("idlescan initial proxy qualification test: %d probes sent, only %d returned", NUM_IPID_PROBES, probes_returned);
+      error("idlescan initial zombie qualification test: %d probes sent, only %d returned", NUM_IPID_PROBES, probes_returned);
     proxy->current_groupsz = MIN(12, proxy->max_groupsz);
     proxy->senddelay += 5000;
   }
