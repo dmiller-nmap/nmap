@@ -237,6 +237,7 @@ struct ops /* someone took struct options, <grrr> */ {
   int isr00t;
   struct in_addr decoys[64];
   int numdecoys;
+  int decoyturn;
   int identscan;
   enum { icmp, tcp, none} pingtype;
   int pingscan;

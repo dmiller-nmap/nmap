@@ -180,6 +180,12 @@ if (o.max_sockets > MAX_SOCKETS_ALLOWED) {
    o.max_sockets = MAX_SOCKETS_ALLOWED;
 }
 
+/* Set up our array of decoys! */
+decoyturn = (o.numdecoys == 0)?  0 : rand() % o.numdecoys; 
+o.numdecoys++;
+for(i=numdecoys-1; i > decoyturn; i++)
+  o.decoys[i] = o.decoys[i-1];
+
 /* If he wants to bounce off of an ftp site, that site better damn well be reachable! */
 if (bouncescan) {
   if (!inet_aton(ftp.server_name, &ftp.server)) {
@@ -295,6 +301,8 @@ if (currenths->flags & HOST_UP && !currenths->source_ip.s_addr && ( o.synscan ||
 /* Figure out what link-layer device (interface) to use (ie eth0, ppp0, etc) */
 if (!o.device[0] && currenths->flags & HOST_UP && (o.nullscan || o.xmasscan || o.finscan || o.synscan) && !ipaddr2devname( currenths->device, &currenths->source_ip))
   fatal("Could not figure out what device to send the packet out on!  You might possibly want to try -S (but this is probably a bigger problem).  If you are trying to sp00f the source of a SYN/FIN scan with -S <fakeip>, then you must use -e eth0 (or other devicename) to tell us what interface to use.\n");
+/* Set up the decoy */
+o.decoys[o.decoyturn] = currenths->source_ip;
 
     /* Time for some actual scanning! */    
     if (currenths->flags & HOST_UP) {
@@ -1448,7 +1456,6 @@ int packets_out;
 pcap_t *pd;
 struct bpf_program fcode;
 char filter[512];
-int decoyturn;
 unsigned int localnet, netmask;
 char *p = NULL;
 char err0r[PCAP_ERRBUF_SIZE];
@@ -1456,8 +1463,6 @@ magic_port_NBO = htons(MAGIC_PORT);
 
 FD_ZERO(&fd_read);
 FD_ZERO(&fd_write);
-
-decoyturn = (o.numdecoys == 0)?  0 : rand() % o.numdecoys; 
 
 /*if ((received = socket(AF_INET, SOCK_RAW,  IPPROTO_TCP)) < 0 )
   perror("socket troubles in syn_scan");*/
@@ -1509,25 +1514,15 @@ do {
     if ((sockets[i] = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) < 0 )
       perror("socket trobles in syn_scan");
     else {
-      for(decoy=0; decoy <= o.numdecoys; decoy++) {
-	if (decoy == decoyturn) { /* Whee, time for the real scan */
-	  if (o.fragscan)
-	    send_small_fragz(sockets[i], &target->source_ip, &target->host, MAGIC_PORT,
-			     portarray[j++], TH_SYN);
-	  else send_tcp_raw(sockets[i], &target->source_ip , &target->host, MAGIC_PORT, 
-			    portarray[j++],0,0,TH_SYN,0,0,0);
-	  usleep(10000);
-	}
-	if (decoy < o.numdecoys) {
-	  if (o.fragscan)
-	    send_small_fragz(sockets[i], &o.decoys[decoy], &target->host, MAGIC_PORT,
-			     portarray[j++], TH_SYN);
-	  else send_tcp_raw(sockets[i], &o.decoys[decoy] , &target->host, MAGIC_PORT, 
-			    portarray[j++],0,0,TH_SYN,0,0,0);
-	  usleep(10000);
-	}
+      for(decoy=0; decoy < o.numdecoys; decoy++) {
+	if (o.fragscan)
+	  send_small_fragz(sockets[i], &o.decoys[decoy], &target->host, MAGIC_PORT,
+			   portarray[j++], TH_SYN);
+	else send_tcp_raw(sockets[i], &o.decoys[decoy] , &target->host, MAGIC_PORT, 
+			  portarray[j++],0,0,TH_SYN,0,0,0);
+	usleep(10000);
       }
-    }
+    }    
   }
   gettimeofday(&start, NULL);
   packets_out = i;
