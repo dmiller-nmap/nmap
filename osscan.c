@@ -585,7 +585,8 @@ int i;
  for(try=0; try < 3; try++) {
   FPs[try] = get_fingerprint(target); 
   FP_matches[try] = match_fingerprint(FPs[try]);
-  if (FP_matches[try][0]) break;
+  if (FP_matches[try][0]) 
+    break;
   usleep(target->to.timeout);
  }
  if (try == 0) {
@@ -593,8 +594,12 @@ int i;
  } else if (try == 3) {
    /* Uh-oh, we were NEVER able to match, lets take
       the first fingerprint */
-   for(try=1; try < 3; try++)
+   for(try=1; try < 3; try++) {
+     if (o.debugging)
+       error("Killing fingerprint #%d (0 based): %s\n", try, 
+	     fp2ascii(FPs[try]));
      if (FPs[try]) freeFingerPrint(FPs[try]);
+   }
    try = 0;
  } else {
    error("WARNING: OS didn't match until the %d try", try + 1);
@@ -607,8 +612,8 @@ int i;
    }
  }
 
-target->FP = FPs[try];
-target->FP_matches = FP_matches[try];
+ target->FP = FPs[try];
+ target->FP_matches = FP_matches[try];
 
 return 1;
 }
