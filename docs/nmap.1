@@ -346,15 +346,25 @@ good (eg at least one open port), Nmap will provide a URL you can use
 to submit the fingerprint if you know (for sure) the OS running on the
 machine.  By doing this you contribute to the pool of operating
 systems known to nmap and thus it will be more accurate for everyone.
+Note that if you leave an IP address on the form, the machine may be
+scanned when we add the fingerprint (to validate that it works).
 .Sp
-The \-O option also enables TCP Sequence Predictability
+The \-O option also enables several other tests.  One is the "Uptime"
+measurement, which uses the TCP timestamp option (RFC 1323) to guess
+when a machine was last rebooted.  This is only reported for machines
+which provide this information.
+.Sp 
+Another test enabled by \-O is TCP Sequence Predictability
 Classification.  This is a measure that describes approximately how
 hard it is to establish a forged TCP connection against the remote
 host.  This is useful for exploiting source-IP based trust
 relationships (rlogin, firewall filters, etc) or for hiding the source
 of an attack.  The actual difficulty number is based on statistical
 sampling and may fluctuate.  It is generally better to use the English
-classification such as "worthy challenge" or "trivial joke".
+classification such as "worthy challenge" or "trivial joke".  This is
+only reported in normal output with -v.
+.Sp
+When verbose mode (\-v) is on with \-O, IPID Sequence Generation is also reported.  Most machines are in the \"incremental\" class, which means that they increment the \"ID\" field in the IP header for each packet they send.  This makes them vulnerable to several advanced information gathering and spoofing attacks.
 .TP
 .B \-I
 This turns on TCP reverse ident scanning. As noted by Dave
@@ -575,6 +585,17 @@ nmap changes the source port even if you used -g.
 Be aware that there is a small performance penalty on some
 scans for using this option, because I sometimes store
 useful information in the source port number.
+.TP
+.B \-n
+Tells Nmap to
+.B NEVER
+do reverse DNS resolution on the active IP addresses it finds.  Since DNS is often slow, this can help speed things up.
+.TP
+.B \-R
+Tells Nmap to
+.B ALWAYS
+do reverse DNS resolution on the target IP addresses.  Normally
+this is only done when a machine is found to be alive.
 .TP
 .B \-r
 Tells Nmap 

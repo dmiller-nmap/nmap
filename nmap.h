@@ -283,6 +283,7 @@ void *realloc();
 #define PINGTYPE_RAWTCP 32
 #define PINGTYPE_CONNECTTCP 64
 
+/* TCP/IP ISN sequence prediction classes */
 #define SEQ_UNKNOWN 0
 #define SEQ_64K 1
 #define SEQ_TD 2
@@ -290,6 +291,19 @@ void *realloc();
 #define SEQ_TR 8
 #define SEQ_i800 16
 #define SEQ_CONSTANT 32
+
+/* TCP Timestamp Sequence */
+#define TS_SEQ_UNKNOWN 0
+#define TS_SEQ_ZERO 1 /* At least one of the timestamps we received back was 0 */
+#define TS_SEQ_100HZ 2
+#define TS_SEQ_1000HZ 3
+
+#define IPID_SEQ_UNKNOWN 0
+#define IPID_SEQ_INCR 1  /* simple increment by one each time */
+#define IPID_SEQ_RPI 2 /* Goes up each time but by a "random" positive 
+                          increment */
+#define IPID_SEQ_RD 3 /* Appears to select IPID using a "random" distributions (meaning it can go up or down) */
+#define IPID_SEQ_CONSTANT 4 /* Contains 1 or more sequential duplicates */
 
 #ifndef MAXHOSTNAMELEN
 #define MAXHOSTNAMELEN 64
@@ -399,6 +413,9 @@ void sigdie(int signo);
 void reaper(int signo);
 char *seqreport(struct seq_info *seq);
 char *seqclass2ascii(int clas);
+char *ipidclass2ascii(int seqclass);
+char *tsseqclass2ascii(int seqclass);
+
 /* Convert a TCP sequence prediction difficulty index like 1264386
    into a difficulty string like "Worthy Challenge */
 const char *seqidx2difficultystr(unsigned long idx);

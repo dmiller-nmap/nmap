@@ -61,12 +61,14 @@ FingerPrint *get_fingerprint(struct hoststruct *target, struct seq_info *si,
 FingerPrint *FP = NULL, *FPtmp = NULL;
 FingerPrint *FPtests[9];
 struct AVal *seq_AVs;
+unsigned short lastipid=0; /* For catching duplicate packets */
 int last;
+u_int32_t timestamp = 0; /* TCP timestamp we receive back */
 struct ip *ip;
 struct tcphdr *tcp;
 struct icmp *icmp;
 struct timeval t1,t2;
-int i;
+int i, j;
 struct hostent *myhostent = NULL;
 pcap_t *pd;
 char myname[513];
@@ -77,6 +79,7 @@ int current_port = 0;
 int testsleft;
 int testno;
 int  timeout;
+int avnum;
 unsigned int sequence_base;
 unsigned long openport;
 unsigned int bytes;
@@ -90,11 +93,22 @@ unsigned int  seq_avg_inc = 0;
 struct udpprobeinfo *upi = NULL;
 unsigned int seq_gcd = 1;
 unsigned int seq_diffs[NUM_SEQ_SAMPLES];
+unsigned short ipid_diffs[NUM_SEQ_SAMPLES];
+unsigned int ts_diffs[NUM_SEQ_SAMPLES];
+unsigned long time_usec_diffs[NUM_SEQ_SAMPLES];
+struct timeval seq_send_times[NUM_SEQ_SAMPLES];
 int ossofttimeout, oshardtimeout;
 int seq_packets_sent = 0;
-
+int seq_response_num; /* response # for sequencing */
+double avg_ts_hz = 0.0; /* Avg. amount that timestamps incr. each second */
 if (target->timedout)
   return NULL;
+
+/* The seqs must start out as zero for the si struct */
+bzero(si->seqs, sizeof(si->seqs));
+si->ipid_seqclass = IPID_SEQ_UNKNOWN;
+si->ts_seqclass = TS_SEQ_UNKNOWN;
+si->lastboot = 0;
 
 /* Init our fingerprint tests to each be NULL */
 bzero(FPtests, sizeof(FPtests)); 
@@ -310,18 +324,21 @@ if (o.verbose && openport != (unsigned long) -1)
        send_tcp_raw_decoys(rawsd, &target->host, 
 			   o.magic_port + seq_packets_sent + 1, 
 			   openport, sequence_base + seq_packets_sent + 1, 0, 
-			   TH_SYN, 0 , NULL, 0, NULL, 0);
+			   TH_SYN, 0 ,"\003\003\012\001\002\004\001\011\010\012\077\077\077\077\000\000\000\000\000\000" , 20, NULL, 0);
        if (!o.scan_delay)
 	 usleep( 5000 + target->to.srtt);
      }
+     gettimeofday(&seq_send_times[seq_packets_sent], NULL);
      seq_packets_sent++;
      
      /* Now we collect  the replies */
+
      while(si->responses < seq_packets_sent && !timeout) {
        
        if (seq_packets_sent == NUM_SEQ_SAMPLES)
 	 ip = (struct ip*) readip_pcap(pd, &bytes, oshardtimeout);
        else ip = (struct ip*) readip_pcap(pd, &bytes, 10);
+
        gettimeofday(&t2, NULL);
        /*     error("DEBUG: got a response (len=%d):\n", bytes);  */
        /*     lamont_hdump((unsigned char *) ip, bytes); */
@@ -340,6 +357,12 @@ if (o.verbose && openport != (unsigned long) -1)
        } else if (TIMEVAL_SUBTRACT(t2,t1) > oshardtimeout) {
 	 timeout = 1;
        }		  
+       if (lastipid != 0 && ip->ip_id == lastipid) {
+	 /* Probably a duplicate -- this happens sometimes when scanning localhost */
+	 continue;
+       }
+       lastipid = ip->ip_id;
+
        if (bytes < (4 * ip->ip_hl) + 4U)
 	 continue;
        if (ip->ip_p == IPPROTO_TCP) {
@@ -359,7 +382,23 @@ if (o.verbose && openport != (unsigned long) -1)
 	 } else if ((tcp->th_flags & (TH_SYN|TH_ACK)) == (TH_SYN|TH_ACK)) {
 	   /*	error("DEBUG: response is SYN|ACK to port %hi\n", ntohs(tcp->th_dport)); */
 	   /*readtcppacket((char *)ip, ntohs(ip->ip_len));*/
-	   si->seqs[si->responses++] = ntohl(tcp->th_seq);
+	   /* We use the ACK value to match up our sent with rcv'd packets */
+	   seq_response_num = (tcp->th_ack /* NOT ntohl! */ - 2 - 
+			       sequence_base); 
+	   if (seq_response_num < 0 || seq_response_num >= seq_packets_sent) {
+	     /* BzzT! Value out of range */
+	     if (o.debugging) error("Unable to associate os scan response with ssent packet (received ack: %li; sequence base: %li", tcp->th_ack, sequence_base);
+	     seq_response_num = si->responses;
+	   }
+	   si->responses++;
+	   si->seqs[seq_response_num] = ntohl(tcp->th_seq); /* TCP ISN */
+	   si->ipids[seq_response_num] = ntohs(ip->ip_id);
+	   gettcpopt_ts(tcp, &timestamp, NULL);
+	   si->timestamps[seq_response_num] = timestamp;
+	   if (timestamp == 0) {
+	     si->ts_seqclass = TS_SEQ_ZERO;
+	   }
+	   /*           printf("Response #%d -- ipid=%hi ts=%i\n", seq_response_num, ntohs(ip->ip_id), timestamp); */
 	   if (si->responses > 1) {
 	     seq_diffs[si->responses-2] = MOD_DIFF(ntohl(tcp->th_seq), si->seqs[si->responses-2]);
 	   }      
@@ -367,7 +406,114 @@ if (o.verbose && openport != (unsigned long) -1)
        }
      }
    }
+
+   /* Now we make sure there are no gaps in our response array ... */
+   for(i=0, si->responses=0; i < seq_packets_sent; i++) {
+     if (si->seqs[i] != 0) /* We found a good one */ {
+       if (si->responses < i) {
+	 si->seqs[si->responses] = si->seqs[i];
+	 si->ipids[si->responses] = si->ipids[i];
+	 si->timestamps[si->responses] = si->timestamps[i];
+	 seq_send_times[si->responses] = seq_send_times[i];
+       }
+       if (si->responses > 0) {
+	 seq_diffs[si->responses - 1] = MOD_DIFF(si->seqs[si->responses], si->seqs[si->responses - 1]);
+	 ipid_diffs[si->responses - 1] = MOD_DIFF_USHORT(si->ipids[si->responses], si->ipids[si->responses - 1]);
+	 ts_diffs[si->responses - 1] = MOD_DIFF(si->timestamps[si->responses], si->timestamps[si->responses - 1]);
+	 time_usec_diffs[si->responses - 1] = TIMEVAL_SUBTRACT(seq_send_times[si->responses], seq_send_times[si->responses - 1]);
+	 /*	 printf("MOD_DIFF_USHORT(%hi, %hi) == %hi\n", si->ipids[si->responses], si->ipids[si->responses - 1], MOD_DIFF_USHORT(si->ipids[si->responses], si->ipids[si->responses - 1])); */
+	 if (si->ipids[si->responses]  < si->ipids[si->responses - 1] &&
+	     (si->ipids[si->responses] > 500 || si->ipids[si->responses] < 65000)) {
+	   /* It has DECREASED and apparently NOT because of a rollover */
+	   si->ipid_seqclass = IPID_SEQ_RD;
+	 }
+       }
+
+       si->responses++;
+     } /* Otherwise nothing good in this slot to copy */
+   }
      
+   /* Battle plan for IPID sequencing:
+      1. If it is already set -- leave it that way
+      2. ipid_diffs-- if scanning localhost and safe
+      3. If any diff is > 1000, set to random, if 0, set to constant
+      4. If any of the diffs are 1, or all are less than 5 set it to 
+         incremental
+   */
+   if (si->ipid_seqclass == IPID_SEQ_UNKNOWN && si->responses >= 3) {
+
+     /* Localhost problem */
+     if (islocalhost(&(target->host))) {
+       int allgto = 1; /* ALL Greater Than One flag */
+       for(i=0; i < si->responses - 1; i++)
+	 if (ipid_diffs[i] < 2) {
+	   allgto = 0; break;
+	 }
+       if (allgto) {
+	 for(i=0; i < si->responses - 1; i++) {
+	   ipid_diffs[i]--; /* Because on localhost the RST sent back ues an IPID */
+	 }
+       }
+     }
+     
+     for(i=0; i < si->responses - 1; i++) {
+       if (ipid_diffs[i] > 1000) {
+	 si->ipid_seqclass = IPID_SEQ_RPI;
+	 break;
+       }
+       if (ipid_diffs[i] == 0) {
+	 si->ipid_seqclass = IPID_SEQ_CONSTANT;
+	 break;
+       }
+     }
+
+     j = 1; /* j is a flag meaning "all differences seen are < 5" */
+     for(i=0; i < si->responses - 1; i++) {
+       if (ipid_diffs[i] == 1) {
+	 si->ipid_seqclass = IPID_SEQ_INCR;
+	 break;
+       }
+       if (ipid_diffs[i] > 5)
+	 j = 0;
+     }
+
+     if (si->ipid_seqclass == IPID_SEQ_UNKNOWN && j == 1)
+       si->ipid_seqclass = IPID_SEQ_INCR;
+
+   }
+
+   /* Now we look at TCP Timestamp sequence prediction */
+   /* Battle plan:
+      1) Compute average increments per second, and variance in incr. per second 
+      2) If any are 0, set to constant
+      3) If variance is high, set to random incr. [ skip for now ]
+      4) if ~10/second, set to appropriate thing
+      5) Same with ~100/sec
+   */
+   if (si->ts_seqclass == TS_SEQ_UNKNOWN && si->responses >= 2) {
+     avg_ts_hz = 0.0;
+     for(i=0; i < si->responses - 1; i++) {
+       double hz;
+
+       hz = (double) ts_diffs[i] / (time_usec_diffs[i] / 1000000.0);
+       /*       printf("ts incremented by %d in %li usec -- %fHZ\n", ts_diffs[i], time_usec_diffs[i], hz); */
+       avg_ts_hz += hz / ( si->responses - 1);
+     }
+
+     if (o.debugging)
+       printf("The avg IPID HZ is: %f\n", avg_ts_hz);
+
+     if (avg_ts_hz > 85 && avg_ts_hz < 115) {
+       si->ts_seqclass = TS_SEQ_100HZ;
+       si->lastboot = seq_send_times[0].tv_sec - (si->timestamps[0] / 100); 
+     }
+     else if (avg_ts_hz > 900 && avg_ts_hz < 1100) {
+       si->ts_seqclass = TS_SEQ_1000HZ;
+       si->lastboot = seq_send_times[0].tv_sec - (si->timestamps[0] / 1000); 
+     }
+   }
+   
+   /* Time to look at the TCP ISN predictability */
    if (si->responses >= 4 && o.scan_delay <= 1000) {
      seq_gcd = gcd_n_uint(si->responses -1, seq_diffs);
      /*     printf("The GCD is %u\n", seq_gcd);*/
@@ -435,43 +581,87 @@ if (o.verbose && openport != (unsigned long) -1)
      FPtests[0] = (FingerPrint *) safe_malloc(sizeof(FingerPrint));
      bzero(FPtests[0], sizeof(FingerPrint));
      FPtests[0]->name = "TSeq";
-     seq_AVs = (struct AVal *) safe_malloc(sizeof(struct AVal) * 3);
-     bzero(seq_AVs, sizeof(struct AVal) * 3);
+     seq_AVs = (struct AVal *) safe_malloc(sizeof(struct AVal) * 5);
+     bzero(seq_AVs, sizeof(struct AVal) * 5);
      FPtests[0]->results = seq_AVs;
-     seq_AVs[0].attribute = "Class";
+     avnum = 0;
+     seq_AVs[avnum].attribute = "Class";
      switch(si->seqclass) {
      case SEQ_CONSTANT:
-       strcpy(seq_AVs[0].value, "C");
-       seq_AVs[0].next = &seq_AVs[1];
-       seq_AVs[1].attribute= "Val";     
-       sprintf(seq_AVs[1].value, "%X", si->seqs[0]);
+       strcpy(seq_AVs[avnum].value, "C");
+       seq_AVs[avnum].next = &seq_AVs[avnum+1]; avnum++;
+       seq_AVs[avnum].attribute= "Val";     
+       sprintf(seq_AVs[avnum].value, "%X", si->seqs[0]);
        break;
      case SEQ_64K:
-       strcpy(seq_AVs[0].value, "64K");      
+       strcpy(seq_AVs[avnum].value, "64K");      
        break;
      case SEQ_i800:
-       strcpy(seq_AVs[0].value, "i800");
+       strcpy(seq_AVs[avnum].value, "i800");
        break;
      case SEQ_TD:
-       strcpy(seq_AVs[0].value, "TD");
-       seq_AVs[0].next = &seq_AVs[1];
-       seq_AVs[1].attribute= "gcd";     
-       sprintf(seq_AVs[1].value, "%X", seq_gcd);
-       seq_AVs[1].next = &seq_AVs[2];
-       seq_AVs[2].attribute="SI";
-       sprintf(seq_AVs[2].value, "%X", si->index);
+       strcpy(seq_AVs[avnum].value, "TD");
+       seq_AVs[avnum].next = &seq_AVs[avnum+1]; avnum++;
+       seq_AVs[avnum].attribute= "gcd";     
+       sprintf(seq_AVs[avnum].value, "%X", seq_gcd);
+       seq_AVs[avnum].next = &seq_AVs[avnum+1]; avnum++;
+       seq_AVs[avnum].attribute="SI";
+       sprintf(seq_AVs[avnum].value, "%X", si->index);
        break;
      case SEQ_RI:
-       strcpy(seq_AVs[0].value, "RI");
-       seq_AVs[0].next = &seq_AVs[1];
-       seq_AVs[1].attribute= "gcd";     
-       sprintf(seq_AVs[1].value, "%X", seq_gcd);
-       seq_AVs[1].next = &seq_AVs[2];
-       seq_AVs[2].attribute="SI";
-       sprintf(seq_AVs[2].value, "%X", si->index);
+       strcpy(seq_AVs[avnum].value, "RI");
+       seq_AVs[avnum].next = &seq_AVs[avnum+1]; avnum++;
+       seq_AVs[avnum].attribute= "gcd";     
+       sprintf(seq_AVs[avnum].value, "%X", seq_gcd);
+       seq_AVs[avnum].next = &seq_AVs[avnum+1]; avnum++;
+       seq_AVs[avnum].attribute="SI";
+       sprintf(seq_AVs[avnum].value, "%X", si->index);
        break;
      case SEQ_TR:
-       strcpy(seq_AVs[0].value, "TR");
+       strcpy(seq_AVs[avnum].value, "TR");
+       break;
+     }
+
+     /* IP ID Class */
+     switch(si->ipid_seqclass) {
+     case IPID_SEQ_CONSTANT:
+       seq_AVs[avnum].next = &seq_AVs[avnum+1]; avnum++;
+       seq_AVs[avnum].attribute = "IPID";
+       strcpy(seq_AVs[avnum].value, "C");
+       break;
+     case IPID_SEQ_INCR:
+       seq_AVs[avnum].next = &seq_AVs[avnum+1]; avnum++;
+       seq_AVs[avnum].attribute = "IPID";
+       strcpy(seq_AVs[avnum].value, "I");
+       break;
+     case IPID_SEQ_RPI:
+       seq_AVs[avnum].next = &seq_AVs[avnum+1]; avnum++;
+       seq_AVs[avnum].attribute = "IPID";
+       strcpy(seq_AVs[avnum].value, "RPI");
+       break;
+     case IPID_SEQ_RD:
+       seq_AVs[avnum].next = &seq_AVs[avnum+1]; avnum++;
+       seq_AVs[avnum].attribute = "IPID";
+       strcpy(seq_AVs[avnum].value, "RD");
+       break;
+     }
+
+     /* TCP Timestamp option sequencing */
+     switch(si->ts_seqclass) {
+     case TS_SEQ_ZERO:
+       seq_AVs[avnum].next = &seq_AVs[avnum+1]; avnum++;
+       seq_AVs[avnum].attribute = "TS";
+       strcpy(seq_AVs[avnum].value, "0");
+       break;
+     case TS_SEQ_100HZ:
+       seq_AVs[avnum].next = &seq_AVs[avnum+1]; avnum++;
+       seq_AVs[avnum].attribute = "TS";
+       strcpy(seq_AVs[avnum].value, "100HZ");
+       break;
+     case TS_SEQ_1000HZ:
+       seq_AVs[avnum].next = &seq_AVs[avnum+1]; avnum++;
+       seq_AVs[avnum].attribute = "TS";
+       strcpy(seq_AVs[avnum].value, "1000HZ");
        break;
      }
    }
@@ -942,7 +1132,7 @@ int bestaccidx;
 
  if (target->numFPs > 1 && target->FPR.overall_results == OSSCAN_SUCCESS &&
      target->FPR.accuracy[0] == 1.0) {
-   if (o.verbose) error("WARNING:  OS didn't match until the try #%d", target->numFPs);
+if (o.verbose) error("WARNING:  OS didn't match until the try #%d", target->numFPs);
  } 
 
  target->goodFP = bestaccidx;
@@ -1484,3 +1674,6 @@ AVs[current_testno].next = NULL;
 
 return AVs;
 }
+
+
+

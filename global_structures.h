@@ -150,10 +150,16 @@ struct timeout_info {
 };
 
 struct seq_info {
-    int seqclass;
-    int responses;
-    unsigned int seqs[NUM_SEQ_SAMPLES];
-    int index;
+  int responses;
+  int seqclass; /* SEQ_* defines in nmap.h */
+  int ts_seqclass; /* TS_SEQ_* defines in nmap.h */
+  time_t uptime; /* time of latest system boot (or 0 if unknown ) */
+  int ipid_seqclass; /* IPID_SEQ_* defines in nmap.h */
+  unsigned int seqs[NUM_SEQ_SAMPLES];
+  unsigned int timestamps[NUM_SEQ_SAMPLES];
+  int index;
+  unsigned short ipids[NUM_SEQ_SAMPLES];
+  time_t lastboot; /* 0 means unknown */
 };
 
 struct targets {

@@ -431,6 +431,18 @@ char *readip_pcap(pcap_t *pd, unsigned int *len, long to_usec);
 int inet_aton(register const char *, struct in_addr *);
 #endif
 
+/* Examines the given tcp packet and obtains the TCP timestamp option
+   information if available.  Note that the CALLER must ensure that
+   "tcp" contains a valid header (in particular the th_off must be the
+   true packet length and tcp must contain it).  If a valid timestamp
+   option is found in the header, nonzero is returned and the
+   'timestamp' and 'echots' parameters are filled in with the
+   appropriate value (if non-null).  Otherwise 0 is returned and the
+   parameters (if non-null) are filled with 0.  Remember that the
+   correct way to check for errors is to look at the return value
+   since a zero ts or echots could possibly be valid. */
+int gettcpopt_ts(struct tcphdr *tcp, u_int32_t *timestamp, u_int32_t *echots);
+
 /* Maximize the receive buffer of a socket descriptor (up to 500K) */
 void max_rcvbuf(int sd);
 

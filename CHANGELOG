@@ -1,5 +1,20 @@
 # Nmap Changelog
 
+-- Show actual IPID and TCP ISN values in XML format output rather than just
+   the cooked results.
+
+-- Suppress IPID and TCP ISN predictability report unless you use -v
+   (you need -O as well).
+
+-- Added TCP Timestamp sequence checking for OS detection and uptime tests.
+
+-- Added IPID sequence number predictability report (also now used in
+   OS detection).
+
+-- Found and fixed (I hope) byte alignment problem which was causing
+   bus errors on SPARC64 ( reported by H D Moore (hdm@secureaustin.com)
+   and Matthew Franz (mfranz@cisco.com) )
+
 -- Applied Darwin (Mac OS X) 1.2 portability patch from 
    Rob Braun <bbraun@synack.net>
 
@@ -11,6 +26,8 @@
 
 -- Applied some more changes from Andy Lutomirski (Luto@mailandnews.com)
    which provides better detection and reporting from some heinous errors.
+
+-- Added -n and -R (always/never DNS resolve) options to the man page.
 
 ** 2.54BETA19
 

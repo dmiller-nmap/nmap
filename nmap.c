@@ -1480,12 +1480,10 @@ char *seqreport(struct seq_info *seq) {
   int i;
 
   snprintf(report, sizeof(report), "TCP Sequence Prediction: Class=%s\n                         Difficulty=%d (%s)\n", seqclass2ascii(seq->seqclass), seq->index, seqidx2difficultystr(seq->index));
-  if (o.verbose) {
-    tmp[0] = '\n';
-    tmp[1] = '\0'; 
-    p = tmp + 1;
-    strcpy(p, "Sequence numbers: ");
-    p += 18;
+  if (o.verbose > 1 || o.debugging ) {
+    p = tmp;
+    strcpy(p, "TCP ISN Seq. Numbers: ");
+    p += 22;
     for(i=0; i < seq->responses; i++) {
       p += snprintf(p, 16, "%X ", seq->seqs[i]);
     }
@@ -1518,9 +1516,42 @@ char *seqclass2ascii(int seqclass) {
   case SEQ_UNKNOWN:
     return "unknown class";
   default:
-    return "Error, WTF?";
+    return "ERROR, WTF?";
   }
 }
+
+char *ipidclass2ascii(int seqclass) {
+  switch(seqclass) {
+  case IPID_SEQ_CONSTANT:
+    return "Duplicated ipid (!)";
+  case IPID_SEQ_INCR:
+    return "Incremental";
+  case IPID_SEQ_RD:
+    return "Randomized";
+  case IPID_SEQ_RPI:
+    return "Random positive increments";
+  case IPID_SEQ_UNKNOWN:
+    return "Unknown class";
+  default:
+    return "ERROR, WTF?";
+  }
+}
+
+char *tsseqclass2ascii(int seqclass) {
+  switch(seqclass) {
+  case TS_SEQ_ZERO:
+    return "zero timestamp";
+  case TS_SEQ_100HZ:
+    return "100HZ";
+  case TS_SEQ_1000HZ:
+    return "1000HZ";
+  case TS_SEQ_UNKNOWN:
+    return "unknown class";
+  default:
+    return "ERROR, WTF?";
+  }
+}
+
 
 char *grab_next_host_spec(FILE *inputfd, int argc, char **fakeargv) {
   static char host_spec[512];

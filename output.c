@@ -509,13 +509,10 @@ void write_host_status(struct hoststruct *currenths, int resolve_all) {
    if an OS Scan was performed */
 void printosscanoutput(struct hoststruct *currenths) {
   int i;
+  char numlst[512]; /* For creating lists of numbers */
+  char *p; /* Used in manipulating numlst above */
 
   if (currenths->osscan_performed) {
-    if (currenths->seq.responses > 3) {
-      log_write(LOG_XML, "<tcpsequence index=\"%li\" class=\"%s\" difficulty=\"%s\" />\n", currenths->seq.index, seqclass2ascii(currenths->seq.seqclass), seqidx2difficultystr(currenths->seq.index)); 
-      log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"%s", seqreport(&(currenths->seq)));
-      log_write(LOG_MACHINE,"\tSeq Index: %d", currenths->seq.index);
-    }
     log_write(LOG_XML, "<os>");
     if (currenths->osscan_openport > 0) {
       log_write(LOG_XML, 
@@ -583,7 +580,6 @@ void printosscanoutput(struct hoststruct *currenths) {
       if (currenths->goodFP >= 0 && (o.debugging || o.verbose > 1) && currenths->FPR.num_perfect_matches > 0 ) {
 	log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"OS Fingerprint:\n%s\n", fp2ascii(currenths->FPs[currenths->goodFP]));
       }
-      log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"\n");
     } else if (currenths->FPR.overall_results == OSSCAN_NOMATCHES) {
       if (o.scan_delay < 500  && currenths->osscan_openport > 0 &&
 	  currenths->osscan_closedport > 0 ) {
@@ -599,6 +595,48 @@ void printosscanoutput(struct hoststruct *currenths) {
 	}
       } else { assert(0); }
      log_write(LOG_XML, "</os>");
+
+     if (currenths->seq.lastboot) {
+       char tmbuf[128];
+       struct timeval tv;
+       gettimeofday(&tv, NULL);
+       strncpy(tmbuf, ctime(&(currenths->seq.lastboot)), sizeof(tmbuf));
+       chomp(tmbuf);
+       log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Uptime %.3f days (since %s)\n", (double) (tv.tv_sec - currenths->seq.lastboot) / 86400, tmbuf);
+     }
+
+     if (currenths->seq.responses > 3) {
+       p=numlst;
+       for(i=0; i < currenths->seq.responses; i++) {
+	 if (p - numlst > (sizeof(numlst) - 15)) 
+	   fatal("STRANGE ERROR #3877 -- please report to fyodor@insecure.org\n");
+	 if (p != numlst) *p++=',';
+	 sprintf(p, "%X", currenths->seq.seqs[i]);
+	 while(*p) p++;
+       }
+
+       log_write(LOG_XML, "<tcpsequence index=\"%li\" class=\"%s\" difficulty=\"%s\" values=\"%s\" />\n", currenths->seq.index, seqclass2ascii(currenths->seq.seqclass), seqidx2difficultystr(currenths->seq.index), numlst); 
+       if (o.verbose)
+	 log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"%s", seqreport(&(currenths->seq)));
+       log_write(LOG_MACHINE,"\tSeq Index: %d", currenths->seq.index);
+     }
+
+     if (currenths->seq.responses > 2) {
+       p=numlst;
+       for(i=0; i < currenths->seq.responses; i++) {
+	 if (p - numlst > (sizeof(numlst) - 15)) 
+	   fatal("STRANGE ERROR #3876 -- please report to fyodor@insecure.org\n");
+	 if (p != numlst) *p++=',';
+	 sprintf(p, "%hX", currenths->seq.ipids[i]);
+	 while(*p) p++;
+       }
+       log_write(LOG_XML, "<ipidsequence class=\"%s\" values=\"%s\"/>\n", ipidclass2ascii(currenths->seq.ipid_seqclass), numlst);
+       if (o.verbose)
+	 log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"IPID Sequence Generation: %s\n", ipidclass2ascii(currenths->seq.ipid_seqclass));
+       log_write(LOG_MACHINE,"\tSeq Index: %d", currenths->seq.index);
+
+       log_write(LOG_XML, "<tcptssequence class=\"%s\" />\n", tsseqclass2ascii(currenths->seq.ts_seqclass));
+     }
   }
 }
 
@@ -617,6 +655,7 @@ void printfinaloutput(int numhosts_scanned, int numhosts_up,
     fprintf(stderr, "WARNING: No targets were specified, so 0 hosts scanned.\n");
   if (numhosts_scanned == 1 && numhosts_up == 0 && !o.listscan)
     log_write(LOG_STDOUT, "Note: Host seems down. If it is really up, but blocking our ping probes, try -P0\n");
+  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"\n");
   log_write(LOG_STDOUT|LOG_SKID, "Nmap run completed -- %d %s (%d %s up) scanned in %d %s\n", numhosts_scanned, (numhosts_scanned == 1)? "IP address" : "IP addresses", numhosts_up, (numhosts_up == 1)? "host" : "hosts",  i, (i == 1)? "second": "seconds");
 
 

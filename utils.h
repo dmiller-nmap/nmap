@@ -99,6 +99,9 @@
 #ifndef MOD_DIFF
 #define MOD_DIFF(a,b) ((unsigned long) (MIN((unsigned long)(a) - (unsigned long ) (b), (unsigned long )(b) - (unsigned long) (a))))
 #endif
+#ifndef MOD_DIFF_USHORT
+#define MOD_DIFF_USHORT(a,b) ((MIN((unsigned short)((unsigned short)(a) - (unsigned short ) (b)), (unsigned short) ((unsigned short )(b) - (unsigned short) (a)))))
+#endif
 #ifndef FALSE
 #define FALSE 0
 #endif
