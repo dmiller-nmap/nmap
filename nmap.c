@@ -2006,7 +2006,7 @@ if (o.debugging || o.verbose)
 		if (numqueries_ideal < 1) numqueries_ideal = 1;
 		if (o.debugging) { printf("Lost a packet, decreasing window to %d\n", (int) numqueries_ideal);
 		windowdecrease++;
-		if (scantype == UDP_SCAN) sleep(1);
+		if (scantype == UDP_SCAN) usleep(500000);
 		}
 	      } else if (o.debugging > 1) { printf("Lost a packet, but not decreasing\n");
 	      }
@@ -2045,7 +2045,10 @@ if (o.debugging || o.verbose)
 	   (long) time(NULL) - starttime, o.numports);
   
   for (current = openlist; current;  current = (current->next >= 0)? &scan[current->next] : NULL) {
-    addport(&target->ports, current->portno, IPPROTO_TCP, NULL);
+    if (scantype != UDP_SCAN)
+      addport(&target->ports, current->portno, IPPROTO_TCP, NULL);
+    else
+       addport(&target->ports, current->portno, IPPROTO_UDP, NULL);
   }
     free(scan);
     close(rawsd);
