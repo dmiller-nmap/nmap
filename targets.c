@@ -1,4 +1,4 @@
-#include "nmap.h"
+#include "targets.h"
 
 extern struct ops o;
 struct hoststruct *nexthost(char *hostexp, int lookahead, int pingtimeout) {
@@ -88,9 +88,9 @@ do {
     hostbatch[i].host.s_addr = 0;
   }
 
-if (hostbatch[0].host.s_addr && (o.pingtype == icmp )) 
+if (hostbatch[0].host.s_addr && (o.pingtype & PINGTYPE_ICMP )) 
   massping(hostbatch, i, pingtimeout);
-else if (hostbatch[0].host.s_addr && (o.pingtype == tcp))
+else if (hostbatch[0].host.s_addr && (o.pingtype & PINGTYPE_TCP))
   masstcpping(hostbatch, i, pingtimeout);
 else for(i=0; hostbatch[i].host.s_addr; i++)  {
   hostbatch[i].to.srtt = -1;
@@ -222,68 +222,54 @@ else {
 
 void massping(struct hoststruct *hostbatch, int num_hosts, int pingtimeout) {
 static struct timeout_info to = { 0,0,0};
-static int group_size = LOOKAHEAD;
-int group_start = 0;
-int dropthistry = 0;
-int group_end;
+static int gsize = LOOKAHEAD;
 int hostnum;
-int up_this_block = 0;
-int block_unaccounted = LOOKAHEAD;
-int discardtimesbefore = 0;
-int down_this_block = 0;
-int num_responses = 0;
-int block_tries = 0; /* How many tries this block has gone through */
-int max_tries = 5; /* Maximum number of tries for a block */
-fd_set fd_r;
-fd_set fd_x;
-struct timeval s_timeout, begin_select;
-
-unsigned int elapsed_time;
-int res;
-int sd_blocking = 1;
-int num_down = 0;
-int bytes;
-struct sockaddr_in sock;
-short seq = 0;
-/*type(8bit)=8, code(8)=0 (echo REQUEST), checksum(16)=34190, id(16)=27002 */
-unsigned char *ping; /*[64] = { 0x8, 0x0, 0x8e, 0x85, 0x69, 0x7A };*/
-unsigned short ushorttmp;
-int decoy;
-int sd,rawsd;
-struct timeval *time;
-struct timeval start, end, t1, t2;
-unsigned short id;
+struct pingtune pt;
+struct scanstats ss;
+struct timeval begin_select;
+int icmpscan = 0, rawtcpscan = 0, connecttcpscan = 0;
 struct ppkt {
   unsigned char type;
   unsigned char code;
   unsigned short checksum;
   unsigned short id;
   unsigned short seq;
-} pingpkt;
-struct {
-  struct ip ip;
-  unsigned char type;
-  unsigned char code;
-  unsigned short checksum;
-  unsigned short identifier;
-  unsigned short sequence;
-  char crap[16536];
-}  response;
+};
+unsigned int elapsed_time;
+int sd_blocking = 1;
+struct sockaddr_in sock;
+short seq = 0;
+int sd,rawsd;
+struct timeval *time;
+struct timeval start, end, t1, t2;
+unsigned short id;
 
-time = safe_malloc(sizeof(struct timeval) * ((max_tries) * num_hosts));
+bzero((char *) &pt, sizeof(struct pingtune)); 
+pt.up_this_block = 0;
+pt.block_unaccounted = LOOKAHEAD;
+pt.discardtimesbefore = 0;
+pt.down_this_block = 0;
+pt.num_responses = 0;
+pt.max_tries = 5; /* Maximum number of tries for a block */
+pt.group_size = gsize;
+pt.group_start = 0;
+pt.block_tries = 0; /* How many tries this block has gone through */
+
+/* What kind of scans are we doing? */
+if (o.pingtype & PINGTYPE_ICMP) icmpscan++;
+if (o.pingtype & PINGTYPE_TCP) {
+  if (o.isr00t)
+    rawtcpscan++;
+  else connecttcpscan++;
+}
+
+time = safe_malloc(sizeof(struct timeval) * ((pt.max_tries) * num_hosts));
 id = (unsigned short) rand();
-/* Lets create our base ping packet here ... */
-pingpkt.type = 8;
-pingpkt.code = 0;
-pingpkt.id = id; /* intentionally not in NBO */
-pingpkt.seq = seq; /* Any reason to use NBO here? */
-ping = (char *) &pingpkt;
-pingpkt.checksum = 0;
-pingpkt.checksum = in_cksum((unsigned short *) ping, 8);
-if (sizeof(struct ppkt) != 8) 
-  fatal("Your native data type sizes are too screwed up for this to work.");
 
-sd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
+if (icmpscan)
+  sd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
+else sd = -1;
+
 if (sd < 0) pfatal("Socket trouble in massping"); 
 unblock_socket(sd);
 sd_blocking = 0;
@@ -295,9 +281,6 @@ if (!to.srtt && !to.rttvar && !to.timeout) {
   to.timeout = 6000000;
 } 
 
-FD_ZERO(&fd_r);
-FD_ZERO(&fd_x);
-
 /* Init our raw socket */
 if (o.numdecoys > 1)
   if ((rawsd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) < 0 )
@@ -306,126 +289,43 @@ if (o.numdecoys > 1)
 unblock_socket(rawsd);
 
 bzero((char *)&sock,sizeof(struct sockaddr_in));
-sock.sin_family=AF_INET;
 gettimeofday(&start, NULL);
 
  if (num_hosts > 10) 
    max_rcvbuf(sd);
  if (o.allowall) broadcast_socket(sd);
  
- group_end = MIN(group_start + group_size -1, num_hosts -1);
+ pt.group_end = MIN(pt.group_start + pt.group_size -1, num_hosts -1);
  
- while(group_start < num_hosts) { /* while we have hosts left to scan */
+ while(pt.group_start < num_hosts) { /* while we have hosts left to scan */
    do { /* one block */
-     discardtimesbefore = -1;
-     up_this_block = 0;
-     down_this_block = 0;
-     for(hostnum=group_start; hostnum <= group_end; hostnum++) {      
+     pt.discardtimesbefore = -1;
+     pt.up_this_block = 0;
+     pt.down_this_block = 0;
+     pt.block_unaccounted = 0;
+     for(hostnum=pt.group_start; hostnum <= pt.group_end; hostnum++) {      
        /* If (we don't know whether the host is up yet) ... */
        if (!(hostbatch[hostnum].flags & HOST_UP) && !hostbatch[hostnum].wierd_responses && !(hostbatch[hostnum].flags & HOST_DOWN)) {  
 	 /* Send a ping packet to it */
-	 /* Update the new packet sequence nr. and checksum */
-	 pingpkt.seq = hostnum * max_tries + block_tries;
-	 pingpkt.checksum = 0;
-	 pingpkt.checksum = in_cksum((unsigned short *) ping, 8);	 
-	 sock.sin_addr = hostbatch[hostnum].host;
-	 gettimeofday(&time[pingpkt.seq], NULL);
+	 seq = hostnum * pt.max_tries + pt.block_tries;
          if (!sd_blocking) { block_socket(sd); sd_blocking = 1; }
-	 gettimeofday(&t1, NULL);
-	 for(decoy=0; decoy < o.numdecoys; decoy++) {
-	   if (decoy == o.decoyturn) {
-	     if ((res = sendto(sd,(char *) ping,8,0,(struct sockaddr *)&sock,
-			       sizeof(struct sockaddr))) != 8) {
-	       fprintf(stderr, "sendto in massping returned %d (should be 8)!\n", res);
-	       perror("sendto");
-	     }
-	   } else {
-	     send_ip_raw( rawsd, &o.decoys[decoy], &(sock.sin_addr), IPPROTO_ICMP, ping, 8);
-	   }
-	 }
+	 sendpingquery(sd, rawsd, &hostbatch[hostnum],  
+		       seq, id, &ss, time);
+	 pt.block_unaccounted++;
 	 gettimeofday(&t2, NULL);
-	 if (TIMEVAL_SUBTRACT(t2,t1) > 1000000) {
-	   discardtimesbefore = hostnum;
+	 if (TIMEVAL_SUBTRACT(t2,time[seq]) > 1000000) {
+	   pt.discardtimesbefore = hostnum;
 	   if (o.debugging) 
 	     printf("Huge send delay: %lu microseconds\n", TIMEVAL_SUBTRACT(t2,t1));
 	 }
-       }  
+       }
      } /* for() loop */
      /* OK, we have sent our ping packets ... now we wait for responses */
      gettimeofday(&begin_select, NULL);
      do {
-       FD_SET(sd, &fd_r);
-       FD_SET(sd, &fd_x);
-       s_timeout.tv_sec = to.timeout / 1000000;
-       s_timeout.tv_usec = to.timeout % 1000000;
-       res = select(sd+1, &fd_r, NULL, &fd_x, &s_timeout);
        if (sd_blocking) { unblock_socket(sd); sd_blocking = 0; }
-       while ((bytes = read(sd,&response,sizeof(response))) > 0) {
-	 /* if it is our response */
-	 if  ( !response.type && !response.code && response.identifier == id) {
-	   hostnum = response.sequence / max_tries;
-	   if (hostnum > group_end) continue;
-	   /*	   gettimeofday(&end, NULL);*/
-	   hostbatch[hostnum].source_ip.s_addr = response.ip.ip_dst.s_addr;
-	   if (o.debugging) printf("We got a ping packet back from %s: id = %d seq = %d checksum = %d\n", inet_ntoa(*(struct in_addr *)(&response.ip.ip_src.s_addr)), response.identifier, response.sequence, response.checksum);
-	   if (hostbatch[hostnum].host.s_addr == response.ip.ip_src.s_addr) {
-	     if (discardtimesbefore < response.sequence)
-	       adjust_timeouts(time[response.sequence], &to);
-	     hostbatch[hostnum].to = to;
-	     if (!(hostbatch[hostnum].flags & HOST_UP)) {	  
-	       if (hostnum >= group_start) {	       
-		 up_this_block++;
-		 block_unaccounted--;
-	       }
-	       num_responses++;
-	       hostbatch[hostnum].flags |= HOST_UP;
-	       if (!dropthistry && response.sequence % max_tries) {
-		 dropthistry = 1;
-		 group_size = MAX(10, group_size * .75);
-		 if (o.debugging) 
-		   printf("Lost packet ... Decreasing group_size to %d\n", group_size);
-	       }
-	       if (num_responses + num_down == num_hosts) goto alldone; /* GOTO!  Hell yeah! */
-	     }
-	   }
-	   else  hostbatch[hostnum].wierd_responses++;
-	 }
-	 
-	 else if (response.type == 3 && ((struct ppkt *) (response.crap + 4 * response.ip.ip_hl))->id == id) {
-	   ushorttmp = ((struct ppkt *) (response.crap + 4 * response.ip.ip_hl))->seq;
-	   hostnum = ushorttmp / max_tries;
-	   if (hostnum > group_end) continue;
-	   if (o.debugging) printf("Got destination unreachable for %s\n", inet_ntoa(hostbatch[hostnum].host));
-	   /* Since this gives an idea of how long it takes to get an answer,
-	      we add it into our times */
-	   if (discardtimesbefore < ushorttmp)
-	     adjust_timeouts(time[ushorttmp], &to);
-
-	   if (!(hostbatch[hostnum].flags & HOST_DOWN) &&
-	       !(hostbatch[hostnum].flags & HOST_UP)) {	   
-	     hostbatch[hostnum].flags |= HOST_DOWN;
-	     num_down++;
-	     if (hostnum >= group_start)
-	       down_this_block++;
-	     if (!dropthistry && (ushorttmp % max_tries)) {
-	       dropthistry = 1;
-	       group_size = MAX(10, group_size * 0.75);
-	       if (o.debugging) 
-		 printf("Decreasing group_size to %d\n", group_size);
-	     }
-	   }
-	   if (num_responses + num_down == num_hosts) goto alldone; /* GOTO!  Hell yeah! */
-	 }	 
-	 else if (response.type == 4 && ((struct ppkt *) (response.crap + 4 * response.ip.ip_hl))->id == id)  {      
-	   if (o.debugging) printf("Got ICMP source quench\n");
-	   usleep(25000);
-	 }
-	 
-	 else if (o.debugging > 1 && ((struct ppkt *) (response.crap + 4 * response.ip.ip_hl))->id == id ) {
-	   
-	   printf("Got ICMP message type %d code %d\n", response.type, response.code);
-	 }
-       }
+       get_ping_results(sd, hostbatch, time, &pt, &to, id);
+     
        gettimeofday(&end, NULL);
        elapsed_time = TIMEVAL_SUBTRACT(end, begin_select);
      } while( elapsed_time < to.timeout);
@@ -433,29 +333,33 @@ gettimeofday(&start, NULL);
 	we haven't run out of retries.  Also retry if the block is extremely
         small.
      */
-     dropthistry = 0;
-   } while ((up_this_block > 0 || group_end - group_start <= 3) && block_unaccounted > 0 && ++block_tries < max_tries);
+     pt.dropthistry = 0;
+     pt.block_tries++;
+   } while ((pt.up_this_block > 0 || pt.group_end - pt.group_start <= 3) && pt.block_unaccounted > 0 && pt.block_tries < pt.max_tries);
 
    if (o.debugging)
-     printf("Finished block: srtt: %d rttvar: %d timeout: %d block_tries: %d up_this_block: %d down_this_block: %d group_sz: %d\n", to.srtt, to.rttvar, to.timeout, block_tries, up_this_block, down_this_block, group_end - group_start + 1);
+     printf("Finished block: srtt: %d rttvar: %d timeout: %d block_tries: %d up_this_block: %d down_this_block: %d group_sz: %d\n", to.srtt, to.rttvar, to.timeout, pt.block_tries, pt.up_this_block, pt.down_this_block, pt.group_end - pt.group_start + 1);
 
-   if ((block_tries == 1) || (block_tries == 2 && up_this_block == 0 && down_this_block == 0)) 
+   if ((pt.block_tries == 1) || (pt.block_tries == 2 && pt.up_this_block == 0 && pt.down_this_block == 0)) 
      /* Then it did not miss any hosts (that we know of)*/
-     group_size = MIN(group_size + 10, 200);
+     pt.group_size = MIN(pt.group_size + 10, 150);
    
+   /* Move to next block */
+   pt.block_tries = 0;
+   pt.group_start = pt.group_end +1;
+   pt.group_end = MIN(pt.group_start + pt.group_size -1, num_hosts -1);
+   /*   pt.block_unaccounted = pt.group_end - pt.group_start + 1;   */
+ }
 
-   block_tries = 0;
-   group_start = group_end +1;
-   group_end = MIN(group_start + group_size -1, num_hosts -1);
-   block_unaccounted = group_end - group_start + 1;   
-}
- alldone:
  close(sd);
  if (o.numdecoys > 1)
    close(rawsd);
+ if (sd >= 0) close(sd);
  free(time);
  if (o.debugging) 
-   printf("massping done:  num_hosts: %d  num_responses: %d\n", num_hosts, num_responses);
+   printf("massping done:  num_hosts: %d  num_responses: %d\n", num_hosts, pt.num_responses);
+ gsize = pt.group_size;
+ return;
 }
 
 void masstcpping(struct hoststruct *hostbatch, int num_hosts, int pingtimeout) {
@@ -471,6 +375,7 @@ void masstcpping(struct hoststruct *hostbatch, int num_hosts, int pingtimeout) {
   int sockaddr_in_len = sizeof(struct sockaddr_in);
   int retry;
   fd_set fds_read, fds_write, fds_ex;
+
   gettimeofday(&start, NULL);
   bzero(sockets, sizeof(int) * MAX_SOCKETS_ALLOWED);
   bzero(&sock, sockaddr_in_len);
@@ -589,3 +494,207 @@ void masstcpping(struct hoststruct *hostbatch, int num_hosts, int pingtimeout) {
     printf("MassTCP ping got responses from %d of %d hosts\n", numcomplete, num_hosts);
   }
 }
+
+
+
+
+
+
+
+int sendpingquery(int sd, int rawsd, struct hoststruct *target,  
+		  int seq, unsigned short id, struct scanstats *ss, 
+		  struct timeval *time) {
+  
+struct ppkt {
+  unsigned char type;
+  unsigned char code;
+  unsigned short checksum;
+  unsigned short id;
+  unsigned short seq;
+} pingpkt;
+int decoy;
+int res;
+struct sockaddr_in sock;
+char *ping = (char *) &pingpkt;
+
+/* Fill out the ping packet */
+pingpkt.type = 8;
+pingpkt.code = 0;
+pingpkt.id = id;
+pingpkt.seq = seq;
+pingpkt.checksum = 0;
+pingpkt.checksum = in_cksum((unsigned short *)ping, 8);
+
+/* Now for our sock */
+bzero((char *)&sock, sizeof(struct sockaddr_in));
+sock.sin_family= AF_INET;
+sock.sin_addr = target->host;
+
+if (sizeof(struct ppkt) != 8) 
+  fatal("Your native data type sizes are too screwed up for this to work.");
+
+
+for (decoy = 0; decoy < o.numdecoys; decoy++) {
+  if (decoy == o.decoyturn) {
+    if ((res = sendto(sd,(char *) ping,8,0,(struct sockaddr *)&sock,
+		      sizeof(struct sockaddr))) != 8) {
+      fprintf(stderr, "sendto in sendpingquery returned %d (should be 8)!\n", res);
+      perror("sendto");
+    }
+  } else {
+    send_ip_raw( rawsd, &o.decoys[decoy], &(sock.sin_addr), IPPROTO_ICMP, ping, 8);
+  }
+}
+gettimeofday(&time[seq], NULL);
+return 0;
+}
+
+int get_ping_results(int sd, struct hoststruct *hostbatch, struct timeval *time,  struct pingtune *pt, struct timeout_info *to, int id) {
+fd_set fd_r, fd_x;
+struct timeval myto, tmpto, start, end;
+int bytes, res;
+struct ppkt {
+  unsigned char type;
+  unsigned char code;
+  unsigned short checksum;
+  unsigned short id;
+  unsigned short seq;
+};
+struct {
+  struct ip ip;
+  unsigned char type;
+  unsigned char code;
+  unsigned short checksum;
+  unsigned short identifier;
+  unsigned short sequence;
+  char crap[16536];
+}  response;
+int hostnum;
+int dotimeout;
+int newstate;
+int foundsomething;
+int trynum;
+unsigned short sequence;
+
+FD_ZERO(&fd_r);
+FD_ZERO(&fd_x);
+
+/* Decide on the timeout, based on whether we need to also watch for TCP stuff */
+if (!(o.pingtype & PINGTYPE_TCP)) {
+  /* We only need to worry about pings, so we set timeout for the whole she-bang! */
+  myto.tv_sec  = to->timeout / 1000000;
+  myto.tv_usec = to->timeout % 1000000;
+} else {
+  myto.tv_sec = 0;
+  myto.tv_usec = 20000;
+}
+
+gettimeofday(&start, NULL);
+while(pt->block_unaccounted > 0) {
+  tmpto = myto;
+  FD_SET(sd, &fd_r);
+  FD_SET(sd, &fd_x);
+
+  res = select(sd+1, &fd_r, NULL, &fd_x, &tmpto);
+  if (res == 0) break;
+  while (pt->block_unaccounted && (bytes = read(sd,&response,sizeof(response))) > 0) {
+    foundsomething = 0;
+    /* if it is our response */
+    if  ( !response.type && !response.code && response.identifier == id) {
+      hostnum = response.sequence / pt->max_tries;
+      if (hostnum > pt->group_end) continue;
+      hostbatch[hostnum].source_ip.s_addr = response.ip.ip_dst.s_addr;
+      if (o.debugging) printf("We got a ping packet back from %s: id = %d seq = %d checksum = %d\n", inet_ntoa(*(struct in_addr *)(&response.ip.ip_src.s_addr)), response.identifier, response.sequence, response.checksum);
+      if (hostbatch[hostnum].host.s_addr == response.ip.ip_src.s_addr) {
+	foundsomething = 1;
+	sequence = response.sequence;
+	if (pt->discardtimesbefore < response.sequence)
+	  dotimeout = 1;
+	trynum = sequence % pt->max_tries;
+	newstate = HOST_UP;
+      }
+      else hostbatch[hostnum].wierd_responses++;
+    } 
+    else if (response.type == 3 && ((struct ppkt *) (response.crap + 4 * response.ip.ip_hl))->id == id) {
+      sequence = ((struct ppkt *) (response.crap + 4 * response.ip.ip_hl))->seq;
+      hostnum = sequence / pt->max_tries;
+      if (hostnum > pt->group_end) continue;
+      if (o.debugging) printf("Got destination unreachable for %s\n", inet_ntoa(hostbatch[hostnum].host));
+      /* Since this gives an idea of how long it takes to get an answer,
+	 we add it into our times */
+      if (pt->discardtimesbefore < sequence)
+	dotimeout = 1;
+      foundsomething = 1;
+      trynum = sequence % pt->max_tries;
+      newstate = HOST_DOWN;
+    }
+    else if (response.type == 4 && ((struct ppkt *) (response.crap + 4 * response.ip.ip_hl))->id == id)  {      
+      if (o.debugging) printf("Got ICMP source quench\n");
+      usleep(50000);
+    }    
+    else if (o.debugging > 1 && ((struct ppkt *) (response.crap + 4 * response.ip.ip_hl))->id == id ) {      
+      printf("Got ICMP message type %d code %d\n", response.type, response.code);
+    }
+  if (foundsomething) {  
+    printf("Calling hostupdate %s sequence %d\n", inet_ntoa(hostbatch[hostnum].host), sequence);
+    hostupdate(hostbatch, &hostbatch[hostnum], newstate, dotimeout, trynum, 
+	       to, &time[sequence], pt, PINGTYPE_ICMP);
+  }
+  }
+  gettimeofday(&end, NULL);
+  if (TIMEVAL_SUBTRACT(end, start) > (3 * to->timeout))
+    break;  
+}
+return 0;
+}
+
+int hostupdate(struct hoststruct *hostbatch, struct hoststruct *target, 
+	       int newstate, int dotimeout, int trynum, 
+	       struct timeout_info *to, struct timeval *sent, 
+	       struct pingtune *pt, int pingtype) {
+
+int hostnum = target - hostbatch;
+assert(hostnum <= pt->group_end);
+
+if (dotimeout) {
+  adjust_timeouts(*sent, to);
+}
+
+target->to = *to;
+
+if (trynum > 0 && !(pt->dropthistry)) {
+  pt->dropthistry = 1;
+  pt->group_size = MAX(pt->group_size * 0.75, 10);
+  if (o.debugging) 
+    printf("Decreasing massping group size to %d\n", pt->group_size);
+}
+
+if (newstate == HOST_DOWN && (target->flags & HOST_DOWN)) {
+  /* I see nothing to do here */
+} else if (newstate == HOST_UP && (target->flags & HOST_DOWN)) {
+  /* We give host_up precedence */
+  target->flags &= ~HOST_DOWN; /* Kill the host_down flag */
+  target->flags |= HOST_UP;
+  if (hostnum >= pt->group_start) {  
+    assert(pt->down_this_block > 0);
+    pt->down_this_block--;
+    pt->up_this_block++;
+  }
+} else if (newstate == HOST_DOWN) {
+  target->flags |= HOST_DOWN;
+  pt->down_this_block++;
+  pt->block_unaccounted--;
+  pt->num_responses++;
+} else {
+  assert(newstate == HOST_UP);
+  target->flags |= HOST_UP;
+  pt->up_this_block++;
+  pt->block_unaccounted--;
+  pt->num_responses++;
+}
+return 0;
+}
+
+
+
+

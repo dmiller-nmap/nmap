@@ -64,6 +64,9 @@ return(answer);
 int resolve(char *hostname, struct in_addr *ip) {
   struct hostent *h;
 
+  if (!hostname || !*hostname)
+    fatal("NULL or zero-length hostname passed to resolve()");
+
   if (inet_aton(hostname, ip))
     return 1; /* damn, that was easy ;) */
   if ((h = gethostbyname(hostname))) {
@@ -932,4 +935,122 @@ signal(SIGALRM, SIG_DFL);
 *len = head.caplen - offset;
 return p;
 }
+
+/* An awesome function to determine what interface a packet to a given
+   destination should be routed through.  It returns NULL if no appropriate
+   interface is found, oterwise it returns the device name and fills in the
+   source parameter.   A very small but very important portion of this
+   (the /proc/net/route stuff for Linux is from something I found in 
+   tcpip.c from the checkos program by the Confidence
+   Remains High folks.  Word to them!  Some of the other stuff is
+   from Stevens' Unix Network Programming V2.  He had an easier suggestion
+   for doing this (in the book), but it isn't portable :( */
+char *routethrough(struct in_addr *dest, struct in_addr *source) {
+  static int initialized = 0;
+  int sd;
+  int i;
+  int res;
+  int len = 10240;
+  char buf[10240];
+  struct mydev {
+    char name[64];
+    struct in_addr addr;
+  } mydevs[32];
+  struct myroute {
+    struct mydev *dev;
+    unsigned long mask;
+    unsigned long dest;
+  } myroutes[32];
+  int numinterfaces = 0;
+  char iface[64];
+  int numroutes = 0;
+  unsigned long tmp;
+  struct ifconf ifc;
+  struct ifreq *ifr;
+  char *p;
+  FILE *routez;
+  struct sockaddr_in *sin;
+
+  if (!dest) fatal("ipaddr2devname passed a NULL dest address");
+
+  if (!initialized) {  
+    /* Dummy socket for ioctl */
+    initialized = 1;
+    sd = socket(AF_INET, SOCK_DGRAM, 0);
+    if (sd < 0) pfatal("socket in routethrough");
+    ifc.ifc_len = sizeof(buf);
+    ifc.ifc_buf = buf;
+    if (ioctl(sd, SIOCGIFCONF, &ifc) < 0) {
+      fatal("Failed to determine your configured interfaces!\n");
+    }
+    close(sd);
+    ifr = (struct ifreq *) buf;
+    if (ifc.ifc_len == 0) 
+      fatal("routethrough: SIOCGIFCONF claims you have no network interfaces!\n");
+#if HAVE_SOCKADDR_SA_LEN
+    len = MAX(sizeof(struct sockaddr), ifr->ifr_addr.sa_len);
+#else
+    len = sizeof(SA);
+#endif
+    for(; ifr && *((char *)ifr) && ((char *)ifr) < buf + ifc.ifc_len; 
+	((*(char **)&ifr) +=  sizeof(ifr->ifr_name) + len )) {
+      sin = (struct sockaddr_in *) &ifr->ifr_addr;
+      memcpy(&(mydevs[numinterfaces].addr), (char *) &(sin->sin_addr), sizeof(struct in_addr));
+      /* Stevens does this in UNP, so it may be useful in some cases */
+      if ((p = strchr(ifr->ifr_name, ':')))
+	*p = '\0';
+      strncpy(mydevs[numinterfaces].name, ifr->ifr_name, 63);
+      mydevs[numinterfaces].name[63] = '\0';
+      numinterfaces++;
+      if (numinterfaces == 32) 
+	fatal("My god!  You seem to have WAY too many interfaces!\n");
+    }
+
+    /* Now that we've got the interfaces, we g0 after the r0ut3Z, this
+     is the part that is partially from CRH #7 */
+    routez = fopen("/proc/net/route", "r");
+    fgets(buf, sizeof(buf), routez); /* Kill the first line */
+    while(1) {
+      res = fscanf(routez, "%s %8lX %8lX %2lX %ld %ld %ld %8lX %ld %ld %ld \n",iface,&myroutes[numroutes].dest,&tmp,&tmp,&tmp,&tmp,&tmp,&myroutes[numroutes].mask, &tmp, &tmp, &tmp);
+      if (res == EOF) break;
+      if (res != 11) { 
+	error("fscanf on route table returned %d (should be 11)", res); 
+	continue; 
+      }
+      /*      myroutes[numroutes].dest = htonl(myroutes[numroutes].dest);
+	      myroutes[numroutes].mask = htonl(myroutes[numroutes].mask);*/
+      printf("#%d: for dev %s, The dest is %lX and the mask is %lX\n", numroutes, iface, myroutes[numroutes].dest, myroutes[numroutes].mask);
+      for(i=0; i < numinterfaces; i++)
+	if (!strcmp(iface, mydevs[i].name)) {
+	  myroutes[numroutes].dev = &mydevs[i];
+	  break;
+	}
+      if (i == numinterfaces) 
+	fatal("Failed to find interface %s mentioned in /proc/net/route\n", iface);
+      numroutes++;
+      if (numroutes == 32)
+	fatal("My god!  You seem to have WAY to many routes!\n");
+    }   
+  }
+  /* WHEW, that takes care of initializing, now we have the easy job of 
+     finding which route matches */
+  for(i=0; i < numroutes; i++) {  
+    printf("dest=%X mask=%lx dest&mask=%lX myroutes.dest=%lX\n", 
+	   dest->s_addr, myroutes[i].mask, (dest->s_addr & myroutes[i].mask), 
+	   myroutes[i].dest);
+    if ((dest->s_addr & myroutes[i].mask) == myroutes[i].dest) {
+      if (source) {
+	source->s_addr = myroutes[i].dev->addr.s_addr;
+      }
+	return myroutes[i].dev->name;      
+    }
+  }
+return NULL;
+}
+
+
+
+
+
+
 

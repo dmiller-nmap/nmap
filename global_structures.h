@@ -134,7 +134,7 @@ struct ops /* someone took struct options, <grrr> */ {
   int decoyturn;
   int identscan;
   int osscan;
-  enum { icmp, tcp, none} pingtype;
+  int pingtype;
   int pingscan;
   int allowall;
   int wait;

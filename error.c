@@ -5,7 +5,7 @@ va_list  ap;
 va_start(ap, fmt);
 fflush(stdout);
 vfprintf(stderr, fmt, ap);
-fprintf(stderr, "\n");
+fprintf(stderr, "\nQUITTING!\n");
 va_end(ap);
 exit(1);
 }

@@ -263,6 +263,11 @@ struct icmp
    result in ip .  returns 0 if hostname cannot
    be resolved */
 int resolve(char *hostname, struct in_addr *ip);
+/* An awesome function to determine what interface a packet to a given
+   destination should be routed through.  It returns NULL if no appropriate
+   interface is found, oterwise it returns the device name and fills in the
+   source parameter */
+char *routethrough(struct in_addr *dest, struct in_addr *source);
 unsigned short in_cksum(unsigned short *ptr,int nbytes);
 int send_tcp_raw( int sd, struct in_addr *source, 
 		  struct in_addr *victim, unsigned short sport, 

@@ -34,6 +34,26 @@ struct hoststruct *currenths;
 char emptystring[1];
 int sourceaddrwarning = 0; /* Have we warned them yet about unguessable
 			      source addresses? */
+
+/* Routethrough stuph -- kill later */
+{
+char *dev;
+struct in_addr dest;
+struct in_addr source;
+if (!resolve(argv[1], &dest))
+  fatal("Failed to resolve %s\n", argv[1]);
+dev = routethrough(&dest, &source);
+if (dev)
+  printf("%s routes through device %s using IP address %s\n", argv[1], dev, inet_ntoa(source));
+else printf("Could not determine which device to route through for %s!!!\n", argv[1]);
+
+
+
+
+exit(0);
+}
+
+
 /* argv faking silliness */
 for(i=0; i < argc; i++) {
   fakeargv[i] = safe_malloc(strlen(argv[i]) + 1);
@@ -131,11 +151,11 @@ while((arg = getopt(argc,fakeargv,"Ab:D:de:Ffg:hIi:L:M:NnOo:P::p:qrRS:s:T:w:Vv")
     break;
   case 'P': 
     if (*optarg == '\0' || *optarg == 'I')
-      o.pingtype = icmp;
+      o.pingtype |= PINGTYPE_ICMP;
     else if (*optarg == '0' || *optarg == 'N' || *optarg == 'D')      
-      o.pingtype = none;
+      o.pingtype = PINGTYPE_NONE;
     else if (*optarg == 'T') {
-      o.pingtype = tcp;
+      o.pingtype |= PINGTYPE_TCP;
       if (isdigit((int) *(optarg+1)))
 	o.tcp_probe_port = atoi(optarg+1);
 	printf("TCP probe port is %hu\n", o.tcp_probe_port);
@@ -196,11 +216,11 @@ while((arg = getopt(argc,fakeargv,"Ab:D:de:Ffg:hIi:L:M:NnOo:P::p:qrRS:s:T:w:Vv")
 }
 
 /* Take care of user wierdness */
-if (!o.isr00t && o.pingtype == icmp) {
+if (!o.isr00t && (o.pingtype & PINGTYPE_ICMP)) {
   error("Warning:  You are not root -- using TCP pingscan rather than ICMP");
-  o.pingtype = tcp;
+  o.pingtype = PINGTYPE_TCP;
 }
-if (bouncescan && o.pingtype != none) printf("Hint: if your bounce scan target hosts aren't reachable from here, remember to use -P0 so we don't try and ping them prior to the scan\n");
+if (bouncescan && !o.pingtype) printf("Hint: if your bounce scan target hosts aren't reachable from here, remember to use -P0 so we don't try and ping them prior to the scan\n");
 if (o.connectscan && (o.synscan || o.finscan || o.maimonscan || o.xmasscan || o.nullscan)) 
   fatal("Pick just one of -t, -s, and -U.  They all do a TCP portscan.\
  If you are trying to do TCP SYN scanning, just use -s, for FIN use -U, and \
@@ -214,8 +234,8 @@ if ((o.fragscan && !o.synscan && !o.finscan &&!o.maimonscan && !o.nullscan && !o
    fprintf(stderr, "Warning: Packet fragmentation selected on non-linux host.  This may or may not work.\n");
  }
 #endif
-if (o.pingtype == tcp && o.numdecoys > 1)
-  printf("Warning: Using TCPping could theoretically reveal your IP address (even though you are using decoys.  If this concerns you, use -pI (the default)\n"); 
+ /*if (o.pingtype == tcp && o.numdecoys > 1)
+   printf("Warning: Using TCPping could theoretically reveal your IP address (even though you are using decoys.  If this concerns you, use -pI (the default)\n"); */
 if ((o.synscan || o.finscan || o.maimonscan || o.udpscan || o.fragscan || o.xmasscan || o.nullscan) && !o.isr00t)
   fatal("Options specified require r00t privileges.  You don't have them!");
 if (!o.connectscan && !o.udpscan && !o.synscan && !o.finscan && !o.maimonscan &&  !o.nullscan && !o.xmasscan && !bouncescan && !o.pingscan) {
@@ -324,9 +344,9 @@ while((host_spec = grab_next_host_spec(inputfd, argc, fakeargv))) {
     if (o.wait && currenths->rtt) currenths->rtt += o.wait;
     if (source) memcpy(&currenths->source_ip, source, sizeof(struct in_addr));
 if (!o.pingscan) {
-  if (o.pingtype != none && (currenths->flags & HOST_UP) && (o.verbose || o.debugging)) 
+  if (o.pingtype && (currenths->flags & HOST_UP) && (o.verbose || o.debugging)) 
     printf("Host %s (%s) appears to be up ... good.\n", currenths->name, inet_ntoa(currenths->host));    
-  else if (o.verbose && o.pingtype != none && !(currenths->flags & HOST_UP)) {  
+  else if (o.verbose && o.pingtype && !(currenths->flags & HOST_UP)) {  
     if (resolve_all)
       nmap_log("Host %s (%s) appears to be down, skipping it.\n", currenths->name, inet_ntoa(currenths->host));
     else printf("Host %s (%s) appears to be down, skipping it.\n", currenths->name, inet_ntoa(currenths->host));
@@ -440,7 +460,7 @@ o.magic_port = 33000 + (rand() % 31000);
 o.allowall = !(IGNORE_ZERO_AND_255_HOSTS);
 #endif
 o.ptime = PING_TIMEOUT;
-o.pingtype = (o.isr00t)? icmp : tcp;
+o.pingtype = (o.isr00t)? PINGTYPE_ICMP : PINGTYPE_TCP;
 }
 
 __inline__ void max_rcvbuf(int sd) {
@@ -2353,11 +2373,10 @@ portlist pos_scan(struct hoststruct *target, unsigned short *portarray, stype sc
     p = strdup(inet_ntoa(target->host));
     sprintf(filter, "(icmp and dst host %s) or (tcp and src host %s and dst host %s)", inet_ntoa(target->source_ip), p, inet_ntoa(target->source_ip));
     free(p);
-    /* Stupid libpcap problem, is this Linux only? */
-#ifdef LINUX
+
     if (target->source_ip.s_addr == htonl(0x7F000001))
       filter[0] = '\0';
-#endif
+
 
 
     if (o.debugging)
