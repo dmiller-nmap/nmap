@@ -1,4 +1,4 @@
-Nmap V. 3.00 Usage: nmap [Scan Type(s)] [Options] <host or net list>
+Nmap V. 3.10ALPHA1 Usage: nmap [Scan Type(s)] [Options] <host or net list>
 Some Common Scan Types ('*' options require root privileges)
 * -sS TCP SYN stealth port scan (default if privileged (root))
   -sT TCP connect() port scan (default for unprivileged users)
@@ -13,6 +13,7 @@ Some Common Options (none are required, most can be combined):
   -v Verbose. Its use is recommended.  Use twice for greater effect.
   -P0 Don't ping hosts (needed to scan www.microsoft.com and others)
 * -Ddecoy_host1,decoy2[,...] Hide scan using many decoys
+  -6 scans via IPv6 rather than IPv4
   -T <Paranoid|Sneaky|Polite|Normal|Aggressive|Insane> General timing policy
   -n/-R Never do DNS resolution/Always resolve [default: sometimes resolve]
   -oN/-oX/-oG <logfile> Output normal/XML/grepable scan logs to <logfile>

@@ -106,7 +106,7 @@ rm -f ${prefix}/bin/xnmap
 * Tue Mar 06 2001 Ben Reed <ben@opennms.org>
 - changed spec to handle not building the frontend
 
-* Thu Dec 30 1999 Fyodor <fyodor@insecure.org>
+* Thu Dec 30 1999 Fyodor (fyodor@insecure.org)
 - Updated description
 - Eliminated source1 (nmapfe.desktop) directive and simply packaged it with Nmap
 - Fixed nmap distribution URL (source0)
@@ -131,12 +131,12 @@ rm -f ${prefix}/bin/xnmap
 	many files/dirs
 - added desktop entry for gnome
 
-* Sun Jan 10 1999 Fyodor <fyodor@insecure.org>
+* Sun Jan 10 1999 Fyodor (fyodor@insecure.org)
 - Merged in spec file sent in by Ian Macdonald <ianmacd@xs4all.nl>
 
-* Tue Dec 29 1998 Fyodor <fyodor@insecure.org>
+* Tue Dec 29 1998 Fyodor (fyodor@insecure.org)
 - Made some changes, and merged in another .spec file sent in
   by Oren Tirosh <oren@hishome.net>
 
-* Mon Dec 21 1998 Riku Meskanen <mesrik@cc.jyu.fi>
+* Mon Dec 21 1998 Riku Meskanen (mesrik@cc.jyu.fi)
 - initial build for RH 5.x

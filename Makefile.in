@@ -38,7 +38,7 @@ SRCS = main.cc nmap.cc targets.cc tcpip.cc nmap_error.cc utils.cc idle_scan.cc o
 
 OBJS = main.o nmap.o targets.o tcpip.o nmap_error.o utils.o idle_scan.o osscan.o output.o scan_engine.o timing.o charpool.o services.o protocols.o nmap_rpc.o portlist.o NmapOps.o TargetGroup.o Target.o @COMPAT_OBJS@
 
-DEPS = nmap.h nmap_error.h targets.h idle_scan.h osscan.h output.h scan_engine.h timing.h tcpip.h utils.h global_structures.h charpool.h services.h protocols.h nmap_rpc.h portlist.h
+DEPS = nmap.h nmap_error.h targets.h idle_scan.h osscan.h output.h scan_engine.h timing.h tcpip.h utils.h global_structures.h charpool.h services.h protocols.h nmap_rpc.h portlist.h NmapOps.h TargetGroup.h Target.h
 
 all: $(TARGET) $(TARGETNMAPFE)
 
@@ -176,19 +176,21 @@ my_distclean:
 depend:
 	$(MAKEDEPEND) $(INCLS) -s "# DO NOT DELETE" -- $(DEFS) -- $(SRCS)
 
-install-nmapfe: $(TARGETNMAPFE)
-	@echo "If the next command fails -- you cannot use the X front end"
-	-test -f nmapfe/nmapfe && $(INSTALL) -c -m 755 nmapfe/nmapfe $(bindir)/nmapfe && $(SHTOOL) rm -f $(bindir)/xnmap && $(SHTOOL) mkln -f -s $(bindir)/nmapfe $(bindir)/xnmap && $(INSTALL) -c -m 644 nmapfe.desktop $(deskdir)/nmapfe.desktop && $(INSTALL) -c -m 644 docs/nmapfe.1 $(mandir)/man1/nmapfe.1 && $(INSTALL) -c -m 644 docs/xnmap.1 $(mandir)/man1/xnmap.1
-
-install: $(TARGET) $(TARGETNMAPFE)
+install-nmap: $(TARGET)
 	$(SHTOOL) mkdir -f -p -m 755 $(bindir) $(mandir)/man1 $(nmapdatadir) $(deskdir)
 	$(INSTALL) -c -m 755 nmap $(bindir)/nmap
-	$(INSTALLNMAPFE)
 	$(INSTALL) -c -m 644 docs/$(TARGET).1 $(mandir)/man1/$(TARGET).1
 	$(INSTALL) -c -m 644 nmap-os-fingerprints  $(nmapdatadir)/nmap-os-fingerprints
 	$(INSTALL) -c -m 644 nmap-services  $(nmapdatadir)/nmap-services
 	$(INSTALL) -c -m 644 nmap-protocols  $(nmapdatadir)/nmap-protocols
 	$(INSTALL) -c -m 644 nmap-rpc  $(nmapdatadir)/nmap-rpc
+
+install-nmapfe: $(TARGETNMAPFE)
+	$(SHTOOL) mkdir -f -p -m 755 $(bindir) $(mandir)/man1 $(nmapdatadir) $(deskdir)
+	@echo "If the next command fails -- you cannot use the X front end"
+	-test -f nmapfe/nmapfe && $(INSTALL) -c -m 755 nmapfe/nmapfe $(bindir)/nmapfe && rm -f $(bindir)/xnmap && $(SHTOOL) mkln -f -s $(bindir)/nmapfe $(bindir)/xnmap && $(INSTALL) -c -m 644 nmapfe.desktop $(deskdir)/nmapfe.desktop && $(INSTALL) -c -m 644 docs/nmapfe.1 $(mandir)/man1/nmapfe.1 && $(INSTALL) -c -m 644 docs/xnmap.1 $(mandir)/man1/xnmap.1
+
+install: install-nmap $(INSTALLNMAPFE)
 
 uninstall:
 	rm -f $(bindir)/$(TARGET) $(bindir)/nmapfe $(bindir)/xnmap

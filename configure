@@ -3016,7 +3016,7 @@ if test "${with_nmapfe+set}" = set; then
   withval="$with_nmapfe"
     case "$with_nmapfe" in
   no)
-    TARGETNMAPFE=""; INSTALLNMAPFE="@echo 'nmapfe is not installed because it was not build'"
+    TARGETNMAPFE=""; INSTALLNMAPFE=""
     ;;
   esac
 

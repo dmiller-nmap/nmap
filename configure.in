@@ -133,7 +133,7 @@ INSTALLNMAPFE=install-nmapfe
 AC_ARG_WITH(nmapfe, [  --with-nmapfe    use nmapfe],
  [  case "$with_nmapfe" in
   no)
-    TARGETNMAPFE=""; INSTALLNMAPFE="@echo 'nmapfe is not installed because it was not build'"
+    TARGETNMAPFE=""; INSTALLNMAPFE=""
     ;;
   esac]
 )
