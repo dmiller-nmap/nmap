@@ -956,8 +956,8 @@ int nmap_main(int argc, char *argv[]) {
 	log_write(LOG_XML, "<host>");
 	write_host_status(currenths, resolve_all);
 	printmacinfo(currenths);
-	if (currenths->flags & HOST_UP)
-	  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"\n");
+	//	if (currenths->flags & HOST_UP)
+	//  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"\n");
 	log_write(LOG_XML, "</host>\n");
 	log_flush_all();
 	continue;

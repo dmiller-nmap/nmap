@@ -207,7 +207,7 @@ int TargetGroup::parse_expr(const char * const target_expr, int af) {
 	    if ((r = strchr(addy[i],'-')) && *(r+1) ) end = atoi(r + 1);
 	    else if (r && !*(r+1)) end = 255;
 	  }
-	  if (o.debugging)
+	  if (o.debugging > 2)
 	    log_write(LOG_STDOUT, "The first host is %d, and the last one is %d\n", start, end);
 	  if (start < 0 || start > end) fatal("Your host specifications are illegal!");
 	  for(k=start; k <= end; k++)
@@ -225,7 +225,7 @@ int TargetGroup::parse_expr(const char * const target_expr, int af) {
 	  if ((r =  strchr(addy[i],'-')) && *(r+1) ) end = atoi(r+1);
 	  else if (r && !*(r+1)) end = 255;
 	}
-	if (o.debugging)
+	if (o.debugging > 2)
 	  log_write(LOG_STDOUT, "The first host is %d, and the last one is %d\n", start, end);
 	if (start < 0 || start > end) fatal("Your host specifications are illegal!");
 	if (j + (end - start) > 255) fatal("Your host specifications are illegal!");

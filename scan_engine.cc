@@ -1193,7 +1193,7 @@ void HostScanStats::getTiming(struct ultra_timing_vals *tmng) {
 void HostScanStats::boostScanDelay() {
   if (sdn.delayms == 0)
     sdn.delayms = 32;
-  else sdn.delayms = MIN(sdn.delayms * 2, 3000);
+  else sdn.delayms = MIN(sdn.delayms * 2, 1000);
   sdn.last_boost = USI->now;
   sdn.droppedRespSinceDelayChanged = 0;
   sdn.goodRespSinceDelayChanged = 0;
@@ -2215,9 +2215,12 @@ static bool get_pcap_result(UltraScanInfo *USI, struct timeval *stime) {
 	}
       }
     } else if (ip->ip_p == IPPROTO_ICMP) {
+      if (icmp->icmp_type != 3)
+	continue;
+
       if ((unsigned) ip->ip_hl * 4 + 28 > bytes) {
 	if (o.debugging) 
-	  error("Received short ICMP packet (%d bytes)\n", bytes);
+	  error("Received short ICMP packet (%d bytes)", bytes);
 	continue;
       }
       icmp = (struct icmp *) ((char *)ip + 4 * ip->ip_hl);
