@@ -985,7 +985,7 @@ int listen_icmp(int icmpsock,  unsigned short outports[],
 #else
   struct iphdr *ip = (struct iphdr *) response;
   struct iphdr *ip2;
-  struct icmphdr *icmp = (struct icmphdr *) (response + sizeof(struct ip));
+  struct icmphdr *icmp = (struct icmphdr *) (response + sizeof(struct iphdr));
 #endif
   unsigned short *data;
   int badport, numcaught=0, bytes, i, tmptry=0, found=0;
@@ -1816,7 +1816,7 @@ ip2->ip_src.s_addr = source->s_addr;
 ip2->ip_dst.s_addr= victim->s_addr;
 ip2->ip_sum = in_cksum((unsigned short *)ip2, sizeof(struct ip));
 #else
-bzero(ip2, sizeof(struct ip));
+bzero(ip2, sizeof(struct iphdr));
 ip2->version = 4;
 ip2->ihl = 5;
 ip2->tot_len = htons(sizeof(struct iphdr) + 4); /* the rest of our TCP packet */
