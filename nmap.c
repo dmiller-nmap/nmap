@@ -1857,8 +1857,10 @@ if (o.debugging || o.verbose)
   printf("Initiating FIN,NULL, UDP, or Xmas stealth scan against %s (%s)\n", target->name, inet_ntoa(target->host));
   
 
-  do {    
+  do {
     changed = 0;
+    if (tries > 3 && senddelay == 0) senddelay = 10000; /* Currently only 
+							   affects UDP */
     while(testinglist != NULL)  /* While we have live queries or more ports to scan */
     {
       /* Check the possible retransmissions first */
