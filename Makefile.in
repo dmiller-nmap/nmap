@@ -1,4 +1,4 @@
-NMAP_VERSION = 2.54BETA14
+NMAP_VERSION = 2.54BETA16
 NMAP_NAME= nmap
 NMAP_URL= www.insecure.org/nmap/
 NMAP_PLATFORM=@host@
@@ -93,7 +93,7 @@ distro:
 	nmapfe.desktop nmap-services nmap-rpc nmap-protocols \
 	configure.in config.h.in nmap_winconfig.h Makefile.in configure \
         $(SHTOOL) install-sh config.guess nmap-$(NMAP_VERSION)-1.spec \
-        config.sub INSTALL COPYING CHANGELOG HACKING \
+        config.sub INSTALL README-WIN32 COPYING CHANGELOG HACKING \
 	$(LIBPCAPDIR) mswin32 /usr/tmp/nmap-$(NMAP_VERSION)
 	$(SHTOOL) mkdir /usr/tmp/nmap-$(NMAP_VERSION)/docs
 	cd docs; cp README copying.html nmap-fingerprinting-article.txt \

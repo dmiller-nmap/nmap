@@ -267,8 +267,15 @@ void winip_postopt_init()
 		&& ver.dwMajorVersion >= 5 && !wo.norawsock))
 	{
 		SOCKET s = INVALID_SOCKET;
+		//	we need to bind before non-admin
+		//	will detect the failure
+		struct sockaddr_in sin;
+		ZeroMemory(&sin, sizeof(sin));
+		sin.sin_family = AF_INET;
+		sin.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
 		s = socket(AF_INET, SOCK_RAW, IPPROTO_RAW);
-		if(s != INVALID_SOCKET)
+		if(s != INVALID_SOCKET
+			&& !bind(s, (struct sockaddr*)&sin, sizeof(sin)))
 		{
 			rawsock_avail = 1;
 			closesocket(s);

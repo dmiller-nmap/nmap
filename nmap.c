@@ -247,7 +247,7 @@ int main(int argc, char *argv[], char *envp[]) {
 	  fatal("Could not find Nmap -- you must add --nmap_path argument");
 	}       
 
-	/* We should be courtious and give Nmap reasonable signal defaults */
+	/* We should be courteous and give Nmap reasonable signal defaults */
 #if HAVE_SIGNAL
 	signal(SIGINT, SIG_DFL);
 	signal(SIGTERM, SIG_DFL);

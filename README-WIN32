@@ -20,9 +20,13 @@ Nmap only exists for Win32 because of their hard work.
 == Nmap does not work under Windows ME .  This is a WinPcap
    limitation.
 
-== RAS connections (eg PPP, SLIP, etc) are not supported under Windows
-   NT or 2000.  This is a WinPcap limitation.  Ethernet should work
-   fine on those platforms.
+== RAS connections (eg PPP, SLIP, etc) are not supported except under
+   Windows 2000.  This is a WinPcap limitation on NT and it isn't
+   supported (yet) on Win98.  Ethernet should work fine on all platforms.
+
+== All interfaces (except localhost) should work under Windows 2000 as
+   administrator.  If you have trouble under Win2K, try the
+   --win_norawsock switch.
 
 == NmapFE (the GUI front end) has not yet been ported to Win32 .
 
@@ -35,7 +39,8 @@ nmap-VERSION-win32.zip :
 
 1) Make sure you have installed Winpcap Version 2.1-beta or later.  This
    is available at http://netgroup-serv.polito.it/winpcap/ .  It is
-   very important that you use version 2.1-beta or later.
+   very important that you use version 2.1-beta or later.  This is
+   optional, but recommended, under Windows 2000.
 
 2) Unzip the archive using Winzip or your favorite decompression
    utility -- a directory call nmap-VERSION will be extracted .
