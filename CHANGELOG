@@ -1,138 +1,10 @@
 # Nmap Changelog ($Id$)
 
-o Nmap now wishes itself a happy birthday when run on September 1 in
-  verbose mode!  The first public release was on that date in 1997.
-
-o Removed a spurious warning message relating to the Windows ARP cache
-  being empty.  Patch by Gisle Vanem (giva(a)bgnett.no).
-
-o Changed the argument parser to better detect bogus arguments to the
-  -iR option.
-
-o Fixed a compilation problem when using some new versions of g++.
-  The problem was noted and patch sent by Gisle Vanem
-  (giva(a)bgnett.no).
-
-Nmap 3.59ALPHA7
-
-o Fixed a problem which could cause a deadlock in some dropped packet
-  cases.
-
-o Fixed some serious runtime portability issues on *BSD systems.
-  Thanks to Eric (catastrophe.net) for reporting the problem.
-
-o Tweaked the License blurb on source files and in the man page.  It
-  clarifies some issues and includes a new GPL exception that
-  explicitly allows linking with the OpenSSL library.  Some people
-  believe that the GPL and OpenSSL licenses are incompatable without
-  this special exception.
-
-Nmap 3.59ALPHA6
-
-o Added --exclude option, which lets you specify a comma-separated
-  list of targets (hosts, ranges, netblocks) that should be excluded
-  from the scan.  This is useful to keep from scannig yourself, your
-  ISP, particularly sensitive hosts, etc.  The new --excludefile reads
-  the list (newline-delimited) from a given file.  All the work was
-  done by Mark-David McLaughlin (mdmcl(a)cisco.com> and William McVey
-  ( wam(a)cisco.com ), who sent me a well-designed and well-tested
-  patch.
-
-o Added support for --min_parallelism and --max_parallelism in the new
-  ultra_scan() framework.  Thanks to Bill Petersen
-  (bill.petersen(a)alcatel.com) for noting that they weren't affecting
-  his scan times.
-
-o Portability changes so that Nmap again compiles on Windows with
-  Visual Studio. Performed some testing and built binaries for distribution.
-
-o Fixed some Windows portability issues discovered by Gisle Vanem
-  (giva(a)bgnett.no).
-
-o Workaround crippled raw sockets on Microsoft Windows XP SP2 scans.
-  I applied a patch by Andy Lutomirski (luto(a)stanford.edu) which
-  causes Nmap to default to winpcap sends instead.  The winpcap send
-  functionality was already there for versions of Windows such as NT and
-  Win98 that never supported Raw Sockets in the first place.
-
-o Changed how Nmap sends Arp requests on Windows to use the iphlpapi
-  SendARP() function rather than creating it raw and reading the
-  response from the Windows ARP cache.  This works around a
-  (reasonable) feature of Windows Firewall which ignored such
-  unsolicited responses.  The firewall is turned on by default as of
-  Windows XP SP2.  This change was implemented by Dana Epp
-  (dana(a)vulscan.com).
-
-o Fixed some warnings that crop up when compiling nbase C files with a
-  C++ compiler.  Thanks to Gisle Vanem (giva(a)bgnett.no) for sending
-  the patch.
-
-Nmap 3.59ALPHA5
-
-o Fixed a major timing bug that I introduced in ALPHA4.  The bug tends
-  to affect scans against multiple, filtered hosts.
-
-o Improved timing algorithms based on benchmark results against a
-  diverse set of networks.
-
-o Documented the --osscan_limit option, which saves time by skipping
-  OS detection if at least one open and one closed port are not found on
-  the remote hosts.  OS detection is much less reliable against such
-  hosts anyway, and skipping it can save some time.
-
-o Fixed an assertion failure (!probes_outstanding.empty()) reported by
-  Bill Petersen (bill.petersen(a)alcatel.com).
-
-o Fixed a bug that caused the source host (localhost) to be
-  skipped when scanning a network that includes the host itself (at
-  least on Linux).
-
-o Fixed Solaris 10 detection by the build system, thanks to a patch by
-  Tom Duffy (tduffy(a)sun.com).
-
-o Improved Windows support when using the MingW compiler thanks to a
-  patch from Gisle Vanem (giva(a)bgnett.no).
-
-Nmap 3.59ALPHA4
-
-o Many Windows portability fix and bug fixes, thanks to patch from
-  Gisle Vanem (giva(a)bgnett.no).  With these changes, he was able to
-  compile Nmap on Windows using MingW + gcc 3.4 C++ rather than MS
-  Visual Studio.
-
-o Made a number of important timing fixes, that should spead things up
-  against hosts where many packet drops were detected.
-
-o Fixed compilation on Solaris versions < 2.51 thanks to a patch by
-  Tom Duffy (tduffy(a)sun.com)
-
-o Provide limited --packet_trace support for TCP connect() (-sT) scans.
-
-Nmap 3.59ALPHA3
-
-o Fixed a segfault bug that could occur when certain ICMP messages are
-  received during a scan.
-
-o Fixed a memory leak related to ping and list scanning.  Found with
-  valgrind ( http://valgrind.kde.org/ ).
-
-o Fixed (I hope) the assertion failure "len == ntohs(ipv4->ip_len)"
-  reported by Eric (catastrophe.net).  I had forgotten that *BSD
-  treats ip_len strangely, and had to use the BSDUFIX macro there.
-
-o Fixed a memory leak related to the Nmap output table.
-
-Nmap 3.59ALPHA2
-
-o Fixed a segfault bug, occuring during certain connect() scans.
-  These are normally only done by non-root users.  Bug reported by
-  Arturo "Buanzo" Busleiman (buanzo(a)buanzo.com.ar)
-
-Nmap 3.59ALPHA1
+Nmap 3.70
 
 o Rewrote core port scanning engine, which is now named ultra_scan().
   Improved algorithms make this faster (often dramatically so) in
-  almost all cases.  Not only is it superior against single hosts,
+  almost all cases.  Not only is it superior against single hosts, but
   ultra_scan() can scan many hosts (sometimes hundreds) in parallel.
   This offers many efficiency/speed advantages.  For example, hosts
   often limit the ICMP port unreachable packets used by UDP scans to
@@ -176,13 +48,28 @@ o Nmap now estimates completion times for almost all port scan types
   that take more than a minute or two, you will see occasional updates
   like:
   SYN Stealth Scan Timing: About 30.01% done; ETC: 16:04 (0:01:09 remaining)
-  New updates are given when the estimates change significantly.
+  New updates are given if the estimates change significantly.
+
+o Added --exclude option, which lets you specify a comma-separated
+  list of targets (hosts, ranges, netblocks) that should be excluded
+  from the scan.  This is useful to keep from scannig yourself, your
+  ISP, particularly sensitive hosts, etc.  The new --excludefile reads
+  the list (newline-delimited) from a given file.  All the work was
+  done by Mark-David McLaughlin (mdmcl(a)cisco.com> and William McVey
+  ( wam(a)cisco.com ), who sent me a well-designed and well-tested
+  patch.
 
 o Nmap now has a "port scan ping" system.  If it has received at least
   one response from any port on the host, but has not received
   responses lately (usually due to filtering), Nmap will "ping" that
   known-good port occasionally to detect latency, packet drop rate,
   etc.
+
+o Service/version detection now handles multiple hosts at once for
+  more efficient and less-intrusive operation.
+
+o Nmap now wishes itself a happy birthday when run on September 1 in
+  verbose mode!  The first public release was on that date in 1997.
 
 o The port randomizer now has a bias toward putting
   commonly-accessible ports (80, 22, etc.) near the beginning of the
@@ -195,13 +82,44 @@ o Host timeout system (--host_timeout) overhauled to support host
   slow host being scanned at the same time.
 
 o When Nmap has not received any responses from a host, it can now
-  use certain timing values from other hosts from the same scan group.
+  use certain timing values from other hosts from the same scan
+  group.  This way Nmap doesn't have to use absolute-worst-case
+  (300bps SLIP link to Uzbekistan) round trip timeouts and such.
 
 o Enabled MAC address reporting when using the Windows version
   of Nmap.  Thanks to Andy Lutomirski (luto(a)stanford.edu) for
   writing and sending the patch.
 
-o Upgraded libpcap from version 0.7.2 to 0.8.3.
+o Workaround crippled raw sockets on Microsoft Windows XP SP2 scans.
+  I applied a patch by Andy Lutomirski (luto(a)stanford.edu) which
+  causes Nmap to default to winpcap sends instead.  The winpcap send
+  functionality was already there for versions of Windows such as NT and
+  Win98 that never supported Raw Sockets in the first place.
+
+o Changed how Nmap sends Arp requests on Windows to use the iphlpapi
+  SendARP() function rather than creating it raw and reading the
+  response from the Windows ARP cache.  This works around a
+  (reasonable) feature of Windows Firewall which ignored such
+  unsolicited responses.  The firewall is turned on by default as of
+  Windows XP SP2.  This change was implemented by Dana Epp
+  (dana(a)vulscan.com).
+
+o Fixed some Windows portability issues discovered by Gisle Vanem
+  (giva(a)bgnett.no).
+
+o Upgraded libpcap from version 0.7.2 to 0.8.3.  This was an attempt
+  to fix an annoying bug, which I then found was actually in my code
+  rather than libpcap :).
+
+o Removed Ident scan (-I).  It was rarely useful, and the
+  implementation would have to be rewritten for the new ultra_scan()
+  system.  If there is significant demand, perhaps I'll put it back in
+  sometime.
+
+o Documented the --osscan_limit option, which saves time by skipping
+  OS detection if at least one open and one closed port are not found on
+  the remote hosts.  OS detection is much less reliable against such
+  hosts anyway, and skipping it can save some time.
 
 o Updated nmapfe.desktop file to provide better NmapFE desktop support
   under Fedora Core and other systems.  Thanks to Mephisto
@@ -221,10 +139,10 @@ o Changed xmloutputversion in XML output from 1.0 to 1.01 to note that
   there was a slight change (which was actually the MAC stuff in 3.55).
   Thanks to Lionel CONS (lionel.cons(a)cern.ch) for the suggestion.
 
-o Removed Ident scan (-I).  It was rarely useful, and the
-  implementation would have to be rewritten for the new ultra_scan()
-  system.  If there is significant demand, perhaps I'll put it back in
-  sometime.
+o Many Windows portability fix and bug fixes, thanks to patch from
+  Gisle Vanem (giva(a)bgnett.no).  With these changes, he was able to
+  compile Nmap on Windows using MingW + gcc 3.4 C++ rather than MS
+  Visual Studio.
 
 o Removed (addport) tags from XML output.  They used to provide open
   ports as they were discovered, but don't work now that the port
@@ -234,6 +152,40 @@ o Removed (addport) tags from XML output.  They used to provide open
 
 o Configure script now detects GNU/k*BSD systems (whatever those are),
   thanks to patch from Robert Millan (rmh@debian.org)
+
+o Fixed various crashes and assertion failures related to the new
+  ultra_scan() system, that were found by Arturo "Buanzo" Busleiman
+  (buanzo(a)buanzo.com.ar), Eric (catastrophe.net), and Bill Petersen
+  (bill.petersen(a)alcatel.com).
+
+o Fixed some minor memory leaks relating to ping and list scanning as
+  well as the Nmap output table.  These were found with valgrind (
+  http://valgrind.kde.org/ ).
+
+o Provide limited --packet_trace support for TCP connect() (-sT)
+  scans.
+
+o Fixed compilation on certain Solaris machines thanks to a patch by
+  Tom Duffy (tduffy(a)sun.com)
+
+o Fixed some warnings that crop up when compiling nbase C files with a
+  C++ compiler.  Thanks to Gisle Vanem (giva(a)bgnett.no) for sending
+  the patch.
+
+o Tweaked the License blurb on source files and in the man page.  It
+  clarifies some issues and includes a new GPL exception that
+  explicitly allows linking with the OpenSSL library.  Some people
+  believe that the GPL and OpenSSL licenses are incompatable without
+  this special exception.
+
+o Fixed some serious runtime portability issues on *BSD systems.
+  Thanks to Eric (catastrophe.net) for reporting the problem.
+
+o Changed the argument parser to better detect bogus arguments to the
+  -iR option.
+
+o Removed a spurious warning message relating to the Windows ARP cache
+  being empty.  Patch by Gisle Vanem (giva(a)bgnett.no).
 
 Nmap 3.55
 
