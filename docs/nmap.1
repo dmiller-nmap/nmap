@@ -349,7 +349,7 @@ ACK packets for root users.  Hosts that are up should
 respond with a RST (or, rarely, a SYN|ACK).  You can set the
 destination ports in the same manner as \-PT above.
 .TP
-.B \-PI
+.B \-PE
 This option uses a true ping (ICMP echo request) packet.  It
 finds hosts that are up and also looks for subnet-directed
 broadcast addresses on your network.  These are IP addresses
@@ -363,7 +363,7 @@ Uses an ICMP timestamp request (code 13) packet to find listening hosts.
 .TP
 .B \-PM
 Same as 
-.B \-PI
+.B \-PE
 and 
 .B \-PP
 except uses a netmask request (ICMP code 17).
@@ -372,7 +372,7 @@ except uses a netmask request (ICMP code 17).
 This is the default ping type.  It uses both the ACK (
 .B \-PT
 ) and ICMP echo request (
-.B \-PI
+.B \-PE
 ) sweeps in parallel.  This way you can get firewalls that filter
 either one (but not both).  The TCP probe destination port can be set
 in the same manner as with \-PT above.  Note that this flag is now deprecated
@@ -517,8 +517,8 @@ stDouT!@!!
 .B \--resume <logfilename>
 A network scan that is cancelled due to control-C, network
 outage, etc. can be resumed using this option.  The
-logfilename must be either a normal (-oN) or machine
-parsable (-oM) log from the aborted scan.  No other options
+logfilename must be either a normal (-oN) or grepable (-oG) 
+log from the aborted scan.  No other options
 can be given (they will be the same as the aborted scan).
 Nmap will start on the machine after the last one
 successfully scanned in the log file.
@@ -873,7 +873,7 @@ want to use \'127-222\' instead of the first asterisks because
 that section has a greater density of interesting machines
 (IMHO).
 .Sp
-.B host -l company.com | cut \'-d \' -f 4 | ./nmap -v -iL -
+.B "host -l company.com | cut \'-d \' -f 4 | ./nmap -v -iL -"
 .Sp
 Do a DNS zone transfer to find the hosts in company.com and
 then feed the IP addresses to
@@ -896,7 +896,7 @@ can be obtained from
 .I http://www.insecure.org/nmap/
 .Sp
 .I nmap 
-is (C) 1995-2001 by Insecure.Com LLC
+is (C) 1995-2003 by Insecure.Com LLC
 .Sp
 This program is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public
