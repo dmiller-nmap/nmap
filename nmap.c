@@ -1922,7 +1922,7 @@ if (o.debugging || o.verbose)
 			   current->portno, 0, 0, scanflags, 0, 0, 0);
 	    else send_udp_raw(rawsd, &o.decoys[decoy], &target->host, o.magic_port,
 			      current->portno, NULL, 0);
-	    if (scantype == UDP_SCAN) usleep(50000);
+	    /*	    if (scantype == UDP_SCAN) usleep(50000);*/
 	    /*usleep(10000);*/ /* *WE* normally do not need this, but the target 
 	      lamer often does */
 	  }
