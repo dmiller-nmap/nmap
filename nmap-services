@@ -1919,6 +1919,7 @@ X11:6             6006/tcp   # X Window server
 X11:7             6007/tcp   # X Window server
 X11:8             6008/tcp   # X Window server
 X11:9             6009/tcp   # X Window server
+arcserve          6050/tcp   # ARCserve agent
 isdninfo          6105/tcp   # isdninfo
 isdninfo          6106/tcp   # i4lmond
 softcm            6110/tcp   # HP SoftBench CM
@@ -2013,6 +2014,8 @@ wnn6              22273/tcp  # Wnn6 (Japanese input)
 wnn6_Cn           22289/tcp  # Wnn6 (Chinese input)
 wnn6_Kr           22305/tcp  # Wnn6 (Korean input)
 wnn6_Tw           22321/tcp  # Wnn6 (Taiwanse input)
+hpnpd             22370/tcp  # Hewlett-Packard Network Printer daemon
+hpnpd             22370/udp  # Hewlett-Packard Network Printer daemon
 wnn6_DS           26208/tcp  # Wnn6 (Dserver)
 Trinoo_Bcast      27444/udp  # Trinoo distributed attack tool Master -> Bcast Daemon communication
 Trinoo_Master     27665/tcp  # Trinoo distributed attack tool Master server control port

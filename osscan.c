@@ -30,9 +30,12 @@
 /*  into the main distribution.  By sending these changes to Fyodor or */
 /*  one the insecure.org development mailing lists, it is assumed that */
 /*  you are offering Fyodor the unlimited, non-exclusive right to      */
-/*  reuse, modify, and relicense the code.  If you wish to specify     */
-/*  special license conditions of your contributions, please state     */
-/*  them up front.                                                     */
+/*  reuse, modify, and relicense the code.  This is important because  */
+/*  the inability to relicense code has caused devastating problems    */
+/*  for other Free Software projects (such as KDE and NASM).  Nmap     */
+/*  will always be available Open Source.  If you wish to specify      */
+/*  special license conditions of your contributions, just say so      */
+/*  when you send them.                                                */
 /*                                                                     */
 /*  This program is distributed in the hope that it will be useful,    */
 /*  but WITHOUT ANY WARRANTY; without even the implied warranty of     */
@@ -673,7 +676,7 @@ void match_fingerprint(FingerPrint *FP, struct FingerPrintResults *FPR,
 	}
       }
     assert(num_subtests_succeeded <= num_subtests);
-    acc = num_subtests_succeeded / (double) num_subtests;
+    acc = (num_subtests)? (num_subtests_succeeded / (double) num_subtests) : 0;
     /*    error("Comp to %s: %li/%li=%f", o.reference_FPs[i]->OS_name, num_subtests_succeeded, num_subtests, acc); */
     if (acc >= FPR_entrance_requirement || acc == 1.0) {
 

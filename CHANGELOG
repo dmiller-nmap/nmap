@@ -1,5 +1,11 @@
 # Nmap Changelog
 
+-- Fixed a problem found by Martyn Tovey <martyn@netcraft.com> when
+   using Nmap on platforms that dislike division by zero.
+
+-- Removed 128.210.*.* addresses from Nmap man page due to complaints
+   from Purdue security staff.
+
 -- Fixed FreeBSD (some versions) compilation problem found by Martyn
    Tovey <martyn@netcraft.com>
 

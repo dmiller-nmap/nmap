@@ -676,10 +676,10 @@ and /16 for a class 'B'.
 .Sp
 Nmap also has a more powerful notation which lets you
 specify an IP address using lists/ranges for each element.
-Thus you can scan the whole class 'B' network 128.210.*.* by
-specifying '128.210.*.*' or '128.210.0-255.0-255' or even
-'128.210.1-50,51-255.1,2,3,4,5-255'.  And of course you can
-use the mask notation: '128.210.0.0/16'.  These are all
+Thus you can scan the whole class 'B' network 192.168.*.* by
+specifying '192.168.*.*' or '192.168.0-255.0-255' or even
+'192.168.1-50,51-255.1,2,3,4,5-255'.  And of course you can
+use the mask notation: '192.168.0.0/16'.  These are all
 equivalent.  If you use asterisks ('*'), remember that most
 shells require you to escape them with back slashes or
 protect them with quotes.
@@ -720,10 +720,10 @@ operating system is running on each host that is up and
 running.  This requires root privileges because of the SYN
 scan and the OS detection.
 .Sp
-.B nmap -sX -p 22,53,110,143,4564 "128.210.*.1-127"
+.B nmap -sX -p 22,53,110,143,4564 "198.116.*.1-127"
 .Sp
 Sends an Xmas tree scan to the first half of each of the 255
-possible 8 bit subnets in the 128.210 class 'B' address
+possible 8 bit subnets in the 198.116 class 'B' address
 space.  We are testing whether the systems run sshd, DNS,
 pop3d, imapd, or port 4564.  Note that Xmas scan doesn't
 work on Microsoft boxes due to their deficient TCP stack.
@@ -787,16 +787,17 @@ have a right to know exactly what a program is going to do
 before they run it.  This also allows you to audit the
 software for security holes (none have been found so far).
 .Sp
-Source code also allows you to port nmap to new platforms,
-fix bugs, and add new features.  You are highly encouraged
-to send your changes to Fyodor for possible incorporation
-into the main Nmap distribution.  By sending these changes
-to Fyodor or nmap-hackers, it is assumed that you are
-offering Fyodor the unlimited, non-exclusive, irrevocable,
-world-wide, royalty-free right to reuse,
-modify, and relicense the code.  If you wish to specify
-special license conditions of your contributions, please
-state them up front.
+Source code also allows you to port Nmap to new platforms, fix bugs,
+and add new features.  You are highly encouraged to send your changes
+to fyodor@insecure.org for possible incorporation into the main
+distribution.  By sending these changes to Fyodor or one the
+insecure.org development mailing lists, it is assumed that you are
+offering Fyodor the unlimited, non-exclusive right to reuse, modify,
+and relicense the code.  This is important because the inability to
+relicense code has caused devastating problems for other Free Software
+projects (such as KDE and NASM).  Nmap will always be available Open
+Source.  If you wish to specify special license conditions of your
+contributions, just say so when you send them.
 .Sp
 This program is distributed in the hope that it will be useful, but
 .B WITHOUT ANY WARRANTY;
