@@ -786,6 +786,9 @@ int nmap_main(int argc, char *argv[]) {
   for(i=0; i < argc; i++) log_write(LOG_NORMAL|LOG_MACHINE,"%s ", fakeargv[i]);
   log_write(LOG_NORMAL|LOG_MACHINE,"\n");  
 
+  /* Before we randomize the ports scanned, lets output them to machine 
+     parseable output */
+  output_ports_to_machine_parseable_output(ports, o.numports, o.windowscan|o.synscan|o.connectscan|o.fragscan|o.finscan|o.maimonscan|o.bouncescan|o.nullscan|o.xmasscan|o.ackscan,o.udpscan);
 
   /* more fakeargv junk, BTW malloc'ing extra space in argv[0] doesn't work */
   if (quashargv) {
@@ -809,6 +812,7 @@ int nmap_main(int argc, char *argv[]) {
   }
 
   if (o.debugging > 1) log_write(LOG_STDOUT, "The max # of sockets we are using is: %d\n", o.max_parallelism);
+
 
   if (randomize)
     shortfry(ports, o.numports); 
@@ -1578,7 +1582,7 @@ void printportoutput(struct hoststruct *currenths, portlist *plist) {
     }
   }
   log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"\n");
-  log_write(LOG_MACHINE, "\tIgnored State: %s", statenum2str(plist->ignored_port_state));
+  log_write(LOG_MACHINE, "\tIgnored State: %s (%d)", statenum2str(plist->ignored_port_state), plist->state_counts[plist->ignored_port_state]);
 }
 
 /* This attempts to calculate the round trip time (rtt) to a host by timing a
@@ -3857,3 +3861,46 @@ int fileexistsandisreadable(char *pathname) {
   if (fp) fclose(fp);
   return (fp == NULL)? 0 : 1;
 }
+
+/* The items in ports should be
+   in sequential order for space savings and easier to read output */
+void output_rangelist_given_ports_to_machine_output(unsigned short *ports,
+						    int numports) {
+int i, previous_port = -2, range_start = -2, port;
+char outpbuf[128];
+
+ for(i=0; i <= numports; i++) {
+   port = (i < numports)? ports[i] : 0xABCDE;
+   if (port != previous_port + 1) {
+     outpbuf[0] = '\0';
+     if (range_start != previous_port && range_start != -2)
+       sprintf(outpbuf, "-%hi", previous_port);
+     if (port != 0xABCDE) {
+       if (range_start != -2)
+	 strcat(outpbuf, ",");
+       sprintf(outpbuf + strlen(outpbuf), "%hi", port);
+     }
+     log_write(LOG_MACHINE, "%s", outpbuf);
+     range_start = port;
+   }
+   previous_port = port;
+ }
+}
+
+/* Output the list of ports scanned to the top of machine parseable
+   logs (in a comment, unfortunately).  The items in ports should be
+   in sequential order for space savings and easier to read output */
+void output_ports_to_machine_parseable_output(unsigned short *ports, 
+					      int numports, int tcpscan, 
+					      int udpscan) {
+  int tcpportsscanned = (tcpscan)? numports : 0;
+  int udpportsscanned = (udpscan)? numports : 0;
+ log_write(LOG_MACHINE, "# Ports scanned: TCP(%d;", tcpportsscanned);
+ if (tcpportsscanned)
+   output_rangelist_given_ports_to_machine_output(ports, tcpportsscanned);
+ log_write(LOG_MACHINE, ") UDP(%d;", udpportsscanned);
+ if (udpportsscanned)
+   output_rangelist_given_ports_to_machine_output(ports, udpportsscanned);
+ log_write(LOG_MACHINE, ")\n");
+}
+

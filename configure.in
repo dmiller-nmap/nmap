@@ -333,7 +333,7 @@ AC_CHECK_FUNC(inet_aton, ,
   [ COMPAT_SRCS="$COMPAT_SRCS inet_aton.c"
     COMPAT_OBJS="$COMPAT_OBJS inet_aton.o" ])
 
-AC_CHECK_FUNC(getopt_long, , 
+AC_CHECK_FUNC(getopt_long_only, , 
   [ COMPAT_SRCS="$COMPAT_SRCS getopt.c getopt1.c"
     COMPAT_OBJS="$COMPAT_OBJS getopt.o getopt1.o" ])
 

@@ -344,6 +344,17 @@ void enforce_scan_delay(struct timeval *tv);
 int check_firewallmode(struct hoststruct *target, struct scanstats *ss);
 int gather_logfile_resumption_state(char *fname, int *myargc, char ***myargv);
 
+/* The items in ports should be
+   in sequential order for space savings and easier to read output */
+void output_rangelist_given_ports_to_machine_output(unsigned short *ports,
+						    int numports);
+/* Output the list of ports scanned to the top of machine parseable
+   logs (in a comment, unfortunately).  The items in ports should be
+   in sequential order for space savings and easier to read output */
+void output_ports_to_machine_parseable_output(unsigned short *ports, 
+					      int numports, int tcpscan, 
+					      int udpscan);
+
 void log_write(int logt, char *fmt, ...);
 void log_close(int logt);
 void log_flush(int logt);

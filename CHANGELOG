@@ -1,5 +1,32 @@
 # Nmap Changelog
 
+** Version 2.3BETA21
+
+-- Applied NetBSD compatability patch provided by Mipam (reinoud at
+   ibbnet.org) which changes an autoconf macro to check for
+   getopt_long_only instead of getopt_long.
+
+-- Nmap used to print an inaccuracy warning when no open TCP ports
+   were found on the target machine.  Due to a bug, this was not
+   always being printed.  Problem found by Matt (matt at use.net) and
+   Ajay Gupta2 (Ajay.Gupta2 at ey.com).
+
+-- Added the number of ports in the ignored state right after the
+state name in machine parseable logs.  It used to looke like:
+ "Ignored State: closed" whereas now it looks like:
+ "Ignored State: closed (1508)" Meaning that 1508 ports were closed
+ and thus are not specifically enumerated.
+
+-- Added list of ports scanned near the top of each machine log.  Here
+   is an example of the format:
+   # Ports scanned: TCP(13;1-10,22,25) UDP(0;)
+   The "13" above is the number of TCP ports being scanned.
+
+-- A number of people reported problems with nmapfe in various
+   environments (specifically gdk errors, hangs, and crashes).  I
+   think that is now fixed.  Let me know if you still have the problem
+   (make sure the title bar says BETA21).
+
 ** Version 2.3BETA20
 
 -- Applied patch sent in by s.rapp@hrz.uni-dortmund.de which fixes a

@@ -413,10 +413,9 @@ if (o.verbose && openport != -1)
      }
    }
    else {
-     log_write(LOG_NORMAL|LOG_SKID,"Insufficient responses for TCP sequencing (%d), OS detection will be MUCH less reliable\n", si->responses);
+     log_write(LOG_STDOUT|LOG_NORMAL|LOG_SKID,"Insufficient responses for TCP sequencing (%d), OS detection will be MUCH less reliable\n", si->responses);
    }
  } else {
-   log_write(LOG_NORMAL|LOG_SKID,"Warning:  No tcp ports found open on this machine, OS detection will be MUCH less reliable\n");
  }
 
 for(i=0; i < 9; i++) {
@@ -713,10 +712,12 @@ int try;
 int i;
 struct timeval now;
 
-if (target->timedout)
-    return 1;
-
-bzero(si, sizeof(si));
+ if (target->timedout)
+   return 1;
+ 
+ bzero(si, sizeof(si));
+ if (target->ports.state_counts_tcp[PORT_OPEN] == 0)
+   log_write(LOG_STDOUT|LOG_NORMAL|LOG_SKID,"Warning:  No TCP ports found open on this machine, OS detection will be MUCH less reliable\n", si->responses);
 
  for(try=0; try < 3; try++) {
    if (o.host_timeout) {   

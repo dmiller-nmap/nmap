@@ -29,6 +29,8 @@
 #include <strings.h>
 #include <assert.h>
 #include <ctype.h>
+#include <errno.h>
+#include <signal.h>
 
 #include "nmapfe.h"
 #include "nmapfe_sig.h"
@@ -67,7 +69,9 @@ main (int argc, char *argv[])
 
   MW = (struct MyWidgets *) malloc(sizeof(struct MyWidgets));
   bzero(MW, sizeof(struct MyWidgets));
-  
+  pipes[0] = pipes[1] = -1;
+  signal(SIGPIPE, SIG_IGN);
+
   main_win = create_main_win ();
   gtk_widget_show (main_win);
 
@@ -441,7 +445,6 @@ void kill_output()
 
 int execute(char *command) {
   /* Many thanks to Fyodor for helping with the piping */
-
   if(pipe(pipes) == -1)
     perror("poopy pipe error");
 
@@ -462,10 +465,20 @@ int execute(char *command) {
     dup2(pipes[1], 1);
     dup2(pipes[1], 2);
     fcntl(pipes[0], F_SETFL, O_NDELAY);
-    execve("nmap", argv, environ);
+    if (execvp("nmap", argv) == -1) {
+      fprintf(stderr, "Nmap execution failed.  errno=%d (%s)\n", errno, strerror(errno));
+      exit(1);
+    }
     /*exit(127);*/
   }
+  if (pid == -1) {
+    fprintf(stderr, "fork() failed.  errno=%d (%s)", errno, strerror(errno));
+    pid = 0;
+    close(pipes[0]);
+    pipes[0] = -1;
+  }
   close(pipes[1]);
+  pipes[1] = -1;
   tag = gtk_timeout_add(time_out, read_data, data);
 
   return(pid);
@@ -688,8 +701,9 @@ gint read_data(gpointer data)
   GdkFont *bold;
   GdkColormap *cmap;
   GdkColor red, blue, green;
-  	  	
+
   /* Get fonts ready */
+
   cmap = gdk_colormap_get_system();
   red.red = 0xffff;
   red.green = 0;
@@ -716,7 +730,7 @@ gint read_data(gpointer data)
   fixed = gdk_font_load ("-misc-fixed-medium-r-*-*-*-120-*-*-*-*-*-*");
   bold = gdk_font_load("-misc-fixed-bold-r-normal-*-*-120-*-*-*-*-*-*");
 
-  while((count = read(pipes[0], buf, sizeof(buf)-1))) {
+  while(pipes[0] != -1 && (count = read(pipes[0], buf, sizeof(buf)-1))) {
     /*    fprintf(stderr, "Count was %d\n", count); */
     buf[count] = '\0';
     if((strcmp(buf, buf2)) == 0) {
@@ -896,7 +910,6 @@ gint read_data(gpointer data)
     gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(MW->start_scan), 0);
     return 0;
   }
-
   return(1);	
 }
 
@@ -906,6 +919,11 @@ void stop_scan()
   if (nmap_pid)
     kill(nmap_pid, 9);
   nmap_pid = 0;
+  if (pipes[0] != -1) {
+    close(pipes[0]);
+    pipes[0] = -1;
+  }
+    
 }
 
 void

@@ -14,6 +14,8 @@
 
 #include <gtk/gtk.h>
 
+/* #define DEBUG(str) { fprintf(stderr, str); fflush(stderr); } */
+
 struct MyWidgets {
   GtkWidget *output;
   GtkWidget *host_text;
