@@ -1967,8 +1967,8 @@ if (o.debugging || o.verbose)
 	      switch(icmp->icmp_code) {
 		
 	      case 3: /* p0rt unreachable */		
-		printf("Got port unreachable newport %hi\n", ntohs(data[1]));
 		newport = ntohs(data[1]);
+		printf("Got port unreachable newport %hi\n", newport);
 		if (portlookup[newport] > 0) {
 		  current = &scan[portlookup[newport]];
 		  if (!o.magic_port_set) {
@@ -1977,7 +1977,13 @@ if (o.debugging || o.verbose)
 		  } else if (current->trynum == 0) packet_trynum = 0;
 		  else packet_trynum = -1;
 		}
-		else { continue; }		
+		else { 
+		  if (o.debugging) {
+		    print("Illegal ICMP port unreachable packet:\n");
+		    hdump(icmp, ntohs(ip->ip_len) -sizeof(struct ip));
+		  }
+		    continue; 
+		}		  		
 		break;
 	      }    
 	    }
