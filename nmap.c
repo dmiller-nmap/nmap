@@ -1777,7 +1777,7 @@ portlist super_scan(struct hoststruct *target, unsigned short *portarray, stype 
   int decoy;
   struct timeval now;
   int i,j;
-  int senddelay = 300000;
+  int senddelay = 500000;
   unsigned short *data;
   int packet_trynum =0;
   int windowdecrease = 0; /* Has the window been decreased this round yet? */
