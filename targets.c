@@ -336,6 +336,7 @@ gettimeofday(&start, NULL);
 	     }
 	     gettimeofday(&t2, NULL);
 	     printf("sendto took %lu microsecs\n", TIMEVAL_SUBTRACT(t2, t1));
+	     usleep(10000);
 	   } else {
 	     send_ip_raw( rawsd, &o.decoys[decoy], &(sock.sin_addr), IPPROTO_ICMP, ping, 8);
 	   }
