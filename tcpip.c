@@ -372,7 +372,7 @@ udp->uh_ulen = htons(datalen);
 bzero(packet, sizeof(struct ip)); 
 ip->ip_v = 4;
 ip->ip_hl = 5;
-ip->ip_len = BSDFIX(sizeof(struct ip) + sizeof(struct tcphdr) + datalen);
+ip->ip_len = BSDFIX(sizeof(struct ip) + sizeof(struct udphdr_bsd) + datalen);
 ip->ip_id = rand();
 ip->ip_ttl = myttl;
 ip->ip_p = IPPROTO_UDP;
