@@ -9,10 +9,10 @@ o Added --packet_trace option, which tells Nmap to display all of the
   exactly what they epect.  If you want this feature supported under
   Windows, please send me a patch :).
 
-o Made Nmap reported execution time more accurate and granular (to the
-  millisecond instead of the nearest second).
-
 o Fixed a segmentation fault in Idlescan (-sI).
+
+o Nmap now reports execution times to millisecond precision (rather
+  than rouding to the nearest second).
 
 o Fixed an infinite loop caused by invalid port arguments.  Problem
   noted by fejed (fejed@uddf.net).
