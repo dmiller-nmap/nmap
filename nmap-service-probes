@@ -1035,10 +1035,12 @@ match ident m|^HELP : USERID : UNIX : trilluser\r\n$| v/Trillian identd///
 
 # Exim 4.20 on Astaro Security Linux gateway/proxy/firewall/router.
 match smtp m|^220 [-.\w]+ ESMTP ready\.\r\n214-Commands supported:\r\n214 AUTH STARTTLS HELO EHLO MAIL RCPT DATA NOOP QUIT RSET HELP\r\n$| v/Exim smtpd/4.20//
-match smtp m|^220 .* ESMTP\r\n214[- ]qmail home page: http://pobox.com/~djb/qmail.html| v/qmail smtpd///
+
 # Exim 4.0 with exiscan patch and banner removed - Linux 2.1.19 - 2.2.25
 match smtp m|^220 .*SMTP Ready\. Expected Helo with a valid domain\.\r\n214-Commands supported:\r\n214 AUTH HELO EHLO MAIL RCPT DATA NOOP QUIT RSET HELP\r\n| v/Exim smtpd/4.0//
 
+match smtp m|^220 .* ESMTP\r\n214[- ]qmail home page: http://pobox.com/~djb/qmail.html| v/qmail smtpd///
+match smtp m|^220 [-.\w]+ ESMTP\r\n214 netqmail home page: http://qmail\.org/netqmail\r\n| v/netqmail smtpd/1.04//
 # Postfix 1.1.11.0-woody3
 # Postfix 1.1.7-2
 match smtp m|^220 [-.\w]+ ESMTP Postfix\r\n$| v/Postfix smtpd/1.X//
