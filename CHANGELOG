@@ -31,6 +31,11 @@ Nmap 2.54BETA30
    you used, the OS/platform you are running on, and whether it is
    reproducable.
 
+-- Added a convenience option "-oA (basefilename)".  This tells Nmap
+   to log in ALL the major formats (normal, grepable, and XML).  You
+   give a base for the filename, and the output files will be
+   base.nmap, base.gnmap, and base.xml.
+
 -- Documented the --append_output option which tells Nmap to append 
    scan results to any output files you have specified rather than 
    overwriting the files.

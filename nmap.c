@@ -389,6 +389,7 @@ int nmap_main(int argc, char *argv[]) {
     {"host_timeout", required_argument, 0, 0},
     {"scan_delay", required_argument, 0, 0},
     {"initial_rtt_timeout", required_argument, 0, 0},
+    {"oA", required_argument, 0, 0},  
     {"oN", required_argument, 0, 0},
     {"oM", required_argument, 0, 0},  
     {"oG", required_argument, 0, 0},  
@@ -541,7 +542,15 @@ int nmap_main(int argc, char *argv[]) {
 	fatal("HTML output is not yet supported");
       } else if (strcmp(long_options[option_index].name, "oX") == 0) {
 	xmlfilename = optarg;
-      } 
+      } else if (strcmp(long_options[option_index].name, "oA") == 0) {
+	char buf[MAXPATHLEN];
+	snprintf(buf, sizeof(buf), "%s.nmap", optarg);
+	normalfilename = strdup(buf);
+	snprintf(buf, sizeof(buf), "%s.gnmap", optarg);
+	machinefilename = strdup(buf);
+	snprintf(buf, sizeof(buf), "%s.xml", optarg);
+	xmlfilename = strdup(buf);
+      }
       else if (strcmp(long_options[option_index].name, "iL") == 0) {
 	if (inputfd) {
 	  fatal("Only one input filename allowed");
