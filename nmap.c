@@ -181,9 +181,9 @@ if (o.max_sockets > MAX_SOCKETS_ALLOWED) {
 }
 
 /* Set up our array of decoys! */
-decoyturn = (o.numdecoys == 0)?  0 : rand() % o.numdecoys; 
+o.decoyturn = (o.numdecoys == 0)?  0 : rand() % o.numdecoys; 
 o.numdecoys++;
-for(i=numdecoys-1; i > decoyturn; i++)
+for(i=o.numdecoys-1; i > o.decoyturn; i++)
   o.decoys[i] = o.decoys[i-1];
 
 /* If he wants to bounce off of an ftp site, that site better damn well be reachable! */
