@@ -113,6 +113,8 @@ match ftp m|^220 [-.\w]+ FTP server \(Version (\S+)/OpenBSD, linux port (\S+)\) 
 match ftp m/^220 Interscan Version ([-\w.]+)/i v/Interscan Viruswall $1/
 match ftp m|^220 [-.\w]+ FTP server \(Version ([-.\w]+)/OpenBSD\) ready\.\r\n$| v/OpenBSD ftpd $1/
 match ftp m|^220-Welcome to [A-Z]+ FTP Service\.\r\n220 All unauthorized access is logged\.\r\n$| v/FileZilla/
+match ftp m|^220 [-.\w]+ FTP server \(Version (6.0\w+)\) ready.\r\n| v/FreeBSD ftpd $1/
+
 # 220 mirrors.midco.net FTP server ready.
 # match ftp m/^220 .*ftp/i
 
@@ -169,6 +171,8 @@ match smtp m|^220 [-.+\w]+ ESMTP MailMasher ready to boogie\r\n| v/MailMasher/
 match smtp m|^220 [-.\w]+ ESMTP Postfix\r\n| v/Postfix/
 match smtp m|^220 \*{10,40}\r\n| v|Cisco PIX sanatized|
 match smtp m|^220 ArGoSoft Mail Server Pro for WinNT/2000/XP, Version [-.\w]+ \(([-.\w]+)\)\r\n| v/ArGoSoft Mail Server Pro $1/
+match smtp m|^220 [-.\w]+ ESMTP server \(Post.Office v([-.\w]+) release ([-.\w]+) ID# | v/Post.Office $1 (release $2)/
+match smtp m|^220 [-.\w]+ ESMTP VisNetic.MailServer.v([-.\w]+); | v/VisNetic MailServer $1/
 
 match pop3 m/^\+OK X1 NT-POP3 Server [-\w.]+ \(IMail ([^)]+)\)\r\n/ v/IMail $1/
 match pop3 m/^\+OK POP3 \[cppop (\d[^]]+)\] at \[/ v/cppop $1/
@@ -190,11 +194,14 @@ match pop3 m/^\+OK <\d{1,5}\.10\d{8}@[-.\w]+>\r\n$/ v/Qmail-pop3d/
 # Courier Pop3 courier-pop3d-0.42.0-1.7.3
 match pop3 m|^\+OK Hello there\.\r\n$| v/Courier/
 match pop3 m|^\+OK ArGoSoft Mail Server Pro for WinNT/2000/XP, Version [-.\w]+ \(([-.\w]+)\)\r\n$| v/ArGoSoft Mail Server Pro $1/
+match pop3 m/^\+OK [-.\w]+ VisNetic.MailServer.v([-.\w]+) POP3 / v/VisNetic MailServer $1/
+match pop3 m/^\+OK [-.\w]+ POP3 server \(Post\.Office v([-.\w]+) release ([-.\w]+) with ZPOP version ([-.\w]+)\) ready / v|Post.Office $1 (release $2 w/ZPOP $3)|
+
 # Courier-Imap 1.4.3-2.3
 match imap2 m|^\* OK Courier-IMAP ready\. Copyright 1998-2002 Double Precision, Inc\.  See COPYING for distribution information\.\r\n$| v/Courier Imap/
 # Courier IMAP courier-imapd-0.42.0-1.7.3
 match imap2 m|^\* OK \[CAPABILITY IMAP4rev1 NAMESPACE AUTH=CRAM-MD5 AUTH=CRAM-SHA1 CHILDREN IDLE QUOTA SORT THREAD=ORDEREDSUBJECT THREAD=REFERENCES UIDPLUS STARTTLS\] Courier-IMAP ready\. Copyright 1998-2003 Double Precision, Inc\.  See COPYING for distribution information\.\r\n| v/Courier 0.42.0/
-
+match imap2 m|^\* OK starvation.hungry.com IMAP4rev(\d) v([-.\w]+) server ready\r\n$| v/Courier IMAP4rev$1 $2/
 # W-Imapd-SSL v2001adebian-6
 match imap3 m|^\* OK \[CAPABILITY IMAP4REV1 X-NETSCAPE LOGIN-REFERRALS STARTTLS AUTH=LOGIN\] \S+ IMAP4rev1 ([-.\w]+) at| v/UW-Imapd-SSL $1/
 match mysql m/^G\0\0\0\xffj\x04Host .* is not allowed to connect to this MySQL server$/ v/MySQL (unauthorized)/
@@ -213,6 +220,8 @@ ports 21,43,110,113,540
 match pop3 m|^\+OK POP3 \[[-.\w]+\] v(200[-.\w]+) server ready\r\n-ERR Null command\r\n-ERR Null command\r\n| v/ipopd $1/
 # OpenBSD 3.2 identd
 match ident m|^0 , 0 : ERROR : UNKNOWN-ERROR\r\n$| v/OpenBSD/
+# FreeBSD 4.8-RC inetd internal identd
+match ident m|^0 , 0 : ERROR : INVALID-PORT\r\n$| v/FreeBSD/
 # pidentd-3.1a19-157
 match identd m|^ : ERROR : UNKNOWN-ERROR\r\n$| v/pidentd/
 # Solaris 9
@@ -230,7 +239,8 @@ match http-proxy m|^HTTP/1\.0 400 Invalid header received from browser\n\n| v/Ju
 # HTTP/1.1 200 OK
 # The 's' option below causes . to match newlines (just as in perl)
 match http m|^HTTP/1\.[01].*Server: Apache/(\d+\.\d+\.[-.\w]+) ([^\r\n]+)|s v/Apache $1 ($2)/
-match http m|^HTTP/1\.1.*\r\nServer: Microsoft-IIS/([-.\w]+)\r\n| v/IIS $1/
+match http m|^HTTP/1\.1.*\r\nServer: Netscape-Enterprise/([-.\w]+)\r\n| v/Netscape Enterprise $1/
+match http m|^HTTP/1\.1.*\r\nServer: Microsoft-IIS/([-.\w]+)\r\n|s v/Microsoft IIS $1/
 match http m|^HTTP/1\.0 200 OK\r\nDate: .+\r\nServer: Tomcat/([-.\w]+)\r\nContent-Type: text/html\r\nContent-Length: \d+\r\nServlet-Engine: Tomcat/[-.\w]+ \(Java ([-.\w]+); SunOS ([-.\w]+) (\w+); java\.vendor=Sun Microsystems Inc\.\)\r\n| v/Solaris management console server (SunOS $3 $4; Java $2; Tomcat $1)/
 match http-proxy m|^HTTP/1\.0 400 Bad Request\r\nServer: Squid/([-.\w]+)\r\n| v/Squid $1/
 match netbios-ssn m/^\x83\0\0\x01\x82|\x8f$/
@@ -252,15 +262,16 @@ match postgres m|^EFATAL:  invalid length of startup packet\n\0$| v/Postgresql/
 Probe UDP DNSVersionBindReq q|\0\x06\x01\0\0\x01\0\0\0\0\0\0\x07version\x04bind\0\0\x10\0\x03|
 ports 53
 # Allow 3-12 character version numbers
-match domain m|\x07version\x04bind.*[\x03-\x10]([-\w._]{3,16})$| v/Bind $1/
+match domain m|\x07version\x04bind.*[\x03-\x10]([-\w._]{3,16})$|s v/Bind $1/
 # Tinydns 1.05
 match domain m|^\0\x06\x81\x81\0\x01\0\0\0\0\0\0\x07version\x04bind\0\0\x10\0\x03$| v/TinyDNS/
 # Microsoft DNS Windows 2000, SP4
 match domain m|^\0\x06\x81\x04\0\x01\0\0\0\0\0\0\x07version\x04bind\0\0\x10\0\x03$| v/Microsoft DNS/
 
+
 Probe TCP DNSVersionBindReq q|\0\x1E\0\x06\x01\0\0\x01\0\0\0\0\0\0\x07version\x04bind\0\0\x10\0\x03|
 ports 53,512,513
-match domain m|\x07version\x04bind.*[\x03-\x10]([-\w._]{3,16})$| v/Bind $1/
+match domain m|\x07version\x04bind.*[\x03-\x10]([-\w._]{3,16})$|s v/Bind $1/
 # Windows 2000 SP4
 match domain m|^\0\x1e\0\x06\x81\x04\0\x01\0\0\0\0\0\0\x07version\x04bind\0\0\x10\0\x03$| v/Microsoft DNS/
 # OpenBSD 2.3
@@ -360,3 +371,17 @@ match smtp m|^220 [-.\w]+ ESMTP Sendmail ([^;]{3,50})| v/Sendmail $1/
 match smtp m|^214-2\.0\.0 This is sendmail version ([-.\w]+)\r\n214-2\.0\.0 Topics:\r\n214-2\.0\.0| v/Sendmail $1/
 # CVSD (cvs chrooting service for pserver) cvsd 0.9.18
 match cvspserver m|^cvs \[pserver aborted\]: bad auth protocol start: HELP\r\n\n$| v/cvsd 0.9.18/
+# Concurrent Versions System (CVS) 1.10.7 (client/server)
+match cvspserver m|^cvs-pserver \[pserver aborted\]: bad auth protocol start: HELP\r\n\n| v/cvs pserver/
+
+Probe TCP LANDesk-RC q|\x54\x4e\x4d\x50\x04\0\0\0\x54\x4e\x4d\x45\0\0\x04\0|
+ports 1761-1764
+# With Host and User currently logged in
+match landesk-rc m|^TNMP.\0\0\0TNME.\0\0\0USER.\x08\x04\0\x08\0.{9}\0R\0\x03\0W\0\xff\xff\0\0\0\xfd..\0\0\0\0\x02\0\0\0\0\x01\x04\0\0\0\0\0...\0\xb5\x01\xbb\0Desktop\x20Manager\x20(\d\.\d)\0\x02\x04\x01\x02\x01\0\0\W+(\w+)\0(\w+)\0\0$| v/LANDesk RC $1 (Host:$2 User: $3)/
+# With just hostname
+match landesk-rc m|^TNMP.\0\0\0TNME.\0\0\0USER.\x08\x04\0\x08\0.{9}\0R\0\x03\0W\0\xff\xff\0\0\0\xfd..\0\0\0\0\x02\0\0\0\0\x01\x04\0\0\0\0\0...\0\xb5\x01\xbb\0Desktop\x20Manager\x20(\d\.\d)\0\x02\x04\x01\x02\x01\0\0\W+(\w+)\0\0\0$| v/LANDesk RC $1 (Host:$2)/
+# Being Controled w/ User
+match landesk-rc m|^TNMP.\0\0\0TNME.\0\0\0USER.\x08\x04\0\x08\0.{9}\0R\0\x03\0W\0\xff\xff\0\0\0\xfd..\0\0\0\0\x02\0\0\0\0\x01\x04\0\0\0\0\0...\0\xb5\x01\xbb\0Desktop\x20Manager\x20(\d\.\d)\0\x02\x04\x01\x02\x01\0\0\W+([\w\d\.\:]+)\W+(\w+)\0(\w+)\0\0$| v/LANDesk RC $1 (Host:$3 User: $4 Controler: $2)/
+# Being Controled w/o User
+match landesk-rc m|^TNMP.\0\0\0TNME.\0\0\0USER.\x08\x04\0\x08\0.{9}\0R\0\x03\0W\0\xff\xff\0\0\0\xfd..\0\0\0\0\x02\0\0\0\0\x01\x04\0\0\0\0\0...\0\xb5\x01\xbb\0Desktop\x20Manager\x20(\d\.\d)\0\x02\x04\x01\x02\x01\0\0\W+([\w\d\.\:]+)\W+(\w+)\0(\w+)\0\0$| v/LANDesk RC ($1) Host:$3 Controler: $2/
+match landesk-rc m|^TNMP\x16\0\0\0TNME\x80\0\xfe\xff..([\w\d\.]+):(\d)$| v/LANDesk RC (Busy, From $1 on port 176$2)/

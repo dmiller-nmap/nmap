@@ -323,6 +323,13 @@ void ServiceProbeMatch::InitMatch(const char *matchtext, int lineno) {
     assert(tmpbuflen < sizeof(tmpbuf) - 1);
     memcpy(tmpbuf, matchtext, tmpbuflen);
     tmpbuf[tmpbuflen] = '\0';
+    // Insure there is no trailing junk after the version string (usually cased be delimchar
+    // accidently being in the version string).
+    p++;
+    while(*p && *p != '\r' && *p != '\n') {
+      if (!isspace((int) *(unsigned char *)p))  fatal("ServiceProbeMatch::InitMatch: illegal trailing garbage (accidental version delimeter in your v// string?) on line %d of nmap-service-probes", lineno);
+      p++;
+    }
   }
 
   isInitialized = 1;

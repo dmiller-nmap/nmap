@@ -185,8 +185,9 @@ distro:
 	$(SHTOOL) mkdir /usr/tmp/nmap-$(NMAP_VERSION)/nsock
 	$(SHTOOL) mkdir /usr/tmp/nmap-$(NMAP_VERSION)/nsock/include
 	$(SHTOOL) mkdir /usr/tmp/nmap-$(NMAP_VERSION)/nsock/src
+	cp nsock/nsock.vcproj /usr/tmp/nmap-$(NMAP_VERSION)/nsock/
 	cd nsock/include; cp -ra nsock.h /usr/tmp/nmap-$(NMAP_VERSION)/nsock/include/
-	cd nsock/src; cp -ra  aclocal.m4 config.guess config.sub nsock.vcproj \
+	cd nsock/src; cp -ra  aclocal.m4 config.guess config.sub \
                             configure configure.ac error.c error.h \
                             filespace.c filespace.h gh_list.c gh_list.h \
                             install-sh Makefile.in netutils.c netutils.h \

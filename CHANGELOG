@@ -1,5 +1,11 @@
 # Nmap Changelog ($Id$)
 
+Nmap 3.40PVT9
+
+o Added/fixed numerous service fingerprints thanks to submissions from
+  Max Vision, MadHat, Seth Master, and Max Vision.  Match lines went
+  from 164 to 179.
+
 o The Winpcap libraries used in the Windows build process have been
   upgraded to version 3.0.
 
@@ -9,6 +15,8 @@ o Most of the Windows port is complete.  It compiles and service scan
   version.  The Windows code was restructed and improved quite a bit,
   but much more work remains to be done in that area.  I'll probably
   do a Windows binary .zip release of the next version.
+
+o Various minor fixes
 
 Nmap 3.40PVT8
 

@@ -202,8 +202,8 @@ int main(int argc, char *argv[]) {
 	p += 3;
 	assert(sizeof(fprint) > fplen + linelen + 1);
 	dst = fprint + fplen;
-	while(*p != '\r' && *p != '\n')
-	*dst++ = *p++;
+	while(*p != '\r' && *p != '\n' && *p != ' ')
+	  *dst++ = *p++;
 	fplen = dst - fprint;
 	*dst++ = '\0';
       } else {
@@ -216,7 +216,7 @@ int main(int argc, char *argv[]) {
 	fatal("New service fingerprint started before the previous one was complete -- line %d", lineno);
       assert(sizeof(fprint) > linelen + 1);
       dst = fprint;
-      while(*p != '\r' && *p != '\n')
+      while(*p != '\r' && *p != '\n' && *p != ' ')
 	*dst++ = *p++;
       fplen = dst - fprint;
       *dst++ = '\0';
