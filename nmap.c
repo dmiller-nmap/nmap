@@ -112,6 +112,7 @@ while((arg = getopt(argc,fakeargv,"Ab:D:de:Ffg:hiL:lM:Nno:P::p:qrRS:s:T:w:Vv")) 
       o.pingtype = tcp;
       if (isdigit(*(optarg+1)))
 	o.tcp_probe_port = atoi(optarg+1);
+	printf("TCP probe port is %hu\n" o.tcp_probe_port);
     }
     else {fatal("Illegal Argument to -P, use -P0, -PI, -PT, or -PT80 (or whatever number you want for the TCP probe destination port)"); }
     break;

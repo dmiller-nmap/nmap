@@ -397,7 +397,7 @@ void masstcpping(struct hoststruct *hostbatch, int num_hosts, int pingtimeout) {
 	maxsock = MAX(maxsock, sockets[hostindex]);
 	unblock_socket(sockets[hostindex]);
 	init_socket(sockets[hostindex]);
-	sock.sin_port =  htons(o.magic_port);
+	sock.sin_port =  htons(o.tcp_probe_port);
 	sock.sin_addr.s_addr = hostbatch[hostindex].host.s_addr;
 	res = connect(sockets[hostindex],(struct sockaddr *)&sock,sizeof(struct sockaddr));
 	if ((res != -1 || errno == ECONNREFUSED)) {
