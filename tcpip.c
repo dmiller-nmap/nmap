@@ -943,7 +943,7 @@ char *routethrough(struct in_addr *dest, struct in_addr *source) {
       
       fgets(buf, sizeof(buf), routez); /* Kill the first line */
       while(1) {
-	res = fscanf(routez, "%s %8lX %8lX %2lX %ld %ld %ld %8lX %ld %ld %ld \n",iface,&myroutes[numroutes].dest,&tmp,&tmp,&tmp,&tmp,&tmp,&myroutes[numroutes].mask, &tmp, &tmp, &tmp);
+	res = fscanf(routez, "%s %8lX %8lX %lX %ld %ld %ld %8lX %ld %ld %ld \n",iface,&myroutes[numroutes].dest,&tmp,&tmp,&tmp,&tmp,&tmp,&myroutes[numroutes].mask, &tmp, &tmp, &tmp);
 	if (res == EOF) break;
 	if (res != 11) { 
 	  error("fscanf on route table returned %d (should be 11)", res); 

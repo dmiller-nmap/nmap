@@ -280,6 +280,7 @@ struct bpf_program fcode;
 char err0r[PCAP_ERRBUF_SIZE];
 char filter[512];
 unsigned int localnet, netmask;
+unsigned short sportbase;
 
 bzero((char *)&ptech, sizeof(struct pingtech));
 
@@ -293,6 +294,11 @@ pt.max_tries = 5; /* Maximum number of tries for a block */
 pt.group_size = gsize;
 pt.group_start = 0;
 pt.block_tries = 0; /* How many tries this block has gone through */
+
+/* What port should we send from? */
+if (o.magic_port_set) sportbase = o.magic_port;
+else sportbase = o.magic_port + 20;
+
 
 /* What kind of scans are we doing? */
 if ((o.pingtype & PINGTYPE_ICMP) &&  hostbatch[0].source_ip.s_addr) 
@@ -369,8 +375,8 @@ if (ptech.rawicmpscan || ptech.rawtcpscan) {
     fatal("Failed to lookup device subnet/netmask: %s", err0r);
   sprintf(filter, "(icmp and dst host %s) or (tcp and dst host %s and ( dst port %d or dst port %d or dst port %d or dst port %d or dst port %d))", 
 	  inet_ntoa(hostbatch[0].source_ip),inet_ntoa(hostbatch[0].source_ip),
-	  o.magic_port , o.magic_port + 1, o.magic_port + 2, o.magic_port + 3, 
-	  o.magic_port + 4);
+	  sportbase , sportbase + 1, sportbase + 2, sportbase + 3, 
+	  sportbase + 4);
 
   /* Due to apparent bug in libpcap */
   if (hostbatch[0].source_ip.s_addr == htonl(0x7F000001))
@@ -556,15 +562,19 @@ int sendrawtcppingquery(int rawsd, struct hoststruct *target, int seq,
 			struct timeval *time, struct pingtune *pt) {
 int decoy, trynum;
 int myseq;
+unsigned short sportbase;
+
+if (o.magic_port_set) sportbase = o.magic_port;
+else sportbase = o.magic_port + 20;
 trynum = seq % pt->max_tries;
 
  myseq = (rand() << 19) + (seq << 3) + 3; /* Response better end in 011 or 100 */
  memcpy((char *)&(o.decoys[o.decoyturn]), (char *)&target->source_ip, sizeof(struct in_addr));
  for (decoy = 0; decoy < o.numdecoys; decoy++) {
    if (o.pingtype & PINGTYPE_TCP_USE_SYN) {   
-   send_tcp_raw( rawsd, &o.decoys[decoy], &(target->host), o.magic_port + trynum, o.tcp_probe_port, myseq, 0, TH_SYN, 0, NULL, 0, NULL, 0);
+   send_tcp_raw( rawsd, &o.decoys[decoy], &(target->host), sportbase + trynum, o.tcp_probe_port, myseq, 0, TH_SYN, 0, NULL, 0, NULL, 0);
    } else {
-     send_tcp_raw( rawsd, &o.decoys[decoy], &(target->host), o.magic_port + trynum, o.tcp_probe_port, myseq, 0, TH_ACK, 0, NULL, 0, NULL, 0);
+     send_tcp_raw( rawsd, &o.decoys[decoy], &(target->host), sportbase + trynum, o.tcp_probe_port, myseq, 0, TH_ACK, 0, NULL, 0, NULL, 0);
    }
  }
 
@@ -781,6 +791,8 @@ int trynum;
 int pingtype;
 unsigned short sequence;
 unsigned long tmpl;
+unsigned short sportbase;
+
 FD_ZERO(&fd_r);
 FD_ZERO(&fd_x);
 
@@ -794,6 +806,8 @@ if (ptech->icmpscan && !ptech->rawtcpscan) {
   myto.tv_usec = 20000;
 }
 
+if (o.magic_port_set) sportbase = o.magic_port;
+else sportbase = o.magic_port + 20;
 
 gettimeofday(&start, NULL);
 while(pt->block_unaccounted > 0) {
@@ -853,11 +867,22 @@ while(pt->block_unaccounted > 0) {
 	pingtype = PINGTYPE_ICMP;
 	trynum = sequence % pt->max_tries;
 	newstate = HOST_DOWN;
+      } else if (response.type == 11 && !response.code && ((struct ppkt *) (response.crap + 4 * response.ip.ip_hl))->id == id) {
+	sequence = ((struct ppkt *) (response.crap + 4 * response.ip.ip_hl))->seq;
+	hostnum = sequence / pt->max_tries;
+	if (hostnum > pt->group_end) continue;
+	if (o.debugging) 
+	  printf("Got Time Exceeded for %s\n", inet_ntoa(hostbatch[hostnum].host));
+	dotimeout = 0; /* I don't want anything to do with timing this */
+	foundsomething = 1;
+	pingtype = PINGTYPE_ICMP;
+	trynum = sequence % pt->max_tries;
+	newstate = HOST_DOWN;
       }
       else if (response.type == 4 && ((struct ppkt *) (response.crap + 4 * response.ip.ip_hl))->id == id)  {      
 	if (o.debugging) printf("Got ICMP source quench\n");
 	usleep(50000);
-      }   
+      }  
       else if (o.debugging > 1 && ((struct ppkt *) (response.crap + 4 * response.ip.ip_hl))->id == id ) {      
 	printf("Got ICMP message type %d code %d\n", response.type, response.code);
       }
@@ -880,7 +905,7 @@ while(pt->block_unaccounted > 0) {
 	  continue;	
 	}
       } else {
-	trynum = ntohs(tcp->th_dport) - o.magic_port;
+	trynum = ntohs(tcp->th_dport) - sportbase;
 	if (trynum >= pt->max_tries) {
 	  continue;
 	}

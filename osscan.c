@@ -983,7 +983,7 @@ return &upi;
 struct AVal *fingerprint_portunreach(struct ip *ip, struct udpprobeinfo *upi) {
 struct icmp *icmp;
 struct ip *ip2;
-int numtests = 9;
+int numtests = 10;
 unsigned short checksum;
 unsigned short *checksumptr;
 udphdr_bsd *udp;
@@ -1019,6 +1019,12 @@ AVs = safe_malloc(numtests * sizeof(struct AVal));
 /* Link them together */
 for(i=0; i < numtests - 1; i++)
   AVs[i].next = &AVs[i+1];
+
+/* First of all, if we got this far the response was yes */
+AVs[current_testno].attribute = "Resp";
+strcpy(AVs[current_testno].value, "Y");
+
+current_testno++;
 
 /* First let us do an easy one, Don't fragment */
 AVs[current_testno].attribute = "DF";

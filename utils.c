@@ -29,3 +29,12 @@ for(i=0; i < len; i++){
 printf("\n");
 }
 
+
+#if MISSING_USLEEP
+void usleep(unsigned long usec) {
+struct timespec ts; 
+ts.tv_sec = usec / 1000000; 
+ts.tv_nsec = (usec % 1000000) * 1000; 
+nanosleep(&tsfoo, NULL);
+}
+#endif

@@ -3,6 +3,8 @@
 
 #undef HAVE_STRUCT_IP
 
+#undef MISSING_USLEEP
+
 #undef HAVE_STRUCT_ICMP
 
 #undef HAVE_IP_IP_SUM

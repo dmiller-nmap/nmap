@@ -253,6 +253,7 @@ __inline__ void adjust_timeouts(struct timeval sent, struct timeout_info *to);
 /* port manipulators */
 unsigned short *getpts(char *expr); /* someone stole the name getports()! */
 unsigned short *getfastports(int tcpscan, int udpscan);
+unsigned short *getdefaultports(int tcpscan, int udpscan);
 int addport(portlist *ports, unsigned short portno, unsigned short protocol,
 	    char *owner, int state);
 int deleteport(portlist *ports, unsigned short portno, unsigned short protocol);

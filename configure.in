@@ -146,6 +146,12 @@ AC_TRY_COMPILE(, [ __inline__ void foo (void) ; ],
 
 dnl AC_HEADER_TIME
 
+dnl lets see if we have usleep
+AC_MSG_CHECKING(for usleep)
+AC_TRY_COMPILE([#include <stdlib.h>], [int main() { usleep(400); } ],
+               [AC_MSG_RESULT(yes) ],
+               [AC_MSG_RESULT(no); AC_DEFINE(MISSING_USLEEP) ])
+
 AC_MSG_CHECKING([struct ip])
 AC_TRY_COMPILE([#include <sys/types.h>
 #include <netinet/in.h>

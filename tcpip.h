@@ -171,14 +171,14 @@ struct ip
 
 #ifdef LINUX
 typedef struct udphdr_bsd {
-         u_int16_t uh_sport;           /* source port */
-         u_int16_t uh_dport;           /* destination port */
-         u_int16_t uh_ulen;            /* udp length */
-         u_int16_t uh_sum;             /* udp checksum */
+         unsigned short uh_sport;           /* source port */
+         unsigned short uh_dport;           /* destination port */
+         unsigned short uh_ulen;            /* udp length */
+         unsigned short uh_sum;             /* udp checksum */
 } udphdr_bsd;
 #else
-typedef struct udphdr udphdr_bsd;
-#endif
+ typedef struct udphdr udphdr_bsd;
+#endif 
 
 
 #ifndef HAVE_STRUCT_ICMP

@@ -7,7 +7,7 @@ extern int optind;
 struct ops o;  /* option structure */
 
 int main(int argc, char *argv[]) {
-char *p;
+char *p, *q;
 int i, j, arg, argvlen;
 FILE *inputfd = NULL;
 char *host_spec;
@@ -92,13 +92,28 @@ while((arg = getopt(argc,fakeargv,"Ab:D:de:Ffg:hIi:L:M:NnOo:P::p:qrRS:s:T:w:Vv")
     }
     break;
   case 'D':
-    if (o.numdecoys >= MAX_DECOYS -1)
-      fatal("You are only allowed %d decoys (if you need more redefine MAX_DECOYS in nmap.h)");
-    if (resolve(optarg, &o.decoys[o.numdecoys])) {
-      o.numdecoys++;
-    } else {
-    fatal("Failed to resolve decoy host: %s (must be hostname or IP address", optarg);
-    }
+    p = optarg;
+    do {    
+      q = strchr(p, ',');
+      if (q) *q = '\0';
+      if (!strcasecmp(p, "me")) {
+	if (o.decoyturn != -1) 
+	  fatal("Can only use 'ME' as a decoy once.\n");
+	o.decoyturn = o.numdecoys++;
+      } else {      
+	if (o.numdecoys >= MAX_DECOYS -1)
+	  fatal("You are only allowed %d decoys (if you need more redefine MAX_DECOYS in nmap.h)");
+	if (resolve(p, &o.decoys[o.numdecoys])) {
+	  o.numdecoys++;
+	} else {
+	  fatal("Failed to resolve decoy host: %s (must be hostname or IP address", optarg);
+	}
+      }
+      if (q) {
+	*q = ',';
+	p = q+1;
+      }
+    } while(q);
     break;
   case 'd': o.debugging++; o.verbose++; break;
   case 'e': strncpy(o.device, optarg,63); o.device[63] = '\0'; break;
@@ -276,10 +291,12 @@ if (o.max_sockets > MAX_SOCKETS_ALLOWED) {
 if (!o.tcp_probe_port) o.tcp_probe_port = 80;
 
 /* Set up our array of decoys! */
-o.decoyturn = (o.numdecoys == 0)?  0 : rand() % o.numdecoys; 
-o.numdecoys++;
-for(i=o.numdecoys-1; i > o.decoyturn; i--)
-  o.decoys[i] = o.decoys[i-1];
+if (o.decoyturn == -1) {
+  o.decoyturn = (o.numdecoys == 0)?  0 : rand() % o.numdecoys; 
+  o.numdecoys++;
+  for(i=o.numdecoys-1; i > o.decoyturn; i--)
+    o.decoys[i] = o.decoys[i-1];
+}
 
 /* We need to find what interface to route through if:
  * --None have been specified AND
@@ -326,7 +343,11 @@ if (o.logfd) {
 if (fastscan)
   ports = getfastports(o.synscan|o.connectscan|o.fragscan|o.finscan|o.maimonscan|bouncescan|o.nullscan|o.xmasscan,
                        o.udpscan|o.lamerscan);
-if (!ports && !o.pingscan) ports = getpts("1-1024");
+if (!ports && !o.pingscan) {
+  ports = getdefaultports(o.synscan|o.connectscan|o.fragscan|o.finscan|
+			o.maimonscan|bouncescan|o.nullscan|o.xmasscan,
+			o.udpscan|o.lamerscan);
+}
 
 
 /* more fakeargv junk, BTW malloc'ing extra space in argv[0] doesn't work */
@@ -509,6 +530,7 @@ o.allowall = !(IGNORE_ZERO_AND_255_HOSTS);
 #endif
 o.ptime = PING_TIMEOUT;
 o.pingtype = PINGTYPE_UNKNOWN;
+o.decoyturn = -1;
 }
 
 __inline__ void max_rcvbuf(int sd) {
@@ -630,12 +652,51 @@ tmp = realloc(ports, i * sizeof(short));
   return tmp;
 }
 
+/* Be default we do all ports 1-1024 as well as any higher ports
+   that are in /etc/services. */
+unsigned short *getdefaultports(int tcpscan, int udpscan) {
+  int portindex = 0, res, lastport = 0;
+  unsigned int portno = 0;
+  unsigned short *ports;
+  char proto[10];
+  char line[201];
+  FILE *fp;
+  ports = safe_malloc(65535 * sizeof(unsigned short));
+  proto[0] = '\0';
+
+  for(portindex = 0; portindex < 1025; portindex++)
+    ports[portindex] = portindex;
+
+  if (!(fp = fopen("/etc/services", "r"))) {
+    error("We can't open /etc/services for reading!  Using just ports 1-1024\n");
+    perror("fopen");
+  } else {  
+    while(fgets(line, 200, fp)) {
+      res = sscanf(line, "%*s %u/%s", &portno, proto);
+      if (portno < 1025) continue;
+      if (res == 2 && portno != 0 && portno != lastport) { 
+	lastport = portno;
+	if (tcpscan && proto[0] == 't')
+	  ports[portindex++] = portno;
+	else if (udpscan && proto[0] == 'u')
+	  ports[portindex++] = portno;
+      }
+    }
+    fclose(fp);
+  }
+  
+
+o.numports = portindex;
+ports[portindex++] = 0;
+return realloc(ports, portindex * sizeof(unsigned short));
+}
+
 unsigned short *getfastports(int tcpscan, int udpscan) {
   int portindex = 0, res, lastport = 0;
   unsigned int portno = 0;
   unsigned short *ports;
   char proto[10];
-  char line[81];
+  char line[201];
   FILE *fp;
   ports = safe_malloc(65535 * sizeof(unsigned short));
   proto[0] = '\0';
@@ -645,7 +706,7 @@ unsigned short *getfastports(int tcpscan, int udpscan) {
     exit(1);
   }
   
-  while(fgets(line, 80, fp)) {
+  while(fgets(line, 200, fp)) {
     res = sscanf(line, "%*s %u/%s", &portno, proto);
     if (res == 2 && portno != 0 && portno != lastport) { 
       lastport = portno;
@@ -656,7 +717,7 @@ unsigned short *getfastports(int tcpscan, int udpscan) {
     }
   }
 
-
+fclose(fp);
 o.numports = portindex;
 ports[portindex++] = 0;
 return realloc(ports, portindex * sizeof(unsigned short));
@@ -678,8 +739,8 @@ Options (none are required, most can be combined):\n\
    -PT Use \"TCP Ping\" to see what hosts are up (for normal and ping scans).\n\
    -PT21 Use \"TCP Ping\" scan with probe destination port of 21 (or whatever).\n\
    -PI Use ICMP ping packet to determines hosts that are up\n\
-   -PB Do BOTH TCP & ICMP scans in parallel (TCP dest port can be specified after the 'B')
-   -O Use TCP/IP fingerprinting to guess what OS the remote host is running
+   -PB Do BOTH TCP & ICMP scans in parallel (TCP dest port can be specified after the 'B')\n\
+   -O Use TCP/IP fingerprinting to guess what OS the remote host is running\n\
    -I Get identd (rfc 1413) info on listening TCP processes.\n\
    -p <range> ports: ex: \'-p 23\' will only try port 23 of the host(s)\n\
                   \'-p 20-30,63000-\' scans 20-30 and 63000-65535. default: 1-1024\n\
@@ -1175,14 +1236,18 @@ struct tcphdr *tcp = (struct tcphdr *) (packet + sizeof(struct ip));
 struct pseudo_header *pseudo = (struct pseudo_header *) (packet + sizeof(struct ip) - sizeof(struct pseudo_header)); 
 char *frag2 = packet + sizeof(struct ip) + 16;
 struct ip *ip2 = (struct ip *) (frag2 - sizeof(struct ip));
+static int myttl = 0;
 int res;
 struct sockaddr_in sock;
 int id;
+
+if (!myttl)  myttl = (time(NULL) % 14) + 51;
 
 /* It was a tough decision whether to do this here for every packet
    or let the calling function deal with it.  In the end I grudgingly decided
    to do it here and potentially waste a couple microseconds... */
 sethdrinclude(sd);
+
 
 /*Why do we have to fill out this damn thing? This is a raw packet, after all */
 sock.sin_family = AF_INET;
@@ -1219,10 +1284,11 @@ ip->ip_hl = 5;
 ip->ip_len = BSDFIX(sizeof(struct ip) + 16);
 id = ip->ip_id = rand();
 ip->ip_off = BSDFIX(MORE_FRAGMENTS);
-ip->ip_ttl = 255;
+ip->ip_ttl = myttl;
 ip->ip_p = IPPROTO_TCP;
 ip->ip_src.s_addr = source->s_addr;
 ip->ip_dst.s_addr = victim->s_addr;
+ip->ip_sum = 0;
 #if HAVE_IP_IP_SUM
 ip->ip_sum= in_cksum((unsigned short *)ip, sizeof(struct ip));
 #endif
@@ -1253,10 +1319,11 @@ ip2->ip_hl = 5;
 ip2->ip_len = BSDFIX(sizeof(struct ip) + 4); /* the rest of our TCP packet */
 ip2->ip_id = id;
 ip2->ip_off = BSDFIX(2);
-ip2->ip_ttl = 255;
+ip2->ip_ttl = myttl;
 ip2->ip_p = IPPROTO_TCP;
 ip2->ip_src.s_addr = source->s_addr;
 ip2->ip_dst.s_addr = victim->s_addr;
+ip2->ip_sum = 0;
 #if HAVE_IP_IP_SUM
 ip2->ip_sum = in_cksum((unsigned short *)ip2, sizeof(struct ip));
 #endif
@@ -2004,10 +2071,10 @@ portlist pos_scan(struct hoststruct *target, unsigned short *portarray, stype sc
     ss.numqueries_ideal = initial_packet_width;
     if (o.debugging)
       printf("Done with round %d\n", tries);
-  } while(pil.testinglist && tries < 20);
+  } while(pil.testinglist && tries < 13);
 
-  if (tries == 20) {
-    error("WARNING: GAVE UP ON SCAN AFTER 20 RETRIES");
+  if (tries == 13) {
+    error("WARNING: GAVE UP ON SCAN AFTER 13 RETRIES");
   }
 
   if (o.verbose)
@@ -2319,6 +2386,12 @@ unsigned short *data;
 	newstate = PORT_UNKNOWN;
 	if (ip->ip_src.s_addr == target->host.s_addr && ip->ip_p == IPPROTO_TCP) {
 	  tcp = (struct tcphdr *) (((char *) ip) + 4 * ip->ip_hl);
+	  i = ntohs(tcp->th_dport);
+	  if (i < o.magic_port || i > o.magic_port + 15) {
+	    if (o.debugging)
+	      error("SYN scan got TCP packet to port %d (magic port is %d) ... ignoring", i, o.magic_port);
+	    continue;
+	  }
 	  newport = ntohs(tcp->th_sport);
 	  /* In case we are scanning localhost and see outgoing packets */
 	  if (ip->ip_src.s_addr == target->source_ip.s_addr && !tcp->th_ack) {
@@ -2712,6 +2785,7 @@ void sigdie(int signo) {
    break;
  case SIGSEGV:
    fprintf(stderr, "caught SIGSEGV signal, cleaning up\n");
+   if (o.debugging) abort();
    break;
  case SIGBUS:
    fprintf(stderr, "caught SIGBUS signal, cleaning up\n");

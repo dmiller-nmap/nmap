@@ -2,6 +2,9 @@
 #define UTILS_H
 #include <stdio.h>
 #include <stdlib.h>
+#if MISSING_USLEEP
+#include <time.h>
+#endif
 #include "error.h"
 
 #ifndef MAX
@@ -27,5 +30,9 @@
 
 void *safe_malloc(int size);
 void hdump(unsigned char *packet, int len);
+
+#if MISSING_USLEEP
+void usleep(unsigned long usec);
+#endif
 
 #endif
