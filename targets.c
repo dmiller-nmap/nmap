@@ -210,7 +210,7 @@ do {
 	    ((o.pingtype & PINGTYPE_TCP) || 
 	     (o.pingtype == PINGTYPE_NONE && 
 	      (o.synscan || o.finscan || o.xmasscan || o.nullscan || o.ipprotscan ||
-	       o.maimonscan || o.ackscan || o.udpscan || o.osscan || o.windowscan)))) {
+	       o.maimonscan || o.idlescan || o.ackscan || o.udpscan || o.osscan || o.windowscan)))) {
 	 device = routethrough(&(hs->hostbatch[hidx].host), &(hs->hostbatch[hidx].source_ip));
 	 if (!device) {
 	   if (o.pingtype == PINGTYPE_NONE) {

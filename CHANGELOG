@@ -1,5 +1,8 @@
 # Nmap Changelog
 
+-- Fixed more nmap-os-fingerprints syntax/grammar violations found by
+   Raymond Mercier of VIGILANTe
+
 ** 2.54BETA26
 
 -- Added Idlescan (IPID blind scan).  The usage syntax is 
