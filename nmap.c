@@ -1025,6 +1025,8 @@ int nmap_main(int argc, char *argv[]) {
   free(host_exp_group);
   timep = time(NULL);
   i = timep - starttime;
+  if (numhosts_scanned == 0)
+    fprintf(stderr, "WARNING: No targets were specified, so 0 hosts scanned.\n");
   if (numhosts_scanned == 1 && numhosts_up == 0)
     log_write(LOG_STDOUT, "Note: Host seems down. If it is really up, but blocking our ping probes, try -P0\n");
   log_write(LOG_STDOUT|LOG_SKID, "Nmap run completed -- %d %s (%d %s up) scanned in %d %s\n", numhosts_scanned, (numhosts_scanned == 1)? "IP address" : "IP addresses", numhosts_up, (numhosts_up == 1)? "host" : "hosts",  i, (i == 1)? "second": "seconds");
