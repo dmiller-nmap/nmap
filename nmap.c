@@ -48,7 +48,7 @@ signal(SIGHUP, sigdie);
 if (argc < 2 ) printusage(argv[0]);
 
 /* OK, lets parse these args! */
-while((arg = getopt(argc,fakeargv,"Ab:Dde:FfhiL:lM:Nno:P::p:qrRS:s:T:tUuw:Vv")) != EOF) {
+while((arg = getopt(argc,fakeargv,"Ab:D:de:FfhiL:lM:Nno:P::p:qrRS:s:T:tUuw:Vv")) != EOF) {
   switch(arg) {
   case 'A': o.allowall++; break;
   case 'b': 
@@ -57,7 +57,13 @@ while((arg = getopt(argc,fakeargv,"Ab:Dde:FfhiL:lM:Nno:P::p:qrRS:s:T:tUuw:Vv")) 
       fprintf(stderr, "Your argument to -b is fucked up. Use the normal url style:  user:pass@server:port or just use server and use default anon login\n  Use -h for help\n");
     }
     break;
-  case 'D': o.pingtype = none; break;
+  case 'D': 
+    if (resolve(optarg, &o.decoys[o.numdecoys])) {
+      o.numdecoys++;
+    } else {
+    fatal("Failed to resolve decoy host: %s (must be hostname or IP address", optarg);
+    }    
+    break;
   case 'd': o.debugging++; break;
   case 'e': strncpy(o.device, optarg,63); o.device[63] = '\0'; break;
   case 'F': fastscan++; break;
@@ -1426,6 +1432,7 @@ return 1;
    of using recvfrom() to read TCP packets from a RAW socket */
 portlist syn_scan(struct hoststruct *target, unsigned short *portarray) {
 int i=0, j=0, starttime;
+int decoy;
 unsigned int bytes;
 int sockets[MAX_SOCKETS_ALLOWED];
 struct timeval tv,start,end;
@@ -1441,6 +1448,7 @@ int packets_out;
 pcap_t *pd;
 struct bpf_program fcode;
 char filter[512];
+int decoyturn;
 unsigned int localnet, netmask;
 char *p = NULL;
 char err0r[PCAP_ERRBUF_SIZE];
@@ -1449,7 +1457,8 @@ magic_port_NBO = htons(MAGIC_PORT);
 FD_ZERO(&fd_read);
 FD_ZERO(&fd_write);
 
-
+if (o.numdecoys == 1) decoyturn = 0;
+else decoyturn = rand() % o.numdecoys;
 
 /*if ((received = socket(AF_INET, SOCK_RAW,  IPPROTO_TCP)) < 0 )
   perror("socket troubles in syn_scan");*/
@@ -1501,12 +1510,24 @@ do {
     if ((sockets[i] = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) < 0 )
       perror("socket trobles in syn_scan");
     else {
-      if (o.fragscan)
-	send_small_fragz(sockets[i], &target->source_ip, &target->host, MAGIC_PORT,
-			 portarray[j++], TH_SYN);
-      else send_tcp_raw(sockets[i], &target->source_ip , &target->host, MAGIC_PORT, 
-			portarray[j++],0,0,TH_SYN,0,0,0);
-      usleep(10000);
+      for(decoy=0; decoy <= o.numdecoys; decoy++) {
+	if (decoy == decoyturn) { /* Whee, time for the real scan */
+	  if (o.fragscan)
+	    send_small_fragz(sockets[i], &target->source_ip, &target->host, MAGIC_PORT,
+			     portarray[j++], TH_SYN);
+	  else send_tcp_raw(sockets[i], &target->source_ip , &target->host, MAGIC_PORT, 
+			    portarray[j++],0,0,TH_SYN,0,0,0);
+	  usleep(10000);
+	}
+	if (decoy < o.numdecoys) {
+	  if (o.fragscan)
+	    send_small_fragz(sockets[i], &o.decoys[decoy], &target->host, MAGIC_PORT,
+			     portarray[j++], TH_SYN);
+	  else send_tcp_raw(sockets[i], &o.decoys[decoy] , &target->host, MAGIC_PORT, 
+			    portarray[j++],0,0,TH_SYN,0,0,0);
+	  usleep(10000);
+	}
+      }
     }
   }
   gettimeofday(&start, NULL);
