@@ -139,11 +139,11 @@ if (o.verbose && openport != -1)
 	    seq_diffs[target->seq.responses-2] = MOD_DIFF(ntohl(tcp->th_seq), target->seq.seqs[target->seq.responses-2]);
 	  }
 	if (!FP) {
-	  FP = malloc(sizeof(FingerPrint));
+	  FP = safe_malloc(sizeof(FingerPrint));
+	  bzero(FP, sizeof(FingerPrint));
 	  FP->name = "T1";
 	  FP->results = fingerprint_iptcppacket(ip ,265, ntohl(tcp->th_ack) -1);
 	  FP->next = NULL;
-	  printf("Fingerprint results: %s\n", fp2ascii(FP));	  
 	}
       }
      }
