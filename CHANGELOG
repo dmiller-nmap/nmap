@@ -1,6 +1,29 @@
 # Nmap Changelog ($Id$)
 
-Nmap 3.40BETA3
+Nmap 3.40PVT4
+
+o Limited the size of service fingerprints to roughly 1024 bytes.
+  This was suggested by Niels Heinen (niels@heinen.ws), because the previous
+  limit was excessive.  The number of fingerprints printed is also now
+  limited to 10.
+
+o Fixed a segmentation fault that could occur when ping-scanning large
+  networks.
+
+o Fixed service scan to gracefully handle host_timeout occurances when
+  they happen during a service scan.
+
+o Fixed a service_scan bug that would cause an error when hosts send
+  data and then close() during the NULL probe (when we haven't sent
+  anything).
+
+o Applied a patch from Solar Designer (solar(a)openwall.com) which
+  corrects some errors in the Russian man page translation and also a
+  couple typos in the regular man page.  Then I spell-checked the man
+  page to reduce future instances of foreigners sending in diffs to
+  correct my English :).
+
+Nmap 3.40PVT3
 
 o Nmap now prints a "service fingerprint" for services that it is
   unable to match despite returning data.  The web submission page it
@@ -17,7 +40,7 @@ o Fixed a bug that would cause Nmap to fail to print the OS
   fingerprint in certain cases.  Thanks to Ste Jones
   (root@networkpenetration.com) for the problem report.
 
-Nmap 3.40BETA2
+Nmap 3.40PVT2
 
 o Nmap now has a simple VERSION detecton scheme.  The 'match' lines in
   nmap-service-probes can specify a template version string
@@ -51,7 +74,7 @@ o Applied another patch from Matt that (we hope) fixes the "present
 
 o Port table header names are now capitalized ("SERVICE", "PORT", etc)
 
-Nmap 3.40BETA1
+Nmap 3.40PVT1
 
 o Initial implementation of service detection.  Nmap will now probe
   ports to determine what is listening, rather than guessing based on

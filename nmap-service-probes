@@ -78,7 +78,7 @@ match smtp m/^220 .*smtp/i
 match ssh m/^SSH-([^-]+)-OpenSSH_(\S+)/ v/OpenSSH $2 (protocol $1)/
 match ssh m/^SSH-([^-]+)-Sun_SSH_(\S+)/ v/SunSSH $2 (protocol $1)/
 match ssh m/^SSH-([^-]+)-(\d+\.\d+\.\d+) SSH Secure Shell/ v/SSH $2 (protocol $1)/
-match ssh m/^SSH-/
+match ssh m/^SSH-([^-]+)-(\d+\.\d+\.[\w_.]+)/ v/SSH $2 (protocol $1)/
 match chargen q| !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ|a0
 
 Probe TCP GetRequest q|GET / HTTP/1.0\r\n\r\n|
@@ -95,11 +95,12 @@ match ftp m/^200 OK/
 
 Probe UDP DNSVersionBindReq q|\0\x06\x01\0\0\x01\0\0\0\0\0\0\x07version\x04bind\0\0\x10\0\x03|
 ports 53
-match domain m|\x07version\x04bind.*\x05(.....)$| v/Bind $1/
+# Allow 3-12 character version numbers
+match domain m|\x07version\x04bind.*[\x03-\x0c]([\w._]{3,12})$| v/Bind $1/
 
 Probe TCP DNSVersionBindReq q|\0\x1E\0\x06\x01\0\0\x01\0\0\0\0\0\0\x07version\x04bind\0\0\x10\0\x03|
 ports 53
-match domain m|\x07version\x04bind.*\x05(.....)$| v/Bind $1/
+match domain m|\x07version\x04bind.*[\x03-\x0c]([\w._]{3,12})$| v/Bind $1/
 
 # DNS Server status request: http://www.crynwr.com/crynwr/rfc1035/rfc1035.html
 Probe TCP DNSStatusRequest q|\0\x0C\0\0\x10\0\0\0\0\0\0\0\0\0|
@@ -152,7 +153,7 @@ match printer m|^\0$|
 Probe TCP X11Probe q|\x6C\0\x0B\0\0\0\0\0\0\0\0\0|
 ports 6000-6020
 match X11 m|^\0\x2D\x0B\0\0\0\x0C\0| v/(access denied)/
-match X11 m|^\x01\0\x0b\0\0\0\x4C\0\xA0\xE0\x63\x02\0\0.*The XFree86 Project, Inc|s v/XFree86 (open)/
+match X11 m|^\x01\0\x0b\0\0\0.\0...\x02\0\0.*The XFree86 Project, Inc|s v/XFree86 (open)/
 match X11 m|^\x01\0\x0b\0\0\0\x4C\0\xA0\xE0\x63\x02\0\0| v/(open)/
 
 # These are empty now, but may prove useful later

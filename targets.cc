@@ -1269,11 +1269,11 @@ int get_ping_results(int sd, pcap_t *pd, Target *hostbatch[], int pingtype,
 	  trynum = sequence % pt->max_tries;
 	} else {
 	  // Didn't get it back in either field -- we'll brute force it ...
-	  for(hostnum = pt->group_end; hostnum >= 0; hostnum--) {
+	  for(hostnum = pt->group_end; hostnum != (u32) -1; hostnum--) {
 	    if (hostbatch[hostnum]->v4host().s_addr == ip->ip_src.s_addr)
 	      break;
 	  }
-	  if (hostnum < 0) {	
+	  if (hostnum == (u32) -1) {	
 	    if (o.debugging > 1) 
 	      error("Warning, unexpected packet from machine %s", inet_ntoa(ip->ip_src));
 	    continue;
@@ -1333,11 +1333,11 @@ int get_ping_results(int sd, pcap_t *pd, Target *hostbatch[], int pingtype,
 
 	/* Since this UDP response doesn't give us the sequence number, we'll have to brute force 
 	   lookup to find the hostnum */
-	for(hostnum = pt->group_end; hostnum >= 0; hostnum--) {
+	for(hostnum = pt->group_end; hostnum != (u32) -1; hostnum--) {
 	  if (hostbatch[hostnum]->v4host().s_addr == ip->ip_src.s_addr)
 	    break;
 	}
-	if (hostnum < 0) {	
+	if (hostnum == (u32) -1) {	
 	  if (o.debugging > 1) 
 	    error("Warning, unexpected packet from machine %s", inet_ntoa(ip->ip_src));
 	  continue;

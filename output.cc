@@ -198,7 +198,7 @@ void printportoutput(Target *currenths, PortList *plist) {
 	state = statenum2str(current->state);
 	current->getServiceDeductions(&sd);
 
-	if (sd.service_fp)
+	if (sd.service_fp && saved_servicefps.size() <= 10)
 	  saved_servicefps.push_back(sd.service_fp);
 
 	if (o.rpcscan) {

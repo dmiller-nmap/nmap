@@ -52,7 +52,7 @@ most of the scanned ports are in the filtered state.
 .PP
 Depending on options used, nmap may also report the
 following characteristics of the remote host: OS in use, TCP
-sequencability, usernames running the programs which have
+sequentiality, usernames running the programs which have
 bound to each port, the DNS name, whether the host is a
 smurf address, and a few others.
 .SH OPTIONS
@@ -152,7 +152,7 @@ doing any actual port scans.
 .B \-sU
 UDP scans: This method is used to determine which UDP (User Datagram
 Protocol, RFC 768) ports are open on a host.  The technique is to send
-0 byte udp packets to each port on the target machine.  If we receive
+0 byte UDP packets to each port on the target machine.  If we receive
 an ICMP port unreachable message, then the port is closed.  Otherwise
 we assume it is open.  Unfortunately, firewalls often block the port
 unreachable messages, causing the port to appear open.  Sometimes an
@@ -191,7 +191,7 @@ and does not seem to do any rate limiting at all on Win95
 and NT machines.  Thus we can scan all 65K ports of a
 Windows machine
 .B very
-quickly.  Woop!
+quickly.  Whoop!
 .Sp
 .TP
 .B \-sO
@@ -242,7 +242,7 @@ whether a firewall is stateful or just a simple packet
 filter that blocks incoming SYN packets.
 .Sp
 This scan type sends an ACK packet (with random looking
-acknowledgement/sequence numbers) to the ports specified.
+acknowledgment/sequence numbers) to the ports specified.
 If a RST comes back, the ports is classified as
 "unfiltered".  If nothing comes back (or if an ICMP
 unreachable is returned), the port is classified as
@@ -258,7 +258,7 @@ obviously never show ports in the "open" state.
 .B \-sW
 Window scan: This advanced scan is very similar to the ACK
 scan, except that it can sometimes detect open ports as well
-as filtered/nonfiltered due to an anomaly in the TCP window
+as filtered/unfiltered due to an anomaly in the TCP window
 size reporting by some operating systems.  Systems
 vulnerable to this include at least some versions of AIX,
 Amiga, BeOS, BSDI, Cray, Tru64 UNIX, DG/UX, OpenVMS, Digital
@@ -289,11 +289,11 @@ FTP bounce attack: An interesting "feature" of the ftp
 protocol (RFC 959) is support for "proxy" ftp
 connections. In other words, I should be able to connect
 from evil.com to the FTP server of target.com and request
-that the server send a file ANYWHERE on the internet!  Now
+that the server send a file ANYWHERE on the Internet!  Now
 this may have worked well in 1985 when the RFC was
 written. But in today's Internet, we can't have people
 hijacking ftp servers and requesting that data be spit out
-to arbitrary points on the internet. As *Hobbit* wrote back
+to arbitrary points on the Internet. As *Hobbit* wrote back
 in 1995, this protocol flaw "can be used to post virtually
 untraceable mail and news, hammer on servers at various
 sites, fill up disks, try to hop firewalls, and generally be
@@ -367,7 +367,7 @@ This option uses a true ping (ICMP echo request) packet.  It
 finds hosts that are up and also looks for subnet-directed
 broadcast addresses on your network.  These are IP addresses
 which are externally reachable and translate to a broadcast
-of incomming IP packets to a subnet of computers.  These
+of incoming IP packets to a subnet of computers.  These
 should be eliminated if found as they allow for numerous
 denial of service attacks (Smurf is the most common).
 .TP
@@ -403,7 +403,7 @@ nmap-os-fingerprints file) to decide what type of system you
 are scanning.
 .Sp
 If Nmap is unable to guess the OS of a machine, and conditions are
-good (eg at least one open port), Nmap will provide a URL you can use
+good (e.g. at least one open port), Nmap will provide a URL you can use
 to submit the fingerprint if you know (for sure) the OS running on the
 machine.  By doing this you contribute to the pool of operating
 systems known to nmap and thus it will be more accurate for everyone.
@@ -437,7 +437,7 @@ scan types, have a look at http://nmap6.sourceforge.net/ .
 .TP
 .B \-I
 This turns on TCP reverse ident scanning. As noted by Dave
-Goldsmith in a 1996 Bugtraq post, the ident protocol (rfc
+Goldsmith in a 1996 Bugtraq post, the ident protocol (RFC
 1413) allows for the disclosure of the username that owns
 any process connected via TCP, even if that process didn't
 initiate the connection. So you can, for example, connect to
@@ -516,7 +516,7 @@ stderr).  Also note that "-v" will cause some extra information to
 be printed.
 .TP
 .B \-oA <basefilename>
-This tells Nmap to log in ALL the majore formats (normal, grepable,
+This tells Nmap to log in ALL the major formats (normal, grepable,
 and XML).  You give a base for the filename, and the output files will
 be base.nmap, base.gnmap, and base.xml.
 .TP
@@ -528,7 +528,7 @@ the 4rgument "-" (wItHOUt qUOteZ) to sh00t output iNT0
 stDouT!@!!
 .TP
 .B \--resume <logfilename>
-A network scan that is cancelled due to control-C, network
+A network scan that is canceled due to control-C, network
 outage, etc. can be resumed using this option.  The
 logfilename must be either a normal (-oN) or grepable (-oG) 
 log from the aborted scan.  No other options
@@ -543,7 +543,7 @@ rather than overwriting those files.
 .B \-iL <inputfilename>
 Reads target specifications from the file specified RATHER
 than from the command line.  The file should contain a list
-of host or network expressions seperated by spaces, tabs, or
+of host or network expressions separated by spaces, tabs, or
 newlines.  Use a hyphen (-) as
 .I inputfilename 
 if you want nmap to read host expressions from
@@ -597,14 +597,14 @@ for hiding your IP address.
 .Sp
 Separate each decoy host with commas, and you can optionally
 use "ME" as one of the decoys to represent the position you
-want your IP address to be used.  If your put "ME" in the
+want your IP address to be used.  If you put "ME" in the
 6th position or later, some common port scan detectors (such
-as Solar Designer's excellent scanlogd) are unlikeley to
+as Solar Designer's excellent scanlogd) are unlikely to
 show your IP address at all.  If you don't use "ME", nmap
 will put you in a random position.
 .Sp
 Note that the hosts you use as decoys should be up or you
-might accidently SYN flood your targets.  Also it will be
+might accidentally SYN flood your targets.  Also it will be
 pretty easy to determine which host is scanning if only one
 is actually up on the network.  You might want to use IP
 addresses instead of names (so the decoy networks don't see
@@ -612,10 +612,10 @@ you in their nameserver logs).
 .Sp
 Also note that some (stupid) "port scan detectors" will
 firewall/deny routing to hosts that attempt port scans.
-Thus you might inadvertantly cause the machine you scan to
+Thus you might inadvertently cause the machine you scan to
 lose connectivity with the decoy machines you are using.
 This could cause the target machines major problems if the
-decoy is, say, its internet gateway or even "localhost".
+decoy is, say, its Internet gateway or even "localhost".
 Thus you might want to be careful of this option.  The real
 moral of the story is that detectors of spoofable port scans
 should not take action against the machine that seems like
@@ -758,7 +758,7 @@ of crashing machines.  It serializes the probes and waits
 order of magnitude slower than default scans, so only use it when you
 need to.
 .B Normal
-is the default Nmap behaviour, which tries to run as quickly
+is the default Nmap behavior, which tries to run as quickly
 as possible without overloading the network or missing
 hosts/ports.
 .B Aggressive
@@ -795,7 +795,7 @@ least the given amount of time before giving up on a probe.
 .TP
 .B --initial_rtt_timeout <milliseconds>
 Specifies the initial probe timeout.  This is generally only
-useful when scanning firwalled hosts with -P0.  Normally
+useful when scanning firewalled hosts with -P0.  Normally
 Nmap can obtain good RTT estimates from the ping and the
 first few probes.  The default mode uses 6000.
 .TP
@@ -830,7 +830,7 @@ you can append
 to the hostname
 or IP address. 
 .B mask 
-must be between 0 (scan the whole internet) and 32 (scan the
+must be between 0 (scan the whole Internet) and 32 (scan the
 single host specified).  Use /24 to scan a class "C" address
 and /16 for a class "B".
 .Sp

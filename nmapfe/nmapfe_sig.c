@@ -245,24 +245,6 @@ void kill_output()
 	there are much more elegant ways to do this, but this is how it works now.  The functions
 	return the process ID of nmap.  This process is
 	different enough between windows & UNIX that I have two functions for doing it: */
-static int execute_unix(char *command);
-static int execute_win(char *command);
-
-int execute(char *command)
-{
-#ifdef WIN32
-int pid = execute_win(command);
-#else
-int pid = execute_unix(command);
-#endif /* WIN32 */
-
-/* timer for calling our read function to poll for new data 8 times per second */
- gtk_timeout_add(125, read_data, NULL);
-
-  return(pid);
-}
-
-
 int execute_unix(char *command)
 {
 #ifdef WIN32
@@ -351,6 +333,22 @@ STARTUPINFO Nmap_Start;
 
 #endif
 }
+
+int execute(char *command)
+{
+#ifdef WIN32
+int pid = execute_win(command);
+#else
+int pid = execute_unix(command);
+#endif /* WIN32 */
+
+/* timer for calling our read function to poll for new data 8 times per second */
+ gtk_timeout_add(125, read_data, NULL);
+
+  return(pid);
+}
+
+
 
 
 char *build_command()

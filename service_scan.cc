@@ -160,8 +160,6 @@ void servicescan_read_handler(nsock_pool nsp, nsock_event nse, void *mydata);
 void servicescan_write_handler(nsock_pool nsp, nsock_event nse, void *mydata);
 void servicescan_connect_handler(nsock_pool nsp, nsock_event nse, void *mydata);
 void end_svcprobe(enum serviceprobestate probe_state, ServiceGroup *SG, ServiceNFO *svc, nsock_iod nsi);
-static void startNextProbe(nsock_pool nsp, nsock_iod nsi, ServiceGroup *SG, 
-			   struct ServiceNFO *svc);
 int launchSomeServiceProbes(nsock_pool nsp, ServiceGroup *SG);
 
 ServiceProbeMatch::ServiceProbeMatch() {
@@ -740,7 +738,7 @@ void ServiceNFO::addServiceChar(char c, int wrapat) {
   if (servicefpalloc - servicefplen < 6)
     fatal("ServiceNFO::addServiceChar - out of space for servicefp");
 
-  if (servicefplen % wrapat == 0) {
+  if (servicefplen % (wrapat+1) == wrapat) {
     // we need to start a new line
     memcpy(servicefp + servicefplen, "\n   ", 4);
     servicefplen += 4;
@@ -775,6 +773,10 @@ void ServiceNFO::addToServiceFingerprint(const char *probeName, const u8 *resp,
 
   assert(resplen);
   assert(probeName);
+
+
+  if (servicefplen > 1024)
+    return; // it is large enough.
 
   if (spaceneeded >= spaceleft) {
     spaceneeded = MAX(spaceneeded, 256); // No point in tiny allocations
@@ -994,12 +996,14 @@ ServiceGroup::~ServiceGroup() {
 // This simple helper function is used to start the next probe.  If
 // the probe exists, execution begins (and the previous one is cleaned
 // up if neccessary) .  Otherwise, the service is listed as finished
-// and moved to the finished list
+// and moved to the finished list.  If you pass 'true' for alwaysrestart, a
+// new connection will be made even if the previous probe was the NULL probe.
+// You would do this, for example, if the other side has closed the connection
 static void startNextProbe(nsock_pool nsp, nsock_iod nsi, ServiceGroup *SG, 
-			   struct ServiceNFO *svc) {
+			   struct ServiceNFO *svc, bool alwaysrestart) {
   ServiceProbe *probe = svc->currentProbe();
 
-  if (probe->isNullProbe()) {
+  if (!alwaysrestart && probe->isNullProbe()) {
     // The difference here is that we can reuse the same (TCP) connection
     // if the last probe was the NULL probe.
     probe = svc->nextProbe();
@@ -1082,14 +1086,18 @@ void servicescan_connect_handler(nsock_pool nsp, nsock_event nse, void *mydata) 
     send_probe_text(nsp, nsi, svc, probe);
     // Now let us read any results
     nsock_read(nsp, nsi, servicescan_read_handler, svc->currentprobe_timemsleft(nsock_gettimeofday()), svc);
-  } else if (status == NSE_STATUS_TIMEOUT || status == NSE_STATUS_ERROR || 
-	     status == NSE_STATUS_KILL) {
+  } else if (status == NSE_STATUS_TIMEOUT || status == NSE_STATUS_ERROR) {
       // This is not good.  The connect() really shouldn't generally
       // be timing out like that.  We'll mark this svc as incomplete
       // and move it to the finished bin.
     if (o.debugging)
       error("Got nsock CONNECT response with status %s - aborting this service", nse_status2str(status));
     end_svcprobe(PROBESTATE_INCOMPLETE, SG, svc, nsi);
+  } else if (status == NSE_STATUS_KILL) {
+    /* User probablby specified host_timeout and so the service scan is
+       shutting down */
+    end_svcprobe(PROBESTATE_INCOMPLETE, SG, svc, nsi);
+    return;
   } else fatal("Unexpected nsock status (%d) returned for connection attempt", (int) status);
 
   // We may have room for more pr0bes!
@@ -1109,7 +1117,16 @@ void servicescan_write_handler(nsock_pool nsp, nsock_event nse, void *mydata) {
 
  SG = (ServiceGroup *) nsp_getud(nsp);
  nsi = nse_iod(nse);
- // Uh-oh.  Some sort of write failure ... maybe the connection closed on us unexpectedly?
+
+ if (status == NSE_STATUS_KILL) {
+   /* User probablby specified host_timeout and so the service scan is
+      shutting down */
+   end_svcprobe(PROBESTATE_INCOMPLETE, SG, svc, nsi);
+   return;
+ }
+
+ // Uh-oh.  Some sort of write failure ... maybe the connection closed
+ // on us unexpectedly?
  if (o.debugging) 
    error("Got nsock WRITE response with status %s - aborting this service", nse_status2str(status));
  end_svcprobe(PROBESTATE_INCOMPLETE, SG, svc, nsi);
@@ -1168,7 +1185,7 @@ void servicescan_read_handler(nsock_pool nsp, nsock_event nse, void *mydata) {
     if (readstrlen > 0)
       svc->addToServiceFingerprint(svc->currentProbe()->getName(), readstr, 
 				   readstrlen);
-    startNextProbe(nsp, nsi, SG, svc);
+    startNextProbe(nsp, nsi, SG, svc, false);
     
   } else if (status == NSE_STATUS_EOF) {
     // The jerk closed on us during read request!
@@ -1182,9 +1199,10 @@ void servicescan_read_handler(nsock_pool nsp, nsock_event nse, void *mydata) {
       // TODO:  Perhaps should do further verification before making this assumption
       end_svcprobe(PROBESTATE_FINISHED_TCPWRAPPED, SG, svc, nsi);
     } else {
-      // Perhaps this service didn't like the particular probe text.  We'll try the 
-      // next one
-      startNextProbe(nsp, nsi, SG, svc);
+
+      // Perhaps this service didn't like the particular probe text.
+      // We'll try the next one
+      startNextProbe(nsp, nsi, SG, svc, true);
     }
   } else if (status == NSE_STATUS_ERROR) {
     // Errors might happen in some cases ... I'll worry about later
@@ -1198,13 +1216,18 @@ void servicescan_read_handler(nsock_pool nsp, nsock_event nse, void *mydata) {
       } else {
 	// Perhaps this service didn't like the particular probe text.  We'll try the 
 	// next one
-	startNextProbe(nsp, nsi, SG, svc);
+	startNextProbe(nsp, nsi, SG, svc, true);
       }
       break;
     default:
       fatal("Unexpected error in NSE_TYPE_READ callback.  Error code: %d (%s)", err,
 	    strerror(err));
     }
+  } else if (status == NSE_STATUS_KILL) {
+    /* User probablby specified host_timeout and so the service scan is 
+       shutting down */
+    end_svcprobe(PROBESTATE_INCOMPLETE, SG, svc, nsi);
+    return;
   } else {
     fatal("Unexpected status (%d) in NSE_TYPE_READ callback.", (int) status);
   }
@@ -1351,8 +1374,10 @@ int service_scan(Target *targets[], int num_targets) {
 
   if (o.verbose) {
     long nsec = time(NULL) - starttime;
-    log_write(LOG_STDOUT, "The service scan took %ld %s to scan %d %s on %d %s.\n", nsec, (nsec == 1)? "second" : "seconds", SG->services_finished.size(),  (SG->services_finished.size() == 1)? "service" : "services", num_targets, (num_targets == 1)? "host" : "hosts");
-    }
+    if (!targets[0]->timedout) {
+      log_write(LOG_STDOUT, "The service scan took %ld %s to scan %d %s on %d %s.\n", nsec, (nsec == 1)? "second" : "seconds", SG->services_finished.size(),  (SG->services_finished.size() == 1)? "service" : "services", num_targets, (num_targets == 1)? "host" : "hosts");
+    } else log_write(LOG_STDOUT, "The service scan timed out.\n");
+  }
 
   // Yeah - done with the service scan.  Now I go through the results
   // discovered, store the important info away, and free up everything
