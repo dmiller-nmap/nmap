@@ -46,6 +46,10 @@ o Fixed a crash that could happen during SSL version detection due to
 o Applied patch from Rob Foehl (rwf(a)loonybin.net) which fixes the
   --with_openssl=DIR configure argument.
 
+o Applied patch to nmap XML dtd (nmap.dtd) from Mario Manno
+  (mm(a)koeln.ccc.de).  This accounts for the new version scanning
+  functionality.
+
 o Updated the Windows build system so that you don't have to manually
   copy nmap-service-probes to the output directory.  I also updated
   the README-WIN32 to elaborate further on the build process.
