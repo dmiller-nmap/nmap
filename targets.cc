@@ -563,8 +563,6 @@ int sendconnecttcpquery(Target *hostbatch[], struct tcpqueryinfo *tqi,
     sin->sin_port = htons(o.tcp_probe_port);
 #if HAVE_IPV6
   else sin6->sin6_port = htons(o.tcp_probe_port);
-#else
-  fatal("IPV6 not supported");
 #endif //HAVE_IPV6
   
   res = connect(tqi->sockets[seq],(struct sockaddr *)&sock, socklen);

@@ -354,7 +354,7 @@ void *realloc();
 #endif
 
 #ifndef NET_SIZE_T
-#  define NET_SIZE_T int
+#  define NET_SIZE_T unsigned int
 #endif
 
 /********************** LOCAL INCLUDES *****************************/

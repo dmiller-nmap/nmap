@@ -911,6 +911,13 @@ int nmap_main(int argc, char *argv[]) {
     free(fakeargv[i]);
   free(fakeargv);
 
+  if (ports) {
+    free(ports->tcp_ports);
+    free(ports->udp_ports);
+    free(ports->prots);
+    free(ports);
+  }
+
   return 0;
 }
 
@@ -953,11 +960,17 @@ int gather_logfile_resumption_state(char *fname, int *myargc, char ***myargv) {
 
   q = strchr(p, '\n');
   if (!q || ((unsigned int) (q - p) >= sizeof(nmap_arg_buffer) - 32))
-    fatal("Unable to parse supposed log file %s.  Sorry", fname);
+    fatal("Unable to parse supposed log file %s.  Perhaps the Nmap execution had not finished at least one host?  In that case there is no use \"resuming\"", fname);
+
 
   strcpy(nmap_arg_buffer, "nmap --append_output ");
+  if ((q-p) + 21 + 1 >= (int) sizeof(nmap_arg_buffer)) fatal("0verfl0w");
   memcpy(nmap_arg_buffer + 21, p, q-p);
   nmap_arg_buffer[21 + q-p] = '\0';
+
+  if (strstr(nmap_arg_buffer, "--randomize_hosts") != NULL) {
+    error("WARNING:  You are attempting to resume a scan which used --randomize_hosts.  Some hosts in the last randomized batch make be missed and others may be repeated once");
+  }
 
   *myargc = arg_parse(nmap_arg_buffer, myargv);
   if (*myargc == -1) {  
@@ -1374,8 +1387,8 @@ int ip_is_reserved(struct in_addr *ip)
   if (i1 >= 70 && i1 <= 79)
     return 1;
 
-  /* 082-095/8 is IANA reserved */
-  if (i1 >= 82 && i1 <= 95)
+  /* 083-095/8 is IANA reserved */
+  if (i1 >= 83 && i1 <= 95)
     return 1;
 
   /* do all the /7's and /8's with a big switch statement, hopefully the

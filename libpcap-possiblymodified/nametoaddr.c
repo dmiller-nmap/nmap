@@ -313,7 +313,7 @@ pcap_ether_aton(const char *s)
 		if (*s == ':')
 			s += 1;
 		d = xdtoi(*s++);
-		if (isxdigit(*s)) {
+		if (isxdigit((unsigned char)*s)) {
 			d <<= 4;
 			d |= xdtoi(*s++);
 		}
@@ -404,5 +404,6 @@ __pcap_nametodnaddr(const char *name)
 #else
 	bpf_error("decnet name support not included, '%s' cannot be translated\n",
 		name);
+	return(0);
 #endif
 }

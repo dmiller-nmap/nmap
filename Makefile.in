@@ -1,4 +1,4 @@
-NMAP_VERSION = 3.10ALPHA4
+NMAP_VERSION = 3.10ALPHA6
 NMAP_NAME= nmap
 NMAP_URL= www.insecure.org/nmap/
 NMAP_PLATFORM=@host@
@@ -79,14 +79,14 @@ distro:
 # nodepage option is included in man2html because of bug in that program which causes it to
 # drop lines if you let it try to delete page breaks
 	nroff -man docs/nmap.1 | man2html -nodepage -title 'Nmap network security scanner man page' > docs/nmap_manpage.html
-	nroff -man docs/nmap_spanish.1 | man2html -nodepage -title 'Nmap network security scanner man page (Spanish translation)' > docs/nmap_manpage-es.html
-	nroff -man docs/nmap_italian.1 | man2html -nodepage -title 'Nmap network security scanner man page (Italian translation)' > docs/nmap_manpage-it.html
 	nroff -man docs/nmap_french.1 | man2html -nodepage -title 'Nmap network security scanner man page (French translation)' > docs/nmap_manpage-fr.html
-	nroff -man docs/nmap_portuguese.1 | man2html -nodepage -title 'Nmap network security scanner man page (Portuguese translation)' > docs/nmap_manpage-pt.html
 	nroff -man docs/nmap_german.1 | man2html -nodepage -title 'Nmap network security scanner man page (German translation)' > docs/nmap_manpage-de.html
+	nroff -man docs/nmap_italian.1 | man2html -nodepage -title 'Nmap network security scanner man page (Italian translation)' > docs/nmap_manpage-it.html
 	nroff -Tlatin1 -man docs/nmap_lithuanian.1 | man2html -nodepage -title 'Nmap network security scanner man page (Lithuanian translation)' > docs/nmap_manpage-lt.html
 # We need a content-type for the Lithuanian version
 	sr '<HEAD>' '<HEAD><META http-equiv="Content-Type" content="text/html; charset=windows-1257">' docs/nmap_manpage-lt.html
+	nroff -man docs/nmap_portuguese.1 | man2html -nodepage -title 'Nmap network security scanner man page (Portuguese translation)' > docs/nmap_manpage-pt.html
+	nroff -man docs/nmap_spanish.1 | man2html -nodepage -title 'Nmap network security scanner man page (Spanish translation)' > docs/nmap_manpage-es.html
 	rm -rf /usr/tmp/nmap-$(NMAP_VERSION)
 	mkdir /usr/tmp/nmap-$(NMAP_VERSION)
 # Make the RPM .spec file
@@ -106,27 +106,32 @@ distro:
                     nmap.dsw nmap.rc winip \
                     /usr/tmp/nmap-$(NMAP_VERSION)/mswin32
 	$(SHTOOL) mkdir /usr/tmp/nmap-$(NMAP_VERSION)/$(LIBPCAPDIR)
-	cd $(LIBPCAPDIR); cp -ra CHANGES CREDITS CVS FILES INSTALL LICENSE \
-            Makefile.in NMAP_MODIFICATIONS README README.aix README.linux \
-            SUNOS4 TODO VERSION aclocal.m4 bpf bpf_dump.c bpf_image.c \
-            config.h.in configure configure.in etherent.c ethertype.h \
-            gencode.c gencode.h grammar.c grammar.y \
-            inet.c lbl llc.h mkdep nametoaddr.c nlpid.h \
-            optimize.c pcap-bpf.c pcap-dlpi.c pcap-enet.c pcap-int.h \
-            pcap-linux.c pcap-namedb.h pcap-nit.c pcap-nit.h pcap-null.c \
-            pcap-pf.c pcap-pf.h pcap-snit.c pcap-snoop.c pcap.3 pcap.c \
-            pcap.h ppp.h savefile.c scanner.c scanner.l sll.h tokdefs.h \
-            /usr/tmp/nmap-$(NMAP_VERSION)/$(LIBPCAPDIR)
 
+	cd $(LIBPCAPDIR); cp -ra acconfig.h aclocal.m4 arcnet.h bpf \
+                          bpf_dump.c bpf_filter.c bpf_image.c CHANGES \
+                          config.guess config.h.in config.sub configure \
+                          configure.in CREDITS etherent.c ethertype.h FILES \
+                          gencode.c gencode.h grammar.c grammar.y inet.c \
+                          install-sh INSTALL.txt lbl LICENSE llc.h \
+                          Makefile.in mkdep nametoaddr.c net nlpid.h \
+                          NMAP_MODIFICATIONS optimize.c pcap.3 pcap-bpf.c \
+                          pcap.c pcap-dlpi.c pcap-enet.c pcap.h pcap-int.h \
+                          pcap-linux.c pcap-namedb.h pcap-nit.c pcap-nit.h \
+                          pcap-null.c pcap-pf.c pcap-pf.h pcap-snit.c \
+                          pcap-snoop.c ppp.h README README.aix README.linux \
+                          README.tru64 savefile.c scanner.c scanner.l sll.h \
+                          SUNOS4 TODO tokdefs.h VERSION \
+                          /usr/tmp/nmap-$(NMAP_VERSION)/$(LIBPCAPDIR)
 	$(SHTOOL) mkdir /usr/tmp/nmap-$(NMAP_VERSION)/docs
 	cd docs; cp -ra README copying.html nmap-fingerprinting-article.txt \
-                    nmap.1 nmap.deprecated.txt nmap.usage.txt nmap_doc.html \
-                    nmap_manpage-es.html nmap_manpage-fr.html \
-                    nmap_manpage-lt.html nmap_manpage-ru.html \
-	            nmap_manpage-it.html nmap_manpage.html \
-                    nmap_spanish.1 nmap_lithuanian.1 nmap_italian.1 \
-                    nmap_portuguese.1 nmapfe.1 \
-	            xnmap.1 nmap.dtd \
+                    nmap.deprecated.txt nmap.usage.txt nmap_doc.html \
+                    nmap_manpage-de.html nmap_manpage-es.html \
+                    nmap_manpage-fr.html nmap_manpage-it.html \
+                    nmap_manpage-lt.html nmap_manpage-pt.html \
+                    nmap_manpage-ru.html nmap_manpage.html \
+                    nmap.1 nmapfe.1 nmap_french.1 nmap_german.1 \
+                    nmap_italian.1 nmap_lithuanian.1 nmap_portuguese.1 \
+                    nmap_spanish.1 xnmap.1 nmap.dtd \
                     /usr/tmp/nmap-$(NMAP_VERSION)/docs
 	$(SHTOOL) mkdir /usr/tmp/nmap-$(NMAP_VERSION)/nmapfe
 	cd nmapfe; cp -ra Makefile.in aclocal.m4 configure configure.in \

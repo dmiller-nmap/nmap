@@ -1539,7 +1539,8 @@ void super_scan(Target *target, u16 *portarray, int numports,
 		    break;
 		  
 		  case 3: /* p0rt unreachable */		
-		    if (scantype == UDP_SCAN) {
+		    if (scantype == UDP_SCAN && 
+			ip->ip_src.s_addr == target->v4host().s_addr) {
 		      newstate = PORT_CLOSED;
 		    } else newstate = PORT_FIREWALLED;
 		    break;

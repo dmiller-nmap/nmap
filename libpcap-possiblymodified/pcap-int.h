@@ -65,7 +65,6 @@ struct pcap_md {
 	long	OrigMissed;	/* missed by i/f before this run */
 #ifdef linux
 	int	sock_packet;	/* using Linux 2.0 compatible interface */
-	int	readlen;	/* byte count to hand to "recvmsg()" */
 	int	timeout;	/* timeout specified to pcap_open_live */
 	int	clear_promisc;	/* must clear promiscuous mode when we close */
 	int	cooked;		/* using SOCK_DGRAM rather than SOCK_RAW */

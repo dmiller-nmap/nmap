@@ -151,9 +151,8 @@ struct scan_lists *getdefaultprots(void) {
     if (nmap_protocols_init() == -1)
       fatal("getdefaultprots(): Couldn't get protocol numbers");
   
-  scanlist = (struct scan_lists *) cp_alloc(sizeof(struct scan_lists));
-  bzero(scanlist, sizeof(*scanlist));
-  scanlist->prots = (unsigned short *) cp_alloc((protsneeded +1) * sizeof(unsigned short));
+  scanlist = (struct scan_lists *) safe_zalloc(sizeof(struct scan_lists));
+  scanlist->prots = (unsigned short *) safe_zalloc((protsneeded +1) * sizeof(unsigned short));
   scanlist->prot_count = protsneeded;
 
   for(bucket = 1; bucket < protsneeded; bucket++) {
@@ -186,9 +185,8 @@ struct scan_lists *getfastprots(void) {
     }
   }
 
-  scanlist = (struct scan_lists *) cp_alloc(sizeof(struct scan_lists));
-  bzero(scanlist, sizeof(*scanlist));
-  scanlist->prots = (unsigned short *) cp_alloc((protsneeded +1) * sizeof(unsigned short));
+  scanlist = (struct scan_lists *) safe_zalloc(sizeof(struct scan_lists));
+  scanlist->prots = (unsigned short *) safe_zalloc((protsneeded +1) * sizeof(unsigned short));
   scanlist->prot_count = protsneeded;
 
   for(bucket = 1; bucket < 256; bucket++) {

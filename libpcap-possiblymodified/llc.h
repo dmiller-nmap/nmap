@@ -58,9 +58,12 @@
 #ifndef LLCSAP_SNAP
 #define	LLCSAP_SNAP		0xaa
 #endif
-#ifndef LLCSAP_ISONS
-#define	LLCSAP_ISONS		0xfe
-#endif
 #ifndef LLCSAP_IPX
 #define LLCSAP_IPX		0xe0
+#endif
+#ifndef LLCSAP_NETBEUI
+#define LLCSAP_NETBEUI		0xf0
+#endif
+#ifndef LLCSAP_ISONS
+#define	LLCSAP_ISONS		0xfe
 #endif

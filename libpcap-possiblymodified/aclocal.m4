@@ -517,10 +517,10 @@ dnl
 AC_DEFUN(AC_LBL_UNALIGNED_ACCESS,
     [AC_MSG_CHECKING(if unaligned accesses fail)
     AC_CACHE_VAL(ac_cv_lbl_unaligned_fail,
-	[case "$target_cpu" in
+	[case "$host_cpu" in
 
 	# XXX: should also check that they don't do weird things (like on arm)
-	alpha*|arm*|hp*|mips|sparc)
+	alpha*|arm*|hp*|mips*|sparc*|ia64)
 		ac_cv_lbl_unaligned_fail=yes
 		;;
 
@@ -767,3 +767,21 @@ fi
 AC_MSG_RESULT($ac_cv___attribute__)
 ])
 
+dnl
+dnl Checks to see if tpacket_stats is defined in linux/if_packet.h
+dnl If so then pcap-linux.c can use this to report proper statistics.
+dnl
+dnl -Scott Barron
+dnl
+AC_DEFUN(AC_LBL_TPACKET_STATS,
+   [AC_MSG_CHECKING(if if_packet.h has tpacket_stats defined)
+   AC_CACHE_VAL(ac_cv_lbl_tpacket_stats,
+   AC_TRY_COMPILE([
+#  include <linux/if_packet.h>],
+   [struct tpacket_stats stats],
+   ac_cv_lbl_tpacket_stats=yes,
+   ac_cv_lbl_tpacket_stats=no))
+   AC_MSG_RESULT($ac_cv_lbl_tpacket_stats)
+   if test $ac_cv_lbl_tpacket_stats = yes; then
+       AC_DEFINE(HAVE_TPACKET_STATS,1,[if if_packet.h has tpacket_stats defined])
+   fi])

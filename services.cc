@@ -223,12 +223,11 @@ struct scan_lists *getdefaultports(int tcpscan, int udpscan) {
     }
   }
 
-  ports = (struct scan_lists *) cp_alloc(sizeof(struct scan_lists));
-  bzero(ports, sizeof(*ports));
+  ports = (struct scan_lists *) safe_zalloc(sizeof(struct scan_lists));
   if (tcpscan) 
-    ports->tcp_ports = (unsigned short *) cp_alloc((tcpportsneeded+1) * sizeof(unsigned short));
+    ports->tcp_ports = (unsigned short *) safe_zalloc((tcpportsneeded+1) * sizeof(unsigned short));
   if (udpscan) 
-    ports->udp_ports = (unsigned short *) cp_alloc((udpportsneeded+1) * sizeof(unsigned short));
+    ports->udp_ports = (unsigned short *) safe_zalloc((udpportsneeded+1) * sizeof(unsigned short));
   ports->tcp_count= tcpportsneeded;
   ports->udp_count= udpportsneeded;
 
@@ -279,12 +278,11 @@ struct scan_lists *getfastports(int tcpscan, int udpscan) {
     }
   }
 
-  ports = (struct scan_lists *) cp_alloc(sizeof(struct scan_lists));
-  bzero(ports, sizeof(*ports));
+  ports = (struct scan_lists *) safe_zalloc(sizeof(struct scan_lists));
   if (tcpscan) 
-    ports->tcp_ports = (unsigned short *) cp_alloc((tcpportsneeded+1) * sizeof(unsigned short));
+    ports->tcp_ports = (unsigned short *) safe_zalloc((tcpportsneeded+1) * sizeof(unsigned short));
   if (udpscan)
-    ports->udp_ports = (unsigned short *) cp_alloc((udpportsneeded+1) * sizeof(unsigned short));
+    ports->udp_ports = (unsigned short *) safe_zalloc((udpportsneeded+1) * sizeof(unsigned short));
   ports->tcp_count= tcpportsneeded;
   ports->udp_count= udpportsneeded;
 
