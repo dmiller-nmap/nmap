@@ -1457,8 +1457,7 @@ magic_port_NBO = htons(MAGIC_PORT);
 FD_ZERO(&fd_read);
 FD_ZERO(&fd_write);
 
-if (o.numdecoys == 1) decoyturn = 0;
-else decoyturn = rand() % o.numdecoys;
+decoyturn == (o.numdecoys == 0)?  0 : rand() % o.numdecoys; 
 
 /*if ((received = socket(AF_INET, SOCK_RAW,  IPPROTO_TCP)) < 0 )
   perror("socket troubles in syn_scan");*/
