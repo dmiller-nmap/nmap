@@ -5,6 +5,8 @@
 -- Fixed a commenting issue that could cause trouble for non-GNU compilers
    (first found by Jan-Frode Myklebust (janfrode at parallab.uib.no))
 
+-- A few new services to nmap-services
+
 ** Version 2.52
 
 -- Added very simple man pages for xnmap/nmapfe (lack of man pages for
