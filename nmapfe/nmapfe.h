@@ -59,6 +59,7 @@
 #endif
 
 #include <gtk/gtk.h>
+#include <nbase.h>
 
 /* #define DEBUG(str) { fprintf(stderr, str); fflush(stderr); } */
 

@@ -69,11 +69,11 @@ mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_CLEAN_FILES = 
 PROGRAMS =  $(bin_PROGRAMS)
 
-
+INCLUDES += -I@NBASEDIR@
 DEFS = @DEFS@ -DVERSION=\"$(VERSION)\" -I$(srcdir) 
 CPPFLAGS = @CPPFLAGS@
 STATIC =
-LDFLAGS = @LDFLAGS@ $(STATIC)
+LDFLAGS = @LDFLAGS@ -L@NBASEDIR@ $(STATIC) -lnbase
 LIBS = @LIBS@
 nmapfe_OBJECTS =  nmapfe.o nmapfe_sig.o
 nmapfe_LDADD = $(LDADD)

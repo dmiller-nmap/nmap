@@ -65,6 +65,8 @@ on_delete_event                        (GtkWidget     *widget,
 
 
 #include <gtk/gtk.h>
+#include <nbase.h>
+
 void build_tree(char *buf);
 void stop_scan();
 gint read_data(gpointer data);
