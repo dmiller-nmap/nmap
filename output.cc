@@ -94,6 +94,7 @@
 #include "osscan.h"
 #include "NmapOps.h"
 #include "NmapOutputTable.h"
+#include "MACLookup.h"
 
 #include <string>
 
@@ -918,6 +919,23 @@ static void printosclassificationoutput(const struct OS_Classification_Results *
   return;
 }
 
+/* Prints the MAC address if one was found for the target (generally
+   this means that the target is directly connected on an ethernet
+   network. */
+void printmacinfo(Target *currenths) {
+  const u8 *mac = currenths->MACAddress();
+  char macascii[32];
+  char vendorstr[128];
+
+  if (mac) {
+    const char *macvendor = MACPrefix2Corp(mac);
+    if (macvendor) snprintf(vendorstr, sizeof(vendorstr), " vendor=\"%s\"", macvendor);
+    else vendorstr[0] = '\0';
+    snprintf(macascii, sizeof(macascii), "%02X:%02X:%02X:%02X:%02X:%02X",  mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+    log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT, "MAC Address: %s (%s)\n", macascii, macvendor? macvendor : "Unknown");
+    log_write(LOG_XML, "<address addr=\"%s\"%s addrtype=\"%s\" />\n", macascii, vendorstr, "mac");
+  }
+}
 
 
 /* Prints the formatted OS Scan output to stdout, logfiles, etc (but only

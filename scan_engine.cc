@@ -433,11 +433,12 @@ static void get_syn_results(Target *target, struct portinfo *scan,
   u16 *data;
   struct timeval start, rcvdtime;
   int quit = 0;
+  struct link_header linkhdr;
 
   gettimeofday(&start, NULL);
 
   while (!quit && ss->numqueries_outstanding > 0 && 
-	 ( ip = (struct ip*) readip_pcap(pd, &bytes, target->to.timeout, &rcvdtime))) {
+	 ( ip = (struct ip*) readip_pcap(pd, &bytes, target->to.timeout, &rcvdtime, &linkhdr))) {
     if (bytes < (4 * ip->ip_hl) + 4U)
       continue;
     current = NULL;
@@ -459,6 +460,8 @@ static void get_syn_results(Target *target, struct portinfo *scan,
       /* Lets quit after we process this packet */
       quit = 1;
     }
+
+    setTargetMACIfAvailable(target, &linkhdr, ip, 0);
 
     if (ip->ip_src.s_addr == target->v4host().s_addr && 
 	ip->ip_p == IPPROTO_TCP) {
@@ -1402,6 +1405,7 @@ void super_scan(Target *target, u16 *portarray, int numports,
   int portno;
   Port *current_port_tmp;
   char hostname[1200];
+  struct link_header linkhdr;
 
   if (target->timedout)
     return;
@@ -1598,7 +1602,7 @@ void super_scan(Target *target, u16 *portarray, int numports,
 	    target->timedout = 1;
 	    goto superscan_timedout;
 	  }
-	while (!timedout && numqueries_outstanding > 0 && ( ip = (struct ip*) readip_pcap(pd, &bytes, target->to.timeout, &end)))
+	while (!timedout && numqueries_outstanding > 0 && ( ip = (struct ip*) readip_pcap(pd, &bytes, target->to.timeout, &end, &linkhdr)))
 	  {
 	    if (++packcount >= 30) {
 	      /* We don't want to allow for the possibility if this going
@@ -1606,8 +1610,9 @@ void super_scan(Target *target, u16 *portarray, int numports,
 	      if (TIMEVAL_SUBTRACT(end, now) > 8000000)
 		timedout = 1;
 	    }
-	    if (bytes < (4 * ip->ip_hl) + 4U)
+	    if (bytes < (4 * ip->ip_hl) + 4U || bytes < 24)
 	      continue;	
+	    setTargetMACIfAvailable(target, &linkhdr, ip, 0);
 	    current = NULL;
 	    if (ip->ip_p == IPPROTO_ICMP ||
 		ip->ip_src.s_addr == target->v4host().s_addr) {

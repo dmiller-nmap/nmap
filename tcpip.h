@@ -276,9 +276,17 @@ class PacketTrace {
 		    struct timeval *now=NULL);
 };
 
+#define MAX_LINK_HEADERSZ 24
+struct link_header {
+  int datalinktype; /* pcap_datalink(), such as DLT_EN10MB */
+  int headerlen; /* 0 if header was too big or unavailaable */
+  u8 header[MAX_LINK_HEADERSZ];
+};
+
 struct interface_info {
-    char name[64];
-    struct in_addr addr;
+  char name[64];
+  struct in_addr addr;
+  struct in_addr netmask;
 };
 
 #ifndef HAVE_STRUCT_IP
@@ -495,12 +503,33 @@ int ipaddr2devname( char *dev, const struct in_addr *addr );
 int devname2ipaddr(char *dev, struct in_addr *addr);
 /* Where the above 2 functions get their info */
 struct interface_info *getinterfaces(int *howmany);
+/* Check whether an IP address appears to be directly connected to an
+   interface on the computer (e.g. on the same ethernet network rather
+   than having to route).  Returns 1 if yes, -1 if maybe, 0 if not. */
+int IPisDirectlyConnected(struct sockaddr_storage *ss, size_t ss_len);
 void sethdrinclude(int sd);
 int getsourceip(struct in_addr *src, const struct in_addr * const dst);
 /* Get the source IP and interface name that a packet
    to dst should be sent to.  Interface name is dynamically
    assigned and thus should be freed */
 char *getsourceif(struct in_addr *src, struct in_addr *dst);
+
+/* This function tries to determine the target's ethernet MAC address
+   from a received packet as follows:
+   1) If linkhdr is an ethernet header, grab the src mac (otherwise give up)
+   2) If overwrite is 0 and a MAC is already set for this target, give up.
+   3) If the packet source address is not the target, give up.
+   4) Use the routing table to try to determine rather target is
+      directly connected to the src host running Nmap.  If it is, set the MAC.
+
+   This function returns 0 if it ends up setting the MAC, nonzero otherwise
+
+   This function assumes that ip has already been verified as
+   containing a complete IP header (or at least the first 20 bytes).
+*/  
+
+int setTargetMACIfAvailable(Target *target, struct link_header *linkhdr,
+			    struct ip *ip, int overwrite);
 int islocalhost(const struct in_addr * const addr);
 int unblock_socket(int sd);
 int Sendto(char *functionname, int sd, const unsigned char *packet, int len, 
@@ -514,7 +543,12 @@ int Sendto(char *functionname, int sd, const unsigned char *packet, int len,
 const char *proto2ascii(u8 proto, bool uppercase=false);
 /* Hex dump */
 int get_link_offset(char *device);
-char *readip_pcap(pcap_t *pd, unsigned int *len, long to_usec, struct timeval *rcvdtime);
+/* If rcvdtime is non-null and a packet is returned, rcvd will be
+   filled with the time that packet was captured from the wire by
+   pcap.  If linknfo is not NULL, lnknfo->headerlen and
+   lnkinfo->header will be filled with the appropriate values. */
+char *readip_pcap(pcap_t *pd, unsigned int *len, long to_usec, 
+		  struct timeval *rcvdtime, struct link_header *linknfo);
 #ifndef HAVE_INET_ATON
 int inet_aton(register const char *, struct in_addr *);
 #endif

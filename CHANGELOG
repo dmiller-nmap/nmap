@@ -2,6 +2,17 @@
 
 UNRELEASED:
 
+o Added MAC address printing.  If Nmap receives packet from a target
+  machine which is on an Ethernet segment directly connected to the
+  scanning machine, Nmap will print out the target MAC address.  Nmap
+  also now contains a database (derived from the official IEEE
+  version) which it uses to determine the vendor name of the target
+  ethernet interface.  The Windows version of Nmap does not yet have
+  this capability.  Here are examples from normal and XML
+  output:
+  MAC Address: 08:00:20:8F:6B:2F (SUN Microsystems Inc.)
+  <address addr="00:A0:CC:63:85:4B" vendor="Lite-on Communications, Inc." addrtype="mac" />
+
 o Normalized many of the OS names in nmap-os-fingerprints (fixed
   capitalization, typos, etc.).  Thanks to Royce Williams
   (royce(a)alaska.net) and Ping Huang (pshuang(a)alum.mit.edu) for

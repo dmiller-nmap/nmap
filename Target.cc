@@ -111,6 +111,8 @@ void Target::Initialize() {
   targetsocklen = sourcesocklen = 0;
   targetipstring[0] = '\0';
   nameIPBuf = NULL;
+  memset(&MACaddress, 0, sizeof(MACaddress));
+  MACaddress_set = false;
 }
 
 void Target::Recycle() {
@@ -284,4 +286,17 @@ const char *Target::NameIP(char *buf, size_t buflen) {
 const char *Target::NameIP() {
   if (!nameIPBuf) nameIPBuf = (char *) safe_malloc(MAXHOSTNAMELEN + INET6_ADDRSTRLEN);
   return NameIP(nameIPBuf, MAXHOSTNAMELEN + INET6_ADDRSTRLEN);
+}
+
+/* Returns zero if MAC address set successfully */
+int Target::setMACAddress(const u8 *addy) {
+  if (!addy) return 1;
+  memcpy(MACaddress, addy, 6);
+  MACaddress_set = 1;
+  return 0;
+}
+
+/* Returns the 6-byte long MAC address, or NULL if none has been set */
+const u8 *Target::MACAddress() {
+  return (MACaddress_set)? MACaddress : NULL;
 }

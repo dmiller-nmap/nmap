@@ -115,6 +115,11 @@
    should write helper functions to handle the table creation */
 void printportoutput(Target *currenths, PortList *plist);
 
+/* Prints the MAC address if one was found for the target (generally
+   this means that the target is directly connected on an ethernet
+   network. */
+void printmacinfo(Target *currenths);
+
 /* Write some information (printf style args) to the given log stream(s).
    Remember to watch out for format string bugs. */
 void log_write(int logt, const char *fmt, ...)

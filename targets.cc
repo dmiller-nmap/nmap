@@ -1040,6 +1040,7 @@ int get_ping_results(int sd, pcap_t *pd, Target *hostbatch[], int pingtype,
   u16 sequence = 65534;
   unsigned long tmpl;
   unsigned short sportbase;
+  struct link_header linkhdr;
 
   FD_ZERO(&fd_r);
   FD_ZERO(&fd_x);
@@ -1065,7 +1066,7 @@ int get_ping_results(int sd, pcap_t *pd, Target *hostbatch[], int pingtype,
     tmpto = myto;
 
     if (pd) {
-      ip = (struct ip *) readip_pcap(pd, &bytes, to->timeout, &rcvdtime);
+      ip = (struct ip *) readip_pcap(pd, &bytes, to->timeout, &rcvdtime, &linkhdr);
     } else {    
       FD_SET(sd, &fd_r);
       FD_SET(sd, &fd_x);
@@ -1394,6 +1395,8 @@ int get_ping_results(int sd, pcap_t *pd, Target *hostbatch[], int pingtype,
     if (foundsomething) {  
       hostupdate(hostbatch, hostbatch[hostnum], newstate, dotimeout, 
 		 trynum, to, &time[sequence], &rcvdtime, pt, NULL, pingstyle);
+      if (newstate == HOST_UP && ip && bytes >= 20)
+	setTargetMACIfAvailable(hostbatch[hostnum], &linkhdr, ip, 0);
     }
     if (newport && newportstate != PORT_UNKNOWN) {
       /* OK, we can add it, but that is only appropriate if this is one

@@ -1375,10 +1375,13 @@ exit(1);
    in pcap_open_live()
  */
 
-/* If rcvdtime is non-null and a packet is returned, rcvd will be filled
-   with the time that packet was captured from the wire by pcap */
-char *readip_pcap(pcap_t *pd, unsigned int *len, long to_usec, struct timeval *rcvdtime) {
-int offset = -1;
+/* If rcvdtime is non-null and a packet is returned, rcvd will be
+   filled with the time that packet was captured from the wire by
+   pcap.  If linknfo is not NULL, linknfo->headerlen and
+   linknfo->header will be filled with the appropriate values. */
+char *readip_pcap(pcap_t *pd, unsigned int *len, long to_usec, 
+		  struct timeval *rcvdtime, struct link_header *linknfo) {
+unsigned int offset = 0;
 struct pcap_pkthdr head;
 char *p;
 int datalink;
@@ -1387,6 +1390,8 @@ struct timeval tv_start, tv_end;
 static char *alignedbuf = NULL;
 static unsigned int alignedbufsz=0;
 static int warning = 0;
+
+if (linknfo) { bzero(linknfo, sizeof(*linknfo)); }
 
 #ifdef WIN32
 long to_left;
@@ -1409,6 +1414,8 @@ if (!pd) fatal("NULL packet device passed to readip_pcap");
  if ( (datalink = pcap_datalink(pd)) < 0)
    fatal("Cannot obtain datalink information: %s", pcap_geterr(pd));
 
+ /* NOTE: IF A NEW OFFSET EVER EXCEEDS THE CURRENT MAX (24), ADJUST
+    MAX_LINK_HEADERSZ in tcpip.h */
  switch(datalink) {
  case DLT_EN10MB: offset = 14; break;
  case DLT_IEEE802: offset = 22; break;
@@ -1486,8 +1493,19 @@ if (!pd) fatal("NULL packet device passed to readip_pcap");
 
    p = (char *) pcap_next(pd, &head);
 
-   if (p)
+   if (p) {
+     if (head.caplen <= offset) {
+       *len = 0;
+       return NULL;
+     }
+     if (offset && linknfo) {
+       linknfo->datalinktype = datalink;
+       linknfo->headerlen = offset;
+       assert(offset < MAX_LINK_HEADERSZ);
+       memcpy(linknfo->header, p, MIN(sizeof(linknfo->header), offset));
+     }
      p += offset;
+   }
    if (!p || (*p & 0x40) != 0x40) {
      /* Should we timeout? */
      if (to_usec == 0) {
@@ -1538,6 +1556,46 @@ if (!pd) fatal("NULL packet device passed to readip_pcap");
  return alignedbuf;
 }
   
+/* This function tries to determine the target's ethernet MAC address
+   from a received packet as follows:
+   1) If linkhdr is an ethernet header, grab the src mac (otherwise give up)
+   2) If overwrite is 0 and a MAC is already set for this target, give up.
+   3) If the packet source address is not the target, give up.
+   4) Use the routing table to try to determine rather target is
+      directly connected to the src host running Nmap.  If it is, set the MAC.
+
+   This function returns 0 if it ends up setting the MAC, nonzero otherwise
+
+   This function assumes that ip has already been verified as
+   containing a complete IP header (or at least the first 20 bytes).
+*/  
+
+int setTargetMACIfAvailable(Target *target, struct link_header *linkhdr,
+			      struct ip *ip, int overwrite) {
+  struct sockaddr_storage ss;
+  size_t sslen;
+
+  if (!linkhdr || !target || !ip)
+    return 1;
+
+  if (linkhdr->datalinktype != DLT_EN10MB || linkhdr->headerlen != 14)
+    return 2;
+
+  if (!overwrite && target->MACAddress())
+    return 3;
+
+  if (ip->ip_src.s_addr != target->v4host().s_addr)
+    return 4;
+
+  target->TargetSockAddr(&ss, &sslen);
+  if (IPisDirectlyConnected(&ss, sslen)) {
+    /* Yay!  This MAC address seems valid */
+    target->setMACAddress(linkhdr->header + 6);
+    return 0;
+  }
+
+  return 5;
+}
  
 
 #ifndef WIN32 /* Windows version of next few functions is currently 
@@ -1674,12 +1732,12 @@ struct interface_info *getinterfaces(int *howmany) {
   static struct interface_info *mydevs;
   static int numinterfaces = 0;
   int ii_capacity = 0;
-  int sd;
-  int len;
+  int sd, len, rc;
   char *p;
   char buf[10240];
   struct ifconf ifc;
   struct ifreq *ifr;
+  struct ifreq tmpifr;
   struct sockaddr_in *sin;
 
   if (!initialized) {
@@ -1697,7 +1755,6 @@ struct interface_info *getinterfaces(int *howmany) {
     if (ioctl(sd, SIOCGIFCONF, &ifc) < 0) {
       fatal("Failed to determine your configured interfaces!\n");
     }
-    close(sd);
     ifr = (struct ifreq *) buf;
     if (ifc.ifc_len == 0) 
       fatal("getinterfaces: SIOCGIFCONF claims you have no network interfaces!\n");
@@ -1730,13 +1787,24 @@ struct interface_info *getinterfaces(int *howmany) {
 
       sin = (struct sockaddr_in *) &ifr->ifr_addr;
       memcpy(&(mydevs[numinterfaces].addr), (char *) &(sin->sin_addr), sizeof(struct in_addr));
+
+      Strncpy(tmpifr.ifr_name, ifr->ifr_name, IFNAMSIZ);
+      memcpy(&(tmpifr.ifr_addr), &(sin->sin_addr), sizeof(tmpifr.ifr_addr));
+      rc = ioctl(sd, SIOCGIFNETMASK, &tmpifr);
+      if (rc < 0 && errno != EADDRNOTAVAIL)
+	pfatal("Failed to determine the netmask of %s!", ifr->ifr_name);
+      else if (rc < 0)
+	mydevs[numinterfaces].netmask.s_addr = (unsigned) -1;
+      else {
+	sin = (struct sockaddr_in *) &(tmpifr.ifr_addr); /* ifr_netmask only on Linux */
+	memcpy(&(mydevs[numinterfaces].netmask), (char *) &(sin->sin_addr), sizeof(struct in_addr));
+      }
       /* In case it is a stinkin' alias */
       if ((p = strchr(ifr->ifr_name, ':')))
 	*p = '\0';
-      strncpy(mydevs[numinterfaces].name, ifr->ifr_name, 63);
-      mydevs[numinterfaces].name[63] = '\0';
+      Strncpy(mydevs[numinterfaces].name, ifr->ifr_name, IFNAMSIZ);
 
-
+      //  printf("ifr name=%s addr=%s, mask=%X\n", mydevs[numinterfaces].name, inet_ntoa(mydevs[numinterfaces].addr), mydevs[numinterfaces].netmask.s_addr); 
 #if TCPIP_DEBUGGING
       printf("Interface %d is %s\n",numinterfaces,mydevs[numinterfaces].name);
 #endif
@@ -1753,11 +1821,33 @@ struct interface_info *getinterfaces(int *howmany) {
 #endif 
       mydevs[numinterfaces].name[0] = '\0';
     }
+    close(sd);
   }
   if (howmany) *howmany = numinterfaces;
   return mydevs;
 }
 #endif
+
+/* Check whether an IP address appears to be directly connected to an
+   interface on the computer (e.g. on the same ethernet network rather
+   than having to route).  Returns 1 if yes, -1 if maybe, 0 if not. */
+int IPisDirectlyConnected(struct sockaddr_storage *ss, size_t ss_len) {
+  struct interface_info *interfaces;
+  int numinterfaces;
+  int i;
+  struct sockaddr_in *sin = (struct sockaddr_in *) ss;
+
+  if (sin->sin_family != AF_INET)
+    fatal("IPisDirectlyConnected passed a non IPv4 address");
+
+  interfaces =  getinterfaces(&numinterfaces);
+
+  for(i=0; i < numinterfaces; i++) {
+    if ((interfaces[i].addr.s_addr & interfaces[i].netmask.s_addr) == (sin->sin_addr.s_addr & interfaces[i].netmask.s_addr))
+      return 1;
+  }
+  return 0;
+}
 
 
 /* An awesome function to determine what interface a packet to a given

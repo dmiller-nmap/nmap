@@ -1,4 +1,4 @@
-NMAP_VERSION = 3.51-TEST2
+NMAP_VERSION = 3.51-TEST3
 NMAP_NAME= nmap
 NMAP_URL= http://www.insecure.org/nmap/
 NMAP_PLATFORM=@host@
@@ -46,11 +46,13 @@ TARGET = nmap
 TARGETNMAPFE=@TARGETNMAPFE@
 INSTALLNMAPFE=@INSTALLNMAPFE@
 
-SRCS = main.cc nmap.cc targets.cc tcpip.cc nmap_error.cc utils.cc idle_scan.cc osscan.cc output.cc scan_engine.cc timing.cc charpool.cc services.cc protocols.cc nmap_rpc.cc portlist.cc NmapOps.cc TargetGroup.cc Target.cc FingerPrintResults.cc service_scan.cc NmapOutputTable.cc @COMPAT_SRCS@
+SRCS = main.cc nmap.cc targets.cc tcpip.cc nmap_error.cc utils.cc idle_scan.cc osscan.cc output.cc scan_engine.cc timing.cc charpool.cc services.cc protocols.cc nmap_rpc.cc portlist.cc NmapOps.cc TargetGroup.cc Target.cc FingerPrintResults.cc service_scan.cc NmapOutputTable.cc MACLookup.cc @COMPAT_SRCS@
 
-OBJS = main.o nmap.o targets.o tcpip.o nmap_error.o utils.o idle_scan.o osscan.o output.o scan_engine.o timing.o charpool.o services.o protocols.o nmap_rpc.o portlist.o NmapOps.o TargetGroup.o Target.o FingerPrintResults.o service_scan.o NmapOutputTable.o @COMPAT_OBJS@
+OBJS = main.o nmap.o targets.o tcpip.o nmap_error.o utils.o idle_scan.o osscan.o output.o scan_engine.o timing.o charpool.o services.o protocols.o nmap_rpc.o portlist.o NmapOps.o TargetGroup.o Target.o FingerPrintResults.o service_scan.o NmapOutputTable.o MACLookup.o @COMPAT_OBJS@
 
-DEPS = nmap.h nmap_amigaos.h nmap_error.h targets.h idle_scan.h osscan.h output.h scan_engine.h timing.h tcpip.h utils.h global_structures.h charpool.h services.h protocols.h nmap_rpc.h portlist.h NmapOps.h TargetGroup.h Target.h FingerPrintResults.h service_scan.h NmapOutputTable.h
+DEPS = nmap.h nmap_amigaos.h nmap_error.h targets.h idle_scan.h osscan.h output.h scan_engine.h timing.h tcpip.h utils.h global_structures.h charpool.h services.h protocols.h nmap_rpc.h portlist.h NmapOps.h TargetGroup.h Target.h FingerPrintResults.h service_scan.h NmapOutputTable.h MACLookup.h
+
+DATAFILES = nmap-os-fingerprints nmap-service-probes nmap-services nmap-rpc nmap-protocols nmap-mac-prefixes
 
 # %.o : %.cc -- nope this is a GNU extension
 .cc.o:
@@ -125,9 +127,8 @@ distro:
 	$(MAKE) clean
 	rm -f $(LIBPCAPDIR)/config.cache $(LIBPCAPDIR)/Makefile
 	unix2dos README-WIN32
-	cp -ra $(SRCS) $(DEPS) nmap-os-fingerprints nmap-service-probes \
-	nmapfe.desktop nmap-services nmap-rpc nmap-protocols \
-	configure.ac config.h.in aclocal.m4 nmap_winconfig.h Makefile.in \
+	cp -ra $(SRCS) $(DEPS) $(DATAFILES) nmapfe.desktop configure.ac \
+        config.h.in aclocal.m4 nmap_winconfig.h Makefile.in \
 	configure $(SHTOOL) install-sh config.guess \
 	nmap-$(NMAP_VERSION)-1.spec config.sub INSTALL README-WIN32 COPYING \
 	CHANGELOG HACKING /usr/tmp/nmap-$(NMAP_VERSION)
@@ -221,7 +222,7 @@ distro:
 # Update the web site
 web:
 	test x$(wroot) != x
-	cp -a CHANGELOG HACKING COPYING INSTALL nmap-os-fingerprints nmap-service-probes nmap-protocols nmap-services nmap-rpc README-WIN32 mswin32/nmap_performance.reg $(wroot)/nmap/data
+	cp -a CHANGELOG HACKING COPYING INSTALL $(DATAFILES) README-WIN32 mswin32/nmap_performance.reg $(wroot)/nmap/data
 	cd docs && cp -a nmap_manpage*.html nmap*.1 xnmap.1 nmap.usage.txt nmap.dtd $(wroot)/nmap/data/
 	scripts/produceosclasschoosebox.pl nmap-os-fingerprints > $(wroot)/nmap/data/os-classes.txt
 	find $(wroot)/nmap/data/ -type f -exec chmod 644 '{}' \;
@@ -257,11 +258,12 @@ install-nmap: $(TARGET)
 	$(SHTOOL) mkdir -f -p -m 755 $(DESTDIR)$(bindir) $(DESTDIR)$(mandir)/man1 $(DESTDIR)$(nmapdatadir)
 	$(INSTALL) -c -m 755 nmap -s $(DESTDIR)$(bindir)/nmap
 	$(INSTALL) -c -m 644 docs/$(TARGET).1 $(DESTDIR)$(mandir)/man1/$(TARGET).1
-	$(INSTALL) -c -m 644 nmap-os-fingerprints  $(DESTDIR)$(nmapdatadir)/nmap-os-fingerprints
-	$(INSTALL) -c -m 644 nmap-service-probes  $(DESTDIR)$(nmapdatadir)/nmap-service-probes
-	$(INSTALL) -c -m 644 nmap-services  $(DESTDIR)$(nmapdatadir)/nmap-services
-	$(INSTALL) -c -m 644 nmap-protocols  $(DESTDIR)$(nmapdatadir)/nmap-protocols
-	$(INSTALL) -c -m 644 nmap-rpc  $(DESTDIR)$(nmapdatadir)/nmap-rpc
+	$(INSTALL) -c -m 644 nmap-services $(DESTDIR)$(nmapdatadir)/
+	$(INSTALL) -c -m 644 nmap-rpc $(DESTDIR)$(nmapdatadir)/
+	$(INSTALL) -c -m 644 nmap-os-fingerprints $(DESTDIR)$(nmapdatadir)/
+	$(INSTALL) -c -m 644 nmap-service-probes $(DESTDIR)$(nmapdatadir)/
+	$(INSTALL) -c -m 644 nmap-protocols $(DESTDIR)$(nmapdatadir)/
+	$(INSTALL) -c -m 644 nmap-mac-prefixes $(DESTDIR)$(nmapdatadir)/
 
 install-nmapfe: $(TARGETNMAPFE)
 	$(SHTOOL) mkdir -f -p -m 755 $(DESTDIR)$(bindir) $(DESTDIR)$(mandir)/man1 $(DESTDIR)$(nmapdatadir) $(DESTDIR)$(deskdir)

@@ -148,6 +148,8 @@ int ossofttimeout, oshardtimeout;
 int seq_packets_sent = 0;
 int seq_response_num; /* response # for sequencing */
 double avg_ts_hz = 0.0; /* Avg. amount that timestamps incr. each second */
+struct link_header linkhdr;
+
 if (target->timedout)
   return NULL;
 
@@ -284,7 +286,7 @@ if (o.verbose && openport != (unsigned long) -1)
        target->timedout = 1;
        goto osscan_timedout;
      }
-   while(( ip = (struct ip*) readip_pcap(pd, &bytes, oshardtimeout, NULL)) && !timeout) {
+   while(( ip = (struct ip*) readip_pcap(pd, &bytes, oshardtimeout, NULL, &linkhdr)) && !timeout) {
      gettimeofday(&t2, NULL);
      if (TIMEVAL_SUBTRACT(t2,t1) > oshardtimeout) {
        timeout = 1;
@@ -295,8 +297,9 @@ if (o.verbose && openport != (unsigned long) -1)
 	 goto osscan_timedout;
        }
 
-     if (bytes < (4 * ip->ip_hl) + 4U)
+     if (bytes < (4 * ip->ip_hl) + 4U || bytes < 20)
        continue;
+     setTargetMACIfAvailable(target, &linkhdr, ip, 0);
      if (ip->ip_p == IPPROTO_TCP) {
        tcp = ((struct tcphdr *) (((char *) ip) + 4 * ip->ip_hl));
        testno = ntohs(tcp->th_dport) - current_port + 1;
@@ -362,8 +365,8 @@ if (o.verbose && openport != (unsigned long) -1)
      while(si->responses < seq_packets_sent && !timeout) {
        
        if (seq_packets_sent == NUM_SEQ_SAMPLES)
-	 ip = (struct ip*) readip_pcap(pd, &bytes, oshardtimeout, NULL);
-       else ip = (struct ip*) readip_pcap(pd, &bytes, 10, NULL);
+	 ip = (struct ip*) readip_pcap(pd, &bytes, oshardtimeout, NULL, &linkhdr);
+       else ip = (struct ip*) readip_pcap(pd, &bytes, 10, NULL, &linkhdr);
        
        gettimeofday(&t2, NULL);
        /*     error("DEBUG: got a response (len=%d):\n", bytes);  */
@@ -389,8 +392,9 @@ if (o.verbose && openport != (unsigned long) -1)
        }
        lastipid = ip->ip_id;
 
-       if (bytes < (4 * ip->ip_hl) + 4U)
+       if (bytes < (4 * ip->ip_hl) + 4U || bytes < 20)
 	 continue;
+       setTargetMACIfAvailable(target, &linkhdr, ip, 0);
        if (ip->ip_p == IPPROTO_TCP) {
 	 /*       readtcppacket((char *) ip, ntohs(ip->ip_len));  */
 	 tcp = ((struct tcphdr *) (((char *) ip) + 4 * ip->ip_hl));
@@ -1519,6 +1523,7 @@ char *p, *q; /* OH YEAH!!!! */
  FPs = (FingerPrint **) safe_zalloc(sizeof(FingerPrint *) * max_records); 
 
  fp = fopen(fname, "r");
+ if (!fp) fatal("Unable to open Nmap fingerprint file: %s", fname);
 
  top:
 while(fgets(line, sizeof(line), fp)) {  

@@ -1,8 +1,8 @@
 
 /***************************************************************************
- * Target.h -- The Target class encapsulates much of the information Nmap  *
- * has about a host.  Results (such as ping, OS scan, etc) are stored in   *
- * this class as they are determined.                                      *
+ * MACLookup.cc -- This relatively simple system handles looking up the    *
+ * vendor registered to a MAC address using the nmap-mac-prefixes          *
+ * database.                                                               *
  *                                                                         *
  ***********************IMPORTANT NMAP LICENSE TERMS************************
  *                                                                         *
@@ -87,95 +87,15 @@
 
 /* $Id$ */
 
-#ifndef TARGET_H
-#define TARGET_H
+#ifndef MACLOOKUP_H
+#define MACLOOKUP_H
 
-#include "nmap.h"
-#include "FingerPrintResults.h"
+#include "nbase/nbase.h"
 
-class Target {
- public: /* For now ... a lot of the data members should be made private */
-  Target();
-  ~Target();
-  /* Recycles the object by freeing internal objects and reinitializing
-     to default state */
-  void Recycle();
-  /* Fills a sockaddr_storage with the AF_INET or AF_INET6 address
-     information of the target.  This is a preferred way to get the
-     address since it is portable for IPv6 hosts.  Returns 0 for
-     success. */
-  int TargetSockAddr(struct sockaddr_storage *ss, size_t *ss_len);
-  /* Note that it is OK to pass in a sockaddr_in or sockaddr_in6 casted
-     to sockaddr_storage */
-  void setTargetSockAddr(struct sockaddr_storage *ss, size_t ss_len);
-  // Returns IPv4 target host address or {0} if unavailable.
-  struct in_addr v4host();
-  const struct in_addr *v4hostip();
-  /* The source address used to reach the target */
-  int SourceSockAddr(struct sockaddr_storage *ss, size_t *ss_len);
-  /* Note that it is OK to pass in a sockaddr_in or sockaddr_in6 casted
-     to sockaddr_storage */
-  void setSourceSockAddr(struct sockaddr_storage *ss, size_t ss_len);
-  struct in_addr v4source();
-  const struct in_addr *v4sourceip();
-  /* The IPv4 or IPv6 literal string for the target host */
-  const char *targetipstr() { return targetipstring; }
-  /* Give the name from the last setHostName() call, which should be
-   the name obtained from reverse-resolution (PTR query) of the IP (v4
-   or v6).  If the name has not been set, or was set to NULL, an empty
-   string ("") is returned to make printing easier. */
-  const char *HostName() { return hostname? hostname : "";  }
-  /* You can set to NULL to erase a name or if it failed to resolve -- or 
-     just don't call this if it fails to resolve.  The hostname is blown
-     away when you setTargetSockAddr(), so make sure you do these in proper
-     order
-  */
-  void setHostName(char *name);
-  /* Generates the a printable string consisting of the host's IP
-     address and hostname (if available).  Eg "www.insecure.org
-     (64.71.184.53)" or "fe80::202:e3ff:fe14:1102".  The name is
-     written into the buffer provided, which is also returned.  Results
-     that do not fit in buflen will be truncated. */
-  const char *NameIP(char *buf, size_t buflen);
-  /* This next version returns a STATIC buffer -- so no concurrency */
-  const char *NameIP();
+/* Takes a three byte MAC address prefix (passing the whole MAC is OK
+   too) and returns the company which has registered the prefix.
+   NULL is returned if no vendor is found for the given prefix or if there
+   is some other error. */
+const char *MACPrefix2Corp(const u8 *prefix);
 
-  /* Takes a 6-byte MAC address */
-  int setMACAddress(const u8 *addy);
-  /* Returns a pointer to 6-byte MAC address, or NULL if none is set */
-  const u8 *MACAddress();
-
-  struct seq_info seq;
-  FingerPrintResults *FPR;
-  int osscan_performed; /* nonzero if an osscan was performed */
-  PortList ports;
-  /*
-  unsigned int up;
-  unsigned int down; */
-  int wierd_responses; /* echo responses from other addresses, Ie a network broadcast address */
-  unsigned int flags; /* HOST_UP, HOST_DOWN, HOST_FIREWALLED, HOST_BROADCAST (instead of HOST_BROADCAST use wierd_responses */
-  struct timeout_info to;
-  struct timeval host_timeout;
-  struct firewallmodeinfo firewallmode; /* For supporting "firewall mode" speed optimisations */
-  int timedout; /* Nonzero if continued scanning should be aborted due to
-		   timeout  */
-  char device[64]; /* The device we transmit on -- make sure to adjust some str* calls if I ever change this*/
-
- private:
-  char *hostname; // Null if unable to resolve or unset
-  void Initialize();
-  void FreeInternal(); // Free memory allocated inside this object
- // Creates a "presentation" formatted string out of the IPv4/IPv6 address
-  void GenerateIPString();
-  struct sockaddr_storage targetsock, sourcesock;
-  size_t targetsocklen, sourcesocklen;
-#ifndef INET6_ADDRSTRLEN
-#define INET6_ADDRSTRLEN 46
-#endif
-  char targetipstring[INET6_ADDRSTRLEN];
-  char *nameIPBuf; /* for the NameIP(void) function to return */
-  u8 MACaddress[6];
-  bool MACaddress_set;
-};
-
-#endif /* TARGET_H */
+#endif /* MACLOOKUP_H */

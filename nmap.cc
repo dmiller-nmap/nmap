@@ -1008,6 +1008,7 @@ int nmap_main(int argc, char *argv[]) {
 		    currenths->targetipstr(), currenths->HostName());
 	} else {
 	  printportoutput(currenths, &currenths->ports);
+	  printmacinfo(currenths);
 	  printosscanoutput(currenths);
  	}      
 
@@ -1236,9 +1237,9 @@ struct scan_lists *getpts(char *origexpr) {
       if (rangestart < 0 || rangestart > 65535) {
 	fatal("Ports to be scanned must be between 0 and 65535 inclusive");
       }
-      if (rangestart == 0) {
+/*      if (rangestart == 0) {
 	error("WARNING:  Scanning \"port 0\" is supported, but unusual.");
-      }
+      } */
       current_range = endptr;
       while(isspace((int) *current_range)) current_range++;
     } else {
