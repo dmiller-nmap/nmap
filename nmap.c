@@ -1870,7 +1870,8 @@ if (o.debugging || o.verbose)
 	    if (current->trynum > 0) {
 	      /* We consider this port valid, move it to open list */
 	      if (o.debugging > 1) { printf("Moving port %hi to the open list\n", current->portno); }
-	      current->state = port_open;    
+	      freshportstried--;
+	      current->state = port_open;
 	      /* First delete from old list */
 	      if (current->next > -1) scan[current->next].prev = current->prev;
 	      if (current->prev > -1) scan[current->prev].next = current->next;
