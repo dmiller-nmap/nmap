@@ -1538,8 +1538,9 @@ return -1;
 		         support ioctl() */
 struct interface_info *getinterfaces(int *howmany) {
   static int initialized = 0;
-  static struct interface_info mydevs[128];
+  static struct interface_info *mydevs;
   static int numinterfaces = 0;
+  int ii_capacity = 0;
   int sd;
   int len;
   char *p;
@@ -1551,6 +1552,10 @@ struct interface_info *getinterfaces(int *howmany) {
   if (!initialized) {
 
     initialized = 1;
+
+    ii_capacity = 32;
+    mydevs = (struct interface_info *) safe_malloc(sizeof(struct interface_info) * ii_capacity);
+
     /* Dummy socket for ioctl */
     sd = socket(AF_INET, SOCK_DGRAM, 0);
     if (sd < 0) pfatal("socket in getinterfaces");
@@ -1604,9 +1609,10 @@ struct interface_info *getinterfaces(int *howmany) {
 #endif
 
       numinterfaces++;
-      if (numinterfaces == 127)  {      
-	error("My God!  You seem to have WAY too many interfaces!  Things may not work right\n");
-	break;
+      if (numinterfaces == ii_capacity)  {      
+	ii_capacity <<= 2;
+	mydevs = (struct interface_info *) realloc(mydevs, sizeof(struct interface_info) * ii_capacity);
+	assert(mydevs);
       }
 #if HAVE_SOCKADDR_SA_LEN
       /* len = MAX(sizeof(struct sockaddr), ifr->ifr_addr.sa_len);*/
@@ -1630,7 +1636,6 @@ struct interface_info *getinterfaces(int *howmany) {
 #ifndef WIN32 /* Windows functionality is currently in wintcpip.c --
                  should probably be merged at some point */
 
-#define ROUTETHROUGH_MAXROUTES 1024
 char *routethrough(const struct in_addr * const dest, struct in_addr *source) {
   static int initialized = 0;
   int i;
@@ -1642,7 +1647,8 @@ char *routethrough(const struct in_addr * const dest, struct in_addr *source) {
     struct interface_info *dev;
     u32 mask;
     u32 dest;
-  } myroutes[ROUTETHROUGH_MAXROUTES];
+  } *myroutes;
+  int myroutes_capacity = 0;
   int numinterfaces = 0;
   char *p, *endptr;
   char iface[64];
@@ -1655,7 +1661,8 @@ char *routethrough(const struct in_addr * const dest, struct in_addr *source) {
     /* Dummy socket for ioctl */
     initialized = 1;
     mydevs = getinterfaces(&numinterfaces);
-
+    myroutes_capacity = 64;
+    myroutes = (struct myroute *) safe_malloc((sizeof(struct myroute) * myroutes_capacity));
     /* Now we must go through several techniques to determine info */
     routez = fopen("/proc/net/route", "r");
 
@@ -1711,8 +1718,12 @@ char *routethrough(const struct in_addr * const dest, struct in_addr *source) {
 	  if (i == numinterfaces) 
 	    fatal("Failed to find interface %s mentioned in /proc/net/route\n", iface);
 	  numroutes++;
-	  if (numroutes == ROUTETHROUGH_MAXROUTES)
-	    fatal("My God!  You seem to have WAY too many routes!\n");
+	  if (numroutes == myroutes_capacity) {
+	    // Gotta grow it
+	    myroutes_capacity <<= 3;
+	    myroutes = (struct myroute *) realloc(myroutes, myroutes_capacity * (sizeof(struct myroute)));
+	    assert(myroutes);
+	  }
       }
       fclose(routez);
     } else {
