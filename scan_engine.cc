@@ -263,9 +263,11 @@ public:
      really late.  But after probeExpire(), I don't waste time keeping
      them around. Givein in MICROseconds */
   unsigned long probeExpire();
-  /* Returns OK if sending a new probe to this host is OK (to avoid
+/* Returns OK if sending a new probe to this host is OK (to avoid
    flooding). If when is non-NULL, fills it with the time that sending
-   will be OK (will be now if it already is)  */
+   will be OK assuming no pending probes are resolved by responses
+   (call it again if they do).  when will become now if it returns
+   true. */
   bool sendOK(struct timeval *when); 
 
 /* Returns the soonest timeout out of the probes in this host, or the
@@ -682,10 +684,15 @@ unsigned long HostScanStats::probeExpire() {
 
 /* Returns OK if sending a new probe to this host is OK (to avoid
    flooding). If when is non-NULL, fills it with the time that sending
-   will be OK (will be now if it already is)  */
+   will be OK assuming no pending probes are resolved by responses
+   (call it again if they do).  when will become now if it returns
+   true. */
 bool HostScanStats::sendOK(struct timeval *when) {
   struct ultra_timing_vals tmng;
   int packTime;
+  list<UltraProbe *>::iterator probeI;
+  struct timeval probe_to, earliest_to, sendTime;
+  long tdiff;
 
   if (target->timedOut(&USI->now)) {
     if (when) *when = USI->now;
@@ -719,9 +726,41 @@ bool HostScanStats::sendOK(struct timeval *when) {
   if (!when)
     return false;
 
-  nextTimeout(when);
-  return false;
+  TIMEVAL_MSEC_ADD(earliest_to, USI->now, 10000);
 
+  // Any timeouts coming up?
+  for(probeI = probes_outstanding.begin(); probeI != probes_outstanding.end();
+      probeI++) {
+    if (!(*probeI)->timedout) {
+      TIMEVAL_MSEC_ADD(probe_to, (*probeI)->sent, probeTimeout() / 1000);
+      if (TIMEVAL_SUBTRACT(probe_to, earliest_to) < 0) {
+	earliest_to = probe_to;
+      }
+    }
+  }
+
+  // Will any scan delay affect this?
+  if (sdn.delayms) {    
+    TIMEVAL_MSEC_ADD(sendTime, lastprobe_sent, sdn.delayms);
+    if (TIMEVAL_MSEC_SUBTRACT(sendTime, USI->now) < 0)
+      sendTime = USI->now;
+    tdiff = TIMEVAL_MSEC_SUBTRACT(earliest_to, sendTime);
+    
+    /* Timeouts previous to the sendTime requirement are pointless,
+       and those later than sendTime are not needed if we can send a
+       new packet at sendTime */
+    if (tdiff < 0) {
+      earliest_to = sendTime;
+    } else {
+      getTiming(&tmng);
+      if (tdiff > 0 && tmng.cwnd > num_probes_active + .5) {
+	earliest_to = sendTime;
+      }
+    }
+  }
+
+  *when = earliest_to;
+  return false;
 }
 
 /* Returns the soonest timeout out of the probes in this host.
@@ -956,32 +995,41 @@ bool UltraScanInfo::sendOK(struct timeval *when) {
   list<HostScanStats *>::iterator host;
   bool ggood = false;
   bool hgood = false;
+  bool thisHostGood = false;
   bool foundgood = false;
   ggood = gstats->sendOK();
+
+  if (!ggood) {
+    if (when) {
+      // Can't do anything until global is OK
+      TIMEVAL_MSEC_ADD(*when, now, 1000); 
+    }
+    return false;
+  }
   
   for(host = incompleteHosts.begin(); host != incompleteHosts.end(); host++) {
-    if (ggood && (*host)->sendOK(&tmptv)) {
+    thisHostGood = (*host)->sendOK(&tmptv);
+    if (ggood && thisHostGood) {
       lowhtime = tmptv;
       hgood = true;
+      foundgood = true;
       break;
-    } 
-    if ((*host)->nextTimeout(&tmptv)) {
-      if (!foundgood || TIMEVAL_SUBTRACT(lowhtime, tmptv) > 0) {
-	lowhtime = tmptv;
-	foundgood = true;
-      }
+    }
+
+    if (!foundgood || TIMEVAL_SUBTRACT(lowhtime, tmptv) > 0) {
+      lowhtime = tmptv;
+      foundgood = true;
     }
   }
 
-  if (!foundgood && !hgood) {
-    // no outstanding probes for some reason, and can't send more now.  Will
-    // wait half a second.
-    TIMEVAL_MSEC_ADD(lowhtime, now, 500);
-  }
+  assert(foundgood);
+
+  if (TIMEVAL_MSEC_SUBTRACT(lowhtime, now) < 0)
+    lowhtime = now;
 
   if (when) *when = lowhtime;
 
-  return (ggood && hgood)? true : false;
+  return (TIMEVAL_MSEC_SUBTRACT(lowhtime, now) == 0)? true : false;
 }
 
 /* Find a HostScanStats by IP its address in the incomplete list.  Returns NULL if
@@ -2416,6 +2464,8 @@ static void waitForResponses(UltraScanInfo *USI) {
   bool gotone = false;
 
   gettimeofday(&USI->now, NULL);
+  USI->gstats->last_wait = USI->now;
+  USI->gstats->probes_sent_at_last_wait = USI->gstats->probes_sent;
 
   do {
     USI->sendOK(&stime);
@@ -2428,7 +2478,6 @@ static void waitForResponses(UltraScanInfo *USI) {
 
   gettimeofday(&USI->now, NULL);
   USI->gstats->last_wait = USI->now;
-  USI->gstats->probes_sent_at_last_wait = USI->gstats->probes_sent;
 }
 
 /* Initiate libpcap or some other sniffer as appropriate to be able to catch
