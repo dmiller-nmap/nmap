@@ -116,16 +116,17 @@ while((arg = getopt(argc,fakeargv,"Ab:D:de:FfhiL:lM:Nno:P::p:qrRS:s:T:tUuw:Vv"))
   case 'R': resolve_all++; break;
   case 'r': 
     randomize = 0;
-    printf("Warning: Randomize syntax has been changed, -r now requests that ports NOT be randomized\n");
+    error("Warning: Randomize syntax has been changed, -r now requests that ports NOT be randomized");
     break;
   case 's': 
     if (!*optarg) {
-      fprintf(stderr, "An option is required for -s, most common are -sT (tcp scan), -sS (SYN scan), and -sP (Ping scan)");
+      fprintf(stderr, "An option is required for -s, most common are -sT (tcp scan), -sS (SYN scan), -sF (FIN scan), -sU (UDP scan) and -sP (Ping scan)");
       printusage(argv[0]);
     }
       p = optarg;
       while(*p) {
 	switch(*p) {
+	case 'B':  break;
 	case 'F':  o.finscan++;break;
 	case 'M':  o.maimonscan++;break;
 	case 'N':  o.nullscan++;break;
@@ -141,20 +142,17 @@ while((arg = getopt(argc,fakeargv,"Ab:D:de:FfhiL:lM:Nno:P::p:qrRS:s:T:tUuw:Vv"))
       break;
   case 'S': 
     if (o.spoofsource)
-      fatal("You can only use the source option once!\n");
+      fatal("You can only use the source option once!  Use -D <decoy1> -D <decoy2> etc. for decoys\n");
     source = safe_malloc(sizeof(struct in_addr));
     o.spoofsource = 1;
     if (!resolve(optarg, source))
       fatal("Failed to resolve source address, try dotted decimal IP address\n");
     break;
   case 'T': o.ptime = atoi(optarg); break;
-  case 't': o.connectscan++; break;
-  case 'U': o.finscan++; break;
-  case 'u': o.udpscan++; break;
   case 'q': quashargv++; break;
   case 'w': o.wait = atoi(optarg); break;
   case 'V': 
-    printf("\nnmap V. %s by Fyodor (fyodor@dhp.com, www.dhp.com/~fyodor/nmap/)\n", VERSION); 
+    printf("\nnmap V. %s by Fyodor (fyodor@dhp.com, www.insecure.org/nmap/)\n", VERSION); 
     exit(0);
     break;
   case 'v': o.verbose++; break;
@@ -173,9 +171,15 @@ if (o.connectscan && (o.synscan || o.finscan || o.maimonscan || o.xmasscan || o.
  for normal connect() style scanning, use -t");
 if ((o.fragscan && !o.synscan && !o.finscan &&!o.maimonscan && !o.nullscan && !o.xmasscan)) {
   printf("Specified -f but don't know whether to fragment SYN,FIN,NULL, or XMAS scan.  Ie you need to still specify -S[something].  Doing fragmented SYN scan\n");
+  o.synscan++;
 }
-if (o.udpscan || o.lamerscan) 
-  printf("Warning: udp scan is not always 100%c accurate, I will be rewriting it\n", '%'); /* Due to gcc -Wall stupidity */
+#ifndef LINUX
+ if (o.fragscan) {
+   fprintf(stderr, "Warning: Packet fragmentation selected on non-linux host.  This may or may not work.\n");
+ }
+#endif
+if (o.pingtype == tcp && o.numdecoys > 1)
+  printf("Warning: Using TCPping could theoretically reveal your IP address (even though you are using decoys.  If this concerns you, use -pI (the default)\n"); 
 if ((o.synscan || o.finscan || o.maimonscan || o.udpscan || o.fragscan || o.xmasscan || o.nullscan) && !o.isr00t)
   fatal("Options specified require r00t privileges.  You don't have them!");
 if (!o.connectscan && !o.udpscan && !o.synscan && !o.finscan && !o.maimonscan &&  !o.nullscan && !o.xmasscan && !bouncescan && !o.pingscan) {
@@ -221,10 +225,6 @@ if (o.logfd) {
   fprintf(o.logfd, "\n");
 }
 printf("\nStarting nmap V. %s by Fyodor (fyodor@dhp.com, www.insecure.org/nmap/)\n", VERSION);
-/* I seriously doubt anyone likes this "feature"
-if (!o.verbose) 
-  error("Hint: The -v option notifies you of open ports as they are found.\n");
-  */
 if (fastscan)
   ports = getfastports(o.synscan|o.connectscan|o.fragscan|o.finscan|o.maimonscan|bouncescan|o.nullscan|o.xmasscan,
                        o.udpscan|o.lamerscan);
@@ -296,7 +296,7 @@ if (currenths->flags & HOST_UP && !currenths->source_ip.s_addr && ( o.synscan ||
     fatal("Your system is messed up.  Cannot get hostname!  You might have to use -S <my_IP_address>\n"); 
   memcpy(&currenths->source_ip, target->h_addr_list[0], sizeof(struct in_addr));
   if (! sourceaddrwarning) {
-    printf("We could not determine for sure which interface to use, so we are guessing %s .  If this is wrong, use -S.\n", inet_ntoa(currenths->source_ip));
+    printf("We could not determine for sure which interface to use, so we are guessing %s .  If this is wrong, use -S <my_IP_address>.\n", inet_ntoa(currenths->source_ip));
     sourceaddrwarning = 1;
   }
 }
@@ -546,7 +546,7 @@ options (none are required, most can be combined):\n\
 if (!o.allowall) printf("-A Allow scanning .0 and .255 addresses" );
 printf("   -T <seconds> Set the ping and tcp connect() timeout.\n\
    -v Verbose.  Its use is recommended.  Use twice for greater effect.\n\
-   -h help, print this junk.  Also see http://www.dhp.com/~fyodor/nmap/\n\
+   -h help, print this junk.  Also see http://www.insecure.org/nmap/\n\
    -V Print version number and exit.\n\
    -w <n> delay.  n microsecond delay. Not recommended unless needed.\n\
    -M <n> maximum number of parallel sockets.  Larger isn't always better.\n");
