@@ -381,7 +381,7 @@ int nmap_main(int argc, char *argv[]) {
     case 'b': 
       o.bouncescan++;
       if (parse_bounce_argument(&ftp, optarg) < 0 ) {
-	fprintf(stderr, "Your argument to -b is fucked up. Use the normal url style:  user:pass@server:port or just use server and use default anon login\n  Use -h for help\n");
+	fprintf(stderr, "Your argument to -b is b0rked. Use the normal url style:  user:pass@server:port or just use server and use default anon login\n  Use -h for help\n");
       }
       break;
     case 'D':
