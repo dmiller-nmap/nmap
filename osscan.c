@@ -799,16 +799,16 @@ struct AVal *fingerprint_iptcppacket(struct ip *ip, int mss, u32 syn) {
   return AVs;
 }
 
-/* Takes a fingerprint and returns the matches in FPR (which must
-   point to an allocated FingerPrintResults structure) -- results will
-   be reverse-sorted by accuracy.  No results below
-   accuracy_threshhold will be included.  The max matches returned is
-   the maximum that fits in a FingerPrintResults structure.  The
-   allocated FingerPrintResults does not have to be initialized --
-   that will be done in this function.  */
-
+/* Takes a fingerprint and looks for matches inside reference_FPs[].
+   The results are stored in in FPR (which must point to an allocated
+   FingerPrintResults structure) -- results will be reverse-sorted by
+   accuracy.  No results below accuracy_threshhold will be included.
+   The max matches returned is the maximum that fits in a
+   FingerPrintResults structure.  The allocated FingerPrintResults
+   does not have to be initialized -- that will be done in this
+   function.  */
 void match_fingerprint(FingerPrint *FP, struct FingerPrintResults *FPR, 
-		      double accuracy_threshold) {
+		      FingerPrint **reference_FPs, double accuracy_threshold) {
 
   int i;
   double FPR_entrance_requirement = accuracy_threshold; /* accuracy must be 
@@ -835,8 +835,8 @@ void match_fingerprint(FingerPrint *FP, struct FingerPrintResults *FPR,
   bzero(FPR, sizeof(*FPR));
   FPR->overall_results = OSSCAN_SUCCESS;
   
-  for(i = 0; o.reference_FPs[i]; i++) {
-    current_os = o.reference_FPs[i];
+  for(i = 0; reference_FPs[i]; i++) {
+    current_os = reference_FPs[i];
     skipfp = 0;
     num_subtests = num_subtests_succeeded = 0;
 
@@ -1083,7 +1083,7 @@ int bestaccidx;
    if (target->timedout)
      return 1;
    match_fingerprint(target->FPs[itry], &FP_matches[itry], 
-		     OSSCAN_GUESS_THRESHOLD);
+		     o.reference_FPs, OSSCAN_GUESS_THRESHOLD);
    if (FP_matches[itry].overall_results == OSSCAN_SUCCESS && 
        FP_matches[itry].num_perfect_matches > 0)
      break;
@@ -1246,6 +1246,81 @@ for(current = FP; current ; current = current->next) {
 return str;
 }
 
+/* Parses a single fingerprint from the memory region given.  If a
+ non-null fingerprint is returned, the user is in charge of freeing it
+ when done.  This function does not require the fingerprint to be 100%
+ complete since it is used by scripts such as scripts/fingerwatch for
+ which some partial fingerpritns are OK. */
+FingerPrint *parse_single_fingerprint(char *fprint_orig) {
+  int lineno = 0;
+  char *p, *q;
+  char *thisline, *nextline;
+  char *fprint = strdup(fprint_orig); // Make a copy we can futz with
+  FingerPrint *FP;
+  FingerPrint *current; /* Since a fingerprint is really a linked list of
+			   FingerPrint structures */
+
+  current = FP = safe_malloc(sizeof(FingerPrint));
+  bzero(FP, sizeof(FingerPrint));
+
+  thisline = fprint;
+  
+  do /* 1 line at a time */ {
+    nextline = strchr(thisline, '\n');
+    if (nextline) *nextline++ = '\0';
+    printf("Preparing to handle next line: %s\n", thisline);
+
+    while(*thisline && isspace((int) *thisline)) thisline++;
+    if (!*thisline) {
+      fatal("Parse error on line %d of fingerprint: %s", lineno);    
+    }
+
+    if (strncasecmp(thisline, "FingerPrint", 11) == 0) {
+      p = thisline + 12;
+      q = FP->OS_name;
+      
+      while(*p && *p != '\n' && *p != '#') {
+	if (q - FP->OS_name >= (sizeof(FP->OS_name) -2))
+	  fatal("Ack!  0v3rf0w r3ad|ng fIng3rpRint FiLE!");
+	*q++ = *p++;
+      }
+      
+      q--;
+      
+      /* Now let us back up through any ending spaces */
+      while(isspace((int)*q)) 
+	q--;
+      
+      /* Terminate the sucker */
+      q++; 
+      *q = '\0';
+
+    } else if ((q = strchr(thisline, '('))) {
+      *q = '\0';
+      if(current->name) {
+	current->next = (FingerPrint *) safe_malloc(sizeof(FingerPrint));
+	current = current->next;
+	bzero(current, sizeof(FingerPrint));
+      }
+      current->name = strdup(thisline);
+      p = q+1;
+      *q = '(';
+      q = strchr(p, ')');
+      if (!q) {
+	fatal("Parse error on line %d of fingerprint: %s\n", lineno, thisline);
+      }
+      *q = '\0';
+      current->results = str2AVal(p);
+    } else {
+      fatal("Parse error line line #%d of fingerprint", lineno);
+    }
+
+    thisline = nextline; /* Time to handle the next line, if there is one */
+    lineno++;
+  } while (thisline && *thisline);
+  return FP;
+}
+
 FingerPrint **parse_fingerprint_file(char *fname) {
 FingerPrint **FPs;
 FingerPrint *current;
@@ -1256,7 +1331,6 @@ int numrecords = 0;
 int lineno = 0;
 char *p, *q; /* OH YEAH!!!! */
 
-/* If you need more than 2048 fingerprints, tough */
  FPs = (FingerPrint **) safe_malloc(sizeof(FingerPrint *) * max_records); 
  bzero(FPs, sizeof(FingerPrint *) * max_records);
 

@@ -75,18 +75,25 @@ unsigned int get_gcd_n_ulong(int numvalues, unsigned int *values);
 unsigned int euclid_gcd(unsigned int a, unsigned int b);
 char *fp2ascii(FingerPrint *FP);
 
+/* Parses a single fingerprint from the memory region given.  If a
+ non-null fingerprint is returned, the user is in charge of freeing it
+ when done.  This function does not require the fingerprint to be 100%
+ complete since it is used by scripts such as scripts/fingerwatch for
+ which some partial fingerpritns are OK. */
+FingerPrint *parse_single_fingerprint(char *fprint_orig);
 FingerPrint **parse_fingerprint_file(char *fname);
 FingerPrint **parse_fingerprint_reference_file();
-/* Takes a fingerprint and returns the matches in FPR (which must
-   point to an allocated FingerPrintResults structure) -- results will
-   be reverse-sorted by accuracy.  No results below
-   accuracy_threshhold will be included.  The max matches returned is
-   the maximum that fits in a FingerPrintResults structure.  The
-   allocated FingerPrintResults does not have to be initialized --
-   that will be done in this function.  */
 
+/* Takes a fingerprint and looks for matches inside reference_FPs[].
+   The results are stored in in FPR (which must point to an allocated
+   FingerPrintResults structure) -- results will be reverse-sorted by
+   accuracy.  No results below accuracy_threshhold will be included.
+   The max matches returned is the maximum that fits in a
+   FingerPrintResults structure.  The allocated FingerPrintResults
+   does not have to be initialized -- that will be done in this
+   function.  */
 void match_fingerprint(FingerPrint *FP, struct FingerPrintResults *FPR, 
-		       double accuracy_threshold);
+		       FingerPrint **reference_FPs, double accuracy_threshold);
 struct AVal *str2AVal(char *p);
 struct AVal *gettestbyname(FingerPrint *FP, const char *name);
 
