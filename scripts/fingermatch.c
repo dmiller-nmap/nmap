@@ -70,6 +70,7 @@ int main(int argc, char *argv[]) {
   int linelen;
   int i;
   char lasttestname[32];
+  int lastlinelen = 0;
   char *p;
   int adjusted = 0; /* Flags if we have adjusted the entered fingerprint */
 
@@ -98,9 +99,15 @@ int main(int argc, char *argv[]) {
       *p = '\0';
       if (strcmp(line, lasttestname) == 0) {
 	adjusted = 1;
-	continue;
+	if (lastlinelen >= linelen)
+	  continue;
+	/* The new one is longer (and thus probably better) -- clobber the last
+	   line */
+	printlen -= lastlinelen;
+	fprint[printlen] = '\0';
       }
       Strncpy(lasttestname, line, sizeof(lasttestname));
+      lastlinelen = linelen;
       *p = '(';
     } else {
       /* The only legitimate non-comment line that doesn't have a ( is the 

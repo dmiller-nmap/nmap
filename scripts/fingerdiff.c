@@ -65,6 +65,7 @@ int main(int argc, char *argv[]) {
   char line[512];
   int linelen;
   char lasttestname[32];
+  int lastlinelen = 0;
   char *p;
   int adjusted = 0; /* Flags if we have adjusted the entered fingerprint */
 
@@ -76,7 +77,7 @@ int main(int argc, char *argv[]) {
   printf("STEP ONE: Enter the **REFERENCE FINGERPRINT**, followed by a blank or single-dot line:\n");
 
   lasttestname[0] = '\0';
-  printlen = 0;
+  printlen = lastlinelen = 0;
   while(fgets(line, sizeof(line), stdin)) {
     if (*line == '\n' || *line == '.')
       break;
@@ -89,9 +90,15 @@ int main(int argc, char *argv[]) {
       *p = '\0';
       if (strcmp(line, lasttestname) == 0) {
 	adjusted = 1;
-	continue;
+	if (lastlinelen >= linelen)
+	  continue;
+	/* The new one is longer (and thus probably better) -- clobber the last
+	   line */
+	printlen -= lastlinelen;
+	referenceFPString[printlen] = '\0';
       }
       Strncpy(lasttestname, line, sizeof(lasttestname));
+      lastlinelen = linelen;
       *p = '(';
     } else {
       /* The only legitimate non-comment line that doesn't have a ( is the 
@@ -146,9 +153,15 @@ int main(int argc, char *argv[]) {
       *p = '\0';
       if (strcmp(line, lasttestname) == 0) {
 	adjusted = 1;
-	continue;
+	if (lastlinelen >= linelen)
+	  continue;
+	/* The new one is longer (and thus probably better) -- clobber the last
+	   line */
+	printlen -= lastlinelen;
+	referenceFPString[printlen] = '\0';
       }
       Strncpy(lasttestname, line, sizeof(lasttestname));
+      lastlinelen = linelen;
       *p = '(';
     } else {
       /* The only legitimate non-comment line that doesn't have a ( is the 
