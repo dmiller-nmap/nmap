@@ -3978,7 +3978,8 @@ T3(Resp=Y%DF=N%W=200%ACK=O%Flags=A%Ops=)
 T4(DF=N%W=200%ACK=O%Flags=R%Ops=)
 T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
-T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=) PU(Resp=N)
+T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+PU(Resp=N)
 
 # Contributed by Darren W. Aldredge <DAldredge@Sunpoint.Com>
 Fingerprint AXIS 540/542Print ServerV5.30 Jan 24 1997
@@ -4011,7 +4012,8 @@ T3(Resp=Y%DF=N%W=200%ACK=O%Flags=A%Ops=)
 T4(DF=N%W=200%ACK=O%Flags=R%Ops=)
 T5(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
-T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=) PU(Resp=N)
+T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
+PU(Resp=N)
 
 # Contributed by brendan tendrich (rhodie@tdp.dhs.org)
 Fingerprint Micro Annex ELS x7.1.8
