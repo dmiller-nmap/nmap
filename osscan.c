@@ -559,52 +559,124 @@ struct AVal *fingerprint_iptcppacket(struct ip *ip, int mss, unsigned int syn) {
   return AVs;
 }
 
-FingerPrint **match_fingerprint(FingerPrint *FP, int *matches_found) {
-  static FingerPrint *matches[15];
-  int max_matches = (sizeof(matches) / sizeof(FingerPrint *)) - 1;
+/* Takes a fingerprint and returns the matches in FPR (which must
+   point to an allocated FingerPrintResults structure) -- results will
+   be reverse-sorted by accuracy.  No results below
+   accuracy_threshhold will be included.  The max matches returned is
+   the maximum that fits in a FingerPrintResults structure.  The
+   allocated FingerPrintResults does not have to be initialized --
+   that will be done in this function.  */
+
+void match_fingerprint(FingerPrint *FP, struct FingerPrintResults *FPR, 
+		      double accuracy_threshold) {
+
+  int i;
+  double FPR_entrance_requirement = accuracy_threshold; /* accuracy must be 
+							   at least this big 
+							   to be added to the 
+							   list */
   FingerPrint *current_os;
   FingerPrint *current_test;
-  struct AVal *tst;
-  int match = 1;
-  int i,j;
+  unsigned long num_subtests;
+  unsigned long num_subtests_succeeded;
+  double acc;
+  int state;
+  int skipfp;
+  int max_prints = sizeof(FPR->prints) / sizeof(FingerPrint *);
 
-  *matches_found = 0;
+  double tmp_acc, tmp_acc2; /* These are temp buffers for list swaps */
+  FingerPrint *tmp_FP, *tmp_FP2;
 
-  if (!FP) {
-    matches[0] = NULL;
-    return matches;
-  }
+  assert(FP);
+  assert(FPR);
+  assert(accuracy_threshold >= 0 && accuracy_threshold <= 1);
 
+  bzero(FPR, sizeof(*FPR));
+  FPR->overall_results = OSSCAN_SUCCESS;
+  
   for(i = 0; o.reference_FPs[i]; i++) {
     current_os = o.reference_FPs[i];
-    match = 1;
+    skipfp = 0;
+    num_subtests = num_subtests_succeeded = 0;
+
     for(current_test = current_os; current_test; current_test = current_test->next) 
       {
 	tst = gettestbyname(FP, current_test->name);
 	if (tst) {
-	  match = AVal_match(current_test->results, tst);
-	  if (!match) break;
+	  AVal_match(current_tst->results, tst, &num_subtests, &num_subtests_succeeded, 0);
 	}
       }
-    if (match) {
-      /* Yeah, we found a match! */
-      if ((*matches_found) >= max_matches -1) {
-	matches[0] = NULL;
-	*matches_found = ETOOMANYMATCHES;
-	return matches;
+    assert(num_subtests_succeeded <= num_subtests);
+    acc = num_subtests_succeeded / (double) num_subtests;
+    if (acc >= FPR_entrance_requirement) {
+
+      /* FIXME:  Insure an FP with the exact same name is not already in the
+	 list -- if it is we must delete it */
+      state = 0;
+      for(idx=0; idx < FPR->num_matches; idx++) {	
+	if (strcmp(FPR->prints[idx]->OS_name, current_os->OS_name) == 0) {
+	  if (FPR->accuracy[idx] >= acc) {
+	    skipfp = 1; /* Skip it -- a higher version is already in list */
+	  } else {	  
+	    /* We must shift the list left to delete this sucker */
+	    memmove(FPR->prints + idx, FPR->prints + idx + 1,
+		    (FPR->num_matches - 1 - idx) * sizeof(FingerPrint *));
+	    memmove(FPR->accuracy + idx, FPR->accuracy + idx + 1,
+		    (FPR->num_matches - 1 - idx) * sizeof(double));
+	    FPR->num_matches--;
+	  }
+	  break; /* There can only be 1 in the list with same name */
+	}
       }
-      /* Lets make sure we haven't found a match with this exact
-	 name before */
-      for(j=0; j < *matches_found; j++) {
-	if (strcmp(current_os->OS_name, matches[j]->OS_name) == 0)
-	  break;
+
+      if (!skipfp) {      
+	/* First we check whether we have overflowed with perfect matches */
+	if (acc == 1) {
+	  if (FPR->num_perfect_matches == max_prints) {
+	    FPR->overall_results = OSSCAN_TOOMANYMATCHES;
+	    return 0;
+	  }
+	  FPR->num_perfect_matches++;
+	}
+	
+	/* Now we add the sucker to the list */
+	state = 0; /* Have not yet done the insertion */
+	for(idx=-1; idx < max_prints -1; idx++) {
+	  if (state == 1) {
+	    /* Push tmp_acc and tmp_FP onto the next idx */
+	    tmp_acc2 = FPR->accuracy[idx+1];
+	    tmp_FP2 = FPR->prints[idx+1];
+	    
+	    FPR->accuracy[idx+1] = tmp_acc;
+	    FPR->prints[idx+1] = tmp_FP;
+	    
+	    tmp_acc = tmp_acc2;
+	    tmp_FP = tmp_FP2;
+	  } else if (FPR->accuracy[idx + 1] < acc) {
+	    /* OK, I insert the sucker into the next slot ... */
+	    tmp_acc = FPR->accuracy[idx+1];
+	    tmp_FP = FPR->prints[idx+1];
+	    FPR->prints[idx+1] = current_os;
+	    FPR->accuracy[idx+1] = acc;
+	    state = 1;
+	  }
+	}
+	assert(state == 1); /* Sine it met the entrance req, it better have
+			       found a place in the list */
+	FPR->num_matches++;
+	
+	/* Calculate the new min req. */
+	if (FPR->num_matches == max_prints) {
+	  FPR_entrance_requirement = FPR->accuracy[max_prints - 1] + 0.00001;
+	}
       }
-      if (j == *matches_found)
-	matches[(*matches_found)++] = current_os;
     }
   }
-  matches[(*matches_found)] = NULL;
-  return matches;
+
+  if (FPR->num_matches == 0 && FPR->overall_results == OSSCAN_SUCCESS)
+    FPR->overall_results = OSSCAN_NOMATCHES;
+
+  return;
 }
 
 struct AVal *gettestbyname(FingerPrint *FP, char *name) {
@@ -629,7 +701,9 @@ struct AVal *getattrbyname(struct AVal *AV, char *name) {
   return NULL;
 }
 
-int AVal_match(struct AVal *reference, struct AVal *fprint) {
+
+/* Returns true if perfect match -- if num_subtests & num_subtests_succeeded are non_null it updates them.  if shortcircuit is zero, it does all the tests, otherwise it returns when the first one fails */
+int AVal_match(struct AVal *reference, struct AVal *fprint, unsigned long *num_subtests, unsigned long *num_subtests_succeeded, int shortcut) {
   struct AVal *current_ref;
   struct AVal *current_fp;
   unsigned int number;
@@ -638,6 +712,8 @@ int AVal_match(struct AVal *reference, struct AVal *fprint) {
   char valcpy[512];
   char *endptr;
   int andexp, orexp, expchar, numtrue;
+  int testfailed;
+  int subtests = 0, subtests_succeeded=0;
 
   for(current_ref = reference; current_ref; current_ref = current_ref->next) {
     current_fp = getattrbyname(fprint, current_ref->attribute);    
@@ -646,7 +722,7 @@ int AVal_match(struct AVal *reference, struct AVal *fprint) {
      potentially large expression in current_ref->value.  The syntax uses
     < (less than), > (greather than), + (non-zero), | (or), and & (and) 
     No parenthesis are allowed and an expression cannot have | AND & */
-    numtrue = andexp = orexp = 0;
+    numtrue = andexp = orexp = 0; testfailed = 0;
     Strncpy(valcpy, current_ref->value, sizeof(valcpy));
     p = valcpy;
     if (strchr(current_ref->value, '|')) {
@@ -658,37 +734,47 @@ int AVal_match(struct AVal *reference, struct AVal *fprint) {
       q = strchr(p, expchar);
       if (q) *q = '\0';
       if (!strcmp(p, "+")) {
-	if (!*current_fp->value) { if (andexp) return 0; }
+	if (!*current_fp->value) { if (andexp) testfailed=1; break; }
 	else {
 	  val = strtol(current_fp->value, &endptr, 16);
-	  if (val == 0 || *endptr) { if (andexp) return 0; }
+	  if (val == 0 || *endptr) { if (andexp) testfailed=1; break; }
 	  else { numtrue++; if (orexp) break; }
 	}
       } else if (*p == '<' && isxdigit((int) p[1])) {
-	if (!*current_fp->value) { if (andexp) return 0; }
+	if (!*current_fp->value) { if (andexp) testfailed=1; break; }
 	number = strtol(p + 1, &endptr, 16);
 	val = strtol(current_fp->value, &endptr, 16);
-	if (val >= number || *endptr) { if (andexp) return 0; }
+	if (val >= number || *endptr) { if (andexp) testfailed=1; break; }
 	else { numtrue++; if (orexp) break; }
       } else if (*p == '>' && isxdigit((int) p[1])) {
-	if (!*current_fp->value) { if (andexp) return 0; }
+	if (!*current_fp->value) { if (andexp) testfailed=1; break; }
 	number = strtol(p + 1, &endptr, 16);
 	val = strtol(current_fp->value, &endptr, 16);
-	if (val <= number || *endptr) { if (andexp) return 0; }
+	if (val <= number || *endptr) { if (andexp) testfailed=1; break; }
 	else { numtrue++; if (orexp) break; }
       }
       else {
 	if (strcmp(p, current_fp->value))
-	  { if (andexp) return 0; }
+	  { if (andexp) testfailed=1; break; }
 	else { numtrue++; if (orexp) break; }
       }
       if (q) p = q + 1;
     } while(q);
-      if (numtrue == 0) return 0;
-    /* Whew, we made it past one Attribute alive , on to the next! */
+      if (numtrue == 0) testfailed=1;
+      subtests++;
+      if (testfailed) {
+	if (shortcut) {
+	  if (num_subtests) *num_subtests = subtests;
+	  return 0;
+	}
+      } else subtests_succeeded++;
+      /* Whew, we made it past one Attribute alive , on to the next! */
   }
-  return 1;  
+  if (num_subtests) *num_subtests = subtests;
+  if (num_subtests_succeeded) *num_subtests_succeeded = subtests_succeeded;
+  return (subtests == subtests_succeeded)? 1 : 0;
 }
+
 
 void freeFingerPrint(FingerPrint *FP) {
 FingerPrint *currentFP;

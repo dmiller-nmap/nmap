@@ -5,8 +5,9 @@
 #include "tcpip.h"
 #include "global_structures.h"
 
-#define ENOMATCHESATALL -1
-#define ETOOMANYMATCHES -2
+#define OSSCAN_SUCCESS 0
+#define OSSCAN_NOMATCHESATALL -1
+#define OSSCAN_TOOMANYMATCHES -2
 
 /**********************  STRUCTURES  ***********************************/
 
@@ -25,10 +26,22 @@ unsigned int get_gcd_n_ulong(int numvalues, unsigned int *values);
 unsigned int euclid_gcd(unsigned int a, unsigned int b);
 char *fp2ascii(FingerPrint *FP);
 FingerPrint **parse_fingerprint_reference_file();
-FingerPrint **match_fingerprint(FingerPrint *FP, int *matches_found);
+/* Takes a fingerprint and returns the matches in FPR (which must
+   point to an allocated FingerPrintResults structure) -- results will
+   be reverse-sorted by accuracy.  No results below
+   accuracy_threshhold will be included.  The max matches returned is
+   the maximum that fits in a FingerPrintResults structure.  The
+   allocated FingerPrintResults does not have to be initialized --
+   that will be done in this function.  */
+
+void match_fingerprint(FingerPrint *FP, struct FingerPrintResults *FPR, 
+		       double accuracy_threshold);
 struct AVal *str2AVal(char *p);
 struct AVal *gettestbyname(FingerPrint *FP, char *name);
-int AVal_match(struct AVal *reference, struct AVal *fprint); 
+
+/* Returns true if perfect match -- if num_subtests & num_subtests_succeeded are non_null it updates them.  if shortcircuit is zero, it does all the tests, otherwise it returns when the first one fails */
+int AVal_match(struct AVal *reference, struct AVal *fprint, unsigned long *num_subtests, unsigned long *num_subtests_succeeded, int shortcut);
+
 void freeFingerPrint(FingerPrint *FP);
 char *mergeFPs(FingerPrint *FPs[], int numFPs);
 #endif /*OSSCAN_H*/

@@ -3444,7 +3444,8 @@ void get_syn_results(struct hoststruct *target, struct portinfo *scan,
       /*	    log_write(LOG_STDOUT, "Caught ICMP packet:\n");
 		    hdump(icmp, ntohs(ip->ip_len) - sizeof(struct ip)); */
       if (icmp->icmp_type == 3) {
-	if (icmp->icmp_code != 1 && icmp->icmp_code != 2 && 
+	if (icmp->icmp_code != 0 && icmp->icmp_code != 1 && 
+	    icmp->icmp_code != 2 && 
 	    icmp->icmp_code != 3 && icmp->icmp_code != 13 &&
 	    icmp->icmp_code != 9 && icmp->icmp_code != 10) {
 	  error("Unexpected ICMP type/code 3/%d unreachable packet:", icmp->icmp_code);

@@ -82,6 +82,19 @@ typedef struct FingerTest {
   struct FingerTest *next;
  } FingerPrint;
 
+/* Maximum number of results allowed in one of these things ... */
+#define MAX_FP_RESULTS 8
+struct FingerPrintResults {
+  double accuracy[MAX_FP_RESULTS]; /* Percentage of match (1.0 == perfect 
+				      match) in same order as pritns[] below */
+  FingerPrint *prints[MAX_FPRINT_RESULTS]; /* ptrs to matching references -- 
+					      highest accuracy matches first */
+  int num_perfect_matches; /* Number of 1.0 accuracy matches in prints[] */
+  int num_matches; /* Total number of matches in prints */
+  int overall_results; /* OSSCAN_TOOMANYMATCHES, OSSCAN_NOMATCHES, 
+			  OSSCAN_SUCCESS, etc */
+};
+
 struct timeout_info {
   int srtt; /* Smoothed rtt estimate (microseconds) */
   int rttvar; /* Rout trip time variance */
