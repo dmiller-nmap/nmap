@@ -373,7 +373,7 @@
               SYN|ACK).  You can set the destination ports in the
               same manner as -PT above.
 
-       <B>-PI</B>    This option uses a true ping  (ICMP  echo  request)
+       <B>-PE</B>    This option uses a true ping  (ICMP  echo  request)
               packet.   It finds hosts that are up and also looks
               for subnet-directed  broadcast  addresses  on  your
               network.   These  are IP addresses which are exter­
@@ -386,11 +386,11 @@
        <B>-PP</B>    Uses an ICMP timestamp request (code 13) packet  to
               find listening hosts.
 
-       <B>-PM</B>    Same  as  <B>-PI</B> and <B>-PP</B> except uses a netmask request
+       <B>-PM</B>    Same  as  <B>-PE</B> and <B>-PP</B> except uses a netmask request
               (ICMP code 17).
 
        <B>-PB</B>    This is the default ping type.  It  uses  both  the
-              ACK ( <B>-PT</B> ) and ICMP echo request ( <B>-PI</B> ) sweeps in
+              ACK ( <B>-PT</B> ) and ICMP echo request ( <B>-PE</B> ) sweeps in
               parallel.  This way you can get firewalls that fil­
               ter  either one (but not both).  The TCP probe des­
               tination port can be set in the same manner as with
@@ -553,11 +553,11 @@
               A network scan that is cancelled due to  control-C,
               network  outage,  etc.  can  be  resumed using this
               option.  The logfilename must be  either  a  normal
-              (-oN)  or  machine  parsable  (-oM)  log  from  the
-              aborted scan.  No other options can be given  (they
-              will  be  the same as the aborted scan).  Nmap will
-              start on the machine after the  last  one  success­
-              fully scanned in the log file.
+              (-oN)  or grepable (-oG) log from the aborted scan.
+              No other options can be given  (they  will  be  the
+              same  as the aborted scan).  Nmap will start on the
+              machine after the last one successfully scanned  in
+              the log file.
 
        <B>--append_output</B>
               Tells  Nmap  to  append  scan results to any output
@@ -942,7 +942,7 @@
        The   newest   version   of  <I>nmap</I>  can  be  obtained  from
        <I>http://www.insecure.org/nmap/</I>
 
-       <I>nmap</I> is (C) 1995-2001 by Insecure.Com LLC
+       <I>nmap</I> is (C) 1995-2003 by Insecure.Com LLC
 
        This program is free software;  you  can  redistribute  it
        and/or modify it under the terms of the GNU General Public
