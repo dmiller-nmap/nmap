@@ -188,6 +188,7 @@ struct ops /* someone took struct options, <grrr> */ {
   int identscan;
   int osscan;
   int pingtype;
+  int listscan;
   int pingscan;
   int allowall;
   int numports;
