@@ -1974,10 +1974,11 @@ if (o.debugging || o.verbose)
     }
     /* Prepare for retry */
     testinglist = openlist;
-    for(current = openlist; current; current = &scan[current->next]) {
+    for(current = openlist; current; current = (current->next >= 0)? &scan[current->next] : NULL) {
       current->state = port_fresh;
-      if (o.debugging) { printf("Preparing for retry, open port %d noted\n", current->portno); }
-      if (current->next < 0) current = NULL;
+      if (o.debugging) { 
+	printf("Preparing for retry, open port %d noted\n", current->portno); 
+      }
     }    
     openlist = NULL;
   } while(changed && ++tries < 8);   
