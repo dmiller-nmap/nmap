@@ -465,7 +465,7 @@ bzero((char *) packet, sizeof(struct ip));
 
 ip->ip_v = 4;
 ip->ip_hl = 5;
-ip->ip_len = BSDFIX(sizeof(struct ip) + sizeof(udphdr_bsd) + datalen);
+ip->ip_len = BSDFIX(sizeof(struct ip) + datalen);
 ip->ip_id = rand();
 ip->ip_ttl = myttl;
 ip->ip_p = proto;
