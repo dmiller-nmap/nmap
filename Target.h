@@ -81,7 +81,7 @@ class Target {
    the name obtained from reverse-resolution (PTR query) of the IP (v4
    or v6).  If the name has not been set, or was set to NULL, an empty
    string ("") is returned to make printing easier. */
-  const char *HostName() { return hostname? : "";  }
+  const char *HostName() { return hostname? hostname : "";  }
   /* You can set to NULL to erase a name or if it failed to resolve -- or 
      just don't call this if it fails to resolve.  The hostname is blown
      away when you setTargetSockAddr(), so make sure you do these in proper
@@ -125,6 +125,9 @@ class Target {
   void GenerateIPString();
   struct sockaddr_storage targetsock, sourcesock;
   size_t targetsocklen, sourcesocklen;
+#ifndef INET6_ADDRSTRLEN
+#define INET6_ADDRSTRLEN 46
+#endif
   char targetipstring[INET6_ADDRSTRLEN];
 };
 

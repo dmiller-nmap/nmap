@@ -406,7 +406,7 @@ void winip_postopt_init()
 	o.isr00t = (pcap_avail | rawsock_avail);
 	if(wo.trace) printf("***WinIP***  o.isr00t = %d\n", o.isr00t);
 
-	qsort(nametable, numifs, sizeof(WINIP_NAME), strcmp);
+	qsort(nametable, numifs, sizeof(WINIP_NAME), (int (*)(const void *, const void *)) strcmp);
 	atexit(winip_cleanup);
 
 	if(wo.listinterfaces)
@@ -518,7 +518,7 @@ static void winip_cleanup(void)
 int name2ifi(const char *name)
 {
 	WINIP_NAME *n = (WINIP_NAME*)bsearch(name, nametable, numifs,
-		sizeof(WINIP_NAME), strcmp);
+		sizeof(WINIP_NAME), (int (*)(const void *, const void *)) strcmp);
 	if(!n) return -1;
 
 	return n->ifi;
@@ -777,7 +777,7 @@ int win32_sendto(int sd, const char *packet, int len,
 int Sendto(char *functionname, int sd, const unsigned char *packet, int len, 
 	   unsigned int flags, struct sockaddr *to, int tolen)
 {
-	return win32_sendto(sd, packet, len, flags, to, tolen);
+	return win32_sendto(sd, (char *) packet, len, flags, to, tolen);
 }
 
 int win32_socket(int af, int type, int proto)
@@ -845,7 +845,7 @@ inline void sethdrinclude(int sd)
 	if(sd != 501)
 	{
 //		error("sethdrinclude called -- this probably shouldn't happen\n");
-		setsockopt(sd, IPPROTO_IP, IP_HDRINCL, (void *) &one, sizeof(one));
+		setsockopt(sd, IPPROTO_IP, IP_HDRINCL, (char *) &one, sizeof(one));
 	}
 }
 
@@ -883,7 +883,7 @@ void set_pcap_filter(Target *target,
 		log_write(LOG_STDOUT, "Packet capture filter: %s\n", buf);
 
 	/* Due to apparent bug in libpcap */
-	if (islocalhost(&(target->host)))
+	if (islocalhost(target->v4hostip()))
 		buf[0] = '\0';
 
 	if (pcap_compile(pd, &fcode, buf, 0, netmask) < 0)

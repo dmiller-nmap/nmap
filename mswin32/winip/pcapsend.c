@@ -233,7 +233,7 @@ static int realsend(LPADAPTER pAdap,
 	if(addrlen != 6)
 		fatal("realsend: non-ethernet address\n");
 
-	build_ethernet(to, from, protocol, packet, len, packetbuf);		
+	build_ethernet(to, from, protocol, (unsigned char *) packet, len, packetbuf);		
 
 	if((lpPacket = PacketAllocatePacket())==NULL)
 	{
@@ -291,21 +291,21 @@ Q_ARP arpcache[ARPCACHELEN];
 int arpfirst = 0;	//	0 <= arpfirst < ARPCACHELEN
 
 PMIB_IPNETTABLE pArpTable;
-int arpalloclen;
+unsigned long arpalloclen;
 int arprefresh = 1;
 
 //	statistics
 static int totaltimetofail = 0;
 static int numfails = 0;
 static int maxfailtime = 0;
-static int queuelen = 0;
+static long queuelen = 0;
 
 //	The actual structure
 static Q_ROUTE sendqueue[SENDQUEUE_LEN];
 static Q_FREE *nextfree = 0;	//	protected by the hSemQueue
 
 //	The send thread
-static DWORD WINAPI SendThreadProc(LPVOID unused0)
+static unsigned int WINAPI SendThreadProc(LPVOID unused0)
 {
 	//	this thread manages send ops
 
@@ -355,7 +355,7 @@ __try {
 				Q_PACKET *p = sendqueue[i].head;
 				BYTE myphys[MAXLEN_PHYSADDR];
 				int myphyslen = MAXLEN_PHYSADDR;
-				int mytype;
+				unsigned long mytype;
 				LPADAPTER pAdap;
 
 #ifdef THREAD_DEBUG
@@ -368,7 +368,7 @@ __try {
 				while(p)
 				{
 					Q_PACKET *next = p->next;
-					realsend(pAdap, p->data, p->len, phys,
+					realsend(pAdap, (char *) p->data, p->len, phys,
 						myphys, myphyslen, mytype, ETH_IP);
 					free(p);
 					p = next;
@@ -553,7 +553,8 @@ static void send_arp(DWORD ifi, DWORD ip)
 	struct arp_hdr	arp_h;
 	LPADAPTER pAdap;
 	BYTE mymac[6];
-	int len, mytype;
+	int len;
+	unsigned long mytype;
 	struct in_addr myip;
 	BYTE bcastmac[6];	//	more Ethernet code !
 	memset(bcastmac, 0xFF, 6);
@@ -754,7 +755,7 @@ int pcapsendraw(const char *packet, int len,
 	int cb = 0;
 	int nRes, i;
 	DWORD nextip;
-	int ifi;
+	unsigned long ifi;
 	LPADAPTER pAdap;
 	BYTE myphys[MAXLEN_PHYSADDR], tphys[MAXLEN_PHYSADDR];
 	int physlen = MAXLEN_PHYSADDR;
@@ -807,7 +808,7 @@ int pcapsendraw(const char *packet, int len,
 void pcapsend_init()
 {
 	int i, nRes;
-	DWORD id;
+	unsigned int id;
 
 	if(pcapsend_inited) return;
 	pcapsend_inited = 1;
@@ -978,7 +979,7 @@ tryagain:
 	else
 	{
 		PMIB_IPFORWARDTABLE pTable = 0;
-		int cb = 0;
+		unsigned long cb = 0;
 		int bestmatch = -1;
 		int bestmask, bestmetric;
 		int nRes, i;
@@ -1058,7 +1059,7 @@ pass1:
 	if(arprefresh)
 	{
 		//	refresh
-		int len = arpalloclen;
+		unsigned long len = arpalloclen;
 
 #ifdef THREAD_DEBUG
 		printf("lookupip: refreshing ARP table\n");

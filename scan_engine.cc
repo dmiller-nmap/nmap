@@ -547,7 +547,9 @@ void pos_scan(Target *target, u16 *portarray, int numports, stype scantype) {
   int starttime;
   struct sockaddr_storage sock;
   struct sockaddr_in *sin = (struct sockaddr_in *) &sock;
+#if HAVE_IPV6
   struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *) &sock;
+#endif
   size_t socklen;
   struct portinfo *scan = NULL,  *current, *next;
   struct portinfolist pil;
@@ -860,7 +862,9 @@ void pos_scan(Target *target, u16 *portarray, int numports, stype scantype) {
 		  init_socket(res);
 		  if (sin->sin_family == AF_INET)
 		    sin->sin_port = htons(current->portno);
+#if HAVE_IPV6
 		  else sin6->sin6_port = htons(current->portno);
+#endif
 		  current->sd[current->trynum] = res;		
 		  res =  connect(res,(struct sockaddr *)&sock, socklen);
 		  if (res != -1) {
@@ -937,7 +941,9 @@ void pos_scan(Target *target, u16 *portarray, int numports, stype scantype) {
 	      init_socket(res);
 	      if (sin->sin_family == AF_INET)
 		sin->sin_port = htons(current->portno);
+#if HAVE_IPV6
 	      else sin6->sin6_port = htons(current->portno);
+#endif
 	      current->sd[current->trynum] = res;		
 	      res =  connect(res,(struct sockaddr *)&sock, socklen);
 	      if (res != -1) {

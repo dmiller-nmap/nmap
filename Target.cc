@@ -107,7 +107,12 @@ void Target::GenerateIPString() {
   struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *) &targetsock;
 
   if (inet_ntop(sin->sin_family, (sin->sin_family == AF_INET)? 
-                (char *) &sin->sin_addr : (char *) &sin6->sin6_addr, 
+                (char *) &sin->sin_addr : 
+#if HAVE_IPV6
+                (char *) &sin6->sin6_addr, 
+#else
+                (char *) NULL,
+#endif
 		targetipstring, sizeof(targetipstring)) == NULL) {
     fatal("Failed to convert target address to presentation format!?!  Error: %s", strerror(errno));
   }

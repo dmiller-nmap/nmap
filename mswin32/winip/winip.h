@@ -121,7 +121,7 @@ struct winops {
 EXTERNC struct winops wo;
 
 /* Sets a pcap filter function -- makes SOCK_RAW reads easier */
-typedef int (*PFILTERFN)(const char *packet, int len); /* 1 to keep */
+typedef int (*PFILTERFN)(const char *packet, unsigned int len); /* 1 to keep */
 
 //	Makes gcc happy
 //	One wonders why VC doesn't complain...

@@ -22,7 +22,7 @@
 
 #include "..\tcpip.h"
 #include "winip.h"
-#include <winsock.h>
+#include <winsock2.h>
 #include "MibAccess.h"
 
 MibII *MIBTraverser::m = 0;

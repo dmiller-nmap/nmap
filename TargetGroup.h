@@ -74,8 +74,9 @@ class TargetGroup {
 
   void Initialize();
 
-  // For IPV6_ADDRESS type
+#if IPV6_SUPPORTED
   struct in6_addr ip6;
+#endif
 
   /* These 4 are used for the '/mask' style of specifying target 
      net (IPV4_NETMASK) */

@@ -67,7 +67,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /GZ /c
-# ADD CPP /nologo /MTd /W2 /Gm /GX /ZI /Od /I "." /I ".." /I "../nbase" /I "mswin32\winip" /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /YX /FD /GZ /c
+# ADD CPP /nologo /MTd /W2 /Gm /GX /ZI /Od /I "." /I ".." /I "../nbase" /I "mswin32\winip" /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /YX /FD /GZ /c /Tp
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
 # ADD RSC /l 0x409 /d "_DEBUG"
 BSC32=bscmake.exe
@@ -116,7 +116,7 @@ SOURCE=.\winip\snmpapi.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\winfix.c
+SOURCE=.\winfix.cc
 # End Source File
 # Begin Source File
 
@@ -124,7 +124,7 @@ SOURCE=.\winip\winip.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\wintcpip.c
+SOURCE=.\wintcpip.cc
 # End Source File
 # End Group
 # Begin Group "Nbase"
@@ -161,67 +161,79 @@ SOURCE=..\nbase\strcasecmp.c
 # End Group
 # Begin Source File
 
-SOURCE=..\charpool.c
+SOURCE=..\charpool.cc
 # End Source File
 # Begin Source File
 
-SOURCE=..\idle_scan.c
+SOURCE=..\idle_scan.cc
 # End Source File
 # Begin Source File
 
-SOURCE=..\main.c
+SOURCE=..\main.cc
 # End Source File
 # Begin Source File
 
-SOURCE=..\nmap.c
+SOURCE=..\nmap.cc
 # End Source File
 # Begin Source File
 
-SOURCE=..\nmap_error.c
+SOURCE=..\nmap_error.cc
 # End Source File
 # Begin Source File
 
-SOURCE=..\nmap_rpc.c
+SOURCE=..\nmap_rpc.cc
 # End Source File
 # Begin Source File
 
-SOURCE=..\osscan.c
+SOURCE=..\NmapOps.cc
 # End Source File
 # Begin Source File
 
-SOURCE=..\output.c
+SOURCE=..\osscan.cc
 # End Source File
 # Begin Source File
 
-SOURCE=..\portlist.c
+SOURCE=..\output.cc
 # End Source File
 # Begin Source File
 
-SOURCE=..\protocols.c
+SOURCE=..\portlist.cc
 # End Source File
 # Begin Source File
 
-SOURCE=..\scan_engine.c
+SOURCE=..\protocols.cc
 # End Source File
 # Begin Source File
 
-SOURCE=..\services.c
+SOURCE=..\scan_engine.cc
 # End Source File
 # Begin Source File
 
-SOURCE=..\targets.c
+SOURCE=..\services.cc
 # End Source File
 # Begin Source File
 
-SOURCE=..\tcpip.c
+SOURCE=..\Target.cc
 # End Source File
 # Begin Source File
 
-SOURCE=..\timing.c
+SOURCE=..\TargetGroup.cc
 # End Source File
 # Begin Source File
 
-SOURCE=..\utils.c
+SOURCE=..\targets.cc
+# End Source File
+# Begin Source File
+
+SOURCE=..\tcpip.cc
+# End Source File
+# Begin Source File
+
+SOURCE=..\timing.cc
+# End Source File
+# Begin Source File
+
+SOURCE=..\utils.cc
 # End Source File
 # End Group
 # Begin Group "Header Files"

@@ -199,6 +199,7 @@ int TargetGroup::parse_expr(const char * const target_expr, int af) {
     (last[2] + 1) * (last[3] + 1);
   }
   else {
+#if HAVE_IPV6
     assert(af == AF_INET6);
     if (strchr(hostexp, '/')) {
       fatal("Invalid host expression: %s -- slash not allowed.  IPv6 addresses can currently only be specified individually", hostexp);
@@ -220,6 +221,9 @@ int TargetGroup::parse_expr(const char * const target_expr, int af) {
     memcpy(ip6.s6_addr, sin6->sin6_addr.s6_addr, 16);
     ipsleft = 1;
     freeaddrinfo(result);
+#else // HAVE_IPV6
+    fatal("IPv6 not supported on your platform");
+#endif // HAVE_IPV6
   }
 
   free(hostexp);
@@ -300,12 +304,16 @@ int TargetGroup::get_next_host(struct sockaddr_storage *ss, size_t *sslen) {
   } else {
     assert(targets_type == IPV6_ADDRESS);
     assert(ipsleft == 1);
+#if HAVE_IPV6
     bzero(sin6, sizeof(struct sockaddr_in6));
     sin6->sin6_family = AF_INET6;
 #ifdef SIN_LEN
     sin6->sin6_len = sizeof(struct sockaddr_in6);
-#endif
+#endif /* SIN_LEN */
     memcpy(sin6->sin6_addr.s6_addr, ip6.s6_addr, 16);
+#else
+    fatal("IPV6 not supported on this platform");
+#endif // HAVE_IPV6
   }
   ipsleft--;
   assert(ipsleft >= 0);

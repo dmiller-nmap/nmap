@@ -29,7 +29,7 @@ int if2nameindex(int ifi);
 int send_ip_raw( int sd, struct in_addr *source, struct in_addr *victim, 
 	u8 proto, u8 *data, u16 datalen)
 {
-	char *packet = safe_malloc(sizeof(struct ip) + datalen);
+	char *packet = (char *) safe_malloc(sizeof(struct ip) + datalen);
 	struct ip *ip = (struct ip *) packet;
 	static int myttl = 0;
 	int res = -1;
@@ -50,7 +50,7 @@ int send_ip_raw( int sd, struct in_addr *source, struct in_addr *victim,
 	if (!source) 
 	{
 		source_malloced = 1;
-		source = safe_malloc(sizeof(struct in_addr));
+		source = (struct in_addr *) safe_malloc(sizeof(struct in_addr));
 		if(!routethrough(victim, source))
 		{
 			error("send_ip_raw: failed to get a route\n");
@@ -87,9 +87,9 @@ int send_ip_raw( int sd, struct in_addr *source, struct in_addr *victim,
 	if (TCPIP_DEBUGGING > 1) 
 	{
 		printf("Raw IP packet creation completed!  Here it is:\n");
-		hdump(packet, BSDUFIX(ip->ip_len));
+		hdump((unsigned char *) packet, BSDUFIX(ip->ip_len));
 	}
-	res = Sendto("send_ip_raw", sd, packet, BSDUFIX(ip->ip_len), 0,(struct sockaddr *)&sock,  (int)sizeof(struct sockaddr_in));
+	res = Sendto("send_ip_raw", sd, (unsigned char *) packet, BSDUFIX(ip->ip_len), 0,(struct sockaddr *)&sock,  (int)sizeof(struct sockaddr_in));
 	if (source_malloced) free(source);
 	free(packet); 
 	return res;
@@ -110,7 +110,7 @@ int send_tcp_raw( int sd, struct in_addr *source, struct in_addr *victim,
 		unsigned char protocol;
 		unsigned short length;
 	};
-	char *packet = safe_malloc(sizeof(struct ip) + sizeof(struct tcphdr) + optlen + datalen);
+	unsigned char *packet = (unsigned char *) safe_malloc(sizeof(struct ip) + sizeof(struct tcphdr) + optlen + datalen);
 	struct ip *ip = (struct ip *) packet;
 	struct tcphdr *tcp = (struct tcphdr *) (packet + sizeof(struct ip));
 	struct pseudo_header *pseudo =  (struct pseudo_header *) (packet + sizeof(struct ip) - sizeof(struct pseudo_header)); 
@@ -145,7 +145,7 @@ int send_tcp_raw( int sd, struct in_addr *source, struct in_addr *victim,
 	if (!source) 
 	{
 		source_malloced = 1;
-		source = safe_malloc(sizeof(struct in_addr));
+		source = (struct in_addr *) safe_malloc(sizeof(struct in_addr));
 		if(!routethrough(victim, source))
 		{
 			error("send_ip_raw: failed to get a route\n");
@@ -163,7 +163,7 @@ int send_tcp_raw( int sd, struct in_addr *source, struct in_addr *victim,
 	sock.sin_family = AF_INET;
 	sock.sin_port = htons(dport);
 	sock.sin_addr.s_addr = victim->s_addr;
-	bzero((char *) packet, sizeof(struct ip) + sizeof(struct tcphdr));
+	bzero((unsigned char *) packet, sizeof(struct ip) + sizeof(struct tcphdr));
 	pseudo->s_addy = source->s_addr;
 	pseudo->d_addr = victim->s_addr;
 	pseudo->protocol = IPPROTO_TCP;
@@ -231,7 +231,7 @@ int send_udp_raw( int sd, struct in_addr *source, struct in_addr *victim,
 		  u16 sport, u16 dport, u8 *data, u16 datalen) 
 {
 
-	char *packet = safe_malloc(sizeof(struct ip) + sizeof(udphdr_bsd) + datalen);
+	unsigned char *packet = (unsigned char *) safe_malloc(sizeof(struct ip) + sizeof(udphdr_bsd) + datalen);
 	struct ip *ip = (struct ip *) packet;
 	udphdr_bsd *udp = (udphdr_bsd *) (packet + sizeof(struct ip));
 	static int myttl = 0;
@@ -263,7 +263,7 @@ int send_udp_raw( int sd, struct in_addr *source, struct in_addr *victim,
 	if (!source) 
 	{
 		source_malloced = 1;
-		source = safe_malloc(sizeof(struct in_addr));
+		source = (struct in_addr *) safe_malloc(sizeof(struct in_addr));
 		if(!routethrough(victim, source))
 		{
 			error("send_ip_raw: failed to get a route\n");
@@ -335,11 +335,11 @@ int send_small_fragz(int sd, struct in_addr *source, struct in_addr *victim,
 	};
 	/*In this placement we get data and some field alignment so we aren't wasting
 	too much to compute the TCP checksum.*/
-	char packet[sizeof(struct ip) + sizeof(struct tcphdr) + 100];
+	unsigned char packet[sizeof(struct ip) + sizeof(struct tcphdr) + 100];
 	struct ip *ip = (struct ip *) packet;
 	struct tcphdr *tcp = (struct tcphdr *) (packet + sizeof(struct ip));
 	struct pseudo_header *pseudo = (struct pseudo_header *) (packet + sizeof(struct ip) - sizeof(struct pseudo_header)); 
-	char *frag2 = packet + sizeof(struct ip) + 16;
+	unsigned char *frag2 = packet + sizeof(struct ip) + 16;
 	struct ip *ip2 = (struct ip *) (frag2 - sizeof(struct ip));
 	static int myttl = 0;
 	int res;
@@ -355,7 +355,7 @@ int send_small_fragz(int sd, struct in_addr *source, struct in_addr *victim,
 	if (!source) 
 	{
 		source_malloced = 1;
-		source = safe_malloc(sizeof(struct in_addr));
+		source = (struct in_addr *) safe_malloc(sizeof(struct in_addr));
 		if(!routethrough(victim, source))
 		{
 			error("send_ip_raw: failed to get a route\n");
@@ -439,7 +439,7 @@ int send_small_fragz(int sd, struct in_addr *source, struct in_addr *victim,
 		log_write(LOG_STDOUT, "\nTrying sendto(%d , ip2, %d, 0 , %s , %d)\n", sd, ntohs(ip2->ip_len), inet_ntoa(*victim), (int) sizeof(struct sockaddr_in));
 	}
 		/*if ((res = sendto(sd, (void *)ip2,sizeof(struct ip) + 4 , 0, (struct sockaddr *)&sock, (int) sizeof(struct sockaddr_in))) == -1)*/
-	if ((res = Sendto("send_small_fragz",sd, (void *)ip2,sizeof(struct ip) + 4 , 0, (struct sockaddr *)&sock, (int) sizeof(struct sockaddr_in))) == -1)
+	if ((res = Sendto("send_small_fragz",sd, (unsigned char *)ip2,sizeof(struct ip) + 4 , 0, (struct sockaddr *)&sock, (int) sizeof(struct sockaddr_in))) == -1)
 	{
 		perror("sendto in send_tcp_raw frag #2");
 		if(source_malloced) free(source);
@@ -485,7 +485,7 @@ int readtcppacket(unsigned char *packet, int readdata)
 {
 	struct ip *ip = (struct ip *) packet;
 	struct tcphdr *tcp = (struct tcphdr *) (packet + sizeof(struct ip));
-	char *data = packet +  sizeof(struct ip) + sizeof(struct tcphdr);
+	unsigned char *data = packet +  sizeof(struct ip) + sizeof(struct tcphdr);
 	int tot_len;
 	struct in_addr bullshit, bullshit2;
 	char sourcehost[16];
@@ -540,7 +540,7 @@ int readudppacket(unsigned char *packet, int readdata)
 
 	struct ip *ip = (struct ip *) packet;
 	udphdr_bsd *udp = (udphdr_bsd *) (packet + sizeof(struct ip));
-	char *data = packet +  sizeof(struct ip) + sizeof(udphdr_bsd);
+	unsigned char *data = packet +  sizeof(struct ip) + sizeof(udphdr_bsd);
 	int tot_len;
 	struct in_addr bullshit, bullshit2;
 	char sourcehost[16];
@@ -661,7 +661,7 @@ int send_tcp_raw_decoys( int sd, struct in_addr *victim, u16 sport,
 	int decoy;
 	for(decoy = 0; decoy < o.numdecoys; decoy++) 
 	{
-		if (send_tcp_raw(sd, &o.decoys[decoy], victim, sport, dport, seq, ack, flags, window, options, optlen, data, datalen) == -1) return -1;
+		if (send_tcp_raw(sd, &o.decoys[decoy], victim, sport, dport, seq, ack, flags, window, options, optlen, (char *) data, datalen) == -1) return -1;
 	}
 	return 0;
 }

@@ -11,6 +11,7 @@
 #include <string.h>
 #include <gnuc.h>
 #include <winsock2.h>
+/* #include <ws2tcpip.h> // IPv6 stuff */
 #include <time.h>
 #include <assert.h>
 #include <iptypes.h>
@@ -100,6 +101,9 @@ int win32_sendto(int sd, const char *packet, int len,
 int win32_socket(int af, int type, int proto);
 
 void win32_pcap_close(pcap_t *pd);
+
+/* non-functioning stub function */
+int fork();
 
 #define socket win32_socket
 #define sendto win32_sendto

@@ -1,6 +1,8 @@
 #include <winclude.h>
 #include <sys/timeb.h>
 
+#include "nmap_error.h"
+
 inline int my_close(int sd)
 {
 	if(sd == 501) return 0;
