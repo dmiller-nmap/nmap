@@ -1,5 +1,11 @@
 # Nmap Changelog ($Id$)
 
+o Fixed a compilation problem on systems w/o OpenSSL that was
+  discovered by Solar Designer.
+
+o Integrated more services thanks to submissions from Niels Heinen
+  (zillion(a)safemode.org).
+
 Nmap 3.40PVT15
 
 o Fixed a major bug in the Nsock time caching system.  This could

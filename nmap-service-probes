@@ -360,6 +360,7 @@ ports 79,80-85,113,139,143,280,515,554,631,783,993,995,1220,5000,5432,5900,8000-
 sslports 443
 # Server: CUPS/1.1
 match ipp m|^HTTP/1\.0.*Server: CUPS/(\S+)|s v/CUPS $1///
+match ipp m|^lpd \[@[-.\w]+\]: Host name for your address \([:.\d]+\) is not known\n$| v/CUPS///
 # My junbuster proxy gives me this.
 match http-proxy m|^HTTP/1\.0 400 Invalid header received from browser\n\n| v/Junkbuster webproxy///
 # HTTP/1.1 200 OK

@@ -4256,30 +4256,8 @@ if test "${with_openssl+set}" = set; then
 
 fi;
 
-# First we test whether they specified openssl desires explicitly
-use_openssl="yes"
-specialssldir=""
-
-
-# Check whether --with-openssl or --without-openssl was given.
-if test "${with_openssl+set}" = set; then
-  withval="$with_openssl"
-    case "$with_openssl" in
-  yes)
-    ;;
-  no)
-    use_openssl="no"
-    ;;
-  *)
-    specialssldir="$with_openssl"
-    LDFLAGS="$LDFLAGS -L$with_openssl/lib"
-    ;;
-  esac
-
-fi;
-
 # If they didn't specify it, we try to find it
-if test "$use_openssl" = "yes" -a "${specialssldir:+set}" = "set"; then
+if test "$use_openssl" = "yes" -a -z "$specialssldir"; then
   if test "${ac_cv_header_openssl_ssl_h+set}" = set; then
   echo "$as_me:$LINENO: checking for openssl/ssl.h" >&5
 echo $ECHO_N "checking for openssl/ssl.h... $ECHO_C" >&6

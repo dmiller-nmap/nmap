@@ -207,27 +207,8 @@ AC_ARG_WITH(openssl,
   esac]
 )
 
-# First we test whether they specified openssl desires explicitly
-use_openssl="yes"
-specialssldir=""
-
-AC_ARG_WITH(openssl,
-[  --with-openssl=DIR    Use optional openssl libs and includes from [DIR]/lib/ and [DIR]/include/openssl/)],
-[  case "$with_openssl" in
-  yes)
-    ;;
-  no)
-    use_openssl="no"
-    ;;
-  *)
-    specialssldir="$with_openssl"
-    LDFLAGS="$LDFLAGS -L$with_openssl/lib"
-    ;;
-  esac]
-)
-
 # If they didn't specify it, we try to find it
-if test "$use_openssl" = "yes" -a "${specialssldir:+set}" = "set"; then
+if test "$use_openssl" = "yes" -a -z "$specialssldir"; then
   AC_CHECK_HEADER(openssl/ssl.h,,
   [ use_openssl="no"
     AC_MSG_WARN([Failed to find openssl/ssl.h so OpenSSL will not be used. If it is installed you can try the --with-openssl=DIR argument]) ])
