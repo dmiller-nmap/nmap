@@ -2095,6 +2095,7 @@ subseven          16959/tcp  # Subseven trojan
 isode-dua         17007/tcp  # 
 isode-dua         17007/udp  # 
 wdbrpc            17185/udp  # vxWorks WDB remote debugging ONCRPC
+kuang2            17300/tcp  # Kuang2 backdoor
 biimenu           18000/tcp  # Beckman Instruments, Inc.
 biimenu           18000/udp  # Beckman Instruments, Inc.
 btx               20005/tcp  # xcept4 (Interacts with German Telekom's CEPT videotext service)
