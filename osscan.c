@@ -1,3 +1,50 @@
+
+/***********************************************************************/
+/* osscan.c -- Routines used for OS detection via TCP/IP               */
+/* fingerprinting.  For more information on how this works in Nmap,    */
+/* see my paper at                                                     */
+/* http://www.insecure.org/nmap/nmap-fingerprinting-article.html       */
+/*                                                                     */
+/***********************************************************************/
+/*  The Nmap Security Scanner is (C) 1995-2000 Insecure.Org.  This     */
+/*  program is free software; you can redistribute it and/or modify    */
+/*  it under the terms of the GNU General Public License as published  */
+/*  by the Free Software Foundation; Version 2.  This guarantees your  */
+/*  right to use, modify, and redistribute this software under certain */
+/*  conditions.  If this license is unacceptable to you,               */
+/*  Insecure.Com LLC may be willing to sell alternative licenses       */
+/*  (contact sales@insecure.com ).                                     */
+/*                                                                     */
+/*  If you received these files with a written license agreement       */
+/*  stating terms other than the (GPL) terms above, then that          */
+/*  alternative license agreement takes precendence over this comment. */
+/*                                                                     */
+/*  Source is provided to this software because we believe users have  */
+/*  a right to know exactly what a program is going to do before they  */
+/*  run it.  This also allows you to audit the software for security   */
+/*  holes (none have been found so far).                               */
+/*                                                                     */
+/*  Source code also allows you to port Nmap to new platforms, fix     */
+/*  bugs, and add new features.  You are highly encouraged to send     */
+/*  your changes to fyodor@insecure.org for possible incorporation     */
+/*  into the main distribution.  By sending these changes to Fyodor or */
+/*  one the insecure.org development mailing lists, it is assumed that */
+/*  you are offering Fyodor the unlimited, non-exclusive right to      */
+/*  reuse, modify, and relicense the code.  If you wish to specify     */
+/*  special license conditions of your contributions, please state     */
+/*  them up front.                                                     */
+/*                                                                     */
+/*  This program is distributed in the hope that it will be useful,    */
+/*  but WITHOUT ANY WARRANTY; without even the implied warranty of     */
+/*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU  */
+/*  General Public License for more details (                          */
+/*  http://www.gnu.org/copyleft/gpl.html ).                            */
+/*                                                                     */
+/***********************************************************************/
+
+/* $Id$ */
+
+
 #include "osscan.h"
 
 extern struct ops o;
@@ -89,7 +136,7 @@ snprintf(filter, sizeof(filter), "(icmp and dst host %s) or (tcp and src host %s
  if (o.debugging)
    log_write(LOG_STDOUT, "Packet capture filter: %s\n", filter);
  if (pcap_compile(pd, &fcode, filter, 0, netmask) < 0)
-   fatal("Error compiling our pcap filter: %s\n", pcap_geterr(pd));
+   fatal("Error compiling our pcap filter (\"%s\"): %s\n", filter, pcap_geterr(pd));
  if (pcap_setfilter(pd, &fcode) < 0 )
    fatal("Failed to set the pcap filter: %s\n", pcap_geterr(pd));
 
@@ -97,11 +144,14 @@ snprintf(filter, sizeof(filter), "(icmp and dst host %s) or (tcp and src host %s
 
  /* Lets find an open port to used */
  openport = (unsigned long) -1;
+ target->osscan_openport = -1;
+ target->osscan_closedport = -1;
  tport = NULL;
  if (target->ports.state_counts_tcp[PORT_OPEN] > 0) { 
    tport = nextport(&target->ports, NULL, IPPROTO_TCP, PORT_OPEN);
    assert(tport);
    openport = tport->portno;
+   target->osscan_openport = tport->portno;
  }
  
  /* Now we should find a closed port */
@@ -109,6 +159,7 @@ snprintf(filter, sizeof(filter), "(icmp and dst host %s) or (tcp and src host %s
    tport = nextport(&target->ports, NULL, IPPROTO_TCP, PORT_CLOSED);
    assert(tport);
    closedport = tport->portno;
+   target->osscan_closedport = tport->portno;
  } else if (target->ports.state_counts_tcp[PORT_UNFIREWALLED] > 0) {
    /* Well, we will settle for unfiltered */
    tport = nextport(&target->ports, NULL, IPPROTO_TCP, PORT_UNFIREWALLED);
@@ -542,7 +593,8 @@ struct AVal *fingerprint_iptcppacket(struct ip *ip, int mss, unsigned int syn) {
   length = (tcp->th_off * 4) - sizeof(struct tcphdr);
   q = ((char *)tcp) + sizeof(struct tcphdr);
 
-  while(length > 0) {
+  while(length > 0 &&
+	((p - AVs[5].value) < (int) (sizeof(AVs[5].value) - 3))) {
     opcode=*q++;
     length--;
     if (!opcode) {
@@ -901,7 +953,23 @@ int bestaccidx;
  return 1;
 }
 
-char *mergeFPs(FingerPrint *FPs[], int numFPs) {
+/* Writes an informational "Test" result suitable for including at the
+   top of a fingerprint.  Gives info which might be useful when the
+   FPrint is submitted (eg Nmap version, etc).  Result is written (up
+   to ostrlen) to the ostr var passed in */
+void WriteSInfo(char *ostr, int ostrlen, int openport, int closedport) {
+  struct tm *ltime;
+  time_t timep;
+  
+  timep = time(NULL);
+  ltime = localtime(&timep);
+
+  snprintf(ostr, ostrlen, "SInfo(V=%s%%P=%s%%D=%d/%d;%d%%O=%d%%C=%d)\n", 
+	   NMAP_VERSION, NMAP_PLATFORM, ltime->tm_mon + 1, ltime->tm_mday, 
+	   (int) timep, openport, closedport);
+}
+
+char *mergeFPs(FingerPrint *FPs[], int numFPs, int openport, int closedport) {
 static char str[10240];
 struct AVal *AV;
 FingerPrint *currentFPs[32];
@@ -919,6 +987,10 @@ for(i=0; i < numFPs; i++) {
   }
   currentFPs[i] = FPs[i];
 }
+
+/* Lets start by writing the fake "Info" test for submitting fingerprints */
+ WriteSInfo(str, sizeof(str), openport, closedport); 
+ p = p + strlen(str);
 
 do {
   changed = 0;

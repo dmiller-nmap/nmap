@@ -1,434 +1,479 @@
-#include "nmap.h"
-#include "osscan.h"
+/***********************************************************************/
+/* nmap.c -- Currently handles the bulk of Nmap's port scanning        */
+/* features as well as the command line user interface.  At some point */
+/* I hope to move the port scanning & related support functions to     */
+/* another file.                                                       */
+/*                                                                     */
+/***********************************************************************/
+/*  The Nmap Security Scanner is (C) 1995-2000 Insecure.Org.  This     */
+/*  program is free software; you can redistribute it and/or modify    */
+/*  it under the terms of the GNU General Public License as published  */
+/*  by the Free Software Foundation; Version 2.  This guarantees your  */
+/*  right to use, modify, and redistribute this software under certain */
+/*  conditions.  If this license is unacceptable to you,               */
+/*  Insecure.Com LLC may be willing to sell alternative licenses       */
+/*  (contact sales@insecure.com ).                                     */
+/*                                                                     */
+/*  If you received these files with a written license agreement       */
+/*  stating terms other than the (GPL) terms above, then that          */
+/*  alternative license agreement takes precendence over this comment. */
+/*                                                                     */
+/*  Source is provided to this software because we believe users have  */
+/*  a right to know exactly what a program is going to do before they  */
+/*  run it.  This also allows you to audit the software for security   */
+/*  holes (none have been found so far).                               */
+/*                                                                     */
+/*  Source code also allows you to port Nmap to new platforms, fix     */
+/*  bugs, and add new features.  You are highly encouraged to send     */
+/*  your changes to fyodor@insecure.org for possible incorporation     */
+/*  into the main distribution.  By sending these changes to Fyodor or */
+/*  one the insecure.org development mailing lists, it is assumed that */
+/*  you are offering Fyodor the unlimited, non-exclusive right to      */
+/*  reuse, modify, and relicense the code.  If you wish to specify     */
+/*  special license conditions of your contributions, please state     */
+/*  them up front.                                                     */
+/*                                                                     */
+/*  This program is distributed in the hope that it will be useful,    */
+/*  but WITHOUT ANY WARRANTY; without even the implied warranty of     */
+/*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU  */
+/*  General Public License for more details (                          */
+/*  http://www.gnu.org/copyleft/gpl.html ).                            */
+/*                                                                     */
+/***********************************************************************/
 
-/* global options */
-extern char *optarg;
-extern int optind;
-struct ops o;  /* option structure */
-extern char **environ;
+/* $Id$ */
 
-int main(int argc, char *argv[], char *envp[]) {
-  /* The "real" main is nmap_main().  This function hijacks control at the
-     beginning to do the following:
-     1) Check if Nmap called under name listed in INTERACTIVE_NAMES or with
-     interactive.
-     2) Start interactive mode or just call nmap_main
-  */
-  char *interactive_names[] = INTERACTIVE_NAMES;
-  int numinames = sizeof(interactive_names) / sizeof(char *);
-  int nameidx;
-  char *nmapcalledas;
-  char command[2048];
-  int myargc, fakeargc;
-  char **myargv = NULL, **fakeargv = NULL;
-  char *cptr;
-  int ret;
-  int i;
-  char nmapargs[1024];
-  char fakeargs[1024];
-  char nmappath[MAXPATHLEN];
-  char *pptr;
-  char path[4096];
-  struct stat st;
-  char *endptr;
-  int interactivemode = 0;
-  int fd;
-  struct timeval tv;
+ #include "nmap.h"
+ #include "osscan.h"
 
-  /* You never know when "random" numbers will come in handy ... */
-  gettimeofday(&tv, NULL);
-  srand((tv.tv_sec ^ tv.tv_usec) ^ getpid());
+ /* global options */
+ extern char *optarg;
+ extern int optind;
+ struct ops o;  /* option structure */
+ extern char **environ;
 
-  /* initialize our options */
-  options_init();
+ int main(int argc, char *argv[], char *envp[]) {
+   /* The "real" main is nmap_main().  This function hijacks control at the
+      beginning to do the following:
+      1) Check if Nmap called under name listed in INTERACTIVE_NAMES or with
+      interactive.
+      2) Start interactive mode or just call nmap_main
+   */
+   char *interactive_names[] = INTERACTIVE_NAMES;
+   int numinames = sizeof(interactive_names) / sizeof(char *);
+   int nameidx;
+   char *nmapcalledas;
+   char command[2048];
+   int myargc, fakeargc;
+   char **myargv = NULL, **fakeargv = NULL;
+   char *cptr;
+   int ret;
+   int i;
+   char nmapargs[1024];
+   char fakeargs[1024];
+   char nmappath[MAXPATHLEN];
+   char *pptr;
+   char path[4096];
+   struct stat st;
+   char *endptr;
+   int interactivemode = 0;
+   int fd;
+   struct timeval tv;
 
+   /* You never know when "random" numbers will come in handy ... */
+   gettimeofday(&tv, NULL);
+   srand((tv.tv_sec ^ tv.tv_usec) ^ getpid());
 
-
-  /* Trap these sigs for cleanup */
-  signal(SIGINT, sigdie);
-  signal(SIGTERM, sigdie);
-  signal(SIGHUP, sigdie); 
-  
-  signal(SIGCHLD, reaper);
+   /* initialize our options */
+   options_init();
 
 
-  /* First we figure out whether the name nmap is called as qualifies it 
-     for interactive mode treatment */
-  nmapcalledas = strrchr(argv[0], '/');
-  if (!nmapcalledas) {
-    nmapcalledas = argv[0];
-  } else nmapcalledas++;
 
-  if ((cptr = getenv("NMAP_ARGS"))) {
-    snprintf(command, sizeof(command), "nmap %s", cptr);
-    myargc = arg_parse(command, &myargv);
-    if (myargc < 1) {
-      fatal("NMAP_ARG variable could not be parsed");
-    }
-    options_init();
-    ret = nmap_main(myargc, myargv);
-    arg_parse_free(myargv);
-    return ret;
-  }
+   /* Trap these sigs for cleanup */
+   signal(SIGINT, sigdie);
+   signal(SIGTERM, sigdie);
+   signal(SIGHUP, sigdie); 
 
-  for(nameidx = 0; nameidx < numinames; nameidx++) {
-    if (strcasecmp(nmapcalledas, interactive_names[nameidx]) == 0) {
-      printf("Entering Interactive Mode because argv[0] == %s\n", nmapcalledas);
-      interactivemode = 1;
-      break;
-    }
-  }
+   signal(SIGCHLD, reaper);
 
-  if (interactivemode == 0 &&
-      argc == 2 && strcmp("--interactive", argv[1]) == 0) {
-    interactivemode = 1;
-  }
 
-  if (!interactivemode) {
-    options_init();
-    if (argc == 3 && strcmp("--resume", argv[1]) == 0) {
-      /* OK, they want to resume an aborted scan given the log file specified.
-	 Lets gather our state from the log file */
-      if (gather_logfile_resumption_state(argv[2], &myargc, &myargv) == -1) {
-	fatal("Cannot resume from (supposed) log file %s", argv[2]);
-      }
-      return nmap_main(myargc, myargv);
-    }
-    return nmap_main(argc, argv);
-  }
-  /*  printf("\nStarting nmap V. %s by fyodor@insecure.org ( www.insecure.org/nmap/ )\n", VERSION);*/
-  printf("\nStarting %s V. %s ( %s )\n", NMAP_NAME, NMAP_VERSION, NMAP_URL);
+   /* First we figure out whether the name nmap is called as qualifies it 
+      for interactive mode treatment */
+   nmapcalledas = strrchr(argv[0], '/');
+   if (!nmapcalledas) {
+     nmapcalledas = argv[0];
+   } else nmapcalledas++;
 
-  printf("Welcome to Interactive Mode -- press h <enter> for help\n");
-  
-  while(1) {
-    printf("nmap> ");
-    fflush(stdout);
-    fgets(command, sizeof(command), stdin);
-    myargc = arg_parse(command, &myargv);
-    if (myargc < 1) {
-      printf("Bogus command -- press h <enter> for help\n");
-      continue;
-    }
-    if (strcasecmp(myargv[0], "h") == 0 ||
-	strcasecmp(myargv[0], "help") == 0) {
-      printinteractiveusage();
-      continue;
-    } else if (strcasecmp(myargv[0], "x") == 0 ||
-	       strcasecmp(myargv[0], "q") == 0 ||
-	       strcasecmp(myargv[0], "e") == 0 ||
-	       strcasecmp(myargv[0], ".") == 0 ||
-	       strcasecmp(myargv[0], "exit") == 0 ||
-	       strcasecmp(myargv[0], "quit") == 0) {
-      printf("Quitting by request.\n");
-      exit(0);
-    } else if (strcasecmp(myargv[0], "n") == 0 ||
-	       strcasecmp(myargv[0], "nmap") == 0) {
-      options_init();
-      o.interactivemode = 1;
-      nmap_main(myargc, myargv);
-    } else if (*myargv[0] == '!') {
-      cptr = strchr(command, '!');
-      system(cptr + 1);
-    } else if (*myargv[0] == 'd') {
-      o.debugging++;
-    } else if (strcasecmp(myargv[0], "f") == 0) {
-      switch((ret = fork())) {
-      case 0: /* Child */
-	/* My job is as follows:
-	   1) Go through arguments for the following 3 purposes:
-	   A.  Build env variable nmap execution will read args from
-	   B.  Find spoof and realpath variables
-	   C.  If realpath var was not set, find an Nmap to use
-	   2) Exec the sucka!@#$! 
-	*/
-	fakeargs[0] = nmappath[0] = '\0';
-	strcpy(nmapargs, "NMAP_ARGS=");
-	for(i=1; i < myargc; i++) {
-	  if (strcasecmp(myargv[i], "--spoof") == 0) {
-	    if (++i > myargc -1) {
-	      fatal("Bad arguments to f!");
-	    }	    
-	    strncpy(fakeargs, myargv[i], sizeof(fakeargs));
-	  } else if (strcasecmp(myargv[i], "--nmap_path") == 0) {
-	    if (++i > myargc -1) {
-	      fatal("Bad arguments to f!");
-	    }	    
-	    strncpy(nmappath, myargv[i], sizeof(nmappath));
-	  } else {
-	    if (strlen(nmapargs) + strlen(myargv[i]) + 1 < sizeof(nmapargs)) {
-	      strcat(nmapargs, " ");
-	      strcat(nmapargs, myargv[i]);
-	    } else fatal("Arguments too long.");
-	  }	 
-	}
-	/* First we stick our arguments into envp */
-	if (o.debugging) {
-	  error("Adding to environment: %s", nmapargs);
-	}
-	if (putenv(nmapargs) == -1) {
-	  pfatal("Failed to add NMAP_ARGS to environment");
-	}
-	/* Now we figure out where the #@$#@ Nmap is located */
-	if (!*nmappath) {
-	  if (stat(argv[0], &st) != -1 && !S_ISDIR(st.st_mode)) {
-	    strncpy(nmappath, argv[0], sizeof(nmappath));
-	  } else {
-	    nmappath[0] = '\0';
-	    /* Doh!  We must find it in path */
-	    if ((pptr = getenv("PATH"))) {
-	      strncpy(path, pptr, sizeof(path));
-	      pptr = path;
-	      while(pptr && *pptr) {
-		endptr = strchr(pptr, ':');
-		if (endptr) { 
-		  *endptr = '\0';
-		}
-		snprintf(nmappath, sizeof(nmappath), "%s/%s", pptr, nmapcalledas);
-		if (stat(nmappath, &st) != -1)
-		  break;
-		nmappath[0] = '\0';
-		if (endptr) pptr = endptr + 1;
-		else pptr = NULL;
-	      }
-	    }
-	  }
-	}
-	if (!*nmappath) {
-	  fatal("Could not find Nmap -- you must add --nmap_path argument");
-	}       
-      
-	/* We should be courtious and give Nmap reasonable signal defaults */
-	signal(SIGINT, SIG_DFL);
-	signal(SIGTERM, SIG_DFL);
-	signal(SIGHUP, SIG_DFL);
-	signal(SIGSEGV, SIG_DFL);
+   if ((cptr = getenv("NMAP_ARGS"))) {
+     snprintf(command, sizeof(command), "nmap %s", cptr);
+     myargc = arg_parse(command, &myargv);
+     if (myargc < 1) {
+       fatal("NMAP_ARG variable could not be parsed");
+     }
+     options_init();
+     ret = nmap_main(myargc, myargv);
+     arg_parse_free(myargv);
+     return ret;
+   }
 
-	/* Now I must handle spoofery */
-	if (*fakeargs) {
-	  fakeargc = arg_parse(fakeargs, &fakeargv);
-	  if (fakeargc < 1) {
-	    fatal("Bogus --spoof parameter");
-	  }
-	} else {
-	  fakeargc = 1;
-	  fakeargv = (char **) malloc(sizeof(char *) * 2);
-	  fakeargv[0] = nmappath;
-	  fakeargv[1] = NULL;
-	}
+   for(nameidx = 0; nameidx < numinames; nameidx++) {
+     if (strcasecmp(nmapcalledas, interactive_names[nameidx]) == 0) {
+       printf("Entering Interactive Mode because argv[0] == %s\n", nmapcalledas);
+       interactivemode = 1;
+       break;
+     }
+   }
 
-	if (o.debugging) error("About to exec %s", nmappath);
-	/* Kill stdout & stderr */
-	if (!o.debugging) {	
-	  fd = open("/dev/null", O_WRONLY);
-	  if (fd != -1) {
-	    dup2(fd, STDOUT_FILENO);
-	    dup2(fd, STDERR_FILENO);
-	  }
-	}
+   if (interactivemode == 0 &&
+       argc == 2 && strcmp("--interactive", argv[1]) == 0) {
+     interactivemode = 1;
+   }
 
-	/* OK, I think we are finally ready for the big exec() */
-	ret = execve(nmappath, fakeargv, environ);
-	if (ret == -1) {
-	  pfatal("Could not exec %s", nmappath);
-	}
-	break;
-      case -1:
-	gh_perror("fork() failed");
-	break;
-      default: /* Parent */
-	printf("[PID: %d]\n", ret);
-	break;
-      }
-    } else {
-      printf("Unknown command (%s) -- press h <enter> for help\n", myargv[0]);
-      continue;
-    }
-    arg_parse_free(myargv);
-  }
-  return 0;
+   if (!interactivemode) {
+     options_init();
+     if (argc == 3 && strcmp("--resume", argv[1]) == 0) {
+       /* OK, they want to resume an aborted scan given the log file specified.
+	  Lets gather our state from the log file */
+       if (gather_logfile_resumption_state(argv[2], &myargc, &myargv) == -1) {
+	 fatal("Cannot resume from (supposed) log file %s", argv[2]);
+       }
+       return nmap_main(myargc, myargv);
+     }
+     return nmap_main(argc, argv);
+   }
+   /*  printf("\nStarting nmap V. %s by fyodor@insecure.org ( www.insecure.org/nmap/ )\n", VERSION);*/
+   printf("\nStarting %s V. %s ( %s )\n", NMAP_NAME, NMAP_VERSION, NMAP_URL);
 
-}
+   printf("Welcome to Interactive Mode -- press h <enter> for help\n");
 
-int nmap_main(int argc, char *argv[]) {
-  char *p, *q;
-  int i, arg;
-  size_t j, argvlen;
-  FILE *inputfd = NULL;
-  char *host_spec;
-  short fastscan=0, randomize=1, resolve_all=0;
-  short quashargv = 0;
-  int numhosts_scanned = 0;
-  char **host_exp_group;
-  int num_host_exp_groups = 0;
-  char *machinefilename = NULL, *kiddiefilename = NULL, *normalfilename = NULL;
-  struct hostgroup_state hstate;
-  int numhosts_up = 0;
-  int starttime;
-  unsigned short *ports = NULL;
-  char myname[MAXHOSTNAMELEN + 1];
-#if (defined(IN_ADDR_DEEPSTRUCT) || defined( SOLARIS))
-  /* Note that struct in_addr in solaris is 3 levels deep just to store an
-   * unsigned int! */
-  struct ftpinfo ftp = { FTPUSER, FTPPASS, "",  { { { 0 } } } , 21, 0};
-#else
-  struct ftpinfo ftp = { FTPUSER, FTPPASS, "", { 0 }, 21, 0};
-#endif
-  struct hostent *target = NULL;
-  char **fakeargv;
-  struct hoststruct *currenths;
-  char emptystring[1];
-  int sourceaddrwarning = 0; /* Have we warned them yet about unguessable
-				source addresses? */
-  time_t timep;
-  char mytime[128];
-  int option_index;
-  struct option long_options[] =
-  {
-    {"version", no_argument, 0, 'V'},
-    {"verbose", no_argument, 0, 'v'},
-    {"debug", optional_argument, 0, 'd'},
-    {"help", no_argument, 0, 'h'},
-    {"max_parallelism", required_argument, 0, 'M'},
-    {"timing", required_argument, 0, 'T'},
-    {"max_rtt_timeout", required_argument, 0, 0},
-    {"min_rtt_timeout", required_argument, 0, 0},
-    {"host_timeout", required_argument, 0, 0},
-    {"scan_delay", required_argument, 0, 0},
-    {"initial_rtt_timeout", required_argument, 0, 0},
-    {"oN", required_argument, 0, 0},
-    {"oM", required_argument, 0, 0},  
-    {"oS", required_argument, 0, 0},
-    {"oH", required_argument, 0, 0},  
-    {"iL", required_argument, 0, 0},  
-    {"iR", no_argument, 0, 0},  
-    {"initial_rtt_timeout", required_argument, 0, 0},
-    {"randomize_hosts", no_argument, 0, 0},
-    {"osscan_limit", no_argument, 0, 0}, /* skip OSScan if no open ports */
-    {"osscan_guess", no_argument, 0, 0}, /* More guessing flexability */
-    {"rH", no_argument, 0, 0},
-    {"vv", no_argument, 0, 0},
-    {"append_output", no_argument, 0, 0},
-    {"noninteractive", no_argument, 0, 0},
-    {0, 0, 0, 0}
-  };
+   while(1) {
+     printf("nmap> ");
+     fflush(stdout);
+     fgets(command, sizeof(command), stdin);
+     myargc = arg_parse(command, &myargv);
+     if (myargc < 1) {
+       printf("Bogus command -- press h <enter> for help\n");
+       continue;
+     }
+     if (strcasecmp(myargv[0], "h") == 0 ||
+	 strcasecmp(myargv[0], "help") == 0) {
+       printinteractiveusage();
+       continue;
+     } else if (strcasecmp(myargv[0], "x") == 0 ||
+		strcasecmp(myargv[0], "q") == 0 ||
+		strcasecmp(myargv[0], "e") == 0 ||
+		strcasecmp(myargv[0], ".") == 0 ||
+		strcasecmp(myargv[0], "exit") == 0 ||
+		strcasecmp(myargv[0], "quit") == 0) {
+       printf("Quitting by request.\n");
+       exit(0);
+     } else if (strcasecmp(myargv[0], "n") == 0 ||
+		strcasecmp(myargv[0], "nmap") == 0) {
+       options_init();
+       o.interactivemode = 1;
+       nmap_main(myargc, myargv);
+     } else if (*myargv[0] == '!') {
+       cptr = strchr(command, '!');
+       system(cptr + 1);
+     } else if (*myargv[0] == 'd') {
+       o.debugging++;
+     } else if (strcasecmp(myargv[0], "f") == 0) {
+       switch((ret = fork())) {
+       case 0: /* Child */
+	 /* My job is as follows:
+	    1) Go through arguments for the following 3 purposes:
+	    A.  Build env variable nmap execution will read args from
+	    B.  Find spoof and realpath variables
+	    C.  If realpath var was not set, find an Nmap to use
+	    2) Exec the sucka!@#$! 
+	 */
+	 fakeargs[0] = nmappath[0] = '\0';
+	 strcpy(nmapargs, "NMAP_ARGS=");
+	 for(i=1; i < myargc; i++) {
+	   if (strcasecmp(myargv[i], "--spoof") == 0) {
+	     if (++i > myargc -1) {
+	       fatal("Bad arguments to f!");
+	     }	    
+	     strncpy(fakeargs, myargv[i], sizeof(fakeargs));
+	   } else if (strcasecmp(myargv[i], "--nmap_path") == 0) {
+	     if (++i > myargc -1) {
+	       fatal("Bad arguments to f!");
+	     }	    
+	     strncpy(nmappath, myargv[i], sizeof(nmappath));
+	   } else {
+	     if (strlen(nmapargs) + strlen(myargv[i]) + 1 < sizeof(nmapargs)) {
+	       strcat(nmapargs, " ");
+	       strcat(nmapargs, myargv[i]);
+	     } else fatal("Arguments too long.");
+	   }	 
+	 }
+	 /* First we stick our arguments into envp */
+	 if (o.debugging) {
+	   error("Adding to environment: %s", nmapargs);
+	 }
+	 if (putenv(nmapargs) == -1) {
+	   pfatal("Failed to add NMAP_ARGS to environment");
+	 }
+	 /* Now we figure out where the #@$#@ Nmap is located */
+	 if (!*nmappath) {
+	   if (stat(argv[0], &st) != -1 && !S_ISDIR(st.st_mode)) {
+	     strncpy(nmappath, argv[0], sizeof(nmappath));
+	   } else {
+	     nmappath[0] = '\0';
+	     /* Doh!  We must find it in path */
+	     if ((pptr = getenv("PATH"))) {
+	       strncpy(path, pptr, sizeof(path));
+	       pptr = path;
+	       while(pptr && *pptr) {
+		 endptr = strchr(pptr, ':');
+		 if (endptr) { 
+		   *endptr = '\0';
+		 }
+		 snprintf(nmappath, sizeof(nmappath), "%s/%s", pptr, nmapcalledas);
+		 if (stat(nmappath, &st) != -1)
+		   break;
+		 nmappath[0] = '\0';
+		 if (endptr) pptr = endptr + 1;
+		 else pptr = NULL;
+	       }
+	     }
+	   }
+	 }
+	 if (!*nmappath) {
+	   fatal("Could not find Nmap -- you must add --nmap_path argument");
+	 }       
 
-#ifdef ROUTETHROUGHTEST
-  /* Routethrough stuff -- kill later */
-  {
-    char *dev;
-    struct in_addr dest;
-    struct in_addr source;
-    if (!resolve(argv[1], &dest))
-      fatal("Failed to resolve %s\n", argv[1]);
-    dev = routethrough(&dest, &source);
-    if (dev)
-      log_write(LOG_STDOUT, "%s routes through device %s using IP address %s\n", argv[1], dev, inet_ntoa(source));
-    else log_write(LOG_STDOUT, "Could not determine which device to route through for %s!!!\n", argv[1]);
+	 /* We should be courtious and give Nmap reasonable signal defaults */
+	 signal(SIGINT, SIG_DFL);
+	 signal(SIGTERM, SIG_DFL);
+	 signal(SIGHUP, SIG_DFL);
+	 signal(SIGSEGV, SIG_DFL);
 
-    exit(0);
-  }
-#endif
+	 /* Now I must handle spoofery */
+	 if (*fakeargs) {
+	   fakeargc = arg_parse(fakeargs, &fakeargv);
+	   if (fakeargc < 1) {
+	     fatal("Bogus --spoof parameter");
+	   }
+	 } else {
+	   fakeargc = 1;
+	   fakeargv = (char **) malloc(sizeof(char *) * 2);
+	   fakeargv[0] = nmappath;
+	   fakeargv[1] = NULL;
+	 }
 
-  /* argv faking silliness */
-  fakeargv = (char **) safe_malloc(sizeof(char *) * (argc + 1));
-  for(i=0; i < argc; i++) {
-    fakeargv[i] = strdup(argv[i]);
-  }
-  fakeargv[argc] = NULL;
+	 if (o.debugging) error("About to exec %s", nmappath);
+	 /* Kill stdout & stderr */
+	 if (!o.debugging) {	
+	   fd = open("/dev/null", O_WRONLY);
+	   if (fd != -1) {
+	     dup2(fd, STDOUT_FILENO);
+	     dup2(fd, STDERR_FILENO);
+	   }
+	 }
 
-  emptystring[0] = '\0'; /* It wouldn't be an emptystring w/o this ;) */
+	 /* OK, I think we are finally ready for the big exec() */
+	 ret = execve(nmappath, fakeargv, environ);
+	 if (ret == -1) {
+	   pfatal("Could not exec %s", nmappath);
+	 }
+	 break;
+       case -1:
+	 gh_perror("fork() failed");
+	 break;
+       default: /* Parent */
+	 printf("[PID: %d]\n", ret);
+	 break;
+       }
+     } else {
+       printf("Unknown command (%s) -- press h <enter> for help\n", myargv[0]);
+       continue;
+     }
+     arg_parse_free(myargv);
+   }
+   return 0;
 
-  if (argc < 2 ) printusage(argv[0], -1);
+ }
 
-  /* OK, lets parse these args! */
-  optind = 1; /* so it can be called multiple times */
-  while((arg = getopt_long_only(argc,fakeargv,"b:D:d::e:Ffg:hIi:M:m:NnOo:P:p:qRrS:s:T:Vv", long_options, &option_index)) != EOF) {
-    switch(arg) {
-    case 0:
-      if (strcmp(long_options[option_index].name, "max_rtt_timeout") == 0) {
-	o.max_rtt_timeout = atoi(optarg);
-	if (o.max_rtt_timeout <= 5) {
-	  fatal("max_rtt_timeout is given in milliseconds and must be greater than 5");
-	}
-      } else if (strcmp(long_options[option_index].name, "min_rtt_timeout") == 0) {
-	o.min_rtt_timeout = atoi(optarg);
-	if (o.min_rtt_timeout > 50000) {
-	  fatal("Warning:  o.min_rtt_timeout is given in milliseconds, your value seems pretty large.");
-	}
-      } else if (strcmp(long_options[option_index].name, "host_timeout") == 0) {
-	o.host_timeout = strtoul(optarg, NULL, 10);
-	if (o.host_timeout <= 200) {
-	  fatal("host_timeout is given in milliseconds and must be greater than 200");
-	}
-      } else if (strcmp(long_options[option_index].name, "append_output") == 0) {
-	o.append_output = 1;
-      } else if (strcmp(long_options[option_index].name, "noninteractive") == 0) {
-	/* Do nothing */
-      } else if (strcmp(long_options[option_index].name, "scan_delay") == 0) {
-	o.scan_delay = atoi(optarg);
-	if (o.scan_delay <= 0) {
-	  fatal("scan_delay must be greater than 0");
-	}   
-	o.max_parallelism = 1;
-      } else if (strcmp(long_options[option_index].name, "randomize_hosts") == 0
-		 || strcmp(long_options[option_index].name, "rH") == 0) {
-	o.randomize_hosts = 1;
-	o.host_group_sz = 2048;
-      } else if (strcmp(long_options[option_index].name, "osscan_limit")  == 0) {
-	o.osscan_limit = 1;
-      } else if (strcmp(long_options[option_index].name, "osscan_guess")  == 0) {
-	o.osscan_guess = 1;
-      } else if (strcmp(long_options[option_index].name, "initial_rtt_timeout") == 0) {
-	o.initial_rtt_timeout = atoi(optarg);
-	if (o.initial_rtt_timeout <= 0) {
-	  fatal("scan_delay must be greater than 0");
-	}   
-      } else if (strcmp(long_options[option_index].name, "oN") == 0) {
-	normalfilename = optarg;
-      } else if (strcmp(long_options[option_index].name, "oM") == 0) {
-	machinefilename = optarg;
-      } else if (strcmp(long_options[option_index].name, "oS") == 0) {
-	kiddiefilename = optarg;
-      } else if (strcmp(long_options[option_index].name, "oH") == 0) {
-	fatal("HTML output is not yet supported");
-      } else if (strcmp(long_options[option_index].name, "iL") == 0) {
-	if (inputfd) {
-	  fatal("Only one input filename allowed");
-	}
-	if (!strcmp(optarg, "-")) {
-	  inputfd = stdin;
-	  log_write(LOG_STDOUT, "Reading target specifications from stdin\n");
-	} else {    
-	  inputfd = fopen(optarg, "r");
-	  if (!inputfd) {
-	    fatal("Failed to open input file %s for reading", optarg);
-	  }  
-	  log_write(LOG_STDOUT, "Reading target specifications from FILE: %s\n", optarg);
-	}
-      } else if (strcmp(long_options[option_index].name, "iR") == 0) {
-	o.generate_random_ips = 1;
-      } else if (strcmp(long_options[option_index].name, "vv") == 0) {
-	/* Compatability hack ... ugly */
-	o.verbose += 2;
-      } else {
-	fatal("Unknown long option (%s) given@#!$#$", long_options[option_index].name);
-      }
-      break;
-    case 'b': 
-      o.bouncescan++;
-      if (parse_bounce(&ftp, optarg) < 0 ) {
-	fprintf(stderr, "Your argument to -b is fucked up. Use the normal url style:  user:pass@server:port or just use server and use default anon login\n  Use -h for help\n");
-      }
-      break;
-    case 'D':
-      p = optarg;
-      do {    
-	q = strchr(p, ',');
-	if (q) *q = '\0';
-	if (!strcasecmp(p, "me")) {
-	  if (o.decoyturn != -1) 
-	    fatal("Can only use 'ME' as a decoy once.\n");
+ int nmap_main(int argc, char *argv[]) {
+   char *p, *q;
+   int i, arg;
+   size_t j, argvlen;
+   FILE *inputfd = NULL;
+   char *host_spec;
+   short fastscan=0, randomize=1, resolve_all=0;
+   short quashargv = 0;
+   int numhosts_scanned = 0;
+   char **host_exp_group;
+   int num_host_exp_groups = 0;
+   char *machinefilename = NULL, *kiddiefilename = NULL, *normalfilename = NULL;
+   struct hostgroup_state hstate;
+   int numhosts_up = 0;
+   int starttime;
+   unsigned short *ports = NULL;
+   char myname[MAXHOSTNAMELEN + 1];
+ #if (defined(IN_ADDR_DEEPSTRUCT) || defined( SOLARIS))
+   /* Note that struct in_addr in solaris is 3 levels deep just to store an
+    * unsigned int! */
+   struct ftpinfo ftp = { FTPUSER, FTPPASS, "",  { { { 0 } } } , 21, 0};
+ #else
+   struct ftpinfo ftp = { FTPUSER, FTPPASS, "", { 0 }, 21, 0};
+ #endif
+   struct hostent *target = NULL;
+   char **fakeargv;
+   struct hoststruct *currenths;
+   char emptystring[1];
+   int sourceaddrwarning = 0; /* Have we warned them yet about unguessable
+				 source addresses? */
+   time_t timep;
+   char mytime[128];
+   int option_index;
+   struct option long_options[] =
+   {
+     {"version", no_argument, 0, 'V'},
+     {"verbose", no_argument, 0, 'v'},
+     {"debug", optional_argument, 0, 'd'},
+     {"help", no_argument, 0, 'h'},
+     {"max_parallelism", required_argument, 0, 'M'},
+     {"timing", required_argument, 0, 'T'},
+     {"max_rtt_timeout", required_argument, 0, 0},
+     {"min_rtt_timeout", required_argument, 0, 0},
+     {"host_timeout", required_argument, 0, 0},
+     {"scan_delay", required_argument, 0, 0},
+     {"initial_rtt_timeout", required_argument, 0, 0},
+     {"oN", required_argument, 0, 0},
+     {"oM", required_argument, 0, 0},  
+     {"oS", required_argument, 0, 0},
+     {"oH", required_argument, 0, 0},  
+     {"iL", required_argument, 0, 0},  
+     {"iR", no_argument, 0, 0},  
+     {"initial_rtt_timeout", required_argument, 0, 0},
+     {"randomize_hosts", no_argument, 0, 0},
+     {"osscan_limit", no_argument, 0, 0}, /* skip OSScan if no open ports */
+     {"osscan_guess", no_argument, 0, 0}, /* More guessing flexability */
+     {"rH", no_argument, 0, 0},
+     {"vv", no_argument, 0, 0},
+     {"append_output", no_argument, 0, 0},
+     {"noninteractive", no_argument, 0, 0},
+     {0, 0, 0, 0}
+   };
+
+ #ifdef ROUTETHROUGHTEST
+   /* Routethrough stuff -- kill later */
+   {
+     char *dev;
+     struct in_addr dest;
+     struct in_addr source;
+     if (!resolve(argv[1], &dest))
+       fatal("Failed to resolve %s\n", argv[1]);
+     dev = routethrough(&dest, &source);
+     if (dev)
+       log_write(LOG_STDOUT, "%s routes through device %s using IP address %s\n", argv[1], dev, inet_ntoa(source));
+     else log_write(LOG_STDOUT, "Could not determine which device to route through for %s!!!\n", argv[1]);
+
+     exit(0);
+   }
+ #endif
+
+   /* argv faking silliness */
+   fakeargv = (char **) safe_malloc(sizeof(char *) * (argc + 1));
+   for(i=0; i < argc; i++) {
+     fakeargv[i] = strdup(argv[i]);
+   }
+   fakeargv[argc] = NULL;
+
+   emptystring[0] = '\0'; /* It wouldn't be an emptystring w/o this ;) */
+
+   if (argc < 2 ) printusage(argv[0], -1);
+
+   /* OK, lets parse these args! */
+   optind = 1; /* so it can be called multiple times */
+   while((arg = getopt_long_only(argc,fakeargv,"b:D:d::e:Ffg:hIi:M:m:NnOo:P:p:qRrS:s:T:Vv", long_options, &option_index)) != EOF) {
+     switch(arg) {
+     case 0:
+       if (strcmp(long_options[option_index].name, "max_rtt_timeout") == 0) {
+	 o.max_rtt_timeout = atoi(optarg);
+	 if (o.max_rtt_timeout <= 5) {
+	   fatal("max_rtt_timeout is given in milliseconds and must be greater than 5");
+	 }
+       } else if (strcmp(long_options[option_index].name, "min_rtt_timeout") == 0) {
+	 o.min_rtt_timeout = atoi(optarg);
+	 if (o.min_rtt_timeout > 50000) {
+	   fatal("Warning:  o.min_rtt_timeout is given in milliseconds, your value seems pretty large.");
+	 }
+       } else if (strcmp(long_options[option_index].name, "host_timeout") == 0) {
+	 o.host_timeout = strtoul(optarg, NULL, 10);
+	 if (o.host_timeout <= 200) {
+	   fatal("host_timeout is given in milliseconds and must be greater than 200");
+	 }
+       } else if (strcmp(long_options[option_index].name, "append_output") == 0) {
+	 o.append_output = 1;
+       } else if (strcmp(long_options[option_index].name, "noninteractive") == 0) {
+	 /* Do nothing */
+       } else if (strcmp(long_options[option_index].name, "scan_delay") == 0) {
+	 o.scan_delay = atoi(optarg);
+	 if (o.scan_delay <= 0) {
+	   fatal("scan_delay must be greater than 0");
+	 }   
+	 o.max_parallelism = 1;
+       } else if (strcmp(long_options[option_index].name, "randomize_hosts") == 0
+		  || strcmp(long_options[option_index].name, "rH") == 0) {
+	 o.randomize_hosts = 1;
+	 o.host_group_sz = 2048;
+       } else if (strcmp(long_options[option_index].name, "osscan_limit")  == 0) {
+	 o.osscan_limit = 1;
+       } else if (strcmp(long_options[option_index].name, "osscan_guess")  == 0) {
+	 o.osscan_guess = 1;
+       } else if (strcmp(long_options[option_index].name, "initial_rtt_timeout") == 0) {
+	 o.initial_rtt_timeout = atoi(optarg);
+	 if (o.initial_rtt_timeout <= 0) {
+	   fatal("scan_delay must be greater than 0");
+	 }   
+       } else if (strcmp(long_options[option_index].name, "oN") == 0) {
+	 normalfilename = optarg;
+       } else if (strcmp(long_options[option_index].name, "oM") == 0) {
+	 machinefilename = optarg;
+       } else if (strcmp(long_options[option_index].name, "oS") == 0) {
+	 kiddiefilename = optarg;
+       } else if (strcmp(long_options[option_index].name, "oH") == 0) {
+	 fatal("HTML output is not yet supported");
+       } else if (strcmp(long_options[option_index].name, "iL") == 0) {
+	 if (inputfd) {
+	   fatal("Only one input filename allowed");
+	 }
+	 if (!strcmp(optarg, "-")) {
+	   inputfd = stdin;
+	   log_write(LOG_STDOUT, "Reading target specifications from stdin\n");
+	 } else {    
+	   inputfd = fopen(optarg, "r");
+	   if (!inputfd) {
+	     fatal("Failed to open input file %s for reading", optarg);
+	   }  
+	   log_write(LOG_STDOUT, "Reading target specifications from FILE: %s\n", optarg);
+	 }
+       } else if (strcmp(long_options[option_index].name, "iR") == 0) {
+	 o.generate_random_ips = 1;
+       } else if (strcmp(long_options[option_index].name, "vv") == 0) {
+	 /* Compatability hack ... ugly */
+	 o.verbose += 2;
+       } else {
+	 fatal("Unknown long option (%s) given@#!$#$", long_options[option_index].name);
+       }
+       break;
+     case 'b': 
+       o.bouncescan++;
+       if (parse_bounce(&ftp, optarg) < 0 ) {
+	 fprintf(stderr, "Your argument to -b is fucked up. Use the normal url style:  user:pass@server:port or just use server and use default anon login\n  Use -h for help\n");
+       }
+       break;
+     case 'D':
+       p = optarg;
+       do {    
+	 q = strchr(p, ',');
+	 if (q) *q = '\0';
+	 if (!strcasecmp(p, "me")) {
+	   if (o.decoyturn != -1) 
+		    fatal("Can only use 'ME' as a decoy once.\n");
 	  o.decoyturn = o.numdecoys++;
 	} else {      
 	  if (o.numdecoys >= MAX_DECOYS -1)
@@ -1037,8 +1082,11 @@ int nmap_main(int argc, char *argv[]) {
 		  }
 		  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT, "\n");
 		}
-		if (o.scan_delay < 500) {
-		  log_write(LOG_NORMAL|LOG_SKID_NOXLT|LOG_STDOUT,"No exact OS matches for host (If you know what OS is running on it, see http://www.insecure.org/cgi-bin/nmap-submit.cgi).\nTCP/IP fingerprint:\n%s\n\n", mergeFPs(currenths->FPs, currenths->numFPs));
+		if (o.scan_delay < 500 && currenths->osscan_openport > 0 &&
+		    currenths->osscan_closedport > 0 ) {
+		  log_write(LOG_NORMAL|LOG_SKID_NOXLT|LOG_STDOUT,"No exact OS matches for host (If you know what OS is running on it, see http://www.insecure.org/cgi-bin/nmap-submit.cgi).\nTCP/IP fingerprint:\n%s\n\n", mergeFPs(currenths->FPs, currenths->numFPs, currenths->osscan_openport, currenths->osscan_closedport));
+		} else {
+		  log_write(LOG_NORMAL|LOG_SKID_NOXLT|LOG_STDOUT,"No exact OS matches for host (test conditions non-ideal).\nTCP/IP fingerprint:\n%s\n\n", mergeFPs(currenths->FPs, currenths->numFPs, currenths->osscan_openport, currenths->osscan_closedport));
 		}
 	      }
 	      
@@ -1048,14 +1096,17 @@ int nmap_main(int argc, char *argv[]) {
 	      }
 	      log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"\n");
 	    } else if (currenths->FPR.overall_results == OSSCAN_NOMATCHES) {
-	      if (o.scan_delay < 500) {
-		log_write(LOG_NORMAL|LOG_SKID_NOXLT|LOG_STDOUT,"No OS matches for host (If you know what OS is running on it, see http://www.insecure.org/cgi-bin/nmap-submit.cgi).\nTCP/IP fingerprint:\n%s\n\n", mergeFPs(currenths->FPs, currenths->numFPs));
+	      if (o.scan_delay < 500  && currenths->osscan_openport > 0 &&
+		  currenths->osscan_closedport > 0 ) {
+		log_write(LOG_NORMAL|LOG_SKID_NOXLT|LOG_STDOUT,"No OS matches for host (If you know what OS is running on it, see http://www.insecure.org/cgi-bin/nmap-submit.cgi).\nTCP/IP fingerprint:\n%s\n\n", mergeFPs(currenths->FPs, currenths->numFPs, currenths->osscan_openport, currenths->osscan_closedport));
+	      } else {
+		log_write(LOG_NORMAL|LOG_SKID_NOXLT|LOG_STDOUT,"No OS matches for host (test conditions non-ideal).\nTCP/IP fingerprint:\n%s\n\n", mergeFPs(currenths->FPs, currenths->numFPs, currenths->osscan_openport, currenths->osscan_closedport));
 	      }
 	    } else if (currenths->FPR.overall_results == OSSCAN_TOOMANYMATCHES)
 	      {
 		log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Too many fingerprints match this host for me to give an accurate OS guess\n");
 		if (o.debugging || o.verbose) {
-		  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"TCP/IP fingerprint:\n%s\n\n",  mergeFPs(currenths->FPs, currenths->numFPs));
+		  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"TCP/IP fingerprint:\n%s\n\n",  mergeFPs(currenths->FPs, currenths->numFPs, currenths->osscan_openport, currenths->osscan_closedport));
 		}
 	      } else { assert(0); }
 	      
@@ -1977,7 +2028,7 @@ void super_scan(struct hoststruct *target, unsigned short *portarray, stype scan
   if (o.debugging)
     log_write(LOG_STDOUT, "Packet capture filter: %s\n", filter);
   if (pcap_compile(pd, &fcode, filter, 0, netmask) < 0)
-    fatal("Error compiling our pcap filter: %s\n", pcap_geterr(pd));
+    fatal("Error compiling our pcap filter (\"%s\"): %s\n", filter, pcap_geterr(pd));
   if (pcap_setfilter(pd, &fcode) < 0 )
     fatal("Failed to set the pcap filter: %s\n", pcap_geterr(pd));
  
@@ -2562,7 +2613,7 @@ void pos_scan(struct hoststruct *target, unsigned short *portarray, stype scanty
     if (o.debugging)
       log_write(LOG_STDOUT, "Packet capture filter: %s\n", filter);
     if (pcap_compile(pd, &fcode, filter, 0, netmask) < 0)
-      fatal("Error compiling our pcap filter: %s\n", pcap_geterr(pd));
+      fatal("Error compiling our pcap filter (\"%s\"): %s\n", filter, pcap_geterr(pd));
     if (pcap_setfilter(pd, &fcode) < 0 )
       fatal("Failed to set the pcap filter: %s\n", pcap_geterr(pd));
     if (scantype == SYN_SCAN)

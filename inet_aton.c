@@ -1,7 +1,7 @@
 /***** THIS CODE IS FROM GLIBC 2.0.6 AND IS INCLUDED IN NMAP BECAUSE SOLARIS
        DOES NOT SEEM TO CONTAIN THE inet_aton(3C) FUNCTION (!).  IT
        IS VERY SLIGHTLY MODIFIED.  SPECIFICALLY, THIS COMES FROM
-       resolv/inet_addr.c --fyodor@dhp.com   ******/
+       resolv/inet_addr.c --fyodor@insecure.org   ******/
 
 #include "nmap.h"
 /*

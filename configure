@@ -2410,7 +2410,12 @@ fi
 
 
 
-subdirs="$libpcapdir nmapfe "
+if test $have_libpcap = yes ; then
+        subdirs=nmapfe
+else
+        subdirs="$libpcapdir nmapfe"
+fi
+subdirs="$subdirs "
 
 
 
@@ -2799,7 +2804,7 @@ if test "$no_recursion" != yes; then
     esac
   done
 
-  for ac_config_dir in $libpcapdir nmapfe ; do
+  for ac_config_dir in $subdirs ; do
 
     # Do not complain, so a configure script can configure whichever
     # parts of a large source tree are present.

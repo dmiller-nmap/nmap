@@ -1,5 +1,15 @@
 # Nmap Changelog
 
+-- I tried to install Nmap on yet another machine without lex/yacc or
+   flex/bison.  That was the last straw!  I am now shipping the
+   generated C files, which eliminates the lex/yacc requirement.
+
+-- Upgraded to the very latest Libpcap version ( the 9/3/00 CVS
+   snapshot ).  This version is from the tcpdump.org group rather than
+   the Lawrence Livermore crew.  The most important advantage is Linux
+   Socket Filter support (so you won't have that annoying syslog
+   message about Nmap using the obsolete SOCK_PACKET interface).
+
 -- Applied patch by Jay Freeman (saurik) <saurik@saurik.com> to make
    Nmap C++-clean (this was lot of tedious work!  Thanks!).  Note that
    Nmap still uses a normal C compiler by default, but Nmap

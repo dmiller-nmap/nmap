@@ -379,7 +379,14 @@ dnl AC_CHECK_FUNCS(gethostname gettimeofday select socket strdup strstr )
 
 dnl I need to configure nmapfe and libpcap here since the user might
 dnl have specified special options (such as --prefix )
-AC_CONFIG_SUBDIRS( $libpcapdir nmapfe )
+dnl
+dnl But I only have to configure libpcap if I am going to use it
+if test $have_libpcap = yes ; then
+        subdirs=nmapfe
+else
+        subdirs="$libpcapdir nmapfe"
+fi
+AC_CONFIG_SUBDIRS( $subdirs )
 
 dnl Configure libpcap if we need to since a lot of lamers don't
 dnl already have it installed ...
