@@ -18,9 +18,6 @@ Nmap only exists for Win32 because of their hard work.
 o You cannot scan yourself (localhost).  This is a Windows/WinPcap
    limitation which we haven't yet found a way to workaround.
 
-o Nmap does not work under Windows ME .  This is a WinPcap
-  limitation. [ Note -- I'm not sure this is still true ]
-
 o RAS connections (eg PPP, SLIP, etc) are not supported except under
    Windows 2000/XP.  This is a WinPcap limitation on NT and it isn't
    supported (yet) on Win98.  Ethernet should work fine on all

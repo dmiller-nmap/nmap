@@ -858,7 +858,7 @@ struct pseudo_udp_hdr {
 } *pseudo = (struct pseudo_udp_hdr *) ((char *)udp - 12) ;
 
 /* check that required fields are there and not too silly */
-if ( !victim || !sport || !dport || sd < 0) {
+if ( !victim || sd < 0) {
   fprintf(stderr, "send_udp_raw: One or more of your parameters suck!\n");
   free(packet);
   return -1;
@@ -1586,6 +1586,10 @@ int setTargetMACIfAvailable(Target *target, struct link_header *linkhdr,
 
   if (ip->ip_src.s_addr != target->v4host().s_addr)
     return 4;
+
+  /* Sometimes bogus MAC address still gets through, like during some localhost scans */
+  if (memcmp(linkhdr->header+6, "\0\0\0\0\0\0", 6) == 0)
+    return 5;
 
   target->TargetSockAddr(&ss, &sslen);
   if (IPisDirectlyConnected(&ss, sslen)) {

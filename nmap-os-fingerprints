@@ -1231,7 +1231,7 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=0%ULEN=134%DAT=E)
 
-Fingerprint Apple Mac OS X 10.3.0 - 10.3.2 (Panther)
+Fingerprint Apple Mac OS X 10.3.0 - 10.3.3
 Class Apple | Mac OS X | 10.3.X | general purpose
 TSeq(Class=TR%gcd=<6%IPID=I%TS=2HZ)
 T1(DF=Y%W=807A|C0B7|FFFF%ACK=S++%Flags=AS%Ops=MNWNNT)

@@ -241,6 +241,7 @@ int nmap_main(int argc, char *argv[]) {
     {"iL", required_argument, 0, 0},  
     {"iR", required_argument, 0, 0},
     {"sI", required_argument, 0, 0},  
+    {"source_port", required_argument, 0, 'g'},
     {"randomize_hosts", no_argument, 0, 0},
     {"osscan_limit", no_argument, 0, 0}, /* skip OSScan if no open ports */
     {"osscan_guess", no_argument, 0, 0}, /* More guessing flexability */
@@ -407,13 +408,11 @@ int nmap_main(int argc, char *argv[]) {
 	}
 	if (!strcmp(optarg, "-")) {
 	  inputfd = stdin;
-	  log_write(LOG_STDOUT, "Reading target specifications from stdin\n");
 	} else {    
 	  inputfd = fopen(optarg, "r");
 	  if (!inputfd) {
 	    fatal("Failed to open input file %s for reading", optarg);
 	  }  
-	  log_write(LOG_STDOUT, "Reading target specifications from FILE: %s\n", optarg);
 	}
       } else if (strcmp(long_options[option_index].name, "iR") == 0) {
 	o.generate_random_ips = 1;
@@ -498,13 +497,11 @@ int nmap_main(int argc, char *argv[]) {
       }
       if (!strcmp(optarg, "-")) {
 	inputfd = stdin;
-	log_write(LOG_STDOUT, "Reading target specifications from stdin\n");
       } else {    
 	inputfd = fopen(optarg, "r");
 	if (!inputfd) {
 	  fatal("Failed to open input file %s for reading", optarg);
 	}  
-	log_write(LOG_STDOUT, "Reading target specifications from FILE: %s\n", optarg);
       }
       break;  
     case 'M': 
@@ -517,7 +514,6 @@ int nmap_main(int argc, char *argv[]) {
     case 'm': 
       machinefilename = optarg;
       break;
-    case 'N': o.force++; break;
     case 'n': o.noresolve++; break;
     case 'O': 
       o.osscan++; 

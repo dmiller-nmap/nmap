@@ -353,32 +353,32 @@ microsoft.com is an example of such a network, and thus you
 should always use
 .B \-P0
 or
-.B \-PT80
+.B \-PS80
 when portscanning microsoft.com.  Note tht "ping" in this context may
 involve more than the traditional ICMP echo request packet.  Nmap
 supports many such probes, including arbitrary combinations of TCP,
 UDP, and ICMP probes.  By default, Nmap sends an ICMP echo request and
 a TCP ACK packet to port 80.
 .TP
-.B \-PT [portlist]
-Use TCP "ping" to determine what hosts are up.  Instead of
-sending ICMP echo request packets and waiting for a
-response, we spew out TCP ACK packets throughout the target
-network (or to a single machine) and then wait for responses
-to trickle back.  Hosts that are up should respond with a
-RST.  This option preserves the efficiency of only scanning
-hosts that are up while still allowing you to scan
-networks/hosts that block ping packets.  For non root users,
-we use connect().  To set the destination ports of the probe
-packets use -PT<port1>[,port2][...].  The default port is 80, since
-this port is often not filtered out.  Note that this option now
-accepts multiple, comma-separated port numbers.
+.B \-PA [portlist]
+Use TCP ACK "ping" to determine what hosts are up.  Instead of sending
+ICMP echo request packets and waiting for a response, we spew out TCP
+ACK packets throughout the target network (or to a single machine) and
+then wait for responses to trickle back.  Hosts that are up should
+respond with a RST.  This option preserves the efficiency of only
+scanning hosts that are up while still allowing you to scan
+networks/hosts that block ping packets.  For non root UNIX users, we
+use connect() and thus a SYN is actually being sent.  To set the
+destination ports of the probe packets use -PA<port1>[,port2][...].
+The default port is 80, since this port is often not filtered out.
+Note that this option now accepts multiple, comma-separated port
+numbers.
 .TP
 .B \-PS [portlist]
 This option uses SYN (connection request) packets instead of
 ACK packets for root users.  Hosts that are up should
 respond with a RST (or, rarely, a SYN|ACK).  You can set the
-destination ports in the same manner as \-PT above.
+destination ports in the same manner as \-PA above.
 .TP
 .B \-PU [portlist]
 This option sends UDP probes to the specified hosts, expecting an ICMP
@@ -408,14 +408,14 @@ except uses a netmask request (ICMP type 17).
 .TP
 .B \-PB
 This is the default ping type.  It uses both the ACK (
-.B \-PT
+.B \-PA
 ) and ICMP echo request (
 .B \-PE
 ) sweeps in parallel.  This way you can get firewalls that filter
 either one (but not both).  The TCP probe destination port can be set
-in the same manner as with \-PT above.  Note that this flag is now deprecated
+in the same manner as with \-PA above.  Note that this flag is now deprecated
 as pingtype flags can now be used in combination.  So you should use both "PE"
-and "PT" to achieve this same effect.
+and "PA" (or rely on the default behavior) to achieve this same effect.
 .TP
 .B \-O
 This option activates remote host identification via TCP/IP
@@ -692,19 +692,19 @@ Tells nmap what interface to send and receive packets on.
 Nmap should be able to detect this but it will tell you if
 it cannot.
 .TP
-.B \-g <portnumber>
-Sets the source port number used in scans.  Many naive
-firewall and packet filter installations make an exception
-in their ruleset to allow DNS (53) or FTP-DATA (20) packets
-to come through and establish a connection.  Obviously this
-completely subverts the security advantages of the firewall
-since intruders can just masquerade as FTP or DNS by
-modifying their source port.  Obviously for a UDP scan you
-should try 53 first and TCP scans should try 20 before 53.
-Note that this is only a request -- nmap will honor it only
-if and when it is able to.  For example, you can't do TCP
-ISN sampling all from one host:port to one host:port, so
-nmap changes the source port even if you used -g.
+.B \--source_port <portnumber>
+Sets the source port number used in scans.  Many naive firewall and
+packet filter installations make an exception in their ruleset to
+allow DNS (53) or FTP-DATA (20) packets to come through and establish
+a connection.  Obviously this completely subverts the security
+advantages of the firewall since intruders can just masquerade as FTP
+or DNS by modifying their source port.  Obviously for a UDP scan you
+should try 53 first and TCP scans should try 20 before 53.  Note that
+this is only a request -- nmap will honor it only if and when it is
+able to.  For example, you can't do TCP ISN sampling all from one
+host:port to one host:port, so nmap changes the source port even if
+you used this option.  This is an alias for the shorter, but harder to
+remember, -g option.
 .Sp
 Be aware that there is a small performance penalty on some
 scans for using this option, because I sometimes store

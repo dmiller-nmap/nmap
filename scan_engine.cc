@@ -382,6 +382,13 @@ static int get_connect_results(Target *target,
 	  posportupdate(target, current, NULL, trynum, scan, ss, CONNECT_SCAN, PORT_OPEN, pil, csi);
 #endif
 	  break;
+	case EACCES:
+	  /* Apparently this can be caused by dest unreachable admin
+	     prohibited messages sent back, at least from IPv6
+	     hosts */
+	  posportupdate(target, current, NULL, trynum, scan, ss, CONNECT_SCAN, PORT_FIREWALLED, pil, csi);
+       break;
+
 	case ECONNREFUSED:
 	  posportupdate(target, current, NULL, trynum, scan, ss, CONNECT_SCAN, PORT_CLOSED, pil, csi);
 	  break;
