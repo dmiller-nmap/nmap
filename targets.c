@@ -863,6 +863,8 @@ while(pt->block_unaccounted > 0) {
       }
     } else if (response.ip.ip_p == IPPROTO_TCP) {
       tcp = (struct tcphdr *) (((char *) ip) + 4 * ip->ip_hl);
+      if (!(tcp->th_flags & TH_RST) && ((tcp->th_flags & (TH_SYN|TH_ACK)) != (TH_SYN|TH_ACK)))
+	continue;
       newport = ntohs(tcp->th_sport);
       tmpl = ntohl(tcp->th_ack);
       /* Grab the sequence nr */

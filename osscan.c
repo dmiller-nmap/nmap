@@ -4,11 +4,12 @@ extern struct ops o;
 
 FingerPrint *get_fingerprint(struct hoststruct *target, struct seq_info *si) {
 FingerPrint *FP = NULL, *FPtmp = NULL;
-FingerPrint *FPtests[8];
+FingerPrint *FPtests[9];
 struct AVal *seq_AVs;
 int last;
 struct ip *ip;
 struct tcphdr *tcp;
+struct icmp *icmp;
 struct timeval t1,t2;
 int i;
 struct hostent *myhostent = NULL;
@@ -34,6 +35,7 @@ char err0r[PCAP_ERRBUF_SIZE];
 char filter[512];
 double seq_inc_sum = 0;
 unsigned long  seq_avg_inc = 0;
+struct udpprobeinfo *upi = NULL;
 unsigned long seq_gcd = 1;
 unsigned long seq_diffs[NUM_SEQ_SAMPLES];
 
@@ -42,7 +44,7 @@ bzero(FPtests, sizeof(FPtests));
 
 /* Init our raw socket */
  if ((rawsd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) < 0 )
-   pfatal("socket trobles in super_scan");
+   pfatal("socket trobles in get_fingerprint");
  unblock_socket(rawsd);
  
  /* Do we have a correct source address? */
@@ -57,10 +59,10 @@ bzero(FPtests, sizeof(FPtests));
  }
  /* Now for the pcap opening nonsense ... */
  /* Note that the snaplen is 152 = 64 byte max IPhdr + 24 byte max link_layer
-  * header + 64 byte max TCP header.
+  * header + 64 byte max TCP header.  Had to up it for UDP test
   */
 
-if (!(pd = pcap_open_live(target->device, 152,  (o.spoofsource)? 1 : 0, (target->to.timeout + 500)/ 1000, err0r)))
+if (!(pd = pcap_open_live(target->device, 650,  (o.spoofsource)? 1 : 0, (target->to.timeout + 500)/ 1000, err0r)))
   fatal("pcap_open_live: %s", err0r);
 
 if (o.debugging)
@@ -256,7 +258,7 @@ if (o.verbose && openport != -1)
  current_port = o.magic_port + NUM_SEQ_SAMPLES +1;
  
  /* Now lets do the NULL packet technique */
- testsleft = (openport == -1)? 3 : 6;
+ testsleft = (openport == -1)? 4 : 7;
  FPtmp = NULL;
  /* bzero(FPtests, sizeof(FPtests));*/
  tries = 0;
@@ -300,6 +302,9 @@ if (o.verbose && openport != -1)
        send_tcp_raw(rawsd, &o.decoys[decoy], &target->host, current_port +5, 
 		    closedport, sequence_base, 0,TH_FIN|TH_PUSH|TH_URG, 0,"\003\003\012\001\002\004\001\011\010\012\077\077\077\077\000\000\000\000\000\000" , 20, NULL, 0);
      }
+   if (!FPtests[8]) {
+     upi = send_closedudp_probe(rawsd, &target->host, o.magic_port, closedport);
+   }
    gettimeofday(&t1, NULL);
    timeout = 0;
    while(( ip = (struct ip*) readip_pcap(pd, &bytes)) && !timeout) {
@@ -323,13 +328,36 @@ if (o.verbose && openport != -1)
        FPtests[testno] = safe_malloc(sizeof(FingerPrint));
        bzero(FPtests[testno], sizeof(FingerPrint));
        FPtests[testno]->results = fingerprint_iptcppacket(ip, 255, sequence_base);
-       FPtests[testno]->name = (testno == 2)? "T2" : (testno == 3)? "T3" : (testno == 4)? "T4" : (testno == 5)? "T5" : (testno == 6)? "T6" : (testno == 7)? "T7" : "T8";
+       FPtests[testno]->name = (testno == 2)? "T2" : (testno == 3)? "T3" : (testno == 4)? "T4" : (testno == 5)? "T5" : (testno == 6)? "T6" : (testno == 7)? "T7" : "PU";
+     } else if (ip->ip_p == IPPROTO_ICMP) {
+       icmp = ((struct icmp *)  (((char *) ip) + 4 * ip->ip_hl));
+       /* It must be a destination port unreachable */
+       if (icmp->icmp_type != 3 || icmp->icmp_code != 3) {
+	 /* This ain't no stinking port unreachable! */
+	 continue;
+       }
+       if (bytes < ntohs(ip->ip_len)) {
+	 error("We only got %d bytes out of %d on our ICMP port unreachable packet, skipping", bytes, ntohs(ip->ip_len));
+	 continue;
+       }
+       FPtests[8] = safe_malloc(sizeof(FingerPrint));
+       bzero(FPtests[8], sizeof(FingerPrint));
+       FPtests[8]->results = fingerprint_portunreach(ip, upi);
+       if (FPtests[8]->results) {       
+	 FPtests[8]->name = "PU";
+	 printf("We got an ICMP pack!!!\n");
+	 testsleft--;
+	 newcatches++;
+       } else {
+	 free(FPtests[8]);
+	 FPtests[8] = NULL;
+       }
      }
    }     
    if (o.debugging > 1) printf("TMP3\n");
  } while ( testsleft > 0 && (tries++ < 5 && (newcatches || tries == 1)));
  
-for(i=0; i < 8; i++) {
+for(i=0; i < 9; i++) {
   if (i > 1 && !FPtests[i] && ((openport != -1) || i > 4)) {
     /* We create a Resp (response) attribute with value of N (no) because
        it is important here to note whether responses were or were not 
@@ -341,12 +369,12 @@ for(i=0; i < 8; i++) {
     strcpy(seq_AVs->value, "N");
     seq_AVs->next = NULL;
     FPtests[i]->results = seq_AVs;
-    FPtests[i]->name =  (i == 2)? "T2" : (i == 3)? "T3" : (i == 4)? "T4" : (i == 5)? "T5" : (i == 6)? "T6" : (i == 7)? "T7" : "T8";
+    FPtests[i]->name =  (i == 2)? "T2" : (i == 3)? "T3" : (i == 4)? "T4" : (i == 5)? "T5" : (i == 6)? "T6" : (i == 7)? "T7" : "PU";
   }
 }
  last = -1;
  FP = NULL;
- for(i=0; i < 8 ; i++) {
+ for(i=0; i < 9 ; i++) {
    if (!FPtests[i]) continue; 
    if (!FP) FP = FPtests[i];
    if (last > -1) {
@@ -830,4 +858,250 @@ return AVs;
 }
 
 
+struct udpprobeinfo *send_closedudp_probe(int sd, struct in_addr *victim,
+unsigned short sport, unsigned short dport) {
 
+static struct udpprobeinfo upi;
+static int myttl = 0;
+static unsigned char patternbyte = 0;
+static unsigned short id = 0; 
+char packet[328]; /* 20 IP hdr + 8 UDP hdr + 300 data */
+struct ip *ip = (struct ip *) packet;
+udphdr_bsd *udp = (udphdr_bsd *) (packet + sizeof(struct ip));
+struct in_addr *source;
+int datalen = 300;
+char *data = packet + 28;
+int res;
+struct sockaddr_in sock;
+int decoy;
+struct pseudo_udp_hdr {
+  struct in_addr source;
+  struct in_addr dest;        
+  char zero;
+  char proto;        
+  unsigned short length;
+} *pseudo = (struct pseudo_udp_hdr *) ((char *)udp - 12) ;
+
+if (!patternbyte) patternbyte = (rand() % 60) + 65;
+memset(data, patternbyte, datalen);
+
+while(!id) id = rand();
+
+/* check that required fields are there and not too silly */
+if ( !victim || !sport || !dport || sd < 0) {
+  fprintf(stderr, "send_udp_raw: One or more of your parameters suck!\n");
+  return NULL;
+}
+
+if (!myttl)  myttl = (time(NULL) % 14) + 51;
+/* It was a tough decision whether to do this here for every packet
+   or let the calling function deal with it.  In the end I grudgingly decided
+   to do it here and potentially waste a couple microseconds... */
+sethdrinclude(sd); 
+
+ for(decoy=0; decoy < o.numdecoys; decoy++) {
+   source = &o.decoys[decoy];
+
+   /*do we even have to fill out this damn thing?  This is a raw packet, 
+     after all */
+   sock.sin_family = AF_INET;
+   sock.sin_port = htons(dport);
+   sock.sin_addr.s_addr = victim->s_addr;
+
+
+   bzero((char *) packet, sizeof(struct ip) + sizeof(udphdr_bsd));
+
+   udp->uh_sport = htons(sport);
+   udp->uh_dport = htons(dport);
+   udp->uh_ulen = htons(8 + datalen);
+
+   /* Now the psuedo header for checksuming */
+   pseudo->source.s_addr = source->s_addr;
+   pseudo->dest.s_addr = victim->s_addr;
+   pseudo->proto = IPPROTO_UDP;
+   pseudo->length = htons(sizeof(udphdr_bsd) + datalen);
+
+   /* OK, now we should be able to compute a valid checksum */
+   udp->uh_sum = in_cksum((unsigned short *)pseudo, 20 /* pseudo + UDP headers */ + datalen);
+   /* Goodbye, pseudo header! */
+   bzero(pseudo, 12);
+
+   /* Now for the ip header */
+   ip->ip_v = 4;
+   ip->ip_hl = 5;
+   ip->ip_len = BSDFIX(sizeof(struct ip) + sizeof(udphdr_bsd) + datalen);
+   ip->ip_id = id;
+   ip->ip_ttl = myttl;
+   ip->ip_p = IPPROTO_UDP;
+   ip->ip_src.s_addr = source->s_addr;
+   ip->ip_dst.s_addr= victim->s_addr;
+#if HAVE_IP_IP_SUM
+   ip->ip_sum = in_cksum((unsigned short *)ip, sizeof(struct ip));
+#endif
+
+   /* OK, now if this is the real she-bang (ie not a decoy) then
+      we stick all the inph0 in our upi */
+   if (decoy == o.decoyturn) {   
+     upi.iptl = 28 + datalen;
+     upi.ipid = id;
+     upi.ipck = ip->ip_sum;
+     upi.sport = sport;
+     upi.dport = dport;
+     upi.udpck = udp->uh_sum;
+     upi.udplen = 8 + datalen;
+     upi.patternbyte = patternbyte;
+     upi.target.s_addr = ip->ip_dst.s_addr;
+   }
+   if (TCPIP_DEBUGGING > 1) {
+     printf("Raw UDP packet creation completed!  Here it is:\n");
+     readudppacket(packet,1);
+   }
+   if (TCPIP_DEBUGGING > 1)     
+     printf("\nTrying sendto(%d , packet, %d, 0 , %s , %d)\n",
+	    sd, BSDUFIX(ip->ip_len), inet_ntoa(*victim),
+	 sizeof(struct sockaddr_in));
+
+   if ((res = sendto(sd, packet, BSDUFIX(ip->ip_len), 0,
+		     (struct sockaddr *)&sock, (int) sizeof(struct sockaddr_in))) == -1)
+     {
+       perror("sendto in send_udp_raw");
+       free(packet);
+       return NULL;
+     }
+
+   if (TCPIP_DEBUGGING > 1) printf("successfully sent %d bytes of raw_tcp!\n", res);
+ }
+
+return &upi;
+
+}
+
+struct AVal *fingerprint_portunreach(struct ip *ip, struct udpprobeinfo *upi) {
+struct icmp *icmp;
+struct ip *ip2;
+int numtests = 9;
+unsigned short checksum;
+struct udphdr_bsd *udp;
+struct AVal *AVs;
+int i;
+int current_testno = 0;
+char *datastart, *dataend;
+
+/* The very first thing we do is make sure this is the correct
+   response */
+if (ip->ip_p != IPPROTO_ICMP) {
+  error("fingerprint_portunreach handed a non-ICMP packet!");
+  return NULL;
+}
+
+if (ip->ip_src.s_addr != upi->target.s_addr)
+  return NULL;  /* Not the person we sent to */
+
+icmp = ((struct icmp *)  (((char *) ip) + 4 * ip->ip_hl));
+if (icmp->icmp_type != 3 || icmp->icmp_code != 3)
+  return NULL; /* Not a port unreachable */
+
+ip2 = (struct ip*) ((char *)icmp + 8);
+udp = (struct udphdr_bsd *) ((char *)ip2 + 20);
+
+/* The ports better match as well ... */
+if (ntohs(udp->uh_sport) != upi->sport || ntohs(udp->uh_dport) != upi->dport) {
+  return NULL;
+}
+
+/* Create the Avals */
+AVs = safe_malloc(numtests * sizeof(struct AVal));
+/* Link them together */
+for(i=0; i < numtests - 1; i++)
+  AVs[i].next = &AVs[i+1];
+
+/* First let us do an easy one, Don't fragment */
+AVs[current_testno].attribute = "DF";
+  if(ip->ip_off && 0x4000) {
+    strcpy(AVs[current_testno].value,"Y");
+  } else strcpy(AVs[current_testno].value, "N");
+
+current_testno++;
+
+/* Now lets do TOS of the response (note, I've never seen this be
+   useful */
+AVs[current_testno].attribute = "TOS";
+sprintf(AVs[current_testno].value, "%hX", ip->ip_tos);
+
+current_testno++;
+
+/* Now we look at the IP datagram length that was returned, some
+   machines send more of the original packet back than others */
+AVs[current_testno].attribute = "IPLEN";
+sprintf(AVs[current_testno].value, "%hX", ntohs(ip->ip_len));
+
+current_testno++;
+
+/* OK, lets check the returned IP length, some systems @$@ this
+   up */
+AVs[current_testno].attribute = "RIPTL";
+sprintf(AVs[current_testno].value, "%hX", ntohs(ip2->ip_len));
+
+current_testno++;
+
+/* Now lets see how they treated the ID we sent ... */
+AVs[current_testno].attribute = "RID";
+if (ntohs(ip2->ip_id) == 0)
+  sprintf(AVs[current_testno].value, "0");
+else if (ip2->ip_id == upi->ipid)
+  sprintf(AVs[current_testno].value, "E"); /* The "expected" value */
+else sprintf(AVs[current_testno].value, "F"); /* They fucked it up */
+
+current_testno++;
+
+/* Let us see if the IP checksum we got back computes */
+AVs[current_testno].attribute = "RIPCK";
+if (ntohs(ip2->ip_sum) == 0)
+  sprintf(AVs[current_testno].value, "0");
+else {
+  checksum = ip2->ip_sum;
+  ip2->ip_sum = 0;
+  if (in_cksum((unsigned short *)ip2, 20) == checksum) {
+    sprintf(AVs[current_testno].value, "E"); /* The "expected" value */
+  } else {
+    sprintf(AVs[current_testno].value, "F"); /* They fucked it up */
+  }
+  ip2->ip_sum = checksum;
+}
+
+current_testno++;
+
+/* UDP checksum */
+AVs[current_testno].attribute = "UCK";
+if (udp->uh_sum == 0)
+  sprintf(AVs[current_testno].value, "0");
+else if (udp->uh_sum == upi->udpck)
+  sprintf(AVs[current_testno].value, "E"); /* The "expected" value */
+else sprintf(AVs[current_testno].value, "F"); /* They fucked it up */
+
+current_testno++;
+
+/* UDP length ... */
+AVs[current_testno].attribute = "ULEN";
+sprintf(AVs[current_testno].value, "%hX", ntohs(udp->uh_ulen));
+
+current_testno++;
+
+/* Finally we ensure the data is OK */
+datastart = ((char *)udp) + 8;
+dataend = (char *)  ip + ntohs(ip->ip_len);
+
+while(datastart < dataend) {
+  if (*datastart != upi->patternbyte) break;
+  datastart++;
+}
+AVs[current_testno].attribute = "DAT";
+if (datastart < dataend)
+  sprintf(AVs[current_testno].value, "F"); /* They fucked it up */
+else  
+  sprintf(AVs[current_testno].value, "E");
+
+AVs[current_testno].next = NULL;
+
+return AVs;
+}

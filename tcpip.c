@@ -76,7 +76,6 @@ int resolve(char *hostname, struct in_addr *ip) {
   return 0;
 }
 
-
 int send_tcp_raw( int sd, struct in_addr *source, 
 		  struct in_addr *victim, unsigned short sport, 
 		  unsigned short dport, unsigned long seq,
@@ -343,6 +342,13 @@ struct sockaddr_in sock;
 char myname[MAXHOSTNAMELEN + 1];
 struct hostent *myhostent = NULL;
 int source_malloced = 0;
+struct pseudo_udp_hdr {
+  struct in_addr source;
+  struct in_addr dest;        
+  char zero;
+  char proto;        
+  unsigned short length;
+} *pseudo = (struct pseudo_udp_hdr *) ((char *)udp - 12) ;
 
 /* check that required fields are there and not too silly */
 if ( !victim || !sport || !dport || sd < 0) {
@@ -385,10 +391,23 @@ bzero((char *) packet, sizeof(struct ip) + sizeof(udphdr_bsd));
 udp->uh_sport = htons(sport);
 udp->uh_dport = htons(dport);
 udp->uh_ulen = htons(8 + datalen);
-/*udp->uh_sum = 0;*/
+
+ /* We should probably copy the data over too */
+if (data)
+  memcpy(packet + sizeof(struct ip) + sizeof(udphdr_bsd), data, datalen);
+
+/* Now the psuedo header for checksuming */
+pseudo->source.s_addr = source->s_addr;
+pseudo->dest.s_addr = victim->s_addr;
+pseudo->proto = IPPROTO_UDP;
+pseudo->length = htons(sizeof(udphdr_bsd) + datalen);
+
+/* OK, now we should be able to compute a valid checksum */
+udp->uh_sum = in_cksum((unsigned short *)pseudo, 20 /* pseudo + UDP headers */ + datalen);
+/* Goodbye, pseudo header! */
+bzero(pseudo, 12);
 
 /* Now for the ip header */
-
 ip->ip_v = 4;
 ip->ip_hl = 5;
 ip->ip_len = BSDFIX(sizeof(struct ip) + sizeof(udphdr_bsd) + datalen);
@@ -400,10 +419,6 @@ ip->ip_dst.s_addr= victim->s_addr;
 #if HAVE_IP_IP_SUM
 ip->ip_sum = in_cksum((unsigned short *)ip, sizeof(struct ip));
 #endif
-
- /* We should probably copy the data over too */
-if (data)
-  memcpy(packet + sizeof(struct ip) + sizeof(udphdr_bsd), data, datalen);
 
 if (TCPIP_DEBUGGING > 1) {
   printf("Raw UDP packet creation completed!  Here it is:\n");
@@ -447,7 +462,7 @@ int source_malloced = 0;
 
 /* check that required fields are there and not too silly */
 if ( !victim || sd < 0) {
-  fprintf(stderr, "send_udp_raw: One or more of your parameters suck!\n");
+  fprintf(stderr, "send_ip_raw: One or more of your parameters suck!\n");
   free(packet);
   return -1;
 }

@@ -26,6 +26,18 @@ struct portinfolist {
    struct portinfo *testinglist;
 };
 
+struct udpprobeinfo {
+  unsigned short iptl;
+  unsigned short ipid;
+  unsigned short ipck;
+  unsigned short sport;
+  unsigned short dport;
+  unsigned short udpck;
+  unsigned short udplen;
+  unsigned char patternbyte;
+  struct in_addr target;
+};
+
 struct connectsockinfo {
   fd_set fds_read;
   fd_set fds_write;
