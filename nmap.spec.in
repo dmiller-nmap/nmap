@@ -76,6 +76,8 @@ rm -rf $RPM_BUILD_ROOT
 %{prefix}/bin/nmapfe
 %{prefix}/bin/xnmap
 %{prefix}/share/gnome/apps/Utilities/nmapfe.desktop
+%{prefix}/man/man1/xnmap.1.gz
+%{prefix}/man/man1/nmapfe.1.gz
 
 %changelog
 * Thu Dec 30 1999 Fyodor <fyodor@insecure.org>

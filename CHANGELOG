@@ -1,5 +1,11 @@
 # Nmap Changelog
 
+-- Fixed a commenting issue that could cause trouble for non-GNU compilers
+   (found by Jan-Frode Myklebust (janfrode at parallab.uib.no))
+
+
+** Version 2.52
+
 -- Added very simple man pages for xnmap/nmapfe (lack of man pages for
    these was noticed by LaMont Jones (lamont (at) hp.com), the Debian
    Nmap package maintainer, based on bug report by Adrian Bunk (bunk
@@ -13,6 +19,9 @@
 
 -- Fixed some typos found by Thomas Klausner ( wiz (at)
    danbala.ifoer.tuwien.ac.at )
+
+-- Updated nmap-rpc with new entries found in the latest version of Eilon
+   Gishri's rpc list.
 
 ** Version 2.51
 

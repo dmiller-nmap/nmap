@@ -4938,7 +4938,7 @@ T7(DF=Y%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=Y%TOS=0%IPLEN=70%RIPTL=148%RID=E%RIPCK=E%UCK=F|E%ULEN=134%DAT=E)
 
 # Contributed by elliotb@flash.net
-Fingerprint Sun Solaris 8 early acces beta (5.8) Beta_Refresh February 2000
+Fingerprint Sun Solaris 8 early acces beta through actual release
 TSeq(Class=RI%gcd=<6%SI=<7AD1E&>1392)
 T1(DF=Y%W=60DA%ACK=S++%Flags=AS%Ops=NNTNWM)
 T2(Resp=N)

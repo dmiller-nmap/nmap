@@ -77,7 +77,7 @@ int target_struct_get(struct targets *t, struct in_addr *sin) {
       t->current[0] = t->last[0]; t->current[1] = t->last[1];
       t->current[2] = t->last[2]; t->current[3] = t->last[3] + 1;
     } else {
-      assert(t->nleft > 1); // There must be at least one more IP left */
+      assert(t->nleft > 1); /* There must be at least one more IP left */
     }
   }
   t->nleft--;

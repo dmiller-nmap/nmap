@@ -1777,6 +1777,7 @@ listen            2766/tcp   # System V listener port
 www-dev           2784/tcp   # world wide web - development
 www-dev           2784/udp   # world wide web - development
 ppp               3000/tcp   # User-level ppp daemon
+nessusd           3001/tcp   # Nessus Security Scanner (www.nessus.org) Daemon
 deslogin          3005/tcp   # encrypted symmetric telnet/login
 deslogind         3006/tcp   # 
 cfs               3049/tcp   # cryptographic file system (nfs) (proposed)
@@ -2004,6 +2005,7 @@ wnn6_Tw           22321/tcp  # Wnn6 (Taiwanse input)
 wnn6_DS           26208/tcp  # Wnn6 (Dserver)
 Trinoo_Bcast      27444/udp  # Trinoo distributed attack tool Master -> Bcast Daemon communication
 Trinoo_Master     27665/tcp  # Trinoo distributed attack tool Master server control port
+Quake3Server      27960/udp  # Quake 3 Arena Server
 Trinoo_Register   31335/udp  # Trinoo distributed attack tool Bcast Daemon registration port
 BackOrifice       31337/udp  # cDc Back Orifice remote admin tool
 Elite             31337/tcp  # Sometimes interesting stuff can be found here
