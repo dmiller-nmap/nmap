@@ -223,7 +223,11 @@ struct ppkt {
   unsigned short seq;
 } pingpkt;
 struct {
+#ifdef __FreeBSD__
+  struct ip ip;
+#else
   struct iphdr ip;
+#endif
   unsigned char type;
   unsigned char code;
   unsigned short checksum;
@@ -287,9 +291,15 @@ for(;;) {
       if  ( !response.type && !response.code && response.identifier == pid) {
 	gettimeofday(&end, NULL);
 	hostno = response.sequence % num_hosts;
+#ifdef __FreeBSD__
+	hostbatch[hostno].source_ip.s_addr = response.ip.ip_dst.s_addr;
+	if (o.debugging) printf("We got a ping packet back from %s: id = %d seq = %d checksum = %d\n", inet_ntoa(*(struct in_addr *)(&response.ip.ip_src.s_addr)), response.identifier, response.sequence, response.checksum);
+	if (hostbatch[hostno].host.s_addr == response.ip.ip_src.s_addr) {
+#else
 	hostbatch[hostno].source_ip.s_addr = response.ip.daddr;
 	if (o.debugging) printf("We got a ping packet back from %s: id = %d seq = %d checksum = %d\n", inet_ntoa(*(struct in_addr *)(&response.ip.saddr)), response.identifier, response.sequence, response.checksum);
 	if (hostbatch[hostno].host.s_addr == response.ip.saddr) {
+#endif
 	  hostbatch[hostno].rtt = (end.tv_sec - time[response.sequence].tv_sec) * 1e6
 	    + end.tv_usec - time[response.sequence].tv_usec;
 	  if (!(hostbatch[hostno].flags & HOST_UP)) {	  
@@ -300,18 +310,31 @@ for(;;) {
 	}
 	else  hostbatch[hostno].wierd_responses++;
       }
+#ifdef __FreeBSD__
+      else if (response.type == 3 && ((struct ppkt *) (response.crap + 4 * response.ip.ip_hl))->id == pid) {
+	ushorttmp = ((struct ppkt *) (response.crap + 4 * response.ip.ip_hl))->seq;
+#else
       else if (response.type == 3 && ((struct ppkt *) (response.crap + 4 * response.ip.ihl))->id == pid) {
 	ushorttmp = ((struct ppkt *) (response.crap + 4 * response.ip.ihl))->seq;
+#endif
 	if (o.debugging) printf("Got destination unreachable for %s\n", inet_ntoa(hostbatch[ushorttmp % num_hosts].host));
 	hostbatch[ushorttmp % num_hosts].flags |= HOST_DOWN;
 	num_down++;
 	if (num_responses + num_down == num_hosts) goto alldone; /* GOTO!  Hell yeah! */
       }
+#ifdef __FreeBSD__
+      else if (response.type == 4 && ((struct ppkt *) (response.crap + 4 * response.ip.ip_hl))->id == pid)  {      
+#else
       else if (response.type == 4 && ((struct ppkt *) (response.crap + 4 * response.ip.ihl))->id == pid)  {      
+#endif
 	if (o.debugging) printf("Got ICMP source quench\n");
 	usleep(15000);
       }
+#ifdef __FreeBSD__
+      else if (o.debugging > 1 && ((struct ppkt *) (response.crap + 4 * response.ip.ip_hl))->id == pid ) {
+#else
       else if (o.debugging > 1 && ((struct ppkt *) (response.crap + 4 * response.ip.ihl))->id == pid ) {
+#endif
 	printf("Got ICMP message type %d code %d\n", response.type, response.code);
       }
     }

@@ -7,6 +7,9 @@
 #include <string.h>
 #include <ctype.h>
 #include <sys/types.h>
+#ifdef __FreeBSD__
+#include <sys/param.h> /* Defines MAXHOSTNAMELEN */
+#endif
 #include <rpc/types.h>
 #include <sys/socket.h>
 #include <sys/socket.h> 
@@ -19,6 +22,9 @@
 #include <fcntl.h>
 #include <signal.h> 
 #include <signal.h>
+#ifdef __FreeBSD__
+#include <netinet/in_systm.h> /* defines n_long needed for netinet/ip.h */
+#endif
 #include <netinet/ip.h> 
 #include <netinet/ip_icmp.h> 
 #include <arpa/inet.h>
@@ -31,7 +37,13 @@
 #include <netinet/tcp.h>          /*#include <netinet/ip_tcp.h>*/
 #undef __FAVOR_BSD
 #include <sys/resource.h>
+#ifdef __FreeBSD__
+#include <net/if_arp.h> /* defines struct arphdr needed for if_ether.h */
+#include <net/if.h>     /* defines struct ifnet needed for if_ether.h */
+#include <netinet/if_ether.h> /* in a different place */
+#else
 #include <linux/if_ether.h>
+#endif
 /************************DEFINES************************************/
 
 /* User configurable #defines: */
