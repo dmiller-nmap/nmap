@@ -236,6 +236,7 @@ int delta;
 
 unsigned int elapsed_time;
 int res;
+int sd_blocking = 1;
 int num_down = 0;
 int bytes;
 struct sockaddr_in sock;
@@ -281,6 +282,7 @@ if (sizeof(struct ppkt) != 8)
 sd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
 if (sd < 0) pfatal("Socket trouble in massping"); 
 unblock_socket(sd);
+sd_blocking = 0;
 
 /* if to timeout structure hasn't been initialized yet */
 if (!to.srtt && !to.rttvar && !to.timeout) {
@@ -323,6 +325,7 @@ gettimeofday(&start, NULL);
 	 pingpkt.checksum = in_cksum((unsigned short *) ping, 8);	 
 	 sock.sin_addr = hostbatch[hostnum].host;
 	 gettimeofday(&time[pingpkt.seq], NULL);
+         if (!sd_blocking) { block_socket(sd); sd_blocking = 1; }
 	 for(decoy=0; decoy < o.numdecoys; decoy++) {
 	   if (decoy == o.decoyturn) {
 	     if ((res = sendto(sd,(char *) ping,8,0,(struct sockaddr *)&sock,
@@ -344,6 +347,7 @@ gettimeofday(&start, NULL);
        s_timeout.tv_sec = to.timeout / 1000000;
        s_timeout.tv_usec = to.timeout % 1000000;
        res = select(sd+1, &fd_r, NULL, &fd_x, &s_timeout);
+       if (sd_blocking) { unblock_socket(sd); sd_blocking = 0; }
        while ((bytes = read(sd,&response,sizeof(response))) > 0) {
 	 /* if it is our response */
 	 if  ( !response.type && !response.code && response.identifier == id) {
