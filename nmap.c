@@ -1957,7 +1957,7 @@ if (o.debugging || o.verbose)
 	    } else { continue; }
 	  } else if (ip->ip_p == IPPROTO_ICMP) {
 	    icmp = (struct icmp *) ((char *)ip + sizeof(struct ip));
-	    ip2 = (struct ip *) (((char *) ip) + 4 * ip->ip_hl + 4 +  sizeof(struct icmp));
+	    ip2 = (struct ip *) (((char *) ip) + 4 * ip->ip_hl + 8);
 	    data = (unsigned short *) ((char *)ip2+ 4 * ip2->ip_hl);
 	    printf("Caught ICMP packet:\n");
 	    hdump(icmp, ntohs(ip->ip_len) - sizeof(struct ip));
