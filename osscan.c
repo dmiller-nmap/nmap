@@ -80,7 +80,7 @@ struct icmp *icmp;
 struct timeval t1,t2;
 int i;
 struct hostent *myhostent = NULL;
-pcap_t *pd;
+pcap_t *pd = NULL;
 char myname[513];
 int rawsd;
 int tries = 0;
@@ -155,13 +155,13 @@ if (o.debugging)
 
  p = strdup(inet_ntoa(target->host));
 
-snprintf(filter, sizeof(filter), "(icmp and dst host %s) or (tcp and src host %s and dst host %s)", inet_ntoa(target->source_ip), p, inet_ntoa(target->source_ip));
+snprintf(filter, sizeof(filter), "dst host %s and (icmp or (tcp and src host %s))", inet_ntoa(target->source_ip), p);
  free(p);
  
  set_pcap_filter(target, pd, flt_icmptcp, filter);
  target->osscan_performed = 1; /* Let Nmap know that we did try an OS scan */
 
- /* Lets find an open port to used */
+ /* Lets find an open port to use */
  openport = (unsigned long) -1;
  target->osscan_openport = -1;
  target->osscan_closedport = -1;
@@ -324,7 +324,7 @@ if (o.verbose && openport != (unsigned long) -1)
  si->responses = 0;
  timeout = 0; 
  gettimeofday(&t1,NULL);
- /* First we send our initial NUM_SEQ_SAMPLES SYN packets  */
+ /* Next we send our initial NUM_SEQ_SAMPLES SYN packets  */
  if (openport != (unsigned long) -1) {
    seq_packets_sent = 0;
    while (seq_packets_sent < NUM_SEQ_SAMPLES) {
