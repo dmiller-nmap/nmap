@@ -1565,8 +1565,7 @@ do {
 	  if (bytes < (4 * ip->ip_hl) + 4)
 	    continue;
 	  tcp = (struct tcphdr *) (((char *)ip) + (4 * ip->ip_hl));
-	  if (ip->ip_src.s_addr == target->host.s_addr && tcp->th_sport != magic_port_NBO
-	      && tcp->th_dport == magic_port_NBO) {
+	  if (ip->ip_src.s_addr == target->host.s_addr && (o.magic_port < 1024 || tcp->th_sport != magic_port_NBO ) && tcp->th_dport == magic_port_NBO) {
 	    
 	    packets_out--;
 	    if (tcp->th_flags & TH_RST) {
