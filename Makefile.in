@@ -10,7 +10,7 @@ libdir = @libdir@
 CC = @CC@
 CCOPT = 
 LIBPCAPDIR = @libpcapdir@
-INCLS = -I.
+INCLS = -I. -I$(LIBPCAPDIR)
 VERSION = 1.60-Beta2
 DEFS = @DEFS@ -DVERSION=\"$(VERSION)\" -DLIBDIR=\"$(libdir)\"
 #CFLAGS = @CFLAGS@ $(CCOPT) $(DEFS) $(INCLS)
