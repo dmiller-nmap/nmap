@@ -297,7 +297,7 @@ struct scan_lists *getfastports(int tcpscan, int udpscan) {
   if (tcpscan) 
     ports->tcp_ports[tcpportindex] = 0;
   if (udpscan) 
-    ports->tcp_ports[udpportindex] = 0;
+    ports->udp_ports[udpportindex] = 0;
 return ports;
 }
 
