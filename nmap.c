@@ -315,17 +315,20 @@ o.decoys[o.decoyturn] = currenths->source_ip;
       if (o.synscan) syn_scan(currenths, ports);
       
       if (o.finscan||o.xmasscan||o.nullscan) super_scan(currenths, ports, FIN_SCAN);
+      if (o.xmasscan) super_scan(currenths, ports, XMAS_SCAN);
+      if (o.nullscan) super_scan(currenths, ports, NULL_SCAN);
+      if (o.udpscan) super_scan(currenths, ports, UDP_SCAN);
       
       if (bouncescan) {
 	if (ftp.sd <= 0) ftp_anon_connect(&ftp);
 	if (ftp.sd > 0) bounce_scan(currenths, ports, &ftp);
 	  }
-      if (o.udpscan) {
+      /*      if (o.udpscan) {
 	if (!o.isr00t || o.lamerscan) 
 	  lamer_udp_scan(currenths, ports);
 
 	else udp_scan(currenths, ports);
-      }
+	}*/
     
       if (!currenths->ports && !o.pingscan) {
 	nmap_log("No ports open for host %s (%s)\n", currenths->name,

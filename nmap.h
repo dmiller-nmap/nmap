@@ -314,6 +314,9 @@ int listen_icmp(int icmpsock, unsigned short outports[],
 		unsigned short numtries[], int *num_out,
 		struct in_addr target, portlist *ports);
 void massping(struct hoststruct *hostbatch, int numhosts, int pingtimeout);
+int send_udp_raw( int sd, struct in_addr *source, 
+		  struct in_addr *victim, unsigned short sport, 
+		  unsigned short dport, char *data, unsigned short datalen);
 void masstcpping(struct hoststruct *hostbatch, int num_hosts, int pingtimeout);
 /* general helper functions */
 void hdump(unsigned char *packet, int len);

@@ -266,6 +266,108 @@ printf("\n");
 return 0;
 }
 
+
+
+int send_udp_raw( int sd, struct in_addr *source, 
+		  struct in_addr *victim, unsigned short sport, 
+		  unsigned short dport, char *data, unsigned short datalen) 
+{
+
+char *packet = safe_malloc(sizeof(struct ip) + sizeof(struct udphdr) + datalen);
+struct ip *ip = (struct ip *) packet;
+struct udphdr *udp = (struct udphdr *) (packet + sizeof(struct ip));
+static int myttl = 0;
+
+int res;
+struct sockaddr_in sock;
+char myname[MAXHOSTNAMELEN + 1];
+struct hostent *myhostent = NULL;
+int source_malloced = 0;
+
+/* check that required fields are there and not too silly */
+if ( !victim || !sport || !dport || sd < 0) {
+  fprintf(stderr, "send_tcp_raw: One or more of your parameters suck!\n");
+  return -1;
+}
+
+if (!myttl)  myttl = (time(NULL) % 14) + 51;
+
+/* It was a tough decision whether to do this here for every packet
+   or let the calling function deal with it.  In the end I grudgingly decided
+   to do it here and potentially waste a couple microseconds... */
+sethdrinclude(sd); 
+
+/* if they didn't give a source address, fill in our first address */
+if (!source) {
+  source_malloced = 1;
+  source = safe_malloc(sizeof(struct in_addr));
+  if (gethostname(myname, MAXHOSTNAMELEN) || 
+      !(myhostent = gethostbyname(myname)))
+    fatal("Your system is messed up.\n"); 
+  memcpy(source, myhostent->h_addr_list[0], sizeof(struct in_addr));
+#if ( TCPIP_DEBUGGING )
+    printf("We skillfully deduced that your address is %s\n", 
+	   inet_ntoa(*source));
+#endif
+}
+
+
+/*do we even have to fill out this damn thing?  This is a raw packet, 
+  after all */
+sock.sin_family = AF_INET;
+sock.sin_port = htons(dport);
+sock.sin_addr.s_addr = victim->s_addr;
+
+
+bzero((char *) packet, sizeof(struct ip) + sizeof(struct udphdr));
+
+udp->uh_sport = htons(sport);
+udp->uh_dport = htons(dport);
+udp->uh_ulen = BSDFIX(datalen);
+/*udp->uh_sum = 0;*/
+
+/* Now for the ip header */
+
+bzero(packet, sizeof(struct ip)); 
+ip->ip_v = 4;
+ip->ip_hl = 5;
+ip->ip_len = BSDFIX(sizeof(struct ip) + sizeof(struct tcphdr) + datalen);
+ip->ip_id = rand();
+ip->ip_ttl = myttl;
+ip->ip_p = IPPROTO_UDP;
+ip->ip_src.s_addr = source->s_addr;
+ip->ip_dst.s_addr= victim->s_addr;
+#if HAVE_IP_IP_SUM
+ip->ip_sum = in_cksum((unsigned short *)ip, sizeof(struct ip));
+#endif
+
+ /* We should probably copy the data over too */
+if (data)
+  memcpy(packet + sizeof(struct ip) + sizeof(struct udphdr), data, datalen);
+
+if (TCPIP_DEBUGGING > 1) {
+printf("Raw UDP packet creation completed!  Here it is:\n");
+/*readudppacket(packet,BSDUFIX(ip->ip_len));*/
+}
+if (TCPIP_DEBUGGING > 1) 
+
+  printf("\nTrying sendto(%d , packet, %d, 0 , %s , %d)\n",
+	 sd, BSDUFIX(ip->ip_len), inet_ntoa(*victim),
+	 sizeof(struct sockaddr_in));
+if ((res = sendto(sd, packet, BSDUFIX(ip->ip_len), 0,
+		  (struct sockaddr *)&sock, (int) sizeof(struct sockaddr_in))) == -1)
+  {
+    perror("sendto in send_tcp_raw");
+    if (source_malloced) free(source);
+    return -1;
+  }
+if (TCPIP_DEBUGGING > 1) printf("successfully sent %d bytes of raw_tcp!\n", res);
+
+if (source_malloced) free(source);
+return res;
+}
+
+
 __inline__ int unblock_socket(int sd) {
 int options;
 /*Unblock our socket to prevent recvfrom from blocking forever

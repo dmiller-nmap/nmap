@@ -76,6 +76,10 @@ void *realloc();
 #include <netinet/tcp.h>          /*#include <netinet/ip_tcp.h>*/
 #define NETINET_TCP_H
 #endif
+#ifndef NETINET_UDP_H
+#include <netinet/udp.h>
+#define NETINET_UDP_H
+#endif
 #include <unistd.h>
 #include <fcntl.h>
 #ifndef NET_IF_H  /* why the HELL does OpenBSD not do this? */
