@@ -46,7 +46,7 @@ struct pingtech {
 };
 
 
-int get_ping_results(int sd, pcap_t *pd, struct hoststruct *hostbatch, struct timeval *time,  struct pingtune *pt, struct timeout_info *to, int id, struct pingtech *ptech);
+int get_ping_results(int sd, pcap_t *pd, struct hoststruct *hostbatch, struct timeval *time,  struct pingtune *pt, struct timeout_info *to, int id, struct pingtech *ptech, unsigned short *ports);
 int hostupdate(struct hoststruct *hostbatch, struct hoststruct *target, 
 	       int newstate, int dotimeout, int trynum, 
 	       struct timeout_info *to, struct timeval *sent, 
@@ -63,7 +63,8 @@ int get_connecttcpscan_results(struct tcpqueryinfo *tqi,
 			       struct timeval *time, struct pingtune *pt, 
 			       struct timeout_info *to);
 char *readhoststate(int state);
-void massping(struct hoststruct *hostbatch, int numhosts);
+void massping(struct hoststruct *hostbatch, int numhosts, 
+	      unsigned short *ports);
 /* Fills up the hostgroup_state structure passed in (which must point
    to valid memory).  Lookahead is the number of hosts that can be
    checked (such as ping scanned) in advance.  Randomize causes each
@@ -80,7 +81,9 @@ int target_struct_get(struct targets *t, struct in_addr *sin);
 /* Undoes the previous target_struct_get operation */
 void target_struct_return(struct targets *t);
 void hoststructfry(struct hoststruct *hostbatch, int nelem);
-struct hoststruct *nexthost(struct hostgroup_state *hs);
+/* Ports is the list of ports the user asked to be scanned (0 terminated),
+   you can just pass NULL (it is only a stupid optimization that needs it) */
+struct hoststruct *nexthost(struct hostgroup_state *hs, unsigned short *ports);
 #endif /* TARGETS_H */
 
 

@@ -122,7 +122,8 @@ void hoststructfry(struct hoststruct *hostbatch, int nelem) {
   return;
 }
 
-struct hoststruct *nexthost(struct hostgroup_state *hs) {
+struct hoststruct *nexthost(struct hostgroup_state *hs, 
+			    unsigned short *ports) {
 int hidx;
 char *device;
 int i;
@@ -205,8 +206,8 @@ if (hs->randomize) {
 }
 
 /* Finally we do the mass ping (if required) */
- if ((o.pingtype == PINGTYPE_ICMP) || (hs->hostbatch[0].host.s_addr && (o.pingtype != PINGTYPE_NONE))) 
-   massping(hs->hostbatch, hs->current_batch_sz);
+ if ((o.pingtype == PINGTYPE_ICMP) || ((hs->hostbatch[0].host.s_addr || !o.isr00t) && (o.pingtype != PINGTYPE_NONE))) 
+   massping(hs->hostbatch, hs->current_batch_sz, ports);
  else for(i=0; i < hs->current_batch_sz; i++)  {
    hs->hostbatch[i].to.srtt = -1;
    hs->hostbatch[i].to.rttvar = -1;
@@ -341,7 +342,8 @@ else {
 }
 
 
-void massping(struct hoststruct *hostbatch, int num_hosts) {
+void massping(struct hoststruct *hostbatch, int num_hosts, unsigned short 
+	      *ports) {
 static struct timeout_info to = { 0,0,0};
 static int gsize = LOOKAHEAD;
 int hostnum;
@@ -538,7 +540,8 @@ gettimeofday(&start, NULL);
 	 unblock_socket(sd); sd_blocking = 0; 
        }
        if(ptech.icmpscan || ptech.rawicmpscan || ptech.rawtcpscan) {       
-	 get_ping_results(sd, pd, hostbatch, time, &pt, &to, id, &ptech);
+	 get_ping_results(sd, pd, hostbatch, time, &pt, &to, id, &ptech, 
+			  ports);
        }
        if (ptech.connecttcpscan) {
 	 get_connecttcpscan_results(&tqi, hostbatch, time, &pt, &to);
@@ -854,7 +857,7 @@ return 0;
 }
 
 
-int get_ping_results(int sd, pcap_t *pd, struct hoststruct *hostbatch, struct timeval *time,  struct pingtune *pt, struct timeout_info *to, int id, struct pingtech *ptech) {
+int get_ping_results(int sd, pcap_t *pd, struct hoststruct *hostbatch, struct timeval *time,  struct pingtune *pt, struct timeout_info *to, int id, struct pingtech *ptech, unsigned short *ports) {
 fd_set fd_r, fd_x;
 struct timeval myto, tmpto, start, end;
 int bytes, res;
@@ -874,12 +877,15 @@ int dotimeout = 1;
 int newstate = HOST_DOWN;
 int foundsomething;
 unsigned short newport;
+int newportstate; /* Hack so that in some specific cases we can determine the 
+		     state of a port and even skip the real scan */
 int trynum = -999999;
 int pingtype = -999999;
 int timeout = 0;
 unsigned short sequence = 65534;
 unsigned long tmpl;
 unsigned short sportbase;
+
 
 FD_ZERO(&fd_r);
 FD_ZERO(&fd_x);
@@ -898,6 +904,9 @@ if (o.magic_port_set) sportbase = o.magic_port;
 else sportbase = o.magic_port + 20;
 
 gettimeofday(&start, NULL);
+newport = 0;
+newportstate = PORT_UNKNOWN;
+
 while(pt->block_unaccounted > 0 && !timeout) {
   tmpto = myto;
 
@@ -929,7 +938,7 @@ while(pt->block_unaccounted > 0 && !timeout) {
 
   foundsomething = 0;
   dotimeout = 0;
-
+  
   /* First check if it is ICMP or TCP */
   if (ip->ip_p == IPPROTO_ICMP) {    
     /* if it is our response */
@@ -976,26 +985,71 @@ while(pt->block_unaccounted > 0 && !timeout) {
 	continue;
       }
       
-      ping2 = (struct ppkt *) ((char *)ip2 + ip2->ip_hl * 4);
-      if (ping2->id != id) {
-	if (o.debugging) {	
-	  error("Illegal id %d found, should be %d (icmp type/code %d/%d)", ping2->id, id, ping->type, ping->code);
-	  if (o.debugging > 1)
-	    lamont_hdump((char *)ip, bytes);
+      if (ip2->ip_p == IPPROTO_ICMP) {
+	/* The response was based on a ping packet we sent */
+	if (!ptech->icmpscan) {
+	  if (o.debugging)
+	    error("Got ICMP error referring to ICMP msg which we did not send");
+	  continue;
 	}
-	continue;
+	ping2 = (struct ppkt *) ((char *)ip2 + ip2->ip_hl * 4);
+	if (ping2->id != id) {
+	  if (o.debugging) {	
+	    error("Illegal id %d found, should be %d (icmp type/code %d/%d)", ping2->id, id, ping->type, ping->code);
+	    if (o.debugging > 1)
+	      lamont_hdump((char *)ip, bytes);
+	  }
+	  continue;
 	}
 	sequence = ping2->seq;
 	hostnum = sequence / pt->max_tries;
 	trynum = sequence % pt->max_tries;
 
-	if (hostnum > pt->group_end) {
+      } else if (ip2->ip_p == IPPROTO_TCP) {
+	/* The response was based our TCP probe */
+	if (!ptech->rawtcpscan) {
 	  if (o.debugging)
-	    error("Bogus ping sequence: %d leads to bogus hostnum %d (icmp type/code %d/%d", sequence, hostnum, ping->type, ping->code);
+	    error("Got ICMP error referring to TCP msg which we did not send");
 	  continue;
 	}
-    
-	if (ping->type == 3) {
+	tcp = (struct tcphdr *) (((char *) ip2) + 4 * ip2->ip_hl);
+	/* No need to check size here, the "+8" check a ways up takes care 
+	   of it */
+	newport = ntohs(tcp->th_dport);
+	
+	trynum = ntohs(tcp->th_sport) - sportbase;
+	if (trynum >= pt->max_tries) {
+	  if (o.debugging)
+	    error("Bogus trynum %d", trynum);
+	  continue;
+	}
+
+	/* Grab the sequence nr */
+	tmpl = ntohl(tcp->th_seq);
+	
+	if ((tmpl & 7) == 3) {
+	  sequence = (tmpl >> 3) & 0xffff;
+	  hostnum = sequence / pt->max_tries;
+	  trynum = sequence % pt->max_tries;
+	} else {
+	  if (o.debugging) {
+	    error("Whacked seq number from %s", inet_ntoa(ip->ip_src));
+	  }
+	  continue;	
+	}	
+      } else {
+	if (o.debugging)
+	  error("Got ICMP response to a packet which was not ICMP or TCP");
+	continue;
+      }
+
+      if (hostnum > pt->group_end) {
+	if (o.debugging)
+	  error("Bogus ping sequence: %d leads to bogus hostnum %d (icmp type/code %d/%d", sequence, hostnum, ping->type, ping->code);
+	continue;
+      }
+        
+      if (ping->type == 3) {
 	if (o.debugging) 
 	  log_write(LOG_STDOUT, "Got destination unreachable for %s\n", inet_ntoa(hostbatch[hostnum].host));
 	/* Since this gives an idea of how long it takes to get an answer,
@@ -1005,6 +1059,7 @@ while(pt->block_unaccounted > 0 && !timeout) {
 	foundsomething = 1;
 	pingtype = PINGTYPE_ICMP;
 	newstate = HOST_DOWN;
+	newportstate = PORT_FIREWALLED;
       } else if (ping->type == 11) {
 	if (o.debugging) 
 	  log_write(LOG_STDOUT, "Got Time Exceeded for %s\n", inet_ntoa(hostbatch[hostnum].host));
@@ -1023,6 +1078,9 @@ while(pt->block_unaccounted > 0 && !timeout) {
     }
   } else if (ip->ip_p == IPPROTO_TCP) 
     {
+      if (!ptech->rawtcpscan) {
+	continue;
+      }
       tcp = (struct tcphdr *) (((char *) ip) + 4 * ip->ip_hl);
       if (!(tcp->th_flags & TH_RST) && ((tcp->th_flags & (TH_SYN|TH_ACK)) != (TH_SYN|TH_ACK)))
 	continue;
@@ -1073,12 +1131,27 @@ while(pt->block_unaccounted > 0 && !timeout) {
       if (pt->discardtimesbefore < sequence)
 	dotimeout = 1;
       newstate = HOST_UP;
+
+      if (o.pingtype & PINGTYPE_TCP_USE_SYN) {
+	if (tcp->th_flags & TH_RST) {
+	  newportstate = PORT_CLOSED;
+	} else if ((tcp->th_flags & (TH_SYN|TH_ACK)) == (TH_SYN|TH_ACK)) {
+	  newportstate = PORT_OPEN;
+	}
+      }
     } else if (o.debugging) {
       error("Found whacked packet protocol %d in get_ping_results", ip->ip_p);
     }
     if (foundsomething) {  
       hostupdate(hostbatch, &hostbatch[hostnum], newstate, dotimeout, 
 		 trynum, to, &time[sequence], pt, NULL,pingtype);
+    }
+    if (newport && newportstate != PORT_UNKNOWN) {
+      /* OK, we can add it, but that is only appropriate if this is one
+	 of the ports the user ASKED for */
+      if (ports && o.numports == 1 && ports[0] == newport)
+	addport(&(hostbatch[hostnum].ports), newport, IPPROTO_TCP, NULL, 
+		newportstate);
     }
 }
 return 0;

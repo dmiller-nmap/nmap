@@ -177,6 +177,10 @@ void *realloc();
 #define MAX_TIMEOUTS MAX_SOCKETS   /* How many timed out connection attempts 
 				      in a row before we decide the host is 
 				      dead? */
+#define DEFAULT_TCP_PROBE_PORT 80 /* The port TCP probes go to if unspecified
+				      by user -- uber hackers change this
+				      to 113 */
+
 #define MAX_DECOYS 128 /* How many decoys are allowed? */
 
 #ifndef MAX_RTT_TIMEOUT
@@ -335,6 +339,7 @@ void options_init();
 void nmap_log(char *fmt, ...);
 void nmap_machine_log(char *fmt, ...);
 char *statenum2str(int state);
+char *scantype2str(stype scantype);
 void sigdie(int signo);
 void reaper(int signo);
 char *seqreport(struct seq_info *seq);

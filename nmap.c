@@ -97,7 +97,7 @@ int main(int argc, char *argv[], char *envp[]) {
     return nmap_main(argc, argv);
   }
   /*  printf("\nStarting nmap V. %s by fyodor@insecure.org ( www.insecure.org/nmap/ )\n", VERSION);*/
-  printf("\nStarting %s V. %s by fyodor@insecure.org ( %s )\n", NMAP_NAME, NMAP_VERSION, NMAP_URL);
+  printf("\nStarting %s V. %s ( %s )\n", NMAP_NAME, NMAP_VERSION, NMAP_URL);
 
   printf("Welcome to Interactive Mode -- press h <enter> for help\n");
   
@@ -552,6 +552,7 @@ int nmap_main(int argc, char *argv[]) {
 	case 'B':  fatal("No scan type 'B', did you mean bounce scan (-b)?");
 	  break;
 	case 'F':  o.finscan = 1; break;
+	case 'L':  o.listscan = 1; o.pingtype = PINGTYPE_NONE; break;
 	case 'M':  o.maimonscan = 1; break;
 	case 'N':  o.nullscan = 1; break;
 	case 'O':  o.ipprotscan = 1;break;
@@ -606,7 +607,7 @@ int nmap_main(int argc, char *argv[]) {
     signal(SIGSEGV, sigdie); 
 
   if (!o.interactivemode)
-    log_write(LOG_STDOUT|LOG_SKID, "\nStarting %s V. %s by fyodor@insecure.org ( %s )\n", NMAP_NAME, NMAP_VERSION, NMAP_URL);
+    log_write(LOG_STDOUT|LOG_SKID, "\nStarting %s V. %s ( %s )\n", NMAP_NAME, NMAP_VERSION, NMAP_URL);
 
   if (o.pingtype == PINGTYPE_UNKNOWN) {
     if (o.isr00t) o.pingtype = PINGTYPE_TCP|PINGTYPE_TCP_USE_ACK|PINGTYPE_ICMP;
@@ -624,7 +625,7 @@ int nmap_main(int argc, char *argv[]) {
 
   /* Now we check the option sanity */
   /* Insure that at least one scantype is selected */
-  if (!o.connectscan && !o.udpscan && !o.synscan && !o.windowscan && !o.finscan && !o.maimonscan &&  !o.nullscan && !o.xmasscan && !o.ackscan && !o.bouncescan && !o.pingscan && !o.ipprotscan) {
+  if (!o.connectscan && !o.udpscan && !o.synscan && !o.windowscan && !o.finscan && !o.maimonscan &&  !o.nullscan && !o.xmasscan && !o.ackscan && !o.bouncescan && !o.pingscan && !o.ipprotscan && !o.listscan) {
     o.connectscan++;
     if (o.verbose) error("No tcp,udp, or ICMP scantype specified, assuming vanilla tcp connect() scan. Use -sP if you really don't want to portscan (and just want to see what hosts are up).");
   }
@@ -645,11 +646,11 @@ int nmap_main(int argc, char *argv[]) {
     ports = getfastports(o.windowscan|o.synscan|o.connectscan|o.fragscan|o.finscan|o.maimonscan|o.bouncescan|o.nullscan|o.xmasscan|o.ackscan,o.udpscan);
   }
 
-  if (o.pingscan && ports) {
-    fatal("You cannot use -F (fast scan) or -p (explicit port selection) with PING scan");
+  if ((o.pingscan || o.listscan) && ports) {
+    fatal("You cannot use -F (fast scan) or -p (explicit port selection) with PING scan or LIST scan");
   }
 
-  if (o.pingscan && fastscan) {
+  if ((o.pingscan || o.listscan) && fastscan) {
     fatal("The fast scan (-F) is incompatible with ping scan");
   }
 
@@ -664,12 +665,17 @@ int nmap_main(int argc, char *argv[]) {
   }
 
   /* Default dest port for tcp probe */
-  if (!o.tcp_probe_port) o.tcp_probe_port = 80;
+  if (!o.tcp_probe_port) o.tcp_probe_port = DEFAULT_TCP_PROBE_PORT;
 
 
-  if (o.pingscan && (o.connectscan || o.udpscan || o.windowscan || o.synscan || o.finscan || o.maimonscan ||  o.nullscan || o.xmasscan || o.ackscan || o.bouncescan || o.ipprotscan)) {
+  if (o.pingscan && (o.connectscan || o.udpscan || o.windowscan || o.synscan || o.finscan || o.maimonscan ||  o.nullscan || o.xmasscan || o.ackscan || o.bouncescan || o.ipprotscan || o.listscan)) {
     fatal("Ping scan is not valid with any other scan types (the other ones all include a ping scan");
   }
+
+ if (o.listscan && (o.connectscan || o.udpscan || o.windowscan || o.synscan || o.finscan || o.maimonscan ||  o.nullscan || o.xmasscan || o.ackscan || o.bouncescan || o.pingscan)) {
+    fatal("List scan is not valid with any other scan types (it just lists the hosts that WOULD be scanned)");
+  }
+
 
   /* We start with stuff users should not do if they are not root */
   if (!o.isr00t) {
@@ -849,9 +855,9 @@ int nmap_main(int argc, char *argv[]) {
     hostgroup_state_init(&hstate, o.host_group_sz, o.randomize_hosts, 
 			 host_exp_group, num_host_exp_groups);
   
-    while((currenths = nexthost(&hstate)) && currenths->host.s_addr) {
+    while((currenths = nexthost(&hstate, ports))) {
       numhosts_scanned++;
-      if (currenths->flags & HOST_UP) 
+      if (currenths->flags & HOST_UP && !o.listscan) 
 	numhosts_up++;
 
       /* Set timeout info */
@@ -878,7 +884,10 @@ int nmap_main(int argc, char *argv[]) {
       }
 
       if (o.source) memcpy(&currenths->source_ip, o.source, sizeof(struct in_addr));
-      if (!o.pingscan) {
+      if (o.listscan) {
+	log_write(LOG_STDOUT|LOG_NORMAL|LOG_SKID, "Host %s (%s) not scanned\n", currenths->name, inet_ntoa(currenths->host));
+	log_write(LOG_MACHINE, "Host: %s (%s)\tStatus: Unknown\n", inet_ntoa(currenths->host), currenths->name);
+      } else if (!o.pingscan) {
 	if (o.pingtype != PINGTYPE_NONE && o.verbose && 
 	    !currenths->wierd_responses) {
 	  if (currenths->flags & HOST_UP) 
@@ -925,7 +934,7 @@ int nmap_main(int argc, char *argv[]) {
 	 NOPE -- gone again */
     
       if (currenths->flags & HOST_UP /*&& !currenths->wierd_responses*/ &&
-	  !o.pingscan) {
+	  !o.pingscan && !o.listscan) {
    
 	if (currenths->flags & HOST_UP && !currenths->source_ip.s_addr && ( o.windowscan || o.synscan || o.finscan || o.maimonscan || o.udpscan || o.nullscan || o.xmasscan || o.ackscan || o.ipprotscan )) {
 	  if (gethostname(myname, MAXHOSTNAMELEN) || 
@@ -976,7 +985,7 @@ int nmap_main(int argc, char *argv[]) {
 	  log_write(LOG_MACHINE,"Host: %s (%s)\tStatus: Timeout", 
 			   inet_ntoa(currenths->host), currenths->name);
 	}
-	else if (!o.pingscan) {
+	else if (!o.pingscan && !o.listscan) {
 	  assignignoredportstate(&currenths->ports);
 	  printportoutput(currenths, &currenths->ports);
 	  resetportlist(&currenths->ports);
@@ -1041,7 +1050,7 @@ int nmap_main(int argc, char *argv[]) {
   i = timep - starttime;
   if (numhosts_scanned == 0)
     fprintf(stderr, "WARNING: No targets were specified, so 0 hosts scanned.\n");
-  if (numhosts_scanned == 1 && numhosts_up == 0)
+  if (numhosts_scanned == 1 && numhosts_up == 0 && !o.listscan)
     log_write(LOG_STDOUT, "Note: Host seems down. If it is really up, but blocking our ping probes, try -P0\n");
   log_write(LOG_STDOUT|LOG_SKID, "Nmap run completed -- %d %s (%d %s up) scanned in %d %s\n", numhosts_scanned, (numhosts_scanned == 1)? "IP address" : "IP addresses", numhosts_up, (numhosts_up == 1)? "host" : "hosts",  i, (i == 1)? "second": "seconds");
 
@@ -1486,6 +1495,28 @@ char *grab_next_host_spec(FILE *inputfd, int argc, char **fakeargv) {
   return host_spec;
 }
 
+/* Just a routine for obtaining a string for printing based on the scantype */
+char *scantype2str(stype scantype) {
+
+  switch(scantype) {
+  case ACK_SCAN: return "ACK Scan"; break;
+  case SYN_SCAN: return "SYN Stealth Scan"; break;
+  case FIN_SCAN: return "FIN Scan"; break;
+  case XMAS_SCAN: return "XMAS Scan"; break;
+  case UDP_SCAN: return "UDP Scan"; break;
+  case CONNECT_SCAN: return "Connect() Scan"; break;
+  case NULL_SCAN: return "NULL Scan"; break;
+  case WINDOW_SCAN: return "Window Scan"; break;
+  case RPC_SCAN: return "RPCGrind Scan"; break;
+  case MAIMON_SCAN: return "Maimon Scan"; break;
+  case IPPROT_SCAN: return "IPProto Scan"; break;
+  default: assert(0); break;
+  }
+
+  return NULL; /* Unreached */
+
+}
+
 char *statenum2str(int state) {
   switch(state) {
   case PORT_OPEN: return "open"; break;
@@ -1926,7 +1957,7 @@ void super_scan(struct hoststruct *target, unsigned short *portarray, stype scan
   starttime = time(NULL);
 
   if (o.debugging || o.verbose)
-    log_write(LOG_STDOUT, "Initiating FIN,NULL, UDP, or Xmas stealth scan against %s (%s)\n", target->name, inet_ntoa(target->host));
+    log_write(LOG_STDOUT, "Initiating %s against %s (%s)\n", scantype2str(scantype), target->name, inet_ntoa(target->host));
   
 
   do {
@@ -2247,8 +2278,7 @@ void super_scan(struct hoststruct *target, unsigned short *portarray, stype scan
   openlist = testinglist;
 
   if (o.debugging || o.verbose)
-    log_write(LOG_STDOUT, "The UDP or stealth FIN/NULL/XMAS scan took %ld %s to scan %d ports.\n", 
-	    (long) time(NULL) - starttime, (((long) time(NULL) - starttime) == 1)? "second" : "seconds",  o.numports);
+    log_write(LOG_STDOUT, "The %s took %ld %s to scan %d ports.\n", scantype2str(scantype), (long) time(NULL) - starttime, (((long) time(NULL) - starttime) == 1)? "second" : "seconds",  o.numports);
   
   for (current = openlist; current;  current = (current->next >= 0)? &scan[current->next] : NULL) {
     if (scantype == IPPROT_SCAN)
@@ -2383,8 +2413,17 @@ void pos_scan(struct hoststruct *target, unsigned short *portarray, stype scanty
   if (target->timedout)
     return;
 
+  /* If it is a SYN scan and we have already figured out the states
+     of all the TCP ports, might as well skip the scan (this can happen
+     if the ping scan determined the states) */
+  if (target->ports.state_counts_tcp[PORT_OPEN] + target->ports.state_counts_tcp[PORT_CLOSED] + target->ports.state_counts_tcp[PORT_FIREWALLED] == o.numports) {
+    if (o.debugging)
+      error("Skipping SYN scan since all ports already known");
+    return;
+  }
+
   if (o.debugging)
-    log_write(LOG_STDOUT, "Starting pos_scan\n");
+    log_write(LOG_STDOUT, "Starting pos_scan (%s)\n", scantype2str(scantype));
 
   if (scantype == RPC_SCAN) initial_packet_width = 2;
   else initial_packet_width = 10;
@@ -2521,24 +2560,10 @@ void pos_scan(struct hoststruct *target, unsigned short *portarray, stype scanty
 
   starttime = time(NULL);
 
+  ack_number = get_random_uint();
+
   if (o.debugging || o.verbose) {  
-    if (scantype == SYN_SCAN)
-      log_write(LOG_STDOUT, "Initiating SYN half-open stealth scan against %s (%s)\n", target->name, inet_ntoa(target->host));
-    else if (scantype == CONNECT_SCAN)
-      log_write(LOG_STDOUT, "Initiating TCP connect() scan against %s (%s)\n",target->name, inet_ntoa(target->host)); 
-    else if (scantype == WINDOW_SCAN) {    
-      log_write(LOG_STDOUT, "Initiating Window scan against %s (%s)\n",target->name, inet_ntoa(target->host));
-      ack_number = get_random_uint();
-    }
-    else if (scantype == ACK_SCAN) {    
-      log_write(LOG_STDOUT, "Initiating ACK scan against %s (%s)\n",target->name, inet_ntoa(target->host));
-      /* WE WANT TO ACK SCAN ACKNOWLEDGEMENT NUMBER TO LOOK AT LEAST A LITTLE
-	 BIT RANDOM (even though it will be constant throughout a session) */
-      ack_number = get_random_uint();
-    }
-    else {
-      log_write(LOG_STDOUT, "Initiating RPC scan against %s (%s)\n",target->name, inet_ntoa(target->host)); 
-    }
+    log_write(LOG_STDOUT, "Initiating %s against %s (%s)\n", scantype2str(scantype), target->name, inet_ntoa(target->host));
   }
 
   do {
@@ -2892,7 +2917,7 @@ void pos_scan(struct hoststruct *target, unsigned short *portarray, stype scanty
   }
   
   if (o.verbose)
-    log_write(LOG_STDOUT, "The %s scan took %ld %s to scan %d ports.\n", (scantype == WINDOW_SCAN) ? "Window" : (scantype == SYN_SCAN)? "SYN" : (scantype == CONNECT_SCAN)? "TCP connect" : (scantype == RPC_SCAN)? "RPC" : "ACK",  (long) time(NULL) - starttime, (((long) time(NULL) - starttime) == 1)? "second" : "seconds", o.numports);
+    log_write(LOG_STDOUT, "The %s took %ld %s to scan %d ports.\n", scantype2str(scantype),  (long) time(NULL) - starttime, (((long) time(NULL) - starttime) == 1)? "second" : "seconds", o.numports);
   
  posscan_timedout:
   

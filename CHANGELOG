@@ -1,5 +1,34 @@
 # Nmap Changelog
 
+** Version 2.54BETA2
+
+-- Added a shortcut which can make single port SYN scans of a network
+   much faster.  For example, if a new sendmail vulnerability is
+   found, this reduces the time it takes to scan your whole network
+   for port 25.  This shortcut takes effect when you do "-PS<port> -sS
+   -p<port>".  For example 'nmap -n -sS -p25 -PS25 24.0.0.0/8".  This
+   optimization doubled the scan speed in a 30,000 IP test I performed.
+
+-- Added -sL (List scan).  Just as ping scan (-sP) allows you to short
+   circuit the scan right after pinging, -sL allows you to short
+   circuit the scan right after target selection.  This allows you to
+   see what hosts WOULD be scanned without actually doing it.  The
+   hosts will be resolved unles you use -n.  Primary uses:
+   1) Get all the IPs in a network (like A.B.C.D/16) and take out
+      machines that are too fragile to be scanned safely before
+      calling Nmap with the new list (using -iL).
+   2) Test that a complex spec like 128.4,5,7-9.*.7 does what you
+      expect before actual scanning.
+   3) When all you want to do is resolve a bunch of IPs.
+   4) You just want results of a zone transfer (if it is implemented).
+
+-- Added a warning when you scan 0 hosts (eg "nmap -v").  There are
+   various other output tweaks as well.
+
+-- Insured that 0.0.0.0 can be scanned by nmap (although on some OSs, like
+   Linux, it won't work due to what seem to be kernel bugs).  Oh
+   well.  I'll look into it later.
+
 ** Version 2.54BETA1
 
 -- Added an extremely cool scan type by Gerhard Rieger ( rieger at
