@@ -1,0 +1,9 @@
+
+Nmap currently includes a modified version of the tcpdump.org release
+of libpcap version 0.6.2.  My (fyodor@insecure.org)
+modifications are as follows:
+
+-- Eliminated Lex/Yacc requirement (I now ship the generated .c files)
+
+-- The config.sub and config.guess have been upgraded (in the distribution
+   file they are just symlinks to the corresponding files in the nmap dir
