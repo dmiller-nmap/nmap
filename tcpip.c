@@ -1210,7 +1210,7 @@ return -1;
 
 struct interface_info *getinterfaces(int *howmany) {
   static int initialized = 0;
-  static struct interface_info mydevs[48];
+  static struct interface_info mydevs[128];
   static int numinterfaces = 0;
   int sd;
   int len;
@@ -1276,7 +1276,7 @@ struct interface_info *getinterfaces(int *howmany) {
 #endif
 
       numinterfaces++;
-      if (numinterfaces == 47)  {      
+      if (numinterfaces == 127)  {      
 	error("My God!  You seem to have WAY too many interfaces!  Things may not work right\n");
 	break;
       }
@@ -1299,7 +1299,7 @@ struct interface_info *getinterfaces(int *howmany) {
    source parameter.   Some of the stuff is
    from Stevens' Unix Network Programming V2.  He had an easier suggestion
    for doing this (in the book), but it isn't portable :( */
-#define ROUTETHROUGH_MAXROUTES 512
+#define ROUTETHROUGH_MAXROUTES 1024
 char *routethrough(struct in_addr *dest, struct in_addr *source) {
   static int initialized = 0;
   int i;
