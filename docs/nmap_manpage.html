@@ -508,18 +508,18 @@
               Nmap ships with an XSL stylesheet named nmap.xsl for viewing  or
               translating XML output to HTML.  The XML output includes an xml-
               stylesheet directive which points to nmap.xml where it was  ini-
-              tially  installed  by  Nmap.  Simply load Nmap’s XML output in a
-              modern web browser and it  should  retrieve  nmap.xsl  from  the
-              filesystem  and  use it to render results.  If you wish to use a
-              different  stylesheet,   specify   it   as   the   argument   to
-              --stylesheet.  You must pass the full pathname or URL.  One com-
-              mon     invocation     is     --stylesheet      http://www.inse-
-              cure.org/nmap/data/nmap.xsl  .  This tells a browser to load the
-              latest version of the stylesheet from Insecure.Org.  This  makes
-              it  easier  to  view results on a machine that doesn’t have Nmap
-              (and thus nmap.xsl) installed.  So the URL is often more useful,
-              but  the local filesystem locaton of nmap.xsl is used by default
-              for privacy reasons.
+              tially installed by Nmap (or in the current working directory on
+              Windows).  Simply load Nmap’s XML output in a modern web browser
+              and  it  should retrieve nmap.xsl from the filesystem and use it
+              to render results.  If you wish to use a  different  stylesheet,
+              specify  it  as the argument to --stylesheet.  You must pass the
+              full pathname or URL.  One  common  invocation  is  --stylesheet
+              http://www.insecure.org/nmap/data/nmap.xsl   .    This  tells  a
+              browser to load the latest version of the stylesheet from  Inse-
+              cure.Org.   This  makes  it  easier to view results on a machine
+              that doesn’t have Nmap (and thus nmap.xsl)  installed.   So  the
+              URL  is  often  more useful, but the local filesystem locaton of
+              nmap.xsl is used by default for privacy reasons.
 
        <B>--no-stylesheet</B>
               Specify this option to prevent Nmap  from  associating  any  XSL

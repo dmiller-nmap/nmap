@@ -1,6 +1,6 @@
 # Nmap Changelog ($Id$)
 
-Nmap 3.80
+Nmap 3.81
 
 o Nmap now ships with and installs (in the same directory as other
   data files such as nmap-os-fingerprints) an XSL stylesheet for
@@ -90,6 +90,9 @@ o The windows build now uses header and static library files from
   using when run with -d.  I would recommend upgrading to 3.1Beta4 if
   you have an older Winpcap installed.
 
+o Nmap now prints a warning message on Windows if Winpcap is not found
+  (it then reverts to raw sockets mode if available, as usual).
+
 o Added an NTP probe and matches to the version detection database
   (nmap-service-probes) thanks to a submission from Martin
   Maèok (martin.macok@underground.cz).
@@ -137,9 +140,6 @@ o Fixed a portability problem on some OpenBSD and FreeBSD machines
 
 o Applied Martin Maèok's (martin.macok(a)underground.cz) "cosmetics
   patch", which fixes a few typos and minor problems.
-
-o I don't bother initializing winip on Windows (using
-  winip_postopt_init()) is only a list scan was requested.
 
 Nmap 3.75
 

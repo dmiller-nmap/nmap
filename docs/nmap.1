@@ -543,11 +543,12 @@ structure is available at http://www.insecure.org/nmap/data/nmap.dtd .
 Nmap ships with an XSL stylesheet named nmap.xsl for viewing or
 translating XML output to HTML.  The XML output includes an
 xml-stylesheet directive which points to nmap.xml where it was
-initially installed by Nmap.  Simply load Nmap's XML output in a
-modern web browser and it should retrieve nmap.xsl from the filesystem
-and use it to render results.  If you wish to use a different
-stylesheet, specify it as the argument to --stylesheet.  You must pass
-the full pathname or URL.  One common invocation is --stylesheet
+initially installed by Nmap (or in the current working directory on
+Windows).  Simply load Nmap's XML output in a modern web browser and
+it should retrieve nmap.xsl from the filesystem and use it to render
+results.  If you wish to use a different stylesheet, specify it as the
+argument to --stylesheet.  You must pass the full pathname or URL.
+One common invocation is --stylesheet
 http://www.insecure.org/nmap/data/nmap.xsl .  This tells a browser to
 load the latest version of the stylesheet from Insecure.Org.  This
 makes it easier to view results on a machine that doesn't have Nmap

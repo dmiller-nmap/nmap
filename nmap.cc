@@ -223,7 +223,9 @@ int nmap_main(int argc, char *argv[]) {
   Target *currenths;
   vector<Target *> Targets;
   char *proberr;
+#if WIN32
   bool skip_winip_init = false;
+#endif
   char emptystring[1];
   int sourceaddrwarning = 0; /* Have we warned them yet about unguessable
 				source addresses? */
@@ -291,7 +293,7 @@ int nmap_main(int argc, char *argv[]) {
       {"win_noiphlpapi", no_argument, 0, 0}, 
       {"win_help", no_argument, 0, 0},
       {"win_trace", no_argument, 0, 0},
-	  {"win_skip_winip_init", no_argument, 0, 0},
+      {"win_skip_winip_init", no_argument, 0, 0},
 #endif
       {0, 0, 0, 0}
     };
@@ -487,8 +489,7 @@ int nmap_main(int argc, char *argv[]) {
 	/* Compatability hack ... ugly */
 	o.verbose += 2;
       } else if (strcmp(long_options[option_index].name, "ff") == 0) {
-	/* Compatability hack ... ugly */
-	o.fragscan = 8;
+	o.fragscan += 16; 
       } else if (strcmp(long_options[option_index].name, "mtu") == 0) {
         o.fragscan = atoi(optarg);
         if (o.fragscan <= 0 || o.fragscan % 8 != 0)

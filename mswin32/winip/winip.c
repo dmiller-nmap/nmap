@@ -318,8 +318,7 @@ void winip_postopt_init()
   __except(GetExceptionCode() == DLI_ERROR)
     {
       pcap_avail = 0;
-      if(o.debugging > 1 || wo.trace)
- printf("***WinIP***  winpcap is not present\n");
+      printf("WARNING: Failed to locate Winpcap. Nmap may not function properly until this is installed!  WinPcap is freely available from http://winpcap.polito.it.\n");
     }
 #endif
 
