@@ -1992,6 +1992,8 @@ man               9535/tcp   #
 man               9535/udp   # 
 sd                9876/tcp   # Session Director
 sd                9876/udp   # Session Director
+issa              9991/tcp   # ISS System Scanner Agent
+issc              9992/tcp   # ISS System Scanner Console
 stel              10005/tcp  # Secure telnet
 amanda            10080/udp  # Amanda Backup Util
 amandaidx         10082/tcp  # Amanda indexing
