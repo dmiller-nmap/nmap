@@ -1922,7 +1922,7 @@ if (o.debugging || o.verbose)
 			   current->portno, 0, 0, scanflags, 0, 0, 0);
 	    else send_udp_raw(rawsd, &o.decoys[decoy], &target->host, o.magic_port,
 			      current->portno, NULL, 0);
-	    /*	    if (scantype == UDP_SCAN) usleep(50000);*/
+	    	    if (scantype == UDP_SCAN) usleep(50000);
 	    /*usleep(10000);*/ /* *WE* normally do not need this, but the target 
 	      lamer often does */
 	  }
@@ -2043,7 +2043,7 @@ if (o.debugging || o.verbose)
     openlist = NULL;
     numqueries_ideal = initial_packet_width;
     printf("Done with round %d\n", tries);
-  } while(changed && ++tries < 20);   
+  } while(changed && ++tries < 100);   
 
   openlist = testinglist;
 
