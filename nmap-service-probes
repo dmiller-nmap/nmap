@@ -581,6 +581,7 @@ match snpp m|^220 QuickPage v(\d[-.\w]+) SNPP server ready at | v/QuickPage SNPP
 match sourceoffice m|^200\r\nProtocol-Version:(\d[.\d]+)\r\nMessage-ID:\d+\r\nDatabase .*\r\nContent-Length:\d+\r\n\r\n(\w:\\.*ini)\r\n\r\n| v/Sourcegear SourceOffSite//Protocol $1; INI file: $2/
 
 match ssh m|^\0\0\0\$\0\0\0\0\x01\0\0\0\x1bNo host key is configured!\n\r!\"v| v/Foundry Networks switch sshd//broken: No host key configured/
+match ssh m|^SSH-(\d[\d.]+)-SSF-(\d[-.\w]+)\n| v/SSF French SSH/$2/protocol $1/
 match ssh m|^SSH-(\d[\d.]+)-lshd_(\d[-.\w]+) lsh - a free ssh\r\n\0\0| v/lshd secure shell/$2/protocol $1/
 match ssh m/^SSH-([.\d]+)-OpenSSH[_-](\S+)/ v/OpenSSH/$2/protocol $1/
 match ssh m/^SSH-([.\d]+)-Sun_SSH_(\S+)/ v/SunSSH/$2/protocol $1/

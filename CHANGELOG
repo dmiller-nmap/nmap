@@ -13,7 +13,7 @@ o Applied patch from Gisle Vanem (giva(a)bgnett.no) which allows the
   of adaptor names in this release.
 
 o Fixed a version detection crash reported in excellent detail by
-  Jedi/Sector One (0daydigest(a)pureftpd.org).
+  Jedi/Sector One (j(a)pureftpd.org).
 
 o Applied patch from Matt Selsky (selsky(a)columbia.edu) which helps
   Nmap build with OpenSSL.
@@ -44,6 +44,10 @@ o Applied a patch to Makefile.in from Scott Mansfield
 o Removed unnecessary banner printing in the non-root connect() ping
   scan.  Thanks to Tom Rune Flo (tom(a)x86.no) for the suggestion and
   a patch.
+
+o Updated the headers at the top of each source file (mostly to
+  advance the copyright year to 2004 and note that Nmap is a registered
+  trademark).
 
 Nmap 3.50
 
