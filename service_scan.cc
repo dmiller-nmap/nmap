@@ -1165,6 +1165,7 @@ void servicescan_write_handler(nsock_pool nsp, nsock_event nse, void *mydata) {
   nsock_iod nsi;
   ServiceNFO *svc = (ServiceNFO *)mydata;
   ServiceGroup *SG;
+  int err;
 
   if (status == NSE_STATUS_SUCCESS)
     return;
@@ -1177,6 +1178,11 @@ void servicescan_write_handler(nsock_pool nsp, nsock_event nse, void *mydata) {
        shutting down */
     end_svcprobe(nsp, PROBESTATE_INCOMPLETE, SG, svc, nsi);
     return;
+  }
+
+  if (status == NSE_STATUS_ERROR) {
+	err = nse_errorcode(nse);
+	error("Got nsock WRITE error #%d (%s)\n", err, strerror(err));
   }
 
   // Uh-oh.  Some sort of write failure ... maybe the connection closed

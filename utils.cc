@@ -374,6 +374,25 @@ if (num_elem < 2)
  return;
 }
 
+// Send data to a socket, keep retrying until an error or the full length
+// is sent.  Returns -1 if there is an error, or len if the full length was sent.
+int Send(int sd, const void *msg, size_t len, int flags) {
+  int res;
+  unsigned int sentlen = 0;
+
+  do {
+    res = send(sd,(char *) msg + sentlen, len - sentlen, 0);
+    if (res > 0)
+      sentlen += res;
+  } while(sentlen < len && (res != -1 || socket_errno() == EINTR));
+
+  return (res < 0)? -1 : len;
+}
+
+// Write data to a file descriptor, keep retrying until an error or the full length
+// is written.  Returns -1 if there is an error, or len if the full length was sent.
+// Note that this does NOT work well on Windows using sockets -- so use Send() above 
+// for those.  I don't know if it works with regular files on Windows with files).
 ssize_t Write(int fd, const void *buf, size_t count) {
   int res;
   unsigned int len;
@@ -385,7 +404,7 @@ ssize_t Write(int fd, const void *buf, size_t count) {
       len += res;
   } while(len < count && (res != -1 || socket_errno() == EINTR));
 
-  return res;
+  return (res == -1)? -1 : count;
 }
 
 

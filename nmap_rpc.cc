@@ -260,7 +260,7 @@ int send_rpc_query(const struct in_addr *target_host, unsigned short portno,
     /* TCP socket */
     /* 0x80000000 means only 1 record marking */
     *(unsigned long *)rpch_buf = htonl(sizeof(struct rpc_hdr) | 0x80000000);
-    res = Write(tcp_rpc_socket, rpch_buf, sizeof(struct rpc_hdr) + sizeof(unsigned long));
+    res = Send(tcp_rpc_socket, rpch_buf, sizeof(struct rpc_hdr) + sizeof(unsigned long), 0);
     if (res == -1) {
       if (o.debugging) {
 	gh_perror("Write in send_rpc_query");

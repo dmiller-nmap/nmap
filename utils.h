@@ -147,6 +147,11 @@ void shortfry(unsigned short *arr, int num_elem);
 /* Like the perl equivialent -- It removes the terminating newline from string
    IF one exists.  It then returns the POSSIBLY MODIFIED string */
 char *chomp(char *string);
+
+// Send data to a socket, keep retrying until an error or the full length
+// is sent.  Returns -1 if there is an error, or len if the full length was sent.
+int Send(int sd, const void *msg, size_t len, int flags);
+
 ssize_t Write(int fd, const void *buf, size_t count);
 
 unsigned long gcd_ulong(unsigned long a, unsigned long b);

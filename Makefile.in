@@ -1,4 +1,4 @@
-NMAP_VERSION = 3.40PVT9
+NMAP_VERSION = 3.40PVT10
 NMAP_NAME= nmap
 NMAP_URL= http://www.insecure.org/nmap/
 NMAP_PLATFORM=@host@
@@ -128,8 +128,8 @@ distro:
 
 	$(SHTOOL) mkdir /usr/tmp/nmap-$(NMAP_VERSION)/mswin32
 	cd mswin32; cp -ra *.[hHcC] *.cc ARPA NET NETINET RPC icon1.ico \
-                    ifaddrlist.h lib libpcap-note.txt nmap.sln nmap.vcproj \
-                    winip /usr/tmp/nmap-$(NMAP_VERSION)/mswin32
+                    ifaddrlist.h lib libpcap-note.txt nmap.rc nmap.sln \
+                    nmap.vcproj winip /usr/tmp/nmap-$(NMAP_VERSION)/mswin32
 
 	$(SHTOOL) mkdir /usr/tmp/nmap-$(NMAP_VERSION)/$(LIBPCAPDIR)
 	cd $(LIBPCAPDIR); cp -ra acconfig.h aclocal.m4 arcnet.h bpf \
@@ -172,14 +172,14 @@ distro:
                         *.c *.h CHANGELOG /usr/tmp/nmap-$(NMAP_VERSION)/nbase
 
 	$(SHTOOL) mkdir /usr/tmp/nmap-$(NMAP_VERSION)/libpcre
-	cd libpcre; cp -ra AUTHORS config.guess config.in config.sub \
-                        configure configure.ac COPYING dftables.c get.c \
-                        INSTALL install-sh internal.h LICENCE ltmain.sh \
-                        Makefile.in maketables.c makevp.bat mkinstalldirs \
-                        NEWS NMAP_MODIFICATIONS NON-UNIX-USE pcre.c \
-                        pcre-config.in pcre.def pcre.h pcre.in pcreposix.c \
-                        pcreposix.h perltest printint.c README RunTest \
-                        RunTest.in study.c \
+	cd libpcre; cp -ra AUTHORS chartables.c config.guess config.in \
+                        config.sub configure configure.ac COPYING dftables.c \
+                        get.c INSTALL install-sh internal.h libpcre.vcproj \
+                        LICENCE ltmain.sh Makefile.in maketables.c makevp.bat \
+                        mkinstalldirs NEWS NMAP_MODIFICATIONS NON-UNIX-USE \
+                        pcre.c pcre-config.in pcre.def pcre.h pcre.in \
+                        pcre_win.h pcre_winconfig.h pcreposix.c pcreposix.h \
+                        perltest printint.c README RunTest RunTest.in study.c \
                         /usr/tmp/nmap-$(NMAP_VERSION)/libpcre
 
 	$(SHTOOL) mkdir /usr/tmp/nmap-$(NMAP_VERSION)/nsock

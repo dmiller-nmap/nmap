@@ -1,5 +1,13 @@
 # Nmap Changelog ($Id$)
 
+Nmap 3.40PVT10
+
+o Cleaned up the Windows support a bit and did more testing and
+  fixing.  Windows service detection seems to be working fine for me
+  now, although my testing is still pretty limited.  This release
+  includes a Windows binary distribution and the README-WIN32 has been
+  updated to reflect new compilation instructions.
+
 o Added "soft matches".  These are similar to normal match lines in
   that they provide a regex for recognizing a service (but no version).
   But instead of stopping at softmatch service recognition, the scan
