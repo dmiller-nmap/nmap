@@ -91,9 +91,9 @@ distro:
 	rm -f $(LIBPCAPDIR)/config.cache $(LIBPCAPDIR)/Makefile
 	cp -ra $(SRCS) $(DEPS) nmap-os-fingerprints \
 	nmapfe.desktop nmap-services nmap-rpc nmap-protocols \
-	configure.in config.h.in Makefile.in configure $(SHTOOL) install-sh \
-        config.guess nmap-$(NMAP_VERSION)-1.spec config.sub INSTALL \
-	COPYING CHANGELOG HACKING \
+	configure.in config.h.in nmap_winconfig.h Makefile.in configure \
+        $(SHTOOL) install-sh config.guess nmap-$(NMAP_VERSION)-1.spec \
+        config.sub INSTALL COPYING CHANGELOG HACKING \
 	$(LIBPCAPDIR) mswin32 /usr/tmp/nmap-$(NMAP_VERSION)
 	$(SHTOOL) mkdir /usr/tmp/nmap-$(NMAP_VERSION)/docs
 	cd docs; cp README copying.html nmap-fingerprinting-article.txt \

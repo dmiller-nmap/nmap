@@ -49,10 +49,17 @@
 
 #include "tcpip.h"
 
-#ifndef WIN32
+#if HAVE_SYS_TIME_H
 #include <sys/time.h>
+#endif
+
+#if HAVE_SYS_RESOURCE_H
 #include <sys/resource.h>
-#include <sys/unistd.h>
+#endif
+
+#if HAVE_UNISTD_H
+/* #include <sys/unistd.h> */
+#include <unistd.h>
 #endif
 
 extern struct ops o;

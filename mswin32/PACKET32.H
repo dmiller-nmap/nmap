@@ -37,7 +37,11 @@
 #define	 pBIOCSRTIMEOUT 7416
 #define	 pBIOCSMODE 7412
 #define	 pBIOCSWRITEREP 7413
-
+#define	 pBIOCSMINTOCOPY 7414
+#define	 pBIOCSETOID 2147483648
+#define	 pBIOCQUERYOID 2147483652
+#define	 pATTACHPROCESS 7117
+#define	 pDETACHPROCESS 7118
 
 //Network type structure
 
@@ -55,7 +59,6 @@ typedef struct NetType
 
 
 //some definitions from libpcap
-#ifdef DONTFUCKINGDOTHIS
 #ifndef BPF_MAJOR_VERSION
 
 struct bpf_program {
@@ -82,7 +85,7 @@ struct bpf_hdr {
 };
 
 #endif
-#endif
+
 #define        DOSNAMEPREFIX   TEXT("Packet_")
 #define        MAX_LINK_NAME_LENGTH   64
 #define        NMAX_PACKET 65535  
@@ -91,6 +94,9 @@ typedef struct _ADAPTER  {
 						   HANDLE hFile;
                            TCHAR  SymbolicLink[MAX_LINK_NAME_LENGTH];
 						   int NumWrites;
+						   PUCHAR SharedBuffer;
+						   UINT SharedBufferDim;
+						   UINT SharedBufferPos;						
 						 }  ADAPTER, *LPADAPTER;
 
 typedef struct _PACKET {  
@@ -98,7 +104,6 @@ typedef struct _PACKET {
                           OVERLAPPED   OverLapped;
                           PVOID        Buffer;
                           UINT         Length;
-//                          PVOID        Next;
 						  UINT         ulBytesReceived;
 						  BOOLEAN      bIoComplete;
 						}  PACKET, *LPPACKET;
@@ -107,6 +112,7 @@ typedef struct _PACKET {
 extern "C" {
 #endif
 
+BOOLEAN PacketSetMinToCopy(LPADAPTER AdapterObject,int nbytes);
 BOOLEAN PacketSetNumWrites(LPADAPTER AdapterObject,int nwrites);
 BOOLEAN PacketSetMode(LPADAPTER AdapterObject,int mode);
 BOOLEAN PacketSetMaxLookaheadsize (LPADAPTER AdapterObject);
@@ -127,7 +133,8 @@ BOOLEAN PacketReceiveNPacket(LPADAPTER AdapterObject,LPPACKET headLPacket,UINT n
 BOOLEAN PacketReceivePacket(LPADAPTER AdapterObject,LPPACKET lpPacket,BOOLEAN Sync);
 VOID PacketCloseAdapter(LPADAPTER lpAdapter);
 BOOLEAN PacketSetHwFilter(LPADAPTER AdapterObject,ULONG Filter);
-ULONG PacketGetAdapterNames(PTSTR pStr,PULONG  BufferSize);
+BOOLEAN PacketGetAdapterNames(PTSTR pStr,PULONG  BufferSize);
+BOOLEAN PacketGetNetInfo(LPTSTR AdapterName, PULONG netp, PULONG maskp);
 BOOLEAN PacketRequest(LPADAPTER  AdapterObject,BOOLEAN Set,PPACKET_OID_DATA  OidData);
 VOID PacketSetNextPacket(LPPACKET lpPacket, LPPACKET next);
 VOID PacketSetLengthBuffer(LPPACKET lpPacket, UINT dim);

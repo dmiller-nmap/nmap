@@ -48,17 +48,25 @@
 #ifndef TARGETS_H
 #define TARGETS_H
 
+#ifdef HAVE_CONFIG_H
 #include "config.h"
+#else
+#ifdef WIN32
+#include "nmap_winconfig.h"
+#endif /* WIN32 */
+#endif /* HAVE_CONFIG_H */
 
-#ifndef WIN32
 /* This contains pretty much everythign we need ... */
+#if HAVE_SYS_TIME_H
 #include <sys/time.h>
+#endif
+
+#if HAVE_UNISTD_H
 #include <unistd.h>
+#endif
 
 #ifdef HAVE_SYS_PARAM_H   
 #include <sys/param.h> /* Defines MAXHOSTNAMELEN on BSD*/
-#endif
-
 #endif
 
 #include "nmap.h"

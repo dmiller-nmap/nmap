@@ -69,7 +69,7 @@ SOURCE=.\iphlpapi.c
 !IF  "$(CFG)" == "iphlpapi - Win32 Release"
 
 USERDEP__IPHLP="iphlpapi.def"	
-# Begin Custom Build -
+# Begin Custom Build
 InputPath=.\iphlpapi.c
 
 "iphlpapi.lib" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
@@ -80,7 +80,7 @@ InputPath=.\iphlpapi.c
 !ELSEIF  "$(CFG)" == "iphlpapi - Win32 Debug"
 
 USERDEP__IPHLP="iphlpapi.def"	
-# Begin Custom Build -
+# Begin Custom Build
 InputPath=.\iphlpapi.c
 
 "iphlpapi.lib" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
@@ -94,17 +94,7 @@ InputPath=.\iphlpapi.c
 # Begin Source File
 
 SOURCE=.\iphlpapi.def
-
-!IF  "$(CFG)" == "iphlpapi - Win32 Release"
-
 # PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "iphlpapi - Win32 Debug"
-
-# PROP Exclude_From_Build 1
-
-!ENDIF 
-
 # End Source File
 # End Group
 # End Target

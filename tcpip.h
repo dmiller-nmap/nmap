@@ -138,7 +138,9 @@ void *realloc();
 #include <netinet/udp.h>
 #define NETINET_UDP_H
 #endif
+#if HAVE_UNISTD_H
 #include <unistd.h>
+#endif
 #include <fcntl.h>
 #ifndef NET_IF_H  /* why the HELL does OpenBSD not do this? */
 #include <net/if.h>

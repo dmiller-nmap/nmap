@@ -47,7 +47,10 @@ typedef unsigned int ssize_t;
 //extern struct interface_info global_adapter;
 #endif
 
-/* #pragma warning(disable: 4761)*/
+/* Disables VC++ warning:
+  "integral size mismatch in argument; conversion supplied".  Perhaps
+  I should try to fix this with casts at some point */
+#pragma warning(disable: 4761)
 
 /* #define signal(x,y) ((void)0)	// ignore for now
                                 // later release may set console handlers

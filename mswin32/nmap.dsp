@@ -42,7 +42,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
-# ADD CPP /nologo /MT /GX /O1 /I "." /I ".." /I "../nbase" /I "mswin32\winip" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D HAVE_CONFIG_H=1 /YX /FD /c
+# ADD CPP /nologo /MT /GX /O1 /I "." /I ".." /I "../nbase" /I "mswin32\winip" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
 # ADD RSC /l 0x409 /d "NDEBUG"
 BSC32=bscmake.exe
@@ -50,7 +50,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib iphlpapi.lib delayimp.lib libpcap.lib /nologo /subsystem:console /machine:I386 /libpath:"winip" /libpath:"lib" /delayload:packet.dll /delay:nobind /opt:nowin98 /delayload:iphlpapi.dll
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib iphlpapi.lib wpcap.lib packet.lib delayimp.lib nbase.lib /nologo /subsystem:console /machine:I386 /force /libpath:"winip" /libpath:"lib" /libpath:"..\nbase" /delayload:packet.dll /delay:nobind /opt:nowin98 /delayload:iphlpapi.dll
 # SUBTRACT LINK32 /pdb:none
 
 !ELSEIF  "$(CFG)" == "nmap - Win32 Debug"
@@ -67,7 +67,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /GZ /c
-# ADD CPP /nologo /MTd /W2 /Gm /GX /ZI /Od /I "." /I ".." /I "../nbase" /I "mswin32\winip" /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D HAVE_CONFIG_H=1 /YX /FD /GZ /c
+# ADD CPP /nologo /MTd /W2 /Gm /GX /ZI /Od /I "." /I ".." /I "../nbase" /I "mswin32\winip" /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /YX /FD /GZ /c
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
 # ADD RSC /l 0x409 /d "_DEBUG"
 BSC32=bscmake.exe
@@ -75,7 +75,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib iphlpapi.lib delayimp.lib libpcap.lib /nologo /subsystem:console /profile /debug /machine:I386 /libpath:"winip" /libpath:"lib" /delayload:packet.dll /delay:nobind
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib iphlpapi.lib wpcap.lib packet.lib delayimp.lib nbase.lib /nologo /subsystem:console /profile /debug /machine:I386 /force /libpath:"winip" /libpath:"lib" /libpath:"..\nbase" /delayload:packet.dll /delay:nobind
 
 !ENDIF 
 
@@ -89,10 +89,6 @@ LINK32=link.exe
 # Begin Group "Windows"
 
 # PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=.\globals.c
-# End Source File
 # Begin Source File
 
 SOURCE=.\nmap.rc
@@ -118,14 +114,9 @@ SOURCE=.\winip\winip.c
 SOURCE=.\wintcpip.c
 # End Source File
 # End Group
-# Begin Source File
+# Begin Group "Nbase"
 
-SOURCE=..\charpool.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\error.c
-# End Source File
+# PROP Default_Filter ""
 # Begin Source File
 
 SOURCE=..\nbase\getopt.c
@@ -145,6 +136,23 @@ SOURCE=..\nbase\nbase_misc.c
 # Begin Source File
 
 SOURCE=..\nbase\nbase_str.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\nbase\nbase_time.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\nbase\strcasecmp.c
+# End Source File
+# End Group
+# Begin Source File
+
+SOURCE=..\charpool.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\error.c
 # End Source File
 # Begin Source File
 
@@ -230,21 +238,29 @@ SOURCE=.\winfix.h
 SOURCE=.\winip\winip.h
 # End Source File
 # End Group
+# Begin Group "Nbase Headers"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\nbase\getopt.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\nbase\nbase.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\nbase\nbase_winconfig.h
+# End Source File
+# End Group
 # Begin Source File
 
 SOURCE=..\charpool.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\config.h
-# End Source File
-# Begin Source File
-
 SOURCE=..\error.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\nbase\getopt.h
 # End Source File
 # Begin Source File
 
@@ -256,15 +272,11 @@ SOURCE=.\NETINET\IP.H
 # End Source File
 # Begin Source File
 
-SOURCE=..\nbase\nbase.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\nbase\nbase_config.h
-# End Source File
-# Begin Source File
-
 SOURCE=..\nmap.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\nmap_winconfig.h
 # End Source File
 # Begin Source File
 

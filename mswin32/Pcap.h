@@ -105,14 +105,11 @@ typedef void (*pcap_handler)(u_char *, const struct pcap_pkthdr *,
 			     const u_char *);
 
 #ifdef WIN32
-
-#define MODE_CAPT 0
-#define MODE_STAT 1
-
-int pcap_setbuff(pcap_t *p, int dim);
-int pcap_setmode(pcap_t *p, int mode);
-
-#endif
+#ifdef __cplusplus
+extern "C"
+{		
+#endif				
+#endif				
 
 char	*pcap_lookupdev(char *);
 int	pcap_lookupnet(char *, bpf_u_int32 *, bpf_u_int32 *, char *);
@@ -130,6 +127,8 @@ char	*pcap_strerror(int);
 char	*pcap_geterr(pcap_t *);
 int	pcap_compile(pcap_t *, struct bpf_program *, char *, int,
 	    bpf_u_int32);
+int	pcap_compile_nopcap(int, int, struct bpf_program *,
+	    char *, int, bpf_u_int32);
 /* XXX */
 int	pcap_freecode(pcap_t *, struct bpf_program *);
 int	pcap_datalink(pcap_t *);
@@ -149,4 +148,24 @@ void	pcap_dump(u_char *, const struct pcap_pkthdr *, const u_char *);
 /* XXX this guy lives in the bpf tree */
 u_int	bpf_filter(struct bpf_insn *, u_char *, u_int, u_int);
 char	*bpf_image(struct bpf_insn *, int);
+
+/*
+ * Win32 definitions
+ */
+#ifdef WIN32
+
+int pcap_setbuff(pcap_t *p, int dim);
+int pcap_setmode(pcap_t *p, int mode);
+int pcap_sendpacket(pcap_t *p, u_char *buf, int size);
+
+#ifdef __cplusplus
+}
+#endif				
+
+#define MODE_CAPT 0
+#define MODE_STAT 1
+
+
+
+#endif
 #endif

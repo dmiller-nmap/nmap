@@ -63,10 +63,13 @@
 #endif
 
 #include <sys/time.h>
-#include <unistd.h>
 #include <assert.h>
 #include <sys/mman.h>
 #include "config.h"
+#endif
+
+#if HAVAE_UNISTD_H
+#include <unistd.h>
 #endif
 
 #if TIME_WITH_SYS_TIME

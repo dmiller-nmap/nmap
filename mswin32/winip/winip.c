@@ -731,8 +731,8 @@ void set_pcap_filter(struct hoststruct *target,
 		return;
 	}
 
-	if (pcap_lookupnet(target->device, &localnet, &netmask, err0r) < 0)
-		fatal("Failed to lookup device subnet/netmask: %s", err0r);
+	if (pcap_lookupnet(target->device, &localnet, &netmask, err0r) == -1)
+		; /* fatal("Failed to lookup device subnet/netmask: %s", err0r);*/
 
 	va_start(ap, bpf);
 	vsprintf(buf, bpf, ap);

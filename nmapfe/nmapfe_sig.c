@@ -63,11 +63,15 @@
 /* Do nothing, nmapfe.c will spit out an error */
 #else
 
+#include <nbase.h>
+
 #include <gtk/gtk.h>
 #include <stdio.h>
 #include <signal.h>
 #include <stdlib.h>
+#if HAVE_UNISTD_H
 #include <unistd.h>
+#endif
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>

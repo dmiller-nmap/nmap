@@ -62,7 +62,10 @@
 
 #include <gtk/gtk.h>
 #include <gdk/gdkkeysyms.h>
+#include <nbase.h>
+#if HAVE_UNISTD_H
 #include <unistd.h>
+#endif
 #include <stdio.h>
 
 #include "nmapfe.h"

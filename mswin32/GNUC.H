@@ -1,5 +1,7 @@
 /* @(#) $Header$ (LBL) */
 
+#ifndef __cplusplus 
+
 /* Define __P() macro, if necessary */
 #ifndef __P
 #if __STDC__
@@ -40,4 +42,6 @@
 #ifndef __attribute__
 #define __attribute__(args)
 #endif
+#endif
+
 #endif
