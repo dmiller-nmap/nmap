@@ -37,7 +37,8 @@ o Fixed problem noted by Maximiliano (emax25@arnet.com.ar) where Nmap
   an random host (-iR) scan.
 
 o Included a number of fingerprint updates, but I still have many more
-  web submissions to go through.
+  web submissions to go through.  Also made some nmap-services
+  portlist updates.
 
 o Included a bunch of fixes (mostly to prevent compiler warnings) from
   William McVey (wam@cisco.com)
