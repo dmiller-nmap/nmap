@@ -1397,7 +1397,7 @@ char *routethrough(const struct in_addr * const dest, struct in_addr *source) {
   static int numroutes = 0;
   FILE *routez;
 
-  if (!dest) fatal("ipaddr2devname passed a NULL dest address");
+  if (!dest) fatal("routethrough passed a NULL dest address");
 
   if (!initialized) {  
     /* Dummy socket for ioctl */

@@ -203,7 +203,9 @@ static int get_connect_results(Target *target,
   struct timeval tv;
   int res;
 #ifdef LINUX
-  struct sockaddr_in sin,sout;
+  struct sockaddr_storage sin,sout;
+  struct sockaddr_in *s_in;
+  struct sockaddr_in6 *s_in6;
   NET_SIZE_T sinlen = sizeof(sin);
   NET_SIZE_T soutlen = sizeof(sout);
 #endif
@@ -279,15 +281,20 @@ static int get_connect_results(Target *target,
 	      if (getpeername(sd, (struct sockaddr *) &sin, &sinlen) < 0) {
 		pfatal("error in getpeername of connect_results for port %hu", current->portno);
 	      } else {
-		if (current->portno != ntohs(sin.sin_port)) {
-		  error("Mismatch!!!! we think we have port %hu but we really have %hu", current->portno, ntohs(sin.sin_port));
+		s_in = (struct sockaddr_in *) &sin;
+		s_in6 = (struct sockaddr_in6 *) &sin;
+		if ((o.af == AF_INET && 
+		    current->portno != ntohs(s_in->sin_port)) || (o.af == AF_INET6 && current->portno != ntohs(s_in6->sin6_port))) {
+		  error("Mismatch!!!! we think we have port %hu but we really have a different one", current->portno);
 		}
 	      }
 
 	      if (getsockname(sd, (struct sockaddr *) &sout, &soutlen) < 0) {
 		pfatal("error in getsockname for port %hu", current->portno);
 	      }
-	      if (htons(sout.sin_port) == current->portno) {
+	      s_in = (struct sockaddr_in *) &sout;
+	      s_in6 = (struct sockaddr_in6 *) &sout;
+	      if ((o.af == AF_INET && htons(s_in->sin_port) == current->portno) || (o.af == AF_INET6 && htons(s_in6->sin6_port) == current->portno)) {
 		/* Linux 2.2 bug can lead to bogus successful connect()ions
 		   in this case -- we treat the port as bogus even though it
 		   is POSSIBLE that this is a real connection */
@@ -539,7 +546,10 @@ void pos_scan(Target *target, u16 *portarray, int numports, stype scantype) {
   int connecterror = 0;
   int starttime;
   struct hostent *myhostent = NULL;
-  struct sockaddr_in sock;
+  struct sockaddr_storage sock;
+  struct sockaddr_in *sin = (struct sockaddr_in *) &sock;
+  struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *) &sock;
+  size_t socklen;
   struct portinfo *scan = NULL,  *current, *next;
   struct portinfolist pil;
   int portlookup[65536]; /* Indexes port number -> scan[] index */
@@ -549,6 +559,7 @@ void pos_scan(Target *target, u16 *portarray, int numports, stype scantype) {
   u32 sequences[3]; /* for various reasons we use 3 separate
 				 ones rather than simply incrementing from
 				 a base */
+  char hostname[1200];
   int i;
   unsigned long j;
 
@@ -673,9 +684,9 @@ void pos_scan(Target *target, u16 *portarray, int numports, stype scantype) {
   } else if (scantype == CONNECT_SCAN) {
     rawsd = -1;
     /* Init our sock */
-    bzero((char *)&sock,sizeof(sock));
-    sock.sin_addr.s_addr = target->v4host().s_addr;
-    sock.sin_family=AF_INET;
+    if (target->TargetSockAddr(&sock, &socklen) != 0) {
+      fatal("Failed to get target socket address in pos_scan");
+    }
   } else if (scantype == RPC_SCAN) {
     get_rpc_procs(&(rsi.rpc_progs), &(rsi.rpc_number));
     scan = (struct portinfo *) safe_malloc(rsi.rpc_number * sizeof(struct portinfo));
@@ -702,7 +713,7 @@ void pos_scan(Target *target, u16 *portarray, int numports, stype scantype) {
   else ack_number = 0;
 
   if (o.debugging || o.verbose) {  
-    log_write(LOG_STDOUT, "Initiating %s against %s (%s)\n", scantype2str(scantype), target->name, target->targetipstr());
+    log_write(LOG_STDOUT, "Initiating %s against %s\n", scantype2str(scantype), target->NameIP(hostname, sizeof(hostname)));
   }
 
   do {
@@ -854,14 +865,16 @@ void pos_scan(Target *target, u16 *portarray, int numports, stype scantype) {
 		  } else {
 		    ss.numqueries_outstanding++;
 		  }
-		  res = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+		  res = socket(o.af, SOCK_STREAM, IPPROTO_TCP);
 		  if (res == -1) pfatal("Socket troubles in pos_scan 143");
 		  csi.socklookup[res] = current;
 		  unblock_socket(res);
 		  init_socket(res);
-		  sock.sin_port = htons(current->portno);
+		  if (sin->sin_family == AF_INET)
+		    sin->sin_port = htons(current->portno);
+		  else sin6->sin6_port = htons(current->portno);
 		  current->sd[current->trynum] = res;		
-		  res =  connect(res,(struct sockaddr *)&sock,sizeof(struct sockaddr));
+		  res =  connect(res,(struct sockaddr *)&sock, socklen);
 		  if (res != -1) {
 		    posportupdate(target, current, current->trynum, scan, &ss, scantype, PORT_OPEN, &pil, &csi);
 		  } else {
@@ -925,7 +938,7 @@ void pos_scan(Target *target, u16 *portarray, int numports, stype scantype) {
 		break;
 	      }
 	    } else { /* CONNECT SCAN */
-	      res = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	      res = socket(o.af, SOCK_STREAM, IPPROTO_TCP);
 	      if (res == -1) pfatal("Socket troubles in pos_scan 11234");
 #ifdef WIN32
 	      if(res > 2047)
@@ -934,9 +947,11 @@ void pos_scan(Target *target, u16 *portarray, int numports, stype scantype) {
 	      csi.socklookup[res] = current;
 	      unblock_socket(res);
 	      init_socket(res);
-	      sock.sin_port = htons(current->portno);
+	      if (sin->sin_family == AF_INET)
+		sin->sin_port = htons(current->portno);
+	      else sin6->sin6_port = htons(current->portno);
 	      current->sd[current->trynum] = res;		
-	      res =  connect(res,(struct sockaddr *)&sock,sizeof(struct sockaddr));
+	      res =  connect(res,(struct sockaddr *)&sock, socklen);
 	      if (res != -1) {
 		posportupdate(target, current, current->trynum, scan, &ss, scantype, PORT_OPEN, &pil, &csi);
 	      } else {
@@ -1087,6 +1102,7 @@ void bounce_scan(Target *target, u16 *portarray, int numports,
   char recvbuf[2048]; 
   char targetstr[20];
   char command[512];
+  char hostname[1200];
   unsigned short portno,p1,p2;
   struct timeval now;
 
@@ -1096,8 +1112,8 @@ void bounce_scan(Target *target, u16 *portarray, int numports,
 
   starttime = time(NULL);
   if (o.verbose || o.debugging)
-    log_write(LOG_STDOUT, "Initiating TCP ftp bounce scan against %s (%s)\n",
-	    target->name,  target->targetipstr());
+    log_write(LOG_STDOUT, "Initiating TCP ftp bounce scan against %s\n",
+	    target->NameIP(hostname, sizeof(hostname)));
   for(i=0; portarray[i]; i++) {
 
     /* Check for timeout */
@@ -1247,6 +1263,7 @@ void super_scan(Target *target, u16 *portarray, int numports,
   struct icmp *icmp;
   int portno;
   struct port *current_port_tmp;
+  char hostname[1200];
 
   if (target->timedout)
     return;
@@ -1334,7 +1351,7 @@ void super_scan(Target *target, u16 *portarray, int numports,
   starttime = time(NULL);
 
   if (o.debugging || o.verbose)
-    log_write(LOG_STDOUT, "Initiating %s against %s (%s)\n", scantype2str(scantype), target->name, target->targetipstr());
+    log_write(LOG_STDOUT, "Initiating %s against %s\n", scantype2str(scantype), target->NameIP(hostname, sizeof(hostname)));
   
 
   do {

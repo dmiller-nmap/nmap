@@ -263,7 +263,7 @@ void initialize_idleproxy(struct idle_proxy_info *proxy, char *proxyName,
     }
   } else proxy->probe_port = o.tcp_probe_port;
 
-  proxy->host.name = strdup(name);
+  proxy->host.setHostName(name);
   if (resolve(name, &ss, &sslen, o.pf) == 0) {
     fatal("Could not resolve idlescan zombie host: %s", name);
   }
@@ -398,10 +398,10 @@ void initialize_idleproxy(struct idle_proxy_info *proxy, char *proxyName,
   switch(proxy->seqclass) {
   case IPID_SEQ_INCR:
   case IPID_SEQ_BROKEN_INCR:
-    log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT, "Idlescan using zombie %s (%s:%hu); Class: %s\n", proxy->host.name, proxy->host.targetipstr(), proxy->probe_port, ipidclass2ascii(proxy->seqclass));
+    log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT, "Idlescan using zombie %s (%s:%hu); Class: %s\n", proxy->host.HostName(), proxy->host.targetipstr(), proxy->probe_port, ipidclass2ascii(proxy->seqclass));
     break;
   default:
-    fatal("Idlescan zombie %s (%s) port %hu cannot be used because IPID sequencability class is: %s.  Try another proxy.", proxy->host.name, proxy->host.targetipstr(), proxy->probe_port, ipidclass2ascii(proxy->seqclass));
+    fatal("Idlescan zombie %s (%s) port %hu cannot be used because IPID sequencability class is: %s.  Try another proxy.", proxy->host.HostName(), proxy->host.targetipstr(), proxy->probe_port, ipidclass2ascii(proxy->seqclass));
   }
 
   proxy->latestid = ipids[probes_returned - 1];
@@ -442,13 +442,13 @@ void initialize_idleproxy(struct idle_proxy_info *proxy, char *proxyName,
     if (newipid == -1)
       newipid = ipid_proxy_probe(proxy, NULL, NULL); /* OK, we'll give it one more try */
 
-    if (newipid < 0) fatal("Your IPID Zombie (%s; %s) is behaving strangely -- suddenly cannot obtain IPID", proxy->host.name, proxy->host.targetipstr());
+    if (newipid < 0) fatal("Your IPID Zombie (%s; %s) is behaving strangely -- suddenly cannot obtain IPID", proxy->host.HostName(), proxy->host.targetipstr());
       
     distance = ipid_distance(proxy->seqclass, proxy->latestid, newipid);
     if (distance <= 0) {
-      fatal("Your IPID Zombie (%s; %s) is behaving strangely -- suddenly cannot obtain valid IPID distance.", proxy->host.name, proxy->host.targetipstr());
+      fatal("Your IPID Zombie (%s; %s) is behaving strangely -- suddenly cannot obtain valid IPID distance.", proxy->host.HostName(), proxy->host.targetipstr());
     } else if (distance == 1) {
-      fatal("Even though your Zombie (%s; %s) appears to be vulnerable to IPID sequence prediction (class: %s), our attempts have failed.  There generally means that either the Zombie uses a separate IPID base for each host (like Solaris), or because you cannot spoof IP packets (perhaps your ISP has enabled egress filtering to prevent IP spoofing), or maybe the target network recognizes the packet source as bogus and drops them", proxy->host.name, proxy->host.targetipstr(), ipidclass2ascii(proxy->seqclass));
+      fatal("Even though your Zombie (%s; %s) appears to be vulnerable to IPID sequence prediction (class: %s), our attempts have failed.  There generally means that either the Zombie uses a separate IPID base for each host (like Solaris), or because you cannot spoof IP packets (perhaps your ISP has enabled egress filtering to prevent IP spoofing), or maybe the target network recognizes the packet source as bogus and drops them", proxy->host.HostName(), proxy->host.targetipstr(), ipidclass2ascii(proxy->seqclass));
     }
     if (o.debugging && distance != 5) {
       error("WARNING: IPID spoofing test sent 4 packets and expected a distance of 5, but instead got %d", distance);
@@ -503,7 +503,7 @@ void adjust_idle_timing(struct idle_proxy_info *proxy,
 
       if (!notidlewarning && o.verbose) {
 	notidlewarning = 1;
-	error("WARNING: Idlescan has erroneously detected phantom ports -- is the proxy %s (%s) really idle?", proxy->host.name, proxy->host.targetipstr());
+	error("WARNING: Idlescan has erroneously detected phantom ports -- is the proxy %s (%s) really idle?", proxy->host.HostName(), proxy->host.targetipstr());
       }
     } else {
       /* W00p We got a perfect match.  That means we get a slight increase
@@ -695,7 +695,7 @@ int idlescan_countopen(struct idle_proxy_info *proxy,
 
   if (openports < 0 || openports > numports ) {
     /* Oh f*ck!!!! */
-    fatal("Idlescan is unable to obtain meaningful results from proxy %s (%s).  I'm sorry it didn't work out.", proxy->host.name, 
+    fatal("Idlescan is unable to obtain meaningful results from proxy %s (%s).  I'm sorry it didn't work out.", proxy->host.HostName(), 
 	  proxy->host.targetipstr());
   }
 
@@ -870,7 +870,7 @@ void idle_scan(Target *target, u16 *portarray, int numports,
   }
 
   if (o.debugging || o.verbose) {  
-    log_write(LOG_STDOUT, "Initiating Idlescan against %s (%s)\n", target->name, target->targetipstr());
+    log_write(LOG_STDOUT, "Initiating Idlescan against %s (%s)\n", target->HostName(), target->targetipstr());
   }
   starttime = time(NULL);
 

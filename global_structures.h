@@ -224,8 +224,23 @@ class Target {
   /* The IPv4 or IPv6 literal string for the target host */
   const char *targetipstr() { return targetipstring; }
   struct in_addr source_ip;
-  char *name;
-
+  /* Give the name from the last setHostName() call, which should be
+   the name obtained from reverse-resolution (PTR query) of the IP (v4
+   or v6).  If the name has not been set, or was set to NULL, an empty
+   string ("") is returned to make printing easier. */
+  const char *HostName() { return hostname? : "";  }
+  /* You can set to NULL to erase a name or if it failed to resolve -- or 
+     just don't call this if it fails to resolve.  The hostname is blown
+     away when you setTargetSockAddr(), so make sure you do these in proper
+     order
+  */
+  void setHostName(char *name);
+  /* Generates the a printable string consisting of the host's IP
+     address and hostname (if available).  Eg "www.insecure.org
+     (64.71.184.53)" or "fe80::202:e3ff:fe14:1102".  The name is
+     written into the buffer provided, which is also returned.  Results
+     that do not fit in bufflen will be truncated. */
+  const char *NameIP(char *buf, size_t buflen);
   struct seq_info seq;
   struct FingerPrintResults FPR;
   FingerPrint *FPs[10]; /* Fingerprint data obtained from host */
@@ -250,6 +265,7 @@ class Target {
   char device[64]; /* The device we transmit on */
 
  private:
+  char *hostname; // Null if unable to resolve or unset
   void Initialize();
   void FreeInternal(); // Free memory allocated inside this object
  // Creates a "presentation" formatted string out of the IPv4/IPv6 address

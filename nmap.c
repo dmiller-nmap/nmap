@@ -161,11 +161,7 @@ int nmap_main(int argc, char *argv[]) {
   char emptystring[1];
   int sourceaddrwarning = 0; /* Have we warned them yet about unguessable
 				source addresses? */
-  char addr_buf[INET6_ADDRSTRLEN];
   char hostname[MAXHOSTNAMELEN + 1] = "";
-  char *host;
-  struct addrinfo hints, *result;
-  int fail=1;
   time_t timep;
   char mytime[128];
   int option_index;
@@ -589,8 +585,8 @@ int nmap_main(int argc, char *argv[]) {
 #endif
 
   if (o.pingtype == PINGTYPE_UNKNOWN) {
-    if (o.isr00t) o.pingtype = PINGTYPE_TCP|PINGTYPE_TCP_USE_ACK|PINGTYPE_ICMP_PING|PINGTYPE_ICMP_MASK|PINGTYPE_ICMP_TS;
-    else o.pingtype = PINGTYPE_TCP;
+    if (o.isr00t && o.af == AF_INET) o.pingtype = PINGTYPE_TCP|PINGTYPE_TCP_USE_ACK|PINGTYPE_ICMP_PING;
+    else o.pingtype = PINGTYPE_TCP; // if nonr00t or IPv6
   }
 
   /* Open the log files, now that we know whether the user wants them appended
@@ -942,39 +938,18 @@ int nmap_main(int argc, char *argv[]) {
 	currenths->host_timeout.tv_usec %= 1000000;
       }
       
-      /* target = NULL; */
-
+      /* Lookup the IP */
       if (((currenths->flags & HOST_UP) || resolve_all) && !o.noresolve) {
-	struct addrinfo tmp_addrinfo;
-	if (o.af == AF_INET) { /* IPv4 */
-	  struct sockaddr_in tmp_sin;
-	  tmp_sin.sin_family = AF_INET;
-	  tmp_sin.sin_addr = currenths->v4host();
-	  tmp_addrinfo.ai_family = AF_INET;
-	  tmp_addrinfo.ai_addr = (struct sockaddr *)&tmp_sin;
-	  tmp_addrinfo.ai_addrlen = sizeof(struct sockaddr_in);		
-	  
+	struct sockaddr_storage sock;
+	size_t socklen;
+	if (currenths->TargetSockAddr(&sock, &socklen) != 0)
+	  fatal("Failed to get target socket address.");
+	if (getnameinfo((struct sockaddr *)&sock, socklen, hostname, 
+			sizeof(hostname), NULL, 0, NI_NAMEREQD) == 0) {
+	  currenths->setHostName(hostname);
 	}
-#if 0
-	else if(o.af == AF_INET6){      /*IPv6*/
-	  struct sockaddr_in6 tmp_sin6;
-	  tmp_sin6.sin6_family = AF_INET6;
-	  memcpy(&(tmp_sin6.sin6_addr),  &(currenths->host6), sizeof(struct in6_addr));
-	  tmp_addrinfo.ai_family = AF_INET6;
-	  tmp_addrinfo.ai_addr = (struct sockaddr *)&tmp_sin6;
-	  tmp_addrinfo.ai_addrlen = sizeof(struct sockaddr_in6);	
-	} 
-#endif
-	else { fatal("Unknown o.af address family"); }
-	fail = getnameinfo((struct sockaddr *) tmp_addrinfo.ai_addr, tmp_addrinfo.ai_addrlen, hostname, sizeof(hostname), NULL, 0,0);
       }
 
-      if ( !fail && *hostname) {
-	currenths->name = strdup(hostname);
-      } else {
-	currenths->name = emptystring;
-      }
-      
       if (o.source) memcpy(&currenths->source_ip, o.source, sizeof(struct in_addr));
       log_write(LOG_XML, "<host>");
       write_host_status(currenths, resolve_all);
@@ -1041,10 +1016,9 @@ int nmap_main(int argc, char *argv[]) {
 	}
 	
 	if (currenths->timedout) {
-	  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Skipping host  %s (%s) due to host timeout\n", currenths->name,
-		    currenths->targetipstr());
+	  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Skipping host %s due to host timeout\n", currenths->NameIP(hostname, sizeof(hostname)));
 	  log_write(LOG_MACHINE,"Host: %s (%s)\tStatus: Timeout", 
-		    currenths->targetipstr(), currenths->name);
+		    currenths->targetipstr(), currenths->HostName());
 	} else {
 	  assignignoredportstate(&currenths->ports);
 	  printportoutput(currenths, &currenths->ports);
@@ -1840,6 +1814,7 @@ int check_firewallmode(Target *target, struct scanstats *ss) {
   struct timeval current_time;
   static struct timeval last_adjust;
   static int init = 0;
+  char hostname[1200];
 
   if (!init) {
     gettimeofday(&last_adjust, NULL);
@@ -1848,7 +1823,7 @@ int check_firewallmode(Target *target, struct scanstats *ss) {
 
   if (fm->nonresponsive_ports > 50 && ((double)fm->responsive_ports / (fm->responsive_ports + fm->nonresponsive_ports)) < 0.05) {  
     if (fm->active == 0 && o.debugging)
-      error("Activating firewall speed-optimization mode for host %s (%s)", target->name, target->targetipstr()); 
+      error("Activating firewall speed-optimization mode for host %s", target->NameIP(hostname, sizeof(hostname)));
     fm->active = 1;
   }
 

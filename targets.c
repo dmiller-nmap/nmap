@@ -357,7 +357,7 @@ Target::Target() {
 }
 
 void Target::Initialize() {
-  name = NULL;
+  hostname = NULL;
   bzero(&seq, sizeof(seq));
   bzero(&FPR, sizeof(FPR));
   bzero(FPs, sizeof(FPs));
@@ -389,8 +389,8 @@ void Target::FreeInternal() {
   int i;
 
   /* Free the DNS name if we resolved one */
-  if (name && *name)
-    free(name);
+  if (hostname)
+    free(hostname);
 
   /* Free OS fingerprints of OS scanning was done */
   for(i=0; i < numFPs; i++) {
@@ -436,6 +436,11 @@ int Target::TargetSockAddr(struct sockaddr_storage *ss, size_t *ss_len) {
 void Target::setTargetSockAddr(struct sockaddr_storage *ss, size_t ss_len) {
 
   assert(ss_len > 0 && ss_len <= sizeof(*ss));
+  if (targetsocklen > 0) {
+    /* We had an old target sock, so we better blow away the hostname as
+       this one may be new. */
+    setHostName(NULL);
+  }
   memcpy(&targetsock, ss, ss_len);
   targetsocklen = ss_len;
   GenerateIPString();
@@ -457,6 +462,31 @@ const struct in_addr *Target::v4hostip() {
     return &(sin->sin_addr);
   }
   return NULL;
+}
+
+  /* You can set to NULL to erase a name or if it failed to resolve -- or 
+     just don't call this if it fails to resolve */
+void Target::setHostName(char *name) {
+  if (hostname) {
+    free(hostname);
+    hostname = NULL;
+  }
+  if (name)
+    hostname = strdup(name);
+}
+
+ /* Generates the a printable string consisting of the host's IP
+     address and hostname (if available).  Eg "www.insecure.org
+     (64.71.184.53)" or "fe80::202:e3ff:fe14:1102".  The name is
+     written into the buffer provided, which is also returned.  Results
+     that do not fit in bufflen will be truncated. */
+const char *Target::NameIP(char *buf, size_t buflen) {
+  assert(buf);
+  assert(buflen > 8);
+  if (hostname) {
+    snprintf(buf, buflen, "%s (%s)", hostname, targetipstring);
+  } else Strncpy(buf, targetipstring, buflen);
+  return buf;
 }
 
 enum pingstyle { pingstyle_unknown, pingstyle_rawtcp, pingstyle_connecttcp, 
@@ -631,7 +661,7 @@ do {
 	   1) We are r00t AND
 	   2) We are doing tcp pingscan OR
 	   3) We are doing a raw-mode portscan or osscan */
-	if (o.isr00t && 
+	if (o.isr00t && o.af == AF_INET && 
 	    ((*pingtype & PINGTYPE_TCP) || 
 	     o.synscan || o.finscan || o.xmasscan || o.nullscan || 
 	     o.ipprotscan || o.maimonscan || o.idlescan || o.ackscan || 
@@ -685,7 +715,7 @@ if (hs->randomize) {
 /* Finally we do the mass ping (if required) */
  if ((*pingtype & 
       (PINGTYPE_ICMP_PING|PINGTYPE_ICMP_MASK|PINGTYPE_ICMP_TS) ) || 
-     ((hs->hostbatch[0]->v4host().s_addr || !o.isr00t) && 
+     ((!o.isr00t || o.af == AF_INET6 || hs->hostbatch[0]->v4host().s_addr) && 
       (*pingtype != PINGTYPE_NONE))) 
    massping(hs->hostbatch, hs->current_batch_sz, ports, *pingtype);
  else for(i=0; i < hs->current_batch_sz; i++)  {
@@ -700,7 +730,7 @@ if (hs->randomize) {
 
 void massping(Target *hostbatch[], int num_hosts, 
               struct scan_lists *ports, int pingtype) {
-static struct timeout_info to = { 0,0,0};
+static struct timeout_info to = {0,0,0};
 static int gsize = LOOKAHEAD;
 int hostnum;
 struct pingtune pt;
@@ -755,7 +785,7 @@ else sportbase = o.magic_port + 20;
 else if (pingtype & (PINGTYPE_ICMP_PING|PINGTYPE_ICMP_MASK|PINGTYPE_ICMP_TS)) 
   ptech.icmpscan = 1;
 if (pingtype & PINGTYPE_TCP) {
-  if (o.isr00t)
+  if (o.isr00t && o.af == AF_INET)
     ptech.rawtcpscan = 1;
   else ptech.connecttcpscan = 1;
 }
@@ -938,7 +968,10 @@ int sendconnecttcpquery(Target *hostbatch[], struct tcpqueryinfo *tqi,
   int res,i;
   int tmpsd;
   int hostnum, trynum;
-  struct sockaddr_in sock;
+  struct sockaddr_storage sock;
+  struct sockaddr_in *sin = (struct sockaddr_in *) &sock;
+  struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *) &sock;
+  size_t socklen;
   
   trynum = seq % pt->max_tries;
   hostnum = seq / pt->max_tries;
@@ -962,9 +995,8 @@ int sendconnecttcpquery(Target *hostbatch[], struct tcpqueryinfo *tqi,
   }
     
   /* Since we know we now have a free s0cket, lets take it */
-
   assert(tqi->sockets[seq] == -1);
-  tqi->sockets[seq] =  socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+  tqi->sockets[seq] =  socket(o.af, SOCK_STREAM, IPPROTO_TCP);
   if (tqi->sockets[seq] == -1) 
     fatal("Socket creation in sendconnecttcpquery");
   tqi->maxsd = MAX(tqi->maxsd, tqi->sockets[seq]);
@@ -972,12 +1004,14 @@ int sendconnecttcpquery(Target *hostbatch[], struct tcpqueryinfo *tqi,
   unblock_socket(tqi->sockets[seq]);
   init_socket(tqi->sockets[seq]);
 
-  bzero(&sock, sizeof(sock));
-  sock.sin_family = AF_INET;
-  sock.sin_port = htons(o.tcp_probe_port);
-  sock.sin_addr.s_addr = target->v4host().s_addr;
+  if (target->TargetSockAddr(&sock, &socklen) != 0)
+    fatal("Unable to get target sock in sendconnecttcpquery");
+
+  if (sin->sin_family == AF_INET)
+    sin->sin_port = htons(o.tcp_probe_port);
+  else sin6->sin6_port = htons(o.tcp_probe_port);
   
-  res = connect(tqi->sockets[seq],(struct sockaddr *)&sock,sizeof(struct sockaddr));
+  res = connect(tqi->sockets[seq],(struct sockaddr *)&sock, socklen);
   gettimeofday(&time[seq], NULL);
 
   if ((res != -1 || errno == ECONNREFUSED)) {
@@ -1130,7 +1164,6 @@ fd_set myfds_r,myfds_w,myfds_x;
 gettimeofday(&start, NULL);
  
 while(pt->block_unaccounted) {
-
   /* OK so there is a little fudge factor, SUE ME! */
   myto.tv_sec  = to->timeout / 1000000; 
   myto.tv_usec = to->timeout % 1000000;

@@ -74,6 +74,7 @@ void printportoutput(Target *currenths, portlist *plist) {
   int numignoredports;
   int portno, protocount;
   struct port **protoarrays[2];
+  char hostname[1200];
 
   numignoredports = plist->state_counts[plist->ignored_port_state];
 
@@ -86,23 +87,23 @@ void printportoutput(Target *currenths, portlist *plist) {
 
   if (numignoredports == plist->numports) {
     log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,
-              "%s %d scanned %s on %s (%s) %s: %s\n",
+              "%s %d scanned %s on %s %s: %s\n",
 	      (numignoredports == 1)? "The" : "All", numignoredports,
-	      (numignoredports == 1)? "port" : "ports", currenths->name, 
-	      currenths->targetipstr(), 
+	      (numignoredports == 1)? "port" : "ports", 
+	      currenths->NameIP(hostname, sizeof(hostname)), 
 	      (numignoredports == 1)? "is" : "are", 
 	      statenum2str(currenths->ports.ignored_port_state));
     log_write(LOG_MACHINE,"Host: %s (%s)\tStatus: Up", 
-	      currenths->targetipstr(), currenths->name);
+	      currenths->targetipstr(), currenths->HostName());
     log_write(LOG_XML, "</ports>\n");
     return;
   }
 
-  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Interesting %s on %s (%s):\n",
-	    (o.ipprotscan)? "protocols" : "ports", currenths->name, 
-	    currenths->targetipstr());
+  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Interesting %s on %s:\n",
+	    (o.ipprotscan)? "protocols" : "ports", 
+	    currenths->NameIP(hostname, sizeof(hostname)));
   log_write(LOG_MACHINE,"Host: %s (%s)", currenths->targetipstr(), 
-	    currenths->name);
+	    currenths->HostName());
   
   if (numignoredports > 0) {
     log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"(The %d %s%s scanned but not shown below %s in state: %s)\n", numignoredports, o.ipprotscan?"protocol":"port", (numignoredports == 1)? "" : "s", (numignoredports == 1)? "is" : "are", statenum2str(plist->ignored_port_state));
@@ -476,9 +477,9 @@ void output_xml_scaninfo_records(struct scan_lists *scanlist) {
    into the XML log */
 static void write_xml_initial_hostinfo(Target *currenths,
 				  const char *status) {
-  log_write(LOG_XML, "<status state=\"%s\" />\n<address addr=\"%s\" addrtype=\"ipv4\" />\n", status,currenths->targetipstr());
-  if (currenths->name && *currenths->name) {
-    log_write(LOG_XML, "<hostnames><hostname name=\"%s\" type=\"PTR\" /></hostnames>\n", currenths->name);
+  log_write(LOG_XML, "<status state=\"%s\" />\n<address addr=\"%s\" addrtype=\"%s\" />\n", status,currenths->targetipstr(), (o.af == AF_INET)? "ipv4" : "ipv6");
+  if (*currenths->HostName()) {
+    log_write(LOG_XML, "<hostnames><hostname name=\"%s\" type=\"PTR\" /></hostnames>\n", currenths->HostName());
   } else /* If machine is up, put blank hostname so front ends know that
 	    no name resolution is forthcoming */
     if (strcmp(status, "up") == 0) log_write(LOG_XML, "<hostnames />\n");
@@ -489,11 +490,12 @@ static void write_xml_initial_hostinfo(Target *currenths,
    machine log.  resolve_all should be passed nonzero if the user asked
    for all hosts (even down ones) to be resolved */
 void write_host_status(Target *currenths, int resolve_all) {
+  char hostname[1200];
 
   if (o.listscan) {
     /* write "unknown" to stdout, machine, and xml */
-    log_write(LOG_STDOUT|LOG_NORMAL|LOG_SKID, "Host %s (%s) not scanned\n", currenths->name, currenths->targetipstr());
-    log_write(LOG_MACHINE, "Host: %s (%s)\tStatus: Unknown\n", currenths->targetipstr(), currenths->name);
+    log_write(LOG_STDOUT|LOG_NORMAL|LOG_SKID, "Host %s not scanned\n", currenths->NameIP(hostname, sizeof(hostname)));
+    log_write(LOG_MACHINE, "Host: %s (%s)\tStatus: Unknown\n", currenths->targetipstr(), currenths->HostName());
     write_xml_initial_hostinfo(currenths, "unknown");
   } 
 
@@ -503,15 +505,16 @@ void write_host_status(Target *currenths, int resolve_all) {
 			       (currenths->flags & HOST_UP)? "up" : "down");
     log_write(LOG_XML, "<smurf responses=\"%d\" />\n", 
 	      currenths->wierd_responses);
-    log_write(LOG_MACHINE,"Host: %s (%s)\tStatus: Smurf (%d responses)\n",  currenths->targetipstr(), currenths->name, currenths->wierd_responses);
+    log_write(LOG_MACHINE,"Host: %s (%s)\tStatus: Smurf (%d responses)\n",  currenths->targetipstr(), currenths->HostName(), currenths->wierd_responses);
     
     if (o.pingscan)
-      log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Host  %s (%s) seems to be a subnet broadcast address (returned %d extra pings).%s\n",  currenths->name, currenths->targetipstr(), currenths->wierd_responses, 
+      log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Host %s seems to be a subnet broadcast address (returned %d extra pings).%s\n",  currenths->NameIP(hostname, sizeof(hostname)), currenths->wierd_responses, 
 		(currenths->flags & HOST_UP)? " Note -- the actual IP also responded." : "");
     else {
-      log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Host  %s (%s) seems to be a subnet broadcast address (returned %d extra pings). %s.\n",  currenths->name, 
-		currenths->targetipstr(), currenths->wierd_responses,
-		(currenths->flags & HOST_UP)? 
+      log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Host %s seems to be a subnet broadcast address (returned %d extra pings). %s.\n",  
+		currenths->NameIP(hostname, sizeof(hostname)),
+		currenths->wierd_responses,
+	       (currenths->flags & HOST_UP)? 
 		" Still scanning it due to ping response from its own IP" 
 		: "Skipping host");
     }
@@ -521,13 +524,13 @@ void write_host_status(Target *currenths, int resolve_all) {
     write_xml_initial_hostinfo(currenths, 
 			       (currenths->flags & HOST_UP)? "up" : "down");
     if (currenths->flags & HOST_UP) {
-      log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Host %s (%s) appears to be up.\n", currenths->name, currenths->targetipstr());
-      log_write(LOG_MACHINE,"Host: %s (%s)\tStatus: Up\n", currenths->targetipstr(), currenths->name);
+      log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Host %s appears to be up.\n", currenths->NameIP(hostname, sizeof(hostname)));
+      log_write(LOG_MACHINE,"Host: %s (%s)\tStatus: Up\n", currenths->targetipstr(), currenths->HostName());
     } else if (o.verbose || resolve_all) {
       if (resolve_all)
-	log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Host %s (%s) appears to be down.\n", currenths->name, currenths->targetipstr());
-      else log_write(LOG_STDOUT,"Host %s (%s) appears to be down.\n", currenths->name, currenths->targetipstr());
-      log_write(LOG_MACHINE, "Host: %s (%s)\tStatus: Down\n", currenths->targetipstr(), currenths->name);
+	log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Host %s appears to be down.\n", currenths->NameIP(hostname, sizeof(hostname)));
+      else log_write(LOG_STDOUT,"Host %s appears to be down.\n", currenths->NameIP(hostname, sizeof(hostname)));
+      log_write(LOG_MACHINE, "Host: %s (%s)\tStatus: Down\n", currenths->targetipstr(), currenths->HostName());
     }
   } 
 
@@ -536,17 +539,17 @@ void write_host_status(Target *currenths, int resolve_all) {
 			       (currenths->flags & HOST_UP)? "up" : "down");
     if (o.verbose) {
       if (currenths->flags & HOST_UP) {
-	log_write(LOG_STDOUT, "Host %s (%s) appears to be up ... good.\n", 
-		  currenths->name, currenths->targetipstr());
+	log_write(LOG_STDOUT, "Host %s appears to be up ... good.\n", 
+		  currenths->NameIP(hostname, sizeof(hostname)));
       } else {
 
 	if (resolve_all) {   
-	  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Host %s (%s) appears to be down, skipping it.\n", currenths->name, currenths->targetipstr());
+	  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Host %s appears to be down, skipping it.\n", currenths->NameIP(hostname, sizeof(hostname)));
 	}
 	else {
-	  log_write(LOG_STDOUT,"Host %s (%s) appears to be down, skipping it.\n", currenths->name, currenths->targetipstr());
+	  log_write(LOG_STDOUT,"Host %s appears to be down, skipping it.\n", currenths->NameIP(hostname, sizeof(hostname)));
 	}
-	log_write(LOG_MACHINE, "Host: %s (%s)\tStatus: Down\n", currenths->targetipstr(), currenths->name);
+	log_write(LOG_MACHINE, "Host: %s (%s)\tStatus: Down\n", currenths->targetipstr(), currenths->HostName());
       }
     }
   }
