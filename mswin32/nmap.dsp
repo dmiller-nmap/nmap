@@ -42,7 +42,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
-# ADD CPP /nologo /MT /GX /O1 /I "." /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
+# ADD CPP /nologo /MT /GX /O1 /I "." /I ".." /I "../nbase" /I "mswin32\winip" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D HAVE_CONFIG_H=1 /YX /FD /c
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
 # ADD RSC /l 0x409 /d "NDEBUG"
 BSC32=bscmake.exe
@@ -50,7 +50,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib libpcap.lib winip\iphlpapi.lib delayimp.lib /nologo /subsystem:console /machine:I386 /delayload:packet.dll /delay:nobind /opt:nowin98 /delayload:iphlpapi.dll
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib iphlpapi.lib delayimp.lib libpcap.lib /nologo /subsystem:console /machine:I386 /libpath:"winip" /libpath:"lib" /delayload:packet.dll /delay:nobind /opt:nowin98 /delayload:iphlpapi.dll
 # SUBTRACT LINK32 /pdb:none
 
 !ELSEIF  "$(CFG)" == "nmap - Win32 Debug"
@@ -67,7 +67,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /GZ /c
-# ADD CPP /nologo /MTd /W2 /Gm /GX /ZI /Od /I "." /I ".." /I "../nbase" /I "mswin32\winip" /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /D HAVE_CONFIG_H=1 /YX /FD /GZ /c
+# ADD CPP /nologo /MTd /W2 /Gm /GX /ZI /Od /I "." /I ".." /I "../nbase" /I "mswin32\winip" /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D HAVE_CONFIG_H=1 /YX /FD /GZ /c
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
 # ADD RSC /l 0x409 /d "_DEBUG"
 BSC32=bscmake.exe
@@ -75,7 +75,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib libpcap.lib iphlpapi.lib delayimp.lib /nologo /subsystem:console /profile /debug /machine:I386 /libpath:"winip" /libpath:"lib" /delayload:packet.dll /delay:nobind
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib iphlpapi.lib delayimp.lib libpcap.lib /nologo /subsystem:console /profile /debug /machine:I386 /libpath:"winip" /libpath:"lib" /delayload:packet.dll /delay:nobind
 
 !ENDIF 
 

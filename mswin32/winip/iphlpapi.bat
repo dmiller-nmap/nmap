@@ -22,7 +22,12 @@ rem License along with this libraryrem  if not, write to the Free Software
 rem Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 echo Rebuilding iphlpapi.lib...
-cl /c /Zl iphlpapi.c
-lib /def:iphlpapi.def iphlpapi.obj
+cl /c /Zl /nologo iphlpapi.c
+lib /nologo /def:iphlpapi.def iphlpapi.obj
 del iphlpapi.obj iphlpapi.exp
+
+rem Clean up after VC
+if exist debug rd debug
+if exist release rd release
+
 echo Done.
