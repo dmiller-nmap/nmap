@@ -156,12 +156,12 @@ struct ip
 #endif /* HAVE_STRUCT_IP */
 
 #ifdef LINUX
-struct udphdr_bsd {
+typedef struct udphdr_bsd {
          u_int16_t uh_sport;           /* source port */
          u_int16_t uh_dport;           /* destination port */
          u_int16_t uh_ulen;            /* udp length */
          u_int16_t uh_sum;             /* udp checksum */
-};
+} udphdr_bsd;
 #else
 typedef struct udphdr udphdr_bsd;
 #endif

@@ -271,8 +271,8 @@ return 0;
 int readudppacket(char *packet, int readdata) {
 
 struct ip *ip = (struct ip *) packet;
-struct udphdr_bsd *udp = (struct udphdr_bsd *) (packet + sizeof(struct ip));
-char *data = packet +  sizeof(struct ip) + sizeof(struct udphdr_bsd);
+udphdr_bsd *udp = (udphdr_bsd *) (packet + sizeof(struct ip));
+char *data = packet +  sizeof(struct ip) + sizeof(udphdr_bsd);
 int tot_len;
 struct in_addr bullshit, bullshit2;
 char sourcehost[16];
@@ -314,9 +314,9 @@ int send_udp_raw( int sd, struct in_addr *source,
 		  unsigned short dport, char *data, unsigned short datalen) 
 {
 
-char *packet = safe_malloc(sizeof(struct ip) + sizeof(struct udphdr_bsd) + datalen);
+char *packet = safe_malloc(sizeof(struct ip) + sizeof(udphdr_bsd) + datalen);
 struct ip *ip = (struct ip *) packet;
-struct udphdr_bsd *udp = (struct udphdr_bsd *) (packet + sizeof(struct ip));
+udphdr_bsd *udp = (udphdr_bsd *) (packet + sizeof(struct ip));
 static int myttl = 0;
 
 int res;
@@ -360,7 +360,7 @@ sock.sin_port = htons(dport);
 sock.sin_addr.s_addr = victim->s_addr;
 
 
-bzero((char *) packet, sizeof(struct ip) + sizeof(struct udphdr_bsd));
+bzero((char *) packet, sizeof(struct ip) + sizeof(udphdr_bsd));
 
 udp->uh_sport = htons(sport);
 udp->uh_dport = htons(dport);
@@ -372,7 +372,7 @@ udp->uh_ulen = BSDFIX(8 + datalen);
 bzero(packet, sizeof(struct ip)); 
 ip->ip_v = 4;
 ip->ip_hl = 5;
-ip->ip_len = BSDFIX(sizeof(struct ip) + sizeof(struct udphdr_bsd) + datalen);
+ip->ip_len = BSDFIX(sizeof(struct ip) + sizeof(udphdr_bsd) + datalen);
 ip->ip_id = rand();
 ip->ip_ttl = myttl;
 ip->ip_p = IPPROTO_UDP;
@@ -384,7 +384,7 @@ ip->ip_sum = in_cksum((unsigned short *)ip, sizeof(struct ip));
 
  /* We should probably copy the data over too */
 if (data)
-  memcpy(packet + sizeof(struct ip) + sizeof(struct udphdr_bsd), data, datalen);
+  memcpy(packet + sizeof(struct ip) + sizeof(udphdr_bsd), data, datalen);
 
 if (TCPIP_DEBUGGING > 1) {
   printf("Raw UDP packet creation completed!  Here it is:\n");

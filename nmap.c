@@ -1988,7 +1988,7 @@ if (o.debugging || o.verbose)
 		else { 
 		  if (o.debugging) {
 		    printf("Illegal ICMP port unreachable packet:\n");
-		    hdump(icmp, ntohs(ip->ip_len) -sizeof(struct ip));
+		    hdump((unsigned char *)icmp, ntohs(ip->ip_len) -sizeof(struct ip));
 		  }
 		    continue; 
 		}		  		
