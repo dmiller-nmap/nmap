@@ -1,4 +1,6 @@
-VERSION = 2.51
+NMAP_VERSION = 2.52
+NMAP_NAME= nmap
+NMAP_URL= www.insecure.org/nmap/
 prefix = @prefix@
 exec_prefix = @exec_prefix@
 bindir = @bindir@
@@ -12,7 +14,7 @@ CC = @CC@
 CCOPT = 
 LIBPCAPDIR = @libpcapdir@
 INCLS = -I. -I$(LIBPCAPDIR)
-DEFS = @DEFS@ -DVERSION=\"$(VERSION)\" -DNMAPDATADIR=\"$(nmapdatadir)\"
+DEFS = @DEFS@ -DNMAP_VERSION=\"$(NMAP_VERSION)\" -DNMAP_NAME=\"$(NMAP_NAME)\" -DNMAP_URL=\"$(NMAP_URL)\" -DNMAPDATADIR=\"$(nmapdatadir)\"
 CFLAGS = @CFLAGS@ $(CCOPT) $(DEFS) $(INCLS)
 # CFLAGS = -g -Wall $(DEFS) $(INCLS)
 STATIC = 
@@ -75,38 +77,38 @@ distro:
 # drop lines if you let it try to delete page breaks
 	nroff -man docs/nmap.1 | man2html -nodepage -title 'Nmap network security scanner man page' > docs/nmap_manpage.html
 	nroff -man docs/nmap_spanish.1 | man2html -nodepage -title 'Nmap network security scanner man page (Spanish translation)' > docs/nmap_manpage-es.html
-	rm -rf /usr/tmp/nmap-$(VERSION)
-	mkdir /usr/tmp/nmap-$(VERSION)
+	rm -rf /usr/tmp/nmap-$(NMAP_VERSION)
+	mkdir /usr/tmp/nmap-$(NMAP_VERSION)
 # Make the RPM .spec file
-	sed -e s/\@VERSION\@/$(VERSION)/g nmap.spec.in > nmap-$(VERSION)-1.spec
+	sed -e s/\@VERSION\@/$(NMAP_VERSION)/g nmap.spec.in > nmap-$(NMAP_VERSION)-1.spec
 	$(MAKE) clean
 	rm -f $(LIBPCAPDIR)/config.cache $(LIBPCAPDIR)/Makefile
 	cp -ra $(SRCS) $(DEPS) inet_aton.c snprintf.c nmap-os-fingerprints \
 	nmapfe.desktop getopt.h getopt.c getopt1.c nmap-services nmap-rpc \
 	configure.in config.h.in Makefile.in configure $(SHTOOL) install-sh \
-        config.guess nmap-$(VERSION)-1.spec config.sub INSTALL \
+        config.guess nmap-$(NMAP_VERSION)-1.spec config.sub INSTALL \
         docs/copying.html docs/README docs/nmap.usage.txt docs/nmap.1 \
 	docs/nmap.deprecated.txt docs/nmap_doc.html docs/nmap_manpage.html \
 	docs/nmap-fingerprinting-article.txt docs/nmap_spanish.1 \
 	docs/nmap_manpage-fr.html docs/nmap_manpage-es.html \
 	COPYING CHANGELOG \
-	$(LIBPCAPDIR) /usr/tmp/nmap-$(VERSION)
-	-mkdir /usr/tmp/nmap-$(VERSION)/nmapfe
+	$(LIBPCAPDIR) /usr/tmp/nmap-$(NMAP_VERSION)
+	-mkdir /usr/tmp/nmap-$(NMAP_VERSION)/nmapfe
 	cd nmapfe; cp Make.files Make.header Makefile  \
 	              Makefile.in aclocal.m4 configure configure.in \
 	              nmapfe.c nmapfe.h nmapfe_sig.c nmapfe_sig.h \
 	              mkinstalldirs missing  \
-	              /usr/tmp/nmap-$(VERSION)/nmapfe
+	              /usr/tmp/nmap-$(NMAP_VERSION)/nmapfe
 # Kill the CVS crap
-	find /usr/tmp/nmap-$(VERSION) -type d -name CVS | xargs rm -rf
+	find /usr/tmp/nmap-$(NMAP_VERSION) -type d -name CVS | xargs rm -rf
 	cd /usr/tmp; \
-	tar czf nmap-$(VERSION).tgz nmap-$(VERSION)
+	tar czf nmap-$(NMAP_VERSION).tgz nmap-$(NMAP_VERSION)
 # Make the actual RPM
-	rpm -ta /usr/tmp/nmap-$(VERSION).tgz
-	cp -f $(RPMTDIR)/RPMS/i386/nmap-$(VERSION)-1.i386.rpm /usr/tmp
-	cp -f $(RPMTDIR)/RPMS/i386/nmap-frontend-0.$(VERSION)-1.i386.rpm /usr/tmp
-	cp -f $(RPMTDIR)/SRPMS/nmap-$(VERSION)-1.src.rpm /usr/tmp
-	rm -rf /usr/tmp/nmap-$(VERSION)
+	rpm -ta /usr/tmp/nmap-$(NMAP_VERSION).tgz
+	cp -f $(RPMTDIR)/RPMS/i386/nmap-$(NMAP_VERSION)-1.i386.rpm /usr/tmp
+	cp -f $(RPMTDIR)/RPMS/i386/nmap-frontend-0.$(NMAP_VERSION)-1.i386.rpm /usr/tmp
+	cp -f $(RPMTDIR)/SRPMS/nmap-$(NMAP_VERSION)-1.src.rpm /usr/tmp
+	rm -rf /usr/tmp/nmap-$(NMAP_VERSION)
 
 # For distributing the binary
 static: 	

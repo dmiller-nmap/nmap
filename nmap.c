@@ -96,7 +96,9 @@ int main(int argc, char *argv[], char *envp[]) {
     }
     return nmap_main(argc, argv);
   }
-  printf("\nStarting nmap V. %s by fyodor@insecure.org ( www.insecure.org/nmap/ )\n", VERSION);
+  /*  printf("\nStarting nmap V. %s by fyodor@insecure.org ( www.insecure.org/nmap/ )\n", VERSION);*/
+  printf("\nStarting %s V. %s by fyodor@insecure.org ( %s )\n", NMAP_NAME, NMAP_VERSION, NMAP_URL);
+
   printf("Welcome to Interactive Mode -- press h <enter> for help\n");
   
   while(1) {
@@ -592,7 +594,7 @@ int nmap_main(int argc, char *argv[]) {
       }
       break;
     case 'V': 
-      printf("\nnmap V. %s\n", VERSION); 
+      printf("\nnmap V. %s\n", NMAP_VERSION); 
       exit(0);
       break;
     case 'v': o.verbose++; break;
@@ -603,7 +605,7 @@ int nmap_main(int argc, char *argv[]) {
     signal(SIGSEGV, sigdie); 
 
   if (!o.interactivemode)
-    log_write(LOG_STDOUT|LOG_SKID, "\nStarting nmap V. %s by fyodor@insecure.org ( www.insecure.org/nmap/ )\n", VERSION);
+    log_write(LOG_STDOUT|LOG_SKID, "\nStarting %s V. %s by fyodor@insecure.org ( %s )\n", NMAP_NAME, NMAP_VERSION, NMAP_URL);
 
   if (o.pingtype == PINGTYPE_UNKNOWN) {
     if (o.isr00t) o.pingtype = PINGTYPE_TCP|PINGTYPE_TCP_USE_ACK|PINGTYPE_ICMP;
@@ -781,7 +783,7 @@ int nmap_main(int argc, char *argv[]) {
     /* Brief info incase they forget what was scanned */
     Strncpy(mytime, ctime(&timep), sizeof(mytime));
     chomp(mytime);
-  log_write(LOG_NORMAL|LOG_MACHINE, "# Nmap (V. %s) scan initiated %s as: ", VERSION, mytime);
+  log_write(LOG_NORMAL|LOG_MACHINE, "# Nmap (V. %s) scan initiated %s as: ", NMAP_NAME, NMAP_VERSION, mytime);
 
   for(i=0; i < argc; i++) log_write(LOG_NORMAL|LOG_MACHINE,"%s ", fakeargv[i]);
   log_write(LOG_NORMAL|LOG_MACHINE,"\n");  
@@ -1367,7 +1369,7 @@ void printusage(char *name, int rc) {
 	 "* -S <your_IP>/-e <devicename> Specify source address or network interface\n"
 	 "  --interactive Go into interactive mode (then press h for help)\n"
 	 "Example: nmap -v -sS -O www.my.com 192.168.0.0/16 '192.88-90.*.*'\n"
-	 "SEE THE MAN PAGE FOR MANY MORE OPTIONS, DESCRIPTIONS, AND EXAMPLES \n", VERSION);
+	 "SEE THE MAN PAGE FOR MANY MORE OPTIONS, DESCRIPTIONS, AND EXAMPLES \n", NMAP_VERSION);
   exit(rc);
 }
 
