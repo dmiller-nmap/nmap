@@ -78,8 +78,8 @@ int send_tcp_raw( int sd, struct in_addr *source,
 		  struct in_addr *victim, unsigned short sport, 
 		  unsigned short dport, unsigned long seq,
 		  unsigned long ack, unsigned char flags,
-		  unsigned short window, char *data, 
-		  unsigned short datalen) 
+		  unsigned short window, char *options, int optlen,
+		  char *data, unsigned short datalen) 
 {
 
 struct pseudo_header { 
@@ -90,7 +90,7 @@ struct pseudo_header {
   unsigned char protocol;
   unsigned short length;
 };
-char *packet = safe_malloc(sizeof(struct ip) + sizeof(struct tcphdr) + datalen);
+char *packet = safe_malloc(sizeof(struct ip) + sizeof(struct tcphdr) + optlen + datalen);
 struct ip *ip = (struct ip *) packet;
 struct tcphdr *tcp = (struct tcphdr *) (packet + sizeof(struct ip));
 struct pseudo_header *pseudo =  (struct pseudo_header *) (packet + sizeof(struct ip) - sizeof(struct pseudo_header)); 
@@ -108,7 +108,12 @@ int source_malloced = 0;
 /* We used to check that sport and dport were nonzer0, but scr3w that! */
 if ( !victim || sd < 0) {
   fprintf(stderr, "send_tcp_raw: One or more of your parameters suck!\n");
+  free(packet);
   return -1;
+}
+
+if (optlen % 4) {
+  fatal("send_tcp_raw called with an option length argument of %d which is illegal because it is not divisible by 4", optlen);
 }
 
 if (!myttl)  myttl = (time(NULL) % 14) + 51;
@@ -158,22 +163,27 @@ if (ack)
 /*else if (flags & TH_ACK)
   tcp->th_ack = rand() + rand();*/
 
-tcp->th_off = 5 /*words*/;
+tcp->th_off = 5 + (optlen /4) /*words*/;
 tcp->th_flags = flags;
 
 if (window)
   tcp->th_win = htons(window);
-else tcp->th_win = htons(2048); /* Who cares */
+else tcp->th_win = htons(1024 * (myttl % 4 + 1)); /* Who cares */
+
+ /* We should probably copy the data over too */
+ if (data)
+   memcpy(packet + sizeof(struct ip) + sizeof(struct tcphdr) + optlen, data, datalen);
+
 
 tcp->th_sum = in_cksum((unsigned short *)pseudo, sizeof(struct tcphdr) + 
-		       sizeof(struct pseudo_header) + datalen);
+		       optlen + sizeof(struct pseudo_header) + datalen);
 
 /* Now for the ip header */
 
 bzero(packet, sizeof(struct ip)); 
 ip->ip_v = 4;
 ip->ip_hl = 5;
-ip->ip_len = BSDFIX(sizeof(struct ip) + sizeof(struct tcphdr) + datalen);
+ip->ip_len = BSDFIX(sizeof(struct ip) + sizeof(struct tcphdr) + optlen + datalen);
 ip->ip_id = rand();
 ip->ip_ttl = myttl;
 ip->ip_p = IPPROTO_TCP;
@@ -182,10 +192,6 @@ ip->ip_dst.s_addr= victim->s_addr;
 #if HAVE_IP_IP_SUM
 ip->ip_sum = in_cksum((unsigned short *)ip, sizeof(struct ip));
 #endif
-
- /* We should probably copy the data over too */
-if (data)
-  memcpy(packet + sizeof(struct ip) + sizeof(struct tcphdr), data, datalen);
 
 if (TCPIP_DEBUGGING > 1) {
 printf("Raw TCP packet creation completed!  Here it is:\n");
@@ -201,11 +207,13 @@ if ((res = sendto(sd, packet, BSDUFIX(ip->ip_len), 0,
   {
     perror("sendto in send_tcp_raw");
     if (source_malloced) free(source);
+    free(packet);
     return -1;
   }
 if (TCPIP_DEBUGGING > 1) printf("successfully sent %d bytes of raw_tcp!\n", res);
 
 if (source_malloced) free(source);
+free(packet);
 return res;
 }
 
@@ -330,6 +338,7 @@ int source_malloced = 0;
 /* check that required fields are there and not too silly */
 if ( !victim || !sport || !dport || sd < 0) {
   fprintf(stderr, "send_udp_raw: One or more of your parameters suck!\n");
+  free(packet);
   return -1;
 }
 
@@ -401,11 +410,13 @@ if ((res = sendto(sd, packet, BSDUFIX(ip->ip_len), 0,
   {
     perror("sendto in send_udp_raw");
     if (source_malloced) free(source);
+    free(packet);
     return -1;
   }
 if (TCPIP_DEBUGGING > 1) printf("successfully sent %d bytes of raw_tcp!\n", res);
 
 if (source_malloced) free(source);
+free(packet);
 return res;
 }
 
@@ -428,6 +439,7 @@ int source_malloced = 0;
 /* check that required fields are there and not too silly */
 if ( !victim || sd < 0) {
   fprintf(stderr, "send_udp_raw: One or more of your parameters suck!\n");
+  free(packet);
   return -1;
 }
 
@@ -494,11 +506,13 @@ if (TCPIP_DEBUGGING > 1)
   {
     perror("sendto in send_ip_raw");
     if (source_malloced) free(source);
+    free(packet);
     return -1;
   }
 if (TCPIP_DEBUGGING > 1) printf("successfully sent %d bytes of raw_tcp!\n", res);
 
 if (source_malloced) free(source);
+free(packet); 
 return res;
 }
 

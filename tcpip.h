@@ -259,12 +259,12 @@ struct icmp
    be resolved */
 int resolve(char *hostname, struct in_addr *ip);
 unsigned short in_cksum(unsigned short *ptr,int nbytes);
-int send_tcp_raw( int sd, struct in_addr *source,
-                  struct in_addr *victim, unsigned short sport,
-                  unsigned short dport, unsigned long seq,
-                  unsigned long ack, unsigned char flags,
-                  unsigned short window, char *data,
-                  unsigned short datalen);
+int send_tcp_raw( int sd, struct in_addr *source, 
+		  struct in_addr *victim, unsigned short sport, 
+		  unsigned short dport, unsigned long seq,
+		  unsigned long ack, unsigned char flags,
+		  unsigned short window, char *options, int optlen,
+		  char *data, unsigned short datalen);
 int send_udp_raw( int sd, struct in_addr *source, 
 		  struct in_addr *victim, unsigned short sport, 
 		  unsigned short dport, char *data, unsigned short datalen);

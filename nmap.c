@@ -1601,7 +1601,7 @@ do {
 	  send_small_fragz(tmpsocket, &o.decoys[decoy], &target->host, o.magic_port,
 			   portarray[j], TH_SYN);
 	else send_tcp_raw(tmpsocket, &o.decoys[decoy] , &target->host, o.magic_port, 
-			  portarray[j],0,0,TH_SYN,0,0,0);
+			  portarray[j],0,0,TH_SYN, 0,NULL, 0, 0,0);
 	if (decoy != o.decoyturn) close(tmpsocket);
 	usleep(10000);
       }
@@ -1971,7 +1971,8 @@ if (o.debugging || o.verbose)
 		  send_small_fragz(rawsd, &o.decoys[decoy], &target->host, i, current->portno, scanflags);
 		else if (scantype != UDP_SCAN) 
 		  send_tcp_raw(rawsd, &o.decoys[decoy], &target->host, i, 
-			       current->portno, 0, 0, scanflags, 0, 0, 0);
+			       current->portno, 0, 0, scanflags, 0, NULL, 0,
+			       0, 0);
 		else send_udp_raw(rawsd, &o.decoys[decoy], &target->host, i,
 				  current->portno, NULL ,0);	      
 		if (scantype == UDP_SCAN && senddelay) usleep(senddelay);
@@ -1997,7 +1998,7 @@ if (o.debugging || o.verbose)
 	      send_small_fragz(rawsd, &o.decoys[decoy], &target->host, o.magic_port, current->portno, scanflags);
 	    else if (scantype != UDP_SCAN) 
 	      send_tcp_raw(rawsd, &o.decoys[decoy], &target->host, o.magic_port, 
-			   current->portno, 0, 0, scanflags, 0, 0, 0);
+			   current->portno, 0, 0, scanflags, 0, NULL, 0, 0, 0);
 	    else send_udp_raw(rawsd, &o.decoys[decoy], &target->host, o.magic_port,
 			      current->portno, NULL, 0);
 	    	    if (scantype == UDP_SCAN && senddelay) usleep(senddelay);
@@ -2240,7 +2241,7 @@ while(!done) {
 	if (o.fragscan)
 	  send_small_fragz(rawsd, &o.decoys[decoy], &target->host, o.magic_port, portno[i], scanflags);
 	else send_tcp_raw(rawsd, &o.decoys[decoy], &target->host, o.magic_port, 
-			  portno[i], 0, 0, scanflags, 0, 0, 0);
+			  portno[i], 0, 0, scanflags, 0, NULL, 0, 0, 0);
 	usleep(10000); /* *WE* normally do not need this, but the target 
 			  lamer often does */
       }
@@ -2309,7 +2310,7 @@ while(!done) {
 	  printf("Good port %d detected by fin_scan!\n", portno[i]);
 	addport(&target->ports, portno[i], IPPROTO_TCP, NULL);
 	send_tcp_raw( rawsd, &target->source_ip, &target->host, o.magic_port, portno[i], 0, 0, 
-		scanflags, 0, 0, 0); 
+		scanflags, 0, NULL, 0, 0, 0); 
 	portno[i] = trynum[i] = 0;
       }
       else someleft = 1;
