@@ -80,7 +80,8 @@ do {
     hostbatch[i].host.s_addr = 0;
   }
 
-if (hostbatch[0].host.s_addr && !o.dontping ) massping(hostbatch, i, pingtimeout);
+if (hostbatch[0].host.s_addr && !o.dontping ) 
+  massping(hostbatch, i, pingtimeout);
 else for(i=0; hostbatch[i].host.s_addr; i++) 
 	hostbatch[i].flags |= HOST_UP; /*hostbatch[i].up = 1;*/
 
@@ -126,8 +127,8 @@ if (targets->netmask != 32 || namedhost) {
     }
  } 
  longtmp = ntohl(targets->start.s_addr);
- targets->start.s_addr = longtmp & (unsigned long) (0 - pow(2,32 - targets->netmask));
- targets->end.s_addr = longtmp | (unsigned long) (pow(2,32 - targets->netmask) - 1);
+ targets->start.s_addr = longtmp & (unsigned long) (0 - (1<<(32 - targets->netmask)));
+ targets->end.s_addr = longtmp | (unsigned long)  ((1<<(32 - targets->netmask)) - 1);
  targets->currentaddr = targets->start;
  if (targets->start.s_addr <= targets->end.s_addr) { free(hostexp); return 1; }
  fprintf(stderr, "Host specification invalid");
@@ -269,15 +270,19 @@ for(;;) {
 
     /* Update the new packet sequence nr. and checksum */
     pingpkt.seq = ++seq;
-    /*    if (seq > 0 ) {*/ /* Don't increment the very first packet */
-    /*      if (ping[2] != 0) ping[2]--; *//* Shit, now not using NBO is hitting the fan ;) */
-      /*      else if (ping[1] != 255) { 
+    if (seq > 0 ) { /* Don't increment the very first packet */
+#ifdef WORDS_BIGENDIAN
+      pingpkt.checksum -= 1;
+#else
+      if (ping[2] != 0) ping[2]--; /* Shit, now not using NBO is hitting the fan ;) */
+      else if (ping[1] != 255) { 
 	ping[2] = 255;
 	ping[1]--;
       }
       else ping[2] = ping[3] = 255;
-      }*/
-    pingpkt.checksum = in_cksum((unsigned short *) ping, 8);
+#endif
+    }
+    /*    pingpkt.checksum = in_cksum((unsigned short *) ping, 8);*/
 
     /* If (we don't know whether the host is up yet) ... */
     if (!(hostbatch[seq%num_hosts].flags & HOST_UP) && !hostbatch[seq%num_hosts].wierd_responses && !(hostbatch[seq%num_hosts].flags & HOST_DOWN)) {  
@@ -339,8 +344,6 @@ for(;;) {
 alldone:
 close(sd);
 free(time);
-if (o.debugging) printf("massping done:  num_hosts: %d  num_responses: %d\n", num_hosts, num_responses);
+if (o.debugging) 
+  printf("massping done:  num_hosts: %d  num_responses: %d\n", num_hosts, num_responses);
 }
-
-
-

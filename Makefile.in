@@ -14,7 +14,7 @@ DEFS = @DEFS@
 CFLAGS = @CFLAGS@ $(CCOPT) $(DEFS) $(INCLS)
 LDFLAGS = @LDFLAGS@
 LIBS =  @LIBS@ -lpcap
-VERSION = 1.49
+VERSION = 1.51
 INSTALL = @INSTALL@
 MAKEDEPEND = @MAKEDEPEND@
 
@@ -54,16 +54,16 @@ distro:
 	rm -rf /usr/tmp/nmap-$(VERSION)
 	mkdir /usr/tmp/nmap-$(VERSION)
 	$(MAKE) clean
-	cp -r Makefile nmap.c targets.c nmap.h \
+	rm -f $(LIBPCAPDIR)/config.cache
+	cp -r nmap.c targets.c nmap.h \
 	tcpip.c tcpip.h error.c error.h utils.c utils.h inet_aton.c \
 	configure.in config.h.in Makefile.in configure install-sh config.guess \
 	config.sub INSTALL bg/purple.gif docs/README docs/copying.html \
 	docs/nmap_doc.html docs/nmap.usage.txt $(LIBPCAPDIR) \
 	/usr/tmp/nmap-$(VERSION)
 	cd /usr/tmp; \
-	tar czf nmap.$(VERSION).tar.gz nmap-$(VERSION)
+	tar czf nmap-$(VERSION).tar.gz nmap-$(VERSION)
 	rm -rf /usr/tmp/nmap-$(VERSION)
-#	cp nmap$(VERSION).tar.gz ~/public_html/dhp/nmap	
 
 # For distributing the binary
 static: 

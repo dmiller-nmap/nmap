@@ -119,7 +119,7 @@ void *realloc();
 /* #define to zero if you don't want to	ignore hosts of the form 
    xxx.xxx.xxx.{0,255} (usually network and broadcast addresses) */
 #define IGNORE_ZERO_AND_255_HOSTS 0
-#define VERSION "1.49"
+#define VERSION "1.51"
 #ifndef DEBUGGING
 #define DEBUGGING 0
 #endif
@@ -130,7 +130,7 @@ void *realloc();
    high value (avoids dynamic memmory allocation */
 #define MAX_SOCKETS_ALLOWED 1025
 /* How many hosts do we ping in parallel to see if they are up? */
-#define LOOKAHEAD 50
+#define LOOKAHEAD 52
 /* If reads of a UDP port keep returning EAGAIN (errno 13), do we want to 
    count the port as valid? */
 #define RISKY_UDP_SCAN 0
@@ -172,6 +172,13 @@ void *realloc();
 #define MAXHOSTNAMELEN 64
 #endif
 
+#ifdef FREEBSD
+#define BSDFIX(x) x
+#define BSDUFIX(x) x
+#else
+#define BSDFIX(x) htons(x)
+#define BSDUFIX(x) ntohs(x)
+#endif
 
 /***********************STRUCTURES**********************************/
 
@@ -224,6 +231,7 @@ struct ops /* someone took struct options, <grrr> */ {
   int debugging;
   int verbose;
   int spoofsource; /* -S used */
+  char device[64];
   int number_of_ports;
   int max_sockets;
   int isr00t;
@@ -239,8 +247,8 @@ struct ops /* someone took struct options, <grrr> */ {
   int udpscan;
   int lamerscan;
   int noresolve;
-  int force;
-  int logfd; /* Output log file descriptor */
+  int force; /* force nmap to continue on even when the outcome seems somewhat certain */
+  FILE *logfd; /* Output log file descriptor */
 };
   
 typedef port *portlist;
@@ -299,6 +307,7 @@ int parse_targets(struct targets *targets, char *h);
 struct hoststruct *nexthost(char *hostexp, int lookahead, int pingtimeout);
 void options_init();
 void nmap_log(char *fmt, ...);
+void sigdie(int signo);
 /* From glibc 2.0.6 because Solaris doesn't seem to have this function */
 #ifndef HAVE_INET_ATON
 int inet_aton(register const char *, struct in_addr *);

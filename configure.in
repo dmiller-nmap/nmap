@@ -40,10 +40,12 @@ case "$host" in
     AC_DEFINE(PCAP_TIMEOUT_IGNORED)  # libpcap doesn't even LOOK at
                                      # the timeout you give it under Linux
     ;;
+    *-freebsd*)
+    AC_DEFINE(FREEBSD)
 esac
 
 dnl Checks for libraries.
-AC_CHECK_LIB(m, pow)
+dnl AC_CHECK_LIB(m, pow)
 if test -z "$no_libnsl"; then
 AC_CHECK_LIB(nsl, inet_ntoa)
 fi

@@ -40,7 +40,5 @@
 #undef HAVE_NETINET_IF_ETHER_H
 
 #undef LINUX
-
 #undef SOLARIS
-
-
+#undef FREEBSD

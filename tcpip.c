@@ -169,7 +169,7 @@ tcp->th_sum = in_cksum((unsigned short *)pseudo, sizeof(struct tcphdr) +
 bzero(packet, sizeof(struct ip)); 
 ip->ip_v = 4;
 ip->ip_hl = 5;
-ip->ip_len = htons(sizeof(struct ip) + sizeof(struct tcphdr) + datalen);
+ip->ip_len = BSDFIX(sizeof(struct ip) + sizeof(struct tcphdr) + datalen);
 ip->ip_id = rand();
 ip->ip_ttl = 255;
 ip->ip_p = IPPROTO_TCP;
@@ -185,14 +185,14 @@ if (data)
 
 if (TCPIP_DEBUGGING > 1) {
 printf("Raw TCP packet creation completed!  Here it is:\n");
-readtcppacket(packet,ntohs(ip->ip_len));
+readtcppacket(packet,BSDUFIX(ip->ip_len));
 }
 if (TCPIP_DEBUGGING > 1) 
 
   printf("\nTrying sendto(%d , packet, %d, 0 , %s , %d)\n",
-	 sd, ntohs(ip->ip_len), inet_ntoa(*victim),
+	 sd, BSDUFIX(ip->ip_len), inet_ntoa(*victim),
 	 sizeof(struct sockaddr_in));
-if ((res = sendto(sd, packet, ntohs(ip->ip_len), 0,
+if ((res = sendto(sd, packet, BSDUFIX(ip->ip_len), 0,
 		  (struct sockaddr *)&sock, (int) sizeof(struct sockaddr_in))) == -1)
   {
     perror("sendto in send_tcp_raw");
@@ -226,8 +226,8 @@ if (!packet) {
 
 bullshit.s_addr = ip->ip_src.s_addr; bullshit2.s_addr = ip->ip_dst.s_addr;
 /* this is gay */
-realfrag = ntohs(ip->ip_off) & 8191 /* 2^13 - 1 */;
-tot_len = ntohs(ip->ip_len);
+realfrag = BSDFIX(ntohs(ip->ip_off) & 8191 /* 2^13 - 1 */);
+tot_len = BSDFIX(ip->ip_len);
 strncpy(sourcehost, inet_ntoa(bullshit), 16);
 i =  4 * (ntohs(ip->ip_hl) + ntohs(tcp->th_off));
 if (ip->ip_p== IPPROTO_TCP) {
@@ -549,8 +549,10 @@ int ipaddr2devname( char *dev, struct in_addr *addr ) {
   char *p;
 
   if (!dev) fatal("NULL pointer given to ipaddr2devname");
+  if (!addr) fatal("ipaddr2devname passed a NULL address");
   /* Dummy socket for ioctl */
   sd = socket(AF_INET, SOCK_DGRAM, 0);
+  if (sd < 0) pfatal("socket in ipaddr2devname");
   ifc.ifc_len = len;
   ifc.ifc_buf = buf;
   if (ioctl(sd, SIOCGIFCONF, &ifc) < 0) {
@@ -567,7 +569,7 @@ if (ifc.ifc_len == 0)
 #endif
   for( ifr = (struct ifreq *) pbuf;
        ifr && *((char *)ifr) && ((char *)ifr) < pbuf + ifc.ifc_len; 
-       ((char *)ifr) += sizeof(ifr->ifr_name) + len ) {
+       ((*(char **)&ifr) +=  sizeof(ifr->ifr_name) + len )) {
     sin = (struct sockaddr_in *) &ifr->ifr_addr;
     if (sin->sin_addr.s_addr == addr->s_addr) {
       /* Stevens does this in UNP, so it may be useful in some cases */

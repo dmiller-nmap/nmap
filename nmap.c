@@ -38,10 +38,15 @@ options_init();
 
 emptystring[0] = '\0'; /* It wouldn't be an emptystring w/o this ;) */
 
+/* Trap these sigs for cleanup */
+signal(SIGINT, sigdie);
+signal(SIGTERM, sigdie);
+signal(SIGHUP, sigdie); 
+
 if (argc < 2 ) printusage(argv[0]);
 
 /* OK, lets parse these args! */
-while((arg = getopt(argc,fakeargv,"Ab:DdFfhiL:lM:Nno:Pp:qrRS:sT:tUuw:Vv")) != EOF) {
+while((arg = getopt(argc,fakeargv,"Ab:Dde:FfhiL:lM:Nno:Pp:qrRS:sT:tUuw:Vv")) != EOF) {
   switch(arg) {
   case 'A': o.allowall++; break;
   case 'b': 
@@ -52,6 +57,7 @@ while((arg = getopt(argc,fakeargv,"Ab:DdFfhiL:lM:Nno:Pp:qrRS:sT:tUuw:Vv")) != EO
     break;
   case 'D': o.dontping++; break;
   case 'd': o.debugging++; break;
+  case 'e': strncpy(o.device, optarg,63); o.device[63] = '\0'; break;
   case 'F': fastscan++; break;
   case 'f': o.fragscan++; break;
   case 'h': 
@@ -69,8 +75,8 @@ while((arg = getopt(argc,fakeargv,"Ab:DdFfhiL:lM:Nno:Pp:qrRS:sT:tUuw:Vv")) != EO
   case 'n': o.noresolve++; break;
   case 'N': o.force++; break;
   case 'o': 
-    if (o.outputfd) fatal("Only one log filename allowed");
-    o.outputfd = fopen(optarg, "w");
+    if (o.logfd) fatal("Only one log filename allowed");
+    o.logfd = fopen(optarg, "w");
     if (!o.logfd) 
       fatal("Failed to open output file %s for writing", optarg);
     break;
@@ -121,7 +127,7 @@ if ((o.fragscan && !o.synscan && !o.finscan)) {
   printf("Specified -f but don't know whether to fragment SYN (-s) scan or FIN (-U) scan.  Doing fragmented SYN scan\n");
 }
 if (o.udpscan || o.lamerscan) 
-  printf("Warning: udp scan is not always 100% accurate, I will be rewriting it\n");
+  printf("Warning: udp scan is not always 100%c accurate, I will be rewriting it\n", '%'); /* Due to gcc -Wall stupidity */
 if ((o.synscan || o.finscan || o.fragscan || pingscan) && !o.isr00t)
   fatal("Options specified require r00t privileges.  You don't have them!");
 if (!tcpscan && !o.udpscan && !o.synscan && !o.finscan && !bouncescan && !pingscan) {
@@ -153,12 +159,12 @@ if (bouncescan) {
 }
 fflush(stdout);
 
-/* If no log file (-o) requested use stdout */
-if (!o.logfd) o.logfd = stdout;
-else {
+if (o.logfd) {
   /* Brief info incase they forget what was scanned */
   fprintf(o.logfd, "# Log of: ");
-  for (
+  for(i=0; i < argc; i++)
+    fprintf(o.logfd, "%s ", fakeargv[i]);
+  fprintf(o.logfd, "\n");
 }
 printf("\nStarting nmap V. %s by Fyodor (fyodor@dhp.com, www.dhp.com/~fyodor/nmap/)\n", VERSION);
 /* I seriously doubt anyone likes this "feature"
@@ -213,16 +219,23 @@ while(optind < argc) {
 if (!pingscan) {
   if (!o.dontping && (currenths->flags & HOST_UP) && (o.verbose || o.debugging)) 
     printf("Host %s (%s) appears to be up ... good.\n", currenths->name, inet_ntoa(currenths->host));    
-  else if (o.verbose && !o.dontping && !(currenths->flags & HOST_UP)) 
-    printf("Host %s (%s) appears to be down, skipping it.\n", currenths->name, inet_ntoa(currenths->host));
+  else if (o.verbose && !o.dontping && !(currenths->flags & HOST_UP)) {  
+    if (resolve_all)
+      nmap_log("Host %s (%s) appears to be down, skipping it.\n", currenths->name, inet_ntoa(currenths->host));
+    else printf("Host %s (%s) appears to be down, skipping it.\n", currenths->name, inet_ntoa(currenths->host));
+  }
 }
 else {
   if (currenths->flags & HOST_UP) 
-    printf("Host %s (%s) appears to be up.\n", currenths->name, inet_ntoa(currenths->host));    
+    nmap_log("Host %s (%s) appears to be up.\n", currenths->name, inet_ntoa(currenths->host));    
   else 
-    if (o.verbose || o.debugging || resolve_all) printf("Host %s (%s) appears to be down.\n", currenths->name, inet_ntoa(currenths->host));
+    if (o.verbose || o.debugging || resolve_all) {    
+      if (resolve_all)
+	nmap_log("Host %s (%s) appears to be down.\n", currenths->name, inet_ntoa(currenths->host));
+      else printf("Host %s (%s) appears to be down.\n", currenths->name, inet_ntoa(currenths->host));
+    }
   if (currenths->wierd_responses)
-    printf("Host  %s (%s) seems to be a subnet broadcast address (returned %d extra pings)\n",  currenths->name, inet_ntoa(currenths->host), currenths->wierd_responses);
+    nmap_log("Host  %s (%s) seems to be a subnet broadcast address (returned %d extra pings)\n",  currenths->name, inet_ntoa(currenths->host), currenths->wierd_responses);
 }
 if (currenths->flags & HOST_UP && !currenths->source_ip.s_addr && ( o.synscan || o.finscan)) {
   if (gethostname(myname, MAXHOSTNAMELEN) || 
@@ -230,13 +243,16 @@ if (currenths->flags & HOST_UP && !currenths->source_ip.s_addr && ( o.synscan ||
     fatal("Your system is fucked up.  Cannot get hostname!\n"); 
   memcpy(&currenths->source_ip, target->h_addr_list[0], sizeof(struct in_addr));
   if (! sourceaddrwarning) {
-    printf("We could not determine for sure which interface to use, so we are guessing %s .  If this is wrong, use -S\n", inet_ntoa(currenths->source_ip));
+    printf("We could not determine for sure which interface to use, so we are guessing %s .  If this is wrong, use -S.\n", inet_ntoa(currenths->source_ip));
     sourceaddrwarning = 1;
   }
 }
 
-if (currenths->flags & HOST_UP && (o.finscan || o.synscan) && !ipaddr2devname( currenths->device, &currenths->source_ip))
-  fatal("Could not figure out what device to send the packet out on!  You might possibly want to try -S (but this is probably a bigger problem)\n");
+ if (o.device[0]) { strcpy(currenths->device, o.device); }
+
+/* Figure out what link-layer device (interface) to use (ie eth0, ppp0, etc) */
+if (!o.device[0] && currenths->flags & HOST_UP && (o.finscan || o.synscan) && !ipaddr2devname( currenths->device, &currenths->source_ip))
+  fatal("Could not figure out what device to send the packet out on!  You might possibly want to try -S (but this is probably a bigger problem).  If you are trying to sp00f the source of a SYN/FIN scan with -S <fakeip>, then you must use -e eth0 (or other devicename) to tell us what interface to use.\n");
 
     /* Time for some actual scanning! */    
     if (currenths->flags & HOST_UP) {
@@ -258,17 +274,17 @@ if (currenths->flags & HOST_UP && (o.finscan || o.synscan) && !ipaddr2devname( c
       }
     
       if (!currenths->ports && !pingscan) {
-	printf("No ports open for host %s (%s)\n", currenths->name,
+	nmap_log("No ports open for host %s (%s)\n", currenths->name,
 	       inet_ntoa(currenths->host));
 	if (currenths->wierd_responses)
-	  printf("Host  %s (%s) seems to be a subnet broadcast address (returned %d extra pings)\n",  currenths->name, inet_ntoa(currenths->host), currenths->wierd_responses);
+	  nmap_log("Host  %s (%s) seems to be a subnet broadcast address (returned %d extra pings)\n",  currenths->name, inet_ntoa(currenths->host), currenths->wierd_responses);
       }
       if (currenths->ports) {
-	printf("Open ports on %s (%s):\n", currenths->name, 
+	nmap_log("Open ports on %s (%s):\n", currenths->name, 
 	       inet_ntoa(currenths->host));
 	printandfreeports(currenths->ports);
 	if (currenths->wierd_responses)
-	  printf("Host  %s (%s) seems to be a subnet broadcast address (returned %d extra pings)\n",  currenths->name, inet_ntoa(currenths->host), currenths->wierd_responses);
+	  nmap_log("Host  %s (%s) seems to be a subnet broadcast address (returned %d extra pings)\n",  currenths->name, inet_ntoa(currenths->host), currenths->wierd_responses);
       }
     }
     fflush(stdout);
@@ -446,29 +462,33 @@ printf("nmap V. %s usage: %s [options] [hostname[/mask] . . .]\n\
 options (none are required, most can be combined):\n\
    -t tcp connect() port scan\n\
    -s tcp SYN stealth port scan (must be root)\n\
-   -u UDP port scan, will use MUCH better version if you are root\n\
    -U Uriel Maimon (P49-15) style FIN stealth scan.\n\
-   -l Do the lamer UDP scan even if root.  Less accurate.\n\
    -P ping \"scan\". Find which hosts on specified network(s) are up.\n\
-   -D Don't ping hosts (needed to scan www.microsoft.com and others)\n\
    -b <ftp_relay_host> ftp \"bounce attack\" port scan\n\
+   -u UDP port scan, will use MUCH better version if you are root\n\
+   -l Do the lamer UDP scan even if root.  Less accurate.\n\
    -f use tiny fragmented packets for SYN or FIN scan.\n\
+   -D Don't ping hosts (needed to scan www.microsoft.com and others)\n\
    -i Get identd (rfc 1413) info on listening TCP processes.\n\
-   -n Don't DNS resolve anything unless we have to (makes ping scans faster)\n\
    -p <range> ports: ex: \'-p 23\' will only try port 23 of the host(s)\n\
                   \'-p 20-30,63000-\' scans 20-30 and 63000-65535 default: 1-1024\n\
    -F fast scan. Only scans ports in /etc/services, a la strobe(1).\n\
+   -n Don't DNS resolve anything unless we have to (makes ping scans faster)\n\
    -L <num> Number of pings to perform in parallel.  Your default is: %d\n\
+   -o <logfile> Output scan logs to <logfile>.\n\
    -R Try to resolve all hosts, even down ones (can take a lot of time)\n\
    -r do NOT randomize target port scanning order.\n\
-   -h help, print this junk.  Also see http://www.dhp.com/~fyodor/nmap/\n\
    -S If you want to specify the source address of SYN or FYN scan.\n", VERSION, name, LOOKAHEAD);
+
+
 if (!o.allowall) printf("-A Allow scanning .0 and .255 addresses" );
 printf("   -T <seconds> Set the ping and tcp connect() timeout.\n\
-   -V Print version number and exit.\n\
    -v Verbose.  Its use is recommended.  Use twice for greater effect.\n\
+   -h help, print this junk.  Also see http://www.dhp.com/~fyodor/nmap/\n\
+   -V Print version number and exit.\n\
    -w <n> delay.  n microsecond delay. Not recommended unless needed.\n\
    -M <n> maximum number of parallel sockets.  Larger isn't always better.\n");
+printf("   -e <devicename>. Send packets on interface <devicename> (eth0,ppp0,etc.).\n"); 
 printf("   -q quash argv to something benign, currently set to \"%s\". (deprecated)\n", FAKE_ARGV);
 printf("Hostnames specified as internet hostname or IP address.  Optional '/mask' \
 specifies subnet. cert.org/24 or 192.88.209.5/24 or 192.88.209.0-255 scan CERT's Class C.\n");
@@ -497,6 +517,7 @@ int timeouts=0;
  static int threshold_warning = 0; /* Have we given the threshold warning yet?*/
 signal(SIGPIPE, SIG_IGN); /* ignore SIGPIPE so our 'write 0 bytes' test
 			     doesn't crash our program!*/
+
 owner[0] = '\0';
 starttime = time(NULL);
 bzero((char *)&sock,sizeof(struct sockaddr_in));
@@ -695,9 +716,9 @@ while(portarray[j] || retryindex >= 0 || current_out != 0) {
 	      timeouts++;	      
 	      if (timeouts > MAX_TIMEOUTS && !target->ports && !o.force) {
 		if (!o.verbose && !o.debugging  && !threshold_warning)
-		  printf("MAX_TIMEOUT threshold (%d) reached, giving up on host %s (%s).  Use -N to skip this check.  This warning won't be repeated during this session\n", MAX_TIMEOUTS, target->name, inet_ntoa(target->host));
+		  nmap_log("MAX_TIMEOUT threshold (%d) reached, giving up on host %s (%s).  Use -N to skip this check.  This warning won't be repeated during this session\n", MAX_TIMEOUTS, target->name, inet_ntoa(target->host));
 		else if (o.verbose || o.debugging)
-		  printf("MAX_TIMEOUT threshold (%d) reached, giving up on host %s (%s).  Use -N to skip this check.\n", MAX_TIMEOUTS, target->name, inet_ntoa(target->host));
+		  nmap_log("MAX_TIMEOUT threshold (%d) reached, giving up on host %s (%s).  Use -N to skip this check.\n", MAX_TIMEOUTS, target->name, inet_ntoa(target->host));
 		threshold_warning++;
 		 for(k=0; k < o.max_sockets; k++) 
 		   if (portno[k]) 
@@ -738,9 +759,9 @@ while(portarray[j] || retryindex >= 0 || current_out != 0) {
 	  timeouts++;	      
 	  if (timeouts > MAX_TIMEOUTS && !target->ports && !o.force) {
 	    if (!o.verbose && !o.debugging  && !threshold_warning)
-	      printf("MAX_TIMEOUT threshold (%d) reached, giving up on host %s (%s).  Use -N to skip this check.  This warning won't be repeated during this session\n", MAX_TIMEOUTS, target->name, inet_ntoa(target->host));
+	      nmap_log("MAX_TIMEOUT threshold (%d) reached, giving up on host %s (%s).  Use -N to skip this check.  This warning won't be repeated during this session\n", MAX_TIMEOUTS, target->name, inet_ntoa(target->host));
 	    else if (o.verbose || o.debugging)
-	      printf("MAX_TIMEOUT threshold (%d) reached, giving up on host %s (%s).  Use -N to skip this check.\n", MAX_TIMEOUTS, target->name, inet_ntoa(target->host));
+	      nmap_log("MAX_TIMEOUT threshold (%d) reached, giving up on host %s (%s).  Use -N to skip this check.\n", MAX_TIMEOUTS, target->name, inet_ntoa(target->host));
 	    threshold_warning++;
 	    for(k=0; k < o.max_sockets; k++) 
 	      if (portno[k]) 
@@ -877,12 +898,12 @@ void printandfreeports(portlist ports) {
   struct servent *service;
   port *current = ports, *tmp;
   
-  printf("Port Number  Protocol  Service");
-  printf("%s", (o.identscan)?"         Owner\n":"\n");
+  nmap_log("Port Number  Protocol  Service");
+  nmap_log("%s", (o.identscan)?"         Owner\n":"\n");
   while(current != NULL) {
     strcpy(protocol,(current->proto == IPPROTO_TCP)? "tcp": "udp");
     service = getservbyport(htons(current->portno), protocol);
-    printf("%-13d%-11s%-16s%s\n", current->portno, protocol,
+    nmap_log("%-13d%-11s%-16s%s\n", current->portno, protocol,
 	   (service)? service->s_name: "unknown",
 	   (current->owner)? current->owner : "");
     tmp = current;
@@ -890,7 +911,7 @@ void printandfreeports(portlist ports) {
     if (tmp->owner) free(tmp->owner);
     free(tmp);
   }
-  printf("\n");
+  nmap_log("\n");
 }
 
 /* This is the version of udp_scan that uses raw ICMP sockets and requires 
@@ -1584,9 +1605,9 @@ ip->ip_v = 4;
 ip->ip_hl = 5;
 /*RFC 791 allows 8 octet frags, but I get "operation not permitted" (EPERM)
   when I try that.  */
-ip->ip_len = htons(sizeof(struct ip) + 16);
+ip->ip_len = BSDFIX(sizeof(struct ip) + 16);
 id = ip->ip_id = rand();
-ip->ip_off = htons(MORE_FRAGMENTS);
+ip->ip_off = BSDFIX(MORE_FRAGMENTS);
 ip->ip_ttl = 255;
 ip->ip_p = IPPROTO_TCP;
 ip->ip_src.s_addr = source->s_addr;
@@ -1605,7 +1626,7 @@ if (o.debugging > 1)
 /* Lets save this and send it AFTER we send the second one, just to be
    cute ;) */
 
-if ((res = sendto(sd, packet, ntohs(ip->ip_len), 0, 
+if ((res = sendto(sd, packet,sizeof(struct ip) + 16 , 0, 
 		  (struct sockaddr *)&sock, sizeof(struct sockaddr_in))) == -1)
   {
     perror("sendto in send_syn_fragz");
@@ -1618,9 +1639,9 @@ if (o.debugging > 1) printf("successfully sent %d bytes of raw_tcp!\n", res);
 bzero((char *) ip2, sizeof(struct ip));
 ip2->ip_v= 4;
 ip2->ip_hl = 5;
-ip2->ip_len = htons(sizeof(struct ip) + 4); /* the rest of our TCP packet */
+ip2->ip_len = BSDFIX(sizeof(struct ip) + 4); /* the rest of our TCP packet */
 ip2->ip_id = id;
-ip2->ip_off = htons(2);
+ip2->ip_off = BSDFIX(2);
 ip2->ip_ttl = 255;
 ip2->ip_p = IPPROTO_TCP;
 ip2->ip_src.s_addr = source->s_addr;
@@ -1636,9 +1657,8 @@ if (o.debugging > 1)
 
   printf("\nTrying sendto(%d , ip2, %d, 0 , %s , %d)\n", sd, 
 	 ntohs(ip2->ip_len), inet_ntoa(*victim), (int) sizeof(struct sockaddr_in));
-if ((res = sendto(sd, (void *)ip2, ntohs(ip2->ip_len), 0, 
+if ((res = sendto(sd, (void *)ip2,sizeof(struct ip) + 4 , 0, 
 		  (struct sockaddr *)&sock, (int) sizeof(struct sockaddr_in))) == -1)
-
   {
     perror("sendto in send_tcp_raw frag #2");
     return -1;
@@ -2097,17 +2117,39 @@ return 1;
 void nmap_log(char *fmt, ...) {
 va_list  ap;
 va_start(ap, fmt);
-if (!o.logfile || o.logfile == stdout || o.verbose || o.debugging) {
-  vfprintf(stdout, fmt, ap);
-  fflush(stdout);
-}
-if (o.logfile && o.logfile != stdout) {
-  vfprintf(o.logfile, fmt, ap);
+vfprintf(stdout, fmt, ap);
+fflush(stdout);
+if (o.logfd && o.logfd != stdout) {
+  vfprintf(o.logfd, fmt, ap);
 }
 va_end(ap);
 return;
 }
 
-
+void sigdie(int signo) {
+ switch(signo) {
+ case SIGINT:
+   fprintf(stderr, "caught SIGINT signal, cleaning up\n");
+   break;
+ case SIGTERM:
+   fprintf(stderr, "caught SIGTERM signal, cleaning up\n");
+   break;
+ case SIGHUP:
+   fprintf(stderr, "caught SIGHUP signal, cleaning up\n");
+   break;
+ case SIGSEGV:
+   fprintf(stderr, "caught SIGSEGV signal, cleaning up\n");
+   break;
+ case SIGBUS:
+   fprintf(stderr, "caught SIGBUS signal, cleaning up\n");
+   break;
+ default:
+   fprintf(stderr, "caught signal %d, cleaning up\n", signo);
+   break;
+ }
+ fflush(stdout);
+ if (o.logfd && o.logfd != stdout) fclose(o.logfd);
+ exit(1);
+}
 
 
