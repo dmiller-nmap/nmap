@@ -1847,6 +1847,7 @@ if (o.debugging || o.verbose)
   
 
   do {    
+    changed = 0;
     while(testinglist != NULL)  /* While we have live queries or more ports to scan */
     {
       /* Check the possible retransmissions first */
@@ -1874,7 +1875,6 @@ if (o.debugging || o.verbose)
 		scan[current->next].prev = current - scan;	      
 	      }
 	      numqueries_outstanding--;
-	      changed = 1;
 	    } else {
 	      /* Initial timeout ... we've got to resend */
 	      if (o.debugging) { printf("Initial timeout, resending to portno %hi\n", current->portno); }
