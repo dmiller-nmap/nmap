@@ -222,7 +222,7 @@ void printportoutput(struct hoststruct *currenths, portlist *plist) {
 
 char* xml_convert (const char* str) {
   unsigned int i;
-  char *temp, ch, prevch = 0, *p;
+  char *temp, ch=0, prevch = 0, *p;
   temp = malloc(strlen(str)*6+1);
   for (p = temp;(prevch = ch, ch = *str);str++) {
     char *a;
