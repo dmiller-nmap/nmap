@@ -6693,8 +6693,11 @@ T6(DF=Y%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=Y%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=C0%IPLEN=164%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
+# I don't put "Gentoo" as the vendor for the classification because it
+# makes output ugly when there are a bunch of Linux matches due to
+# firewalling or similar problems.
 Fingerprint Gentoo 1.2 linux (Kernel 2.4.19-gentoo-rc5)
-Class Gentoo | Linux | 2.4.X | general purpose
+Class Linux | Linux | 2.4.X | general purpose
 TSeq(Class=RI%gcd=<6%SI=<1BF1FC0&>4788F%IPID=RD%TS=1000HZ)
 T1(DF=Y%W=7FFF%ACK=S++%Flags=AS%Ops=MNNTNW)
 T2(Resp=N)
@@ -6732,7 +6735,7 @@ T7(DF=Y%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=C0%IPLEN=164%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Linux 2.5.25 - 2.5.59 or Gentoo 1.2 Linux 2.4.19 rc1-rc7)
-Class Gentoo | Linux | 2.4.X | general purpose
+Class Linux | Linux | 2.4.X | general purpose
 Class Linux | Linux | 2.5.X | general purpose
 TSeq(Class=RI%gcd=<6%SI=<244F6FE&>5CF30%IPID=Z%TS=1000HZ)
 T1(DF=Y%W=7FFF%ACK=S++%Flags=AS%Ops=MNNTNW)

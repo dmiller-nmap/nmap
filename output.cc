@@ -590,12 +590,15 @@ static int addtochararrayifnew(char *arr[], int *numentries, int arrsize, char *
 
 #define MAX_OS_CLASSMEMBERS 8
 static void printosclassificationoutput(const struct OS_Classification_Results *OSR) {
-  int classno;
-  int overflow = 0; /* Whether we have too many devices to list */
-  char *types[MAX_OS_CLASSMEMBERS], *vendors[MAX_OS_CLASSMEMBERS], 
-       *osfamilies[MAX_OS_CLASSMEMBERS], *osgenerations[MAX_OS_CLASSMEMBERS];
-  int numtypes = 0, numvendors=0, numosfamilies = 0, numosgenerations = 0;
+  int classno, i, familyno;
+   int overflow = 0; /* Whether we have too many devices to list */
+  char *types[MAX_OS_CLASSMEMBERS];
+  char fullfamily[MAX_OS_CLASSMEMBERS][128]; // "[vendor] [os family]"
+  char familygenerations[MAX_OS_CLASSMEMBERS][48]; // example: "4.X|5.X|6.X"
+  int numtypes = 0, numfamilies=0;
   char tmpbuf[1024];
+
+  for(i=0; i < MAX_OS_CLASSMEMBERS; i++) familygenerations[i][0] = '\0';
 
   if (OSR->overall_results == OSSCAN_SUCCESS) {
 
@@ -606,38 +609,59 @@ static void printosclassificationoutput(const struct OS_Classification_Results *
 	snprintf(tmpbuf, sizeof(tmpbuf), " osgen=\"%s\"", OSR->OSC[classno]->OS_Generation);
       } else tmpbuf[0] = '\0';
       log_write(LOG_XML, "<osclass type=\"%s\" vendor=\"%s\" osfamily=\"%s\"%s accuracy=\"%d\"/>\n", OSR->OSC[classno]->Device_Type, OSR->OSC[classno]->OS_Vendor, OSR->OSC[classno]->OS_Family, tmpbuf, (int) (OSR->OSC_Accuracy[classno] * 100));
-      
-      if (addtochararrayifnew(types, &numtypes, MAX_OS_CLASSMEMBERS, OSR->OSC[classno]->Device_Type) == -1)
-	overflow = 1;
-      if (addtochararrayifnew(vendors, &numvendors, MAX_OS_CLASSMEMBERS, OSR->OSC[classno]->OS_Vendor) == -1)
-	overflow = 1;
-      if (addtochararrayifnew(osfamilies, &numosfamilies, MAX_OS_CLASSMEMBERS,  OSR->OSC[classno]->OS_Family) == -1)
-	overflow = 1;
-      if (OSR->OSC[classno]->OS_Generation)
-	addtochararrayifnew(osgenerations, &numosgenerations, MAX_OS_CLASSMEMBERS, OSR->OSC[classno]->OS_Generation);
     }
 
-    /* If there is only one vendor and OS family, and they are the
-       same, kill the redundant vendor */
-    if (numvendors == 1 && numosfamilies == 1 && strcmp(vendors[0], osfamilies[0]) == 0)
-      numvendors = 0;
-
-    if (!overflow && numtypes >= 1) {
+    // Now to create the fodder for normal output
+    for (classno=0; classno < OSR->OSC_num_perfect_matches; classno++) {
+      if (addtochararrayifnew(types, &numtypes, MAX_OS_CLASSMEMBERS, OSR->OSC[classno]->Device_Type) == -1)
+	overflow = 1;
+      
+      // If family and vendor names are the same, no point being redundant
+      if (strcmp(OSR->OSC[classno]->OS_Vendor, OSR->OSC[classno]->OS_Family) == 0)
+	Strncpy(tmpbuf, OSR->OSC[classno]->OS_Family, sizeof(tmpbuf));
+      else snprintf(tmpbuf, sizeof(tmpbuf), "%s %s", OSR->OSC[classno]->OS_Vendor, OSR->OSC[classno]->OS_Family);
+      
+      
+      // Let's see if it is already in the array
+      for(familyno = 0; familyno < numfamilies; familyno++) {
+	if (strcmp(fullfamily[familyno], tmpbuf) == 0) {
+	  // got a match ... do we need to add the generation?
+	  if (OSR->OSC[classno]->OS_Generation && !strstr(familygenerations[familyno], OSR->OSC[classno]->OS_Generation)) {
+	    // We add it, preceded by | if something is already there
+	    if (strlen(familygenerations[familyno]) + 2 + strlen(OSR->OSC[classno]->OS_Generation) >= 48) fatal("buffer 0verfl0w of familygenerations");
+	    if (*familygenerations[familyno]) strcat(familygenerations[familyno], "|");
+	    strcat(familygenerations[familyno], OSR->OSC[classno]->OS_Generation);
+	  }
+	  break;
+	}
+      }
+      
+      if (familyno == numfamilies) {
+	// Looks like the new family is not in the list yet.  Do we have room to add it?
+	if (numfamilies >= MAX_OS_CLASSMEMBERS) {
+	  overflow = 1;
+	  break;
+	}
+	
+	// Have space, time to add...
+	Strncpy(fullfamily[numfamilies], tmpbuf, 128);
+	if (OSR->OSC[classno]->OS_Generation)
+	  Strncpy(familygenerations[numfamilies], OSR->OSC[classno]->OS_Generation, 48);
+	numfamilies++;
+      }
+    }
+    
+    if (!overflow && numfamilies >= 1) {
       log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT, "Device type: ");
       for(classno=0; classno < numtypes; classno++)
 	log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT, "%s%s", types[classno], (classno < numtypes - 1)? "|" : "");
       log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT, "\n    Running: ");
-      for(classno=0; classno < numvendors; classno++)
-	log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT, "%s%s", vendors[classno], (classno < numvendors - 1)? "|" : "");
-      log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT, " ");
-     for(classno=0; classno < numosfamilies; classno++)
-	log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT, "%s%s", osfamilies[classno], (classno < numosfamilies - 1)? "|" : "");
-     if (numosfamilies == 1 && numosgenerations > 0) {
-       log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT, " ");
-       for(classno=0; classno < numosgenerations; classno++)
-	 log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT, "%s%s", osgenerations[classno], (classno < numosgenerations - 1)? "|" : "");
-     }
-     log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT, "\n");
+      for(familyno = 0; familyno < numfamilies; familyno++) {
+	if (familyno > 0) log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT, ", ");
+	log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT, "%s", fullfamily[familyno]);
+	if (*familygenerations[familyno]) log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT, " %s", familygenerations[familyno]);
+      }
+      log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT, "\n");
     }
   }
   return;

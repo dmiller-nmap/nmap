@@ -1219,7 +1219,7 @@ bzero(str, sizeof(str));
 
 if (!FP) return "(None)";
 
-if(*(FP->OS_name)) {
+if(FP->OS_name && *(FP->OS_name)) {
   len = snprintf(str, 128, "FingerPrint  %s\n", FP->OS_name);
   if (len < 0) fatal("OS name too long");
   p += len;
