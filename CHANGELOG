@@ -1,5 +1,13 @@
 # Nmap Changelog
 
+-- Added very simple man pages for xnmap/nmapfe (lack of man pages for
+   these was noticed by LaMont Jones (lamont (at) hp.com), the Debian
+   Nmap package maintainer, based on bug report by Adrian Bunk (bunk
+   (at) fs.tum.de ).
+
+-- Fixed a "Status: Down" machine name output problem in machine
+   parseable logs found by Alek O. Komarnitsky ( alek (at) ast.lmco.com )
+
 -- Took some wierd files out of the doc directory (cd, grep , vi, and
    .swp)
 

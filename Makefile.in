@@ -88,6 +88,7 @@ distro:
 	configure.in config.h.in Makefile.in configure $(SHTOOL) install-sh \
         config.guess nmap-$(NMAP_VERSION)-1.spec config.sub INSTALL \
         docs/copying.html docs/README docs/nmap.usage.txt docs/nmap.1 \
+        docs/xnmap.1 docs/nmapfe.1 \
 	docs/nmap.deprecated.txt docs/nmap_doc.html docs/nmap_manpage.html \
 	docs/nmap-fingerprinting-article.txt docs/nmap_spanish.1 \
 	docs/nmap_manpage-fr.html docs/nmap_manpage-es.html \
