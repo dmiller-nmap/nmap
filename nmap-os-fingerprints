@@ -3981,18 +3981,6 @@ T6(DF=Y%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=Y%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=C0%IPLEN=164%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
-# Contributed by nicolas@republique.org
-Fingerprint Linux 2.4.7 (X86)
-TSeq(Class=RI%gcd=<6%SI=<23A3836&>5A873%IPID=Z%TS=100HZ)
-T1(DF=Y%W=1680%ACK=S++%Flags=AS%Ops=MNNTNW)
-T2(Resp=N)
-T3(Resp=Y%DF=Y%W=1680%ACK=S++%Flags=AS%Ops=MNNTNW)
-T4(DF=Y%W=0%ACK=O%Flags=R%Ops=)
-T5(DF=Y%W=0%ACK=S++%Flags=AR%Ops=)
-T6(DF=Y%W=0%ACK=O%Flags=R%Ops=)
-T7(DF=Y%W=0%ACK=S++%Flags=AR%Ops=)
-PU(DF=N%TOS=C0%IPLEN=164%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
-
 # Not really constant -- just slow incrementation
 # This is an LCIII
 Fingerprint MacOS 7.1   # Thanks to  Renaud Deraison 
