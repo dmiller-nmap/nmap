@@ -173,10 +173,9 @@ if (o.verbose && openport != -1)
        continue;
      if (ip->ip_p == IPPROTO_TCP) {
        tcp = ((struct tcphdr *) (((char *) ip) + 4 * ip->ip_hl));
-       if (ntohs(tcp->th_dport) < current_port || ntohs(tcp->th_dport) - current_port > 6) {
-	 continue;
-       }
        testno = ntohs(tcp->th_dport) - current_port + 1;
+       if (testno <= 0 || testno > 7)
+	 continue;
        if (o.debugging > 1)
 	 printf("Got packet for test number %d\n", testno);
        if (FPtests[testno]) continue;

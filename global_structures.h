@@ -135,7 +135,6 @@ struct ops /* someone took struct options, <grrr> */ {
   struct in_addr *source;
   char device[64];
   FingerPrint **reference_FPs;
-  int number_of_ports;
   unsigned short magic_port;
   unsigned short magic_port_set; /* Was this set by user? */
   unsigned short tcp_probe_port;
@@ -153,6 +152,7 @@ struct ops /* someone took struct options, <grrr> */ {
   int ptime;
   int numports;
   int connectscan;
+  int bouncescan;
   int nullscan;
   int xmasscan;
   int fragscan;
@@ -164,6 +164,7 @@ struct ops /* someone took struct options, <grrr> */ {
   int noresolve;
   int force; /* force nmap to continue on even when the outcome seems somewhat certain */
   FILE *logfd; /* Output log file descriptor */
+  FILE *machinelogfd; /* Machine parseable log file descriptor */
 };
   
 typedef port *portlist;

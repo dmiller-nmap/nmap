@@ -18,7 +18,6 @@ int numhosts_up = 0;
 int starttime;
 int lookahead = LOOKAHEAD;
 struct timeval tv; /* Just for seeding random generator */
-short bouncescan = 0;
 unsigned short *ports = NULL;
 char myname[MAXHOSTNAMELEN + 1];
 #if (defined(IN_ADDR_DEEPSTRUCT) || defined( SOLARIS))
@@ -73,20 +72,15 @@ options_init();
 
 emptystring[0] = '\0'; /* It wouldn't be an emptystring w/o this ;) */
 
-/* Trap these sigs for cleanup */
-signal(SIGINT, sigdie);
-signal(SIGTERM, sigdie);
-signal(SIGHUP, sigdie); 
-signal(SIGSEGV, sigdie); 
 
 if (argc < 2 ) printusage(argv[0]);
 
 /* OK, lets parse these args! */
-while((arg = getopt(argc,fakeargv,"Ab:D:de:Ffg:hIi:L:M:NnOo:P::p:qrRS:s:T:w:Vv")) != EOF) {
+while((arg = getopt(argc,fakeargv,"Ab:D:de:Ffg:hIi:L:M:m:NnOo:P::p:qrRS:s:T:w:Vv")) != EOF) {
   switch(arg) {
   case 'A': o.allowall++; break;
   case 'b': 
-    bouncescan++;
+    o.bouncescan++;
     if (parse_bounce(&ftp, optarg) < 0 ) {
       fprintf(stderr, "Your argument to -b is fucked up. Use the normal url style:  user:pass@server:port or just use server and use default anon login\n  Use -h for help\n");
     }
@@ -152,6 +146,13 @@ while((arg = getopt(argc,fakeargv,"Ab:D:de:Ffg:hIi:L:M:NnOo:P::p:qrRS:s:T:w:Vv")
       o.max_sockets = MAX_SOCKETS_ALLOWED;
     }
     break;
+  case 'm': 
+    if (o.machinelogfd != NULL)
+      fatal("Only one machine log filename allowed");
+    o.machinelogfd = fopen(optarg, "w");
+    if (!o.machinelogfd)
+      fatal("Failed to open machine parseable log file %s", optarg);
+    break;
   case 'n': o.noresolve++; break;
   case 'N': o.force++; break;
   case 'O': 
@@ -159,7 +160,7 @@ while((arg = getopt(argc,fakeargv,"Ab:D:de:Ffg:hIi:L:M:NnOo:P::p:qrRS:s:T:w:Vv")
     o.reference_FPs = parse_fingerprint_reference_file();
     break;
   case 'o': 
-    if (o.logfd) fatal("Only one log filename allowed");
+    if (o.logfd != NULL) fatal("Only one log filename allowed");
     o.logfd = fopen(optarg, "w");
     if (!o.logfd) 
       fatal("Failed to open output file %s for writing", optarg);
@@ -250,12 +251,21 @@ if (o.pingtype == PINGTYPE_UNKNOWN) {
   if (o.isr00t) o.pingtype = PINGTYPE_TCP|PINGTYPE_TCP_USE_ACK|PINGTYPE_ICMP;
   else o.pingtype = PINGTYPE_TCP;
 }
+
+/* Trap these sigs for cleanup */
+signal(SIGINT, sigdie);
+signal(SIGTERM, sigdie);
+signal(SIGHUP, sigdie); 
+if (!o.debugging)
+  signal(SIGSEGV, sigdie); 
+
+
 /* Take care of user wierdness */
 if (!o.isr00t && (o.pingtype & PINGTYPE_ICMP)) {
   error("Warning:  You are not root -- using TCP pingscan rather than ICMP");
   o.pingtype = PINGTYPE_TCP;
 }
-if (bouncescan && !o.pingtype) printf("Hint: if your bounce scan target hosts aren't reachable from here, remember to use -P0 so we don't try and ping them prior to the scan\n");
+if (o.bouncescan && !o.pingtype) printf("Hint: if your bounce scan target hosts aren't reachable from here, remember to use -P0 so we don't try and ping them prior to the scan\n");
 if (o.connectscan && (o.synscan || o.finscan || o.maimonscan || o.xmasscan || o.nullscan)) 
   fatal("Pick just one of -t, -s, and -U.  They all do a TCP portscan.\
  If you are trying to do TCP SYN scanning, just use -s, for FIN use -U, and \
@@ -274,7 +284,7 @@ if ((o.fragscan && !o.synscan && !o.finscan &&!o.maimonscan && !o.nullscan && !o
 
 if ((o.synscan || o.finscan || o.maimonscan || o.udpscan || o.fragscan || o.xmasscan || o.nullscan) && !o.isr00t)
   fatal("Options specified require r00t privileges.  You don't have them!");
-if (!o.connectscan && !o.udpscan && !o.synscan && !o.finscan && !o.maimonscan &&  !o.nullscan && !o.xmasscan && !bouncescan && !o.pingscan) {
+if (!o.connectscan && !o.udpscan && !o.synscan && !o.finscan && !o.maimonscan &&  !o.nullscan && !o.xmasscan && !o.bouncescan && !o.pingscan) {
   o.connectscan++;
   if (o.verbose) error("No scantype specified, assuming vanilla tcp connect()\
  scan. Use -sP if you really don't want to portscan (and just want to see what hosts are up).");
@@ -317,7 +327,7 @@ if (*o.device && !o.source) {
 
 
 /* If he wants to bounce off of an ftp site, that site better damn well be reachable! */
-if (bouncescan) {
+if (o.bouncescan) {
   if (!inet_aton(ftp.server_name, &ftp.server)) {
     if ((target = gethostbyname(ftp.server_name)))
       memcpy(&ftp.server, target->h_addr_list[0], 4);
@@ -341,11 +351,11 @@ if (o.logfd) {
 }
 
 if (fastscan)
-  ports = getfastports(o.synscan|o.connectscan|o.fragscan|o.finscan|o.maimonscan|bouncescan|o.nullscan|o.xmasscan,
+  ports = getfastports(o.synscan|o.connectscan|o.fragscan|o.finscan|o.maimonscan|o.bouncescan|o.nullscan|o.xmasscan,
                        o.udpscan|o.lamerscan);
 if (!ports && !o.pingscan) {
   ports = getdefaultports(o.synscan|o.connectscan|o.fragscan|o.finscan|
-			o.maimonscan|bouncescan|o.nullscan|o.xmasscan,
+			o.maimonscan|o.bouncescan|o.nullscan|o.xmasscan,
 			o.udpscan|o.lamerscan);
 }
 
@@ -419,8 +429,10 @@ if (!o.pingscan) {
 
 }
 else {
-  if (currenths->flags & HOST_UP) 
+  if (currenths->flags & HOST_UP) {  
     nmap_log("Host %s (%s) appears to be up.\n", currenths->name, inet_ntoa(currenths->host));    
+    nmap_machine_log("Host: %s (%s) Status: Up\n", inet_ntoa(currenths->host), currenths->name);
+  }
   else 
     if (o.verbose || o.debugging || resolve_all) {    
       if (resolve_all)
@@ -428,93 +440,115 @@ else {
       else printf("Host %s (%s) appears to be down.\n", currenths->name, inet_ntoa(currenths->host));
     }
 }
-  if (currenths->wierd_responses)
-    nmap_log("Host  %s (%s) seems to be a subnet broadcast address (returned %d extra pings).  Skipping host.\n",  currenths->name, inet_ntoa(currenths->host), currenths->wierd_responses);
 
-if (currenths->flags & HOST_UP && !currenths->source_ip.s_addr && ( o.synscan || o.finscan || o.maimonscan || o.udpscan || o.nullscan || o.xmasscan)) {
-  if (gethostname(myname, MAXHOSTNAMELEN) || 
-      !(target = gethostbyname(myname)))
-    fatal("Your system is messed up.  Cannot get hostname!  You might have to use -S <my_IP_address>\n"); 
-  memcpy(&currenths->source_ip, target->h_addr_list[0], sizeof(struct in_addr));
-  if (! sourceaddrwarning) {
-    printf("We could not determine for sure which interface to use, so we are guessing %s .  If this is wrong, use -S <my_IP_address>.\n", inet_ntoa(currenths->source_ip));
-    sourceaddrwarning = 1;
-  }
-}
+ if (currenths->wierd_responses) {  
+   nmap_log("Host  %s (%s) seems to be a subnet broadcast address (returned %d extra pings).  Skipping host.\n",  currenths->name, inet_ntoa(currenths->host), currenths->wierd_responses);
+   nmap_machine_log("Host: %s (%s) Status: Smurf (%d responses)\n",  inet_ntoa(currenths->host), currenths->name, currenths->wierd_responses);
+ }
+ 
 
-/* Figure out what link-layer device (interface) to use (ie eth0, ppp0, etc) */
-if (!*currenths->device && currenths->flags & HOST_UP && (o.nullscan || o.xmasscan || o.udpscan || o.finscan || o.maimonscan ||  o.synscan || o.osscan) && !ipaddr2devname( currenths->device, &currenths->source_ip))
-  fatal("Could not figure out what device to send the packet out on!  You might possibly want to try -S (but this is probably a bigger problem).  If you are trying to sp00f the source of a SYN/FIN scan with -S <fakeip>, then you must use -e eth0 (or other devicename) to tell us what interface to use.\n");
-/* Set up the decoy */
-o.decoys[o.decoyturn] = currenths->source_ip;
-
-    /* Time for some actual scanning! */    
-    if (currenths->flags & HOST_UP && !currenths->wierd_responses) {
-
-      if (o.synscan) pos_scan(currenths, ports, SYN_SCAN);
-      if (o.connectscan) pos_scan(currenths, ports, CONNECT_SCAN);      
-      
-      if (o.finscan) super_scan(currenths, ports, FIN_SCAN);
-      if (o.xmasscan) super_scan(currenths, ports, XMAS_SCAN);
-      if (o.nullscan) super_scan(currenths, ports, NULL_SCAN);
-      if (o.maimonscan) super_scan(currenths, ports, MAIMON_SCAN);
-      if (o.udpscan) super_scan(currenths, ports, UDP_SCAN);
-      
-      if (bouncescan) {
-	if (ftp.sd <= 0) ftp_anon_connect(&ftp);
-	if (ftp.sd > 0) bounce_scan(currenths, ports, &ftp);
-      }
-      
-      if (o.osscan) {
-	os_scan(currenths);
-      }
-    
-      if (!currenths->ports && !o.pingscan) {
-	nmap_log("No ports open for host %s (%s)\n", currenths->name,
-	       inet_ntoa(currenths->host));
-	if (currenths->wierd_responses)
-	  nmap_log("Host  %s (%s) seems to be a subnet broadcast address (returned %d extra pings)\n",  currenths->name, inet_ntoa(currenths->host), currenths->wierd_responses);
-      }
-      if (currenths->ports) {
-	nmap_log("Interesting ports on %s (%s):\n", currenths->name, 
-	       inet_ntoa(currenths->host));
-	printandfreeports(currenths->ports);
-	if (currenths->wierd_responses)
-	  nmap_log("Host  %s (%s) seems to be a subnet broadcast address (returned %d extra pings)\n",  currenths->name, inet_ntoa(currenths->host), currenths->wierd_responses);
-      } if (o.osscan) {
-	if (currenths->seq.responses > 3) {
-	  nmap_log("%s", seqreport(&(currenths->seq)));
-	}
-	if (currenths->FP_matches[0]) {
-	  if (!currenths->FP_matches[1])
+ if (currenths->flags & HOST_UP && !currenths->wierd_responses &&
+     !o.pingscan) {
+   
+   if (currenths->flags & HOST_UP && !currenths->source_ip.s_addr && ( o.synscan || o.finscan || o.maimonscan || o.udpscan || o.nullscan || o.xmasscan)) {
+     if (gethostname(myname, MAXHOSTNAMELEN) || 
+	 !(target = gethostbyname(myname)))
+       fatal("Your system is messed up.  Cannot get hostname!  You might have to use -S <my_IP_address>\n"); 
+     memcpy(&currenths->source_ip, target->h_addr_list[0], sizeof(struct in_addr));
+     if (! sourceaddrwarning) {
+       printf("We could not determine for sure which interface to use, so we are guessing %s .  If this is wrong, use -S <my_IP_address>.\n", inet_ntoa(currenths->source_ip));
+       sourceaddrwarning = 1;
+     }
+   }
+   
+   /* Figure out what link-layer device (interface) to use (ie eth0, ppp0, etc) */
+   if (!*currenths->device && currenths->flags & HOST_UP && (o.nullscan || o.xmasscan || o.udpscan || o.finscan || o.maimonscan ||  o.synscan || o.osscan) && !ipaddr2devname( currenths->device, &currenths->source_ip))
+     fatal("Could not figure out what device to send the packet out on!  You might possibly want to try -S (but this is probably a bigger problem).  If you are trying to sp00f the source of a SYN/FIN scan with -S <fakeip>, then you must use -e eth0 (or other devicename) to tell us what interface to use.\n");
+   /* Set up the decoy */
+   o.decoys[o.decoyturn] = currenths->source_ip;
+   
+   /* Time for some actual scanning! */    
+   
+   
+   if (o.synscan) pos_scan(currenths, ports, SYN_SCAN);
+   if (o.connectscan) pos_scan(currenths, ports, CONNECT_SCAN);      
+   
+   if (o.finscan) super_scan(currenths, ports, FIN_SCAN);
+   if (o.xmasscan) super_scan(currenths, ports, XMAS_SCAN);
+   if (o.nullscan) super_scan(currenths, ports, NULL_SCAN);
+   if (o.maimonscan) super_scan(currenths, ports, MAIMON_SCAN);
+   if (o.udpscan) super_scan(currenths, ports, UDP_SCAN);
+   
+   if (o.bouncescan) {
+     if (ftp.sd <= 0) ftp_anon_connect(&ftp);
+     if (ftp.sd > 0) bounce_scan(currenths, ports, &ftp);
+   }
+   
+   if (o.osscan) {
+     os_scan(currenths);
+   }
+   
+   if (!currenths->ports && !o.pingscan) {
+     nmap_log("No ports open for host %s (%s)\n", currenths->name,
+	      inet_ntoa(currenths->host));
+     nmap_machine_log("Host: %s (%s) Status: Up", 
+		      inet_ntoa(currenths->host), currenths->name);
+   }
+   if (currenths->ports) {
+     nmap_log("Interesting ports on %s (%s):\n", currenths->name, 
+	      inet_ntoa(currenths->host));
+     nmap_machine_log("Host: %s (%s)", inet_ntoa(currenths->host), 
+		      currenths->name);
+     invertfirewalled(&currenths->ports, ports);
+     printandfreeports(currenths->ports);
+   }
+   if (o.osscan) {
+     if (currenths->seq.responses > 3) {
+       nmap_log("%s", seqreport(&(currenths->seq)));
+       nmap_machine_log(" Seq Index: %d", currenths->seq.index);
+     }
+     if (currenths->FP_matches[0]) {
+       nmap_machine_log(" OS: %s",  currenths->FP_matches[0]->OS_name);
+       i = 1;
+       while(currenths->FP_matches[i]) {
+	 nmap_machine_log("|%s", currenths->FP_matches[i]->OS_name);
+	 i++;
+       }
+       if (!currenths->FP_matches[1])
 	    nmap_log("Remote operating system guess: %s", 
 		     currenths->FP_matches[0]->OS_name);
-	  else  {
-	    nmap_log("Remote OS guesses: %s", 
-		     currenths->FP_matches[0]->OS_name);
-	    i = 1;
-	    while(currenths->FP_matches[i]) {
-	      nmap_log(", %s", currenths->FP_matches[i]->OS_name);
-	      i++;
-	    }
-	  }
-	  nmap_log("\n");
-	  if (o.debugging || o.verbose > 1) {
-	    nmap_log("OS Fingerprint:\n%s\n", fp2ascii(currenths->FP));
-	  }
-	  nmap_log("\n");
-	} else {
-	  nmap_log("No OS matches for this host.  TCP fingerprint:\n%s\n\n", fp2ascii(currenths->FP));
-	}
-	freeFingerPrint(currenths->FP);
-      }
-      if (o.debugging) printf("Final times for host: srtt: %d rttvar: %d  to: %d\n", currenths->to.srtt, currenths->to.rttvar, currenths->to.timeout);
-    }
-    fflush(stdout);
+       else  {
+	 nmap_log("Remote OS guesses: %s", 
+		  currenths->FP_matches[0]->OS_name);
+	 i = 1;
+	 while(currenths->FP_matches[i]) {
+	   nmap_log(", %s", currenths->FP_matches[i]->OS_name);
+	   i++;
+	 }
+       }
+       nmap_log("\n");	  
+       if (o.debugging || o.verbose > 1) {
+	 nmap_log("OS Fingerprint:\n%s\n", fp2ascii(currenths->FP));
+       }
+       nmap_log("\n");
+     } else {
+       nmap_log("No OS matches for this host.  TCP fingerprint:\n%s\n\n", fp2ascii(currenths->FP));
+     }
+     freeFingerPrint(currenths->FP);
+   }
+
+   if (o.machinelogfd) fflush(o.machinelogfd);
+   if (o.debugging) printf("Final times for host: srtt: %d rttvar: %d  to: %d\n", currenths->to.srtt, currenths->to.rttvar, currenths->to.timeout);
+   nmap_machine_log("\n");
+ }
+ fflush(stdout);
+ if (o.machinelogfd) fflush(o.machinelogfd);
+ if (o.logfd) fflush(o.logfd);
   }
 }
 
-printf("Nmap run completed -- %d %s (%d %s up) scanned in %ld seconds\n", numhosts_scanned, (numhosts_scanned == 1)? "IP address" : "IP addresses", numhosts_up, (numhosts_up == 1)? "host" : "hosts",  (long) time(NULL) - starttime);
+i = time(NULL) - starttime;
+printf("Nmap run completed -- %d %s (%d %s up) scanned in %d %s\n", numhosts_scanned, (numhosts_scanned == 1)? "IP address" : "IP addresses", numhosts_up, (numhosts_up == 1)? "host" : "hosts",  i, (i == 1)? "second": "seconds");
 return 0;
 }
 
@@ -793,7 +827,7 @@ char tmp[256];
 char *p;
 int i;
 int len;
- sprintf(report, "TCP Sequence Prediction: Class=%s\n                         Difficulty=%s; Seq Index=%d (lower=easier)\n", seqclass2ascii(seq->class), (seq->index < 10)? "Trivial joke" : (seq->index < 80)? "Easy" : (seq->index < 3000)? "Medium" : (seq->index < 5000)? "Formidable" : (seq->index < 100000)? "Worthy challenge" : "Good luck!", seq->index);
+ sprintf(report, "TCP Sequence Prediction: Class=%s\n                         Difficulty=%d (%s)\n", seqclass2ascii(seq->class), seq->index, (seq->index < 10)? "Trivial joke" : (seq->index < 80)? "Easy" : (seq->index < 3000)? "Medium" : (seq->index < 5000)? "Formidable" : (seq->index < 100000)? "Worthy challenge" : "Good luck!");
  if (o.verbose) {
    tmp[0] = '\n';
    tmp[1] = '\0'; 
@@ -852,6 +886,11 @@ int addport(portlist *ports, unsigned short portno, unsigned short protocol,
 struct port *current, *tmp;
 int len;
 
+/* Make sure state is OK */
+if (state != PORT_OPEN && state != PORT_CLOSED && state != PORT_FIREWALLED &&
+    state != PORT_UNFIREWALLED)
+  fatal("addport: attempt to add port number %d with illegal state %d\n", portno, state);
+
 if (*ports) {
   current = *ports;
   /* case 1: we add to the front of the list */
@@ -864,6 +903,10 @@ if (*ports) {
       if (o.debugging || o.verbose) 
 	printf("Duplicate port (%hi/%s)\n", portno , 
 	       (protocol == IPPROTO_TCP)? "tcp": "udp");
+      /* I still want to use the newer info in most cases */
+      current->state = state;
+      if (!current->owner && owner && *owner) 
+	current->owner = strdup(owner);
       return -1;
     }  
     tmp = current;
@@ -893,6 +936,10 @@ if (*ports) {
       if (o.debugging || o.verbose) 
 	printf("Duplicate port (%hi/%s)\n", portno , 
 	       (protocol == IPPROTO_TCP)? "tcp": "udp");
+      /* I still want to use the newer info in most cases */
+      current->state = state;
+      if (!current->owner && owner && *owner) 
+	current->owner = strdup(owner);
       return -1;
     }
     tmp = current->next;
@@ -938,21 +985,24 @@ int deleteport(portlist *ports, unsigned short portno,
     if (o.debugging > 1) error("Tried to delete from empty port list!");
     return -1;
   }
+  current = *ports;
   /* Case 1, deletion from front of list*/
-  if ((*ports)->portno == portno && (*ports)->proto == protocol) {
-    tmp = (*ports)->next;
-    if ((*ports)->owner) free((*ports)->owner);
-    free(*ports);
+  if (current->portno == portno && current->proto == protocol) {
+    tmp = current->next;
+    if (current->owner) free(current->owner);
+    current->next = NULL; /* Just because */
+    free(current);
     *ports = tmp;
   }
   else {
-    current = *ports;
-    for(;current->next && (current->next->portno != portno || current->next->proto != protocol); current = current->next);
+    for(;current->next && (current->next->portno != portno || current->next->proto != protocol); current = current->next)
+      ;
     if (!current->next)
       return -1;
     tmp = current->next;
     current->next = tmp->next;
     if (tmp->owner) free(tmp->owner);
+    tmp->next = NULL; /* Just because */
     free(tmp);
 }
   return 0; /* success */
@@ -980,23 +1030,40 @@ char *grab_next_host_spec(FILE *inputfd, int argc, char **fakeargv) {
   return host_spec;
 }
 
+char *statenum2str(int state) {
+  switch(state) {
+  case PORT_OPEN: return "open"; break;
+  case PORT_FIREWALLED: return "filtered"; break;
+  case PORT_UNFIREWALLED: return "unfiltered"; break;
+  case PORT_CLOSED: return "closed"; break;
+  default: return "unknown"; break;
+  }
+  return "unknown";
+}
+
 
 void printandfreeports(portlist ports) {
   char protocol[4];
+  char *state;
+  int first = 1;
   struct servent *service;
   port *current = ports, *tmp;
   
   nmap_log("Port    State       Protocol  Service");
   nmap_log("%s", (o.identscan)?"         Owner\n":"\n");
+  nmap_machine_log(" Ports: ");
   while(current != NULL) {
+    if (!first) nmap_machine_log(", ");
+    else first = 0;
     strcpy(protocol,(current->proto == IPPROTO_TCP)? "tcp": "udp");
+    state = statenum2str(current->state);
     service = getservbyport(htons(current->portno), protocol);
-    nmap_log("%-8d%-12s%-11s%-16s%s\n", current->portno, 
-	     (current->state == PORT_OPEN)? "open" :
-	     (current->state == PORT_FIREWALLED)? "firewalled" :
-	     "whacked", protocol,
-	   (service)? service->s_name: "unknown",
-	   (current->owner)? current->owner : "");
+    nmap_log("%-8d%-12s%-11s%-16s%s\n", current->portno, state, protocol,
+	     (service)? service->s_name: "unknown",
+	     (current->owner)? current->owner : "");
+    /* format is 22/TCP/Open/root/banner/TBD/TBD/ */
+    nmap_machine_log("%d/%s/%s/%s////", current->portno, state, protocol,
+		     (current->owner)? current->owner : "");    
     tmp = current;
     current = current->next;
     if (tmp->owner) free(tmp->owner);
@@ -1391,6 +1458,7 @@ portlist super_scan(struct hoststruct *target, unsigned short *portarray, stype 
   unsigned int localnet, netmask;
   int starttime;
   unsigned short newport;
+  int newstate = 999; /* This ought to break something if used illegally */
   struct hostent *myhostent = NULL;
   struct portinfo *scan, *openlist, *current, *fresh, *testinglist, *next;
   int portlookup[65536]; /* Indexes port number -> scan[] index */
@@ -1560,7 +1628,7 @@ if (o.debugging || o.verbose)
 			   current->portno, 0, 0, scanflags, 0, NULL, 0, 0, 0);
 	    else send_udp_raw(rawsd, &o.decoys[decoy], &target->host, o.magic_port,
 			      current->portno, NULL, 0);
-	    	    if (scantype == UDP_SCAN && senddelay) usleep(senddelay);
+	    if (scantype == UDP_SCAN && senddelay) usleep(senddelay);
 	  }
 	}
       }
@@ -1571,11 +1639,14 @@ if (o.debugging || o.verbose)
       windowdecrease = 0;
       while (( ip = (struct ip*) readip_pcap(pd, &bytes))) {
 	if (bytes < (4 * ip->ip_hl) + 4)
-	  continue;
-	if (ip->ip_src.s_addr == target->host.s_addr) {
+	  continue;	
+	current = NULL;
+	if (ip->ip_p == IPPROTO_ICMP ||
+	    ip->ip_src.s_addr == target->host.s_addr) {
 	  if (ip->ip_p == IPPROTO_TCP) {
 	    tcp = (struct tcphdr *) (((char *) ip) + 4 * ip->ip_hl);
 	    if (tcp->th_flags & TH_RST) {	    
+	      newstate = PORT_CLOSED;
 	      newport = ntohs(tcp->th_sport);
 	      if (portlookup[newport] < 0) {
 		if (o.debugging) {
@@ -1585,8 +1656,8 @@ if (o.debugging || o.verbose)
 		current = NULL;
 		continue;
 	      }	      
-	      /* We figure out the scan number (and put it in i) */
 	      current = &scan[portlookup[newport]];
+
 	      if (ntohs(tcp->th_dport) != o.magic_port && 
 		  ntohs(tcp->th_dport) != o.magic_port + 1) {
 		if (o.debugging)  {		
@@ -1594,12 +1665,12 @@ if (o.debugging || o.verbose)
 		}
 		continue;		
 	      }
-
+	      
 	      if (current->state != PORT_TESTING && o.debugging) {
 		error("TCP packet detected from port %d which is in state %d (should usually be PORT_TESTING (but not always)", 
 		      newport, current->state); 
 	      }
-	    
+	      
 	      if (!o.magic_port_set) {
 		packet_trynum = ntohs(tcp->th_dport) - o.magic_port;
 		if ((packet_trynum|1) != 1) packet_trynum = -1;
@@ -1608,107 +1679,117 @@ if (o.debugging || o.verbose)
 	    } else { continue; } /* Wrong TCP flags */
 	    
 	  } else if (ip->ip_p == IPPROTO_ICMP) {
-	    icmp = (struct icmp *) ((char *)ip + sizeof(struct ip));
-	    ip2 = (struct ip *) (((char *) ip) + 4 * ip->ip_hl + 8);
-	    data = (unsigned short *) ((char *)ip2+ 4 * ip2->ip_hl);
+	    icmp = (struct icmp *) ((char *)ip + 4 * ip->ip_hl);
+	    ip2 = (struct ip *) (((char *) icmp) + 8);
+	    if (ip2->ip_dst.s_addr != target->host.s_addr)
+	      continue;
+	    data = (unsigned short *) ((char *)ip2 + 4 * ip2->ip_hl);
 	    /*	    printf("Caught ICMP packet:\n");
 		    hdump(icmp, ntohs(ip->ip_len) - sizeof(struct ip)); */
 	    if (icmp->icmp_type == 3) {
+	      newport = ntohs(data[1]);
+	      if (portlookup[newport] < 0) {
+		if (o.debugging) {
+		  printf("Strange ICMP packet type 3 code %d related to port %d:\n", icmp->icmp_code, newport);
+		}
+		readtcppacket((char *)ip, bytes);		
+		continue;		
+	      }
+	      current = &scan[portlookup[newport]];
+	      if (!o.magic_port_set) {
+		packet_trynum = ntohs(data[0]) - o.magic_port;
+		if ((packet_trynum|1) != 1) packet_trynum = -1;
+	      } else {
+		if (current->trynum == 0)  {
+		  packet_trynum = 0;
+		}
+		else packet_trynum = -1;
+	      }
+	      
 	      switch(icmp->icmp_code) {
 		
 	      case 2: /* pr0t0c0l unreachable */
-		newport = ntohs(data[1]);
-		if (portlookup[newport] >= 0) {
-		  current = &scan[portlookup[newport]];
-		  if (!o.magic_port_set) {
-		    packet_trynum = ntohs(data[0]) - o.magic_port;
-		    if ((packet_trynum|1) != 1) packet_trynum = -1;
-		  } else if (current->trynum == 0) packet_trynum = 0;
-		  else packet_trynum = -1;
-		}
-		else { 
-		  if (o.debugging) {
-		    printf("Illegal ICMP pr0t0c0l unreachable packet:\n");
-		    hdump((unsigned char *)icmp, ntohs(ip->ip_len) -sizeof(struct ip));
-		  }
-		  continue; 
-		}		  		
+		newstate = PORT_FIREWALLED;
 		break;
 		
 	      case 3: /* p0rt unreachable */		
-		newport = ntohs(data[1]);
-		if (portlookup[newport] >= 0) {
-		  current = &scan[portlookup[newport]];
-		  if (!o.magic_port_set) {
-		    packet_trynum = ntohs(data[0]) - o.magic_port;
-		    if ((packet_trynum|1) != 1) packet_trynum = -1;
-		  } else if (current->trynum == 0) packet_trynum = 0;
-		  else packet_trynum = -1;
-		}
-		else { 
-		  if (o.debugging) {
-		    printf("Illegal ICMP port unreachable packet:\n");
-		    hdump((unsigned char *)icmp, ntohs(ip->ip_len) -sizeof(struct ip));
-		  }
-		  continue; 
-		}		  		
+		if (scantype == UDP_SCAN) {
+		  newstate = PORT_CLOSED;
+		} else newstate = PORT_FIREWALLED;
 		break;
-	      }    
+
+	      case 13: /* Administratively prohibited packet */
+		newstate = PORT_FIREWALLED;
+		break;		
+
+	      default:
+		if (o.debugging) {
+		  error("Received strange ICMP destunreach response -- code: %d", icmp->icmp_code);
+		  hdump((unsigned char *)icmp, ntohs(ip->ip_len) - 
+			sizeof(struct ip));
+		}
+		continue;
+	      }
 	    }
 	  } else if (ip->ip_p == IPPROTO_UDP) {
 	    if (UDPPacketWarning == 0) {
 	      UDPPacketWarning = 1;
-	      error("UDP packet received -- WEIRD!\n");
+	      if (o.debugging)
+		error("UDP packet received\n");
 	    }
 	    continue;
 	  }
-
-	  if (current->state == PORT_OPEN) {
-	    /* 0oPs! we gave up on this port two early, now we must
-	       pay */
-	    /* Let us first strop this fucer from the open list ... */
-	    if (current->next > -1) 
-	      scan[current->next].prev = current->prev;
-	    if (current->prev > -1) 
-	      scan[current->prev].next = current->next;
-	    if (openlist == current) 
-	      openlist = (current->next >= 0)? &scan[current->next]:NULL;
-	  }
-	  else if (current->state == PORT_CLOSED && (packet_trynum < 0)) {
-	    target->to.rttvar *= 1.2;
-	    if (o.debugging) { printf("Late packet, couldn't figure out sendno so we do varianceincrease to %d\n", target->to.rttvar); 
+	  if (current) {	  
+	    if (current->state == PORT_OPEN) {
+	      /* 0oPs! we gave up on this port two early, now we must
+		 pay */
+	      /* Let us first strop this fucer from the open list ... */
+	      if (current->next > -1) 
+		scan[current->next].prev = current->prev;
+	      if (current->prev > -1) 
+		scan[current->prev].next = current->next;
+	      if (openlist == current) 
+		openlist = (current->next >= 0)? &scan[current->next]:NULL;
 	    }
-	  } 
-	  if (packet_trynum > -1) {		
-	    /* Update our records */
-	    adjust_timeouts(current->sent[packet_trynum], &(target->to));
-	    numqueries_ideal = MIN(numqueries_ideal + (packet_incr/numqueries_ideal), max_width);
-	    if (packet_trynum > 0 && current->trynum > 0) {
-	      /* The first packet was apparently lost, slow down */
-	      dropped++;
-	      if (freshportstried > 50 && ((double) dropped/freshportstried) > 0.2) {
-		if (!senddelay) senddelay = 50000;
-		else senddelay = MIN(senddelay * 2, 1000000);
-		freshportstried = 0;
-		dropped = 0;
-		if (o.verbose || o.debugging )  
-		  printf("Too many drops ... increasing senddelay to %d\n", senddelay);
+	    else if (current->state == PORT_CLOSED && (packet_trynum < 0)) {
+	      target->to.rttvar *= 1.2;
+	      if (o.debugging) { printf("Late packet, couldn't figure out sendno so we do varianceincrease to %d\n", target->to.rttvar); 
 	      }
-	      if (windowdecrease == 0) {
-		numqueries_ideal *= fallback_percent;
-		if (numqueries_ideal < 1) numqueries_ideal = 1;
-		if (o.debugging) { printf("Lost a packet, decreasing window to %d\n", (int) numqueries_ideal);
-		windowdecrease++;
-		if (scantype == UDP_SCAN) usleep(250000);
+	    } 
+	    if (packet_trynum > -1) {		
+	      /* Update our records */
+	      adjust_timeouts(current->sent[packet_trynum], &(target->to));
+	      numqueries_ideal = MIN(numqueries_ideal + (packet_incr/numqueries_ideal), max_width);
+	      if (packet_trynum > 0 && current->trynum > 0) {
+		/* The first packet was apparently lost, slow down */
+		dropped++;
+		if (freshportstried > 50 && ((double) dropped/freshportstried) > 0.3) {
+		  if (!senddelay) senddelay = 50000;
+		  else senddelay = MIN(senddelay * 2, 1000000);
+		  if (senddelay >= 200000 && scantype == UDP_SCAN)
+		    max_width = 2;
+		  freshportstried = 0;
+		  dropped = 0;
+		  if (o.verbose || o.debugging )  
+		    printf("Too many drops ... increasing senddelay to %d\n", senddelay);
+	      }
+		if (windowdecrease == 0) {
+		  numqueries_ideal *= fallback_percent;
+		  if (numqueries_ideal < 1) numqueries_ideal = 1;
+		  if (o.debugging) { printf("Lost a packet, decreasing window to %d\n", (int) numqueries_ideal);
+		  windowdecrease++;
+		  if (scantype == UDP_SCAN) usleep(250000);
+		  }
+		} else if (o.debugging > 1) { 
+		  printf("Lost a packet, but not decreasing\n");
 		}
-	      } else if (o.debugging > 1) { 
-		printf("Lost a packet, but not decreasing\n");
 	      }
+	    }      
+	    if (current->state != newstate) {
+	      changed++;
 	    }
-	  }	      
-	  if (current->state != PORT_CLOSED) {
-	    changed++;
-	    if (current->state != PORT_OPEN) {	    
+	    if (current->state != PORT_OPEN && 
+		current->state != PORT_CLOSED) {	    
 	      numqueries_outstanding--;
 	    }
 	    if (current->state == PORT_TESTING && current == testinglist)
@@ -1717,7 +1798,11 @@ if (o.debugging || o.verbose)
 	      openlist = (current->next >= 0)? &scan[current->next] : NULL;
 	    if (current->next >= 0) scan[current->next].prev = current->prev;
 	    if (current->prev >= 0) scan[current->prev].next = current->next;
-	    current->state = PORT_CLOSED;
+	    current->state = newstate;
+	    if (current->state != PORT_CLOSED) {
+	      addport(&target->ports, current->portno, (scantype == UDP_SCAN)?
+		      IPPROTO_UDP : IPPROTO_TCP, NULL, current->state);
+	    }
 	  }
 	}
       }
@@ -2537,6 +2622,51 @@ unsigned short *data;
       }
 }
 
+/* This is an ugly hack -- but the idea is that if 90% of the 
+   ports are in the firewalled state, we'd rather show the ports
+   in the UNFIREWALLED state */
+void invertfirewalled(portlist *pl, unsigned short *ports) {
+  int firewalledports = 0;
+  port *current;
+  int i;
+
+  for(current = *pl; current; current = current->next) {
+    if (current->state == PORT_FIREWALLED)
+      firewalledports++;
+  }
+
+  if (firewalledports > 10 && (((double) firewalledports / o.numports) > 0.6))
+    {
+      /* OK, we are going to add an UNFIREWALLED entry for every port not
+	 listed and then we will delete every port that is firewalled */
+      for(i=0; i < o.numports; i++) {
+	if (o.udpscan) {
+	  current = lookupport(*pl, ports[i], IPPROTO_UDP);
+	  if (!current)
+	    addport(pl, ports[i], IPPROTO_UDP, NULL, PORT_UNFIREWALLED);
+	  else {
+	    if (current->state == PORT_FIREWALLED)
+	      if (deleteport(pl, ports[i], IPPROTO_UDP) == -1)
+		fatal("Deletion of port %d failed\n", ports[i]);
+	  }
+	}
+	if (o.connectscan || o.nullscan || o.xmasscan || o.synscan || 
+	    o.maimonscan || o.finscan || o.bouncescan) {
+	  current = lookupport(*pl, ports[i], IPPROTO_TCP);
+	  if (!current)
+	    addport(pl, ports[i], IPPROTO_TCP, NULL, PORT_UNFIREWALLED);
+	  else {
+	    if (current->state == PORT_FIREWALLED)
+	      if (deleteport(pl, ports[i], IPPROTO_TCP) == -1)
+		fatal("Deletion of port %d failed\n", ports[i]);
+	  }	 
+	}
+      }
+    }
+}
+
+
+
 int ftp_anon_connect(struct ftpinfo *ftp) {
 int sd;
 struct sockaddr_in sock;
@@ -2817,6 +2947,17 @@ if (o.logfd && o.logfd != stdout) {
 va_end(ap);
 return;
 }
+
+/* For logging machine readable stuff */
+void nmap_machine_log(char *fmt, ...) {
+va_list  ap;
+if (!o.machinelogfd) return;
+va_start(ap, fmt);
+vfprintf(o.machinelogfd, fmt, ap);
+va_end(ap);
+return;
+}
+
 
 void sigdie(int signo) {
  switch(signo) {

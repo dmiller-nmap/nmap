@@ -97,10 +97,11 @@ struct ip *ip = (struct ip *) packet;
 struct tcphdr *tcp = (struct tcphdr *) (packet + sizeof(struct ip));
 struct pseudo_header *pseudo =  (struct pseudo_header *) (packet + sizeof(struct ip) - sizeof(struct pseudo_header)); 
 static int myttl = 0;
+int retries = 0;
 
  /*With these placement we get data and some field alignment so we aren't
    wasting too much in computing the checksum */
-int res;
+int res = -1;
 struct sockaddr_in sock;
 char myname[MAXHOSTNAMELEN + 1];
 struct hostent *myhostent = NULL;
@@ -173,7 +174,7 @@ if (window)
 else tcp->th_win = htons(1024 * (myttl % 4 + 1)); /* Who cares */
 
  /* We should probably copy the data over too */
- if (data)
+ if (data && datalen)
    memcpy(packet + sizeof(struct ip) + sizeof(struct tcphdr) + optlen, data, datalen);
  /* And the options */
  if (optlen) {
@@ -205,19 +206,32 @@ if (TCPIP_DEBUGGING > 1) {
 printf("Raw TCP packet creation completed!  Here it is:\n");
 readtcppacket(packet,BSDUFIX(ip->ip_len));
 }
-if (TCPIP_DEBUGGING > 1) 
 
-  printf("\nTrying sendto(%d , packet, %d, 0 , %s , %d)\n",
-	 sd, BSDUFIX(ip->ip_len), inet_ntoa(*victim),
-	 sizeof(struct sockaddr_in));
-if ((res = sendto(sd, packet, BSDUFIX(ip->ip_len), 0,
-		  (struct sockaddr *)&sock, (int) sizeof(struct sockaddr_in))) == -1)
-  {
-    perror("sendto in send_tcp_raw");
-    if (source_malloced) free(source);
-    free(packet);
-    return -1;
-  }
+do {
+  if (TCPIP_DEBUGGING > 1) 
+    printf("\nTrying sendto(%d , packet, %d, 0 , %s , %d)\n",
+	   sd, BSDUFIX(ip->ip_len), inet_ntoa(*victim),
+	   sizeof(struct sockaddr_in));
+  if ((res = sendto(sd, packet, BSDUFIX(ip->ip_len), 0,
+		    (struct sockaddr *)&sock, (int)sizeof(struct sockaddr_in)))
+      == -1)
+    {
+      if (errno != EINVAL || retries >= 2) {      
+	error("sendto in send_tcp_raw sendto(%d, packet, %d, 0, %s, %d): %s",
+	      sd, BSDUFIX(ip->ip_len), inet_ntoa(*victim), 
+	      sizeof(struct sockaddr_in), strerror(errno));
+	
+	if (source_malloced) free(source);
+	free(packet);
+	return -1;
+      }
+      printf("Sleeping due to (Linux only?) EINVAL lameness (%d seconds) ...", (retries + 1) * 60);
+      fflush(stdout);
+      sleep((retries + 1) * 60);
+      fflush(stdout);
+      printf("done\n");
+    }
+} while(res == -1 && errno == EINVAL && retries++ < 2);
 if (TCPIP_DEBUGGING > 1) printf("successfully sent %d bytes of raw_tcp!\n", res);
 
 if (source_malloced) free(source);
@@ -454,7 +468,8 @@ char *packet = safe_malloc(sizeof(struct ip) + datalen);
 struct ip *ip = (struct ip *) packet;
 static int myttl = 0;
 
-int res;
+int res = -1;
+int retries = 0;
 struct sockaddr_in sock;
 char myname[MAXHOSTNAMELEN + 1];
 struct hostent *myhostent = NULL;
@@ -520,19 +535,33 @@ if (TCPIP_DEBUGGING > 1) {
   printf("Raw IP packet creation completed!  Here it is:\n");
   hdump(packet, BSDUFIX(ip->ip_len));
 }
+
+do {
 if (TCPIP_DEBUGGING > 1) 
   printf("\nTrying sendto(%d , packet, %d, 0 , %s , %d)\n",
 	 sd, BSDUFIX(ip->ip_len), inet_ntoa(*victim),
 	 sizeof(struct sockaddr_in));
-
  if ((res = sendto(sd, packet, BSDUFIX(ip->ip_len), 0,
-		   (struct sockaddr *)&sock, (int) sizeof(struct sockaddr_in))) == -1)
-  {
-    perror("sendto in send_ip_raw");
-    if (source_malloced) free(source);
-    free(packet);
-    return -1;
-  }
+		    (struct sockaddr *)&sock, (int)sizeof(struct sockaddr_in)))
+      == -1)
+    {
+      if (errno != EINVAL || retries >= 2) {      
+	error("sendto in send_tcp_raw sendto(%d, packet, %d, 0, %s, %d): %s",
+	      sd, BSDUFIX(ip->ip_len), inet_ntoa(*victim), 
+	      sizeof(struct sockaddr_in), strerror(errno));
+	if (source_malloced) free(source);
+	free(packet);
+	return -1;
+      }
+      printf("Sleeping due to (Linux only?) EINVAL lameness (%d seconds) ...",
+	     (retries + 1) * 60);
+      fflush(stdout);
+      sleep((retries + 1) * 60);
+      printf("done\n");
+      fflush(stdout);
+    }
+} while(res == -1 && errno == EINVAL && retries++ < 2);
+
 if (TCPIP_DEBUGGING > 1) printf("successfully sent %d bytes of raw_tcp!\n", res);
 
 if (source_malloced) free(source);
@@ -875,7 +904,7 @@ struct interface_info *getinterfaces(int *howmany) {
 	((*(char **)&ifr) +=  sizeof(ifr->ifr_name) + len )) {
       sin = (struct sockaddr_in *) &ifr->ifr_addr;
       memcpy(&(mydevs[numinterfaces].addr), (char *) &(sin->sin_addr), sizeof(struct in_addr));
-      /* Stevens does this in UNP, so it may be useful in some cases */
+      /* In case it is a stinkin' alias */
       if ((p = strchr(ifr->ifr_name, ':')))
 	*p = '\0';
       strncpy(mydevs[numinterfaces].name, ifr->ifr_name, 63);

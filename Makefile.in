@@ -18,7 +18,7 @@ LDFLAGS = @LDFLAGS@
 LIBS =  @LIBS@ -lpcap -lm
 INSTALL = @INSTALL@
 MAKEDEPEND = @MAKEDEPEND@
-VERSION = 2.0-Beta11
+VERSION = 2.0-Beta13
 
 TARGET = nmap
 
@@ -81,7 +81,7 @@ static:
 
 clean: @PCAP_CLEAN@ my_clean
 my_clean:
-	rm -f $(OBJS) $(TARGET)
+	rm -f $(OBJS) $(TARGET) 
 pcap_clean:
 	cd $(LIBPCAPDIR); $(MAKE) clean
 pcap_dist_clean:

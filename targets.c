@@ -271,7 +271,7 @@ int blockinc;
 int sd_blocking = 1;
 struct sockaddr_in sock;
 short seq = 0;
-int sd, rawsd, rawpingsd = -1;
+int sd = -1, rawsd = -1, rawpingsd = -1;
 struct timeval *time;
 struct timeval start, end, t1, t2;
 unsigned short id;
@@ -285,6 +285,7 @@ unsigned short sportbase;
 bzero((char *)&ptech, sizeof(struct pingtech));
 
 bzero((char *) &pt, sizeof(struct pingtune)); 
+
 pt.up_this_block = 0;
 pt.block_unaccounted = LOOKAHEAD;
 pt.discardtimesbefore = 0;
@@ -299,7 +300,6 @@ pt.block_tries = 0; /* How many tries this block has gone through */
 if (o.magic_port_set) sportbase = o.magic_port;
 else sportbase = o.magic_port + 20;
 
-
 /* What kind of scans are we doing? */
 if ((o.pingtype & PINGTYPE_ICMP) &&  hostbatch[0].source_ip.s_addr) 
   ptech.rawicmpscan = 1;
@@ -312,6 +312,7 @@ if (o.pingtype & PINGTYPE_TCP) {
 }
 
 time = safe_malloc(sizeof(struct timeval) * ((pt.max_tries) * num_hosts));
+bzero(time, sizeof(struct timeval) * pt.max_tries * num_hosts);
 id = (unsigned short) rand();
 
 if (ptech.connecttcpscan) 
@@ -353,11 +354,13 @@ if (o.numdecoys > 1 || ptech.rawtcpscan || ptech.rawicmpscan) {
     pfatal("socket trobles in massping");
   if (o.allowall) broadcast_socket(rawsd);
 
+  
   if ((rawpingsd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) < 0 )
     pfatal("socket trobles in massping");
   if (o.allowall) broadcast_socket(rawpingsd);
+
 }
-else rawsd = -1; 
+ else { rawsd = -1; rawpingsd = -1; }
 
 if (ptech.rawicmpscan || ptech.rawtcpscan) {
   /* we need a pcap descript0r! */
@@ -368,7 +371,8 @@ if (ptech.rawicmpscan || ptech.rawtcpscan) {
      ---
    = 104 byte snaplen */
   
-  if (!(pd = pcap_open_live(hostbatch[0].device, 104,  (o.spoofsource)? 1 : 0, 20, err0r)))
+  if (!(pd = pcap_open_live(hostbatch[0].device, 104, o.spoofsource, 20,
+			    err0r)))
     fatal("pcap_open_live: %s", err0r);
 
   if (pcap_lookupnet(hostbatch[0].device, &localnet, &netmask, err0r) < 0)
@@ -472,11 +476,10 @@ gettimeofday(&start, NULL);
  }
 
  close(sd);
- if (o.numdecoys > 1)
-   close(rawsd);
  if (ptech.connecttcpscan) free(tqi.sockets);
  if (sd >= 0) close(sd);
  if (rawsd >= 0) close(rawsd);
+ if (rawpingsd >= 0) close(rawpingsd);
  free(time);
  if (pd) pcap_close(pd);
  if (o.debugging) 
@@ -769,18 +772,10 @@ struct ppkt {
   unsigned short checksum;
   unsigned short id;
   unsigned short seq;
-};
-struct {
-  struct ip ip;
-  unsigned char type;
-  unsigned char code;
-  unsigned short checksum;
-  unsigned short identifier;
-  unsigned short sequence;
-  char crap[16536];
-}  response;
+} *ping = NULL, *ping2 = NULL;
+char response[16536]; 
 struct tcphdr *tcp;
-struct ip *ip;
+struct ip *ip, *ip2;
 int hostnum = -99999; /* This ought to crash us if it is used uninitialized */
 int tm;
 int dotimeout = 1;
@@ -789,6 +784,7 @@ int foundsomething;
 unsigned short newport;
 int trynum = -999999;
 int pingtype = -999999;
+int timeout = 0;
 unsigned short sequence = 65534;
 unsigned long tmpl;
 unsigned short sportbase;
@@ -810,84 +806,131 @@ if (o.magic_port_set) sportbase = o.magic_port;
 else sportbase = o.magic_port + 20;
 
 gettimeofday(&start, NULL);
-while(pt->block_unaccounted > 0) {
+while(pt->block_unaccounted > 0 && !timeout) {
   tmpto = myto;
 
   if (pd) {
     ip = (struct ip*) readip_pcap(pd, &bytes);
-    if (bytes > sizeof(response)) {
-      error("Huge packet caught by get_ping_results");
-      continue;
-    }
-    if (bytes > 0) {    
-      memcpy((char *)&response, (char *)ip, bytes);  
-    }
   } else {    
     FD_SET(sd, &fd_r);
     FD_SET(sd, &fd_x);
     res = select(sd+1, &fd_r, NULL, &fd_x, &tmpto);
     if (res == 0) break;
     bytes = read(sd,&response,sizeof(response));
-    ip = &(response.ip);
+    ip = (struct ip *) &(response);
   }
+
+  gettimeofday(&end, NULL);
+  tm = TIMEVAL_SUBTRACT(end,start);  
+  if (tm > (MAX(400000,3 * to->timeout)))
+    timeout = 1;
+  if (bytes == 0 &&  tm > to->timeout) {  
+    timeout = 1;
+  }
+  if (bytes == 0)
+    continue;
+
   if (bytes > 0 && bytes <= 20) {  
     error("%d byte micro packet received in get_ping_results");
-  }
-  else if (bytes > 20) {  
-    foundsomething = 0;
-    /* First check if it is ICMP or TCP */
-    if (response.ip.ip_p == IPPROTO_ICMP) {    
-      /* if it is our response */
-      if  ( !response.type && !response.code && response.identifier == id) {
-	hostnum = response.sequence / pt->max_tries;
-	if (hostnum > pt->group_end) continue;
-	if (!hostbatch[hostnum].source_ip.s_addr)
-	  hostbatch[hostnum].source_ip.s_addr = response.ip.ip_dst.s_addr;
-	if (o.debugging) printf("We got a ping packet back from %s: id = %d seq = %d checksum = %d\n", inet_ntoa(*(struct in_addr *)(&response.ip.ip_src.s_addr)), response.identifier, response.sequence, response.checksum);
-	if (hostbatch[hostnum].host.s_addr == response.ip.ip_src.s_addr) {
-	  foundsomething = 1;
-	  pingtype = PINGTYPE_ICMP;
-	  sequence = response.sequence;
-	  if (pt->discardtimesbefore < response.sequence)
-	    dotimeout = 1;
-	  trynum = sequence % pt->max_tries;
-	  newstate = HOST_UP;
-	}
-	else hostbatch[hostnum].wierd_responses++;
+    continue;
+  }  
+
+  foundsomething = 0;
+  dotimeout = 0;
+
+  /* First check if it is ICMP or TCP */
+  if (ip->ip_p == IPPROTO_ICMP) {    
+    /* if it is our response */
+    ping = (struct ppkt *) ((ip->ip_hl * 4) + (char *) ip);
+    if (bytes < ip->ip_hl * 4 + 8) {
+      error("Supposed ping packet is only %d bytes long!", bytes);
+      continue;
+    }
+    if  ( !ping->type && !ping->code && ping->id == id) {
+      hostnum = ping->seq / pt->max_tries;
+      if (hostnum > pt->group_end) {
+	if (o.debugging) 
+	  error("Ping sequence %d leads to hostnum %d which is beyond the end of this group (%d)", ping->seq, hostnum, pt->group_end);
+	continue;
       }
-      else if (response.type == 3 && ((struct ppkt *) (response.crap + 4 * response.ip.ip_hl))->id == id) {
-	sequence = ((struct ppkt *) (response.crap + 4 * response.ip.ip_hl))->seq;
+      if (!hostbatch[hostnum].source_ip.s_addr)
+	hostbatch[hostnum].source_ip.s_addr = ip->ip_dst.s_addr;
+      if (o.debugging) 
+	printf("We got a ping packet back from %s: id = %d seq = %d checksum = %d\n", inet_ntoa(ip->ip_src), ping->id, ping->seq, ping->checksum);
+      if (hostbatch[hostnum].host.s_addr == ip->ip_src.s_addr) {
+	foundsomething = 1;
+	pingtype = PINGTYPE_ICMP;
+	sequence = ping->seq;
+	newstate = HOST_UP;
+	trynum = sequence % pt->max_tries;
+	if (pt->discardtimesbefore < ping->seq)
+	  dotimeout = 1;
+	else dotimeout = 0;
+      }
+      else hostbatch[hostnum].wierd_responses++;
+    }
+    else if (ping->type == 3 || ping->type == 11 || ping->type == 4 || 
+	     o.debugging) {
+      if (bytes <  ip->ip_hl * 4 + 28) {
+	if (o.debugging)
+	  error("ICMP type %d code %d packet is only %d bytes\n", ping->type, ping->code, bytes);
+	continue;
+      }
+
+      ip2 = (struct ip *) ((char *)ip + ip->ip_hl * 4 + 8);
+      if (bytes < ip->ip_hl * 4 + 8 + ip2->ip_hl * 4 + 8) {
+	if (o.debugging)
+	  error("ICMP type %d code %d packet is only %d bytes\n", ping->type, ping->code, bytes);
+	continue;
+      }
+      
+      ping2 = (struct ppkt *) ((char *)ip2 + ip2->ip_hl * 4);
+      if (ping2->id != id) {
+	if (o.debugging) {	
+	  error("Illegal id %d found, should be %d (icmp type/code %d/%d)", ping2->id, id, ping->type, ping->code);
+	  if (o.debugging > 1)
+	    lamont_hdump((char *)ip, bytes);
+	}
+	continue;
+	}
+	sequence = ping2->seq;
 	hostnum = sequence / pt->max_tries;
-	if (hostnum > pt->group_end) continue;
-	if (o.debugging) printf("Got destination unreachable for %s\n", inet_ntoa(hostbatch[hostnum].host));
+	trynum = sequence % pt->max_tries;
+
+	if (hostnum > pt->group_end) {
+	  if (o.debugging)
+	    error("Bogus ping sequence: %d leads to bogus hostnum %d (icmp type/code %d/%d", sequence, hostnum, ping->type, ping->code);
+	  continue;
+	}
+    
+	if (ping->type == 3) {
+	if (o.debugging) 
+	  printf("Got destination unreachable for %s\n", inet_ntoa(hostbatch[hostnum].host));
 	/* Since this gives an idea of how long it takes to get an answer,
 	   we add it into our times */
 	if (pt->discardtimesbefore < sequence)
-	  dotimeout = 1;
+	  dotimeout = 1;	
 	foundsomething = 1;
 	pingtype = PINGTYPE_ICMP;
-	trynum = sequence % pt->max_tries;
 	newstate = HOST_DOWN;
-      } else if (response.type == 11 && !response.code && ((struct ppkt *) (response.crap + 4 * response.ip.ip_hl))->id == id) {
-	sequence = ((struct ppkt *) (response.crap + 4 * response.ip.ip_hl))->seq;
-	hostnum = sequence / pt->max_tries;
-	if (hostnum > pt->group_end) continue;
+      } else if (ping->type == 11) {
 	if (o.debugging) 
 	  printf("Got Time Exceeded for %s\n", inet_ntoa(hostbatch[hostnum].host));
 	dotimeout = 0; /* I don't want anything to do with timing this */
 	foundsomething = 1;
 	pingtype = PINGTYPE_ICMP;
-	trynum = sequence % pt->max_tries;
 	newstate = HOST_DOWN;
       }
-      else if (response.type == 4 && ((struct ppkt *) (response.crap + 4 * response.ip.ip_hl))->id == id)  {      
+      else if (ping->type == 4) {      
 	if (o.debugging) printf("Got ICMP source quench\n");
 	usleep(50000);
       }  
-      else if (o.debugging > 1 && ((struct ppkt *) (response.crap + 4 * response.ip.ip_hl))->id == id ) {      
-	printf("Got ICMP message type %d code %d\n", response.type, response.code);
+      else if (o.debugging > 0) {
+	printf("Got ICMP message type %d code %d\n", ping->type, ping->code);
       }
-    } else if (response.ip.ip_p == IPPROTO_TCP) {
+    }
+  } else if (ip->ip_p == IPPROTO_TCP) 
+    {
       tcp = (struct tcphdr *) (((char *) ip) + 4 * ip->ip_hl);
       if (!(tcp->th_flags & TH_RST) && ((tcp->th_flags & (TH_SYN|TH_ACK)) != (TH_SYN|TH_ACK)))
 	continue;
@@ -901,13 +944,15 @@ while(pt->block_unaccounted > 0) {
 	  trynum = sequence % pt->max_tries;
 	} else {
 	  if (o.debugging) {
-	    error("Whacked ACK number from %s", inet_ntoa(response.ip.ip_src));
+	    error("Whacked ACK number from %s", inet_ntoa(ip->ip_src));
 	  }
 	  continue;	
 	}
       } else {
 	trynum = ntohs(tcp->th_dport) - sportbase;
 	if (trynum >= pt->max_tries) {
+	  if (o.debugging)
+	    error("Bogus trynum %d", trynum);
 	  continue;
 	}
 	/* FUDGE!  This ACK scan is cool but we don't get sequence numbers
@@ -930,26 +975,19 @@ while(pt->block_unaccounted > 0) {
 	continue;
       }
       if (o.debugging) 
-	printf("We got a TCP ping packet back from %s (hostnum = %d trynum = %d\n", inet_ntoa(*(struct in_addr *)(&response.ip.ip_src.s_addr)),
-	       hostnum, trynum);
+	printf("We got a TCP ping packet back from %s (hostnum = %d trynum = %d\n", inet_ntoa(ip->ip_src), hostnum, trynum);
       pingtype = PINGTYPE_RAWTCP;
       foundsomething = 1;
-      if (pt->discardtimesbefore < response.sequence)
+      if (pt->discardtimesbefore < sequence)
 	dotimeout = 1;
       newstate = HOST_UP;
     } else if (o.debugging) {
-      error("Found whacked packet protocol %d in get_ping_results", response.ip.ip_p);
+      error("Found whacked packet protocol %d in get_ping_results", ip->ip_p);
     }
     if (foundsomething) {  
       hostupdate(hostbatch, &hostbatch[hostnum], newstate, dotimeout, 
 		 trynum, to, &time[sequence], pt, NULL,pingtype);
     }
-  }
-  gettimeofday(&end, NULL);
-  tm = TIMEVAL_SUBTRACT(end,start);  
-  if (tm > (3 * to->timeout))
-    break;
-  if (bytes == 0 &&  tm > to->timeout) break;
 }
 return 0;
 }
@@ -967,7 +1005,7 @@ struct timeval tv;
 
 if (o.debugging)  {
   gettimeofday(&tv, NULL);
-  printf("Hostupdate called for machne %s state %s -> %s (trynum %d, dotimeadj: %s time: %ld)\n", inet_ntoa(target->host), readhoststate(target->flags), readhoststate(newstate), trynum, (dotimeout)? "yes" : "no", TIMEVAL_SUBTRACT(tv, *sent));
+  printf("Hostupdate called for machne %s state %s -> %s (trynum %d, dotimeadj: %s time: %ld)\n", inet_ntoa(target->host), readhoststate(target->flags), readhoststate(newstate), trynum, (dotimeout)? "yes" : "no", (long) TIMEVAL_SUBTRACT(tv, *sent));
 }
 assert(hostnum <= pt->group_end);
 

@@ -172,6 +172,7 @@ void *realloc();
 #define PORT_FIREWALLED 4
 #define PORT_TESTING 8
 #define PORT_FRESH 16
+#define PORT_UNFIREWALLED 32
  
 #define CONF_NONE 0
 #define CONF_LOW 1
@@ -287,9 +288,12 @@ int parse_targets(struct targets *targets, char *h);
 struct hoststruct *nexthost(char *hostexp, int lookahead, int pingtimeout);
 void options_init();
 void nmap_log(char *fmt, ...);
+void nmap_machine_log(char *fmt, ...);
+char *statenum2str(int state);
 void sigdie(int signo);
 char *seqreport(struct seq_info *seq);
 char *seqclass2ascii(int clas);
+void invertfirewalled(portlist *pl, unsigned short *ports);
 /* From glibc 2.0.6 because Solaris doesn't seem to have this function */
 #ifndef HAVE_INET_ATON
 int inet_aton(register const char *, struct in_addr *);
