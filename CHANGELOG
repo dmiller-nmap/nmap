@@ -1,5 +1,8 @@
 # Nmap Changelog
 
+-- Fixed FreeBSD (some versions) compilation problem found by Martyn
+   Tovey <martyn@netcraft.com>
+
 ** Version 2.54BETA4
 
 -- Upgraded to the very latest Libpcap version ( the 9/3/00 CVS
