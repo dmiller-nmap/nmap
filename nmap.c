@@ -673,9 +673,10 @@ int nmap_main(int argc, char *argv[]) {
     case 'p': 
       if (ports)
 	fatal("Only 1 -p option allowed, separate multiple ranges with commas.");
-      ports = getpts(optarg); break;
+      ports = getpts(optarg);
       if (!ports)
 	fatal("Your port specification string is not parseable");
+      break;
     case 'q': quashargv++; break;
     case 'R': resolve_all++; break;
     case 'r': 
