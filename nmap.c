@@ -1522,13 +1522,14 @@ do {
 	} else tmpsocket = sockets[i];
 	if (o.fragscan)
 	  send_small_fragz(tmpsocket, &o.decoys[decoy], &target->host, MAGIC_PORT,
-			   portarray[j++], TH_SYN);
+			   portarray[j], TH_SYN);
 	else send_tcp_raw(tmpsocket, &o.decoys[decoy] , &target->host, MAGIC_PORT, 
-			  portarray[j++],0,0,TH_SYN,0,0,0);
+			  portarray[j],0,0,TH_SYN,0,0,0);
 	if (decoy != o.decoyturn) close(tmpsocket);
 	usleep(10000);
       }
-    }    
+      j++;
+    }
   }
   gettimeofday(&start, NULL);
   packets_out = i;
