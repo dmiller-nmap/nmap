@@ -153,6 +153,9 @@ match printer m|^\0$|
 Probe TCP X11Probe q|\x6C\0\x0B\0\0\0\0\0\0\0\0\0|
 ports 6000-6020
 match X11 m|^\0\x2D\x0B\0\0\0\x0C\0| v/(access denied)/
+# I think the below means access denied (no authentication protocol 
+# specified?) or is it a problem w/my probe that I should fix?
+match X11 m|^\0\x16\x0b\0\0\0\x06\0No\x20protocol\x20specified\x0a\0\0$| v/(access denied)/
 match X11 m|^\x01\0\x0b\0\0\0.\0...\x02\0\0.*The XFree86 Project, Inc|s v/XFree86 (open)/
 match X11 m|^\x01\0\x0b\0\0\0\x4C\0\xA0\xE0\x63\x02\0\0| v/(open)/
 
