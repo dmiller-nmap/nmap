@@ -322,7 +322,7 @@
               requests  (or  responses) through their firewall.  microsoft.com
               is an example of such a network, and thus you should always  use
               <B>-P0</B>  or  <B>-PT80</B> when portscanning microsoft.com.  Note tht "ping"
-              in this contect may involve more than the traditional ICMP  echo
+              in this context may involve more than the traditional ICMP  echo
               request packet.  Nmap supports many such probes, including arbi-
               trary combinations of TCP, UDP, and ICMP  probes.   By  default,
               Nmap sends an ICMP echo request and a TCP ACK packet to port 80.
@@ -483,7 +483,7 @@
               to stderr).  Also note that "-v" may cause some  extra  informa-
               tion to be printed.  The Document Type Definition (DTD) defining
               the  XML  output  structure  is  available  at  http://www.inse-
-              cure.org/nmap/nmap.dtd .
+              cure.org/nmap/data/nmap.dtd .
 
        <B>-oG</B> <B>&lt;logfilename&gt;</B>
               This  logs the results of your scans in a <B>grepable</B> form into the
@@ -666,7 +666,7 @@
        <B>-r</B>     Tells Nmap <B>NOT</B>  to  randomize  the  order  in  which  ports  are
               scanned.
 
-       <B>-ttl</B> <B>&lt;value&gt;</B>
+       <B>--ttl</B> <B>&lt;value&gt;</B>
               Sets  the  IPv4  time to live field in sent packets to the given
               value.
 

@@ -36,10 +36,11 @@ o TCP connect() scan can be agonizingly slow.  You may be able to
    distribution, and nmap-VERSION/mswin32 in the source distro).
    Apply it by double-clicking on the file, or run the command
    "regedt32 nmap_performance.reg".  Or you can make the changes by
-   hand - add the following two registry DWORD values to:
+   hand - add the following three registry DWORD values:
    [HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters]
      "MaxUserPort", with a large value like 65534 (0x0000fffe).  See MS KB Q196271.
      "TcpTimedWaitDelay" with the minimum value (0x0000001e). [See MS KB 149532]
+     "StrictTimeWaitSeqCheck" with a value of 1 (so TcpTimedWaitDelay is checked)
 
 o The NmapFE Nmap GUI frontend port is not yet stable enough to
   include with the binary distribution.

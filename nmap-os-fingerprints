@@ -1231,7 +1231,7 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=0%ULEN=134%DAT=E)
 
-Fingerprint Apple Mac OX X 10.3.0 - 10.3.2 (Panther)
+Fingerprint Apple Mac OS X 10.3.0 - 10.3.2 (Panther)
 Class Apple | Mac OS X | 10.3.X | general purpose
 TSeq(Class=TR%gcd=<6%IPID=I%TS=2HZ)
 T1(DF=Y%W=807A|C0B7|FFFF%ACK=S++%Flags=AS%Ops=MNWNNT)
@@ -4928,7 +4928,7 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=0%ULEN=134%DAT=E)
 
-Fingerprint FreeBSD 4.7-RELEASE (x86)
+Fingerprint FreeBSD 4.7-RELEASE through 4.8-RELEASE (x86)
 Class FreeBSD | FreeBSD | 4.X | general purpose
 TSeq(Class=TR%gcd=<6%IPID=I%TS=U)
 T1(DF=Y%W=E000%ACK=S++%Flags=AS%Ops=M)
@@ -8430,9 +8430,11 @@ T6(DF=Y%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=Y%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=C0%IPLEN=164%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
-Fingerprint Linux 2.5.25 - 2.5.70 or Gentoo 1.2 Linux 2.4.19 rc1-rc7)
+# Linux matrix 2.6.3-gentoo-r2 x86
+Fingerprint Linux 2.5.25 - 2.6.3 or Gentoo 1.2 Linux 2.4.19 rc1-rc7)
 Class Linux | Linux | 2.4.X | general purpose
 Class Linux | Linux | 2.5.X | general purpose
+Class Linux | Linux | 2.6.X | general purpose
 TSeq(Class=RI%gcd=<6%SI=<244F6FE&>5CF30%IPID=Z%TS=1000HZ)
 T1(DF=Y%W=7FFF%ACK=S++%Flags=AS%Ops=MNNTNW)
 T2(Resp=N)
@@ -12197,8 +12199,9 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 # http://www.turtlebeach.com/site/products/audiotron/producthome.asp
-Fingerprint Turtle Beach AudioTron 100 network MP3 player
+Fingerprint Turtle Beach AudioTron 100 network MP3 player or Microsoft Windows 98SE
 Class Turtle Beach | embedded || media device
+Class Microsoft | Windows | 95/98/ME | general purpose
 TSeq(Class=TD%gcd=<68%SI=<1E%IPID=BI%TS=U)
 T1(DF=Y%W=2017%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)

@@ -12,12 +12,26 @@ o Applied patch from Gisle Vanem (giva(a)bgnett.no) which allows the
   future releases).  The Winpcap folks apparently changed the encoding
   of adaptor names in this release.
 
+o Fixed a version detection crash reported in excellent detail by
+  Jedi/Sector One (0daydigest(a)pureftpd.org).
+
 o Applied patch from Matt Selsky (selsky(a)columbia.edu) which helps
   Nmap build with OpenSSL.
 
 o Modified the configure/build system to fix library ordering problems
   that prevented Nmap from building on certain platforms.  Thanks to
-  Greg A. Woods (woods(a)weird.com) for the suggestions.
+  Greg A. Woods (woods(a)weird.com) and Saravanan
+  (saravanan_kovai(a)HotPop.com) for the suggestions.
+
+o Modified the mswine32/nmap_performance.reg Windows registry file to
+  use an older and more compatable version.  It also now includes the
+  value "StrictTimeWaitSeqCheck"=dword:00000001 , as suggested by Jim
+  Harrison (jmharr(a)microsoft.com).  Without that latter value, the
+  TcpTimedWaitDelay value apparently isn't checked.  Windows users
+  should apply the new registry changes by clicking on the .reg file.
+  Or do it manually as described in README-WIN32.  This file is also
+  now available in the data directory at
+  http://www.insecure.org/nmap/data/nmap_performance.reg
 
 o Applied a patch to Makefile.in from Scott Mansfield
   (thephantom(a)mac.com) which enables the use of a DESTDIR variable
@@ -26,6 +40,10 @@ o Applied a patch to Makefile.in from Scott Mansfield
   this case, but DESTDIR is apparently a standard that package
   maintainers like Scott are used to.  An example usage is 
   "make DESTDIR=/tmp/packageroot".
+
+o Removed unnecessary banner printing in the non-root connect() ping
+  scan.  Thanks to Tom Rune Flo (tom(a)x86.no) for the suggestion and
+  a patch.
 
 Nmap 3.50
 

@@ -6,14 +6,15 @@
  *                                                                         *
  ***********************IMPORTANT NMAP LICENSE TERMS************************
  *                                                                         *
- * The Nmap Security Scanner is (C) 1995-2003 Insecure.Com LLC. This       *
- * program is free software; you may redistribute and/or modify it under   *
- * the terms of the GNU General Public License as published by the Free    *
+ * The Nmap Security Scanner is (C) 1996-2004 Insecure.Com LLC. Nmap       *
+ * is also a registered trademark of Insecure.Com LLC.  This program is    *
+ * free software; you may redistribute and/or modify it under the          *
+ * terms of the GNU General Public License as published by the Free        *
  * Software Foundation; Version 2.  This guarantees your right to use,     *
  * modify, and redistribute this software under certain conditions.  If    *
  * you wish to embed Nmap technology into proprietary software, we may be  *
  * willing to sell alternative licenses (contact sales@insecure.com).      *
- * Many security scanner vendors already license Nmap technology such as   *
+ * Many security scanner vendors already licensed Nmap technology such as  *
  * our remote OS fingerprinting database and code.                         *
  *                                                                         *
  * Note that the GPL places important restrictions on "derived works", yet *
@@ -1108,11 +1109,14 @@ ServiceNFO::ServiceNFO(AllProbes *newAP) {
   softMatchFound = false;
   servicefplen = servicefpalloc = 0;
   servicefp = NULL;
+  bzero(&currentprobe_exec_time, sizeof(currentprobe_exec_time));
 }
 
 ServiceNFO::~ServiceNFO() {
   if (currentresp) free(currentresp);
   if (servicefp) free(servicefp);
+  servicefp = NULL;
+  servicefpalloc = servicefplen = 0;
 #if HAVE_OPENSSL
   if (ssl_session)
     SSL_SESSION_free((SSL_SESSION*)ssl_session);
@@ -1347,7 +1351,7 @@ void ServiceNFO::resetProbes(bool freefp) {
 
   if (freefp) {
     if (servicefp) { free(servicefp); servicefp = NULL; }
-    servicefplen = 0;
+    servicefplen = servicefpalloc = 0;
   }
 
   currentresp = NULL; currentresplen = 0;

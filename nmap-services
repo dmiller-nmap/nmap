@@ -2006,6 +2006,7 @@ X11:6             6006/tcp   # X Window server
 X11:7             6007/tcp   # X Window server
 X11:8             6008/tcp   # X Window server
 X11:9             6009/tcp   # X Window server
+xmail-ctrl        6017/tcp   # XMail CTRL server
 arcserve          6050/tcp   # ARCserve agent
 VeritasBackupExec 6101/tcp   # Backup Exec UNIX and 95/98/ME Aent
 RETS-or-BackupExec 6103/tcp  # Backup Exec Agent Accelerator and Remote Agent also sql server and cisco works blue

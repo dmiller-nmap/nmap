@@ -6,14 +6,15 @@
  *                                                                         *
  ***********************IMPORTANT NMAP LICENSE TERMS************************
  *                                                                         *
- * The Nmap Security Scanner is (C) 1995-2003 Insecure.Com LLC. This       *
- * program is free software; you may redistribute and/or modify it under   *
- * the terms of the GNU General Public License as published by the Free    *
+ * The Nmap Security Scanner is (C) 1996-2004 Insecure.Com LLC. Nmap       *
+ * is also a registered trademark of Insecure.Com LLC.  This program is    *
+ * free software; you may redistribute and/or modify it under the          *
+ * terms of the GNU General Public License as published by the Free        *
  * Software Foundation; Version 2.  This guarantees your right to use,     *
  * modify, and redistribute this software under certain conditions.  If    *
  * you wish to embed Nmap technology into proprietary software, we may be  *
  * willing to sell alternative licenses (contact sales@insecure.com).      *
- * Many security scanner vendors already license Nmap technology such as   *
+ * Many security scanner vendors already licensed Nmap technology such as  *
  * our remote OS fingerprinting database and code.                         *
  *                                                                         *
  * Note that the GPL places important restrictions on "derived works", yet *
@@ -956,15 +957,9 @@ while(pt->block_unaccounted) {
 	        foundsomething = 1;
 	        newstate = HOST_UP;
 	        if (o.verbose) {	      
-		  buf[res2] = '\0';
-		  if (res2 == 0)
 		    log_write(LOG_STDOUT, "Machine %s is actually LISTENING on probe port %d\n",
 			   hostbatch[hostindex]->targetipstr(), 
 			   o.ping_synprobes[p]);
-		  else 
-		    log_write(LOG_STDOUT, "Machine %s is actually LISTENING on probe port %d, banner: %s\n",
-			   hostbatch[hostindex]->targetipstr(), 
-			   o.ping_synprobes[p], buf);
 	        }
 	      }
 	      if (foundsomething) {
