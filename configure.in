@@ -125,6 +125,21 @@ AC_CHECK_FUNC(setsockopt, , AC_CHECK_LIB(socket, setsockopt))
 dnl need posix4/nanosleep for solaris 2.4
 AC_CHECK_FUNC(nanosleep, , AC_CHECK_LIB(posix4, nanosleep))
 
+# By default, try to build nmapfe if possible
+test "${with_nmapfe+set}" != "set" && with_nmapfe=yes
+ 
+TARGETNMAPFE=nmapfe/nmapfe
+INSTALLNMAPFE=install-nmapfe
+AC_ARG_WITH(nmapfe, [  --with-nmapfe    use nmapfe],
+ [  case "$with_nmapfe" in
+  no)
+    TARGETNMAPFE=""; INSTALLNMAPFE="@echo 'nmapfe is not installed because it was not build'"
+    ;;
+  esac]
+)
+AC_SUBST(TARGETNMAPFE)
+AC_SUBST(INSTALLNMAPFE)
+
 dnl Check whether libpcap is already available
 have_libpcap=no
 
@@ -414,6 +429,7 @@ else
         subdirs="$NBASEDIR $libpcapdir"
 fi
 
+if test "${with_nmapfe}" = "yes"; then
 dnl Check for GTK+
 AC_PATH_PROG(GTK_CONFIG, gtk-config, no)
 AC_MSG_CHECKING(If you have GTK+ installed)
@@ -446,7 +462,7 @@ else
     dnl AC_SUBST(GTK_LIBS)
   fi
 fi
-
+fi
 
 AC_CONFIG_SUBDIRS( $subdirs )
 

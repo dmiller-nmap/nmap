@@ -1,6 +1,6 @@
 
 /***********************************************************************
- * osscan.c -- Routines used for OS detection via TCP/IP               *
+ * osscan.cc -- Routines used for OS detection via TCP/IP              *
  * fingerprinting.  For more information on how this works in Nmap,    *
  * see my paper at                                                     *
  * http://www.insecure.org/nmap/nmap-fingerprinting-article.html       *
@@ -49,6 +49,7 @@
 
 #include "osscan.h"
 #include "timing.h"
+#include "NmapOps.h"
 
 #if TIME_WITH_SYS_TIME
 # include <sys/time.h>

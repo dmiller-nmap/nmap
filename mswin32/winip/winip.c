@@ -39,6 +39,7 @@ If used outside nmap in a GPL'ed app, just copy them from wintcpip.c.
 #include "nmap.h"
 #include "..\tcpip.h"
 #include "winip.h"
+#include "..\..\NmapOps.h"
 
 #ifdef _MSC_VER
 # include <delayimp.h>

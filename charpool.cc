@@ -1,6 +1,6 @@
 
 /***********************************************************************
- * charpool.c -- Handles Nmap's "character pool" memory allocation     *
+ * charpool.cc -- Handles Nmap's "character pool" memory allocation    *
  * system.                                                             *
  *                                                                     *
  ***********************************************************************

@@ -1,6 +1,6 @@
 
 /***********************************************************************
- * protocols.c -- Functions relating to the protocol scan and mapping  *
+ * protocols.cc -- Functions relating to the protocol scan and mapping *
  * between IPproto Number <-> name.                                    *
  *                                                                     *
  ***********************************************************************
@@ -44,8 +44,8 @@
 
 /* $Id$ */
 
-
 #include "protocols.h"
+#include "NmapOps.h"
 
 extern NmapOps o;
 static int protocols_initialized = 0;

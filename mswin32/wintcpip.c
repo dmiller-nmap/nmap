@@ -7,6 +7,7 @@
   */
 
 #include "../tcpip.h"
+#include "../NmapOps.h"
 #include "winip\winip.h"
 
 //	Note: we cheat with the timeouts here

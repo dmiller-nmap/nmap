@@ -1,6 +1,6 @@
 
 /***********************************************************************
- * services.c -- Various functions relating to reading the             *
+ * services.cc -- Various functions relating to reading the            *
  * nmap-services file and port <-> service mapping                     *
  *                                                                     *
  ***********************************************************************
@@ -44,8 +44,8 @@
 
 /* $Id$ */
 
-
 #include "services.h"
+#include "NmapOps.h"
 
 extern NmapOps o;
 static int services_initialized = 0;

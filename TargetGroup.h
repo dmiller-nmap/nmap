@@ -1,9 +1,10 @@
 
 /***********************************************************************
- * error.cc -- Some simple error handling routines.                    *
+ * TargetGroup.h -- The "TargetGroup" class holds a group of IP        *
+ * addresses, such as those from a '/16' or '10.*.*.*' specification.  *
  *                                                                     *
  ***********************************************************************
- *  The Nmap Security Scanner is (C) 1995-2001 Insecure.Com LLC. This  *
+ *  The Nmap Security Scanner is (C) 1995-2002 Insecure.Com LLC. This  *
  *  program is free software; you can redistribute it and/or modify    *
  *  it under the terms of the GNU General Public License as published  *
  *  by the Free Software Foundation; Version 2.  This guarantees your  *
@@ -43,60 +44,51 @@
 
 /* $Id$ */
 
-#include "nmap_error.h"
+#ifndef TARGETGROUP_H
+#define TARGETGROUP_H
 
-#ifdef WIN32
-#include <windows.h>
-#endif /* WIN32 */
+#include "nmap.h"
 
-void fatal(char *fmt, ...) {
-va_list  ap;
-va_start(ap, fmt);
-fflush(stdout);
-vfprintf(stderr, fmt, ap);
-fprintf(stderr, "\nQUITTING!\n");
-va_end(ap);
-exit(1);
-}
+class TargetGroup {
+ public:
+  TargetGroup();
 
-void error(char *fmt, ...) {
-va_list  ap;
-va_start(ap, fmt);
-fflush(stdout);
-vfprintf(stderr, fmt, ap);
-fprintf(stderr, "\n");
-va_end(ap);
-return;
-}
+ /* Initializes (or reinitializes) the object with a new expression,
+    such as 192.168.0.0/16 , 10.1.0-5.1-254 , or
+    fe80::202:e3ff:fe14:1102 .  The af parameter is AF_INET or
+    AF_INET6 Returns 0 for success */
+  int parse_expr(const char * const target_expr, int af);
+  /* Grab the next host from this expression (if any).  Returns 0 and
+     fills in ss if successful.  ss must point to a pre-allocated
+     sockaddr_storage structure */
+  int get_next_host(struct sockaddr_storage *ss, size_t *sslen);
+  /* Returns the last given host, so that it will be given again next
+     time get_next_host is called.  Obviously, you should only call
+     this if you have fetched at least 1 host since parse_expr() was
+     called */
+  int return_last_host();
+ private:
+  enum { TYPE_NONE, IPV4_NETMASK, IPV4_RANGES, IPV6_ADDRESS } targets_type;
 
-void pfatal(char *err, ...) {
-#ifdef WIN32
-	int lasterror =0;
-	char *errstr = NULL;
-#endif
-	va_list  ap;va_start(ap, err);
-	fflush(stdout);
-	vfprintf(stderr, err, ap);
-	va_end(ap);
-#ifdef WIN32
-	lasterror = GetLastError();
-	FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER|FORMAT_MESSAGE_FROM_SYSTEM, NULL, lasterror, MAKELANGID (LANG_NEUTRAL, SUBLANG_DEFAULT),
-		(LPTSTR) &errstr,  0, NULL);
-	fprintf(stderr, ": %s (%d)\n", errstr, lasterror);
-	HeapFree(GetProcessHeap(), 0, errstr);
-#else
-	perror(" ");
-#endif /* WIN32 perror() compatability switch */
-	fflush(stderr);
-	exit(1);
-}
+  void Initialize();
 
-void gh_perror(char *err, ...) {
-va_list  ap;va_start(ap, err);
-fflush(stdout);
-vfprintf(stderr, err, ap);
-va_end(ap);
-perror(" ");
-fflush(stderr);
-return;
-}
+  // For IPV6_ADDRESS type
+  struct in6_addr ip6;
+
+  /* These 4 are used for the '/mask' style of specifying target 
+     net (IPV4_NETMASK) */
+  u32 netmask;
+  struct in_addr startaddr;
+  struct in_addr currentaddr;
+  struct in_addr endaddr;
+
+  // These three are for the '138.[1-7,16,91-95,200-].12.1 style (IPV4_RANGES)
+  u8 addresses[4][256];
+  unsigned int current[4];
+  u8 last[4];  
+
+  int ipsleft; /* Number of IPs left in this structure -- set to 0 if 
+		  the fields are not valid */
+};
+
+#endif /* TARGETGROUP_H */

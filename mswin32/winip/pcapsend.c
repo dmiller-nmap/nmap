@@ -47,6 +47,7 @@ nmap not to try the host again, while not confusing nmap.)
 */
 
 #include "..\tcpip.h"
+#include "..\..\NmapOps.h"
 #include "winip.h"
 
 #define MAXARPTRIES 3

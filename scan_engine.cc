@@ -1,6 +1,6 @@
 
 /***********************************************************************
- * scanengine.c -- Includes much of the "engine" functions for         *
+ * scanengine.cc -- Includes much of the "engine" functions for        *
  * scanning, such as pos_scan and super_scan.  It also includes        *
  * dependant functions such as those for collectiong SYN/connect scan  *
  * responses.                                                          *

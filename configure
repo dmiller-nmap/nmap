@@ -835,6 +835,7 @@ if test -n "$ac_init_help"; then
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
+  --with-nmapfe    use nmapfe
   --with-libpcap=DIR    Look for pcap include/libs in DIR
   --with-libnbase=DIR     Look for nbase include/libs in DIR
 
@@ -3004,6 +3005,25 @@ fi
 fi
 
 
+# By default, try to build nmapfe if possible
+test "${with_nmapfe+set}" != "set" && with_nmapfe=yes
+
+TARGETNMAPFE=nmapfe/nmapfe
+INSTALLNMAPFE=install-nmapfe
+
+# Check whether --with-nmapfe or --without-nmapfe was given.
+if test "${with_nmapfe+set}" = set; then
+  withval="$with_nmapfe"
+    case "$with_nmapfe" in
+  no)
+    TARGETNMAPFE=""; INSTALLNMAPFE="@echo 'nmapfe is not installed because it was not build'"
+    ;;
+  esac
+
+fi;
+
+
+
 have_libpcap=no
 
 # By default, search for pcap library
@@ -5146,6 +5166,7 @@ else
         subdirs="$NBASEDIR $libpcapdir"
 fi
 
+if test "${with_nmapfe}" = "yes"; then
 # Extract the first word of "gtk-config", so it can be a program name with args.
 set dummy gtk-config; ac_word=$2
 echo "$as_me:$LINENO: checking for $ac_word" >&5
@@ -5217,7 +5238,7 @@ echo "$as_me: WARNING: An old version of GTK+ ($major.$minor.$micro) was found.\
     subdirs="$subdirs nmapfe"
                       fi
 fi
-
+fi
 
 
 
@@ -5800,6 +5821,8 @@ s,@host_os@,$host_os,;t t
 s,@CC@,$CC,;t t
 s,@CFLAGS@,$CFLAGS,;t t
 s,@ac_ct_CC@,$ac_ct_CC,;t t
+s,@TARGETNMAPFE@,$TARGETNMAPFE,;t t
+s,@INSTALLNMAPFE@,$INSTALLNMAPFE,;t t
 s,@CPP@,$CPP,;t t
 s,@PCAP_DEPENDS@,$PCAP_DEPENDS,;t t
 s,@PCAP_CLEAN@,$PCAP_CLEAN,;t t

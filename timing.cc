@@ -1,6 +1,6 @@
 
 /***********************************************************************
- * timing.c -- Functions related to computing scan timing (such as     *
+ * timing.cc -- Functions related to computing scan timing (such as    *
  * keeping track of and adjusting smoothed round trip times,           *
  * statistical deviations, timeout values, etc.  Various user options  *
  * (such as the timing policy (-T)) also play a role in these          *
@@ -48,6 +48,7 @@
 /* $Id$ */
 
 #include "timing.h"
+#include "NmapOps.h"
 
 extern NmapOps o;
 

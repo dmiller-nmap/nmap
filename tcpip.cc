@@ -1,6 +1,6 @@
 
 /***********************************************************************
- * tcpip.c -- Various functions relating to low level TCP/IP handling, *
+ * tcpip.cc -- Various functions relating to low level TCP/IP handling,*
  * including sending raw packets, routing, printing packets, reading   *
  * from libpcap, etc.                                                  *
  *                                                                     *
@@ -47,6 +47,7 @@
 
 
 #include "tcpip.h"
+#include "NmapOps.h"
 
 #if HAVE_SYS_TIME_H
 #include <sys/time.h>
@@ -1572,9 +1573,7 @@ int max_sd() {
     if (setrlimit(RLIMIT_NOFILE, &r))
       if (o.debugging) perror("setrlimit RLIMIT_NOFILE failed");
     if (!getrlimit(RLIMIT_NOFILE, &r)) {
-      maxfds =  MIN(r.rlim_cur, MAX_SOCKETS_ALLOWED);
-      /* I do not feel comfortable going over 255 for now .. */
-      maxfds = MIN(maxfds, 250);
+      maxfds = r.rlim_cur;
       return maxfds;
     } else return 0;
   }
@@ -1585,9 +1584,7 @@ int max_sd() {
     if (setrlimit(RLIMIT_OFILE, &r))
       if (o.debugging) perror("setrlimit RLIMIT_OFILE failed");
     if (!getrlimit(RLIMIT_OFILE, &r)) {
-      maxfds =  MIN(r.rlim_cur, MAX_SOCKETS_ALLOWED);
-      /* I do not feel comfortable going over 255 for now .. */
-      maxfds = MIN(maxfds, 250);
+      maxfds = r.rlim_cur;
       return maxfds;
     }
     else return 0;

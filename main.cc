@@ -1,6 +1,6 @@
 
 /***********************************************************************
- * main.c -- Contains the main() function of Nmap.  Note that main()   *
+ * main.cc -- Contains the main() function of Nmap.  Note that main()  *
  * does very little except for calling nmap_main() (which is in        *
  * nmap.c)                                                             *
  *                                                                     *
@@ -50,6 +50,7 @@
 #include "scan_engine.h"
 #include "idle_scan.h"
 #include "timing.h"
+#include "NmapOps.h"
 
 /* global options */
 extern NmapOps o;  /* option structure */

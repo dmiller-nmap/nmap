@@ -211,9 +211,6 @@ void *realloc();
 /* Default number of ports in parallel.  Doesn't always involve actual 
    sockets.  Can also adjust with the -M command line option.  */
 #define MAX_SOCKETS 36 
-/* As an optimisation we limit the maximum value of MAX_SOCKETS to a very
-   high value (avoids dynamic memmory allocation */
-#define MAX_SOCKETS_ALLOWED 1025
 /* How many hosts do we ping in parallel to see if they are up? */
 #define LOOKAHEAD 25
 /* If reads of a UDP port keep returning EAGAIN (errno 13), do we want to 
@@ -369,7 +366,8 @@ void *realloc();
 #include "protocols.h"
 #include "nmap_rpc.h"
 #include "targets.h"
-
+#include "Target.h"
+#include "TargetGroup.h"
 
 /***********************STRUCTURES**********************************/
 

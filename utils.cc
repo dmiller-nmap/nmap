@@ -1,6 +1,6 @@
 
 /***********************************************************************
- * utils.c -- Various miscellaneous utility functions which defy       *
+ * utils.cc -- Various miscellaneous utility functions which defy      *
  * categorization :)                                                   *
  *                                                                     *
  ***********************************************************************
@@ -44,9 +44,7 @@
 
 /* $Id$ */
 
-
 #include "utils.h"
-
 
 void *safe_malloc(int size)
 {

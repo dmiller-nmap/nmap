@@ -50,11 +50,12 @@
 #include "scan_engine.h"
 #include "idle_scan.h"
 #include "timing.h"
+#include "NmapOps.h"
 
 /* global options */
 extern char *optarg;
 extern int optind;
-NmapOps o;  /* option structure */
+extern NmapOps o;  /* option structure */
 
 /* parse the --scanflags argument.  It can be a number >=0 or a string consisting of TCP flag names like "URGPSHFIN".  Returns -1 if the argument is invalid. */
 static int parse_scanflags(char *arg) {
@@ -429,9 +430,8 @@ int nmap_main(int argc, char *argv[]) {
     case 'M': 
       o.max_parallelism = atoi(optarg); 
       if (o.max_parallelism < 1) fatal("Argument to -M must be at least 1!");
-      if (o.max_parallelism > MAX_SOCKETS_ALLOWED) {
-	fprintf(stderr, "Warning: You are limited to MAX_SOCKETS_ALLOWED (%d) parallel sockets.  If you really need more, change the #define and recompile.\n", MAX_SOCKETS_ALLOWED);
-	o.max_parallelism = MAX_SOCKETS_ALLOWED;
+      if (o.max_parallelism > 900) {
+	error("Warning: Your max_parallelism (-M) option is absurdly high! Don't complain to Fyodor if all hell breaks loose!");
       }
       break;
     case 'm': 
@@ -569,10 +569,7 @@ int nmap_main(int argc, char *argv[]) {
     signal(SIGSEGV, sigdie); 
 #endif
 
-  if (o.pingtype == PINGTYPE_UNKNOWN) {
-    if (o.isr00t && o.af() == AF_INET) o.pingtype = PINGTYPE_TCP|PINGTYPE_TCP_USE_ACK|PINGTYPE_ICMP_PING;
-    else o.pingtype = PINGTYPE_TCP; // if nonr00t or IPv6
-  }
+  o.ValidateOptions();
 
   /* Open the log files, now that we know whether the user wants them appended
      or overwritten */
@@ -588,74 +585,27 @@ int nmap_main(int argc, char *argv[]) {
   if (!o.interactivemode)
     log_write(LOG_STDOUT|LOG_SKID, "\nStarting %s V. %s ( %s )\n", NMAP_NAME, NMAP_VERSION, NMAP_URL);
 
-  /* Now we check the option sanity */
-  /* Insure that at least one scantype is selected */
-  if (!o.connectscan && !o.udpscan && !o.synscan && !o.windowscan && !o.idlescan && !o.finscan && !o.maimonscan &&  !o.nullscan && !o.xmasscan && !o.ackscan && !o.bouncescan && !o.pingscan && !o.ipprotscan && !o.listscan) {
-    if (o.isr00t && o.af() == AF_INET)
-      o.synscan++;
-    else o.connectscan++;
-    if (o.verbose) error("No tcp, udp, or ICMP scantype specified, assuming %s scan. Use -sP if you really don't want to portscan (and just want to see what hosts are up).", o.synscan? "SYN Stealth" : "vanilla tcp connect()");
+  if ((o.pingscan || o.listscan) && fastscan) {
+    fatal("The fast scan (-F) is incompatible with ping scan");
   }
-
-  if (o.pingtype != PINGTYPE_NONE && o.spoofsource) {
-    error("WARNING:  If -S is being used to fake your source address, you may also have to use -e <iface> and -P0 .  If you are using it to specify your real source address, you can ignore this warning.");
-  }
-
-  if (o.pingtype != PINGTYPE_NONE && o.idlescan) {
-    error("WARNING: Many people use -P0 w/Idlescan to prevent pings from your true IP");
-    sleep(1); /* Give ppl a chance for ^C :) */
-  }
-
-  if (o.numdecoys > 1 && o.idlescan) {
-    error("WARNING: Your decoys won't be used in the Idlescan portion of your scanning (although all packets sent to the target are spoofed anyway");
-  }
-
-  if (o.connectscan && o.spoofsource) {
-    error("WARNING:  -S will not affect the source address used in a connect() scan.  Use -sS or another raw scan if you want to use the specified source address for the port scanning stage of nmap");
-  }
-
-
-  if (o.ipprotscan && (o.connectscan | o.windowscan | o.synscan | o.finscan | o.maimonscan | o.xmasscan | o.nullscan | o.ackscan | o.udpscan | o.idlescan )) {
-  /* It's no longer the case that the reason this doesn't work is due to port
-   * list conflicts. Port ranges and protocol ranges could be specified on
-   * the command line. Right now though, the main issue is with conflicting
-   * port vs protocol scan output (in particular, -oG output format would have
-   * to be updated). 
-   *
-   * if (!ports)
-   *   fatal("Sorry, IP protocol scan can only be used with other scan types if port ranges and protocol ranges are specified on command line with -p\n");
-   */
-     fatal("Sorry, IP protocol scan can not be used with other scan types for now");
-   }
 
   if (fastscan && ports) {
     fatal("You can specify fast scan (-F) or explicitly select individual ports (-p), but not both");
   } else if (fastscan && o.ipprotscan) {
     ports = getfastprots();
   } else if (fastscan) {
-    ports = getfastports(o.windowscan|o.synscan|o.connectscan|o.fragscan|o.idlescan|o.finscan|o.maimonscan|o.bouncescan|o.nullscan|o.xmasscan|o.ackscan,o.udpscan);
+    ports = getfastports(o.TCPScan(), o.UDPScan());
   }
-
 
   if ((o.pingscan || o.listscan) && ports) {
     fatal("You cannot use -F (fast scan) or -p (explicit port selection) with PING scan or LIST scan");
-  }
-
-  if ((o.pingscan || o.listscan) && fastscan) {
-    fatal("The fast scan (-F) is incompatible with ping scan");
-  }
-
-  if ((o.pingscan && o.pingtype == PINGTYPE_NONE)) {
-    fatal("-P0 (skip ping) is incompatable with -sP (ping scan).  If you only want to enumerate hosts, try list scan (-sL)");
   }
 
   if (!ports) {
     if (o.ipprotscan) {
       ports = getdefaultprots();
     } else {
-      ports = getdefaultports(o.windowscan|o.synscan|o.connectscan|o.fragscan|o.idlescan|o.finscan|
-			      o.maimonscan|o.bouncescan|o.nullscan|o.xmasscan|o.ackscan,
-			      o.udpscan);
+      ports = getdefaultports(o.TCPScan(), o.UDPScan());
     }
   }
 
@@ -664,116 +614,12 @@ int nmap_main(int argc, char *argv[]) {
    * (such as OS ident scan) might break cause no ports were specified,  but
    * we've given our warning...
    */
-  if ((o.windowscan|o.synscan|o.connectscan|o.fragscan|o.finscan|o.maimonscan|o.bouncescan|o.nullscan|o.xmasscan|o.ackscan|o.idlescan) && ! ports->tcp_count)
+  if ((o.TCPScan()) && ports->tcp_count == 0)
     error("WARNING: a TCP scan type was requested, but no tcp ports were specified.  Skipping this scan type.");
-  if (o.udpscan && ! ports->udp_count)
+  if (o.UDPScan() && ports->udp_count == 0)
     error("WARNING: UDP scan was requested, but no udp ports were specified.  Skipping this scan type.");
-  if (o.ipprotscan && ! ports->prot_count)
+  if (o.ipprotscan && ports->prot_count == 0)
     error("WARNING: protocol scan was requested, but no protocols were specified to be scanned.  Skipping this scan type.");
-
-  if (o.pingscan && (o.connectscan || o.udpscan || o.windowscan || o.synscan || o.idlescan || o.finscan || o.maimonscan ||  o.nullscan || o.xmasscan || o.ackscan || o.bouncescan || o.ipprotscan || o.listscan)) {
-    fatal("Ping scan is not valid with any other scan types (the other ones all include a ping scan");
-  }
-
-  if (o.listscan && (o.connectscan || o.udpscan || o.windowscan || o.synscan || o.idlescan || o.finscan || o.maimonscan ||  o.nullscan || o.xmasscan || o.ackscan || o.bouncescan || o.pingscan)) {
-    fatal("List scan is not valid with any other scan types (it just lists the hosts that WOULD be scanned)");
-  }
-
-
-  /* We start with stuff users should not do if they are not root */
-  if (!o.isr00t) {
-
-#ifndef WIN32	/*	Win32 has perfectly fine ICMP socket support */
-    if (o.pingtype & (PINGTYPE_ICMP_PING|PINGTYPE_ICMP_MASK|PINGTYPE_ICMP_TS)) {
-      error("Warning:  You are not root -- using TCP pingscan rather than ICMP");
-      o.pingtype = PINGTYPE_TCP;
-    }
-#endif
-
-    if (o.idlescan || o.finscan || o.windowscan || o.synscan || o.maimonscan || o.nullscan || o.xmasscan || o.ackscan
-	|| o.udpscan || o.ipprotscan) {
-#ifndef WIN32
-      fatal("You requested a scan type which requires r00t privileges, and you do not have them.\n");
-#else
-      winip_barf(0);
-#endif
-    }
-  
-    if (o.numdecoys > 0) {
-#ifndef WIN32
-      fatal("Sorry, but you've got to be r00t to use decoys, boy!");
-#else
-      winip_barf(0);
-#endif
-    }
-  
-    if (o.fragscan) {
-#ifndef WIN32
-      fatal("Sorry, but fragscan requires r00t privileges\n");
-#else
-      winip_barf(0);
-#endif
-    }
-
-    if (o.osscan) {
-#ifndef WIN32
-      fatal("TCP/IP fingerprinting (for OS scan) requires root privileges which you do not appear to possess.  Sorry, dude.\n");
-#else
-      winip_barf(0);
-#endif
-    }
-  }
-
-  if (o.numdecoys > 0 && o.rpcscan) {
-    error("WARNING:  RPC scan currently does not make use of decoys so don't count on that protection");
-  }
-
-  if (o.bouncescan && o.pingtype != PINGTYPE_NONE) 
-    log_write(LOG_STDOUT, "Hint: if your bounce scan target hosts aren't reachable from here, remember to use -P0 so we don't try and ping them prior to the scan\n");
-
-  if (o.connectscan + o.windowscan + o.synscan + o.finscan + o.idlescan + o.maimonscan + o.xmasscan + o.nullscan + o.ackscan  > 1) {
-    fatal("You specified more than one type of TCP scan.  Please choose only one of -sT, -sS, -sF, -sM, -sX, -sA, -sW, and -sN");
-  }
-
-  if (o.numdecoys > 0 && (o.bouncescan || o.connectscan)) {
-    fatal("Decoys are irrelevant to the bounce or connect scans");
-  }
-
-  if (o.fragscan && (o.connectscan || 
-		     ((o.udpscan || o.ipprotscan) &&
-		      (o.windowscan + o.synscan + o.finscan + o.maimonscan + 
-		       o.xmasscan + o.ackscan + o.nullscan == 0))))
-    fatal("Fragmentation scan can only be used with SYN, FIN, Maimon, XMAS, ACK, or NULL scan types");
- 
-  if (o.identscan && !o.connectscan) {
-    error("Identscan only works with connect scan (-sT) ... ignoring option");
-    o.identscan = 0;
-  }
-
-  if (o.osscan && o.bouncescan)
-    error("Combining bounce scan with OS scan seems silly, but I will let you do whatever you want!");
-
-#if !defined(LINUX) && !defined(OPENBSD) && !defined(FREEBSD) && !defined(NETBSD)
-  if (o.fragscan) {
-    fprintf(stderr, "Warning: Packet fragmentation selected on a host other than Linux, OpenBSD, FreeBSD, or NetBSD.  This may or may not work.\n");
-  }
-#endif
-
-  if (o.max_parallelism > MAX_SOCKETS_ALLOWED) {
-    error("Warning: You are limited to MAX_SOCKETS_ALLOWED (%d) parallel sockets.  If you really need more, change the #define and recompile.\n", MAX_SOCKETS_ALLOWED);
-    o.max_parallelism = MAX_SOCKETS_ALLOWED;
-  }
-
-  if (o.osscan && o.pingscan) {
-    fatal("WARNING:  OS Scan is unreliable with a ping scan.  You need to use a scan type along with it, such as -sS, -sT, -sF, etc instead of -sP");
-  }
-
-  if (o.resume_ip.s_addr && o.generate_random_ips)
-    o.resume_ip.s_addr = 0;
-
-  if (o.magic_port_set && o.connectscan) {
-    error("WARNING:  -g is incompatible with the default connect() scan (-sT).  Use a raw scan such as -sS if you want to set the source port.");
-  }
 
   /* Set up our array of decoys! */
   if (o.decoyturn == -1) {
@@ -832,7 +678,6 @@ int nmap_main(int argc, char *argv[]) {
   log_write(LOG_NORMAL|LOG_MACHINE, "# ");
   log_write(LOG_NORMAL|LOG_MACHINE|LOG_XML, "%s (V. %s) scan initiated %s as: ", NMAP_NAME, NMAP_VERSION, mytime);
   
-
   for(i=0; i < argc; i++) {
     char *p = xml_convert(fakeargv[i]);
     log_write(LOG_XML,"%s ", p);

@@ -1,6 +1,6 @@
 
 /***********************************************************************
- * idle_scan.c -- Includes the function specific to "Idle Scan"        *
+ * idle_scan.cc -- Includes the function specific to "Idle Scan"       *
  * support (-sI).  This is an extraordinarily cool scan type that      *
  * can allow for completely blind scanning (eg no packets sent to the  *
  * target from your own IP address) and can also be used to penetrate  *
@@ -53,6 +53,7 @@
 #include "timing.h"
 #include "osscan.h"
 #include "nmap.h"
+#include "NmapOps.h"
 
 #include <stdio.h>
 

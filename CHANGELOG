@@ -11,6 +11,11 @@ o Major code restructing, which included conversion to C++ -- so
   requirement slip in a while back and found that almost everyone has
   such a compiler.
 
+o Applied patch from Axel Nennker (Axel.Nennker@t-systems.com) which
+  adds a --without-nmapfe option to the configure script.  This si
+  useful if your system doesn't have the proper libraries (eg GTK) or
+  if you think GUIs are for sissies :).
+
 o Added DEC OSF to the platforms that require the BSDFIX() macro due
   to taking ip length and offset fields in host rather than network byte
   order.  Suggested by Dean Bennett (deanb@gbtn.net)
