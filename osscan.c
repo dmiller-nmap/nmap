@@ -158,7 +158,7 @@ if (o.verbose && openport != -1)
        for(i=0; i < target->seq.responses - 1; i++)
 	 seq_diffs[i] /= seq_gcd;
        for(i=0; i < target->seq.responses - 1; i++) {     
-	 if (MOD_DIFF(target->seq.seqs[i+1],target->seq.seqs[i]) > 10000000) {
+	 if (MOD_DIFF(target->seq.seqs[i+1],target->seq.seqs[i]) > 50000000) {
 	   target->seq.class = SEQ_TR;
 	   target->seq.index = 9999999;
 	   /*	 printf("Target is a TR box\n");*/
