@@ -187,10 +187,10 @@ rtelnet           107/tcp    # Remote Telnet
 rtelnet           107/udp    # Remote Telnet Service
 snagas            108/tcp    # SNA Gateway Access Server
 snagas            108/udp    # SNA Gateway Access Server
-pop-2             109/tcp    # PostOffice V.2
-pop-2             109/udp    # PostOffice V.2
-pop-3             110/tcp    # PostOffice V.3
-pop-3             110/udp    # PostOffice V.3
+pop2             109/tcp    # PostOffice V.2
+pop2             109/udp    # PostOffice V.2
+pop3             110/tcp    # PostOffice V.3
+pop3             110/udp    # PostOffice V.3
 rpcbind           111/tcp    # portmapper, rpcbind
 rpcbind           111/udp    # portmapper, rpcbind
 mcidas            112/tcp    # McIDAS Data Transmission Protocol
@@ -1114,6 +1114,8 @@ accessbuilder     888/udp    #
 sun-manageconsole 898/tcp    # Solaris Management Console Java listener (Solaris 8 & 9)
 ftps-data         989/tcp    # ftp protocol, data, over TLS/SSL
 samba-swat        901/tcp    # Samba SWAT tool.  Also used by ISS RealSecure.
+iss-realsecure-sensor 902/tcp # ISS RealSecure Sensor
+iss-console-mgr   903/tcp    # ISS Console Manager
 oftep-rpc         950/tcp    # Often RPC.statd (on Redhat Linux)
 rndc              953/tcp    # RNDC is used by BIND 9 (& probably other NS)
 securenetpro-sensor 975/tcp
