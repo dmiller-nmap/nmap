@@ -1,7 +1,7 @@
 #ifndef GLOBAL_STRUCTURES_H
 #define GLOBAL_STRUCTURES_H
 
-typedef struct port {
+struct port {
   unsigned short portno;
   unsigned char proto;
   char *owner;
@@ -18,7 +18,16 @@ typedef struct port {
   int state; 
   int confidence; /* How sure are we about the state? */
   struct port *next;
-} port;
+};
+
+typedef struct portlist {
+  struct port *ports;  /* The actual linked list of ports.  These are sorted by PORT NUMBER (of course there could be serval ports per port number -- one for each protocol */
+  int state_counts[PORT_HIGHEST_STATE]; /* How many ports in list are in each
+					   state */
+  int state_counts_udp[PORT_HIGHEST_STATE];
+  int state_counts_tcp[PORT_HIGHEST_STATE];
+  int numports; /* Total number of ports in list in ANY state */
+} portlist;
 
 /* Stores "port info" which is TCP/UDP ports or RPC program ids */
  struct portinfo {
@@ -139,7 +148,7 @@ struct hoststruct {
   FingerPrint *FPs[10];
   int numFPs;
   int goodFP;
-  struct port *ports;
+  portlist ports;
   /*
   unsigned int up;
   unsigned int down; */
@@ -224,7 +233,6 @@ struct ops /* someone took struct options, <grrr> */ {
   FILE *nmap_stdout; /* Nmap standard output */
 };
   
-typedef port *portlist;
 typedef enum { SYN_SCAN, FIN_SCAN, XMAS_SCAN, UDP_SCAN, CONNECT_SCAN, NULL_SCAN, WINDOW_SCAN, RPC_SCAN, MAIMON_SCAN } stype;
 
 #endif /*GLOBAL_STRUCTURES_H */

@@ -974,20 +974,20 @@ while(1) {
       nmap_machine_log("Host: %s (%s)\tStatus: Timeout", 
 		       inet_ntoa(currenths->host), currenths->name);
     }
-    else if (!currenths->ports && !o.pingscan) {
+    else if (!currenths->ports.numports && !o.pingscan) {
       nmap_log("No ports open for host %s (%s)\n", currenths->name,
 	       inet_ntoa(currenths->host));
       nmap_machine_log("Host: %s (%s)\tStatus: Up", 
 		       inet_ntoa(currenths->host), currenths->name);
     }
     else {
-      if (currenths->ports) {
+      if (currenths->ports.numports) {
 	nmap_log("Interesting ports on %s (%s):\n", currenths->name, 
 		 inet_ntoa(currenths->host));
 	nmap_machine_log("Host: %s (%s)", inet_ntoa(currenths->host), 
-			 currenths->name);
+			 currenths->name);	
 	invertfirewalled(&currenths->ports, ports);
-	printandfreeports(currenths->ports);
+	printandfreeports(&currenths->ports);
       }
       if (o.osscan) {
 	if (currenths->seq.responses > 3) {
@@ -1373,8 +1373,8 @@ char *seqclass2ascii(int class) {
 
 
 
-struct port *lookupport(portlist ports, unsigned short portno, unsigned short protocol) {
-  portlist result = ports;
+struct port *lookupport(portlist *ports, unsigned short portno, unsigned short protocol) {
+  struct port *result = ports->ports;
   while(result && result->portno <= portno) {
     if(result->portno == portno && result->proto == protocol)
       return result;
@@ -1387,121 +1387,138 @@ struct port *lookupport(portlist ports, unsigned short portno, unsigned short pr
 
 /* gawd, my next project will be in c++ so I don't have to deal with
    this crap ... simple linked list implementation */
-int addport(portlist *ports, unsigned short portno, unsigned short protocol,
+int addport(portlist *plist, unsigned short portno, unsigned short protocol,
 	    char *owner, int state) {
-struct port *current, *tmp;
+struct port *current = NULL, *tmp;
 int len;
+int isok = 0;
 
 /* Make sure state is OK */
 if (state != PORT_OPEN && state != PORT_CLOSED && state != PORT_FIREWALLED &&
     state != PORT_UNFIREWALLED)
   fatal("addport: attempt to add port number %d with illegal state %d\n", portno, state);
 
-if (*ports) {
-  current = *ports;
+if (plist->ports) {
+  current = plist->ports;
   /* case 1: we add to the front of the list */
-  if (portno <= current->portno) {
+
+  if (portno < current->portno || 
+      (current->portno == portno && current->proto == protocol)) {
     if (current->portno == portno && current->proto == protocol) {
-      if (current->state != state) {      
+      isok = 0;
+      if (current->state != state) { 
+	plist->state_counts[current->state]--;
+	plist->state_counts[state]++;
+	if (protocol == IPPROTO_TCP) {
+	plist->state_counts_tcp[current->state]--;
+	plist->state_counts_tcp[state]++;
+	} else {
+	plist->state_counts_udp[current->state]--;
+	plist->state_counts_udp[state]++;
+	}
 	current->state = state;
-	return 0;
+	isok = 1;
       }
+      if (!current->owner && owner && *owner) {      
+	current->owner = strdup(owner);
+	isok = 1;
+      }
+      if (isok) return 0;
       if (o.debugging || o.verbose) 
 	fprintf(stderr, "Duplicate port (%hu/%s)\n", portno , 
 	       (protocol == IPPROTO_TCP)? "tcp": "udp");
-      /* I still want to use the newer info in most cases */
-      current->state = state;
-      if (!current->owner && owner && *owner) 
-	current->owner = strdup(owner);
       return -1;
-    }  
-    tmp = current;
-    *ports = safe_malloc(sizeof(struct port));
-    (*ports)->next = tmp;
-    current = *ports;
-    current->portno = portno;
-    current->proto = protocol;
-    current->confidence = CONF_HIGH;
-    current->rpc_status = RPC_STATUS_UNTESTED;
-    current->state = state;
-    if (owner && *owner) {
-      len = strlen(owner);
-      current->owner = malloc(sizeof(char) * (len + 1));
-      strncpy(current->owner, owner, len + 1);
     }
-    else current->owner = NULL;
+
+    tmp = current;
+    current = safe_malloc(sizeof(struct port));
+    plist->ports = current;
+    current->next = tmp;
   }
   else { /* case 2: we add somewhere in the middle or end of the list */
-    while( current->next  && current->next->portno < portno)
+    while( current->next  && current->next->portno <= portno && 
+	   ( current->next->portno != portno || 
+	     current->next->proto != protocol ))
       current = current->next;
     if (current->next && current->next->portno == portno 
 	&& current->next->proto == protocol) {
-      if (current->state != state) {      
-	current->state = state;
-	return 0;
+      isok = 0;
+      if (current->next->state != state) {      
+	plist->state_counts[current->next->state]--;
+	plist->state_counts[state]++;
+	if (protocol == IPPROTO_TCP) {
+	  plist->state_counts_tcp[current->next->state]--;
+	  plist->state_counts_tcp[state]++;
+	} else {
+	  plist->state_counts_udp[current->next->state]--;
+	  plist->state_counts_udp[state]++;
+	}
+	current->next->state = state;
+	isok = 1;
       }
+      if (!current->next->owner && owner && *owner) {      
+	current->next->owner = strdup(owner);
+	isok = 1;
+      }
+      if (isok) return 0;
       if (o.debugging || o.verbose) 
 	fprintf(stderr, "Duplicate port (%hu/%s)\n", portno , 
-	       (protocol == IPPROTO_TCP)? "tcp": "udp");
-      /* I still want to use the newer info in most cases */
-      current->state = state;
-      if (!current->owner && owner && *owner) 
-	current->owner = strdup(owner);
+		(protocol == IPPROTO_TCP)? "tcp": "udp");
       return -1;
     }
     tmp = current->next;
     current->next = safe_malloc(sizeof(struct port));
-    current->next->next = tmp;
-    tmp = current->next;
-    tmp->portno = portno;
-    tmp->proto = protocol;
-    tmp->rpc_status = RPC_STATUS_UNTESTED;
-    tmp->confidence = CONF_HIGH;
-    tmp->state = state;
-    if (owner && *owner) {
-      len = strlen(owner);
-      tmp->owner = malloc(sizeof(char) * (len + 1));
-      strncpy(tmp->owner, owner, len + 1);
-    }
-    else tmp->owner = NULL;
+    current = current->next;
+    current->next = tmp;
   }
 }
-
 else { /* Case 3, list is null */
-  *ports = safe_malloc(sizeof(struct port));
-  tmp = *ports;
-  tmp->portno = portno;
-  tmp->proto = protocol;
-  tmp->rpc_status = RPC_STATUS_UNTESTED;
-  tmp->confidence = CONF_HIGH;
-  tmp->state = state;
-  if (owner && *owner) {
-    len = strlen(owner);
-    tmp->owner = safe_malloc(sizeof(char) * (len + 1));
-    strncpy(tmp->owner, owner, len + 1);
-  }
-  else tmp->owner = NULL;
-  tmp->next = NULL;
-}
-return 0; /*success */
+  plist->ports = safe_malloc(sizeof(struct port));
+  current = plist->ports;
+  current->next = NULL;
 }
 
-int deleteport(portlist *ports, unsigned short portno,
+/* OK, now we have allocated 'current' if neccessary and linked it into
+   the list.  So we just fill it out and update our counts by one */
+ current->portno = portno;
+ current->proto = protocol;
+ current->confidence = CONF_HIGH;
+ current->rpc_status = RPC_STATUS_UNTESTED;
+ current->state = state;
+ if (owner && *owner) {
+   len = strlen(owner);
+   current->owner = malloc(sizeof(char) * (len + 1));
+   strncpy(current->owner, owner, len + 1);
+ }
+ else current->owner = NULL;
+
+ plist->state_counts[state]++;
+ if (protocol == IPPROTO_TCP) {
+   plist->state_counts_tcp[state]++;
+ } else {
+   plist->state_counts_udp[state]++;
+ }
+ plist->numports++;
+
+ return 0; /*success */
+}
+
+int deleteport(portlist *plist, unsigned short portno,
 	       unsigned short protocol) {
-  portlist current, tmp;
+  struct port *current, *tmp;
   
-  if (!*ports) {
+  if (!plist->ports) {
     if (o.debugging > 1) error("Tried to delete from empty port list!");
     return -1;
   }
-  current = *ports;
+  current = plist->ports;
   /* Case 1, deletion from front of list*/
   if (current->portno == portno && current->proto == protocol) {
     tmp = current->next;
     if (current->owner) free(current->owner);
     current->next = NULL; /* Just because */
     free(current);
-    *ports = tmp;
+    plist->ports = tmp;
   }
   else {
     for(;current->next && (current->next->portno != portno || current->next->proto != protocol); current = current->next)
@@ -1561,7 +1578,7 @@ char *statenum2str(int state) {
 }
 
 
-void printandfreeports(portlist ports) {
+void printandfreeports(portlist *plist) {
   char protocol[4];
   char rpcinfo[64];
   char rpcmachineinfo[64];
@@ -1570,7 +1587,7 @@ void printandfreeports(portlist ports) {
   char *name;
   int first = 1;
   struct servent *service;
-  port *current = ports, *tmp;
+  struct port *current = plist->ports, *tmp;
 
   
   if (!o.rpcscan) {  
@@ -1636,6 +1653,7 @@ void printandfreeports(portlist ports) {
     free(tmp);
   }
   nmap_log("\n");
+  bzero(plist, sizeof(portlist));
 }
 
 int listen_icmp(int icmpsock,  unsigned short outports[], 
@@ -1996,7 +2014,7 @@ return 1;
 }
 
 
-portlist super_scan(struct hoststruct *target, unsigned short *portarray, stype scantype) {
+void super_scan(struct hoststruct *target, unsigned short *portarray, stype scantype) {
   int initial_packet_width;  /* How many scan packets in parallel (to start with) */
   int packet_incr = 4; /* How much we increase the parallel packets by each round */
   double fallback_percent = 0.7;
@@ -2037,9 +2055,10 @@ portlist super_scan(struct hoststruct *target, unsigned short *portarray, stype 
   int packet_trynum = 0;
   int windowdecrease = 0; /* Has the window been decreased this round yet? */
   struct icmp *icmp;
+  struct port *current_port_tmp;
 
- if (target->timedout)
-    return target->ports;
+  if (target->timedout)
+    return;
 
   if (o.debugging) 
     fprintf(o.nmap_stdout, "Starting super_scan\n");
@@ -2439,10 +2458,56 @@ if (o.debugging || o.verbose)
 
  superscan_timedout:
 
-    free(scan);
-    close(rawsd);
-    pcap_close(pd);
-    return target->ports;
+  free(scan);
+  close(rawsd);
+  pcap_close(pd);
+
+  /* Super scan relies on us receiving a response if the port is
+     CLOSED and no response if the port is OPEN.  A problem with
+     this is that when a machine is doing heavy filtering, all ports
+     will seem to be open.  Thus we add a little metric: if > 25
+     ports were scanned and they are ALL considered open by this
+     function, then it is reasonably to assume that the REAL reason
+     they are all open is that they have been filtered. */
+  if (o.numports > 25) {    
+    if (scantype == UDP_SCAN) {
+      if (target->ports.state_counts_udp[PORT_OPEN] == o.numports) {
+	if (o.verbose) { 
+	  error("(no udp responses received -- assuming all ports filtered)");
+	}
+	for(current_port_tmp = target->ports.ports; current_port_tmp;
+	    current_port_tmp = current_port_tmp->next) {
+	  if (current_port_tmp->proto == IPPROTO_UDP) {
+	    assert(current_port_tmp->state == PORT_OPEN);
+	    current_port_tmp->state = PORT_FIREWALLED;
+	    target->ports.state_counts[PORT_OPEN]--;
+	    target->ports.state_counts[PORT_FIREWALLED]++;
+	    target->ports.state_counts_udp[PORT_OPEN]--;
+	    target->ports.state_counts_udp[PORT_FIREWALLED]++;
+	  }
+	}
+      }
+    } else {
+      if (target->ports.state_counts_tcp[PORT_OPEN] == o.numports) {
+	if (o.verbose) { 
+	  error("(no tcp responses received -- assuming all ports filtered)");
+	}
+	for(current_port_tmp = target->ports.ports; current_port_tmp;
+	    current_port_tmp = current_port_tmp->next) {
+	  if (current_port_tmp->proto == IPPROTO_TCP) {
+	    assert(current_port_tmp->state == PORT_OPEN);
+	    current_port_tmp->state = PORT_FIREWALLED;
+	    target->ports.state_counts[PORT_OPEN]--;
+	    target->ports.state_counts[PORT_FIREWALLED]++;
+	    target->ports.state_counts_tcp[PORT_OPEN]--;
+	    target->ports.state_counts_tcp[PORT_FIREWALLED]++;
+	  }
+	}
+      }
+    }
+  }
+
+  return;
 }
 
 
@@ -2479,7 +2544,7 @@ int check_firewallmode(struct hoststruct *target, struct scanstats *ss) {
   return fm->active;
 }
 
-portlist pos_scan(struct hoststruct *target, unsigned short *portarray, stype scantype) {
+void pos_scan(struct hoststruct *target, unsigned short *portarray, stype scantype) {
   int initial_packet_width;  /* How many scan packets in parallel (to start with) */
   struct scanstats ss;
   int rawsd;
@@ -2512,7 +2577,7 @@ portlist pos_scan(struct hoststruct *target, unsigned short *portarray, stype sc
   int i;
 
   if (target->timedout)
-    return target->ports;
+    return;
 
   if (o.debugging)
     fprintf(o.nmap_stdout, "Starting pos_scan\n");
@@ -2646,7 +2711,7 @@ portlist pos_scan(struct hoststruct *target, unsigned short *portarray, stype sc
     }
     current = pil.testinglist = &scan[0]; 
     rawsd = -1;
-    rsi.rpc_current_port = target->ports;
+    rsi.rpc_current_port = target->ports.ports;
   }
 
   starttime = time(NULL);
@@ -3020,7 +3085,7 @@ portlist pos_scan(struct hoststruct *target, unsigned short *portarray, stype sc
     pcap_close(pd);
   if (scantype == RPC_SCAN)
     close_rpc_query_sockets();
-  return target->ports;
+  return;
 }
 
 /* Does the appropriate stuff when the port we are looking at is found
@@ -3531,41 +3596,39 @@ struct timeval tv;
 /* This is an ugly hack -- but the idea is that if 90% of the 
    ports are in the firewalled state, we'd rather show the ports
    in the UNFIREWALLED state */
-void invertfirewalled(portlist *pl, unsigned short *ports) {
+void invertfirewalled(portlist *plist, unsigned short *ports) {
   int firewalledports = 0;
-  port *current;
+  struct port *current;
   int i;
 
-  for(current = *pl; current; current = current->next) {
-    if (current->state == PORT_FIREWALLED)
-      firewalledports++;
-  }
 
-  if (firewalledports > 10 && (((double) firewalledports / o.numports) > 0.6))
+  firewalledports = plist->state_counts[PORT_FIREWALLED];
+
+  if (firewalledports > 10 && (((double) firewalledports / plist->numports ) > 0.6))
     {
       nmap_log("(Ports scanned but not shown below are in state: filtered)\n");
       /* OK, we are going to add an UNFIREWALLED entry for every port not
 	 listed and then we will delete every port that is firewalled */
       for(i=0; i < o.numports; i++) {
 	if (o.udpscan) {
-	  current = lookupport(*pl, ports[i], IPPROTO_UDP);
+	  current = lookupport(plist, ports[i], IPPROTO_UDP);
 	  if (!current)
-	    addport(pl, ports[i], IPPROTO_UDP, NULL, PORT_UNFIREWALLED);
+	    addport(plist, ports[i], IPPROTO_UDP, NULL, PORT_UNFIREWALLED);
 	  else {
 	    if (current->state == PORT_FIREWALLED)
-	      if (deleteport(pl, ports[i], IPPROTO_UDP) == -1)
-		fatal("Deletion of port %d failed\n", ports[i]);
+	      if (deleteport(plist, ports[i], IPPROTO_UDP) == -1)
+		fatal("Deletion of port %d/UDP failed\n", ports[i]);
 	  }
 	}
 	if (o.connectscan || o.nullscan || o.xmasscan || o.synscan ||
             o.windowscan || o.maimonscan || o.finscan || o.bouncescan) {
-	  current = lookupport(*pl, ports[i], IPPROTO_TCP);
+	  current = lookupport(plist, ports[i], IPPROTO_TCP);
 	  if (!current)
-	    addport(pl, ports[i], IPPROTO_TCP, NULL, PORT_UNFIREWALLED);
+	    addport(plist, ports[i], IPPROTO_TCP, NULL, PORT_UNFIREWALLED);
 	  else {
 	    if (current->state == PORT_FIREWALLED)
-	      if (deleteport(pl, ports[i], IPPROTO_TCP) == -1)
-		fatal("Deletion of port %d failed\n", ports[i]);
+	      if (deleteport(plist, ports[i], IPPROTO_TCP) == -1)
+		fatal("Deletion of port %d/TCP failed\n", ports[i]);
 	  }	 
 	}
       }
@@ -3680,7 +3743,7 @@ perror("select() in recvtime");
 return -1;
 }
 
-portlist bounce_scan(struct hoststruct *target, unsigned short *portarray,
+void bounce_scan(struct hoststruct *target, unsigned short *portarray,
 		     struct ftpinfo *ftp) {
 int starttime,  res , sd = ftp->sd,  i=0;
 char *t = (char *)&target->host; 
@@ -3705,7 +3768,7 @@ for(i=0; portarray[i]; i++) {
     if ((TIMEVAL_SUBTRACT(now, target->host_timeout) >= 0))
       {
 	target->timedout = 1;
-	return target->ports;
+	return;
       }
   }
 
@@ -3722,7 +3785,7 @@ for(i=0; portarray[i]; i++) {
       retriesleft--;
       close(sd);
       ftp->sd = ftp_anon_connect(ftp);
-      if (ftp->sd < 0) return target->ports;
+      if (ftp->sd < 0) return;
       sd = ftp->sd;
       i--;
     }
@@ -3730,7 +3793,7 @@ for(i=0; portarray[i]; i++) {
       fprintf(stderr, "Our socket descriptor is dead and we are out of retries. Giving up.\n");
       close(sd);
       ftp->sd = -1;
-      return target->ports;
+      return;
     }
   } else { /* Our send is good */
     res = recvtime(sd, recvbuf, 2048,15);
@@ -3798,7 +3861,7 @@ for(i=0; portarray[i]; i++) {
 if (o.debugging || o.verbose) 
   fprintf(o.nmap_stdout, "Scanned %d ports in %ld seconds via the Bounce scan.\n",
 	 o.numports, (long) time(NULL) - starttime);
-return target->ports;
+return;
 }
 
 /* parse a URL stype ftp string of the form user:pass@server:portno */

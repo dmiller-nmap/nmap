@@ -206,10 +206,12 @@ void *realloc();
 #define PORT_UNKNOWN 0
 #define PORT_CLOSED 1
 #define PORT_OPEN 2
-#define PORT_FIREWALLED 4
-#define PORT_TESTING 8
-#define PORT_FRESH 16
-#define PORT_UNFIREWALLED 32
+#define PORT_FIREWALLED 3
+#define PORT_TESTING 4
+#define PORT_FRESH 5
+#define PORT_UNFIREWALLED 6
+#define PORT_HIGHEST_STATE 6 /* ***IMPORTANT -- BUMP THIS UP WHEN STATES ARE 
+				ADDED *** */
  
 #define CONF_NONE 0
 #define CONF_LOW 1
@@ -267,9 +269,11 @@ void printusage(char *name, int rc);
 void printinteractiveusage();
 
 /* our scanning functions */
-portlist super_scan(struct hoststruct *target, unsigned short *portarray, stype scantype);
-portlist pos_scan(struct hoststruct *target, unsigned short *portarray, stype scantype);
-portlist bounce_scan(struct hoststruct *target, unsigned short *portarray,
+void super_scan(struct hoststruct *target, unsigned short *portarray, 
+		stype scantype);
+void pos_scan(struct hoststruct *target, unsigned short *portarray, 
+	      stype scantype);
+void bounce_scan(struct hoststruct *target, unsigned short *portarray,
 		     struct ftpinfo *ftp);
 
 /* Scan helper functions */
@@ -295,13 +299,15 @@ int get_connect_results(struct hoststruct *target, struct portinfo *scan,
 inline void adjust_timeouts(struct timeval sent, struct timeout_info *to);
 /* port manipulators */
 unsigned short *getpts(char *expr); /* someone stole the name getports()! */
-int addport(portlist *ports, unsigned short portno, unsigned short protocol,
-	    char *owner, int state);
-int deleteport(portlist *ports, unsigned short portno, unsigned short protocol);
-struct port *lookupport(portlist ports, unsigned short portno, unsigned short protocol);
-void printandfreeports(portlist ports);
-int shortfry(unsigned short *ports);
 
+int shortfry(unsigned short *ports);
+int addport(portlist *plist, unsigned short portno, unsigned short protocol,
+	    char *owner, int state);
+int deleteport(portlist *plist, unsigned short portno,
+	       unsigned short protocol);
+struct port *lookupport(portlist *ports, unsigned short portno, 
+			unsigned short protocol);
+void printandfreeports(portlist *plist);
 /* socket manipulation functions */
 void init_socket(int sd);
 int unblock_socket(int sd);

@@ -95,20 +95,21 @@ snprintf(filter, sizeof(filter), "(icmp and dst host %s) or (tcp and src host %s
 
  /* Lets find an open port to used */
  openport = -1;
- for(tport = target->ports; tport; tport = tport->next) {
-   if (tport->state == PORT_OPEN && tport->proto == IPPROTO_TCP &&
-       tport->confidence == CONF_HIGH) {   
-     openport = tport->portno;
-     break;
-   } else if  (tport->state == PORT_OPEN && tport->proto == IPPROTO_TCP) {
-     openport = tport->portno;
+ if (target->ports.state_counts[PORT_OPEN] > 0) { 
+   for(tport = target->ports.ports; tport; tport = tport->next) {
+     if (tport->state == PORT_OPEN && tport->proto == IPPROTO_TCP &&
+	 tport->confidence == CONF_HIGH) {   
+       openport = tport->portno;
+       break;
+     } else if  (tport->state == PORT_OPEN && tport->proto == IPPROTO_TCP) {
+       openport = tport->portno;
+     }
    }
  }
  
-
  /* Now we should find a closed port */
  for(i=0; i < o.numports; i++) {
-   tport = lookupport(target->ports, portarray[i], IPPROTO_TCP);
+   tport = lookupport(&target->ports, portarray[i], IPPROTO_TCP);
    if (!tport || tport->state == PORT_UNFIREWALLED) {
      /* Great -- we found what we were looking for ... */
      closedport = portarray[i];

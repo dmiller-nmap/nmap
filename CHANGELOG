@@ -1,8 +1,23 @@
 # Nmap Changelog
 
--- Added some more RPC numbers from <mmmorris@netscape.net>
+** Version 2.3BETA13
+-- I made Nmap smarter about detecting filtering during UDP, Xmas,
+   NULL, and FIN scans.
+
+-- Updated Nmapfe to 0.9.5 (+ a patch from NmapFE author Zach Smith)
+
+-- Fixed a problem where NmapFE would fail to honor $PATH (Noticed 
+   by K. Scott Rowe <kscott@nmt.edu>)
+
 -- Added a couple ICMP unreachable messages Nmap was missing (found by
-Bifrost <bifrost@minions.com>).
+   Bifrost <bifrost@minions.com>).
+
+-- Internal cleanup that improves the way some port lists are stored.
+
+-- Added some more RPC numbers from <mmmorris@netscape.net>
+
+-- Relaxed the dependency requirements of nmapfe rpm (now will accept
+   any version of Nmap).
 
 ** Version 2.3BETA12
 -- Added interactive mode which adds convenience for managing nmap
