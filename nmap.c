@@ -1928,6 +1928,7 @@ if (o.debugging || o.verbose)
 		readtcppacket((char *)ip, bytes);
 	      }
 	    } else {
+	      gettimeofday(&now, NULL);
 	      /* We figure out the scan number (and put it in i) */
 	      current = &scan[portlookup[ntohs(tcp->th_sport)]];
 	      if (current->trynum == 0) i = 0;
