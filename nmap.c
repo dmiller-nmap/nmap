@@ -1753,6 +1753,7 @@ portlist super_scan(struct hoststruct *target, unsigned short *portarray, stype 
   double numqueries_ideal = initial_packet_width; /* How many do we WANT to be on the 'net right now? */
   int max_width = 150; /* No more packets than this at once, pleeze */
   int tries = 0;
+  int tmp = 0;
   unsigned int localnet, netmask;
   int starttime, delta;
   unsigned short newport;
@@ -1928,6 +1929,7 @@ if (o.debugging || o.verbose)
       }
 
       if (o.debugging > 1) printf("Ideal number of queries: %d\n", (int) numqueries_ideal);
+      tmp++;
       /* Now that we have sent the packets we wait for responses */
       windowdecrease = 0;
       while (( ip = (struct ip*) readip_pcap(pd, &bytes))) {
