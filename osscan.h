@@ -84,6 +84,13 @@ FingerPrint *parse_single_fingerprint(char *fprint_orig);
 FingerPrint **parse_fingerprint_file(char *fname);
 FingerPrint **parse_fingerprint_reference_file();
 
+/* Compares 2 fingerprints -- a referenceFP (can have expression
+   attributes) with an observed fingerprint (no expressions).  If
+   verbose is nonzero, differences will be printed.  The comparison
+   accuracy (between 0 and 1) is returned) */
+double compare_fingerprints(FingerPrint *referenceFP, FingerPrint *observedFP,
+			    int verbose);
+
 /* Takes a fingerprint and looks for matches inside reference_FPs[].
    The results are stored in in FPR (which must point to an allocated
    FingerPrintResults structure) -- results will be reverse-sorted by

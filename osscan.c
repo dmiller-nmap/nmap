@@ -799,6 +799,39 @@ struct AVal *fingerprint_iptcppacket(struct ip *ip, int mss, u32 syn) {
   return AVs;
 }
 
+/* Compares 2 fingerprints -- a referenceFP (can have expression
+   attributes) with an observed fingerprint (no expressions).  If
+   verbose is nonzero, differences will be printed.  The comparison
+   accuracy (between 0 and 1) is returned). */
+double compare_fingerprints(FingerPrint *referenceFP, FingerPrint *observedFP,
+			    int verbose) {
+  FingerPrint *currentReferenceTest;
+  struct AVal *currentObservedTest;
+  unsigned long num_subtests = 0, num_subtests_succeeded = 0;
+  unsigned long  new_subtests, new_subtests_succeeded;
+  assert(referenceFP);
+  assert(observedFP);
+
+  for(currentReferenceTest = referenceFP; currentReferenceTest; 
+      currentReferenceTest = currentReferenceTest->next) {
+    currentObservedTest = gettestbyname(observedFP, currentReferenceTest->name);
+    if (currentObservedTest) {
+      new_subtests = new_subtests_succeeded = 0;
+      AVal_match(currentReferenceTest->results, currentObservedTest, 
+		 &new_subtests, &new_subtests_succeeded, 0);
+      if (verbose && new_subtests_succeeded < new_subtests) 
+	printf("Test %s differs in %li attributes\n", 
+	       currentReferenceTest->name, 
+	       new_subtests - new_subtests_succeeded);      
+      num_subtests += new_subtests;
+      num_subtests_succeeded += new_subtests_succeeded;
+    }
+  }
+
+  assert(num_subtests_succeeded <= num_subtests);
+  return (num_subtests)? (num_subtests_succeeded / (double) num_subtests) : 0; 
+}
+
 /* Takes a fingerprint and looks for matches inside reference_FPs[].
    The results are stored in in FPR (which must point to an allocated
    FingerPrintResults structure) -- results will be reverse-sorted by
@@ -815,11 +848,7 @@ void match_fingerprint(FingerPrint *FP, struct FingerPrintResults *FPR,
 							   at least this big 
 							   to be added to the 
 							   list */
-  struct AVal *tst;
   FingerPrint *current_os;
-  FingerPrint *current_test;
-  unsigned long num_subtests=0;
-  unsigned long num_subtests_succeeded=0;
   double acc;
   int state;
   int skipfp;
@@ -838,17 +867,9 @@ void match_fingerprint(FingerPrint *FP, struct FingerPrintResults *FPR,
   for(i = 0; reference_FPs[i]; i++) {
     current_os = reference_FPs[i];
     skipfp = 0;
-    num_subtests = num_subtests_succeeded = 0;
 
-    for(current_test = current_os; current_test; current_test = current_test->next) 
-      {
-	tst = gettestbyname(FP, current_test->name);
-	if (tst) {
-	  AVal_match(current_test->results, tst, &num_subtests, &num_subtests_succeeded, 0);
-	}
-      }
-    assert(num_subtests_succeeded <= num_subtests);
-    acc = (num_subtests)? (num_subtests_succeeded / (double) num_subtests) : 0;
+    acc = compare_fingerprints(current_os, FP, 0);
+
     /*    error("Comp to %s: %li/%li=%f", o.reference_FPs[i]->OS_name, num_subtests_succeeded, num_subtests, acc); */
     if (acc >= FPR_entrance_requirement || acc == 1.0) {
 
@@ -952,8 +973,7 @@ struct AVal *getattrbyname(struct AVal *AV, const char *name) {
    is already there.  So initialize them to zero first if you only
    want to see the results from this match.  if shortcircuit is zero,
    it does all the tests, otherwise it returns when the first one
-   fails */
-
+   fails. */
 int AVal_match(struct AVal *reference, struct AVal *fprint, unsigned long *num_subtests, unsigned long *num_subtests_succeeded, int shortcut) {
   struct AVal *current_ref;
   struct AVal *current_fp;
