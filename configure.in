@@ -37,7 +37,7 @@ fi
 
 dnl Checks for header files.
 AC_HEADER_STDC
-AC_CHECK_HEADERS(string.h memory.h sys/param.h)
+AC_CHECK_HEADERS(string.h strings.h memory.h sys/param.h)
 dnl AC_CHECK_HEADERS(fcntl.h sys/time.h unistd.h)
 
 dnl Checks for typedefs, structures, and compiler characteristics.
@@ -101,6 +101,13 @@ if test $bsd_networking = yes; then
     fi
   fi
 fi
+
+AC_MSG_CHECKING([if struct in_addr is a wacky huge structure (like in Solaris)])
+
+AC_TRY_COMPILE([#include <netinet/in.h>], struct in_addr i; i._S_un._S_addr;, \
+              AC_DEFINE(IN_ADDR_DEEPSTRUCT) \
+              AC_MSG_RESULT(yes) , \
+              AC_MSG_RESULT(no);)
 
 dnl Checks for library functions.
 dnl AC_TYPE_SIGNAL

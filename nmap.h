@@ -2,21 +2,64 @@
 #define NMAP_H
 
 /************************INCLUDES**********************************/
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+#ifndef HAVE_INLINE
+#define __inline__
+#endif
+
+#ifdef STDC_HEADERS
+#include <stdlib.h>
+#else
+void *malloc();
+void *realloc();
+#endif
+
+#if STDC_HEADERS || HAVE_STRING_H
+#include <string.h>
+#if !STDC_HEADERS && HAVE_MEMORY_H
+#include <memory.h>
+#endif
+#endif
+#if HAVE_STRINGS_H
+#include <strings.h>
+#endif
+
+#ifndef HAVE_BZERO
+#define bzero(s, n) memset((s), 0, (n))
+#endif
+
+#ifndef HAVE_MEMCPY
+#define memcpy(d, s, n) bcopy((s), (d), (n))
+#endif
+
+#include <ctype.h>
+#include <sys/types.h>
+
+#ifdef HAVE_SYS_PARAM_H   
+#include <sys/param.h> /* Defines MAXHOSTNAMELEN on BSD*/
+#endif
+
 /* Linux uses these defines in netinet/ip.h and netinet/tcp.h to
    use the correct struct ip and struct tcphdr */
+#ifndef __FAVOR_BSD
 #define __FAVOR_BSD
+#endif
+#ifndef __USE_BSD
 #define __USE_BSD
+#endif
 
 /* BSDI needs this to insure the correct struct ip */
 #undef _IP_VHL
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#if HAVE_STRINGS_H
 #include <strings.h>
-#include <ctype.h>
-#include <sys/types.h>
-#include <sys/param.h> /* Defines MAXHOSTNAMELEN on BSD*/
+#endif
+
+#include <stdio.h>
 #include <rpc/types.h>
 #include <sys/socket.h>
 #include <sys/socket.h> 
@@ -35,7 +78,9 @@
 #include <arpa/inet.h>
 #include <math.h>
 #include <sys/time.h> 
+#ifndef __FAVOR_BSD
 #define __FAVOR_BSD
+#endif
 #include <netinet/tcp.h>          /*#include <netinet/ip_tcp.h>*/
 #include <sys/resource.h>
 /*#include <net/if_arp.h> *//* defines struct arphdr needed for if_ether.h */
@@ -92,6 +137,11 @@
 #define CONF_NONE 0;
 #define CONF_LOW 1;
 #define CONF_HIGH 2;
+
+#ifndef MAXHOSTNAMELEN
+#define MAXHOSTNAMELEN 64
+#endif
+
 
 /***********************STRUCTURES**********************************/
 
@@ -221,8 +271,9 @@ void *safe_malloc(int size);
 int parse_targets(struct targets *targets, char *h);
 struct hoststruct *nexthost(char *hostexp, int lookahead, int pingtimeout);
 void options_init();
-#ifdef __SOLARIS__
 /* From glibc 2.0.6 because Solaris doesn't seem to have this function */
-int inet_aton(register const char *cp, struct in_addr *addr);
+#ifndef HAVE_INET_ATON
+int inet_aton(register const char *, struct in_addr *);
 #endif
 #endif /* NMAP_H */
+

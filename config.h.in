@@ -5,6 +5,8 @@
 
 #undef HAVE_STRING_H
 
+#undef HAVE_STRINGS_H
+
 #undef HAVE_MEMORY_H
 
 /* both bzero() and memcpy() are used in the source */
@@ -16,4 +18,6 @@
 #undef BSD_NETWORKING
 
 #undef HAVE_SNPRINTF
+
+#undef IN_ADDR_DEEPSTRUCT
 
