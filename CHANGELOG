@@ -9,7 +9,10 @@ o Fixed Mac OS X Compilation (at least on most of the machines
   provided or offered shell accounts!
 
 o Fixed a segmentation fault several people reported that was
-  introduced in 3.23.
+  introduced in 3.25.  This problem manifests itself intermittently
+  in many normal situations involving large-network scanning.  So all
+  3.25 users are urged to upgrade.  Pre-3.25 users should upgrade too,
+  since 3.25 included so many improvements :).
 
 Nmap 3.25
 
