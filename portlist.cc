@@ -104,7 +104,8 @@ int Port::getServiceDeductions(struct serviceDeductions *sd) {
     sd->dtype = SERVICE_DETECTION_PROBED; // RPC counts as probed
     sd->version = serviceprobe_version;
     return 0;
-  } else if (serviceprobe_results == PROBESTATE_FINISHED_MATCHED) {
+  } else if (serviceprobe_results == PROBESTATE_FINISHED_HARDMATCHED
+	     || serviceprobe_results == PROBESTATE_FINISHED_SOFTMATCHED) {
     assert(serviceprobe_service);
     sd->dtype = SERVICE_DETECTION_PROBED;
     sd->name = serviceprobe_service;

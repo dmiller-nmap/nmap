@@ -1,9 +1,41 @@
 # Nmap Changelog ($Id$)
 
+o Added "soft matches".  These are similar to normal match lines in
+  that they provide a regex for recognizing a service (but no version).
+  But instead of stopping at softmatch service recognition, the scan
+  continues looking for more info.  It only launches probes that are
+  known-capable of matching the softmatched service.  If no version
+  number is found, at least the determined service is printed.  A
+  service print for submission is also provided in that case.  So this
+  provides more informative results and improves efficiency.
+
+o More service fingerprints!  Thanks to Solar Designer, Max Vision,
+  Frank Denis (Jedi/Sector One) for the submissions.  I also added a
+  bunch from my own testing.
+
+o Updated XML output to handle new version and service detection
+  information.  Here are a few exmaples of the new output:
+  <port protocol="tcp" portid="22"><state state="open" /><service
+    name="ssh" version="OpenSSH 3.1p1 (protocol 1.99)" method="probed"
+    conf="10" /></port>
+  <port protocol="tcp" portid="111"><state state="open" /><service
+    name="rpcbind" version="2 (rpc #100000)" method="probed" conf="10" /></port>
+  <port protocol="tcp" portid="953"><state state="open" /><service
+    name="rndc" method="table" conf="3" /></port>
+
+o Fixed issue where Nmap would quit when ECONNREFUSED was returned
+  when we try to read from an already-connected TCP socket.  FreeBSD
+  does this for some reason instead of giving ECONNRESET.  Thanks to
+  Will Saxon (WillS@housing.ufl.edu) for the report.
+
+o Removed the SERVICEMATCH_STATIC match type from
+  nmap-service-probes.  There wasn't much benefit of this over regular
+  expressions, so it isn't worth maintaining the extra code.
+
 Nmap 3.40PVT9
 
 o Added/fixed numerous service fingerprints thanks to submissions from
-  Max Vision, MadHat, Seth Master, and Max Vision.  Match lines went
+  Max Vision, MadHat, Seth Master.  Match lines went
   from 164 to 179.
 
 o The Winpcap libraries used in the Windows build process have been

@@ -69,7 +69,8 @@ enum serviceprobestate {
   PROBESTATE_NULLPROBE, // Is working on the NULL Probe
   PROBESTATE_MATCHINGPROBES, // Is doing matching probe(s)
   PROBESTATE_NONMATCHINGPROBES, // The above failed, is checking nonmatches
-  PROBESTATE_FINISHED_MATCHED, // Yay!  Found a match
+  PROBESTATE_FINISHED_HARDMATCHED, // Yay!  Found a match
+  PROBESTATE_FINISHED_SOFTMATCHED, // Well, a soft match anyway
   PROBESTATE_FINISHED_NOMATCH, // D'oh!  Failed to find the service.
   PROBESTATE_FINISHED_TCPWRAPPED, // We think the port is blocked via tcpwrappers
   PROBESTATE_INCOMPLETE // failed to complete (error, host timeout, etc.)

@@ -261,9 +261,11 @@ void printportoutput(Target *currenths, PortList *plist) {
 	if (o.rpcscan && sd.rpc_status == RPC_STATUS_GOOD_PROG) {
 	  if (name) Strncpy(tmpbuf, name, sizeof(tmpbuf));
 	  else snprintf(tmpbuf, sizeof(tmpbuf), "#%li", sd.rpc_program);
-	  log_write(LOG_XML, "<service name=\"%s\" proto=\"rpc\" rpcnum=\"%li\" lowver=\"%i\" highver=\"%i\" method=\"detection\" conf=\"5\" />\n", tmpbuf, sd.rpc_program, sd.rpc_lowver, sd.rpc_highver);
+	  log_write(LOG_XML, "<service name=\"%s\" proto=\"rpc\" rpcnum=\"%li\" lowver=\"%i\" highver=\"%i\" method=\"probed\" conf=\"%d\" />\n", tmpbuf, sd.rpc_program, sd.rpc_lowver, sd.rpc_highver, sd.name_confidence);
 	} else if (sd.name) {
-	  log_write(LOG_XML, "<service name=\"%s\" method=\"table\" conf=\"3\" %s />\n", sd.name, (o.rpcscan && sd.rpc_status == RPC_STATUS_UNKNOWN)? "proto=\"rpc\"" : ""); 
+	  if (sd.version) snprintf(tmpbuf, sizeof(tmpbuf), " version=\"%s\"", sd.version);
+	  else tmpbuf[0] = '\0';
+	  log_write(LOG_XML, "<service name=\"%s\"%s method=\"%s\" conf=\"%d\" %s />\n", sd.name, tmpbuf, (sd.dtype == SERVICE_DETECTION_TABLE)? "table" : "probed", sd.name_confidence, (o.rpcscan && sd.rpc_status == RPC_STATUS_UNKNOWN)? "proto=\"rpc\"" : ""); 
 	}
 	log_write(LOG_XML, "</port>\n");
 	rowno++;

@@ -74,8 +74,8 @@ int doMatch(AllProbes *AP, char *fprint, int fplen, char *ipaddystr) {
   unsigned int resptextlen;
   char *dst;
   ServiceProbe *SP = NULL;
-  const char *matchedsvc;
-  char matchedversion[256];
+  char softmatch[32] = {0};
+  const struct MatchDetails *MD = NULL;
 
   // First lets find the port number and protocol
   assert(fplen > 10);
@@ -126,21 +126,29 @@ int doMatch(AllProbes *AP, char *fprint, int fplen, char *ipaddystr) {
     if (!SP) {
       error("WARNING: Unable to find probe named %s in given probe file.", probename);
     } else {
-      matchedsvc = SP->testMatch((u8 *) resptext, resptextlen, matchedversion, sizeof(matchedversion));
-      if (matchedsvc) {
-	// YEAH!  Found a match!
-	if (*matchedversion)
-	  printf("MATCHED svc %s (%s)%s: %s\n", matchedsvc, matchedversion, ipaddystr, fprint);
-	else
-	  printf("MATCHED svc %s (NO VERSION)%s: %s\n", matchedsvc, ipaddystr, fprint);
-	return 0;
+      MD = SP->testMatch((u8 *) resptext, resptextlen);
+      if (MD && MD->serviceName) {
+	if (MD->isSoft) {
+	  // We'll just squirrel it away for now
+	  if (*softmatch && strcmp(softmatch, MD->serviceName) != 0) {
+	    fprintf(stderr, "WARNING:  Soft match for service %s, followed by (ignored) soft match for service %s\n", softmatch, MD->serviceName);
+	  } else Strncpy(softmatch, MD->serviceName, sizeof(softmatch));
+	} else {
+	  // YEAH!  Found a hard match!
+	  if (MD->version)
+	    printf("MATCHED svc %s (%s)%s: %s\n", MD->serviceName, MD->version, ipaddystr, fprint);
+	  else
+	    printf("MATCHED svc %s (NO VERSION)%s: %s\n", MD->serviceName, ipaddystr, fprint);
+	  return 0;
+	}
       }
     }
     // Lets find the next probe, if any
     currentprobe = strstr(p, "%r(");
   }
-
-  printf("FAILED to match%s: %s\n", ipaddystr, fprint);
+  
+  if (*softmatch) printf("SOFT MATCH svc %s (SOFT MATCH)%s: %s\n", softmatch, ipaddystr, fprint);
+  else printf("FAILED to match%s: %s\n", ipaddystr, fprint);
 
   return 1;
 }

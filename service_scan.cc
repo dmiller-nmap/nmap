@@ -96,6 +96,9 @@ public:
   const char *probe_matched;
   // If a match is found, it is placed here.  Otherwise 0 length.
   char version_matched[128];
+  // if a match was found (see above), this tells whether it was a "soft"
+  // or hard match.  It is always false if no match has been found.
+  bool softMatchFound;
   // most recent probe executed (or in progress).  If there has been a match 
   // (probe_matched != NULL), this will be the corresponding ServiceProbe.
   ServiceProbe *currentProbe();
@@ -120,9 +123,6 @@ public:
   // Get the full current response string.  Note that this pointer is 
   // INVALIDATED if you call appendtocurrentproberesponse() or nextProbe()
   u8 *getcurrentproberesponse(int *respstrlen);
-  // If there is a write in progress, this is the ID (so we can cancel it if
-  // neccessary).  Otherwise, this is -1.
-  nsock_event_id current_write; 
           
 private:
   // Adds a character to servicefp.  Takes care of word wrapping if
@@ -168,6 +168,7 @@ ServiceProbeMatch::ServiceProbeMatch() {
   isInitialized = false;
   matchops_ignorecase = false;
   matchops_dotall = false;
+  isSoft = false;
 }
 
 ServiceProbeMatch::~ServiceProbeMatch() {
@@ -182,12 +183,12 @@ ServiceProbeMatch::~ServiceProbeMatch() {
   matchops_anchor = -1;
 }
 
-// match text from the nmap-service-probes file.  This must be called before 
-// you try and do anything with this match.  This
-// function should be passed the text remaining in the line right AFTER 
-// "match " in nmap-service-probes.  The line number that the text is
-// provided so that it can be reported in error messages.  This function will
-// abort the program if there is a syntax problem.
+// match text from the nmap-service-probes file.  This must be called
+// before you try and do anything with this match.  This function
+// should be passed the whole line starting with "match" or
+// "softmatch" in nmap-service-probes.  The line number that the text
+// is provided so that it can be reported in error messages.  This
+// function will abort the program if there is a syntax problem.
 void ServiceProbeMatch::InitMatch(const char *matchtext, int lineno) {
   char *p;
   char delimchar;
@@ -204,7 +205,17 @@ void ServiceProbeMatch::InitMatch(const char *matchtext, int lineno) {
 
   while(isspace(*matchtext)) matchtext++;
 
-  // first comes the service name
+  // first we find whether this is a "soft" or normal match
+  if (strncmp(matchtext, "softmatch ", 10) == 0) {
+    isSoft = true;
+    matchtext += 10;
+  } else if (strncmp(matchtext, "match ", 6) == 0) {
+    isSoft = false;
+    matchtext += 6;
+  } else 
+    fatal("ServiceProbeMatch::InitMatch: parse error on line %d of nmap-service-probes - must begin with \"match\" or \"softmatch\"", lineno);
+
+  // next comes the service name
   p = strchr(matchtext, ' ');
   if (!p) fatal("ServiceProbeMatch::InitMatch: parse error on line %d of nmap-service-probes", lineno);
 
@@ -264,42 +275,6 @@ void ServiceProbeMatch::InitMatch(const char *matchtext, int lineno) {
     regex_extra = pcre_study(regex_compiled, 0, &pcre_errptr);
     if (pcre_errptr != NULL)
       fatal("ServiceProbeMatch::InitMatch: failed to pcre_study regexp on line %d of nmap-service-probes: %s\n", lineno, pcre_errptr);
-  } else if (*matchtext == 'q') {
-    // The 'q' option is a simple C-like string for when regex would be overkill
-    if (!*(matchtext+1))
-      fatal("ServiceProbeMatch::InitMatch: parse error on line %d of nmap-service-probes", lineno);
-    matchtype = SERVICEMATCH_STATIC;
-    delimchar = *(++matchtext);
-    ++matchtext;
-    // find the end of the regex
-    p = strchr(matchtext, delimchar);
-    if (!p) fatal("ServiceProbeMatch::InitMatch: parse error on line %d of nmap-service-probes", lineno);
-    tmpbuflen = p - matchtext;
-    assert(tmpbuflen < sizeof(tmpbuf) - 1);
-    memcpy(tmpbuf, matchtext, tmpbuflen);
-    tmpbuf[tmpbuflen] = '\0';
-    if (!cstring_unescape(tmpbuf, &tmpbuflen)) {
-      fatal("ServiceProbeMatch::InitMatch: parse error on line %d of nmap-service-probes", lineno);
-    }
-    matchstr = (char *) safe_malloc(tmpbuflen + 1);
-    memcpy(matchstr, tmpbuf, tmpbuflen);
-    matchstrlen = tmpbuflen;
-    matchstr[matchstrlen]  = '\0'; // matchstr[] may have embedded NUL - only terminated for ease of debugging
-    matchtext = p + 1; // skip past the delim
-    // any options?
-    while(*matchtext && !isspace(*matchtext)) {
-      if (*matchtext == 'a') {
-	char *endptr = NULL;
-	matchtext++;
-	if (!isdigit(*matchtext))
-	  fatal("ServiceProbeMatch::InitMatch: static match string option 'a' must be followed by a number - line %d of nmap-service-probes", lineno);
-	matchops_ignorecase = true;
-	matchops_anchor = strtol(matchtext, &endptr, 10);
-	assert(matchops_anchor >= 0);
-	matchtext = endptr - 1; // will be incremented momentarily anyway
-      } else fatal("ServiceProbeMatch::InitMatch: illegal regexp option on line %d of nmap-service-probes", lineno);
-      matchtext++;
-    }
   } else {
     /* Invalid matchtext */
     fatal("ServiceProbeMatch::InitMatch: parse error on line %d of nmap-service-probes", lineno);
@@ -309,6 +284,8 @@ void ServiceProbeMatch::InitMatch(const char *matchtext, int lineno) {
 
   while(isspace(*matchtext)) matchtext++;
   if (isalnum(*matchtext)) {
+    if (isSoft)
+      fatal("ServiceProbeMatch::InitMatch: illegal trailing garbage on line %d of nmap-service-probes - note that softmatch lines cannot have a version specifier.", lineno);
     if (*matchtext != 'v') 
       fatal("ServiceProbeMatch::InitMatch: illegal trailing garbage (should be a version pattern match?) on line %d of nmap-service-probes", lineno);
     delimchar = *(++matchtext);
@@ -335,66 +312,52 @@ void ServiceProbeMatch::InitMatch(const char *matchtext, int lineno) {
   isInitialized = 1;
 }
 
-// Returns this service name if the givven buffer and length match it.
-// Otherwise returns NULL.  If there is a service match, and the
-// version is able to be determined (meaning there is a
-// version_template), and 'version' is not NULL, and versionlen is
-// long enough, than the software version is stuck into 'version' (and
-// NUL terminated). If the version info is unavailable, version[0]
-// will be set to '\0', space permitting.
-const char *ServiceProbeMatch::testMatch(const u8 *buf, int buflen, 
-					 char *version, int versionlen) {
+  // If the buf (of length buflen) match the regex in this
+  // ServiceProbeMatch, returns the details of the match (service
+  // name, version number if applicable, and whether this is a "soft"
+  // match.  If the buf doesn't match, the serviceName field in the
+  // structure will be NULL.  The MatchDetails sructure returned is
+  // only valid until the next time this function is called. The only
+  // exception is that the serviceName field can be saved throughought
+  // program execution.  If no version matched, that field will be
+  // NULL.
+const struct MatchDetails *ServiceProbeMatch::testMatch(const u8 *buf, int buflen) {
   int rc;
   int i;
+  static char version[120];
   char *bufc = (char *) buf;
   int ovector[150]; // allows 50 substring matches (including the overall match)
   assert(isInitialized);
 
-  if (matchtype == SERVICEMATCH_REGEX) {
-    rc = pcre_exec(regex_compiled, regex_extra, bufc, buflen, 0, 0, ovector, sizeof(ovector) / sizeof(*ovector));
-    if (rc < 0) {
+  assert (matchtype == SERVICEMATCH_REGEX);
+
+  // Clear out the output struct
+  memset(&MD_return, 0, sizeof(MD_return));
+  MD_return.isSoft = isSoft;
+
+  rc = pcre_exec(regex_compiled, regex_extra, bufc, buflen, 0, 0, ovector, sizeof(ovector) / sizeof(*ovector));
+  if (rc < 0) {
 #ifdef PCRE_ERROR_MATCHLIMIT  // earlier PCRE versions lack this
-      if (rc == PCRE_ERROR_MATCHLIMIT) {
-	if (o.debugging || o.verbose > 1) 
-	  error("Warning: Hit PCRE_ERROR_MATCHLIMIT when probing for service %s with the regex '%s'", servicename, matchstr);
-      } else
+    if (rc == PCRE_ERROR_MATCHLIMIT) {
+      if (o.debugging || o.verbose > 1) 
+	error("Warning: Hit PCRE_ERROR_MATCHLIMIT when probing for service %s with the regex '%s'", servicename, matchstr);
+    } else
 #endif // PCRE_ERROR_MATCHLIMIT
-	if (rc != PCRE_ERROR_NOMATCH) {
-	  fatal("Unexpected PCRE error (%d) when probing for service %s with the regex '%s'", rc, servicename, matchstr);
-	}
-      return NULL;
-    }
+      if (rc != PCRE_ERROR_NOMATCH) {
+	fatal("Unexpected PCRE error (%d) when probing for service %s with the regex '%s'", rc, servicename, matchstr);
+      }
+  } else {
     // Yeah!  Match apparently succeeded.
     // Now lets get the version number if available
-    if (version_template && version && versionlen > 5) {
-      i = getVersionStr(buf, buflen, ovector, rc, version, versionlen);
-      if (i < 0 && versionlen > 0)
-	version[0] = '\0';
-    } else if (version && versionlen > 0)
-      version[0] = '\0';
-    return servicename;
-  } else {
-    assert(matchtype == SERVICEMATCH_STATIC);
-    if (matchops_anchor >= 0) {
-      if (buflen < matchstrlen + matchops_anchor)
-	return NULL; // no room to match
-      if (memcmp(buf + matchops_anchor, matchstr, matchstrlen) != 0)
-	return NULL; // TODO: I should somehow mark this as impossible to match
-      // Yeah!  At this point the match must have succeeded
-      return servicename;
-    } else {
-      for(int startpos = 0; startpos <= buflen - matchstrlen; startpos++) {
-	if (memcmp(buf + startpos, matchstr, matchstrlen) == 0) {
-	  // Yeah!  At this point the match must have succeeded
-	  return servicename;
-	}
-      }
-      // Went through all possible start positions (if any) and didn't find jack.
-      return NULL;
+    if (version_template) {
+      i = getVersionStr(buf, buflen, ovector, rc, version, sizeof(version));
+      assert (i == 0);
+      MD_return.version = version;
     }
+    MD_return.serviceName = servicename;
   }
-  assert(0);
-  return NULL; // unreached
+
+  return &MD_return;
 }
 
 // Use version_template, and the match data included here to put the version info
@@ -605,14 +568,31 @@ bool ServiceProbe::portIsProbable(u16 portno) {
   return true;
 }
 
+ // Returns true if the passed in service name is among those that can
+  // be detected by the matches in this probe;
+bool ServiceProbe::serviceIsPossible(const char *sname) {
+  vector<const char *>::iterator vi;
 
-  // Takes a "match" line in a probe description and adds it to the list of 
-  // matches for this probe.  Pass in any text after "match ".  The line
-  // number is requested because this function will bail with an error
-  // (giving the line number) if it fails to parse the string.
+  for(vi = detectedServices.begin(); vi != detectedServices.end(); vi++) {
+    if (strcmp(*vi, sname) == 0)
+      return true;
+  }
+  return false;
+}
+
+  // Takes a match line in a probe description and adds it to the
+  // list of matches for this probe.  This function should be passed
+  // the whole line starting with "match" or "softmatch" in
+  // nmap-service-probes.  The line number is requested because this
+  // function will bail with an error (giving the line number) if it
+  // fails to parse the string.
 void ServiceProbe::addMatch(const char *match, int lineno) {
+  const char *sname;
   ServiceProbeMatch *newmatch = new ServiceProbeMatch();
   newmatch->InitMatch(match, lineno);
+  sname = newmatch->getName();
+  if (!serviceIsPossible(sname))
+    detectedServices.push_back(sname);
   matches.push_back(newmatch);
 }
 
@@ -663,8 +643,8 @@ void parse_nmap_service_probe_file(AllProbes *AP, char *filename) {
 	if (waitms < 100 || waitms > 300000)
 	  fatal("Error on line %d of nmap-service-probes file (%s): bad totalwaitms value.  Must be between 100 and 300000 milliseconds", lineno, filename);
 	newProbe->totalwaitms = waitms;
-      } else if (strncmp(line, "match ", 6) == 0) {
-	newProbe->addMatch(line + 6, lineno);
+      } else if (strncmp(line, "match ", 6) == 0 || strncmp(line, "softmatch ", 10) == 0) {
+	newProbe->addMatch(line, lineno);
       } else fatal("Parse error on line %d of nmap-service-probes file: %s", lineno, filename);
     }
   }
@@ -692,19 +672,23 @@ void parse_nmap_service_probes(AllProbes *AP) {
   parse_nmap_service_probe_file(AP, filename);
 }
 
-// Returns a service name if the givven buffer and length match one.
-// Otherwise returns NULL.  If there is a match and the version is
-// also able to be determined, and 'version' is not NULL, and
-// versionlen is long enough, the app/version info is stck into
-// 'version' (and NUL terminated.  If the version info is unavailable,
-// version[0] will be set to '\0', space permitting.
-const char *ServiceProbe::testMatch(const u8 *buf, int buflen, char *version, 
-				    int versionlen) {
+// If the buf (of length buflen) matches one of the regexes in this
+// ServiceProbe, returns the details of the match (service name,
+// version number if applicable, and whether this is a "soft" match.
+// If the buf doesn't match, the serviceName field in the structure
+// will be NULL.  The MatchDetails returned is only valid until the
+// next time this function is called.  The only exception is that the
+// serviceName field can be saved throughought program execution.  If
+// no version matched, that field will be NULL. This function may
+// return NULL if there are no match lines at all in this probe.
+const struct MatchDetails *ServiceProbe::testMatch(const u8 *buf, int buflen) {
   vector<ServiceProbeMatch *>::iterator vi;
+  const struct MatchDetails *MD;
 
   for(vi = matches.begin(); vi != matches.end(); vi++) {
-    if ((*vi)->testMatch(buf, buflen, version, versionlen))
-      return (*vi)->getName();
+    MD = (*vi)->testMatch(buf, buflen);
+    if (MD->serviceName)
+      return MD;
   }
 
   return NULL;
@@ -750,9 +734,9 @@ ServiceNFO::ServiceNFO(AllProbes *newAP) {
   currentresplen = 0;
   port = NULL;
   version_matched[0] = '\0';
+  softMatchFound = false;
   servicefplen = servicefpalloc = 0;
   servicefp = NULL;
-  current_write = (nsock_event_id) -1;
 }
 
 ServiceNFO::~ServiceNFO() {
@@ -935,6 +919,7 @@ bool dropdown = false;
  if (probe_state == PROBESTATE_MATCHINGPROBES) {
    if (!dropdown && current_probe != AP->probes.end()) current_probe++;
    while (current_probe != AP->probes.end()) {
+     // For the first run, we only do probes that match this port number
      if ((proto == (*current_probe)->getProbeProtocol()) && 
 	 (*current_probe)->portIsProbable(portno)) {
        // This appears to be a valid probe.  Let's do it!
@@ -951,16 +936,20 @@ bool dropdown = false;
  if (probe_state == PROBESTATE_NONMATCHINGPROBES) {
    if (!dropdown && current_probe != AP->probes.end()) current_probe++;
    while (current_probe != AP->probes.end()) {
+     // The protocol must be right, it must be a nonmatching port ('cause we did thos),
+     // and we better either have no soft match yet, or the soft service match must
+     // be available via this probe.
      if ((proto == (*current_probe)->getProbeProtocol()) && 
-	 !(*current_probe)->portIsProbable(portno)) {
-       // Valid, nonmatching probe.  Let's do it!
+	 !(*current_probe)->portIsProbable(portno) &&
+	 (!softMatchFound || (*current_probe)->serviceIsPossible(probe_matched))) {
+       // Valid, probe.  Let's do it!
        return *current_probe;
      }
      current_probe++;
    }
 
-   // Tried all NONMATCHINGPROBES -- No luck - we're finished :(
-   probe_state = PROBESTATE_FINISHED_NOMATCH;
+   // Tried all NONMATCHINGPROBES -- we're finished
+   probe_state = (softMatchFound)? PROBESTATE_FINISHED_SOFTMATCHED : PROBESTATE_FINISHED_NOMATCH;
    return NULL; 
  }
 
@@ -1052,7 +1041,7 @@ ServiceGroup::~ServiceGroup() {
     probestring = probe->getProbeString(&probestringlen);
     assert(probestringlen > 0);
     // Now we write the string to the IOD
-    svc->current_write = nsock_write(nsp, nsi, servicescan_write_handler, svc->currentprobe_timemsleft(), svc,
+    nsock_write(nsp, nsi, servicescan_write_handler, svc->currentprobe_timemsleft(), svc,
 		(const char *) probestring, probestringlen);
     return 0;
   }
@@ -1079,7 +1068,7 @@ static void startNextProbe(nsock_pool nsp, nsock_iod nsi, ServiceGroup *SG,
     } else {
       // Should only happen if someone has a highly perverse nmap-service-probes
       // file.  Null scan should generally never be the only probe.
-      end_svcprobe(nsp, PROBESTATE_FINISHED_NOMATCH, SG, svc, NULL);
+      end_svcprobe(nsp, (svc->softMatchFound)? PROBESTATE_FINISHED_SOFTMATCHED : PROBESTATE_FINISHED_NOMATCH, SG, svc, NULL);
     }
   } else {
     // The finisehd probe was not a NULL probe.  So we close the
@@ -1089,11 +1078,7 @@ static void startNextProbe(nsock_pool nsp, nsock_iod nsi, ServiceGroup *SG,
     if (probe) {
       // For a TCP probe, we start by requesting a new connection to the target
       if (svc->proto == IPPROTO_TCP) {
-	if (svc->current_write != (nsock_event_id) -1) {
-	  nsock_event_cancel(nsp, svc->current_write, 0);
-	  svc->current_write = (nsock_event_id) -1;
-	}
-	nsi_delete(nsi);
+	nsi_delete(nsi, NSOCK_PENDING_SILENT);
 	if ((svc->niod = nsi_new(nsp, svc)) == NULL) {
 	  fatal("Failed to allocate Nsock I/O descriptor in startNextProbe()");
 	}
@@ -1112,12 +1097,8 @@ static void startNextProbe(nsock_pool nsp, nsock_iod nsi, ServiceGroup *SG,
       }
     } else {
       // No more probes remaining!  Failed to match
-      if (svc->current_write != (nsock_event_id) -1) {
-	nsock_event_cancel(nsp, svc->current_write, 0);
-	svc->current_write = (nsock_event_id) -1;
-      }
-      nsi_delete(nsi);
-      end_svcprobe(nsp, PROBESTATE_FINISHED_NOMATCH, SG, svc, NULL);
+      nsi_delete(nsi, NSOCK_PENDING_SILENT);
+      end_svcprobe(nsp, (svc->softMatchFound)? PROBESTATE_FINISHED_SOFTMATCHED : PROBESTATE_FINISHED_NOMATCH, SG, svc, NULL);
     }
   }
   return;
@@ -1136,11 +1117,7 @@ void end_svcprobe(nsock_pool nsp, enum serviceprobestate probe_state, ServiceGro
   SG->services_finished.push_back(svc);
 
   if (nsi) {
-    if (svc->current_write != (nsock_event_id) -1) {
-      nsock_event_cancel(nsp, svc->current_write, 0);
-      svc->current_write = (nsock_event_id) -1;
-    }
-    nsi_delete(nsi);
+    nsi_delete(nsi, NSOCK_PENDING_SILENT);
   }
 
   return;
@@ -1189,8 +1166,6 @@ void servicescan_write_handler(nsock_pool nsp, nsock_event nse, void *mydata) {
   ServiceNFO *svc = (ServiceNFO *)mydata;
   ServiceGroup *SG;
 
-  svc->current_write = (nsock_event_id) -1;
-
   if (status == NSE_STATUS_SUCCESS)
     return;
 
@@ -1223,9 +1198,9 @@ void servicescan_read_handler(nsock_pool nsp, nsock_event nse, void *mydata) {
   ServiceNFO *svc = (ServiceNFO *) mydata;
   ServiceProbe *probe = svc->currentProbe();
   ServiceGroup *SG = (ServiceGroup *) nsp_getud(nsp);
-  const char *matchname;
   const u8 *readstr;
   int readstrlen;
+  const struct MatchDetails *MD;
 
   assert(type == NSE_TYPE_READ);
 
@@ -1236,19 +1211,32 @@ void servicescan_read_handler(nsock_pool nsp, nsock_event nse, void *mydata) {
     // now get the full version
     readstr = svc->getcurrentproberesponse(&readstrlen);
     // Now let us try to match it.
-    matchname = probe->testMatch(readstr, readstrlen, svc->version_matched, sizeof(svc->version_matched));
+    MD = probe->testMatch(readstr, readstrlen);
 
-    if (matchname) {
-      // WOO HOO!!!!!!  MATCHED!
-      if (o.debugging > 1)
-	if (*(svc->version_matched))
-	printf("Service scan match: %s:%hi is %s.  Version: %s\n", svc->target->NameIP(), svc->portno, matchname, svc->version_matched);
-	else
-	  printf("Service scan match: %s:%hi is %s\n", svc->target->NameIP(), svc->portno, matchname);
-      svc->probe_matched = matchname;
-      end_svcprobe(nsp, PROBESTATE_FINISHED_MATCHED, SG, svc, nsi);
+    if (MD && MD->serviceName) {
+      // WOO HOO!!!!!!  MATCHED!  But might be soft
+      if (MD->isSoft && svc->probe_matched) {
+	if (strcmp(svc->probe_matched, MD->serviceName) != 0)
+	  error("WARNING:  service %s:%hi had allready soft-matched %s, but now soft-matched %s; ignoring second value\n", svc->target->NameIP(), svc->portno, svc->probe_matched, MD->serviceName);
+	// No error if its the same - that happens frequently.  For example, if we read
+	// more data for the same probe response it will probably still match.
+      } else {
+	if (o.debugging > 1)
+	  if (MD->version)
+	    printf("Service scan match: %s:%hi is %s.  Version: %s\n", svc->target->NameIP(), svc->portno, MD->serviceName, MD->version);
+	  else
+	    printf("Service scan %s match: %s:%hi is %s\n", (MD->isSoft)? "soft" : "hard", svc->target->NameIP(), svc->portno, MD->serviceName);
+	svc->probe_matched = MD->serviceName;
+	if (MD->version) {
+	  Strncpy(svc->version_matched, MD->version, sizeof(svc->version_matched));
+	}
+	svc->softMatchFound = MD->isSoft;
+	if (!svc->softMatchFound)
+	  end_svcprobe(nsp, PROBESTATE_FINISHED_HARDMATCHED, SG, svc, nsi);
+      }
+    }
 
-    } else {
+    if (!MD || !MD->serviceName || MD->isSoft) {
       // Didn't match... maybe reading more until timeout will help
       // TODO: For efficiency I should be able to test if enough data has been
       // received rather than always waiting for the reading to timeout.  For now I'll limit it
@@ -1296,6 +1284,8 @@ void servicescan_read_handler(nsock_pool nsp, nsock_event nse, void *mydata) {
     int err = nse_errorcode(nse);
     switch(err) {
     case ECONNRESET:
+    case ECONNREFUSED: // weird to get this on a connected socket (shrug) but 
+                       // BSD sometimes gives it
       // Jerk hung up on us.  Probably didn't like our probe.  We treat it as with EOF above.
       if (probe->isNullProbe()) {
 	// TODO:  Perhaps should do further verification before making this assumption
@@ -1337,16 +1327,20 @@ static void processResults(ServiceGroup *SG) {
 list<ServiceNFO *>::iterator svc;
 
  for(svc = SG->services_finished.begin(); svc != SG->services_finished.end(); svc++) {
-   if ((*svc)->probe_state == PROBESTATE_FINISHED_MATCHED) {
-
-     (*svc)->port->setServiceProbeResults(PROBESTATE_FINISHED_MATCHED, 
+   if ((*svc)->probe_state == PROBESTATE_FINISHED_HARDMATCHED) {
+     (*svc)->port->setServiceProbeResults((*svc)->probe_state, 
 					  (*svc)->probe_matched, 
 					  *(*svc)->version_matched? (*svc)->version_matched : NULL, 
 					  NULL);
 
-   } else if ((*svc)->probe_state == PROBESTATE_FINISHED_NOMATCH) {
+   } else if ((*svc)->probe_state == PROBESTATE_FINISHED_SOFTMATCHED) {
+    (*svc)->port->setServiceProbeResults((*svc)->probe_state, 
+					  (*svc)->probe_matched, 
+					  NULL, (*svc)->getServiceFingerprint(NULL));
+
+   }  else if ((*svc)->probe_state == PROBESTATE_FINISHED_NOMATCH) {
      if ((*svc)->getServiceFingerprint(NULL))
-       (*svc)->port->setServiceProbeResults(PROBESTATE_FINISHED_NOMATCH, NULL,
+       (*svc)->port->setServiceProbeResults((*svc)->probe_state, NULL,
 					    NULL, (*svc)->getServiceFingerprint(NULL));
    }
  }

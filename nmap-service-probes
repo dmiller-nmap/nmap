@@ -93,12 +93,12 @@ match ftp m/^220 JD FTP Server Ready/ v/HP JetDirect/
 match ftp m/^220.*Check Point FireWall-1 Secure FTP server running on/s v/Check Point Firewall-1/
 match ftp-proxy m/^220-Sidewinder ftp proxy\.  You must login to the proxy first/ v/Sidewinder FTP proxy/
 match ftp-proxy m/^220-\r\x0a220-Sidewinder ftp proxy/s v/Sidewinder FTP proxy/
-match ftp m/^220[- ].*FTP server \(Version (wu-\S+) /s v/WU-FTPD $1/
+match ftp m/^220[- ].*FTP server \(Version (wu-[-.\w]+)\) /s v/WU-FTPD $1/
 match ftp m/^220 ProFTPD (\d\S+) Server/ v/ProFTPD $1/
 match ftp m/^220.*ProFTP[dD].*Server ready/ v/ProFTPD/
 match ftp m/^220.*NcFTPd Server / v/NcFTPD/
 match ftp m/^220.*FTP server \(SunOS (\S+)\) ready/ v/SunOS $1/
-match ftp m/^220-FTPD1 IBM FTP.*(V\d+R\d+)/ v|IBM OS/390 $1|
+match ftp m/^220-[-.\w]+ IBM FTP.*(V\d+R\d+)/ v|IBM OS/390 $1|
 match ftp m/^220 VxWorks \((\d[^)]+)\) FTP server ready/ v/VxWorks $1/
 match ftp m/^220 VxWorks \(VxWorks(\d[^)]+)\) FTP server ready/ v/VxWorks $1/
 match ftp m/^220.*Welcome to PureFTPd (\d\S+)/ v/PureFTPd $1/
@@ -114,14 +114,17 @@ match ftp m/^220 Interscan Version ([-\w.]+)/i v/Interscan Viruswall $1/
 match ftp m|^220 [-.\w]+ FTP server \(Version ([-.\w]+)/OpenBSD\) ready\.\r\n$| v/OpenBSD ftpd $1/
 match ftp m|^220-Welcome to [A-Z]+ FTP Service\.\r\n220 All unauthorized access is logged\.\r\n$| v/FileZilla/
 match ftp m|^220 [-.\w]+ FTP server \(Version (6.0\w+)\) ready.\r\n| v/FreeBSD ftpd $1/
-
+# OpenBSD 3.4 beta running Pure-FTPd 1.0.16 with SSL/TLS
+match ftp m|^220---------- Welcome to Pure-FTPd \[privsep\] \[TLS\] ----------\r\n220-You are user number| v|Pure-FTPd (with SSL/TLS)|
 # 220 mirrors.midco.net FTP server ready.
-# match ftp m/^220 .*ftp/i
+softmatch ftp m/^220 [-.\w ]+ftp.*\r\n$/i
+softmatch ftp m/^220-[-.\w ]+ftp.*\r\n220/i
 
-match ssh m/^SSH-([^-]+)-OpenSSH_(\S+)/ v/OpenSSH $2 (protocol $1)/
-match ssh m/^SSH-([^-]+)-Sun_SSH_(\S+)/ v/SunSSH $2 (protocol $1)/
-match ssh m/^SSH-([^-]+)-(\d+\.\d+\.\d+) SSH Secure Shell/ v/SSH $2 (protocol $1)/
-match ssh m/^SSH-([^-]+)-(\d+\.\d+\.[\w_.]+)/ v/SSH $2 (protocol $1)/
+match ssh m/^SSH-([.\d]+)-OpenSSH_(\S+)/ v/OpenSSH $2 (protocol $1)/
+match ssh m/^SSH-([.\d]+)-Sun_SSH_(\S+)/ v/SunSSH $2 (protocol $1)/
+match ssh m/^SSH-([.\d]+)-(\d+\.\d+\.\d+) SSH Secure Shell/ v/SSH $2 (protocol $1)/
+match ssh m/^SSH-([.\d]+)-(\d+\.\d+\.[\w_.]+)/ v/SSH $2 (protocol $1)/
+softmatch ssh m/^SSH-([.\d]+)-/
 
 match telnet m/^Check Point FireWall-1 authenticated Telnet server running on/ v/Check Point Firewall-1/
 match telnet m/^\r\nSpeedStream ([^(\r\n]+) \(.*\) v(\S+) Ready\r\n\xff\xfb\x01\xff\xfb\x03\xff\xfd/ v/SpeedStream $1 v$2/
@@ -135,7 +138,7 @@ match telnet m/^\n\rVina Technologies ([-+_. a-zA-Z0-9()]+)\n\r/ v/Vina Technolo
 match telnet m/^\xff\xfd\x03\xff\xfb\x03\xff\xfb\x01\x1b\[0m\x1b\[1;1H\x1b\[2J\rD\r           \n\r             (DES-.*) Command Line Interface\n\r\n/ v/$1/
 match telnet m/^\xff\xfb\x01\xff\xfb\x03\xff\xfc\x1f\n\r\n\rUser Access Verification\n\r\n\r\n\r\n\r\n\rShell version (\d\S+).*Maipu Communication Technology Co\./ v/Maipu Router (shell v$1)/
 match telnet m/^\xff\xfb\x01\xff\xfb\x03\xff\xfd\x03\x1b.*Intel Corporation, ([-+. \w()]+)/s v/Intel $1/
-match telnet m|^\r\n(FlowPoint/.*) Ready\r\n.*\xff\xfb\x01\xff\xfb| v/$1/
+match telnet m|^\r\nFlowPoint/(.*) Ready\r\n.*\xff\xfb\x01\xff\xfb| v/Flowpoint $1/
 match telnet m/Welcome to Tenor Multipath Switch Telnet Server.*Type: (\S+)/s v/Tenor $1 (Multipath Switch)/
 match telnet m|^\xff\xfb\x01\xff\xfb\x03\xff\xfd\x01\x0d\x0a\x0d\x0aCisco\x20Systems.*Console/Telnet Access of the ([-. \w]+) for Configuration Purposes|s v/Cisco $1/
 # Cisco 678 DSL router
@@ -173,6 +176,9 @@ match smtp m|^220 \*{10,40}\r\n| v|Cisco PIX sanatized|
 match smtp m|^220 ArGoSoft Mail Server Pro for WinNT/2000/XP, Version [-.\w]+ \(([-.\w]+)\)\r\n| v/ArGoSoft Mail Server Pro $1/
 match smtp m|^220 [-.\w]+ ESMTP server \(Post.Office v([-.\w]+) release ([-.\w]+) ID# | v/Post.Office $1 (release $2)/
 match smtp m|^220 [-.\w]+ ESMTP VisNetic.MailServer.v([-.\w]+); | v/VisNetic MailServer $1/
+# CommuniGate Pro 4.0.5
+match smtp m|^220 df.ru ESMTP Service. Welcome.\r\n$| v/CommuniGate Pro/
+softmatch smtp m|^220 [-.\w ]+SMTP.*\r\n|
 
 match pop3 m/^\+OK X1 NT-POP3 Server [-\w.]+ \(IMail ([^)]+)\)\r\n/ v/IMail $1/
 match pop3 m/^\+OK POP3 \[cppop (\d[^]]+)\] at \[/ v/cppop $1/
@@ -196,34 +202,49 @@ match pop3 m|^\+OK Hello there\.\r\n$| v/Courier/
 match pop3 m|^\+OK ArGoSoft Mail Server Pro for WinNT/2000/XP, Version [-.\w]+ \(([-.\w]+)\)\r\n$| v/ArGoSoft Mail Server Pro $1/
 match pop3 m/^\+OK [-.\w]+ VisNetic.MailServer.v([-.\w]+) POP3 / v/VisNetic MailServer $1/
 match pop3 m/^\+OK [-.\w]+ POP3 server \(Post\.Office v([-.\w]+) release ([-.\w]+) with ZPOP version ([-.\w]+)\) ready / v|Post.Office $1 (release $2 w/ZPOP $3)|
+match pop3 m/^\+OK CommuniGate Pro POP3 Server ([-.\w]+) ready/ v/CommuniGate Pro $1/
+softmatch pop3 m/^\+OK [-.\w ]+\r\n$/
 
 # Courier-Imap 1.4.3-2.3
 match imap2 m|^\* OK Courier-IMAP ready\. Copyright 1998-2002 Double Precision, Inc\.  See COPYING for distribution information\.\r\n$| v/Courier Imap/
 # Courier IMAP courier-imapd-0.42.0-1.7.3
 match imap2 m|^\* OK \[CAPABILITY IMAP4rev1 NAMESPACE AUTH=CRAM-MD5 AUTH=CRAM-SHA1 CHILDREN IDLE QUOTA SORT THREAD=ORDEREDSUBJECT THREAD=REFERENCES UIDPLUS STARTTLS\] Courier-IMAP ready\. Copyright 1998-2003 Double Precision, Inc\.  See COPYING for distribution information\.\r\n| v/Courier 0.42.0/
+# Courier IMAP 1.7.2
+match imap2 m|\* OK \[CAPABILITY IMAP4rev1 CHILDREN NAMESPACE THREAD=ORDEREDSUBJECT THREAD=REFERENCES SORT QUOTA\] Courier-IMAP ready. Copyright 1998-2003 Double Precision, Inc.  See COPYING for distribution information.\r\n$| v/Courier IMAP 1.7.2/
 match imap2 m|^\* OK starvation.hungry.com IMAP4rev(\d) v([-.\w]+) server ready\r\n$| v/Courier IMAP4rev$1 $2/
+match imap2 m|^\* OK CommuniGate Pro IMAP Server ([-.\w]+) at df.ru ready\r\n$| v/CommuniGate Pro $1/
 # W-Imapd-SSL v2001adebian-6
 match imap3 m|^\* OK \[CAPABILITY IMAP4REV1 X-NETSCAPE LOGIN-REFERRALS STARTTLS AUTH=LOGIN\] \S+ IMAP4rev1 ([-.\w]+) at| v/UW-Imapd-SSL $1/
-match mysql m/^G\0\0\0\xffj\x04Host .* is not allowed to connect to this MySQL server$/ v/MySQL (unauthorized)/
+softmatch imap m/^\* OK [-.\w ]+\r\n$/
+
+match mysql m/^.\0\0\0\xffj\x04Host .* is not allowed to connect to this MySQL server$/ v/MySQL (unauthorized)/
 match mysql m/.\0\0\0.(3\.[-.\w]+)\0.*\x08\x02\0\0\0\0\0\0\0\0\0\0\0\0\0\0$/s v/MySQL $1/
 match mysql m/.\0\0\0\n(3\.[-.\w]+)\0.\0\0\0/s v/MySQL $1/
+# r(NULL,2B,"'\0\0\0\n4.0.13\0\xdf\xbc\x02\0SC7)fHu5\0, \x08\x02\0\0\0\0\0\0\0\0\0\0\0\0\0\0")
+match mysql m/.\0\0\0\n(4\.[-.\w]+)\0\xdf\xbc\x02\0/ v/MySQL $1/
+
 match mud m|^\n\r\xff\xfbUDo you want ANSI color\? \(Y/n\) $| v|ROM-based MUD (http://rrp.rom.org/)|
 match winshell m/^Microsoft Windows ((2000)|(XP)|(NT 4\.0)) \[Version ([\d.]+)\]\r\n\(C\) Copyright 1985-20\d\d Microsoft Corp\.\r\n\r\n/ v/Microsoft Windows $1 $5 cmd.exe/
 match netsaint m|^Sorry, you \(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\) are not among the allowed hosts\.\.\.\n$| v/Netsaint status daemon/
 match ncacn_http m|^ncacn_http/([\d.]+)$| v/ncacn_http $1/
 match issrealsecure m|^\0\0\0\x9d\x08\x01\x03\x01\0\x95\x02\0\0\x03\xe6\0\0\xac\0\0\0f\x04\0\0\x80\x04\0\xef\0\xa8\0\xa06ISS ECNRA Built-In Provider, Strong Encryption Version\0\0\0\0| v/ISS RealSecure/
+# TightVNC 1.2.6
+match vnc m|^RFB 003.003\n$| v/VNC/
 
-# These are empty now, but may prove useful later
 Probe TCP GenericLines q|\r\n\r\n|
 ports 21,43,110,113,540
 # iopd 2003debian0.0304182231-1
 match pop3 m|^\+OK POP3 \[[-.\w]+\] v(200[-.\w]+) server ready\r\n-ERR Null command\r\n-ERR Null command\r\n| v/ipopd $1/
+# Solid POP3d 0.15
+match pop3 m|^\+OK Solid POP3 server ready\r\n-ERR unknown command\r\n-ERR unknown command\r\n$| v/Solid POP3d/
 # OpenBSD 3.2 identd
-match ident m|^0 , 0 : ERROR : UNKNOWN-ERROR\r\n$| v/OpenBSD/
+match ident m|^0 , 0 : ERROR : UNKNOWN-ERROR\r\n$| v/OpenBSD identd/
 # FreeBSD 4.8-RC inetd internal identd
-match ident m|^0 , 0 : ERROR : INVALID-PORT\r\n$| v/FreeBSD/
+match ident m|^0 , 0 : ERROR : INVALID-PORT\r\n$| v/FreeBSD identd/
 # pidentd-3.1a19-157
-match identd m|^ : ERROR : UNKNOWN-ERROR\r\n$| v/pidentd/
+match ident m|^ : ERROR : UNKNOWN-ERROR\r\n$| v/pidentd/
+match ident m|^0, 0 : ERROR : X-INVALID-REQUEST\r\n$| v/Minidentd/
+
 # Solaris 9
 match ftp m|^220 [-.\w]+ FTP server ready\.\r\n530 Please login with USER and PASS\.\r\n530 Please login with USER and PASS\.\r\n$| v/Solaris/
 # Solaris 9
@@ -231,7 +252,7 @@ match uucp m|^login: Please enter user name: Password: $| v/Solaris/
 match whois m|^%  No entries found for the selected source\(s\)\.\n$| v/Merit IRRD/
 
 Probe TCP GetRequest q|GET / HTTP/1.0\r\n\r\n|
-ports 79,80,81,139,143,515,783,8000-8010,8080-8085
+ports 79,80-85,139,143,515,554,631,783,993,995,1220,5432,5900,8000-8010,8080-8085
 # Server: CUPS/1.1
 match ipp m|^HTTP/1\.0.*Server: CUPS/(\S+)|s v/CUPS $1/
 # My junbuster proxy gives me this.
@@ -242,13 +263,24 @@ match http m|^HTTP/1\.[01].*Server: Apache/(\d+\.\d+\.[-.\w]+) ([^\r\n]+)|s v/Ap
 match http m|^HTTP/1\.1.*\r\nServer: Netscape-Enterprise/([-.\w]+)\r\n| v/Netscape Enterprise $1/
 match http m|^HTTP/1\.1.*\r\nServer: Microsoft-IIS/([-.\w]+)\r\n|s v/Microsoft IIS $1/
 match http m|^HTTP/1\.0 200 OK\r\nDate: .+\r\nServer: Tomcat/([-.\w]+)\r\nContent-Type: text/html\r\nContent-Length: \d+\r\nServlet-Engine: Tomcat/[-.\w]+ \(Java ([-.\w]+); SunOS ([-.\w]+) (\w+); java\.vendor=Sun Microsystems Inc\.\)\r\n| v/Solaris management console server (SunOS $3 $4; Java $2; Tomcat $1)/
+match http m|^HTTP/1.1 200 OK\r\n.+Server: CommuniGatePro/([-.\w]+)\r\n|s v/CommuniGate Pro $1/
+match http m|^HTTP/1.0 401 Unauthorized\r\nDate: .*\r\nServer: DSS ([-.\w]+) Admin Server/([-.\w]+)| v/DarwinStreamingServer $1 Admin Server (Admin Server $2)/
+match http m|^HTTP/1.0 404 Not Found\r\nContent-Type: text/html\r\nConnection: close\r\n\r\n<title>Not Found</title>This host is not served here\.$| v/Fnord httpd/
+softmatch http m|^HTTP/1.[01] \d\d\d|
+
 match http-proxy m|^HTTP/1\.0 400 Bad Request\r\nServer: Squid/([-.\w]+)\r\n| v/Squid $1/
+# TightVNC 1.2.6
+match vnc-http m|^HTTP/1.0 200 OK\n\n<HTML>\n  <HEAD><TITLE>TightVNC desktop \[[-.\w]+\]| v/TightVNC/
+match rtsp m|^RTSP/1.0 400 Bad Request\r\nServer: DSS/([-.\w]+) \[(v\d+)]-(\w+)\r\n| v/DarwinStreamingServer $1 ($2 on $3)/
+
 match netbios-ssn m/^\x83\0\0\x01\x82|\x8f$/
 # spamd 2.20-1woody
 match spamd m|^SPAMD/1\.0 76 Bad header line: GET / HTTP/1\.0\r\r\n| v/SpamAssassin spamd/
 # Finger 0.17 from debian linux (which is from Linux netkit I believe)
 # OpenBSD 2.3
-match finger m|^finger: GET: no such user\.\nfinger: /: no such user\.\nfinger: HTTP/1\.0: no such user\.\n$| v|BSD/Linux|
+match finger m|^finger: GET: no such user\.\nfinger: /: no such user\.\nfinger: HTTP/1\.0: no such user\.\n$| v|BSD/Linux fingerd|
+# Redhat Linux from finger-server-0.17-9 RPM
+match finger m|^finger: GET: no such user.\r\nfinger: /: no such user.\r\nfinger: HTTP/1.0: no such user.\r\n$| v/Linux fingerd/
 # Solaris 9
 match finger m|^Login       Name               TTY         Idle    When    Where\r\nGET                   \?\?\?\r\n/                     \?\?\?\r\nHTTP/1\.0              \?\?\?\r\n$| v/Solaris/
 # uw-imap 2003debian0.0304182231-1
@@ -313,12 +345,6 @@ match netbios-ns m|\x80\xf0\x84\0\0\0\0\x01\0\0\0\0 CKAAAAAAAAAAAAAAAAAAAAAAAAAA
 match netbios-ns m|\x80\xf0\x84\0\0\0\0\x01\0\0\0\0 CKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\0\0!\0\x01\0\0\0\0...(\w{1,15}) *\0\x04\0(\w{1,15}) *\0\x84\0\w{1,15} *\x03\x04\0\w{1,15} *\x04\0(\w{1,15}) *\x03\x04\0\w{1,15} *\x1e\x84\0| v/Microsoft Windows XP (host: $1 workgroup: $2 user: $3)/
 match netbios-ns m|\x80\xf0\x84\0\0\0\0\x01\0\0\0\0 CKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\0\0!\0\x01\0\0\0\0...(\w{1,15}) *\0\x04\0(\w{1,15}) *\0\x84\0\w{1,15} *\x03\x04\0\w{1,15} *\x04\0\w{1,15} *\x1e\x84\0| v/Microsoft Windows XP (host: $1 workgroup: $2)/
 #match netbios-ns m|\x80\xf0\x84\0\0\0\0\x01\0\0\0\0 CKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\0\0!\0\x01\0\0\0\0\0\xd1\tPLAYGROUND     \0\x04\0WORKGROUP      \0\x84\0PLAYGROUND     \x03\x04\0PLAYGROUND      \x04\0WORKGROUP      \x1e\x84\0WORKGROUP      \x1d\x04\0\x01\x02__MSBROWSE__\x02\x01\x84\0FYODOR         \x03\x04\0ROOT           \x03\x04\0\0\xa0\xccc\x85K\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\xc8\x87\xa1\x82\0\0\0\0\0\0\0|
-# Note the MAC for playground is \0\0\xa0\xccc\x85K
-#match netbios-ns m|\x80\xf0\x84\0\0\0\0\x01\0\0\0\0 CKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\0\0!\0\x01\0\0\0\0\0\xad\x07PLAYGROUND     \0\x04\0WORKGROUP      \0\x84\0PLAYGROUND     \x03\x04\0PLAYGROUND      \x04\0WORKGROUP      \x1e\x84\0WORKGROUP      \x1d\x04\0\x01\x02__MSBROWSE__\x02\x01\x84\0\0\xa0\xccc\x85K\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\xa8\0(\0\0\0\0\0\0\xc0\xa8\n\xf9\0\0\0\0\0|
-#match netbios-ns m|\x80\xf0\x84\0\0\0\0\x01\0\0\0\0 CKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\0\0!\0\x01\0\0\0\0\0\x9b\x06GNUBER         \0\x04\0WORKGROUP      \0\x84\0GNUBER         \x03\x04\0GNUBER          \x04\0FYODOR         \x03\x04\0WORKGROUP      \x1e\x84\0\0`\x1d#\xd82\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\00\02\06\0B\0D\00\0F\06\0}|
-#match netbios-ns m|\x80\xf0\x84\0\0\0\0\x01\0\0\0\0 CKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\0\0!\0\x01\0\0\0\0\0\x9b\x06GNUBER         \0\x04\0WORKGROUP      \0\x84\0GNUBER         \x03\x04\0GNUBER          \x04\0FYODOR         \x03\x04\0WORKGROUP      \x1e\x84\0\0`\x1d#\xd82\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\00\02\06\0B\0D\00\0F\06\0}|
-# After I logged out
-#match netbios-ns m|\x80\xf0\x84\0\0\0\0\x01\0\0\0\0 CKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\0\0!\0\x01\0\0\0\0\0\x89\x05GNUBER         \0\x04\0WORKGROUP      \0\x84\0GNUBER         \x03\x04\0GNUBER          \x04\0WORKGROUP      \x1e\x84\0\0`\x1d#\xd82\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\xff\xff\xff\x08\0\0\0 \0\0\0d\0\0\0@\r\x03
 
 # This probe sends an RPC "Null command" to the port for service
 # 100000 (portmapper).
@@ -327,19 +353,19 @@ match netbios-ns m|\x80\xf0\x84\0\0\0\0\x01\0\0\0\0 CKAAAAAAAAAAAAAAAAAAAAAAAAAA
 # This would make IDS detection and such a bit harder.  On the other
 # hand, that would make the response a little harder to recognize too.
 Probe TCP RPCCheck q|\x80\0\0\x28\x72\xFE\x1D\x13\0\0\0\0\0\0\0\x02\0\x01\x86\xA0\0\x01\x97\x7C\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0|
-ports 111,4045
-match rpc q|\x80\0\0\x18\x72\xFE\x1D\x13\0\0\0\x01\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x01|a0
-match rpc q|\x80\0\0\x20\x72\xFE\x1D\x13\0\0\0\x01\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x02|a0
+ports 111,4045,32750-32810,38978
+match rpc m|^\x80\0\0\x18\x72\xFE\x1D\x13\0\0\0\x01\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x01|
+match rpc m|^\x80\0\0\x20\x72\xFE\x1D\x13\0\0\0\x01\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x02|
 
 Probe UDP RPCCheck q|\x72\xFE\x1D\x13\0\0\0\0\0\0\0\x02\0\x01\x86\xA0\0\x01\x97\x7C\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0|
-ports 111,4045
-match rpc q|\x72\xFE\x1D\x13\0\0\0\x01\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x01|a0
-match rpc q|\x72\xFE\x1D\x13\0\0\0\x01\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x02|a0
+ports 111,4045,32750-32810,38978
+match rpc m|^\x72\xFE\x1D\x13\0\0\0\x01\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x01|
+match rpc m|^\x72\xFE\x1D\x13\0\0\0\x01\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x02|
 
 Probe UDP Help q|help\r\n\r\n|
 ports 7
 match echo m|^help\r\n\r\n$|
-match chargen q|@ABCDEFGHIJKLMNOPQRSTUVWXYZ|
+match chargen m|@ABCDEFGHIJKLMNOPQRSTUVWXYZ|
 
 # ftp://ftp.rfc-editor.org/in-notes/rfc1179.txt
 Probe TCP LPDString q|\x01default\n|
@@ -361,7 +387,7 @@ match font-service m|^\0\0\x02\0\0\0\0\0\0\0\0\0\x06\0\0\0\0@\x0c\0p\x17\0\0X Co
 Probe TCP Help q|HELP\r\n|
 ports 7,25,2401
 match echo m|^HELP\r\n$|
-match smtp m|^214 qmail home page: http://pobox.com/~djb/qmail.html| v/Qmail/
+match smtp m|^220 [-.\w]+ ESMTP\r\n214 qmail home page: http://pobox.com/~djb/qmail.html| v/Qmail/
 # Postfix 1.1.11.0-woody3
 # Postfix 1.1.7-2
 match smtp m|^220 [-.\w]+ ESMTP Postfix\r\n$| v/Postfix/
@@ -385,3 +411,6 @@ match landesk-rc m|^TNMP.\0\0\0TNME.\0\0\0USER.\x08\x04\0\x08\0.{9}\0R\0\x03\0W\
 # Being Controled w/o User
 match landesk-rc m|^TNMP.\0\0\0TNME.\0\0\0USER.\x08\x04\0\x08\0.{9}\0R\0\x03\0W\0\xff\xff\0\0\0\xfd..\0\0\0\0\x02\0\0\0\0\x01\x04\0\0\0\0\0...\0\xb5\x01\xbb\0Desktop\x20Manager\x20(\d\.\d)\0\x02\x04\x01\x02\x01\0\0\W+([\w\d\.\:]+)\W+(\w+)\0(\w+)\0\0$| v/LANDesk RC ($1) Host:$3 Controler: $2/
 match landesk-rc m|^TNMP\x16\0\0\0TNME\x80\0\xfe\xff..([\w\d\.]+):(\d)$| v/LANDesk RC (Busy, From $1 on port 176$2)/
+
+Probe UDP Sqlping q|\x02|
+ports 1434

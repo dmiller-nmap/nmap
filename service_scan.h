@@ -62,9 +62,23 @@ using namespace std;
 #define DEFAULT_SERVICEWAITMS 7500
 #define DEFAULT_CONNECT_TIMEOUT 5000
 #define SERVICEMATCH_REGEX 1
-#define SERVICEMATCH_STATIC 2
+// #define SERVICEMATCH_STATIC 2 -- no longer supported
 
 /**********************  STRUCTURES  ***********************************/
+
+// This is returned when we find a match
+struct MatchDetails {
+// Rather the match is a "soft" service only match, where we should
+// continue to look for a better match.
+  bool isSoft;
+
+  // The service that was matched (Or NULL) zero-terminated.
+  const char *serviceName;
+
+  // The verson info for the service that was matched (Or NULL)
+  // zero-terminated.
+  const char *version;
+};
 
 /**********************  CLASSES     ***********************************/
 
@@ -72,19 +86,24 @@ class ServiceProbeMatch {
  public:
   ServiceProbeMatch();
   ~ServiceProbeMatch();
-// match text from the nmap-service-probes file.  This must be called before 
-// you try and do anything with this match.  This
-// function should be passed the text remaining in the line right AFTER 
-// "match " in nmap-service-probes.  The line number that the text is
-// provided so that it can be reported in error messages.  This function will
-// abort the program if there is a syntax problem.
+
+// match text from the nmap-service-probes file.  This must be called
+// before you try and do anything with this match.  This function
+// should be passed the whole line starting with "match" or
+// "softmatch" in nmap-service-probes.  The line number that the text
+// is provided so that it can be reported in error messages.  This
+// function will abort the program if there is a syntax problem.
   void InitMatch(const char *matchtext, int lineno); 
-  // Returns this service name if the givven buffer and length match it.  Otherwise
-  // returns NULL.  If there is a service match, and the version is able to be determined
-  // (meaning there is a version_template), and 'version' is not NULL, and versionlen
-  // is long enough, than the software version is stuck into 'version' (and NUL terminated).
-  // If the version info is unavailable, version[0] will be set to '\0', space permitting.
-  const char *testMatch(const u8 *buf, int buflen, char *version, int versionlen);
+
+  // If the buf (of length buflen) match the regex in this
+  // ServiceProbeMatch, returns the details of the match (service
+  // name, version number if applicable, and whether this is a "soft"
+  // match.  If the buf doesn't match, the serviceName field in the
+  // structure will be NULL.  The MatchDetails returned is only valid
+  // until the next time this function is called.  The only exception
+  // is that the serviceName field can be saved throughought program
+  // execution.  If no version matched, that field will be NULL.
+  const struct MatchDetails *testMatch(const u8 *buf, int buflen);
 // Returns the service name this matches
   const char *getName() { return servicename; }
  private:
@@ -97,16 +116,20 @@ class ServiceProbeMatch {
   pcre_extra *regex_extra;
   bool matchops_ignorecase;
   bool matchops_dotall;
+  bool isSoft; // is this a soft match? ("softmatch" keyword in nmap-service-probes)
   // If this is non-NULL, a version template string was given to
   // deduce the application/version info via substring matches.
   char *version_template; 
   // The anchor is for SERVICESCAN_STATIC matches.  If the anchor is not -1, the match must
   // start at that zero-indexed position in the response str.
   int matchops_anchor;
-  // Use version_template, and the match data included here to put the version info
-  // into 'version' (as long as versionlen is sufficient).  Returns zero for success.
-  int getVersionStr(const u8 *subject, int subjectlen, int *ovector, int nummatches,
-		char *version, int versionlen);
+// Details to fill out and return for testMatch() calls
+  struct MatchDetails MD_return;
+  // Use version_template, and the match data included here to put the
+  // version info into 'version' (as long as versionlen is
+  // sufficient).  Returns zero for success.
+  int getVersionStr(const u8 *subject, int subjectlen, int *ovector, 
+		    int nummatches, char *version, int versionlen);
 };
 
 
@@ -154,22 +177,28 @@ class ServiceProbe {
 
   // Returns true if the passed in port is on the list of probable ports for this probe.
   bool portIsProbable(u16 portno);
-  
+  // Returns true if the passed in service name is among those that can
+  // be detected by the matches in this probe;
+  bool serviceIsPossible(const char *sname);
 
-  // Takes a "match" line in a probe description and adds it to the list of 
-  // matches for this probe.  Pass in any text after "match ".  The line
-  // number is requested because this function will bail with an error
-  // (giving the line number) if it fails to parse the string.
+  // Takes a match line in a probe description and adds it to the
+  // list of matches for this probe.  This function should be passed
+  // the whole line starting with "match" or "softmatch" in
+  // nmap-service-probes.  The line number is requested because this
+  // function will bail with an error (giving the line number) if it
+  // fails to parse the string.
   void addMatch(const char *match, int lineno);
 
-
-  // Returns a service name if the givven buffer and length match one.
-  // Otherwise returns NULL.  If there is a match and the version is
-  // also able to be determined, and 'version' is not NULL, and
-  // versionlen is long enough, the app/version info is stck into
-  // 'version' (and NUL terminated.  If the version info is unavailable,
-  // version[0] will be set to '\0', space permitting.
-  const char *testMatch(const u8 *buf, int buflen, char *version, int versionlen);
+  // If the buf (of length buflen) matches one of the regexes in this
+  // ServiceProbe, returns the details of the match (service name,
+  // version number if applicable, and whether this is a "soft" match.
+  // If the buf doesn't match, the serviceName field in the structure
+  // will be NULL.  The MatchDetails returned is only valid until the
+  // next time this function is called.  The only exception is that the
+  // serviceName field can be saved throughought program execution.  If
+  // no version matched, that field will be NULL. This function may
+  // return NULL if there are no match lines at all in this probe.
+  const struct MatchDetails *testMatch(const u8 *buf, int buflen);
 
  private:
   char *probename;
@@ -177,6 +206,7 @@ class ServiceProbe {
   u8 *probestring;
   int probestringlen;
   vector<u16> probableports;
+  vector<const char *> detectedServices;
   int probeprotocol;
   vector<ServiceProbeMatch *> matches; // first-ever use of STL in Nmap!
 };
