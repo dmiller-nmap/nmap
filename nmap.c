@@ -1740,6 +1740,11 @@ portlist super_scan(struct hoststruct *target, unsigned short *portarray, stype 
   int rawsd;
   char myname[513];
   int scanflags = 0;
+
+  int dropped = 0;  /* These three are for UDP squelching */
+  int freshportstried = 0;
+  int senddelay = 500000;
+
   pcap_t *pd;
   int bytes;
   struct ip *ip, *ip2;
@@ -1777,7 +1782,6 @@ portlist super_scan(struct hoststruct *target, unsigned short *portarray, stype 
   int decoy;
   struct timeval now;
   int i,j;
-  int senddelay = 500000;
   unsigned short *data;
   int packet_trynum =0;
   int windowdecrease = 0; /* Has the window been decreased this round yet? */
@@ -1911,6 +1915,7 @@ if (o.debugging || o.verbose)
 	     we try to send off new queries if we can ... */
 	  if (numqueries_outstanding > (int) numqueries_ideal) break;
 	  if (o.debugging > 1) printf("Sending initial query to port %hi\n", current->portno);
+	  freshportstried++;
 	  /* Otherwise lets send a packet! */
 	  current->state = port_testing;
 	  /*	if (!testinglist) testinglist = current; */
@@ -2010,6 +2015,15 @@ if (o.debugging || o.verbose)
 	    if (o.debugging > 1) printf("srtt %d rttvar %d timeout %d\n",  to.srtt, to.rttvar, to.timeout);
 	    if (packet_trynum > 0 && current->trynum > 0) {
 	      /* The first packet was apparently lost, slow down */
+	      dropped++;
+	      if (freshportstried > 50 && ((double) dropped/freshportstried) > 0.25) {
+		if (!senddelay) senddelay = 50000;
+		else senddelay = MIN(senddelay * 2, 1000000);
+		freshportstried = 0;
+		dropped = 0;
+		if (o.verbose || o.debugging )  
+		  printf("Too many drops ... increasing senddelay to %d\n", senddelay);
+	      }
 	      if (windowdecrease == 0) {
 		numqueries_ideal *= fallback_percent;
 		if (numqueries_ideal < 1) numqueries_ideal = 1;
