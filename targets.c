@@ -48,6 +48,7 @@
 
 
 #include "targets.h"
+#include "timing.h"
 
 extern struct ops o;
 

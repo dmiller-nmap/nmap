@@ -49,6 +49,7 @@
 
 
 #include "osscan.h"
+#include "timing.h"
 
 extern struct ops o;
 

@@ -1033,6 +1033,12 @@ if (!pd) fatal("NULL packet device passed to readip_pcap");
 #ifdef DLT_PPP_BSDOS
  case DLT_PPP_BSDOS:
 #endif
+#ifdef DLT_PPP_SERIAL
+ case DLT_PPP_SERIAL:
+#endif
+#ifdef DLT_PPP_ETHER
+ case DLT_PPP_ETHER:
+#endif
 #if (FREEBSD || OPENBSD || NETBSD || BSDI)
    offset = 4;
 #else
@@ -1349,6 +1355,129 @@ char *routethrough(struct in_addr *dest, struct in_addr *source) {
     return NULL;
 }
 
+/* Maximize the receive buffer of a socket descriptor (up to 500K) */
+void max_rcvbuf(int sd) {
+  int optval = 524288 /*2^19*/;
+  NET_SIZE_T optlen = sizeof(int);
+
+  if (setsockopt(sd, SOL_SOCKET, SO_RCVBUF, (const char *) &optval, optlen))
+    if (o.debugging) perror("Problem setting large socket recieve buffer");
+  if (o.debugging) {
+    getsockopt(sd, SOL_SOCKET, SO_RCVBUF,(char *) &optval, &optlen);
+    log_write(LOG_STDOUT, "Our buffer size is now %d\n", optval);
+  }
+}
+
+/* Maximize the open file descriptor limit for this process go up to the
+   max allowed  */
+int max_sd() {
+  struct rlimit r;
+  static int maxfds = -1;
+
+  if (maxfds > 0)
+    return maxfds;
+
+#if(defined(RLIMIT_NOFILE))
+  if (!getrlimit(RLIMIT_NOFILE, &r)) {
+    r.rlim_cur = r.rlim_max;
+    if (setrlimit(RLIMIT_NOFILE, &r))
+      if (o.debugging) perror("setrlimit RLIMIT_NOFILE failed");
+    if (!getrlimit(RLIMIT_NOFILE, &r)) {
+      maxfds =  MIN(r.rlim_cur, MAX_SOCKETS_ALLOWED);
+      /* I do not feel comfortable going over 255 for now .. */
+      maxfds = MIN(maxfds, 250);
+      return maxfds;
+    } else return 0;
+  }
+#endif
+#if(defined(RLIMIT_OFILE) && !defined(RLIMIT_NOFILE))
+  if (!getrlimit(RLIMIT_OFILE, &r)) {
+    r.rlim_cur = r.rlim_max;
+    if (setrlimit(RLIMIT_OFILE, &r))
+      if (o.debugging) perror("setrlimit RLIMIT_OFILE failed");
+    if (!getrlimit(RLIMIT_OFILE, &r)) {
+      maxfds =  MIN(r.rlim_cur, MAX_SOCKETS_ALLOWED);
+      /* I do not feel comfortable going over 255 for now .. */
+      maxfds = MIN(maxfds, 250);
+      return maxfds;
+    }
+    else return 0;
+  }
+#endif
+  return 0;
+}
+
+/* Convert a socket to blocking mode */
+int block_socket(int sd) {
+  int options;
+  options = (~O_NONBLOCK) & fcntl(sd, F_GETFL);
+  fcntl(sd, F_SETFL, options);
+  return 1;
+}
+
+/* Give broadcast permission to a socket */
+void broadcast_socket(int sd) {
+  int one = 1;
+  if (setsockopt(sd, SOL_SOCKET, SO_BROADCAST, (const char *)&one, sizeof(int)) != 0) {
+    fprintf(stderr, "Failed to secure socket broadcasting permission\n");
+    perror("setsockopt");
+  }
+}
+
+/* Do a receive (recv()) on a socket and stick the results (upt to
+   len) into buf .  Give up after 'seconds'.  Returns the number of
+   bytes read (or -1 in the case of an error.  It only does one recv
+   (it will not keep going until len bytes are read */
+int recvtime(int sd, char *buf, int len, int seconds) {
+
+  int res;
+  struct timeval timeout;
+  fd_set readfd;
+
+  timeout.tv_sec = seconds;
+  timeout.tv_usec = 0;
+  FD_ZERO(&readfd);
+  FD_SET(sd, &readfd);
+  res = select(sd + 1, &readfd, NULL, NULL, &timeout);
+  if (res > 0 ) {
+    res = recv(sd, buf, len, 0);
+    if (res >= 0) return res;
+    perror("recv in recvtime");
+    return 0; 
+  }
+  else if (!res) return 0;
+  perror("select() in recvtime");
+  return -1;
+}
+
+/* This attempts to calculate the round trip time (rtt) to a host by timing a
+   connect() to a port which isn't listening.  A better approach is to time a
+   ping (since it is more likely to get through firewalls (note, this isn't
+   always true nowadays --fyodor).  This is now 
+   implemented in isup() for users who are root.  */
+unsigned long calculate_sleep(struct in_addr target) {
+  struct timeval begin, end;
+  int sd;
+  struct sockaddr_in sock;
+  int res;
+
+  if ((sd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) == -1)
+    {perror("Socket troubles"); exit(1);}
+
+  sock.sin_family = AF_INET;
+  sock.sin_addr.s_addr = target.s_addr;
+  sock.sin_port = htons(o.magic_port);
+
+  gettimeofday(&begin, NULL);
+  if ((res = connect(sd, (struct sockaddr *) &sock, 
+		     sizeof(struct sockaddr_in))) != -1)
+    fprintf(stderr, "WARNING: You might want to use a different value of -g (or change o.magic_port in the include file), as it seems to be listening on the target host!\n");
+  close(sd);
+  gettimeofday(&end, NULL);
+  if (end.tv_sec - begin.tv_sec > 5 ) /*uh-oh!*/
+    return 0;
+  return (end.tv_sec - begin.tv_sec) * 1000000 + (end.tv_usec - begin.tv_usec);
+}
 
 
 

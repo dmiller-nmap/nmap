@@ -329,45 +329,20 @@ void printusage(char *name, int rc);
 /* print Interactive usage information */
 void printinteractiveusage();
 
-/* our scanning functions */
-void super_scan(struct hoststruct *target, unsigned short *portarray, 
-		stype scantype);
-void pos_scan(struct hoststruct *target, unsigned short *portarray, 
-	      stype scantype);
-void bounce_scan(struct hoststruct *target, unsigned short *portarray,
-		     struct ftpinfo *ftp);
-
 /* Scan helper functions */
 unsigned long calculate_sleep(struct in_addr target);
 int check_ident_port(struct in_addr target);
 int getidentinfoz(struct in_addr target, int localport, int remoteport,
 		  char *owner);
-int parse_bounce(struct ftpinfo *ftp, char *url);
 int ftp_anon_connect(struct ftpinfo *ftp);
-/* Does the appropriate stuff when the port we are looking at is found
-   to be open trynum is the try number that was successful */
-void posportupdate(struct hoststruct *target, struct portinfo *current, 
-		   int trynum, struct portinfo *scan,
-		   struct scanstats *ss ,stype scantype, int newstate,
-		   struct portinfolist *pil, struct connectsockinfo *csi);
-void get_syn_results(struct hoststruct *target, struct portinfo *scan,
-		     struct scanstats *ss, struct portinfolist *pil, 
-		     int *portlookup, pcap_t *pd, unsigned long *sequences, stype scantype);
-int get_connect_results(struct hoststruct *target, struct portinfo *scan, 
-			 struct scanstats *ss, struct portinfolist *pil, 
-			 int *portlookup, unsigned long *sequences, 
-			 struct connectsockinfo *csi);
-inline void adjust_timeouts(struct timeval sent, struct timeout_info *to);
+
 /* port manipulators */
 unsigned short *getpts(char *expr); /* someone stole the name getports()! */
 
 /* socket manipulation functions */
 void init_socket(int sd);
-int block_socket(int sd);
-void broadcast_socket(int sd);
 int recvtime(int sd, char *buf, int len, int seconds);
-void max_rcvbuf(int sd);
-int max_sd();
+
 /* RAW packet building/dissasembling stuff */
 int isup(struct in_addr target);
 int listen_icmp(int icmpsock, unsigned short outports[],
@@ -393,7 +368,6 @@ char *seqclass2ascii(int clas);
 const char *seqidx2difficultystr(unsigned long idx);
 int nmap_fetchfile(char *filename_returned, int bufferlen, char *file);
 int fileexistsandisreadable(char *pathname);
-void enforce_scan_delay(struct timeval *tv);
 int check_firewallmode(struct hoststruct *target, struct scanstats *ss);
 int gather_logfile_resumption_state(char *fname, int *myargc, char ***myargv);
 

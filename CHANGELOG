@@ -1,7 +1,21 @@
 # Nmap Changelog
 
+** Version 2.54BETA7
+
+-- Applied patch from Hubert Feyrer
+   (hubert.feyrer@informatik.fh-regensburg.de) which adds support for
+   the new NetBSD DLT_PPP_* types.
+
 -- Updated to Eilon Gishri's (eilon@aristo.tau.ac.il) newest version
    of nmap-rpc at ftp://ftp.tau.ac.il/pub/users/eilon/rpc/rpc
+
+-- Moved a bunch of the scanning engine related functions to new files
+   (scan_engine.c and scan_engine.h ).  Timing functions were moved to
+   the new timing.c/timing.h .  Other stuff was shifted to
+   tcpip.c/tcpip.h.  At some point, nmap.c will only contain the Nmap
+   command line UI.
+
+-- Updated Russian version of man page from Alex Volkov (topcat@nm.ru)
 
 ** Version 2.54BETA6
 

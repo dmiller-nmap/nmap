@@ -411,6 +411,31 @@ char *readip_pcap(pcap_t *pd, unsigned int *len, long to_usec);
 int inet_aton(register const char *, struct in_addr *);
 #endif
 
+/* Maximize the receive buffer of a socket descriptor (up to 500K) */
+void max_rcvbuf(int sd);
+
+/* Maximize the open file descriptor limit for this process go up to the
+   max allowed  */
+int max_sd();
+
+/* Convert a socket to blocking mode */
+int block_socket(int sd);
+
+/* Give broadcast permission to a socket */
+void broadcast_socket(int sd);
+
+/* Do a receive (recv()) on a socket and stick the results (upt to
+   len) into buf .  Give up after 'seconds'.  Returns the number of
+   bytes read (or -1 in the case of an error.  It only does one recv
+   (it will not keep going until len bytes are read */
+int recvtime(int sd, char *buf, int len, int seconds);
+
+/* This attempts to calculate the round trip time (rtt) to a host by timing a
+   connect() to a port which isn't listening.  A better approach is to time a
+   ping (since it is more likely to get through firewalls (note, this isn't
+   always true nowadays --fyodor).  This is now 
+   implemented in isup() for users who are root.  */
+unsigned long calculate_sleep(struct in_addr target);
 
 #endif /*TCPIP_H*/
 

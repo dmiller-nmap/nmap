@@ -1727,7 +1727,7 @@ dls-monitor       2048/tcp   #
 dls-monitor       2048/udp   # 
 nfs               2049/tcp   # networked file system
 nfs               2049/udp   # networked file system
-distrib-netassholes 2064/tcp # A group of lamers working on a silly closed-source client for solving the RSA cryptographic challenge.  This is the keyblock proxy port.
+distrib-net-losers 2064/tcp  # A group of lamers working on a silly closed-source client for solving the RSA cryptographic challenge.  This is the keyblock proxy port.
 dlsrpn            2065/tcp   # Data Link Switch Read Port Number
 dlsrpn            2065/udp   # Data Link Switch Read Port Number
 dlswpn            2067/tcp   # Data Link Switch Write Port Number
@@ -1979,6 +1979,7 @@ fodms             7200/udp   # FODMS FLIP
 dlip              7201/tcp   # 
 dlip              7201/udp   # 
 icb               7326/tcp   # Internet Citizen's Band
+qaz               7597/tcp   # Quaz trojan worm
 cucme-1           7648/udp   # cucme live video/audio server
 cucme-2           7649/udp   # cucme live video/audio server
 cucme-3           7650/udp   # cucme live video/audio server

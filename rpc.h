@@ -55,6 +55,7 @@
 #include "charpool.h"
 #include "error.h"
 #include "utils.h"
+#include "timing.h"
 
 /* rpc related #defines */
 #define RECORD_MARKING 4        /* length of recoder marking (bytes)     */
