@@ -1897,8 +1897,8 @@ if (o.debugging || o.verbose)
 	} else { /* current->state == port_fresh */
 	  /* OK, now we have gone through our list of in-transit queries, so now
 	     we try to send off new queries if we can ... */
-	  printf("Sending initial query to port %hi\n", current->portno);
 	  if (numqueries_outstanding > (int) numqueries_ideal) break;
+	  printf("Sending initial query to port %hi\n", current->portno);
 	  /* Otherwise lets send a packet! */
 	  current->state = port_testing;
 	  /*	if (!testinglist) testinglist = current; */
@@ -1927,45 +1927,39 @@ if (o.debugging || o.verbose)
 		readtcppacket((char *)ip, bytes);
 	      }
 	    } else {
+	      /* We figure out the scan number (and put it in i) */
+	      if (current->trynum == 0) i = 0;
+	      else if (!o.magic_port_set) {
+		i = ntohs(tcp->th_dport) - o.magic_port;
+		if ((i|1) != 1) i = -1;
+	      } else i = -1;
 	      current = &scan[portlookup[ntohs(tcp->th_sport)]];
-	      if (current->state == port_closed) {
-		/* We've got a latecomer */
-		if (o.magic_port_set) {
+	      if (current->state == port_closed && (i < 0)) {
 		  to.rttvar *= 1.2;
-		  if (o.debugging) { printf("Late packet, magic_port_set so we just do varianceincrease to %d\n", to.rttvar); }
-		}
-		else { /* We figure out which packet it is from dst portno */
-		  gettimeofday(&now,NULL);
-		  if (((ntohs(tcp->th_dport) - o.magic_port) | 1) == 1) { 
-		    delta = TIMEVAL_SUBTRACT(now,current->sent[(ntohs(tcp->th_dport) - o.magic_port)]) - to.srtt;
-		    numqueries_ideal += (4/numqueries_ideal);
-		    to.srtt += delta >> 3;
-		    to.rttvar += (ABS(delta) - to.rttvar) >> 2;
-		    to.timeout = to.srtt + (to.rttvar << 2);
+		  if (o.debugging) { printf("Late packet, couldn't figure out sendno so we do varianceincrease to %d\n", to.rttvar); 
 		  }
-		}
-	      }
-	      else if (current->trynum > 0) {
-		/* Doh! our last packet was apparently lost, slow down */
-		numqueries_ideal *= fallback_percent;
-		if (o.debugging) { printf("Lost a packet, decreasing window to %d\n", (int) numqueries_ideal); }
-	      } else {
-		/* Yeah, just what we were hoping for ... */
-		gettimeofday(&now,NULL);
-		delta = TIMEVAL_SUBTRACT(now,current->sent[0]) - to.srtt;
+	      } else if (i > -1) {		
+		/* Update our records */
+		delta = TIMEVAL_SUBTRACT(now,current->sent[i]) - to.srtt;
 		numqueries_ideal += (4/numqueries_ideal);
 		to.srtt += delta >> 3;
 		to.rttvar += (ABS(delta) - to.rttvar) >> 2;
 		to.timeout = to.srtt + (to.rttvar << 2);
-	      }
+		if (i > 0 && current->trynum > 0) {
+		  /* The first packet was apparently lost, slow down */
+		  numqueries_ideal *= fallback_percent;
+		  if (o.debugging) { printf("Lost a packet, decreasing window to %d\n", (int) numqueries_ideal);
+		  }
+		}
+	      }	      
 	      if (current->state != port_closed) {
 		changed++;
-	      numqueries_outstanding--;
-	      current->state = port_closed;
-	      if (current == testinglist)
-		testinglist = (current->next >= 0)?  &scan[current->next] : NULL;
-	      if (current->next >= 0) scan[current->next].prev = current->prev;
-	      if (current->prev >= 0) scan[current->prev].next = current->next;
+		numqueries_outstanding--;
+		current->state = port_closed;
+		if (current == testinglist)
+		  testinglist = (current->next >= 0)?  &scan[current->next] : NULL;
+		if (current->next >= 0) scan[current->next].prev = current->prev;
+		if (current->prev >= 0) scan[current->prev].next = current->next;
 	      }
 	    }
 	  }
@@ -1976,6 +1970,7 @@ if (o.debugging || o.verbose)
     testinglist = openlist;
     for(current = openlist; current; current = (current->next >= 0)? &scan[current->next] : NULL) {
       current->state = port_fresh;
+      current->trynum = 0;
       if (o.debugging) { 
 	printf("Preparing for retry, open port %d noted\n", current->portno); 
       }
