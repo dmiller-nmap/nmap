@@ -110,7 +110,7 @@ while((arg = getopt(argc,fakeargv,"Ab:D:de:Ffg:hiL:lM:Nno:P::p:qrRS:s:T:w:Vv")) 
       o.pingtype = none;
     else if (*optarg == 'T') {
       o.pingtype = tcp;
-      if (isdigit(*(optarg+1)))
+      if (isdigit((int) *(optarg+1)))
 	o.tcp_probe_port = atoi(optarg+1);
 	printf("TCP probe port is %hu\n", o.tcp_probe_port);
     }
@@ -1833,7 +1833,8 @@ portlist super_scan(struct hoststruct *target, unsigned short *portarray, stype 
 
   /* Do we have a correct source address? */
   if (!target->source_ip.s_addr) {
-    if (gethostname(myname, MAXHOSTNAMELEN) != 0 && (myhostent = gethostbyname(myname) == NULL))
+    if (gethostname(myname, MAXHOSTNAMELEN) != 0 && 
+	!((myhostent = gethostbyname(myname))))
       fatal("Your system is messed up.\n"); 
     memcpy(&target->source_ip, myhostent->h_addr_list[0], sizeof(struct in_addr));
     if (o.debugging || o.verbose) 
