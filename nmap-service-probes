@@ -130,6 +130,7 @@ match ftp m|^220-Cerberus FTP Server Personal Edition\r\n220-UNREGISTERED\r\n| v
 match ftp m|^220-GuildFTPd FTP Server \(c\) 2001\r\n220-Version (\d[-.\w]+)\r\n220 Please enter your name:\r\n| v/GuildFTPd/$1//
 match ftp m|^220 FTP print service:V-(\d[-.\w]+)/Use the network password for the ID if updating\.\r\n| v/Brother printer ftpd/$1//
 match ftp m|^220- APC FTP server ready\.\r\n220 \r\n$| v|APC ftp server||UPS/Power device|
+match ftp m|^220 [-\w]+ FTP server \(Version (\d.[.\d]+) ([A-Z][a-z]{2} [A-Z][a-z]{2} [0-9]+ [0-9:]+ .* [21][0-9]+)\) ready\.\r\n| v/HP-UX 10.x ftpd/$1//
 match ftp m|^220 [-\w]+ FTP server \(Version (\d[-.\w]+) [A-Z][a-z]{2} [A-Z][a-z]{2} .*\) ready\.\r\n| v/AIX ftpd/$1//
 match ftp m|^220[- ]Roxen FTP server running on Roxen (\d[-.\w]+)/Pike (\d[-.\w]+)\r\n| v/Roxen ftp server/$1/Pike $2/
 # Debian packaged oftpd 0.3.6-51 on Linux 2.6.0-test4 Debian
@@ -182,8 +183,13 @@ match ftp m|^220---------- Welcome to Pure-FTPd \[privsep\] \[TLS\] ----------\r
 match ftp m|^220---------- .* Pure-FTPd ----------\r\n220-| v/Pure-FTPd///
 # Trolltech Troll-FTPD 1.28 (Only runs on Linux)
 match ftp m|^220-Setting memory limit to 1024\+1024kbytes\r\n220-Local time is now \d+:\d+ and the load is [.\d]+\.\r\n220 You will be disconnected after \d+ seconds of inactivity.\r\n$| v/Trolltech Troll-FTPd//on Linux/
+
+match ftp m|^220  FTP server \(Hummingbird Ltd\. \(HCLFTPD\) Version (7.1.0.0)\) ready\.\r\n$| v/Hummingbird FTP server/$1//
+
 # Netware 6 - NWFTPD.NLM FTP Server Version 5.01w
 match ftp m|^220 Service Ready for new User\r\n$| v/Netware NWFTPD///
+match ftp m|^220 ([-\w]+) FTP server \(NetWare (v[\d.]+)\) ready\.\r\n$| v/Novell Netware ftpd/$2//
+match ftp m|220  FTP Server for NW 3.1x, 4.xx  \((v1.10)\), \(c\) 199[0-9] HellSoft\.\r\n$| v/HellSoft FTP server for Netware 3.1x, 4.x/$1//
 match ftp m|^220 [-.\w]+ MultiNet FTP Server Process V(\S+) at .+\r\n$| v/DEC OpenVMS MultiNet FTPd/$1//
 match ftp m|^220-\r\n220 [-.\w]+ FTP server \(NetBSD-ftpd ([-.\w]+)\) ready.\r\n$| v/NetBSD ftpd/$1//
 match ftp m|^220 ([-.\w]+) Network Management Card AOS v([-.\w]+) FTP server ready.\r\n$| v/APC AOS ftpd/$2/on APC $1 network management card/
@@ -376,13 +382,16 @@ match pksd m|^usage: [/\w]*/etc/pksd\.conf conf_file\n$| v/PGP Public Key Server
 # UW POP2 server on Linux 2.4.18
 match pop2 m|^\+ POP2 [-\[\].\w]+ v(20[-.\w]+) server ready\r\n$| v/UW POP2 server/$1//
 
+match pop3 m|^\+OK POP3 AnalogX Proxy (\d[-.\w]+) \(Release\) ready\.\n$| v/AnalogX POP3 proxy/$1//
+
 # Novell Groupwise 6.0.1
 match pop3 m|^\+OK GroupWise POP3 server ready\r\n$| v/Novell GroupWise pop3d///
 match pop3 m|^\+OK Ready when you are <200\d+\.| v/Hotmail Popper hotmail to pop3 gateway///
 match pop3 m|^\+OK Internet Rex POP3 server ready <| v/Internet Rex Pop3 server///
 match pop3 m|^\+OK DBMAIL pop3 server ready to rock <| v/DBMail pop3d///
 match pop3 m|^\+OK POP3 POPFile \(v(\d[-.\w]+)\) server ready\r\n| v/popfile pop3d/$1//
-match pop3 m|^\+OK [-.+\w]+ NetMail POP3 Agent \$Revision$\r\n| v/Novell NetMail pop3d//File revision: $1/
+# Dots in Revision to prevent MY CVS from screwing it up
+match pop3 m|^\+OK [-.+\w]+ NetMail POP3 Agent \$Re..sion: ([\d.]+) \$\r\n| v/Novell NetMail pop3d//File revision: $1/
 match pop3 m|^\+OK [-.+\w]+ Merak (\d[-.\w]+) POP3 | v/Merak mail server pop3d/$1//
 # Mercury/32 3.32 pop3 Server module on Windows XP
 match pop3 m|^\+OK <\d{6,10}\.\d{4,6}@[-.+\w]+>, POP3 server ready\.\r\n| v|Mercury/32 pop3d||Win32|
@@ -418,6 +427,7 @@ match pop3 m|^\+OK <[\da-f]{32}@[-.\w]+>\r\n| v/tpop3d///
 match pop3 m|^\+OK UCB based pop server \(version (\d[-.\w]+) at sionisten\) starting\.\r\n| v/Heimdal kerberized pop3/$1/UCB-pop3 derived/
 # VPOP3 (Virtual POP3 server) 2.0.0d on Windows 2000
 match pop3 m|^\+OK VPOP3 Server Ready <.*>\r\n| v/PSCS VPop3///
+match pop3 m|^\+OK Lotus Notes POP3 server version ([-.\w]+) ready .* on ([^/]+)/([^\.]+)\.\r\n| v/Lotus Domino POP3 server/$1/CN=$2;Org=$3/
 match pop3 m|^\+OK Lotus Notes POP3 server version ([-.\w]+) ready on | v/Lotus Domino POP3 server/$1//
 match pop3 m|^\+OK POP3 hotwayd v(\d[-.\w]+) -> The POP3-HTTPMail Gateway\.| v/hotwayd pop3d/$1//
 match pop3 m|^\+OK [-.\w]+ POP3 service \(Netscape Messaging Server (\d[^(]+) \(built ([\w ]+)\)\)\r\n| v/Netscape Messenging Server pop3/$1/built on $2/
@@ -498,13 +508,16 @@ match sftp m|^\+Shiva SFTP Service\0$| v/Shiva LanRover SFTP service///
 # HP-UX B.11.00 A 9000/785
 match shell m|^\x01remshd: getservbyname\n$| v/HP-UX Remshd///
 
+match smtp m|^220 [-/.+\w]+ SMTP AnalogX Proxy (\d[-.\w]+) \(Release\) ready\r\n| v/AnalogX SMTP proxy/$1//
+
 match smtp m|^220 [-/.+\w]+ MailGate ready for ESMTP on | v/MailGate smtpd//Windows/
 match smtp m|^220 [-/.+\w]+ SMTP ready to roll\r\n| v/Hotmail Popper hotmail to smtp gateway///
 match smtp m|^220 [-/.+\w]+ AvMailGate-(\d[-.\w]+)\r\n| v/AvMailGate smtp anti-virus mail gateway/$1//
 match smtp m|^220 ([-/.+\w]+) Internet Rex ESMTP daemon at your service\.\r\n| v/Internet Rex smtpd///
 match smtp m|^220 [-.+\w]+ ESMTP NetIQ MailMarshal \(v(\d[-.\w]+)\) Ready\r\n| v/MailMarshal/$1//
 # I think the revision number is different than the official product version number
-match smtp m|^220 [-.+\w]+ Novonyx SMTP ready \$Revision$\r\n| v|Novonyx Novell NetMail smtpd||Revision $1|
+# Dots in Revision to prevent MY CVS from screwing it up
+match smtp m|^220 [-.+\w]+ Novonyx SMTP ready \$Re..sion: ([\d.]+) \$\r\n| v|Novonyx Novell NetMail smtpd||Revision $1|
 match smtp m|^554-[-.+\w]+\.us\r\n554 Access denied\r\n$| v/IronPort appliance mail rejector///
 match smtp m|^220 eSafe@[-.+\w]+ Service ready\r\n| v/eSafe anti-virus mail gatewal///
 match smtp m|^220 [-.+\w]+ ESMTP Merak (\d[-.\w]+);| v/Merak Mail Server smtpd/$1/Windows/
@@ -558,6 +571,8 @@ match smtp m|^220 [-.+\w]+ GroupWise Internet Agent (\S+) .*Novell, Inc\..*Ready
 match smtp m|^220 Matrix SMTP Mail Server v([\w.]+) on <MATRIX_([\w]+)> Simple Mail Transfer Service Ready\r\n| v/Matrix SMTP Mail Server/$1/on Matrix $2/
 match smtp m|^220 Net_sec WebShield SMTP V(\S+) Network Associates, Inc\. Ready at| v/Network Associates WebShield/$1//
 match smtp m|^220 [-.+\w]+ ESMTP MailMasher ready to boogie\r\n| v/MailMasher smtpd///
+# 220 example.com ESMTP Postfix (2.0.13) (Mandrake Linux)
+match smtp m|^220 [-.\w]+ ESMTP Postfix \(([-.\w]+)\) \(([-.\w ]+)\)| v/Postfix smtpd/$1/$2/
 # postfix 1.1.11-0.woody2
 match smtp m|^220 [-.\w]+ ESMTP Postfix| v/Postfix smtpd///
 match smtp m|^220 \*{10,40}\r\n| v|Cisco PIX sanatized smtpd|||
@@ -740,8 +755,10 @@ match tinc m|^0 \w+ 17\n| v/tinc vpn daemon///
 match time m|^[\xc0-\xc5]...$|
 # Tiny Personal Firewall 2.0
 match tinyfw m|^\x0f\0\n\0\x01\0\0\0\0\x02\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\xc0\x0ef7\xbb\x9bS\xfc\x86\xe4\x7f\x18\xb8\x97\x06 | v/Tiny Personal Firewall/2.0//
-# Kerio Personal Firewall 4.02 on Windows 2000
-match tinyfw m|^\x12\0\x03\0\x04\0\0\0\0\x02\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0| v/Kerio Personal Firewall/4.0.X//
+# Kerio Personal Firewall 4.02 on Windows 2000, 4.0.11 on W2K SP4+ too (port 44xxx)
+match keriopfservice m|^\x12\0\x03\0\x04\0\0\0\0\x02\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0| v/Kerio PF 4 Service//maybe 4.0.2-11/
+# Kerio PF 4.0.11 unregistered - GUI process (Port 1027-1200,44xxx? RPC?) on MS W2K SP4+
+match keriopfgui m|^\x12\0\r\0\x03\0\0\0\0\x02\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x9a\x20\xd0Z\x1e\x1b\xa3\*\xf2\xdd\xe2\(\xc3sp&\xda\xe4Yp\xdbET\xf9\x8cc\xc24\*Y\xbe\xb3\xba\xd6%\xf5\xb668\xad\xab>@D<\x01<i\x80O>\xdd>\)\xdb\x18\xf55\xd1\xba\x96\x1c\x17\x17\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x01\0\x01| v/Kerio PF 4 GUI//maybe 4.0.11/
 # Kerio Personal Firewall 2.1.4 on Windows
 # Tiny Personal Firewall 2.0
 # Kerio Personal Firewall, Firewall engine version 2.1.5 Driver version 3.0.0 on WinXP
@@ -761,6 +778,8 @@ match xfce m|^\0\x01\0@\0\0\0\0| v/XFCE Desktop///
 
 match zebra m|^\r\nHello, this is zebra \(version (\d[-.\w]+)\)\.\r\nCopyright 1996-20| v/GNU Zebra routing software/$1//
 match zebra m|^\r\nHello, this is zebra \(version (\d[-.\w]+)\)\.\r\nCopyright 200\d| v/GNU Zebra routing software/$1//
+
+match pcp m|^\0\0\0\x14\0\0p\0\0\0..\0\0\0\0\x02\x01\0\0| v/SGI Performance Co-Pilot///
 
 ##############################NEXT PROBE##############################
 Probe TCP GenericLines q|\r\n\r\n|
@@ -876,6 +895,9 @@ Probe TCP GetRequest q|GET / HTTP/1.0\r\n\r\n|
 ports 70,79,80-85,88,113,139,143,280,497,515,540,554,631,783,993,995,1220,1503,2030,3052,3128,3372,3531,3689,5000,5432,5800,5900,6699,7070,8000-8010,8080-8085,8880-8888,9090,9999,10000,10005,11371,13722,15000,40193,4711
 sslports 443
 
+# Kerio PF 4.0.11 unregistered - Service process (Port 44xxx?) on MS W2K SP4+
+match keriopfservice m|^(HTTP/1\.0) 200 OK\r\nServer: Kerio Personal Firewall\r\n| v/Kerio PF 4 Service//$1/
+
 match backupexecra m|^\xf6\xff\xff\xff\x10\0\0\0\0\0\0\0\0\0\0\0$| v/Veritas BackupExec Remote Agent///
 
 match dantzretrospect m|^\0\xca\0\0\0\0\0\x04\0\0\0\0$| v/Dantz Retrospect/6.0//
@@ -917,7 +939,7 @@ match gnutella m|^HTTP/1\.1 404 Not Found\r\nServer: giFT-Gnutella/(\d[-.\w]+)\r
 match gopher m|^HTTP/1\.0 200 Ok\r\nMIME-Version: 1\.0\r\nServer: GopherWEB/(\d[-.\w]+)\r\n| v/Internet Gopher Server//Gopher+ protocol; GopherWeb $1/
 
 match http m|^HTTP/1\.0 401 Unauthorized\r\nPragma: no-cache\r\nContent-type: text/html\r\nWWW-Authenticate: Basic realm=\"Login to the Router Web Configurator\"\r\n\r\n<html>\n  <head>\n  <title>401 Unauthorized</title>\n  </head>\n<body>\n\n<div align=\"center\">| v/Draytek Vigor aDSL router webadmin///
-match http m|^HTTP/1\.1 200 OK\r\nServer: webfs/(\d[-.\w]+)\r\n| v/WebFS httpd/$1//
+match http m|^HTTP/1\.1 \d\d\d .*\r\nServer: webfs/(\d[-.\w]+)\r\n| v/WebFS httpd/$1//
 match http m|^HTTP/1\.0 200 OK\r\nConnection: Keep-Alive\r\nContent-Type: text/html\r\nContent-Length: \d+\r\n\r\n<HTML>\n<!-- Copyright IBM Corporation, 1999 -->\n<HEAD>\n<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=| v/IBM switch webadmin///
 match http m|^HTTP/1\.0 \d\d\d .*\r\nServer: WebCam2000/(\d[-.\w]+) \(([-/.+\w]+); www\.stratoware\.com/webcam2000/\)\r\n| v/Webcam2000 httpd/$1/$2/
 match http m|^HTTP/1\.0 404 Not Found\r\nDate: .*\r\nServer: BWS/1\.0b3\r\n\r\n| v/Corel Paradox relational database web interface/9.X/Embedded BWS 1.0b3/
@@ -1045,6 +1067,7 @@ match http m|^HTTP/1\.0 200 OK\r\nServer: eHTTP v(\d[-.\w]+)\r\nConnection: clos
 match http m|^HTTP/1\.1 \d\d\d .*\r\nServer: Sun-ONE-Application-Server/(\d[-.\w]+)\r\n| v/SunONE Application Server/$1//
 match http m|^HTTP/1\.1 \d\d\d .*\r\nServer: SunONE WebServer (\d[-.\w]+)\r\n| v/SunONE WebServer/$1//
 match http m|^HTTP/1\.1 \d\d\d .*\r\nDate: .*\r\nServer: IBM_HTTP_Server/(\d[-.\w]+) +(Apache/)?(\d[-.\w]+) \(([^\r\n]+)\)\r\n|i v/IBM HTTP Server/$1/Derived from Apache $3; $4/
+match http m|^HTTP/1\.1 \d\d\d .*\r\nDate: .*\r\nServer: IBM_HTTP_Server/(\d[-.\w]+) +(Apache/)?(\d[-.\w]+)\r\n|i v/IBM HTTP Server/$1/Derived from Apache $3/
 # D-Link DWL-1000AP webadmin
 match http m|^HTTP/1\.0 200 OK\r\nServer: PSIWBL/(\d[-.\w]+)\r\nDate: .*Title: www\r\n\r\n<HTML>\n <HEAD>\n   <meta http-equiv=\"Refresh\" content=\"0; url=/startup/startup\.shtml\">\n </HEAD>\n <BODY>\n </BODY>\n</HTML>$|s v/D-Link web admin server//Embedded webserver: PSIWBL $1/
 # D-Link DWL-900AP+ WAP
@@ -1126,6 +1149,8 @@ match http m|^HTTP/1\.1 \d\d\d .*\r\nServer: Netscape-Enterprise/([-. \w]+)\r\n|
 match http m|^HTTP/1\.0 \d\d\d .*\nDate: .*\nServer: NCSA/(1\.\d)\n| v/NCSA httpd/$1//
 match http m|^HTTP/1\.0 \d\d\d .*\r\nServer: Netscape-FastTrack/(\d[-.\w]+)\r\n| v/Netscape FastTrack web server/$1//
 match http m|^HTTP/1\.1 \d\d\d .*\r\nServer: (Oracle[-.\w/]+) Oracle HTTP Server ([-.\w]+)|s v/Oracle HTTP Server/$1/$2/
+match http m|^HTTP/1\.1 \d\d\d .*\r\nServer: Oracle HTTP Server Powered by Apache\r\n|s v/Oracle HTTP Server Powered by Apache///
+match http m|^HTTP/1\.1 \d\d\d .*\r\nServer: Oracle HTTP Server Powered by Apache/([-.\w]+)\r\n|s v/Oracle HTTP Server Powered by Apache/$1//
 match http m|^HTTP/1\.0 401 Unauthorized\r\nServer: Embedded HTTP Server (\d[.\d]+)\r\nWWW-Authenticate: Basic realm=\"([-+.\w]+)\"\r\nConnection:| v/D-Link Embedded HTTP Server/$1/on D-Link $2/
 # iCal 3.6
 match http m|^HTTP/1\.1 200 OK\r\nDate: .*\r\nMIME-Version: 1\.0\r\nServer: Wapapi/1\.1\r\nContent-Type: text/html\r\nContent-Length: \d+\r\n\r\n<html>\r\n<head><title>iCal Tutorial:  Introduction</title></head>| v/Brown Bear iCal web calendar///
@@ -1157,6 +1182,12 @@ match http m|^HTTP/1\.1 \d\d\d .*\r\nDate: .*\r\nServer: Jetty/(\d[-.\w]+) \(([^
 # future services that start with the service name, and relable all of
 # those.  Shrug.  For now it is gone.
 # softmatch http m|^HTTP/1.[01] \d\d\d|
+
+match http m|^HTTP/1\.1 \d\d\d .*\r\nServer: WebSphere Application Server/(.+)\r\n| v/IBM WebSphere Application Server/$1//
+
+match http m|^HTTP/1\.[01] \d\d\d .*\r\nServer: JRun Web Server\r\n| v/JRun Web Server///
+
+match http m|^401 Access denied\r\nWWW-Authenticate: Negotiate \r\nContent-length: 0\r\n\r\n| v/Microsoft IIS 5.0 WebDAV//access denied/
 
 match http m|^HTTP/1\.1 \d\d\d .*\r\nServer: IDSL MailGate (\d[-.\w]+)\r\n| v/MailGate web proxy/$1//
 # While this response looks like a web admin port, I think the same port is used for the primary
@@ -1221,9 +1252,10 @@ match irc m|^:Default-Chat-Community 421 \* GET :Unknown command\r\n| v/Microsof
 
 # Jabber 1.4.2
 match jabber m|^<stream:error>Invalid XML</stream:error>$| v/Jabber instant messaging server///
-match kazaa-http m|^HTTP/1\.0 404 Not Found\nX-Kazaa-Username: ([-.+\w]+)\r\nX-Kazaa-Network: ([-.\w]+)\r\n| v/KaZaA P2P client//username: $1; network: $2/
+match kazaa-http m|^HTTP/1\.0 404 Not Found\r\nX-Kazaa-Username: ([-.+\w]+)\r\nX-Kazaa-Network: ([-.\w]+)\r\n| v/KaZaA P2P client//username: $1; network: $2/
 match kazaa-peerpoint m|^HTTP/1\.0 404 Not Found\n\r\n$| v/KaZaA P2P client Peer Point Manager///
 match msdtc m|^...\0..$|s v/Microsoft Distributed Transaction Coordinator///
+match msdtc m|^ERROR\n$|s v/(?) Microsoft Distributed Transaction Coordinator//error/
 
 # MLDonkey 2.5
 match napster m|^1INVALID REQUEST$| v/MLdonkey multi-network P2P client///
@@ -1297,6 +1329,9 @@ match dgld m|^OPTI$| v/IRIX Distributed GL Daemon///
 match irc m|^:[-.\w]+ 421 \* OPTIONS :Unknown command\r\n| v/Webmaster Conferenceroom IRC server///
 #  cgi-httpd from shttpd-0.53 on FreeBSD
 match http m|^HTTP/1\.0 501 method not implemented\r\nServer: cgi-httpd\r\n| v/shttpd cgi-httpd///
+match http m|^HTTP/1\.1 \d\d\d .*\r\nServer: WebSphere Application Server/(.+)\r\n| v/IBM WebSphere Application Server/$1//
+match http m|^HTTP/1\.1 \d\d\d .*\r\nServer: Oracle HTTP Server Powered by Apache\r\n|s v/Oracle HTTP Server Powered by Apache///
+match http m|^HTTP/1\.1 \d\d\d .*\r\nServer: webfs/(\d[-.\w]+)\r\n| v/WebFS httpd/$1//
 
 ##############################NEXT PROBE##############################
 Probe TCP RTSPRequest q|OPTIONS / RTSP/1.0\r\n\r\n|
@@ -1354,6 +1389,9 @@ match domain m|^\0\x06\x81\x04\0\0\0\0\0\0\0\0$| v/MyDNS///
 # Symantec Antivirus (rtvscan.exe)
 match symantec-av m|^\0\x06\x01\x01\0\x10.\x01\xe0\nI\0\xe0\nI\0$| v/Symantec rtvscan antivirus///
 
+# pdnsd 1.1.8b1
+match domain m|^\0\x06\x81\x84\0\x01\0\0\0\0\0\0\x07version\x04bind\0\0\x10\0\x03$| v/pdnsd///
+
 ##############################NEXT PROBE##############################
 Probe TCP DNSVersionBindReq q|\0\x1E\0\x06\x01\0\0\x01\0\0\0\0\0\0\x07version\x04bind\0\0\x10\0\x03|
 ports 53,512,513,543,544,1521,2105,2967,6543
@@ -1361,9 +1399,9 @@ match domain m|\x07version\x04bind.*[\x03-\x14]([-\w._ ]{3,20})$|s v/ISC Bind/$1
 match domain m|\x07version\x04bind.*[\x03-\x14]BIND ([-\w._]{3,20})$|s v/ISC Bind/$1//
 # ISC Bind 9.1.3
 match domain m|\x07version\x04bind\0\0\x10\0\x03\xc0\x0c\0\x10\0\x03\0\0\0\0\0\x01\0| v/ISC Bind///
-# pdnsd 1.1.7a
+# pdnsd 1.1.7a, 1.1.8b1
 # http://www.phys.uu.nl/~rombouts/pdnsd.html
-match domain m|^\0\x1e\0\x06\x81\x84\0\x01\0\0\0\0\0\0\x07version\x04bind\0\0\x10\0\x03$| v/pdns///
+match domain m|^\0\x1e\0\x06\x81\x84\0\x01\0\0\0\0\0\0\x07version\x04bind\0\0\x10\0\x03$| v/pdnsd///
 # Windows 2000 SP4
 match domain m|^\0\x1e\0\x06\x81\x04\0\x01\0\0\0\0\0\0\x07version\x04bind\0\0\x10\0\x03$| v/Microsoft DNS///
 # Novell 5.1 DNS Server
@@ -1377,6 +1415,7 @@ match domain m|^\0\x1e\0\x06\x81\x85\0\x01\0\0\0\0\0\0\x07version\x04bind\0\0\x1
 match exec m|^\x01Login incorrect\.\n$|
 # HP-UX B.11.00 A
 match exec m|^\x01rexecd: Login incorrect.\n$| v/HP-UX rexecd///
+match exec m|^\x01rexecd: [-\d]+ The login is not correct\.\n| v/AIX rexecd///
 
 # Digital UNIX V4.0F login
 match login m|^\x01Permission denied: Error 0$| v/Digital UNIX login///
@@ -1396,6 +1435,9 @@ match kshell m|^\x01rshd: Authentication failed: Bad sendauth version was sent\n
 match ssc-agent m|^\0\x1e\0\x06\0\t\0\0$| v/Novell Netware ssc-agent///
 # http://www.apcupsd.com/ - apcupsd 3.8.5-1.3 on Linux 2.4.X
 match apcnisd m|^\0\x11Invalid command\n\0\0\0$| v/apcupsd///
+
+match klogin m|^\x01krlogind: Kerberos Authentication Failed\.\r\n\0| v/AIX kerberized rlogin///
+match kshell m|^\x01rshd: [-\d]+ The host name for your address is not known\.\n| v/AIX (kerberized?) rshd///
 
 # DNS Server status request: http://www.crynwr.com/crynwr/rfc1035/rfc1035.html
 ##############################NEXT PROBE##############################
@@ -1524,7 +1566,8 @@ match smtp m|^220 [-.\w]+ ESMTP ready\.\r\n214-Commands supported:\r\n214 AUTH S
 # Exim 4.0 with exiscan patch and banner removed - Linux 2.1.19 - 2.2.25
 match smtp m|^220 .*SMTP Ready\. Expected Helo with a valid domain\.\r\n214-Commands supported:\r\n214 AUTH HELO EHLO MAIL RCPT DATA NOOP QUIT RSET HELP\r\n| v/Exim smtpd/4.0//
 
-match smtp m|^220 .* ESMTP\r\n214[- ]qmail home page: http://pobox.com/~djb/qmail.html| v/qmail smtpd///
+match smtp m|^220 .* ESMTP ?\r\n214[- ]qmail home page: http://pobox.com/~djb/qmail.html| v/qmail smtpd///
+match smtp m|^220 .* ESMTP ?\r\n214[- ]qmail home page: http://pobox\.com/~djb/qmail\.html\r\n214[- ]qmail-ldap patch home page: http://www\.nrg4u\.com\r\n| v/qmail-ldap smtpd///
 match smtp m|^220 [-.\w]+ ESMTP\r\n214 netqmail home page: http://qmail\.org/netqmail\r\n| v/netqmail smtpd/1.04//
 # VirusBuster MailShield for SMTP. Version 1.15.030 on Linux 2.4
 match smtp m|^220 [-.\w]+ SMTP version 1\.00;\r\n214 We strongly advise you to study of the RFC821\.\.\.\r\n$| v/VirusBuster MailShield for SMTP///
@@ -1620,6 +1663,8 @@ match symantec-esm m|^\0\x01#$| v/Symantec Enterprise Security Manager///
 # Windows 2000 Server Wins name resolution service
 # Windows NT 4.0 Wins
 match wins m|^\0\0\0\x1e\xffS\xad\x80\0\0\0\x01\0\0\0\0\0\0\0\0\0\0\0\x07\xe9\0\0\0\x01\0\0\x81\0\x02| v/Microsoft Windows Wins///
+
+match sap-its m|^\0\0\0\x0c\x01\x03\0\0\0\0\x071\0\0\0\0\0\0\x071Content-Type:\x20\x20text/html;\x20charset=Windows-1250\r\n\r\n<!--\r\n\x20This\x20page\x20was\x20created\x20by\x20the\x20\r\n\x20SAP\x20Internet\x20Transaction\x20Server\x20\(ITS,\x20Version\x20,\x20Build\x20,\x20Virtual\x20Server\x20\)\r\n| v/SAP Internet Transaction Server///
 
 # From xlsclients
 ##############################NEXT PROBE##############################
@@ -1756,3 +1801,13 @@ match wms m|^\x01\0\0.\xce\xfa\x0b\xb0.\0\0\0MMS .\0{7}.{9}\0\0\0\x01\0\x04\0\0\
 Probe TCP oracle-tns q|\0Z\0\0\x01\0\0\0\x016\x01,\0\0\x08\0\x7F\xFF\x7F\x08\0\0\0\x01\0 \0:\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\04\xE6\0\0\0\x01\0\0\0\0\0\0\0\0(CONNECT_DATA=(COMMAND=version))|
 ports 1521,1522,1525,1574
 match oracle-tns m|^\0.\0\0\x02\0\0\0.*TNSLSNR for ([-.+/ \w]{2,20}): Version ([-\d.]+) - Production|s v/Oracle DB Listener/$2 (for $1)//
+
+### do not slow down the scan
+
+#Probe TCP mydoom q|\x0d\x0d|
+#ports 3127-3198
+#match mydoom m|\x04\x5b\0\0\0\0\0\0| v/MyDoom virus backdoor/v012604//
+
+#Probe TCP WWWOFFLEctrlstat q|WWWOFFLE STATUS\r\n|
+#ports 8081
+#match http-proxy-ctrl m|^WWWOFFLE Server Status\n-*\nVersion *: (\d.*)\n| v/WWWOFFLE proxy control/$1//
