@@ -353,11 +353,12 @@ gettimeofday(&start, NULL);
 	 if  ( !response.type && !response.code && response.identifier == id) {
 	   hostnum = response.sequence / max_tries;
 	   if (hostnum > group_end) continue;
-	   gettimeofday(&end, NULL);
+	   /*	   gettimeofday(&end, NULL);*/
 	   hostbatch[hostnum].source_ip.s_addr = response.ip.ip_dst.s_addr;
 	   if (o.debugging) printf("We got a ping packet back from %s: id = %d seq = %d checksum = %d\n", inet_ntoa(*(struct in_addr *)(&response.ip.ip_src.s_addr)), response.identifier, response.sequence, response.checksum);
 	   if (hostbatch[hostnum].host.s_addr == response.ip.ip_src.s_addr) {
-	     if (!to.srtt) {
+	     adjust_timeouts(time[response.sequence], &to);
+	     /*	     if (!to.srtt) {
 	       to.srtt = TIMEVAL_SUBTRACT(end, time[response.sequence]);
 	       to.rttvar = MAX(5000, MIN(to.srtt, 500000));
 	       to.timeout = to.srtt + (to.rttvar << 2);
@@ -370,7 +371,7 @@ gettimeofday(&start, NULL);
 	       to.timeout = to.srtt + (to.rttvar << 2);
 	       if (o.debugging > 1)
 		 printf(" %d %d %d\n", to.srtt, to.rttvar, to.timeout);
-	     }
+		 }*/
 	     hostbatch[hostnum].to = to;
 	     if (!(hostbatch[hostnum].flags & HOST_UP)) {	  
 	       if (hostnum >= group_start) {	       
@@ -398,7 +399,8 @@ gettimeofday(&start, NULL);
 	   if (o.debugging) printf("Got destination unreachable for %s\n", inet_ntoa(hostbatch[hostnum].host));
 	   /* Since this gives an idea of how long it takes to get an answer,
 	      we add it into our times */
-	   gettimeofday(&end, NULL);
+	   adjust_timeouts(time[ushorttmp], &to);
+	   /*	   gettimeofday(&end, NULL);
 	   if (!to.srtt) {
 	     to.srtt = TIMEVAL_SUBTRACT(end, time[ushorttmp]);
 	     to.rttvar = MAX(5000, MIN(to.srtt, 500000));
@@ -411,7 +413,7 @@ gettimeofday(&start, NULL);
 	     to.timeout = to.srtt + (to.rttvar << 2);
 	     if (o.debugging > 1)
 	       printf(" %d %d %d\n", to.srtt, to.rttvar, to.timeout);
-	   }
+	       }*/
 	   if (!(hostbatch[hostnum].flags & HOST_DOWN) &&
 	       !(hostbatch[hostnum].flags & HOST_UP)) {	   
 	     hostbatch[hostnum].flags |= HOST_DOWN;

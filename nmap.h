@@ -247,7 +247,7 @@ void posportupdate(struct hoststruct *target, struct portinfo *current,
 void get_syn_results(struct hoststruct *target, struct portinfo *scan,
 		     struct scanstats *ss, struct portinfolist *pil, 
 		     int *portlookup, pcap_t *pd, unsigned long *sequences);
-void adjust_timeouts(struct timeval sent, struct timeout_info *to);
+__inline__ void adjust_timeouts(struct timeval sent, struct timeout_info *to);
 /* port manipulators */
 unsigned short *getpts(char *expr); /* someone stole the name getports()! */
 unsigned short *getfastports(int tcpscan, int udpscan);

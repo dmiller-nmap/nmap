@@ -2684,15 +2684,29 @@ switch(current->state) {
  return;
 }
 
-void adjust_timeouts(struct timeval sent, struct timeout_info *to) {
-  int delta;
+__inline__ void adjust_timeouts(struct timeval sent, struct timeout_info *to) {
+  int delta = 0;
   struct timeval end;
   gettimeofday(&end, NULL);
-  delta = TIMEVAL_SUBTRACT(end, sent) - to->srtt;
-  to->srtt += delta >> 3;
-  to->rttvar += (ABS(delta) - to->rttvar) >> 2;
-  to->timeout = to->srtt + (to->rttvar << 2);
-  
+
+  if (o.debugging > 1) {
+    printf("Timeout vals: srtt: %d rttvar: %d to: %d ", to->srtt, to->rttvar, to->timeout);
+  }
+  if (to->srtt == -1 && to->rttvar == -1) {
+    /* We need to initialize the sucker ... */
+    to->srtt = TIMEVAL_SUBTRACT(end, sent);
+    to->rttvar = MAX(5000, MIN(to->srtt, 600000));
+    to->timeout = to->srtt + (to->rttvar << 2);
+  }
+  else {
+    delta = TIMEVAL_SUBTRACT(end, sent) - to->srtt;
+    to->srtt += delta >> 3;
+    to->rttvar += (ABS(delta) - to->rttvar) >> 2;
+    to->timeout = to->srtt + (to->rttvar << 2);  
+  }
+  if (o.debugging > 1) {
+    printf("delta %d ==> srtt: %d rttvar: %d to: %d\n", delta, to->srtt, to->rttvar, to->timeout);
+  }
 }
 
 void get_syn_results(struct hoststruct *target, struct portinfo *scan,
