@@ -1,6 +1,13 @@
 # Nmap Changelog ($Id$)
 
 o Applied patch from Andy Lutomirski (Luto@myrealbox.com) which fixes
+  a crash on some Windows platforms when timeouts occur.
+
+o Fixed "grepable output" (-oG) so that it prints IPID sequence class
+  rather than printing the TCP ISN sequence index twice.  Problem
+  noted by Russell Fulton (r.fulton@auckland.ac.nz)
+
+o Applied patch from Andy Lutomirski (Luto@myrealbox.com) which fixes
   some important Windows bugs.  Apparently this can cause a dramatic
   speedup in some circumstances.  The patch had other misc. changes
   too.
