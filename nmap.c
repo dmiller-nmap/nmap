@@ -1960,11 +1960,11 @@ if (o.debugging || o.verbose)
 		    numqueries_ideal *= fallback_percent;
 		    if (o.debugging) { printf("Lost a packet, decreasing window to %d\n", (int) numqueries_ideal);
 		    windowdecrease++;
+		    }
 		    } else if (o.debugging) { printf("Lost a packet, but not decreasing\n");
 		    }
-		  }
 		}
-	      }	      
+	      }	      	      
 	      if (current->state != port_closed) {
 		changed++;
 		numqueries_outstanding--;
