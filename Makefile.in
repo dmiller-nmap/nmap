@@ -5,14 +5,14 @@ bindir = @bindir@
 sbindir = @sbindir@
 mandir = @mandir@
 srcdir = @srcdir@
-libdir = @libdir@/nmap
+nmapdatadir = @datadir@/nmap
 deskdir = $(prefix)/share/gnome/apps/Utilities
 
 CC = @CC@
 CCOPT = 
 LIBPCAPDIR = @libpcapdir@
 INCLS = -I. -I$(LIBPCAPDIR)
-DEFS = @DEFS@ -DVERSION=\"$(VERSION)\" -DLIBDIR=\"$(libdir)\"
+DEFS = @DEFS@ -DVERSION=\"$(VERSION)\" -DNMAPDATADIR=\"$(nmapdatadir)\"
 CFLAGS = @CFLAGS@ $(CCOPT) $(DEFS) $(INCLS)
 # CFLAGS = -g -Wall $(DEFS) $(INCLS)
 STATIC = 
@@ -84,7 +84,11 @@ distro:
 	cp -ra $(SRCS) $(DEPS) inet_aton.c snprintf.c nmap-os-fingerprints \
 	nmapfe.desktop getopt.h getopt.c getopt1.c nmap-services nmap-rpc \
 	configure.in config.h.in Makefile.in configure $(SHTOOL) install-sh \
-        config.guess nmap-$(VERSION)-1.spec config.sub INSTALL docs \
+        config.guess nmap-$(VERSION)-1.spec config.sub INSTALL \
+        docs/copying.html docs/README docs/nmap.usage.txt docs/nmap.1 \
+	docs/nmap.deprecated.txt docs/nmap_doc.html docs/nmap_manpage.html \
+	docs/nmap-fingerprinting-article.txt docs/nmap_spanish.1 \
+	docs/nmap_manpage-fr.html docs/nmap_manpage-es.html \
 	COPYING CHANGELOG \
 	$(LIBPCAPDIR) /usr/tmp/nmap-$(VERSION)
 	-mkdir /usr/tmp/nmap-$(VERSION)/nmapfe
@@ -129,14 +133,14 @@ depend:
 	$(MAKEDEPEND) $(INCLS) -s "# DO NOT DELETE" -- $(DEFS) -- $(SRCS)
 
 install: $(TARGET)
-	$(SHTOOL) mkdir -f -p -m 755 $(bindir) $(mandir)/man1 $(libdir) $(deskdir)
+	$(SHTOOL) mkdir -f -p -m 755 $(bindir) $(mandir)/man1 $(nmapdatadir) $(deskdir)
 	$(INSTALL) -c -m 755 nmap $(bindir)/nmap
-	@echo "If the next command failes -- you cannot use the X front end"
+	@echo "If the next command fails -- you cannot use the X front end"
 	-test -f nmapfe/nmapfe && $(INSTALL) -c -m 755 nmapfe/nmapfe $(bindir)/nmapfe && $(SHTOOL) mkln -f -s $(bindir)/nmapfe $(bindir)/xnmap && $(INSTALL) -c -m 644 nmapfe.desktop $(deskdir)/nmapfe.desktop
 	$(INSTALL) -c -m 644 docs/$(TARGET).1 $(mandir)/man1/$(TARGET).1
-	$(INSTALL) -c -m 644 nmap-os-fingerprints  $(libdir)/nmap-os-fingerprints
-	$(INSTALL) -c -m 644 nmap-services  $(libdir)/nmap-services
-	$(INSTALL) -c -m 644 nmap-rpc  $(libdir)/nmap-rpc
+	$(INSTALL) -c -m 644 nmap-os-fingerprints  $(nmapdatadir)/nmap-os-fingerprints
+	$(INSTALL) -c -m 644 nmap-services  $(nmapdatadir)/nmap-services
+	$(INSTALL) -c -m 644 nmap-rpc  $(nmapdatadir)/nmap-rpc
 
 uninstall:
 	rm -f $(bindir)/$(TARGET)

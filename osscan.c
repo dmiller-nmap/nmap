@@ -883,7 +883,7 @@ char *p, *q; /* OH YEAH!!!! */
  bzero(FPs, sizeof(FingerPrint *) * 2048);
 
 if (nmap_fetchfile(filename, sizeof(filename), "nmap-os-fingerprints") == -1){
-  fatal("OS scan requested but I cannot find nmap-os-fingerprints file.  It should be in %s, ~/.nmap/ or .", LIBDIR);
+  fatal("OS scan requested but I cannot find nmap-os-fingerprints file.  It should be in %s, ~/.nmap/ or .", NMAPDATADIR);
 }
 
 fp = fopen(filename, "r");

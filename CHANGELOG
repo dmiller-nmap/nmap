@@ -1,7 +1,22 @@
 # Nmap Changelog
 
--- Fix target parsing bug found by Steve Horsburgh (shorsburgh (at)
+-- Took some wierd files out of the doc directory (cd, grep , vi, and
+   .swp)
+
+-- Fixed some typos found by Thomas Klausner ( wiz (at)
+   danbala.ifoer.tuwien.ac.at )
+
+** Version 2.51
+
+-- Fixed target parsing bug found by Steve Horsburgh (shorsburgh (at)
    horsburgh.com).
+
+-- Changed makefile/rpm to store fingerprint, rpc, and services file
+   in $prefix/share/nmap rather than $prefix/lib/nmap , since these
+   files are architecture independent.  You should now use 
+   ./configure --datadir instead of ./configure --libdir to change 
+   the default location.  Suggested by Thomas Klausner ( wiz (at)
+   danbala.ifoer.tuwien.ac.at ).
 
 -- I am now including Eilon Gishri's (eilon (at) aristo.tau.ac.il) rpc
    number list (which he recently merged with the Nmap 2.50 rpc list).

@@ -3823,7 +3823,7 @@ int nmap_fetchfile(char *filename_returned, int bufferlen, char *file) {
 
   /* First we try $NMAPDIR/file
      next we try ~user/nmap/file
-     then we try LIBDIR/nmap/file <--LIBDIR 
+     then we try NMAPDATADIR/file <--NMAPDATADIR 
      finally we try ./file
   */
   if ((dirptr = getenv("NMAPDIR"))) {
@@ -3854,7 +3854,7 @@ int nmap_fetchfile(char *filename_returned, int bufferlen, char *file) {
     }
   }
   if (!foundsomething) {
-    res = snprintf(filename_returned, bufferlen, "%s/%s", LIBDIR, file);
+    res = snprintf(filename_returned, bufferlen, "%s/%s", NMAPDATADIR, file);
     if (res > 0 && res < bufferlen) {
       if (fileexistsandisreadable(filename_returned))
 	foundsomething = 1;

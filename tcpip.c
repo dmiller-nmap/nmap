@@ -43,7 +43,7 @@ char dev[128];
   return 0;
 }
 
-/* Calls pcap_open_live and spits out an error (and quits) if the call failes.
+/* Calls pcap_open_live and spits out an error (and quits) if the call faile.
    So a valid pcap_t will always be returned. */
 pcap_t *my_pcap_open_live(char *device, int snaplen, int promisc, int to_ms) 
 {
