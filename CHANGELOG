@@ -1,0 +1,65 @@
+# Nmap Changelog
+
+***Version 2.05 Changes***
+
+-- Tons of new fingerprints.  The number has grown by more than 25%.
+  In particular, Charles M. Hannum <root@ihack.net> fixed several
+  problems with NetBSD that made it easy to fingerprint and he sent me
+  a huge new batch of fingerprints for various NetBSD releases down to
+  1.2.  Other people sent NetBSD fingerprints down to 1.0.  I finally
+  got some early Linux fingerprints in (down to 1.09).
+
+-- Nmap now comes with its own nmap.services which I created by
+   merging the /etc/services from a bunch of OS' and then adding
+   Netbus, Back Orifice, etc.
+
+-- Random number generation now takes advantage of the /dev/urandom or
+   /dev/random that most free operating systems offer.
+
+-- Increased the maximum number of OS guesses nmap will make, told
+   nmap never to give you two matches where the OS names are
+   byte-to-byte equivalent.  Fixed nmap to differentiate between "no
+   OS matches found" and "too many OS matches to list".
+
+
+-- Fixed an information leak in the packet TTL values (found by 
+   HD Moore <hdmoore@usa.net>)
+
+-- Fixed the problem noted by Savva Uspensky about offsets used for
+   various operating systems' PPP/SLIP headers.  Due to lack of
+   responses regarding other operating systems, I have made
+   assumptions about what works for BSDI, NetBSD, and SOLARIS.  If
+   this version no longer works on your modem, please let me know (and
+   tell me whether you are using SLIP/PPP and what OS you are
+   running).
+
+-- Machine parseable logs are now more machine parseable (I now use a
+   tab to seperate test result fields rather than the more ambiguous
+   spaces.  This may break a few things which rely on the old format.
+   Sorry.  They should be easy to fix.
+
+-- Added my nmap-fingerprintinting-article.txt to the distribution in
+   the docs directory.
+
+-- Added a CHANGELOG file to the distribution.
+
+-- Fixed problem where nmap -sS <my_ethernet_or_ppp_ip_address> would
+   not correctly scan localhost (due to the kernel rerouting the
+   traffic through localhost).  Nmap should now detect and work around
+   this behavior.
+
+-- Applied patch sent to my by Bill Fenner <fenner@parc.xerox.com>
+   which fixes various SunOS compatibility problems.
+
+-- Changed the makefile 'all' target to use install-sh rather than 
+   mkdir -p (doesn't work on some systems)
+
+-- Documentation updated and clarified slightly.
+
+-- Regarding someone's post that nmap should include firewall firewall
+   fingerprints -- I'm happy to include them when people send them
+   in.  I think I added 3 firewall fingerprints last night.
+
+
+
+
