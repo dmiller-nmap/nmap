@@ -131,7 +131,7 @@ void NmapOps::Initialize() {
   reference_FPs = NULL;
   magic_port = 33000 + (get_random_uint() % 31000);
   magic_port_set = 0;
-  num_ping_synprobes = num_ping_ackprobes = 0;
+  num_ping_synprobes = num_ping_ackprobes = num_ping_udpprobes = 0;
   timing_level = 3;
   max_parallelism = 0;
   min_parallelism = 0;
@@ -207,6 +207,10 @@ void NmapOps::ValidateOptions() {
  if (connectscan && spoofsource) {
     error("WARNING:  -S will only affect the source address used in a connect() scan if you specify one of your own addresses.  Use -sS or another raw scan if you want to completely spoof your source address, but then you need to know what you're doing to obtain meaningful results.");
   }
+
+ if ((pingtype & PINGTYPE_UDP) && (!o.isr00t || o.af() != AF_INET)) {
+   fatal("Sorry, UDP Ping (-PU) only works if you are root (because we need to read raw responses off the wire) and only for IPv4 (cause fyodor is too lazy right now to add IPv6 support and nobody has sent a patch)");
+ }
 
  if ((pingtype & PINGTYPE_TCP) && (!o.isr00t || o.af() != AF_INET)) {
    /* We will have to do a connect() style ping */
@@ -334,3 +338,26 @@ void NmapOps::ValidateOptions() {
   }
 }
   
+void NmapOps::setMaxRttTimeout(int rtt) 
+{ 
+  if (rtt <= 0) fatal("NmapOps::setMaxRttTimeout(): maximum round trip time must be greater than 0");
+  max_rtt_timeout = rtt; 
+  if (rtt < min_rtt_timeout) min_rtt_timeout = rtt; 
+  if (rtt < initial_rtt_timeout) initial_rtt_timeout = rtt;
+}
+
+void NmapOps::setMinRttTimeout(int rtt) 
+{ 
+  if (rtt < 0) fatal("NmapOps::setMaxRttTimeout(): minimum round trip time must be at least 0");
+  min_rtt_timeout = rtt; 
+  if (rtt > max_rtt_timeout) max_rtt_timeout = rtt;  
+  if (rtt > initial_rtt_timeout) initial_rtt_timeout = rtt;
+}
+
+void NmapOps::setInitialRttTimeout(int rtt) 
+{ 
+  if (rtt <= 0) fatal("NmapOps::setMaxRttTimeout(): initial round trip time must be greater than 0");
+  initial_rtt_timeout = rtt; 
+  if (rtt > max_rtt_timeout) max_rtt_timeout = rtt;  
+  if (rtt < min_rtt_timeout) min_rtt_timeout = rtt;
+}

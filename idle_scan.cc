@@ -252,7 +252,7 @@ void initialize_idleproxy(struct idle_proxy_info *proxy, char *proxyName,
   bzero(proxy, sizeof(*proxy));
   proxy->host.to.srtt = -1;
   proxy->host.to.rttvar = -1;
-  proxy->host.to.timeout = o.initial_rtt_timeout * 1000;
+  proxy->host.to.timeout = o.initialRttTimeout() * 1000;
 
   proxy->max_groupsz = (o.max_parallelism)? o.max_parallelism : 100;
   proxy->min_groupsz = (o.min_parallelism)? o.min_parallelism : 4;

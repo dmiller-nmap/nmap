@@ -398,7 +398,8 @@ int send_tcp_raw( int sd, const struct in_addr *source,
 		  u16 window, u8 *options, int optlen, char *data, 
 		  u16 datalen);
 int send_udp_raw( int sd, struct in_addr *source, const struct in_addr *victim,
- 		  int ttl, u16 sport, u16 dport, char *data, u16 datalen);
+ 		  int ttl, u16 sport, u16 dport, u16 ipid, char *data, 
+		  u16 datalen);
 
 int send_ip_raw( int sd, struct in_addr *source, const struct in_addr *victim, 
 		 int ttl, u8 proto, char *data, u16 datalen);
@@ -414,8 +415,9 @@ int send_tcp_raw_decoys( int sd, const struct in_addr *victim, int ttl,
 			 u16 window, u8 *options, int optlen, char *data,
 			 u16 datalen);
 
-int send_udp_raw_decoys( int sd, const struct in_addr *victim, int ttl,
-			 u16 sport, u16 dport, char *data, u16 datalen);
+int send_udp_raw_decoys( int sd, const struct in_addr *victim, int ttl, 
+			 u16 sport, u16 dport, u16 ipid, char *data, 
+			 u16 datalen);
 
 int send_small_fragz_decoys( int sd, const struct in_addr *victim, u32 seq,
 			     int ttl, u16 sport, u16 dport, int flags);

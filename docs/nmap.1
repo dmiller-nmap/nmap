@@ -335,7 +335,7 @@ or
 .B \-PT80
 when portscanning microsoft.com.
 .TP
-.B \-PT
+.B \-PT [portlist]
 Use TCP "ping" to determine what hosts are up.  Instead of
 sending ICMP echo request packets and waiting for a
 response, we spew out TCP ACK packets throughout the target
@@ -349,11 +349,18 @@ packets use -PT<port1>[,port2][...].  The default port is 80, since
 this port is often not filtered out.  Note that this option now
 accepts multiple, comma-separated port numbers.
 .TP
-.B \-PS
+.B \-PS [portlist]
 This option uses SYN (connection request) packets instead of
 ACK packets for root users.  Hosts that are up should
 respond with a RST (or, rarely, a SYN|ACK).  You can set the
 destination ports in the same manner as \-PT above.
+.TP
+.B \-PU [portlist]
+This option sends UDP probes to the specified hosts, expecting an ICMP
+port unreachable packet (or possibly a UDP response if the port is
+open) if the host is up.  Since many UDP services won't reply to an
+empty packet, your best bet might be to send this to expected-closed
+ports rather than open ones.
 .TP
 .B \-PE
 This option uses a true ping (ICMP echo request) packet.  It

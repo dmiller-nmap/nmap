@@ -222,8 +222,9 @@ int send_tcp_raw( int sd, const struct in_addr *source,
 	return res;
 }
 
-int send_udp_raw( int sd, struct in_addr *source, const struct in_addr *victim, 
-		  int ttl, u16 sport, u16 dport, char *data, u16 datalen) 
+int send_udp_raw( int sd, struct in_addr *source, const struct in_addr *victim,
+		  int ttl, u16 sport, u16 dport, u16 ipid, char *data, 
+		  u16 datalen) 
 {
 
 	unsigned char *packet = (unsigned char *) safe_malloc(sizeof(struct ip) + sizeof(udphdr_bsd) + datalen);
@@ -300,7 +301,7 @@ int send_udp_raw( int sd, struct in_addr *source, const struct in_addr *victim,
 	ip->ip_v = 4;
 	ip->ip_hl = 5;
 	ip->ip_len = BSDFIX(sizeof(struct ip) + sizeof(udphdr_bsd) + datalen);
-	get_random_bytes(&(ip->ip_id), 2);
+	ip->ip_id = htons(ipid);
 	ip->ip_ttl = myttl;
 	ip->ip_p = IPPROTO_UDP;
 	if(source->s_addr == victim->s_addr) source->s_addr++;
@@ -675,13 +676,15 @@ int send_tcp_raw_decoys( int sd, const struct in_addr *victim, int ttl,
 }
 
 int send_udp_raw_decoys( int sd, const struct in_addr *victim, int ttl,
-			 u16 sport, u16 dport, char *data, u16 datalen) 
+			 u16 sport, u16 dport, u16 ipid, char *data, 
+			 u16 datalen) 
 {
 	int decoy;
   
 	for(decoy = 0; decoy < o.numdecoys; decoy++)
 	{
-		if (send_udp_raw(sd, &o.decoys[decoy], victim, ttl, sport, dport, data, datalen) == -1) return -1;
+	  if (send_udp_raw(sd, &o.decoys[decoy], victim, ttl, sport, dport, 
+			   ipid, data, datalen) == -1) return -1;
 	}
 	return 0;
 }

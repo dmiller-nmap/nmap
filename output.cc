@@ -225,7 +225,8 @@ void printportoutput(Target *currenths, portlist *plist) {
    }
   }
   /*  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"\n"); */
-  log_write(LOG_MACHINE, "\tIgnored State: %s (%d)", statenum2str(plist->ignored_port_state), plist->state_counts[plist->ignored_port_state]);
+  if (plist->state_counts[plist->ignored_port_state] > 0)
+    log_write(LOG_MACHINE, "\tIgnored State: %s (%d)", statenum2str(plist->ignored_port_state), plist->state_counts[plist->ignored_port_state]);
   log_write(LOG_XML, "</ports>\n");
 }
 

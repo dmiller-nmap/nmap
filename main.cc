@@ -237,7 +237,7 @@ int main(int argc, char *argv[], char *envp[]) {
 	    nmappath[0] = '\0';
 	    /* Doh!  We must find it in path */
 	    if ((pptr = getenv("PATH"))) {
-	      strncpy(path, pptr, sizeof(path));
+	      Strncpy(path, pptr, sizeof(path));
 	      pptr = path;
 	      while(pptr && *pptr) {
 		endptr = strchr(pptr, ':');

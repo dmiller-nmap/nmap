@@ -360,7 +360,8 @@
               ple  of  such a network, and thus you should always
               use <B>-P0</B> or <B>-PT80</B> when portscanning microsoft.com.
 
-       <B>-PT</B>    Use TCP "ping" to  determine  what  hosts  are  up.
+       <B>-PT</B> <B>[portlist]</B>
+              Use TCP "ping" to  determine  what  hosts  are  up.
               Instead  of  sending  ICMP echo request packets and
               waiting for a response, we spew out TCP ACK packets
               throughout  the  target  network  (or  to  a single
@@ -376,11 +377,21 @@
               that  this option now accepts multiple, comma-sepa­
               rated port numbers.
 
-       <B>-PS</B>    This option uses SYN (connection  request)  packets
+       <B>-PS</B> <B>[portlist]</B>
+              This option uses SYN (connection  request)  packets
               instead  of ACK packets for root users.  Hosts that
               are up should respond with a  RST  (or,  rarely,  a
               SYN|ACK).  You can set the destination ports in the
               same manner as -PT above.
+
+       <B>-PU</B> <B>[portlist]</B>
+              This option  sends  UDP  probes  to  the  specified
+              hosts,  expecting  an  ICMP port unreachable packet
+              (or possibly a UDP response if the port is open) if
+              the  host  is  up.   Since  many UDP services won't
+              reply to an empty packet, your best bet might be to
+              send this to expected-closed ports rather than open
+              ones.
 
        <B>-PE</B>    This option uses a true ping  (ICMP  echo  request)
               packet.   It finds hosts that are up and also looks
@@ -806,13 +817,13 @@
               loading  the  network   or   missing   hosts/ports.
               <B>Aggressive</B>  This  option  can  make  certain  scans
               (especially  SYN  scans  against  heavily  filtered
-              hosts)   much   faster.    It  is  recommended  for
-              impatient folks with a fast net connection.  <B>Insane</B>
-              is  only  suitable  for very fast networks or where
-              you don't mind losing some information.   It  times
-              out  hosts  in  15 minutes and won´t wait more than
-              0.3 seconds for individual probes.  It  does  allow
-              for very quick network sweeps though :).
+              hosts)  much  faster.   It is recommended for impa­
+              tient folks with a fast net connection.  <B>Insane</B>  is
+              only  suitable  for very fast networks or where you
+              don't mind losing some information.  It  times  out
+              hosts  in  15  minutes and won´t wait more than 0.3
+              seconds for individual probes.  It does  allow  for
+              very quick network sweeps though :).
 
               You  can also reference these by number (0-5).  For
               example, ´-T0´ gives you Paranoid mode and ´-T5´ is
@@ -872,9 +883,9 @@
        <B>TARGET</B> <B>SPECIFICATION</B>
               Everything  that  isn't  an option (or option argu­
               ment) in nmap is treated as a target host  specifi­
-              cation.    The  simplest  case  is  listing  single
-              hostnames or IP addresses on the command line.   If
-              you  want to scan a subnet of IP addresses, you can
+              cation.   The simplest case is listing single host­
+              names or IP addresses on the command line.  If  you
+              want  to  scan  a  subnet  of IP addresses, you can
               append <B>´/mask´</B> to the hostname or IP address.  <B>mask</B>
               must  be between 0 (scan the whole internet) and 32
               (scan the single host specified).  Use /24 to  scan

@@ -130,7 +130,9 @@
 /* Return num if it is between min and max.  Otherwise return min or
    max (whichever is closest to num), */
 template<class T> T box(T bmin, T bmax, T bnum) {
-  assert(bmin <= bmax);
+  if (bmin > bmax)
+    fatal("box(%d, %d, %d) called (min,max,num)", (int) bmin, (int) bmax, (int) bnum);
+  //  assert(bmin <= bmax);
   if (bnum >= bmax)
     return bmax;
   if (bnum <= bmin)
@@ -150,6 +152,7 @@ int get_random_int();
 unsigned short get_random_ushort();
 unsigned int get_random_uint();
 u32 get_random_u32();
+u16 get_random_u16();
 u8 get_random_u8();
 
 /* Scramble the contents of an array*/

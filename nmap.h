@@ -238,6 +238,8 @@ void *realloc();
 #define DEFAULT_TCP_PROBE_PORT 80 /* The port TCP probes go to if unspecified
 				      by user -- uber hackers change this
 				      to 113 */
+#define DEFAULT_UDP_PROBE_PORT 31338 /* The port UDP probes (esp. "ping" probes) go to if unspecified
+				     by user */
 
 #define MAX_DECOYS 128 /* How many decoys are allowed? */
 
@@ -280,6 +282,7 @@ void *realloc();
 #define PINGTYPE_TCP_USE_SYN 64
 #define PINGTYPE_RAWTCP 128
 #define PINGTYPE_CONNECTTCP 256
+#define PINGTYPE_UDP  512
 
 /* TCP/IP ISN sequence prediction classes */
 #define SEQ_UNKNOWN 0

@@ -102,7 +102,7 @@ static int nmap_services_init() {
       p++;
     if (*p == '#')
       continue;
-    res = sscanf(line, "%s %hu/%s", servicename, &portno, proto);
+    res = sscanf(line, "%127s %hu/%s", servicename, &portno, proto);
     if (res !=3)
       continue;
     portno = htons(portno);

@@ -181,10 +181,10 @@ int nmap_main(int argc, char *argv[]) {
     {"timing", required_argument, 0, 'T'},
     {"max_rtt_timeout", required_argument, 0, 0},
     {"min_rtt_timeout", required_argument, 0, 0},
+    {"initial_rtt_timeout", required_argument, 0, 0},
     {"scanflags", required_argument, 0, 0},
     {"host_timeout", required_argument, 0, 0},
     {"scan_delay", required_argument, 0, 0},
-    {"initial_rtt_timeout", required_argument, 0, 0},
     {"oA", required_argument, 0, 0},  
     {"oN", required_argument, 0, 0},
     {"oM", required_argument, 0, 0},  
@@ -195,7 +195,6 @@ int nmap_main(int argc, char *argv[]) {
     {"iL", required_argument, 0, 0},  
     {"iR", required_argument, 0, 0},
     {"sI", required_argument, 0, 0},  
-    {"initial_rtt_timeout", required_argument, 0, 0},
     {"randomize_hosts", no_argument, 0, 0},
     {"osscan_limit", no_argument, 0, 0}, /* skip OSScan if no open ports */
     {"osscan_guess", no_argument, 0, 0}, /* More guessing flexability */
@@ -237,19 +236,22 @@ int nmap_main(int argc, char *argv[]) {
     switch(arg) {
     case 0:
       if (strcmp(long_options[option_index].name, "max_rtt_timeout") == 0) {
-	o.max_rtt_timeout = atoi(optarg);
-	if (o.max_rtt_timeout <= 5) {
+	o.setMaxRttTimeout(atoi(optarg));
+	if (o.maxRttTimeout() <= 5) {
 	  fatal("max_rtt_timeout is given in milliseconds and must be at least 5");
 	}       
-        if (o.max_rtt_timeout < 20) {
-	  error("WARNING: You specified a round-trip time timeout (%d ms) that is EXTRAORDINARILY SMALL.  Accuracy may suffer.", o.max_rtt_timeout);
+        if (o.maxRttTimeout() < 20) {
+	  error("WARNING: You specified a round-trip time timeout (%d ms) that is EXTRAORDINARILY SMALL.  Accuracy may suffer.", o.maxRttTimeout());
 	}
-	if ( o.initial_rtt_timeout > o.max_rtt_timeout)
-	  o.initial_rtt_timeout = o.max_rtt_timeout;
       } else if (strcmp(long_options[option_index].name, "min_rtt_timeout") == 0) {
-	o.min_rtt_timeout = atoi(optarg);
-	if (o.min_rtt_timeout > 50000) {
-	  fatal("Warning:  o.min_rtt_timeout is given in milliseconds, your value seems pretty large.");
+	o.setMinRttTimeout(atoi(optarg));
+	if (o.minRttTimeout() > 50000) {
+	  error("Warning:  min_rtt_timeout is given in milliseconds, your value seems pretty large.");
+	}
+      } else if (strcmp(long_options[option_index].name, "initial_rtt_timeout") == 0) {
+	o.setInitialRttTimeout(atoi(optarg));
+	if (o.initialRttTimeout() <= 0) {
+	  fatal("initial_rtt_timeout must be greater than 0");
 	}
       } else if (strcmp(long_options[option_index].name, "scanflags") == 0) {
 	o.scanflags = parse_scanflags(optarg);
@@ -321,11 +323,6 @@ int nmap_main(int argc, char *argv[]) {
 	o.osscan_guess = 1;
       } else if (strcmp(long_options[option_index].name, "packet_trace") == 0) {
 	o.setPacketTrace(true);
-      } else if (strcmp(long_options[option_index].name, "initial_rtt_timeout") == 0) {
-	o.initial_rtt_timeout = atoi(optarg);
-	if (o.initial_rtt_timeout <= 0) {
-	  fatal("initial_rtt_timeout must be greater than 0");
-	}
       } else if (strcmp(long_options[option_index].name, "data_length") == 0) {
 	o.extra_payload_length = atoi(optarg);
 	if (o.extra_payload_length < 0) {
@@ -510,6 +507,19 @@ int nmap_main(int argc, char *argv[]) {
 	  o.ping_ackprobes[0] = DEFAULT_TCP_PROBE_PORT;
 	}
       }
+      else if (*optarg == 'U') {
+	o.pingtype |= (PINGTYPE_UDP);
+	if (isdigit((int) *(optarg+1))) {
+	  o.num_ping_udpprobes = numberlist2array(optarg+1, o.ping_udpprobes, sizeof(o.ping_udpprobes), &proberr);
+	  if (o.num_ping_udpprobes < 0) {
+	    fatal("Bogus argument to -PU: %s", proberr);
+	  }
+	}
+	if (o.num_ping_udpprobes == 0) {
+	  o.num_ping_udpprobes = 1;
+	  o.ping_udpprobes[0] = DEFAULT_UDP_PROBE_PORT;
+	}
+      }
       else if (*optarg == 'B') {
 	o.pingtype = (PINGTYPE_TCP|PINGTYPE_TCP_USE_ACK|PINGTYPE_ICMP_PING);
 	if (isdigit((int) *(optarg+1))) {
@@ -583,12 +593,12 @@ int nmap_main(int argc, char *argv[]) {
 	o.timing_level = 0;
 	o.max_parallelism = 1;
 	o.scan_delay = 300000;
-	o.initial_rtt_timeout = 300000;
+	o.setInitialRttTimeout(300000);
       } else if (*optarg == '1' || (strcasecmp(optarg, "Sneaky") == 0)) {
 	o.timing_level = 1;
 	o.max_parallelism = 1;
 	o.scan_delay = 15000;
-	o.initial_rtt_timeout = 15000;
+	o.setInitialRttTimeout(15000);
       } else if (*optarg == '2' || (strcasecmp(optarg, "Polite") == 0)) {
 	o.timing_level = 2;
 	o.max_parallelism = 1;
@@ -596,12 +606,12 @@ int nmap_main(int argc, char *argv[]) {
       } else if (*optarg == '3' || (strcasecmp(optarg, "Normal") == 0)) {
       } else if (*optarg == '4' || (strcasecmp(optarg, "Aggressive") == 0)) {
 	o.timing_level = 4;
-	o.max_rtt_timeout = 1250;
-	o.initial_rtt_timeout = 800;
+	o.setMaxRttTimeout(1250);
+	o.setInitialRttTimeout(800);
       } else if (*optarg == '5' || (strcasecmp(optarg, "Insane") == 0)) {
 	o.timing_level = 5;
-	o.max_rtt_timeout = 300;
-	o.initial_rtt_timeout = 300;
+	o.setMaxRttTimeout(300);
+	o.setInitialRttTimeout(300);
 	o.host_timeout = 900000;
       } else {
 	fatal("Unknown timing mode (-T argment).  Use either \"Paranoid\", \"Sneaky\", \"Polite\", \"Normal\", \"Aggressive\", \"Insane\" or a number from 0 (Paranoid) to 5 (Insane)");
@@ -1578,8 +1588,8 @@ int check_ident_port(struct in_addr target) {
   NET_SIZE_T sockaddr_in_len = sizeof(struct sockaddr_in);
   fd_set fds_read, fds_write;
   struct timeval tv;
-  tv.tv_sec = o.initial_rtt_timeout / 1000;
-  tv.tv_usec = (o.initial_rtt_timeout % 1000) * 1000;
+  tv.tv_sec = o.initialRttTimeout() / 1000;
+  tv.tv_usec = (o.initialRttTimeout() % 1000) * 1000;
   if ((sd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) == -1)
     {perror("Socket troubles"); exit(1);}
   unblock_socket(sd);

@@ -151,23 +151,17 @@ snprintf(filter, sizeof(filter), "dst host %s and (icmp or (tcp and src host %s)
  target->osscan_openport = -1;
  target->osscan_closedport = -1;
  tport = NULL;
- if (target->ports.state_counts_tcp[PORT_OPEN] > 0) { 
-   tport = nextport(&target->ports, NULL, IPPROTO_TCP, PORT_OPEN);
-   assert(tport);
+ if ((tport = nextport(&target->ports, NULL, IPPROTO_TCP, PORT_OPEN, false))) {
    openport = tport->portno;
    target->osscan_openport = tport->portno;
  }
  
  /* Now we should find a closed port */
- if (target->ports.state_counts_tcp[PORT_CLOSED] > 0) {
-   tport = nextport(&target->ports, NULL, IPPROTO_TCP, PORT_CLOSED);
-   assert(tport);
+ if ((tport = nextport(&target->ports, NULL, IPPROTO_TCP, PORT_CLOSED, false))) {
    closedport = tport->portno;
    target->osscan_closedport = tport->portno;
- } else if (target->ports.state_counts_tcp[PORT_UNFIREWALLED] > 0) {
+ } else if ((tport = nextport(&target->ports, NULL, IPPROTO_TCP, PORT_UNFIREWALLED, false))) {
    /* Well, we will settle for unfiltered */
-   tport = nextport(&target->ports, NULL, IPPROTO_TCP, PORT_UNFIREWALLED);
-   assert(tport);
    closedport = tport->portno;
  } else {
    closedport = (get_random_uint() % 14781) + 30000;
@@ -1503,7 +1497,7 @@ while(!id) id = get_random_uint();
 
 /* check that required fields are there and not too silly */
 if ( !victim || !sport || !dport || sd < 0) {
-  fprintf(stderr, "send_udp_raw: One or more of your parameters suck!\n");
+  fprintf(stderr, "send_closedudp_probe: One or more of your parameters suck!\n");
   return NULL;
 }
 

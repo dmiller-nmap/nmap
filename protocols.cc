@@ -82,7 +82,7 @@ static int nmap_protocols_init() {
       p++;
     if (*p == '#')
       continue;
-    res = sscanf(line, "%s %hu", protocolname, &protno);
+    res = sscanf(line, "%127s %hu", protocolname, &protno);
     if (res !=2)
       continue;
     protno = htons(protno);

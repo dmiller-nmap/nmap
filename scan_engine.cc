@@ -782,7 +782,7 @@ void pos_scan(Target *target, u16 *portarray, int numports, stype scantype) {
     if (scantype == RPC_SCAN) {    
       /* Make sure we have ports left to scan */
       rsi.rpc_current_port = nextport(&target->ports, rsi.rpc_current_port,
-				      0, PORT_OPEN);
+				      0, PORT_OPEN, true);
       if (!rsi.rpc_current_port) /* Woop!  Done! */ break;
 
       /* Reinit our testinglist so we try each RPC prog */
@@ -1463,7 +1463,7 @@ void super_scan(Target *target, u16 *portarray, int numports,
 		  send_small_fragz_decoys(rawsd, target->v4hostip(), 0, o.ttl, i, current->portno, scanflags);
 		else if (scantype == UDP_SCAN)
 		  send_udp_raw_decoys(rawsd, target->v4hostip(), o.ttl, i,
-				      current->portno, o.extra_payload, o.extra_payload_length);
+				      current->portno, get_random_u16(), o.extra_payload, o.extra_payload_length);
 		else if (scantype == IPPROT_SCAN)
 		  send_ip_raw_decoys(rawsd, target->v4hostip(), o.ttl, current->portno, o.extra_payload, o.extra_payload_length);
 		else
@@ -1493,7 +1493,8 @@ void super_scan(Target *target, u16 *portarray, int numports,
 	    else if (scantype == UDP_SCAN)
 	      send_udp_raw_decoys(rawsd, target->v4hostip(), o.ttl,
 			      	  o.magic_port, current->portno,
-				  o.extra_payload, o.extra_payload_length);
+				  get_random_u16(), o.extra_payload, 
+				  o.extra_payload_length);
 	    else if (scantype == IPPROT_SCAN)
 	      send_ip_raw_decoys(rawsd, target->v4hostip(), o.ttl,
 				 current->portno, o.extra_payload, o.extra_payload_length);

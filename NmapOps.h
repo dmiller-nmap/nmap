@@ -59,6 +59,7 @@ class NmapOps {
   /* Note that it is OK to pass in a sockaddr_in or sockaddr_in6 casted
      to sockaddr_storage */
   void setSourceSockAddr(struct sockaddr_storage *ss, size_t ss_len);
+
 // The time this obj. was instantiated   or last ReInit()ed.
   const struct timeval *getStartTime() { return &start_time; }
   // Number of milliseconds since getStartTime().  The current time is an
@@ -95,14 +96,23 @@ class NmapOps {
   u16 ping_synprobes[MAX_PROBE_PORTS];
   int num_ping_ackprobes;
   u16 ping_ackprobes[MAX_PROBE_PORTS];
-
+  int num_ping_udpprobes;
+  u16 ping_udpprobes[MAX_PROBE_PORTS];
   /* Scan timing/politeness issues */
   int timing_level; // 0-5, corresponding to Paranoid, Sneaky, Polite, Normal, Aggressive, Insane
   int max_parallelism; // 0 means it has not been set
   int min_parallelism; // 0 means it has not been set
-  int max_rtt_timeout;
-  int min_rtt_timeout;
-  int initial_rtt_timeout;
+
+  /* These functions retrieve and set the Round Trip Time timeouts, in
+   milliseconds.  The set versions do extra processing to insure sane
+   values and to adjust each other to insure consistance (e.g. that
+   max is always at least as high as min) */
+  int maxRttTimeout() { return max_rtt_timeout; }
+  int minRttTimeout() { return min_rtt_timeout; }
+  int initialRttTimeout() { return initial_rtt_timeout; }
+  void setMaxRttTimeout(int rtt);
+  void setMinRttTimeout(int rtt);
+  void setInitialRttTimeout(int rtt);
   int max_ips_to_scan; // Used for Random input (-iR) to specify how 
                        // many IPs to try before stopping. 0 means unlimited.
   int extra_payload_length; /* These two are for --data_length op */
@@ -153,6 +163,9 @@ class NmapOps {
   int ttl; // Time to live
   char *datadir;
  private:
+  int max_rtt_timeout;
+  int min_rtt_timeout;
+  int initial_rtt_timeout;
   void Initialize();
   int addressfamily; /*  Address family:  AF_INET or AF_INET6 */  
   struct sockaddr_storage sourcesock;

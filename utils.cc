@@ -263,6 +263,12 @@ u32 get_random_u32() {
   return i;
 }
 
+u16 get_random_u16() {
+  u16 i;
+  get_random_bytes(&i, sizeof(i));
+  return i;
+}
+
 u8 get_random_u8() {
   u8 i;
   get_random_bytes(&i, sizeof(i));

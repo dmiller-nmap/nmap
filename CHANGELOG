@@ -1,5 +1,17 @@
 # Nmap Changelog ($Id$)
 
+o I added UDP-based "ping" scanning.  The -PU option can take an
+  optional portlist like the TCP "ping" options (-PS, -PA), but it sends
+  a UDP packet to the targets and expects hosts that are up to reply
+  with a port unreachable (or possibly a UDP response if the port is
+  open).  This one is likely to work best against closed ports, since
+  many open ports don't respond to empty requests.
+
+o Fixed an "assertion failure" which would cause Nmap to exit when you
+  specify a --max_rtt_timeout below 3000.  Thanks to Tammy Rathbun
+  (rathbun2@llnl.gov) and Jan Roger Wilkens (jrw@proseq.net) for
+  reporting this.
+
 o Fixed a GCC dependency reported by Ayamura KIKUCHI (ayamura@keio.net)
 
 o Fixed a divide by zero error caused when nonroot users (on UNIX)
@@ -10,6 +22,19 @@ o Fixed a divide by zero error caused when nonroot users (on UNIX)
 o Changed the wording of NmapFE Gnome entries to better-comply with
   Gnome's Human Interface Guidelines (HIG).  Suggested by Axel Krauth
   (krauth@fmi.uni-passau.de)
+
+o Made Nmap more tolerant of corrupt nmap-services and nmap-protocols
+  files thanks to report & patch sent by Phix (phix@hush.com)
+
+o Added some more port numbers sent in by Seth Master
+  (smaster@stanford.edu).  He has been a frequent nmap-services
+  contributor in the last couple months.
+
+o Removed superfluous "addport" line in the XML output (patch from Max
+  Schubert (nmap@webwizarddesign.com)).
+
+o Fixed an assertion failure crash related to combining port 0 scans
+and OS scan.  Thanks to A.Jones@mvv.de for reporting this.
 
 Nmap 3.20
 

@@ -107,7 +107,7 @@ void adjust_timeouts2(const struct timeval *sent,
   
   /* It hurts to do this ... it really does ... but otherwise we are being
      too risky */
-  to->timeout = box(o.min_rtt_timeout * 1000, o.max_rtt_timeout * 1000,  
+  to->timeout = box(o.minRttTimeout() * 1000, o.maxRttTimeout() * 1000,  
 		    to->timeout);
 
   if (o.scan_delay)

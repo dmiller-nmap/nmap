@@ -103,7 +103,8 @@ struct pingtech {
   unsigned int icmpscan: 1,
     rawicmpscan: 1,
     connecttcpscan: 1,
-    rawtcpscan: 1;
+    rawtcpscan: 1,
+    rawudpscan: 1;
 };
 
 
@@ -117,9 +118,11 @@ int sendpingqueries(int sd, int rawsd, Target *target,
 int sendpingquery(int sd, int rawsd, Target *target,  
 		  int seq, unsigned short id, struct scanstats *ss, 
 		  struct timeval *time, int pingtype, struct pingtech ptech);
-int sendrawtcppingqueries(int rawsd, Target *target, int pingtype,
+int sendrawtcpudppingqueries(int rawsd, Target *target, int pingtype,
 			  int seq, struct timeval *time, struct pingtune *pt);
 int sendrawtcppingquery(int rawsd, Target *target, int pingtype, u16 probe_port,
+			int seq, struct timeval *time, struct pingtune *pt);
+int sendrawudppingquery(int rawsd, Target *target, u16 probe_port,
 			int seq, struct timeval *time, struct pingtune *pt);
 int sendconnecttcpqueries(Target *hostbatch[], struct tcpqueryinfo *tqi, Target *target,
 			  int seq, struct timeval *time, struct pingtune *pt, struct timeout_info *to, int max_width);

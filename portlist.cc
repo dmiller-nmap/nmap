@@ -77,8 +77,6 @@ int addport(portlist *plist, u16 portno, u8 protocol, char *owner, int state) {
     /* Write out add port messages for XML format so wrapper libraries can
        use it and not have to parse LOG_STDOUT ;), which is a pain! */
     
-    log_write(LOG_XML, "<addport state=\"%s\" portid=\"%hu\" protocol=\"%s\"/>\n", statenum2str(state), portno,
-	      (protocol == IPPROTO_TCP)? "tcp" : "udp");
     log_write(LOG_XML, "<addport state=\"%s\" portid=\"%hu\" protocol=\"%s\" owner=\"%s\"/>\n", statenum2str(state), portno, (protocol == IPPROTO_TCP)? "tcp" : "udp", ((owner && *owner) ? owner : ""));
     log_flush(LOG_XML); 
   }
@@ -281,10 +279,11 @@ void assignignoredportstate(portlist *plist) {
    fashion as allowed_protocol. This function returns ports in numeric
    order from lowest to highest, except that if you ask for both TCP &
    UDP, every TCP port will be returned before we start returning UDP
-   ports */
+   ports.  */
 
 struct port *nextport(portlist *plist, struct port *afterthisport, 
-		      u8 allowed_protocol, int allowed_state) {
+		      u8 allowed_protocol, int allowed_state, 
+		      bool allow_portzero) {
 
   /* These two are chosen because they come right "before" port 1/tcp */
 unsigned int current_portno = 0;
@@ -293,9 +292,10 @@ unsigned int current_proto = IPPROTO_TCP;
 if (afterthisport) {
   current_portno = afterthisport->portno;
   current_proto = afterthisport->proto;  /* (afterthisport->proto == IPPROTO_TCP)? IPPROTO_TCP : IPPROTO_UDP; */
+  current_portno++; /* Start on the port after the one we were given */ 
 } 
 
- current_portno++; /* Start on the port after the one we were given */
+ if (!allow_portzero && current_portno == 0) current_portno++;
 
 /* First we look for TCP ports ... */
 if (current_proto == IPPROTO_TCP) {

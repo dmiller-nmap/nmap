@@ -114,7 +114,8 @@ int deleteport(portlist *plist, u16 portno, u8 protocol);
    UDP, every TCP port will be returned before we start returning UDP
    ports */
 struct port *nextport(portlist *plist, struct port *afterthisport, 
-		      u8 allowed_protocol, int allowed_state);
+		      u8 allowed_protocol, int allowed_state, 
+		      bool allow_portzero);
 
 struct port *lookupport(portlist *ports, u16 portno, u8 protocol);
 
