@@ -668,7 +668,7 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=F%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
-FingerPrint Windows NT 4.0
+FingerPrint Windows Windows NT4 / Win95
 TSeq(Class=TD%gcd=1|2|3|4|5|10|20|30|40%SI=<500)
 T1(DF=Y%W=2017%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)

@@ -345,7 +345,6 @@ if (o.verbose && openport != -1)
        FPtests[8]->results = fingerprint_portunreach(ip, upi);
        if (FPtests[8]->results) {       
 	 FPtests[8]->name = "PU";
-	 printf("We got an ICMP pack!!!\n");
 	 testsleft--;
 	 newcatches++;
        } else {
