@@ -148,7 +148,7 @@ T6(DF=N&W=0&ACK=O&Flags=R&Ops=)
 T7(DF=N&W=0&ACK=S&Flags=AR&Ops=)
 
 # On very rare cases, I get a T2 response back -- weird
-FingerPrint  Linux 2.0.31-34 (pattern 2)
+FingerPrint  Linux 2.0.31-34 
 TSeq(Class=TR)
 T1(DF=N&W=7FE0&ACK=S++&Flags=BAS&Ops=ME)
 T2(Resp=Y&DF=N&W=0&ACK=S&Flags=AR&Ops=)
@@ -233,7 +233,7 @@ FingerPrint Windows 95/98/NT  #I think this counts Win98, can anyone verify?
 TSeq(SI=<75)
 T1(DF=Y&W=2017&ACK=S++&Flags=AS&Ops=M)
 T2(Resp=Y&DF=N&W=0&ACK=S&Flags=AR&Ops=)
-T3(Resp=YW=2017&Flags=AS&Ops=M)
+T3(Resp=Y&W=2017&Flags=AS&Ops=M)
 T4(DF=N&W=0&Flags=R&Ops=)
 T5(DF=N&W=0&ACK=S++&Flags=AR&Ops=)
 T6(DF=N&W=0&Flags=R&Ops=)
