@@ -662,6 +662,9 @@ typedef int (*PFILTERFN)(const char *packet, unsigned int len); /* 1 to keep */
 void set_pcap_filter(Target *target, pcap_t *pd, PFILTERFN filter, char *bpf, ...);
 #endif
 
+/* Just accept everything ... TODO: Need a better approach than this flt_ 
+   stuff */
+int flt_all(const char *packet, unsigned int len);
 int flt_icmptcp(const char *packet, unsigned int len);
 int flt_icmptcp_2port(const char *packet, unsigned int len);
 int flt_icmptcp_5port(const char *packet, unsigned int len);

@@ -391,10 +391,12 @@ int PortList::addPort(u16 portno, u8 protocol, char *owner, int state) {
 	      proto2ascii(protocol), msg, idstr? idstr : "");
     log_flush(LOG_STDOUT);
     
-    /* Write out add port messages for XML format so wrapper libraries can
-       use it and not have to parse LOG_STDOUT ;), which is a pain! */
-    
-    log_write(LOG_XML, "<addport state=\"%s\" portid=\"%hu\" protocol=\"%s\" owner=\"%s\"/>\n", statenum2str(state), portno, proto2ascii(protocol), ((owner && *owner) ? owner : ""));
+    /* Write out add port messages for XML format so wrapper libraries
+       can use it and not have to parse LOG_STDOUT ;), which is a
+       pain! REMOVED now that Nmap scans multiple hosts in parallel.
+       This addport does not even tell which host the new port was
+       on. */    
+    //    log_write(LOG_XML, "<addport state=\"%s\" portid=\"%hu\" protocol=\"%s\" owner=\"%s\"/>\n", statenum2str(state), portno, proto2ascii(protocol), ((owner && *owner) ? owner : ""));
     log_flush(LOG_XML); 
   }
 

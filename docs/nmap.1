@@ -17,8 +17,7 @@ individuals to scan large networks to determine which hosts
 are up and what services they are offering.
 .I nmap 
 supports a large number of scanning techniques such as: UDP, TCP
-connect(), TCP SYN (half open), ftp proxy (bounce attack),
-Reverse-ident, ICMP (ping sweep), FIN, ACK sweep, Xmas Tree, SYN
+connect(), TCP SYN (half open), ftp proxy (bounce attack), ICMP (ping sweep), FIN, ACK sweep, Xmas Tree, SYN
 sweep, IP Protocol, and Null scan.  See the
 .I Scan Types 
 section for more details.  nmap also offers a number of
@@ -162,9 +161,13 @@ an X server is open to connections or the SSH protocol version).  If
 Nmap was compiled with OpenSSL support, it will connect to SSL servers
 to deduce the service listening behind the encryption.  When RPC
 services are discovered, the Nmap RPC grinder is used to determine the
-RPC program and version numbers.  Note that the Nmap -A option also
-enables this feature.  For a much more detailed description of Nmap
-service detection, read our paper at
+RPC program and version numbers.  Some UDP ports are left in the
+"openfiltered" state after a UDP scan is unable to determine whether
+the port is open or filtered.  Version detection will try to elicit a
+response from these ports (just as it does with open ports), and
+change the state to open if it succeeds. Note that the Nmap -A option
+also enables this feature.  For a much more detailed description of
+Nmap service detection, read our paper at
 http://www.insecure.org/nmap/versionscan.html .  There is a related
 --version_trace option which causes Nmap to print out extensive
 debugging info about what version scanning is doing (this is a subset
@@ -174,14 +177,12 @@ of what you would get with --packet_trace).
 UDP scans: This method is used to determine which UDP (User Datagram
 Protocol, RFC 768) ports are open on a host.  The technique is to send
 0 byte UDP packets to each port on the target machine.  If we receive
-an ICMP port unreachable message, then the port is closed.  Otherwise
-we assume it is open.  Unfortunately, firewalls often block the port
-unreachable messages, causing the port to appear open.  Sometimes an
-ISP will block only a few specific dangerous ports such as 31337 (back
-orifice) and 139 (Windows NetBIOS), making it look like these
-vulnerable ports are open.  So don't panic immediately.
-Unfortunately, it isn't always trivial to differentiate between real
-open UDP ports and these filtered false-positives.
+an ICMP port unreachable message, then the port is closed.  If a UDP
+response is received to the probe (unusual), the port is open.  If we
+get no response at all, the state is "openfiltered", meaning that the
+port is either open or packet filters are blocking the communication.
+Versions scan (-sV) can be used to help differentiate the truly open
+ports from the filtered ones.
 .Sp
 Some people think UDP scanning is pointless. I usually
 remind them of the Solaris rpcbind hole. Rpcbind can
@@ -469,21 +470,6 @@ record) or as a literal IP address such as
 3ffe:501:4819:2000:210:f3ff:fe03:4d0 .  Currently, connect() TCP scan
 and TCP connect() Ping scan are supported.  If you need UDP or other
 scan types, have a look at http://nmap6.sourceforge.net/ .
-.TP
-.B \-I
-This turns on TCP reverse ident scanning. As noted by Dave
-Goldsmith in a 1996 Bugtraq post, the ident protocol (RFC
-1413) allows for the disclosure of the username that owns
-any process connected via TCP, even if that process didn't
-initiate the connection. So you can, for example, connect to
-the http port and then use identd to find out whether the
-server is running as root. This can only be done with a full
-TCP connection to the target port (i.e. the -sT scanning
-option).  When
-.B \-I
-is used, the remote host's identd is queried for each open
-port found.  Obviously this won't work if the host is not
-running identd.
 .TP
 .B \-f
 This option causes the requested SYN, FIN, XMAS, or NULL
@@ -833,6 +819,24 @@ Specifies the initial probe timeout.  This is generally only
 useful when scanning firewalled hosts with -P0.  Normally
 Nmap can obtain good RTT estimates from the ping and the
 first few probes.  The default mode uses 6000.
+.TP
+.B --max_hostgroup <numhosts>
+Specifies the maximum number of hosts that Nmap is allowed to scan in
+parallel.  Most of the port scan techniques support multi-host
+operation, which makes them much quicker.  Spreading the load among
+multiple target hosts makes the scans gentler.  The downside is
+increast results latency.  You need to wait for all hosts in a group
+to finish, rather than having them pop up one by one.  Specify an
+argument of one for old-style (one host at a time) Nmap behavior.
+Note that the ping scanner handles its own grouping, and ignores this
+value.
+.TP
+.B --min_hostgroup <milliseconds>
+Specifies the minimum host group size (see previous entry).  Large
+values (such as 50) are often beneficial for unattended scans, though they do
+take up more memory.  Nmap may override this preference when it needs
+to, because a group must all use the same network interface, and some
+scan types can only handle one host at a time.
 .TP
 .B --max_parallelism <number>
 Specifies the maximum number of scans Nmap is allowed to

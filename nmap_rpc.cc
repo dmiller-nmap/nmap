@@ -493,13 +493,9 @@ unsigned long current_msg_len;
 
    
    /* Insure there is no timeout ... */
-   if (o.host_timeout) {	
-     gettimeofday(&tv, NULL);
-     if (TIMEVAL_MSEC_SUBTRACT(tv, target->host_timeout) >= 0) {
-       target->timedout = 1;
+   gettimeofday(&tv, NULL);
+   if (target->timedOut(&tv))
        return;
-     }
-   }
 
    tv.tv_sec = target->to.timeout / 1000000;
    tv.tv_usec = target->to.timeout % 1000000;

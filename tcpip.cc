@@ -1656,7 +1656,7 @@ void set_pcap_filter(Target *target,
 		     pcap_t *pd, PFILTERFN filter, char *bpf, ...)
 {
   va_list ap;
-  char buf[512];
+  char buf[1024];
   struct bpf_program fcode;
 #ifndef __amigaos__
   unsigned int localnet, netmask;
@@ -1669,7 +1669,8 @@ void set_pcap_filter(Target *target,
     fatal("Failed to lookup device subnet/netmask: %s", err0r);
   
   va_start(ap, bpf);
-  vsprintf(buf, bpf, ap);
+  if (vsnprintf(buf, sizeof(buf), bpf, ap) >= (int) sizeof(buf))
+    fatal("set_pcap_filter called with too-large filter arg\n");
   va_end(ap);
   
   if (o.debugging)
@@ -1690,6 +1691,12 @@ void set_pcap_filter(Target *target,
 /* This is ugly :(.  We need to get rid of these at some point */
 unsigned long flt_dsthost, flt_srchost;	/* _net_ order */
 unsigned short flt_baseport;	/*	_host_ order */
+
+/* Just accept everything ... TODO: Need a better approach than this flt_ 
+   stuff */
+int flt_all(const char *packet, unsigned int len) {
+  return 1;
+}
 
 int flt_icmptcp(const char *packet, unsigned int len)
 {

@@ -302,7 +302,7 @@ void *realloc();
 #define MIN_RTT_TIMEOUT 100 
 #endif
 
-#define INITIAL_RTT_TIMEOUT 6000 /* Allow 6 seconds at first for packet responses */
+#define INITIAL_RTT_TIMEOUT 1000 /* Allow 1 second initially for packet responses */
 #define HOST_TIMEOUT    0 /* By default allow unlimited time to scan each host */
 
 /* If nmap is called with one of the names below, it will start up in interactive mode -- alternatively, you can rename Nmap any of the following names to have it start up interactivey by default.  */
@@ -447,7 +447,6 @@ char *tsseqclass2ascii(int seqclass);
 const char *seqidx2difficultystr(unsigned long idx);
 int nmap_fetchfile(char *filename_returned, int bufferlen, char *file);
 int fileexistsandisreadable(char *pathname);
-int check_firewallmode(Target *target, struct scanstats *ss);
 int gather_logfile_resumption_state(char *fname, int *myargc, char ***myargv);
 
 /* From glibc 2.0.6 because Solaris doesn't seem to have this function */

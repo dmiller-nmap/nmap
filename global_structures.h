@@ -132,12 +132,6 @@ struct connectsockinfo {
   int maxsd;
 };
 
-struct firewallmodeinfo {
-  int active; /* is firewall mode currently active for the host? */
-  int nonresponsive_ports; /* # Of ports we haven't received any response from */
-  int responsive_ports; /* # of ports that told us whether they were open/closed/filtered/unfiltered */
-};
-
 /* The runtime statistics used to decide how fast to proced and how
    many ports we can try at once */
 struct scanstats {

@@ -163,6 +163,13 @@ class NmapOps {
   void setMaxRttTimeout(int rtt);
   void setMinRttTimeout(int rtt);
   void setInitialRttTimeout(int rtt);
+
+  /* Similar functions for Host group size */
+  int minHostGroupSz() { return min_host_group_sz; }
+  int maxHostGroupSz() { return max_host_group_sz; }
+  void setMinHostGroupSz(unsigned int sz);
+  void setMaxHostGroupSz(unsigned int sz);
+
   int max_ips_to_scan; // Used for Random input (-iR) to specify how 
                        // many IPs to try before stopping. 0 means unlimited.
   int extra_payload_length; /* These two are for --data_length op */
@@ -185,7 +192,6 @@ class NmapOps {
   int osscan_guess;   /* Be more aggressive in guessing OS type */
   int numdecoys;
   int decoyturn;
-  int identscan;
   int osscan;
   int servicescan;
   int pingtype;
@@ -217,6 +223,8 @@ class NmapOps {
   int max_rtt_timeout;
   int min_rtt_timeout;
   int initial_rtt_timeout;
+  unsigned int min_host_group_sz;
+  unsigned int max_host_group_sz;
   void Initialize();
   int addressfamily; /*  Address family:  AF_INET or AF_INET6 */  
   struct sockaddr_storage sourcesock;

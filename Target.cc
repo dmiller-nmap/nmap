@@ -90,6 +90,9 @@
 #include "Target.h"
 #include "osscan.h"
 #include "nbase.h"
+#include "NmapOps.h"
+
+extern NmapOps o;
 
 Target::Target() {
   Initialize();
@@ -102,9 +105,6 @@ void Target::Initialize() {
   osscan_performed = 0;
   wierd_responses = flags = 0;
   memset(&to, 0, sizeof(to));
-  memset(&host_timeout, 0, sizeof(host_timeout));
-  memset(&firewallmode, 0, sizeof(struct firewallmodeinfo));
-  timedout = 0;
   device[0] = '\0';
   memset(&targetsock, 0, sizeof(targetsock));
   memset(&sourcesock, 0, sizeof(sourcesock));
@@ -113,6 +113,8 @@ void Target::Initialize() {
   nameIPBuf = NULL;
   memset(&MACaddress, 0, sizeof(MACaddress));
   MACaddress_set = false;
+  htn.msecs_used = 0;
+  htn.toclock_running = false;
 }
 
 void Target::Recycle() {
@@ -289,6 +291,44 @@ const char *Target::NameIP() {
   if (!nameIPBuf) nameIPBuf = (char *) safe_malloc(MAXHOSTNAMELEN + INET6_ADDRSTRLEN);
   return NameIP(nameIPBuf, MAXHOSTNAMELEN + INET6_ADDRSTRLEN);
 }
+
+  /* Starts the timeout clock for the host running (e.g. you are
+     beginning a scan).  If you do not have the current time handy,
+     you can pass in NULL.  When done, call stopTimeOutClock (it will
+     also automatically be stopped of timedOut() returns true) */
+void Target::startTimeOutClock(const struct timeval *now) {
+  assert(htn.toclock_running == false);
+  htn.toclock_running = true;
+  if (now) htn.toclock_start = *now;
+  else gettimeofday(&htn.toclock_start, NULL);
+}
+  /* The complement to startTimeOutClock. */
+void Target::stopTimeOutClock(const struct timeval *now) {
+  struct timeval tv;
+  assert(htn.toclock_running == true);
+  htn.toclock_running = false;
+  if (now) tv = *now;
+  else gettimeofday(&tv, NULL);
+  htn.msecs_used += TIMEVAL_MSEC_SUBTRACT(tv, htn.toclock_start);
+}
+  /* Returns whether the host is timedout.  If the timeoutclock is
+     running, counts elapsed time for that.  Pass NULL if you don't have the
+     current time handy.  You might as well also pass NULL if the
+     clock is not running, as the func won't need the time. */
+bool Target::timedOut(const struct timeval *now) {
+  unsigned long used = htn.msecs_used;
+  struct timeval tv;
+
+  if (!o.host_timeout) return false;
+  if (htn.toclock_running) {
+    if (now) tv = *now;
+    else gettimeofday(&tv, NULL);
+    used += TIMEVAL_MSEC_SUBTRACT(tv, htn.toclock_start);
+  }
+
+  return (used > o.host_timeout)? true : false;
+}
+
 
 /* Returns zero if MAC address set successfully */
 int Target::setMACAddress(const u8 *addy) {

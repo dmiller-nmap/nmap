@@ -1,5 +1,74 @@
 # Nmap Changelog ($Id$)
 
+Nmap 3.59ALPHA1
+
+o Rewrote core port scanning engine, which is now named ultra_scan().
+  Improved algorithms make this faster (often dramatically so) in
+  almost all cases.  Not only is it superior against single hosts,
+  ultra_scan() can scan many hosts (sometimes hundreds) in parallel.
+  This offers many efficiency/speed advantages.  For example, hosts
+  often limit the ICMP port unreachable packets used by UDP scans to
+  1/second.  That made those scans extraordinarily slow in previous
+  versions of Nmap.  But if you are scanning 100 hosts at once,
+  suddenly you can receive 100 responses per second.  Spreading the
+  scan amongst hosts is also gentler toward the target hosts.  Nmap
+  can still scan many ports at the same time, as well.  If you find
+  cases where ultra_scan is slower or less accurate, please send a
+  report (including exact command-lines, versions used, and output, if
+  posible) to Fyodor.
+
+o Added --max_hostgroup option which specifies the maximum number of
+  hosts that Nmap is allowed to scan in parallel.
+
+o Added --min_hostgroup option which specifies the minimum number of
+  hosts that Nmap should scan in parallel (there are some exceptions
+  where Nmap will still scan smaller groups -- see man page).  Of
+  course, Nmap will try to choose efficient values even if you don't
+  specify hostgroup restrictions explicitly.
+
+o Rewrote TCP SYN, ACK, Window, and Connect() scans to use
+  ultra_scan() framework, rather than the old pos_scan().
+
+o Rewrote FIN, Xmas, NULL, Maimon, UDP, and IP Protocol scans to use
+  ultra_scan(), rather than the old super_scan().
+
+o Overhauled UDP scan.  Ports that don't respond are now classified as
+  "openfiltered" (open or filtered) rather than "open".  The (somewhat
+  rare) ports that actually respond with a UDP packet to the empty
+  probe are considered open.  If version detection is requested, it
+  will be performed on openfiltered ports.  Any that respond to any of
+  the UDP probes will have their status changed to open.  This avoids a
+  the false-positive problem where filtered UDP ports appear to be
+  open, leading to terrified newbies thinking their machine is
+  infected by back orifice.
+
+o Nmap now estimates completion times for almost all port scan types
+  (any that use ultra_scan()) as well as service scan (version
+  detection).  These are only shown in verbose mode (-v).  On scans
+  that take more than a minute or two, you will see occasional updates
+  like:
+  SYN Stealth Scan Timing: About 30.01% done; ETC: 16:04 (0:01:09 remaining)
+  New updates are given when the estimates change significantly.
+
+o Nmap now has a "port scan ping" system.  If it has received at least
+  one response from any port on the host, but has not received
+  responses lately (usually due to filtering), Nmap will "ping" that
+  known-good port occasionally to detect latency, packet drop rate,
+  etc.
+
+o The port randomizer now has a bias toward putting
+  commonly-accessible ports (80, 22, etc.) near the beginning of the
+  list.  Getting a response early helps Nmap calculate response times and
+  detect packet loss, so the scan goes faster.
+
+o Host timeout system (--host_timeout) overhauled to support host
+  parallelization.  Hosts times are tracked separately, so a host that
+  finishes a SYN scan quickly is not penalized for an exceptionally
+  slow host being scanned at the same time.
+
+o When Nmap has not received any responses from a host, it can now
+  use certain timing values from other hosts from the same scan group.
+
 o Enabled MAC address reporting when using the Windows version
   of Nmap.  Thanks to Andy Lutomirski (luto(a)stanford.edu) for
   writing and sending the patch.
@@ -23,6 +92,17 @@ o Ensured that MAC address vendor names are always escaped in XML
 o Changed xmloutputversion in XML output from 1.0 to 1.01 to note that
   there was a slight change (which was actually the MAC stuff in 3.55).
   Thanks to Lionel CONS (lionel.cons(a)cern.ch) for the suggestion.
+
+o Removed identscan (-I).  It was rarely useful, and the
+  implementation would have to be rewritten for the new ultra_scan()
+  system.  If there is significant demand, perhaps I'll put it back in
+  sometime.
+
+o Removed (addport) tags from XML output.  They used to provide open
+  ports as they were discovered, but don't work now that the port
+  scanners scan many hosts at once.  They did not specify an IP
+  address.  Of course the appropriate (port) tags are still printed
+  once scanning of a target is complete.
 
 Nmap 3.55
 

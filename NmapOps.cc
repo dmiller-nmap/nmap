@@ -185,10 +185,11 @@ void NmapOps::Initialize() {
   max_rtt_timeout = MAX_RTT_TIMEOUT;
   min_rtt_timeout = MIN_RTT_TIMEOUT;
   initial_rtt_timeout = INITIAL_RTT_TIMEOUT;
+  min_host_group_sz = 1;
+  max_host_group_sz = 100000; // don't want to be restrictive unles user sets
   max_ips_to_scan = 0;
   extra_payload_length = 0;
   extra_payload = NULL;
-  host_timeout = HOST_TIMEOUT;
   scan_delay = 0;
   scanflags = -1;
   resume_ip.s_addr = 0;
@@ -196,7 +197,6 @@ void NmapOps::Initialize() {
   osscan_guess = 0;
   numdecoys = 0;
   decoyturn = -1;
-  identscan = 0;
   osscan = 0;
   servicescan = 0;
   pingtype = PINGTYPE_UNKNOWN;
@@ -365,11 +365,6 @@ void NmapOps::ValidateOptions() {
     fatal("Fragscan only works with ACK, FIN, Maimon, NULL, SYN, Window, and XMAS scan types");
   }
   
-  if (identscan && !connectscan) {
-    error("Identscan only works with connect scan (-sT) ... ignoring option");
-    identscan = 0;
-  }
-  
   if (osscan && bouncescan)
     error("Combining bounce scan with OS scan seems silly, but I will let you do whatever you want!");
   
@@ -421,4 +416,18 @@ void NmapOps::setInitialRttTimeout(int rtt)
   initial_rtt_timeout = rtt; 
   if (rtt > max_rtt_timeout) max_rtt_timeout = rtt;  
   if (rtt < min_rtt_timeout) min_rtt_timeout = rtt;
+}
+
+void NmapOps::setMinHostGroupSz(unsigned int sz) {
+  if (sz > max_host_group_sz)
+    fatal("Minimum host group size may not be set to greater than maximum size (currently %d)\n", max_host_group_sz);
+  min_host_group_sz = sz;
+}
+
+void NmapOps::setMaxHostGroupSz(unsigned int sz) {
+  if (sz < min_host_group_sz)
+    fatal("Maximum host group size may not be set to less than the maximum size (currently %d)\n", min_host_group_sz);
+  if (sz <= 0)
+    fatal("Max host size must be at least 1");
+  max_host_group_sz = sz;
 }

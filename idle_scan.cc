@@ -920,7 +920,7 @@ void idle_scan(Target *target, u16 *portarray, int numports,
   int portidx = 0; /* Used for splitting the port array into chunks */
   int portsleft;
   time_t starttime;
-  
+
   if (numports == 0) return; /* nothing to scan for */
   if (!proxyName) fatal("Idlescan requires a proxy host");
 
@@ -928,7 +928,10 @@ void idle_scan(Target *target, u16 *portarray, int numports,
     fatal("idle_scan(): You are not allowed to change proxies midstream.  Sorry");
   assert(target);
 
+  if (target->timedOut(NULL))
+    return;
 
+  target->startTimeOutClock(NULL);
 
   /* If this is the first call,  */
   if (!*lastproxy) {
@@ -981,5 +984,6 @@ void idle_scan(Target *target, u16 *portarray, int numports,
     }
   }
 
+  target->stopTimeOutClock(NULL);
   return;
 }

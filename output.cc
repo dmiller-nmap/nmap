@@ -228,7 +228,7 @@ void printportoutput(Target *currenths, PortList *plist) {
   int statecol = -1; // port/protocol state
   int servicecol = -1; // service or protocol name
   int versioncol = -1;
-  int ownercol = -1; // Used for ident scan
+  //  int ownercol = -1; // Used for ident scan
   int colno = 0;
   unsigned int rowno;
   int numrows;
@@ -269,8 +269,8 @@ void printportoutput(Target *currenths, PortList *plist) {
   portcol = colno++;
   statecol = colno++;
   servicecol = colno++;
-  if (o.identscan)
-    ownercol = colno++;
+  /*  if (o.identscan)
+      ownercol = colno++; */
   if (o.servicescan || o.rpcscan)
     versioncol = colno++;
 
@@ -294,8 +294,8 @@ void printportoutput(Target *currenths, PortList *plist) {
   Tbl->addItem(0, servicecol, false, "SERVICE", 7);
   if (versioncol > 0)
     Tbl->addItem(0, versioncol, false, "VERSION", 7);
-  if (ownercol > 0)
-    Tbl->addItem(0, ownercol, false, "OWNER", 5);
+  /*  if (ownercol > 0)
+      Tbl->addItem(0, ownercol, false, "OWNER", 5); */
 
   log_write(LOG_MACHINE,"\t%s: ", (o.ipprotscan)? "Protocols" : "Ports" );
   
@@ -381,8 +381,8 @@ void printportoutput(Target *currenths, PortList *plist) {
 	Tbl->addItem(rowno, portcol, true, portinfo);
 	Tbl->addItem(rowno, statecol, false, state);
 	Tbl->addItem(rowno, servicecol, true, serviceinfo);
-	if (current->owner)
-	  Tbl->addItem(rowno, ownercol, true, current->owner);
+	/*	if (current->owner)
+		Tbl->addItem(rowno, ownercol, true, current->owner); */
 	if (*sd.fullversion)
 	  Tbl->addItem(rowno, versioncol, true, sd.fullversion);
 

@@ -150,7 +150,7 @@ int seq_response_num; /* response # for sequencing */
 double avg_ts_hz = 0.0; /* Avg. amount that timestamps incr. each second */
 struct link_header linkhdr;
 
-if (target->timedout)
+if (target->timedOut(NULL))
   return NULL;
 
 /* The seqs must start out as zero for the si struct */
@@ -281,21 +281,17 @@ if (o.verbose && openport != (unsigned long) -1)
    timeout = 0;
 
    /* Insure we haven't overrun our allotted time ... */
-   if (o.host_timeout && (TIMEVAL_MSEC_SUBTRACT(t1, target->host_timeout) >= 0))
-     {
-       target->timedout = 1;
-       goto osscan_timedout;
-     }
+   if (target->timedOut(&t1))
+     goto osscan_timedout;
+
    while(( ip = (struct ip*) readip_pcap(pd, &bytes, oshardtimeout, NULL, &linkhdr)) && !timeout) {
      gettimeofday(&t2, NULL);
      if (TIMEVAL_SUBTRACT(t2,t1) > oshardtimeout) {
        timeout = 1;
      }
-     if (o.host_timeout && (TIMEVAL_MSEC_SUBTRACT(t2, target->host_timeout) >= 0))
-       {
-	 target->timedout = 1;
-	 goto osscan_timedout;
-       }
+
+     if (target->timedOut(&t2))
+       goto osscan_timedout;
 
      if (bytes < (4 * ip->ip_hl) + 4U || bytes < 20)
        continue;
@@ -372,11 +368,9 @@ if (o.verbose && openport != (unsigned long) -1)
        /*     error("DEBUG: got a response (len=%d):\n", bytes);  */
        /*     lamont_hdump((unsigned char *) ip, bytes); */
        /* Insure we haven't overrun our allotted time ... */
-       if (o.host_timeout && (TIMEVAL_MSEC_SUBTRACT(t2, target->host_timeout) >= 0))
-	 {
-	   target->timedout = 1;
-	   goto osscan_timedout;
-	 }
+       if (target->timedOut(&t2))
+	 goto osscan_timedout;
+
        if (!ip) { 
 	 if (seq_packets_sent < NUM_SEQ_SAMPLES)
 	   break;
@@ -715,7 +709,7 @@ for(i=0; i < 9; i++) {
  if (last) FPtests[last]->next = NULL;
  
  osscan_timedout:
- if (target->timedout)
+ if (target->timedOut(NULL))
    FP = NULL;
  close(rawsd);
  pcap_close(pd);
@@ -1130,7 +1124,7 @@ struct timeval now;
 double bestacc;
 int bestaccidx;
 
- if (target->timedout)
+ if (target->timedOut(NULL))
    return 1;
  
  if (target->FPR == NULL)
@@ -1150,17 +1144,12 @@ int bestaccidx;
  }
 
  for(itry=0; itry < 3; itry++) {
-   if (o.host_timeout) {   
-     gettimeofday(&now, NULL);
-     if (target->timedout || TIMEVAL_MSEC_SUBTRACT(now, target->host_timeout) >= 0)
-       {
-	 target->timedout = 1;
-	 return 1;
-       }
-   }
-   target->FPR->FPs[itry] = get_fingerprint(target, &si[itry]); 
-   if (target->timedout)
+   gettimeofday(&now, NULL);
+   if (target->timedOut(&now))
      return 1;
+
+   target->FPR->FPs[itry] = get_fingerprint(target, &si[itry]); 
+
    match_fingerprint(target->FPR->FPs[itry], &FP_matches[itry], 
 		     o.reference_FPs, OSSCAN_GUESS_THRESHOLD);
    if (FP_matches[itry].overall_results == OSSCAN_SUCCESS && 

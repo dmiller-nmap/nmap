@@ -231,6 +231,8 @@ int nmap_main(int argc, char *argv[]) {
       {"max_rtt_timeout", required_argument, 0, 0},
       {"min_rtt_timeout", required_argument, 0, 0},
       {"initial_rtt_timeout", required_argument, 0, 0},
+      {"max_hostgroup", required_argument, 0, 0},
+      {"min_hostgroup", required_argument, 0, 0},
       {"scanflags", required_argument, 0, 0},
       {"host_timeout", required_argument, 0, 0},
       {"scan_delay", required_argument, 0, 0},
@@ -305,6 +307,12 @@ int nmap_main(int argc, char *argv[]) {
 	if (o.initialRttTimeout() <= 0) {
 	  fatal("initial_rtt_timeout must be greater than 0");
 	}
+      } else if (strcmp(long_options[option_index].name, "max_hostgroup") == 0) {
+	o.setMaxHostGroupSz(atoi(optarg));
+      } else if (strcmp(long_options[option_index].name, "min_hostgroup") == 0) {
+	o.setMinHostGroupSz(atoi(optarg));
+	if (atoi(optarg) > 100)
+	  error("Warning: You specified a highly aggressive --min_hostgroup.");
       } else if (strcmp(long_options[option_index].name, "scanflags") == 0) {
 	o.scanflags = parse_scanflags(optarg);
 	if (o.scanflags < 0) {
@@ -494,7 +502,10 @@ int nmap_main(int argc, char *argv[]) {
       break;    
     case 'h': printusage(argv[0], 0); break;
     case '?': printusage(argv[0], -1); break;
-    case 'I': o.identscan++; break;
+    case 'I': 
+      printf("WARNING: identscan (-I) no longer supported.  Ignoring -I\n");
+      break;
+      // o.identscan++; break;
     case 'i': 
       if (inputfd) {
 	fatal("Only one input filename allowed");
@@ -664,12 +675,12 @@ int nmap_main(int argc, char *argv[]) {
 	o.timing_level = 4;
 	o.setMinRttTimeout(100);
 	o.setMaxRttTimeout(1250);
-	o.setInitialRttTimeout(800);
+	o.setInitialRttTimeout(500);
       } else if (*optarg == '5' || (strcasecmp(optarg, "Insane") == 0)) {
 	o.timing_level = 5;
 	o.setMinRttTimeout(50);
 	o.setMaxRttTimeout(300);
-	o.setInitialRttTimeout(300);
+	o.setInitialRttTimeout(250);
 	o.host_timeout = 900000;
       } else {
 	fatal("Unknown timing mode (-T argment).  Use either \"Paranoid\", \"Sneaky\", \"Polite\", \"Normal\", \"Aggressive\", \"Insane\" or a number from 0 (Paranoid) to 5 (Insane)");
@@ -908,12 +919,11 @@ int nmap_main(int argc, char *argv[]) {
 	  free(host_exp_group[i]);
 	num_host_exp_groups = 0;
 	/* Now grab any new expressions */
-	while(num_host_exp_groups < o.ping_group_sz &&
+	while(num_host_exp_groups < o.ping_group_sz && 
+	      (!o.max_ips_to_scan ||  o.max_ips_to_scan > numhosts_scanned + num_host_exp_groups) &&
 	      (host_spec = grab_next_host_spec(inputfd, argc, fakeargv))) {
-	  host_exp_group[num_host_exp_groups++] = strdup(host_spec);
 	  // For purposes of random scan
-	  if (o.max_ips_to_scan && o.max_ips_to_scan <= numhosts_scanned + num_host_exp_groups)
-	    break;
+	  host_exp_group[num_host_exp_groups++] = strdup(host_spec);
 	}
 	if (num_host_exp_groups == 0)
 	  break;
@@ -931,18 +941,6 @@ int nmap_main(int argc, char *argv[]) {
       if (currenths->flags & HOST_UP && !o.listscan) 
 	numhosts_up++;
     
-      /* Set timeout info */
-      currenths->timedout = 0;
-      if (o.host_timeout) {
-	gettimeofday(&currenths->host_timeout, NULL);
-      
-	/* Must go through all this to avoid int overflow */
-	currenths->host_timeout.tv_sec += o.host_timeout / 1000;
-	currenths->host_timeout.tv_usec += (o.host_timeout % 1000) * 1000;
-	currenths->host_timeout.tv_sec += currenths->host_timeout.tv_usec / 1000000;
-	currenths->host_timeout.tv_usec %= 1000000;
-      }
-    
       /* Lookup the IP */
       if (((currenths->flags & HOST_UP) || resolve_all) && !o.noresolve) {
 	if (currenths->TargetSockAddr(&ss, &sslen) != 0)
@@ -959,8 +957,9 @@ int nmap_main(int argc, char *argv[]) {
 	write_host_status(currenths, resolve_all);
 	printmacinfo(currenths);
 	if (currenths->flags & HOST_UP)
-	  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT|LOG_MACHINE,"\n");
+	  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"\n");
 	log_write(LOG_XML, "</host>\n");
+	log_flush_all();
 	continue;
       }
     
@@ -1080,7 +1079,7 @@ int nmap_main(int argc, char *argv[]) {
     /* Now I can do the output and such for each host */
       log_write(LOG_XML, "<host>");
       write_host_status(currenths, resolve_all);
-      if (currenths->timedout) {
+      if (currenths->timedOut(NULL)) {
 	log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Skipping host %s due to host timeout\n", 
 		  currenths->NameIP(hostname, sizeof(hostname)));
 	log_write(LOG_MACHINE,"Host: %s (%s)\tStatus: Timeout", 
@@ -1424,7 +1423,7 @@ void printusage(char *name, int rc) {
 	 "  -sP ping scan (Find any reachable machines)\n"
 	 "* -sF,-sX,-sN Stealth FIN, Xmas, or Null scan (experts only)\n"
          "  -sV Version scan probes open ports determining service & app names/versions\n"
-	 "  -sR/-I RPC/Identd scan (use with other scan types)\n"
+	 "  -sR RPC scan (use with other scan types)\n"
 	 "Some Common Options (none are required, most can be combined):\n"
 	 "* -O Use TCP/IP fingerprinting to guess remote operating system\n"
 	 "  -p <range> ports to scan.  Example range: 1-1024,1080,6666,31337\n"
@@ -1722,174 +1721,6 @@ char *statenum2str(int state) {
   default: return "unknown"; break;
   }
   return "unknown";
-}
-
-
-/* Checks whether the identd port (113) is open on the target machine.  No
-   sense wasting time trying it for each good port if it is down! */
-
-int check_ident_port(struct in_addr target) {
-  int sd;
-  char buf[4096];
-  struct sockaddr_in sock;
-  int res;
-  struct sockaddr_in stranger;
-  recvfrom6_t sockaddr_in_len = sizeof(struct sockaddr_in);
-  fd_set fds_read, fds_write;
-  struct timeval tv;
-  tv.tv_sec = o.initialRttTimeout() / 1000;
-  tv.tv_usec = (o.initialRttTimeout() % 1000) * 1000;
-  if ((sd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) == -1)
-    {perror("Socket troubles"); exit(1);}
-  unblock_socket(sd);
-  sock.sin_family = AF_INET;
-  sock.sin_addr.s_addr = target.s_addr;
-  sock.sin_port = htons(113); /*should use getservbyname(3), yeah, yeah */
-  FD_ZERO(&fds_read);
-  FD_ZERO(&fds_write);
-  FD_SET(sd, &fds_read);
-  FD_SET(sd, &fds_write);
-  res = connect(sd, (struct sockaddr *) &sock, sizeof(struct sockaddr_in));
-  if (res != -1) /* must be scanning localhost, this socket is non-blocking */ 
-    goto success;
-  if (socket_errno() == ECONNREFUSED) /* Unlikely in non-blocking, but could happen  */ 
-    goto failure;
-  if ((res = select(sd+1, &fds_read, &fds_write, NULL, &tv)) > 0) {
-    /* Yay, it may be up ... */
-    if (FD_ISSET(sd, &fds_read) && FD_ISSET(sd, &fds_write)) {
-      res = recvfrom(sd, buf,4096, 0, (struct sockaddr *) & stranger, &sockaddr_in_len);
-      if (res >= 0) goto success;
-      goto failure;
-    }
-    else if (FD_ISSET(sd, &fds_write)) {
-      res = send(sd, buf, 0, 0);
-      if (res < 0) goto failure;
-      goto success;
-    } else if (FD_ISSET(sd, &fds_read)) {
-      fprintf(stderr, "I have never seen this type of socket selectable for read only.  Please let me know how you did it and what OS you are running (fyodor@insecure.org).\n");
-      goto success;
-    }
-    else {
-      fprintf(stderr, "Wow, select blatantly lied to us!  Please let fyodor know what OS you are running (fyodor@insecure.org).\n");
-      goto failure;
-    } 
-  }
-
- failure:
-  close(sd);
-  if (o.debugging || o.verbose) log_write(LOG_STDOUT, "identd port not active\n");
-  return 0;
-
- success:
-  close(sd);
-  if (o.debugging || o.verbose) log_write(LOG_STDOUT, "identd port is active\n");
-  return 1;
-}
-
-/* returns 0 for possibly temporary error, -1 means we shouldn't attempt
-   inetd again on this host */
-int getidentinfoz(struct in_addr target, u16 localport, u16 remoteport,
-		  char *owner, int ownersz) {
-  int sd;
-  struct sockaddr_in sock;
-  int res;
-  char request[16];
-  char response[1024];
-  char *p,*q;
-  char  *os;
-  int slen = 0;
-
-  if (ownersz == 0) return 0;
-  owner[0] = '\0';
-  if ((sd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) == -1)
-    {perror("Socket troubles"); exit(1);}
-
-  sock.sin_family = AF_INET;
-  sock.sin_addr.s_addr = target.s_addr;
-  sock.sin_port = htons(113);
-  usleep(50000);   /* If we aren't careful, we really MIGHT take out inetd, 
-		      some are very fragile */
-  res = connect(sd, (struct sockaddr *) &sock, sizeof(struct sockaddr_in));
-
-  if (res < 0 ) {
-    if (o.debugging)
-      fprintf(stderr, "Identd port not open, cannot obtain port owner info.\n"); 
-    close(sd);
-    return -1;
-  }
-  snprintf(request, sizeof(request), "%hu,%hu\r\n", remoteport, localport);
-  if (o.debugging > 1) log_write(LOG_STDOUT, "Connected to identd, sending request: %s", request);
-  if (write(sd, request, strlen(request) + 1) == -1) {
-    perror("identd write");
-    close(sd);
-    return 0;
-  }
-  else if ((res = recv(sd, response, sizeof(response), 0)) == -1) {
-    perror("reading from identd");
-    close(sd);
-    return 0;
-  }
-  else {
-    close(sd);
-    if (o.debugging > 1) log_write(LOG_STDOUT, "Read %d bytes from identd: %s\n", res, response);
-    if ((p = strchr(response, ':'))) {
-      p++;
-      if ((q = strtok(p, " :"))) {
-	if (!strcasecmp( q, "error")) {
-	  if (strstr(response, "HIDDEN-USER") || strstr(response, "hidden-user")) {
-	    log_write(LOG_STDOUT, "identd returning HIDDEN-USER, giving up on it\n");
-	    return -1;
-	  }
-	  if (o.debugging) log_write(LOG_STDOUT, "ERROR returned from identd for port %d\n", remoteport);
-	  return 0;
-	}
-	if ((os = strtok(NULL, " :"))) {
-	  if ((p = strtok(NULL, " :"))) {
-	    if ((q = strchr(p, '\r'))) *q = '\0';
-	    if ((q = strchr(p, '\n'))) *q = '\0';
-	    Strncpy(owner, p, ownersz);
-            slen = strlen(owner);
-	    replacenonprintable(owner, slen, '.');
-	  }
-	}
-      } 
-    }  
-  }
-  return 1;
-}
-
-
-
-/* Determine whether firewall mode should be on for a scan */
-/* If firewall mode is active, we increase the scan group size every
-   30 seconds */
-int check_firewallmode(Target *target, struct scanstats *ss) {
-  struct firewallmodeinfo *fm = &(target->firewallmode);
-
-  if (!fm->active && fm->nonresponsive_ports > 50 && ((double)fm->responsive_ports / (fm->responsive_ports + fm->nonresponsive_ports)) < 0.05) {  
-    /* We allow a one-time boost of the parallelism since these slow scans often require us to wait a long time for each group.  This boost can be lost if packet loss is demonstrated.  First we start with a base value based on timing */
-    int base_value = 0;
-    int bonus = 0;
-    double new_ideal;
-    if (o.timing_level >= 3) {
-      base_value = (o.timing_level == 3)? 25 :
-	(o.timing_level == 4)? 35 : 50;
-      /* Now we give a bonus for high-srtt hosts (because the extra on-wire time allows for more parallelization */
-      if (target->to.srtt > 3000)
-	bonus = MIN(target->to.srtt / 7000, 15);
-    }
-    new_ideal = MAX(ss->numqueries_ideal, base_value + bonus);
-    new_ideal = box((double) ss->min_width, (double) ss->max_width, new_ideal);
-    if (o.debugging)
-      error("Activating firewall speed-optimization mode for host %s -- adjusting ideal_queries from %.3g to %.3g", target->NameIP(), ss->numqueries_ideal, new_ideal);
-    ss->numqueries_ideal = new_ideal;
-    fm->active = 1;
-  }
-
-  /* The code here used to up the numqueries_ideal a little bit every
-     5 seconds in firewall mode ... I have removed that because I
-     think the new approach (immediate boost) is better */
-  return fm->active;
 }
 
 int ftp_anon_connect(struct ftpinfo *ftp) {

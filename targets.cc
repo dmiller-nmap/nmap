@@ -1408,9 +1408,12 @@ int get_ping_results(int sd, pcap_t *pd, Target *hostbatch[], int pingtype,
     if (newport && newportstate != PORT_UNKNOWN) {
       /* OK, we can add it, but that is only appropriate if this is one
 	 of the ports the user ASKED for */
+      /* This was for the old turbo mode -- which I no longer support now that ultra_scan() can handle parallel hosts.  Maybe I'll brign it back someday */
+      /*
       if (ports && ports->tcp_count == 1 && ports->tcp_ports[0] == newport)
 	hostbatch[hostnum]->ports.addPort(newport, IPPROTO_TCP, NULL, 
 					  newportstate);
+      */
     }
   }
   return 0;

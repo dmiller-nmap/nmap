@@ -93,6 +93,12 @@
 #include "nmap.h"
 #include "FingerPrintResults.h"
 
+struct host_timeout_nfo {
+  unsigned long msecs_used; /* How many msecs has this Target used? */
+  bool toclock_running; /* Is the clock running right now? */
+  struct timeval toclock_start; /* When did the clock start? */
+};
+
 class Target {
  public: /* For now ... a lot of the data members should be made private */
   Target();
@@ -140,6 +146,21 @@ class Target {
   /* This next version returns a STATIC buffer -- so no concurrency */
   const char *NameIP();
 
+  /* Starts the timeout clock for the host running (e.g. you are
+     beginning a scan).  If you do not have the current time handy,
+     you can pass in NULL.  When done, call stopTimeOutClock (it will
+     also automatically be stopped of timedOut() returns true) */
+  void startTimeOutClock(const struct timeval *now);
+  /* The complement to startTimeOutClock. */
+  void stopTimeOutClock(const struct timeval *now);
+  /* Is the timeout clock currently running? */
+  bool timeOutClockRunning() { return htn.toclock_running; }
+  /* Returns whether the host is timedout.  If the timeoutclock is
+     running, counts elapsed time for that.  Pass NULL if you don't have the
+     current time handy.  You might as well also pass NULL if the
+     clock is not running, as the func won't need the time. */
+  bool timedOut(const struct timeval *now);
+
   /* Takes a 6-byte MAC address */
   int setMACAddress(const u8 *addy);
   /* Returns a pointer to 6-byte MAC address, or NULL if none is set */
@@ -155,10 +176,6 @@ class Target {
   int wierd_responses; /* echo responses from other addresses, Ie a network broadcast address */
   unsigned int flags; /* HOST_UP, HOST_DOWN, HOST_FIREWALLED, HOST_BROADCAST (instead of HOST_BROADCAST use wierd_responses */
   struct timeout_info to;
-  struct timeval host_timeout;
-  struct firewallmodeinfo firewallmode; /* For supporting "firewall mode" speed optimisations */
-  int timedout; /* Nonzero if continued scanning should be aborted due to
-		   timeout  */
   char device[64]; /* The device we transmit on -- make sure to adjust some str* calls if I ever change this*/
 
  private:
@@ -176,6 +193,7 @@ class Target {
   char *nameIPBuf; /* for the NameIP(void) function to return */
   u8 MACaddress[6];
   bool MACaddress_set;
+  struct host_timeout_nfo htn;
 };
 
 #endif /* TARGET_H */
