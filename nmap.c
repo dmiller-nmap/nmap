@@ -8,8 +8,12 @@ struct ops o;  /* option structure */
 int main(int argc, char *argv[]) {
 char *p;
 int i, j, arg, argvlen;
+FILE *inputfd = NULL;
+char *host_spec;
 short fastscan=0, randomize=1, resolve_all=0;
 short quashargv = 0;
+int numhosts_scanned = 0;
+int starttime;
 int lookahead = LOOKAHEAD;
 struct timeval tv; /* Just for seeding random generator */
 short bouncescan = 0;
@@ -36,6 +40,8 @@ for(i=0; i < argc; i++) {
 }
 fakeargv[argc] = NULL;
 
+printf("\nStarting nmap V. %s by Fyodor (fyodor@dhp.com, www.insecure.org/nmap/)\n", VERSION);
+
 /* Seed our random generator */
 gettimeofday(&tv, NULL);
 if (tv.tv_usec) srand(tv.tv_usec);
@@ -55,7 +61,7 @@ signal(SIGHUP, sigdie);
 if (argc < 2 ) printusage(argv[0]);
 
 /* OK, lets parse these args! */
-while((arg = getopt(argc,fakeargv,"Ab:D:de:Ffg:hiL:lM:Nno:P::p:qrRS:s:T:w:Vv")) != EOF) {
+while((arg = getopt(argc,fakeargv,"Ab:D:de:Ffg:hIi:L:M:Nno:P::p:qrRS:s:T:w:Vv")) != EOF) {
   switch(arg) {
   case 'A': o.allowall++; break;
   case 'b': 
@@ -84,9 +90,24 @@ while((arg = getopt(argc,fakeargv,"Ab:D:de:Ffg:hiL:lM:Nno:P::p:qrRS:s:T:w:Vv")) 
     break;    
   case 'h': 
   case '?': printusage(argv[0]);
-  case 'i': o.identscan++; break;
+  case 'I': o.identscan++; break;
+  case 'i': 
+    if (inputfd) {
+      fatal("Only one input filename allowed");
+    }
+    if (!strcmp(optarg, "-")) {
+      inputfd = stdin;
+      printf("Reading target specifications from stdin\n");
+    } else {    
+      inputfd = fopen(optarg, "r");
+      if (!inputfd) {
+	fatal("Failed to open input file %s for writing", optarg);
+      }  
+      printf("Reading target specifications from FILE: %s\n", optarg);
+    }
+    break;  
   case 'L': lookahead = atoi(optarg); break;
-  case 'l': o.lamerscan++; o.udpscan++; break;
+    /*  case 'l': o.lamerscan++; o.udpscan++; break; */
   case 'M': 
     o.max_sockets = atoi(optarg); 
     if (o.max_sockets < 1) fatal("Argument to -M must be at least 1!");
@@ -234,7 +255,7 @@ if (o.logfd) {
     fprintf(o.logfd, "%s ", fakeargv[i]);
   fprintf(o.logfd, "\n");
 }
-printf("\nStarting nmap V. %s by Fyodor (fyodor@dhp.com, www.insecure.org/nmap/)\n", VERSION);
+
 if (fastscan)
   ports = getfastports(o.synscan|o.connectscan|o.fragscan|o.finscan|o.maimonscan|bouncescan|o.nullscan|o.xmasscan,
                        o.udpscan|o.lamerscan);
@@ -265,8 +286,12 @@ if (o.debugging > 1) printf("The max # of sockets on your system is: %d\n", i);
 
 if (randomize)
   shortfry(ports); 
-while(optind < argc) {
-  while((currenths = nexthost(fakeargv[optind], lookahead, o.ptime)) && currenths->host.s_addr) {
+
+starttime = time(NULL);
+
+while((host_spec = grab_next_host_spec(inputfd, argc, fakeargv))) {
+  while((currenths = nexthost(host_spec, lookahead, o.ptime)) && currenths->host.s_addr) {
+    numhosts_scanned++;
     /*    printf("Nexthost() returned: %s\n", inet_ntoa(currenths->host));*/
     target = NULL;
     if (((currenths->flags & HOST_UP) || resolve_all) && !o.noresolve)
@@ -286,7 +311,9 @@ if (!o.pingscan) {
     if (resolve_all)
       nmap_log("Host %s (%s) appears to be down, skipping it.\n", currenths->name, inet_ntoa(currenths->host));
     else printf("Host %s (%s) appears to be down, skipping it.\n", currenths->name, inet_ntoa(currenths->host));
+    numhosts_scanned++;
   }
+
 }
 else {
   if (currenths->flags & HOST_UP) 
@@ -358,9 +385,9 @@ o.decoys[o.decoyturn] = currenths->source_ip;
     }
     fflush(stdout);
   }
-  optind++;
 }
 
+printf("Nmap run completed -- %d host(s) scanned in %ld seconds\n", numhosts_scanned, (long) time(NULL) - starttime);
 return 0;
 }
 
@@ -553,6 +580,7 @@ Options (none are required, most can be combined):\n\
    -F fast scan. Only scans ports in /etc/services, a la strobe(1).\n\
    -n Don't DNS resolve anything unless we have to (makes ping scans faster)\n\
    -o <logfile> Output scan logs to <logfile>.\n\
+   -i <inputfile> Grab IP numbers or hostnames from file.  Use '-' for stdin\n\
    -g <portnumber> Sets the source port used for scans.  20 and 53 are good choices.\n\
    -L <num> Number of pings to perform in parallel.  Your default is: %d\n\
    -R Try to resolve all hosts, even down ones (can take a lot of time)\n\
@@ -568,7 +596,8 @@ printf("   -T <seconds> Set the ping and tcp connect() timeout.\n\
 printf("   -e <devicename>. Send packets on interface <devicename> (eth0,ppp0,etc.).\n"); 
 printf("   -q quash argv to something benign, currently set to \"%s\". (deprecated)\n", FAKE_ARGV);
 printf("Hostnames specified as internet hostname or IP address.  Optional '/mask' \
-specifies subnet. cert.org/24 or 192.88.209.5/24 or 192.88.209.0-255 or '128.88.209.*' scan CERT's Class C.\n");
+specifies subnet. cert.org/24 or 192.88.209.5/24 or 192.88.209.0-255 or '128.88.209.*' scan CERT's Class C.\n\
+SEE THE MAN PAGE FOR MORE THOROUGH EXPLANATIONS AND EXAMPLES.\n");
 exit(0);
 }
 
@@ -969,6 +998,29 @@ int deleteport(portlist *ports, unsigned short portno,
 }
   return 0; /* success */
 }
+
+char *grab_next_host_spec(FILE *inputfd, int argc, char **fakeargv) {
+  static char host_spec[512];
+  int host_spec_index;
+  int ch;
+  if (!inputfd) {
+    return( (optind < argc)?  fakeargv[optind++] : NULL);
+  }
+  host_spec_index = 0;
+  while((ch = getc(inputfd)) != EOF) {
+    if (ch == ' ' || ch == '\n' || ch == '\t' || ch == '\0') {
+      if (host_spec_index == 0) continue;
+      host_spec[host_spec_index] = '\0';
+      return host_spec;
+    } else if (host_spec_index < 511) {
+      host_spec[host_spec_index++] = (char) ch;
+    } else fatal("One of the host_specifications from your input file is too long (> %d chars)", sizeof(host_spec));
+  }
+  host_spec[host_spec_index] = '\0';
+  if (!*host_spec) return NULL;
+  return host_spec;
+}
+
 
 void printandfreeports(portlist ports) {
   char protocol[4];
@@ -1760,7 +1812,6 @@ portlist super_scan(struct hoststruct *target, unsigned short *portarray, stype 
   int dropped = 0;  /* These three are for UDP squelching */
   int freshportstried = 0;
   int senddelay = 0;
-
   pcap_t *pd;
   int bytes;
   struct ip *ip, *ip2;
@@ -2083,7 +2134,7 @@ if (o.debugging || o.verbose)
   openlist = testinglist;
 
   if (o.debugging || o.verbose)
-    printf("The TCP stealth FIN/NULL/XMAS scan took %ld seconds to scan %d ports.\n", 
+    printf("The UDP or stealth FIN/NULL/XMAS scan took %ld seconds to scan %d ports.\n", 
 	   (long) time(NULL) - starttime, o.numports);
   
   for (current = openlist; current;  current = (current->next >= 0)? &scan[current->next] : NULL) {

@@ -5,15 +5,23 @@ struct hoststruct *nexthost(char *hostexp, int lookahead, int pingtimeout) {
 static int lastindex = -1;
 static struct hoststruct *hostbatch  = NULL;
 static int targets_valid = 0;
+static char *lastexp = NULL;
 static int i;
 static struct targets targets;
 static char *lasthostexp = NULL;
 if (!hostbatch) hostbatch = safe_malloc((lookahead + 1) * sizeof(struct hoststruct));
 
-if (lasthostexp && lasthostexp != hostexp) {
+if (!lastexp) {
+  lastexp = safe_malloc(1024);
+  *lastexp = '\0';
+}
+
+if (strcmp(lastexp, hostexp)) {
  /* New expression -- reinit everything */
   targets_valid = 0;
   lastindex = -1;
+  strncpy(lastexp, hostexp, 1024);
+  lastexp[1023] = '\0';
 }
 
 if (!targets_valid) {

@@ -320,6 +320,7 @@ void masstcpping(struct hoststruct *hostbatch, int num_hosts, int pingtimeout);
 /* general helper functions */
 void hdump(unsigned char *packet, int len);
 void *safe_malloc(int size);
+char *grab_next_host_spec(FILE *inputfd, int argc, char **fakeargv);
 int parse_targets(struct targets *targets, char *h);
 struct hoststruct *nexthost(char *hostexp, int lookahead, int pingtimeout);
 void options_init();

@@ -212,7 +212,7 @@ of incomming IP packets to a subnet of computers.  These should be
 eliminated if found as they allow for numerous denial of service
 attacks (Smurf is the most common).
 .TP
-.B \-i
+.B \-I
 This turns on TCP reverse ident scanning. As noted by Dave Goldsmith
 in a 1996 Bugtraq post, the ident protocol (rfc 1413) allows for the
 disclosure of the username that owns any process connected via
@@ -253,6 +253,17 @@ This handy option display a quick reference screen of nmap usage options.
 .TP
 .B \-o <logfilename>
 This logs the results of your scans into the file you specify as an argument.
+.TP
+.B \-i <inputfilename>
+Reads target specifications from the file specified RATHER than from
+the command line.  The file should contain a list of host or net
+expressions seperated by spaces, tabs, or newlines.  Use a hyphen (-)
+as
+.I inputfilename 
+if you want nmap to read host expressions from
+stdin (like at the end of a pipe).  See the section
+.I target specification
+for more information on the expressions you fill the file with.
 .TP
 .B \-p <port ranges>
 This option specifies what ports you want to specify. For example '-p
@@ -379,18 +390,30 @@ Launches a stealth SYN scan against each machine that is up out of the
 255 machines on class 'C' where target.example.com resides.  This
 requires root privileges because of the SYN scan.
 .Sp
-.B nmap -sX -p 22,53,110,143,4564 "128.210.*.1-127"
+.B nmap -sX -p 22,53,110,143 "128.210.*.1-127"
 .Sp
-Sends an Xmas tree scan to the first half of each of the 255 possible 8 bit subnets in the 128.210 class 'B' address space.  We are testing whether the systems run sshd, DNS, pop3d, imapd, or port 4564.  The latter is included to filter out Windows boxes, which will show all ports open (Xmas scan doesn't work on Microsoft boxes due to their deficient TCP stack).  Thus any machines that show port 4564 can be marked down under 'Windows boxes'.
+Sends an Xmas tree scan to the first half of each of the 255 possible
+8 bit subnets in the 128.210 class 'B' address space.  We are testing
+whether the systems run sshd, DNS, pop3d, imapd, or port 4564.  Note
+that Xmas scan doesn't work on Microsoft boxes due to their deficient
+TCP stack.
 .Sp
 .B nmap -v -p 80 '*.*.2.3-5'
 .Sp
-Rather than focus in a specific IP range, it is sometimes interesting
-to take the entire Internet and try a small sample of each section.
+Rather than focus on a specific IP range, it is sometimes interesting
+to slice up the entire Internet and scan a small sample from each slice.
 This command finds all web servers on machines with IP addresses
 ending in .2.3, .2.4, or .2.5 .  If you are root you might as well add -sS.  Also you will find more interesting machines starting at 127. so you might want to use '127-222' instead of the first asterict because that section has a greater density of interesting machines (IMHO).
 .Sp
-.B nmap -v -PT80 -g 6791 -sS -D lamer.example.com -p 53,80,139 -o logs/evil_empire.scan www.microsoft.com/24
+.B host -l company.com | cut '-d ' -f 4 | ./nmap -v -i -
+.Sp
+Do a DNS zone transfer to find the hosts in company.com and then feed
+the IP addresses to 
+.I nmap.
+The above commands are for my GNU/Linux box.  You may need different
+commands/options on other operating systems.
+.Sp
+.B nmap -v -PT80 -g 6791 -sS -D lamer.example.com -p 53,80,139 -o evil_empire.scan www.microsoft.com/24
 .Sp
 This SYN scans 255 machines on the www.microsoft.com network of web servers
 looking for TCP ports 53 (DNS) 80 (WWW) and 139 (NetBIOS-SSN).  
@@ -402,7 +425,7 @@ because the source port of the scan must be greater than 1023.  Packets coming f
 .B -D
 option makes it appear (to MS) that 'lamer.example.com' is scanning them at the same time we are.  MS won't know which is doing the real scan and which is the decoy.  The
 .B -o
-option logs important output to logs/evil_empire.scan for our later perusal.
+option logs important output to evil_empire.scan for our later perusal.
 .Sp
 Most domains are not this much of a pain to scan.  MS just has a
 paranoid-as-hell packet filtering policy.  This is actually quite
@@ -427,8 +450,7 @@ is (C) 1997,1998 by Fyodor (fyodor@dhp.com, fyodor@insecure.org)
 .Sp
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or (at
-your option) any later version.
+the Free Software Foundation; Version 2.
 .Sp
 This program is distributed in the hope that it will be useful, but
 WITHOUT ANY WARRANTY; without even the implied warranty of
