@@ -762,15 +762,12 @@ if (!lastpcap || pd != lastpcap) {
 }
 lastpcap = pd;
 do {
-  printf("Calling pcap_next\n");
   p = (char *) pcap_next(pd, &head);
-  printf("Done with pcap_next\n");
   if (p)
     p += offset;
   else {
     /* timed out */ 
     *len=0;
-    printf("leaving\n");
     return NULL;
   }
 } while(!p || (*p & 0x40) != 0x40); /* Go until we get IPv4 packet */

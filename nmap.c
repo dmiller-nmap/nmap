@@ -1889,17 +1889,17 @@ if (o.debugging || o.verbose)
 	      i = (o.magic_port_set)? o.magic_port : o.magic_port + 1;
 	      gettimeofday(&current->sent[1], NULL);
 	      now = current->sent[1];
-	    for(decoy=0; decoy < o.numdecoys; decoy++) {
-	      if (o.fragscan)
-		send_small_fragz(rawsd, &o.decoys[decoy], &target->host, i, current->portno, scanflags);
-	      else if (scantype != UDP_SCAN) 
-		send_tcp_raw(rawsd, &o.decoys[decoy], &target->host, i, 
-			     current->portno, 0, 0, scanflags, 0, 0, 0);
-	      else send_udp_raw(rawsd, &o.decoys[decoy], &target->host, i,
-				current->portno, NULL ,0);	      
-	      /*usleep(10000);*/ /* *WE* normally do not need this, but the target 
-		lamer often does */
-	    }
+	      for(decoy=0; decoy < o.numdecoys; decoy++) {
+		if (o.fragscan)
+		  send_small_fragz(rawsd, &o.decoys[decoy], &target->host, i, current->portno, scanflags);
+		else if (scantype != UDP_SCAN) 
+		  send_tcp_raw(rawsd, &o.decoys[decoy], &target->host, i, 
+			       current->portno, 0, 0, scanflags, 0, 0, 0);
+		else send_udp_raw(rawsd, &o.decoys[decoy], &target->host, i,
+				  current->portno, NULL ,0);	      
+		/*usleep(10000);*/ /* *WE* normally do not need this, but the target 
+		  lamer often does */
+	      }
 	    }
 	  }
 	} else { 
@@ -1937,23 +1937,23 @@ if (o.debugging || o.verbose)
 	  if (ip->ip_p == IPPROTO_TCP) {
 	    tcp = (struct tcphdr *) (((char *) ip) + 4 * ip->ip_hl);
 	    if (tcp->th_flags & TH_RST) {	    
-	      if (portlookup[ntohs(tcp->th_sport)] < 0) {
+	      newport = ntohs(tcp->th_sport);
+	      if (portlookup[newport] < 0) {
 		if (o.debugging) {
 		  printf("Strange packet from port %d:\n", ntohs(tcp->th_sport));
 		  readtcppacket((char *)ip, bytes);
 		}
 		current = NULL;
 		continue;
-	      }
-
+	      }	      
 	      /* We figure out the scan number (and put it in i) */
-	      newport = ntohs(tcp->th_sport);
 	      current = &scan[portlookup[newport]];
-	      if (current->trynum == 0) packet_trynum = 0;
-	      else if (!o.magic_port_set) {
+
+	      if (!o.magic_port_set) {
 		packet_trynum = ntohs(tcp->th_dport) - o.magic_port;
 		if ((packet_trynum|1) != 1) packet_trynum = -1;
-	      } else packet_trynum = -1;
+	      } else if (current->trynum == 0) packet_trynum = 0;
+	      else packet_trynum = -1;
 	    } else { continue; }
 	  } else if (ip->ip_p == IPPROTO_ICMP) {
 	    icmp = (struct icmp *) ((char *)ip + sizeof(struct ip));
@@ -1963,7 +1963,7 @@ if (o.debugging || o.verbose)
 	    hdump(icmp, ntohs(ip->ip_len) - sizeof(struct ip));
 	    if (icmp->icmp_type == 3) {
 	      switch(icmp->icmp_code) {
-
+		
 	      case 3: /* p0rt unreachable */		
 		printf("Got port unreachable newport %hi\n", ntohs(data[1]));
 		newport = ntohs(data[1]);
@@ -1977,12 +1977,12 @@ if (o.debugging || o.verbose)
 		}
 		else { continue; }		
 		break;
-	      }	     
+	      }    
 	    }
 	  } else if (ip->ip_p == IPPROTO_UDP) {
 	    printf("Received udp packet back ... interesting\n");
 	    continue;
-	  }	
+	  }
 	  gettimeofday(&now, NULL);
 	  if (current->state == port_closed && (packet_trynum < 0)) {
 	    to.rttvar *= 1.2;
@@ -2008,7 +2008,7 @@ if (o.debugging || o.verbose)
 	      } else if (o.debugging > 1) { printf("Lost a packet, but not decreasing\n");
 	      }
 	    }
-	  }      	      
+	  }  	      
 	  if (current->state != port_closed) {
 	    changed++;
 	    numqueries_outstanding--;
@@ -2019,7 +2019,7 @@ if (o.debugging || o.verbose)
 	    if (current->prev >= 0) scan[current->prev].next = current->next;
 	  }
 	}
-      }	  
+      } 
     }
     /* Prepare for retry */
     testinglist = openlist;
@@ -2029,7 +2029,7 @@ if (o.debugging || o.verbose)
       if (o.debugging) { 
 	printf("Preparing for retry, open port %d noted\n", current->portno); 
       }
-    }    
+    }  
     openlist = NULL;
     numqueries_ideal = initial_packet_width;
     printf("Done with round %d\n", tries);
