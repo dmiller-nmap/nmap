@@ -840,7 +840,7 @@ int winip_corruption_possible()
 	return rawsock_avail;	//	for now
 }
 
-inline void sethdrinclude(int sd) 
+void sethdrinclude(int sd) 
 {
 	int one = 1;
 	if(sd != 501)

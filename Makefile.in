@@ -132,9 +132,9 @@ distro:
 	              nmapfe_error.c nmapfe_error.h NmapFE.dsp nmapfe.dsw \
 	              /usr/tmp/nmap-$(NMAP_VERSION)/nmapfe
 	$(SHTOOL) mkdir /usr/tmp/nmap-$(NMAP_VERSION)/nbase
-	cd $(NBASEDIR); cp -ra Makefile.in aclocal.m4 configure configure.in \
-	             nbase_config.h.in \
-                     *.c *.h CHANGELOG /usr/tmp/nmap-$(NMAP_VERSION)/nbase
+	cd $(NBASEDIR); cp -ra Makefile.in aclocal.m4 configlocal.m4 \
+                        configure configure.in nbase_config.h.in \
+                        *.c *.h CHANGELOG /usr/tmp/nmap-$(NMAP_VERSION)/nbase
 
 	rm -f /usr/tmp/nmap-$(NMAP_VERSION)/nbase/nbase_config.h 
 # Kill the CVS crap

@@ -121,7 +121,7 @@ int resolve(char *hostname, struct sockaddr_storage *ss, size_t *sslen,
   rc = getaddrinfo(hostname, NULL, &hints, &result);
   if (rc != 0)
     return 0;
-  assert(result->ai_addrlen > 0 && result->ai_addrlen <= sizeof(struct sockaddr_storage));
+  assert(result->ai_addrlen > 0 && result->ai_addrlen <= (int) sizeof(struct sockaddr_storage));
   *sslen = result->ai_addrlen;
   memcpy(ss, result->ai_addr, *sslen);
   freeaddrinfo(result);
