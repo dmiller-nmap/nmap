@@ -536,12 +536,12 @@ int AVal_match(struct AVal *reference, struct AVal *fprint) {
       val = strtol(current_fp->value, &endptr, 16);
       if (val == 0 || *endptr) return 0;
       }
-    } else if (*current_ref->value == '<' && isdigit(current_ref->value[1])) {
+    } else if (*current_ref->value == '<' && isdigit((int) current_ref->value[1])) {
       if (!*current_fp->value) return 0;
       number = strtol(current_ref->value + 1, &endptr, 16);
       val = strtol(current_fp->value, &endptr, 16);
       if (val > number || *endptr) return 0;          
-    } else if (*current_ref->value == '>' && isdigit(current_ref->value[1])) {
+    } else if (*current_ref->value == '>' && isdigit((int) current_ref->value[1])) {
       if (!*current_fp->value) return 0;
       number = strtol(current_ref->value + 1, &endptr, 16);
       val = strtol(current_fp->value, &endptr, 16);
@@ -657,7 +657,7 @@ while(fgets(line, sizeof(line), fp)) {
     printf("Parse error on line %d of nmap_os_fingerprints file: %s\n", lineno, line);
   }
   p = line + 12;
-  while(*p && isspace(*p)) p++;
+  while(*p && isspace((int) *p)) p++;
   if (!*p) {
     printf("Parse error on line %d of nmap_os_fingerprints file: %s\n", lineno, line);    
   }

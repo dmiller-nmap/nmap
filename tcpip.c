@@ -963,9 +963,9 @@ char *routethrough(struct in_addr *dest, struct in_addr *source) {
 	return NULL;
       /* Now we insure this claimed address is a real interface ... */
       for(i=0; i < numinterfaces; i++)
-	if (mydevs[i].addr.s_addr == dest->s_addr) {
+	if (mydevs[i].addr.s_addr == addy.s_addr) {
 	  if (source) {
-	    source->s_addr = dest->s_addr;	  
+	    source->s_addr = addy.s_addr;	  
 	  }
 	  return mydevs[i].name;
 	}  
