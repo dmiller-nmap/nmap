@@ -1777,6 +1777,7 @@ portlist super_scan(struct hoststruct *target, unsigned short *portarray, stype 
   int decoy;
   struct timeval now;
   int i,j;
+  int senddelay = 50000;
   unsigned short *data;
   int packet_trynum =0;
   int windowdecrease = 0; /* Has the window been decreased this round yet? */
@@ -1898,6 +1899,7 @@ if (o.debugging || o.verbose)
 			       current->portno, 0, 0, scanflags, 0, 0, 0);
 		else send_udp_raw(rawsd, &o.decoys[decoy], &target->host, i,
 				  current->portno, NULL ,0);	      
+		if (scantype == UDP_SCAN) usleep(senddelay);
 		/*usleep(10000);*/ /* *WE* normally do not need this, but the target 
 		  lamer often does */
 	      }
@@ -1922,7 +1924,7 @@ if (o.debugging || o.verbose)
 			   current->portno, 0, 0, scanflags, 0, 0, 0);
 	    else send_udp_raw(rawsd, &o.decoys[decoy], &target->host, o.magic_port,
 			      current->portno, NULL, 0);
-	    	    if (scantype == UDP_SCAN) usleep(50000);
+	    	    if (scantype == UDP_SCAN) usleep(senddelay);
 	    /*usleep(10000);*/ /* *WE* normally do not need this, but the target 
 	      lamer often does */
 	  }
