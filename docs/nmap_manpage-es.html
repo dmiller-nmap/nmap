@@ -1,0 +1,825 @@
+<HTML>
+<HEAD>
+<TITLE>Nmap network security scanner man page (Spanish translation)</TITLE>
+</HEAD>
+<BODY>
+<H1>Nmap network security scanner man page (Spanish translation)</H1>
+<HR>
+<PRE>
+<!-- Manpage converted by man2html 3.0.1 -->
+
+
+
+<B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
+
+
+
+</PRE>
+<H2>NOMBRE</H2><PRE>
+       nmap  -  Herramienta  de  exploraci<B>o</B>n  de red y esc<B>a</B>ner de
+       seguridad.
+
+
+</PRE>
+<H2>SINOPSIS</H2><PRE>
+       <B>nmap</B> [Tipos(s)de escaneo] [Opciones] &lt;servidor  o  red  #1
+       ... [#N]&gt;
+
+
+</PRE>
+<H2>DESCRIPCION</H2><PRE>
+       <I>Nmap</I>  ha  sido dise<B>n</B>ado para permitir a administradores de
+       sistemas y gente curiosa en general el escaneo de  grandes
+       redes para determinar qu<B>e</B> servidores se encuentran activos
+       y qu<B>e</B> servicios ofrecen.  <I>nmap</I> es compatible con  un  gran
+       n<B>u</B>mero  de  t<B>e</B>cnicas  de escaneo como: UDP, TCP connect(),
+       TCP SYN (half open), ftp proxy (bounce  attack),  Reverse-
+       ident,  ICMP  (ping sweep), FIN, ACK sweep, Xmas Tree, SYN
+       sweep, and Null scan. V<B>e</B>ase la secci<B>o</B>n  <I>Tipos</I>  <I>de</I>  <I>Escaneo</I>
+       para m<B>a</B>s detalles.  <I>nmap</I> proporciona tambi<B>e</B>n caracter<B>i</B>sti-
+       cas avanzadas como la detecci<B>o</B>n remota del sistema  opera-
+       tivo  por  medio  de huellas TCP/IP , escaneo tipo stealth
+       (oculto), retraso din<B>a</B>mico y  c<B>a</B>lculos  de  retransmisi<B>o</B>n,
+       escaneo  paralelo,  detecci<B>o</B>n  de servidores inactivos por
+       medio de pings paralelos, escaneo con se<B>n</B>uelos,  detecci<B>o</B>n
+       de  filtrado  de  puertos,  escaneo  por  fragmentaci<B>o</B>n  y
+       especificaci<B>o</B>n flexible de destino y puerto.
+
+       Se han hecho grandes esfuerzos encaminados a  proporcionar
+       un  rendimiento  decente para usuarios normales (no root).
+       Por desgracia, muchos de los interfaces cr<B>i</B>ticos del  ker-
+       nel ( tales como los raw sockets) requieren privilegios de
+       root.  Deber<B>i</B>a ejecutarse <I>nmap</I> como root siempre  que  sea
+       posible.
+
+
+
+</PRE>
+<H2>OPCIONES</H2><PRE>
+       En general, pueden combinarse aquellas opciones que tengan
+       sentido en conjunto.  Algunas  de  ellas  son  espec<B>i</B>ficas
+       para  ciertos  modos de escaneo.  <I>nmap</I> trata de detectar y
+       advertir al usuario  sobre  el  uso  de  combinaciones  de
+       opciones sic<B>o</B>ticas o no permitidas.
+
+       Si  usted  es una persona impaciente, puede pasar directa-
+       mente a la secci<B>o</B>n <I>ejemplos</I> al final  de  este  documento,
+       donde  encontrar<B>a</B>  ejemplos  de  los  usos m<B>a</B>s corrientes.
+       Tambi<B>e</B>n puede ejecutar el comando <B>nmap</B> <B>-h</B> para una  p<B>a</B>gina
+       de referencia r<B>a</B>pida con un listado de todas las opciones.
+
+       <B>Tipos</B> <B>de</B> <B>Escaneo</B>
+
+       <B>-sT</B>    Escaneo TCP connect(): Es la forma  m<B>a</B>s  b<B>a</B>sica  de
+              escaneo  TCP.  La llamada de sistema connect() pro-
+              porcionada por nuestro  sistema  operativo  se  usa
+              para  establecer una conexi<B>o</B>n con todos los puertos
+              interesantes de la m<B>a</B>quina. Si el puerto est<B>a</B> a  la
+
+
+
+                                                                1
+
+
+
+
+
+<B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
+
+
+              escucha,  connect()  tendr<B>a</B> <B>e</B>xito, de otro modo, el
+              puerto resulta inalcanzable. Una ventaja importante
+              de  esta  t<B>e</B>cnica es que no resulta necesario tener
+              privilegios especiales.  Cualquier  usuario  en  la
+              mayor<B>i</B>a  de  los  sistemas  UNIX tiene permiso para
+              usar esta llamada.
+
+              Este tipo de escaneo resulta f<B>a</B>cilmente  detectable
+              dado  que  los  registros  del  servidor de destino
+              muestran un mont<B>o</B>n  de  conexiones  y  mensajes  de
+              error  para  aquellos servicios que accept() (acep-
+              tan) la conexi<B>o</B>n  para  luego  cerrarla  inmediata-
+              mente.
+
+       <B>-sS</B>    Escaneo  TCP  SYN:  A  menudo  se  denomina  a esta
+              t<B>e</B>cnica escaneo "half open" (medio abierto), porque
+              no  se  abre una conexi<B>o</B>n TCP completa. Se env<B>i</B>a un
+              paquete SYN, como si se fuese a abrir una  conexi<B>o</B>n
+              real  y  se  espera  que  llegue  una respuesta. Un
+              SYN|ACK indica que el puerto est<B>a</B> a la escucha.  Un
+              RST  es  indicativo  de  que el puerto no est<B>a</B> a la
+              escucha. Si se recibe un SYN|ACK, se env<B>i</B>a  un  RST
+              inmediatamente para cortar la conexi<B>o</B>n (en realidad
+              es el kernel de nuestro sistema  operativo  el  que
+              hace  esto  por  nosotros). La ventaja principal de
+              esta t<B>e</B>cnica de escaneo es que ser<B>a</B> registrada  por
+              muchos  menos  servidores que la anterior. Por des-
+              gracia se necesitan privilegios de root  para  con-
+              struir estos paquetes SYN modificados.
+
+       <B>-sF</B> <B>-sX</B> <B>-sN</B>
+              Modos Stealth FIN, Xmas Tree o Nul scan: A veces ni
+              siquiera el escaneo SYN resulta lo  suficientemente
+              clandestino.  Algunas firewalls y filtros de paque-
+              tes vigilan el env<B>i</B>o  de  paquetes  SYN  a  puertos
+              restringidos,  y programas disponibles como Synlog-
+              ger y Courtney detectan este tipo de escaneo. Estos
+              tipos  de  escaneo  avanzado,  sin  embargo, pueden
+              cruzar estas barreras sin ser detectados.
+
+              La idea es que se requiere que los puertos cerrados
+              respondan  a  nuestro paquete de prueba con un RST,
+              mientras que los puertos abiertos deben ignorar los
+              paquetes  en  cuesti<B>o</B>n  (v<B>e</B>ase  RFC  794 pp 64). El
+              escaneo FIN utiliza un paquete FIN vac<B>i</B>o (sorpresa)
+              como  prueba,  mientras  que  el  escaneo Xmas tree
+              activa las flags FIN, URG y PUSH. El  escaneo  NULL
+              desactiva todas las flags.  Por desgracia Microsoft
+              (como de costumbre)  decidi<B>o</B>  ignorar  el  est<B>a</B>ndar
+              completamente y hacer las cosas a su manera. Debido
+              a esto, este tipo de escaneo no funcionar<B>a</B> con sis-
+              temas basados en Windows95/NT. En el lado positivo,
+              esta es una buena manera de  distinguir  entre  las
+              dos  plataformas.  Si  el escaneo encuentra puertos
+
+
+
+                                                                2
+
+
+
+
+
+<B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
+
+
+              cerrados, probablemente se  trate  de  una  m<B>a</B>quina
+              UNIX,  mientras  que  todos los puertos abiertos es
+              indicativo de  Windows.   Excepcionalmente,  Cisco,
+              BSDI, HP/UX, MVS, y IRIX tambi<B>e</B>n env<B>i</B>an RSTs en vez
+              de desechar el paquete.
+
+       <B>-sP</B>    Escaneo ping: A veces <B>u</B>nicamente se necesita  saber
+              qu<B>e</B>  servidores  en  una red se encuentran activos.
+              Nmap  puede  hacer  esto  enviando  peticiones   de
+              respuesta ICMP a cada direcci<B>o</B>n IP de la red que se
+              especifica. Aquellos servidores  que  responden  se
+              encuentran   activos.  Desafortunadamente,  algunos
+              sitios web como microsoft.com bloquean este tipo de
+              paquetes.  Nmap puede enviar tambi<B>e</B>n un paquete TCP
+              ack al puerto 80 (por defecto). Si se  obtiene  por
+              respuesta un RST, esa m<B>a</B>quina est<B>a</B> activa. Una ter-
+              cera t<B>e</B>cnica implica el env<B>i</B>o de  un paquete SYN  y
+              la  espera de de un RST o un SYN/ACK. Para usuarios
+              no root se usa un m<B>e</B>todo connect().
+
+              Por defecto (para usuarios no root), nmap  usa  las
+              t<B>e</B>cnicas  ICMP  y ACK en paralelo. Se puede cambiar
+              la opci<B>o</B>n <B>-p</B> descrita m<B>a</B>s adelante.
+
+              N<B>o</B>tese que el envio de pings se realiza por defecto
+              de todas maneras y que s<B>o</B>lamente se escanean aquel-
+              los servidores de los que se obtiene respuesta. Use
+              esta  opci<B>o</B>n  s<B>o</B>lamente  en el caso de que desee un
+              ping sweep (barrido ping) <B>sin</B> hacer ning<B>u</B>n tipo  de
+              escaneo de puertos.
+
+       <B>-sU</B>    Escaneo  Udp:  Este  m<B>e</B>todo  se  usa para saber qu<B>e</B>
+              puertos UDP (Protocolo de Datagrama de Usuario, RFC
+              768) est<B>a</B>n abiertos en un servidor. La t<B>e</B>cnica con-
+              siste en enviar paquetes UCP  de  0  bytes  a  cada
+              puerto de la m<B>a</B>quina objetivo. Si se recibe un men-
+              saje ICMP de  puerto  no  alcanzable,  entonces  el
+              puerto  est<B>a</B> cerrado. De lo contrario, asumimos que
+              est<B>a</B> abierto.
+
+              Alguna gente piensa que el  escaneo  UDP  no  tiene
+              sentido.  Normalmente les recuerdo el reciente agu-
+              jero Solaris rcpbind. Puede encontrarse  a  rcpbind
+              escondido  en un puerto UDP no documentado en alg<B>u</B>n
+              lugar por encima  del  32770.   Por  lo  tanto,  no
+              importa  que el 111 est<B>e</B> bloqueado por la firewall.
+              Pero, <B>c</B>qui<B>e</B>n puede decir en  cual  de  los  m<B>a</B>s  de
+              30000  puertos  altos  se encuentra a la escucha el
+              programa? <B>i</B>Con un esc<B>a</B>ner  UDP  se  puede!  Tenemos
+              tambi<B>e</B>n el programa de puerta trasera cDc Back Ori-
+              fice que se oculta en un puerto UDP configurable en
+              las  m<B>a</B>quinas  Windows, por no mencionar los muchos
+              servicios frecuentemente vulnerables que  usan  UDP
+              como snmp, tftp, NFS, etc.
+
+
+
+                                                                3
+
+
+
+
+
+<B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
+
+
+              Por  desgracia,  el  escaneo  UDP  resulta  a veces
+              tremendamente lento debido a que la mayor<B>i</B>a de  los
+              servidores  implementan  una sugerencia recogida en
+              el RFC 1812 (secci<B>o</B>n 4.3.2.8)  acerca  de  la  lim-
+              itaci<B>o</B>n de la frecuencia de mensajes de error ICMP.
+              Por ejemplo, el kernel de Linux  (en  /ipv4/icmp.h)
+              limita  la  generaci<B>o</B>n de mensajes de destino inal-
+              canzable a 80 cada cuatro segundos, con una  penal-
+              izaci<B>o</B>n de 1/4 de segundo si se rebasa dicha canti-
+              dad. Solaris tiene unos l<B>i</B>mites mucho m<B>a</B>s estrictos
+              (m<B>a</B>s o menos 2 mensajes por segundo) y por lo tanto
+              lleva m<B>a</B>s tiempo hacerle un escaneo.  <I>nmap</I>  detecta
+              este  l<B>i</B>mite de frecuencia y se ralentiza en conse-
+              cuencia, en vez de desbordar la  red  con  paquetes
+              in<B>u</B>tiles que la m<B>a</B>quina destino ignorar<B>a</B>.
+
+              Como de costumbre, Microsoft ignor<B>o</B> esta sugerencia
+              del RFC y no parece que haya previsto  ning<B>u</B>n  tipo
+              de  l<B>i</B>mite de frecuencia para las m<B>a</B>quinas Windows.
+              Debido a esto  resulta  posible  escanear  los  65K
+              puertos  de  una  m<B>a</B>quina  Windows <B>muy</B> r<B>a</B>pidamente.
+              <B>i</B>Woop!
+
+       <B>-b</B> <B>&lt;ftp</B> <B>relay</B> <B>host&gt;</B>
+              Ataque de rebote FTP: Una  caracter<B>i</B>stica  "intere-
+              sante"  del protocolo FTP (FRC 959) es la posibili-
+              dad de realizar conexiones  ftp  tipo  "proxy".  En
+              otras  palabras,  <B>i</B>me resultar<B>i</B>a posible conectarme
+              desde malvado.com al servidor ftp de destino.com  y
+              pedirle  a  ese  servidor  que enviase un archivo a
+              CUALQUIER PARTE de Internet! Aun as<B>i</B>,  esto  podr<B>i</B>a
+              haber funcionado bien en 1985 cuando se escribi<B>o</B> el
+              RFC, pero en la Internet actual, no podemos  permi-
+              tir  que la gente vaya por ah<B>i</B> asaltando servidores
+              ftp y pidi<B>e</B>ndoles que escupan sus  datos  a  puntos
+              arbitrarios  de Internet. Tal y como escribi<B>o</B> *Hob-
+              bit* en 1985, este  defecto  del  protocolo  "puede
+              usarse  para  enviar  mensajes de correo y noticias
+              cuyo rastro ser<B>a</B> virtualmente imposible de  seguir,
+              machacar  servidores  en  varios sitios web, llenar
+              discos, tratar de saltarse firewalls y  ,  en  gen-
+              eral,  resultar  molesto  y  dif<B>i</B>cil de detectar al
+              mismo tiempo." Nosotros explotaremos  este  defecto
+              para  (sorpresa,  sorpresa)  escanear  puertos  TCP
+              desde un servidor ftp "proxy".  De  este  modo  nos
+              podr<B>i</B>amos conectar a un servidor ftp tras una fire-
+              wall, y luego escanear aquellos puertos que con m<B>a</B>s
+              probabilidad  se  encuentren  bloqueados (el 139 es
+              uno bueno). Si el servidor ftp permite la lectura y
+              escritura  en  alg<B>u</B>n  directorio  (como por ejemplo
+              /incoming), se pueden enviar  datos  arbitrarios  a
+              puertos  que se encuentren abiertos (aunque nmap no
+              realiza esta funci<B>o</B>n por s<B>i</B> mismo).
+
+
+
+
+                                                                4
+
+
+
+
+
+<B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
+
+
+              El argumento que se pasa a la opci<B>o</B>n 'b' es el host
+              que  se  pretende  usar como proxy, en notaci<B>o</B>n URL
+              est<B>a</B>ndar. El  formato  es:  <I>nombre</I><B>_</B><I>de</I><B>_</B><I>usuario:pass-</I>
+              <I>word@servidor:puerto.</I>   Todo  excepto  <I>servidor</I>  es
+              opcional. Para determinar qu<B>e</B> servidores  son  vul-
+              nerables a este ataque, v<B>e</B>ase mi art<B>i</B>culo en <I>Phrack</I>
+              51. Se encuentra disponible una versi<B>o</B>n actualizada
+              en la URL de <I>nmap</I> (http://www.insecure.org/nmap).
+
+       <B>Opciones</B> <B>Generales</B>
+              No se requiere ninguna pero algunas de ellas pueden
+              resultar de gran utilidad.
+
+       <B>-p0</B>    No intenta  hacer  ping  a  un  servidor  antes  de
+              escanearlo. Esto permite el escaneo de redes que no
+              permiten que pasen peticiones (o respuestas)de ecos
+              ICMP  a  trav<B>e</B>s de su firewall. microsoft.com es un
+              ejemplo de una red de este tipo, y, por  lo  tanto,
+              deber<B>i</B>a  usarse  siempre  <B>-p0</B>  o  <B>-PT80</B> al escanear
+              microsoft.com.
+
+       <B>-PT</B>    Usa el ping  TCP  para  determinar  qu<B>e</B>  servidores
+              est<B>a</B>n   activos.  En  vez  de  enviar  paquetes  de
+              petici<B>o</B>n de ecos ICMP y esperar una  respuesta,  se
+              lanzan  paquetes TCP ACK a trav<B>e</B>s de la red de des-
+              tino (o a una sola m<B>a</B>quina) y luego se espera a que
+              lleguen  las  respuestas.  Los  servidores  activos
+              responden con un RST.  Esta opci<B>o</B>n mantiene la efi-
+              ciencia  de escanear <B>u</B>nicamente aquellos servidores
+              que se encuentran activos y la combina con la posi-
+              bilidad  de  escanear redes/servidores que bloquean
+              los paquetes ping. Para los usuarios no root se usa
+              connect().  Para establecer el puerto de destino de
+              los paquetes de prueba use -PT &lt;n<B>u</B>mero de  puerto).
+              El  puerto  por  defecto es el 80, dado que normal-
+              mente este puerto no es un puerto filtrado.
+
+       <B>-PS</B>    Esta opci<B>o</B>n usa paquetes SYN (petici<B>o</B>n de conexi<B>o</B>n)
+              en  vez de los paquetes ACK para usuarios root. Los
+              servidores activos deber<B>i</B>an responder  con  un  RST
+              (o, en raras ocasiones, un SYN|ACK).
+
+       <B>-PI</B>    Esta  opci<B>o</B>n  usa  un paquete ping (petici<B>o</B>n de eco
+              ICMP) verdadero.  Encuentra  servidores  que  est<B>a</B>n
+              activos  y  tambi<B>e</B>n  busca direcciones de broadcast
+              dirigidas a subredes en una red. Se trata de direc-
+              ciones  IP alcanzables desde el exterior que env<B>i</B>an
+              los paquetes IP entrantes a una  subred  de  servi-
+              dores. Estas direcciones deber<B>i</B>an eliminarse, si se
+              encontrase alguna, dado que suponen un riesgo  ele-
+              vado ante numerosos ataques de denegaci<B>o</B>n de servi-
+              cio (el m<B>a</B>s corriente es Smurf).
+
+       <B>-PB</B>    Este es el  tipo  de  ping  por  defecto.  Usa  los
+
+
+
+                                                                5
+
+
+
+
+
+<B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
+
+
+              barridos ACK ( <B>-PT</B> ) e ICMP ( <B>-PI</B> ) en paralelo. De
+              este modo se pueden alcanzar firewalls que  filtren
+              uno de los dos (pero no ambos).
+
+       <B>-O</B>     Esta  opci<B>o</B>n activa la detecci<B>o</B>n remota del sistema
+              operativo por medio de la huella TCP/IP.  En  otras
+              palabras,  usa  un pu<B>n</B>ado de t<B>e</B>cnicas para detectar
+              sutilezas en la pila de red subyacente del  sistema
+              operativo  de  los  servidores que se escanean. Usa
+              esta informaci<B>o</B>n para crear una 'huella' que  luego
+              compara  con  una  base de datos de huellas de sis-
+              temas operativos conocidas (el archivo nmap-os-fin-
+              gerprints) para decidir qu<B>e</B> tipo de sistema se est<B>a</B>
+              escaneando.
+
+              Si encuentra una m<B>a</B>quina diagnosticada err<B>o</B>neamente
+              que  tenga por lo menos un puerto abierto, me ser<B>i</B>a
+              de gran utilidad que me enviase los detalles en  un
+              email  (es decir, se encontr<B>o</B> la versi<B>o</B>n xxx de tal
+              cosa y se detect<B>o</B> este u otro sistema operativo..).
+              Si  encuentra  una  m<B>a</B>quina  con al menos un puerto
+              abierto de la cual nmap le informe "sistema  opera-
+              tivo  desconocido",  le  estar<B>i</B>a  agradecido  si me
+              enviase la direcci<B>o</B>n IP junto  con  el  nombre  del
+              sistema  operativo y el n<B>u</B>mero de su versi<B>o</B>n. Si no
+              me puede enviar la direcci<B>o</B>n  IP,  una  alternativa
+              ser<B>i</B>a ejecutar nmap con la opci<B>o</B>n <B>-d</B> y enviarme las
+              tres huellas que obtendr<B>i</B>a como resultado junto con
+              el  nombre  del  sistema  operativo  y el n<B>u</B>mero de
+              versi<B>o</B>n. Al hacer esto, est<B>a</B> contribuyendo a aumen-
+              tar  el  n<B>u</B>mero  importante  de sistemas operativos
+              conocidos por namp  y  de  este  modo  el  programa
+              resultar<B>a</B> m<B>a</B>s exacto para todo el mundo.
+
+       <B>-I</B>     Esta opci<B>o</B>n activa el escaneo TCP de identificaci<B>o</B>n
+              contraria. Tal y como comenta Dave Goldsmith en  un
+              correo  Bugtrat  de  1996,  el protocolo ident (rfc
+              1413) permite la revelaci<B>o</B>n del nombre del  usuario
+              propietario de cualquier proceso conectado v<B>i</B>a TCP,
+              incluso aunque ese  proceso  no  haya  iniciado  la
+              conexi<B>o</B>n.  De  este  modo  se  puede,  por ejemplo,
+              conectar con el puerto http  y  luego  usar  identd
+              para  descubrir  si  el  servidor est<B>a</B> ejecut<B>a</B>ndose
+              como root.   Esto  s<B>o</B>lo  se  puede  hacer  con  una
+              conexi<B>o</B>n  TCP  completa con el puerto de destino (o
+              sea, la opci<B>o</B>n de escaneo -sT).  Cuando se usa  <B>-I,</B>
+              se  consulta  al  identd  del servidor remoto sobre
+              cada uno de los puertos abiertos encontrados en  el
+              sistema.  Por  supuesto,  esto  no funcionar<B>a</B> si el
+              servidor en cuesti<B>o</B>n no est<B>a</B> ejecutando identd.
+
+       <B>-f</B>     Esta opci<B>o</B>n hace que el escaneo solicitado de  tipo
+              SYN,  FIN,  XMAS,  o  NULL use peque<B>n</B>os paquetes IP
+              fragmentados.  La  idea  consiste  en  dividir   la
+
+
+
+                                                                6
+
+
+
+
+
+<B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
+
+
+              cabecera  TCP en varios paquetes para pon<B>e</B>rselo m<B>a</B>s
+              dif<B>i</B>cil a los  filtros  de  paquetes,  sistemas  de
+              detecci<B>o</B>n  de intrusi<B>o</B>n y otras inconveniencias por
+              el estilo que tratan de saber lo uno est<B>a</B> haciendo.
+              <B>i</B>Tenga  cuidado  con esto! Algunos programas tienen
+              problemas a la hora de manejar estos  paquetes  tan
+              peque<B>n</B>os.   Mi sniffer favorito produjo un error de
+              segmentaci<B>o</B>n inmediatamente despu<B>e</B>s de  recibir  el
+              primer  fragmento  de  36  bytes.  <B>i</B>Despu<B>e</B>s de este
+              viene uno de 24 bytes! Mientras que este m<B>e</B>todo  no
+              podr<B>a</B> con filtros de paquetes y firewalls que ponen
+              en cola todos los fragmentos IP (como en el caso de
+              la  opci<B>o</B>n  CONFIG_IP_ALWAYS_DEFRAG  en la configu-
+              raci<B>o</B>n del kernel de Linux), tambi<B>e</B>n es verdad  que
+              algunas  redes no pueden permitirse el efecto nega-
+              tivo que esta opci<B>o</B>n causa sobre su  rendimiento  y
+              por lo tanto la dejan desactivada.
+
+              N<B>o</B>tese que no he coseguido que esta opci<B>o</B>n funcione
+              con todos los sistemas.  Funciona bien con mis sis-
+              temas  Linux,  FreeBSD y OpenBSD y algunas personas
+              han informado de <B>e</B>xitos con otras variantes *NIX.
+
+       <B>-v</B>     Modo de informaci<B>o</B>n ampliada. Esta  opci<B>o</B>n  resulta
+              muy  recomendable  y  proporciona  gran cantidad de
+              informaci<B>o</B>n sobre lo  que  est<B>a</B>  sucediendo.  Puede
+              usarla  dos  veces para un efecto mayor. <B>i</B>Use <B>-d</B> un
+              par  veces  si  lo  que  quiere  es  volverse  loco
+              haciendo scroll en su pantalla!
+
+       <B>-h</B>     Esta  opci<B>o</B>n  tan  pr<B>a</B>ctica muestra una pantalla de
+              referencia r<B>a</B>pida sobre  las  opciones  de  uso  de
+              nmap.  Quiz<B>a</B>s haya notado que esta p<B>a</B>gina de manual
+              no es precisamente una "referencia r<B>a</B>pida" :)
+
+       <B>-o</B> <B>&lt;nombre_de_archivo_de_registro&gt;</B>
+              Esta opci<B>o</B>n guarda los resultados de  sus  escaneos
+              en  forma  <B>humanamente</B>  <B>inteligible</B>  en  el archivo
+              especificado como argumento.
+
+       <B>-m</B> <B>&lt;nombre_de_archivo_de_registro&gt;</B>
+              Esta opci<B>o</B>n guarda los resultados de  sus  escaneos
+              en  un  formato <B>comprensible</B> <B>para</B> <B>una</B> <B>maquina</B> en el
+              archivo especificado como argumento.
+
+       <B>-i</B> <B>&lt;nombre_de_archivo_de_entrada&gt;</B>
+              Lee especificaciones de servidores o redes de  des-
+              tino  a  partir  del archivo especificado en vez de
+              hacerlo de la l<B>i</B>nea de comandos.  El  archivo  debe
+              contener  una  lista de expresiones de servidores o
+              redes separadas por espacios, tabuladores o  nuevas
+              l<B>i</B>neas.    Use    un    gui<B>o</B>n    (-)    como   <I>nom-</I>
+              <I>bre</I><B>_</B><I>de</I><B>_</B><I>archivo</I><B>_</B><I>de</I><B>_</B><I>entrada</I> si desea  que  nmap  tome
+              las  expresiones  de  servidores de stdin. V<B>e</B>ase la
+
+
+
+                                                                7
+
+
+
+
+
+<B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
+
+
+              secci<B>o</B>n <I>Especificaci'</I<B><</B>I>on</I> <I>de</I> <I>Objetivo</I> para m<B>a</B>s  infor-
+              maci<B>o</B>n  sobre expresiones con las que poder comple-
+              tar este archivo.
+
+       <B>-p</B> <B>&lt;rango</B> <B>de</B> <B>puertos&gt;</B>
+              Esta opci<B>o</B>n determina los puertos  que  se  quieren
+              especificar.  Por  ejemplo, '-p 23' probar<B>a</B> solo el
+              puerto   23   del   servidor(es)   objetivo.    '-p
+              20-30,139,60000-' escanea los puertos del 20 al 30,
+              el puerto 139 y todos los  puertos  por  encima  de
+              60000.  Por  defecto  se escanean todos los puertos
+              entre el 1 y el 1024 as<B>i</B> como los que figuran en el
+              archivo /etc/services.
+
+       <B>-F</B> <B>Modo</B> <B>de</B> <B>escaneo</B> <B>rapido.</B>
+              Implica  que s<B>o</B>lo se desean escanear aquellos puer-
+              tos que figuran en /etc/services.  Obviamente  esto
+              resulta  mucho  m<B>a</B>s r<B>a</B>pido que escanear cada uno de
+              los 65535 puertos de un servidor.
+
+       <B>-D</B> <B>&lt;senuelo1</B> <B>[,senuelo2][,ME],...&gt;</B>
+              Especifica que se desea  efectuar  un  escaneo  con
+              se<B>n</B>uelos,  el  cual  hace que el servidor escaneado
+              piense que la red destino del escaneo  est<B>a</B>  siendo
+              escaneada tambi<B>e</B>n por el servidor(es) especificados
+              como se<B>n</B>uelos. As<B>i</B>,  sus  IDs  pueden  informar  de
+              entre 5 y 10 escaneos procedentes de direcci<B>o</B>nes IP
+              <B>u</B>nicas, pero no sabr<B>a</B>n que direcci<B>o</B>n IP les  estaba
+              escaneando   realmente   y   c<B>u</B>ales  eran  se<B>n</B>uelos
+              inocentes.
+
+              Separe cada servidor se<B>n</B>uelo  con  comas,  y  puede
+              usar opcionalmente 'ME' como se<B>n</B>uelo que representa
+              la posici<B>o</B>n que quiere que ocupe su  direcci<B>o</B>n  IP.
+              Si  coloca 'ME' en la sexta posici<B>o</B>n o superior, es
+              muy poco probable que algunos esc<B>a</B>neres de  puertos
+              comunes   (como  el  excelente  scanlogd  de  Solar
+              Designer) lleguen incluso a  mostrar  su  direcci<B>o</B>n
+              IP.  Si no se usa 'ME', nmap le colocar<B>a</B> a usted en
+              una posici<B>o</B>n aleatoria.
+
+              N<B>o</B>tese que aquellos servidores usados como se<B>n</B>uelos
+              deben  escontrarse  activos,  o,  de  lo  contrario
+              podr<B>i</B>a provocar un desbordamiento (flood) SYN en su
+              objetivo.  Por otra parte, resultar<B>a</B> bastante f<B>a</B>cil
+              saber qu<B>e</B> servidor est<B>a</B>  escaneando  si  <B>u</B>nicamente
+              hay uno activo en la red.
+
+              N<B>o</B>tese  tambi<B>e</B>n que algunos (est<B>u</B>pidos) "detectores
+              de esc<B>a</B>neres de puertos" opondr<B>a</B>n  una  firewall  o
+              bien  denegar<B>a</B>n el rutaje a aquellos servidores que
+              intenten escanear sus  puertos.  De  este  modo  se
+              podr<B>i</B>a provocar inadvertidamente que la m<B>a</B>quina que
+              se est<B>a</B> intentando escanear perdiese  contacto  con
+
+
+
+                                                                8
+
+
+
+
+
+<B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
+
+
+              los  servidores  usados  como se<B>n</B>uelos. Esto podr<B>i</B>a
+              causarles a los  servidores  escaneados  verdaderos
+              problemas  si  los  servidores  se<B>n</B>uelo fuesen, por
+              ejemplo, su gateway a internet  o  incluso  "local-
+              host".  Deber<B>i</B>a  usarse  esta  opci<B>o</B>n  con  extremo
+              cuidado. La verdadera moraleja de  este  asunto  es
+              que   un   detector  de  escaneos  de  puertos  que
+              aparenten  tener  intenciones  poco  amistosas   no
+              deber<B>i</B>a  llevar  a  cabo  acci<B>o</B>n  alguna  contra la
+              m<B>a</B>quina  que  aparentemente  le  est<B>a</B>   escaneando.
+              <B>i</B>Podr<B>i</B>a no ser m<B>a</B>s que un se<B>n</B>uelo!
+
+              Los  se<B>n</B>uelos se usan tanto en el escaneo ping ini-
+              cial (usando ICMP, SYN, ACK, o lo que sea) como  en
+              la  fase  de  escaneo de puertos propiamente dicha.
+              Tambi<B>e</B>n  se  usan  los  se<B>n</B>uelos  en  la  fase   de
+              detecci<B>o</B>n remota del sistema operativo ( <B>-O</B> ).
+
+              Vale  la  pena  destacar  que  el uso de demasiados
+              se<B>n</B>uelos puede ralentizar el proceso de escaneo  y,
+              potencialmente,  hacer  que  sea  menos exacto. Por
+              otra parte, algunos  ISPs  filtrar<B>a</B>n  los  paquetes
+              manipulados   y   los   desechar<B>a</B>n,  aunque  muchos
+              (actualmente la mayor<B>i</B>a) no ponen  restricciones  a
+              este tipo de paquetes.
+
+       <B>-S</B> <B>&lt;Direccion_IP&gt;</B>
+              En determinadas circunstancias, es posible que <I>nmap</I>
+              no sea capaz de determinar su (de usted)  direcci<B>o</B>n
+              IP  de origen ( <I>nmap</I> se lo har<B>a</B> saber si este es el
+              caso). En este caso, use -S  con  su  direcci<B>o</B>n  IP
+              (del  interfaz  a  trav<B>e</B>s del cual desea enviar los
+              paquetes).
+
+              Otro posible uso de esta opci<B>o</B>n es el de  manipular
+              el  escaneo  para  hacer  creer a los servidores de
+              destino  que  <B>alguien</B>  <B>mas</B>  les  est<B>a</B>   escaneando.
+              <B>i</B>Imag<B>i</B>nese  a  una compa<B>ni</B>a escaneada repetidamente
+              por una compa<B>ni</B>a rival! Esta no es la funci<B>o</B>n  para
+              la  que se ha dise<B>n</B>ado esta opci<B>o</B>n (ni su prop<B>o</B>sito
+              principal). Simplemente pienso que revela una posi-
+              bilidad  que la gente deber<B>i</B>a tener en cuenta antes
+              de acusar a los dem<B>a</B>s de escanear sus puertos.   La
+              opci<B>o</B>n  <B>-e</B> ser<B>a</B> necesaria en general para este tipo
+              de uso.
+
+       <B>-e</B> <B>&lt;interfaz&gt;</B>
+              Le dice a nmap qu<B>e</B> interfaz ha de usar para  enviar
+              y  recibir  paquetes.  El programa deber<B>i</B>a detectar
+              esto por s<B>i</B> mismo, pero le informar<B>a</B> si no es  as<B>i</B>.
+
+       <B>-g</B> <B>&lt;numero_de_puerto&gt;</B>
+              Establece  el  n<B>u</B>mero de puerto de origen a usar en
+              los escaneos. Muchas instalaciones de  firewalls  y
+
+
+
+                                                                9
+
+
+
+
+
+<B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
+
+
+              filtros  de  paquetes inocentes hacen una excepci<B>o</B>n
+              en sus reglas para permitir que  las  atraviesen  y
+              establezcan  una  conexi<B>o</B>n paquetes DNS (53) o FTP-
+              DATA (20). Evidentemente esto contraviene completa-
+              mente las ventajas en materia de seguridad que com-
+              porta una firewall dado  que  los  intrusos  pueden
+              enmascararse  como DNS o FTP con una simple modifi-
+              caci<B>o</B>n  de  su  puerto  de  origen.  Por  supuesto,
+              deber<B>i</B>a  probarse  primero con el puerto 53 para un
+              escaneo UDP y los escaneos TCP deber<B>i</B>an  probar  el
+              20 antes del 53.
+
+              N<B>o</B>tese que el uso de esta opci<B>o</B>n penaliza levemente
+              el rendimiento del escaneo, porque a veces se alma-
+              cena  informaci<B>o</B>n  <B>u</B>til  en  el n<B>u</B>mero de puerto de
+              origen.
+
+       <B>-M</B> <B>&lt;max</B> <B>sockets&gt;</B>
+              Establece el n<B>u</B>mero m<B>a</B>ximo de sockets que se usar<B>a</B>n
+              en  paralelo para un escaneo TCP connect() (escaneo
+              por defecto). Resulta <B>u</B>til a la hora de  ralentizar
+              ligeramente  el  proceso  de  escaneo con el fin de
+              evitar que la m<B>a</B>quina de destino se  cuelgue.  Otra
+              manera  de hacerlo es usar -sS, que normalmente les
+              resulta m<B>a</B>s f<B>a</B>cil de asumir a las m<B>a</B>quinas de  des-
+              tino.
+
+       <B>Especificacion</B> <B>de</B> <B>Objetivo</B>
+              Cualquier cosa que no es una opci<B>o</B>n (o el argumento
+              de una opci<B>o</B>n) en namp se trata como una  especifi-
+              caci<B>o</B>n  de  servidor de destino. El caso m<B>a</B>s simple
+              consiste  en  especificar  servidores  aislados   o
+              direcciones IP en la l<B>i</B>nea de comandos. Si pretende
+              escanear una subred de direcciones IP, entonces  se
+              puede  a<B>n</B>adir <B>'/mask'</B> a la direcci<B>o</B>n IP o al nombre
+              del servidor.  <B>mask</B> debe  estar  entre  0  (escanea
+              toda Internet) y 32 (escanea <B>u</B>nicamente el servidor
+              especificado). Use /24 para escanear una  direcci<B>o</B>n
+              de clase 'C' y /16 para la clase 'B'.
+
+              Nmap  dispone  tambi<B>e</B>n  de  una  notaci<B>o</B>n mucho m<B>a</B>s
+              potente que permite  la  especificaci<B>o</B>n  de  direc-
+              ciones  IP usando listas/rangos para cada elemento.
+              De este modo, se puede escanear la red de clase 'B'
+              completa 128.210.*.*  especificando '128.210.*.*' o
+              '128.210.0-255.0-255'   o   incluso   notaci<B>o</B>n   de
+              m<B>a</B>scara:  '128.210.0.0/16'. Todas ellas son equiva-
+              lentes. Si se usan asteriscos ('*'), ha de  tenerse
+              en  cuenta  que  la mayor<B>i</B>a de los shells requieren
+              que se salga de ellos con caracteres / o que se les
+              proteja con comillas.
+
+              Otra  posibilidad  interesante  consiste en dividir
+              Internet en el otro sentido.  En  vez  de  escanear
+
+
+
+                                                               10
+
+
+
+
+
+<B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
+
+
+              todos  los  servidores  en  una clase 'B', se puede
+              escanear '*.*.5.6-7' para escanear todas las direc-
+              ciones IP terminadas en .5.6 o .5.7 Escoja sus pro-
+              pios n<B>u</B>meros. Para m<B>a</B>s informaci<B>o</B>n sobre la especi-
+              ficaci<B>o</B>n de servidores a escanear, v<B>e</B>ase la secci<B>o</B>n
+              <I>ejemplos</I> a continuaci<B>o</B>n.
+
+
+
+</PRE>
+<H2>EJEMPLOS</H2><PRE>
+       A continuaci<B>o</B>n se muestran algunos  ejemplos  del  uso  de
+       nmap  que abarcan desde los usos m<B>a</B>s normales y frecuentes
+       a los m<B>a</B>s complejos o incluso esot<B>e</B>ricos.  N<B>o</B>tese  que  se
+       han  incluido  direciones  IP  y nombres de dominio reales
+       para hacer las cosas m<B>a</B>s concretas. Usted  deber<B>i</B>a  susti-
+       tuirlos  por  n<B>u</B>meros  y direcciones de su <B>propia</B> <B>red.</B>  No
+       creo que escanear otras redes sea ilegal; ni  se  deber<B>i</B>an
+       considerar  los  escaneos  de  puertos  como  ataques.  He
+       escaneado cientos de miles  de  m<B>a</B>quinas  y  tan  s<B>o</B>lo  he
+       recibido  una  queja. Pero no soy abogado y es posible que
+       los intentos de <I>nmap</I> lleguen a molestar  a  alguna  gente.
+       Obtenga  primero  el permiso para hacerlo o h<B>a</B>galo bajo su
+       propia responsabilidad.
+
+       <B>nmap</B> <B>-v</B> <B>objetivo.ejemplo.com</B>
+
+       Esta opci<B>o</B>n escanea todos los puertos TCP reservados en la
+       m<B>a</B>quina  objetivo.ejemplo.com. La -v implica la activaci<B>o</B>n
+       del modo de informaci<B>o</B>n ampliada.
+
+       <B>nmap</B> <B>-sS</B> <B>-O</B> <B>objetivo.ejemplo.com/24</B>
+
+       Lanza un  escaneo  SYN  oculto  contra  cada  una  de  las
+       m<B>a</B>quinas  activas  de  las  255  m<B>a</B>quinas de la classe 'C'
+       donde se  aloja  objetivo.ejemplo.com.  Tambi<B>e</B>n  trata  de
+       determinar  el  sistema operativo usado en cada una de las
+       m<B>a</B>quinas activas.  Este escaneo  requiere  privilegios  de
+       roor  a  causa  del escaneo SYN y la detecci<B>o</B>n del sistema
+       operativo.
+
+       <B>nmap</B> <B>-sX</B> <B>-p</B> <B>22,53,110,143</B> <B>128.210.*.1-127</B>
+
+       Env<B>i</B>a un escaneo Xmas tree a la primera mitad de cada  una
+       de  las  255  posibles subredes de 8 bits en el espacio de
+       direcciones clase 'B' 128.210 . Se trata de  comprobar  si
+       los  sistemas ejecutan sshd, DNS, pop3d, imapd o el puerto
+       4564. N<B>o</B>tese que el escaneo Xmas no funciona contra servi-
+       dores  ejecutando cualquier sistema operativo de Microsoft
+       debido a una pila TCP deficiente. Lo mismo se aplica a los
+       sistemas CISCO, IRIX, HP/UX, y BSDI.
+
+       <B>nmap</B> <B>-v</B> <B>-p</B> <B>80</B> <B>'*.*.2.3-5'</B>
+
+       En  vez de centrarse en un rango espec<B>i</B>fico de direcciones
+       IP,  resulta  a  veces  interesante  dividir  Internet  en
+
+
+
+                                                               11
+
+
+
+
+
+<B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
+
+
+       porciones  y escanear una peque<B>n</B>a muestra de cada porci<B>o</B>n.
+       Este  comando  encuentra  todos  los  servidores  web   en
+       m<B>a</B>quinas  cuyas  direcciones  IP terminen en .2.3, .2.4, o
+       .2.5 . Si usted es root podr<B>i</B>a a<B>n</B>adir tambi<B>e</B>n -sS. Tambi<B>e</B>n
+       encontrar<B>a</B>  m<B>a</B>quinas  mucho m<B>a</B>s interesantes si empieza en
+       127. as<B>i</B> que es posible que desee usar '127-222' en vez de
+       el  primer asterisco dado que esa secci<B>o</B>n tiene una densi-
+       dad mucho mayor de m<B>a</B>quinas interesantes (IMHO).
+
+       <B>host</B> <B>-l</B> <B>compania.com</B> <B>|</B> <B>cut</B> <B>'-d</B> <B>'</B> <B>-f</B> <B>4</B> <B>|</B> <B>./nmap</B> <B>-v</B> <B>-i</B> <B>-</B>
+
+       Hace una transferencia de DNS de zona para  descubrir  los
+       servidores  en  compa<B>ni</B>a.com y luego pasar las direcciones
+       IP a <I>nmap.</I>  Los comandos arriba indicados son para mi sis-
+       tema  Linux. Es posible que se necesiten comandos/opciones
+       diferentes para otros sistemas operativos.
+
+
+</PRE>
+<H2>BUGS</H2><PRE>
+       <B>c</B>Bugs? <B>c</B>Qu<B>e</B> bugs? Por favor,  env<B>i</B>eme  cualquier  bug  que
+       descubra.  Los  parches  tampoco  estar<B>i</B>an mal :) Recuerde
+       enviar tambi<B>e</B>n nuevas huellas de sistemas operativos  para
+       que podamos ampliar nuestra base de datos.
+
+
+</PRE>
+<H2>AUTOR</H2><PRE>
+       Fyodor <I>&lt;fyodor@dhp.com&gt;Tipos</I> <I>de</I> <I>Escaneo</I>
+
+
+</PRE>
+<H2>DISTRIBUCION</H2><PRE>
+       La   <B>u</B>ltima   versi<B>o</B>n   de   <I>nmap</I>   se  puede  obtener  en
+       <I>http://www.insecure.org/nmap</I>
+
+       <I>nmap</I> es (C)  1997,1998  de  Fyodor  (fyodor@dhp.com,  fyo-
+       dor@insecure.org)
+
+       Este  programa es software libre; puede redistribuirse y/o
+       modificarse bajo los t<B>e</B>rminos de la Licencia P<B>u</B>blica  Gen-
+       eral  GNU  tal  y como la publica la Fundaci<B>o</B>n de Software
+       Libre; Versi<B>o</B>n 2.
+
+       Este programa se distribuye con la esperanza de que  pueda
+       resultar  de  utilidad,  pero SIN NING<B>U</B>N TIPO DE GARANT<B>I</B>A;
+       sin tan siquiera la garant<B>i</B>a e ser apto para su  COMECIAL-
+       IZACI<B>O</B>N  o ADECUADO PARA UN PROP<B>O</B>SITO EN PARTICULAR. V<B>e</B>ase
+       la Licencia P<B>u</B>blica General GNU para m<B>a</B>s detalles (est<B>a</B> en
+       el archivo COPYING de la distribuci<B>o</B>n de <I>nmap</I> ).
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                                               12
+
+
+</PRE>
+<HR>
+<ADDRESS>
+Man(1) output converted with
+<a href="http://www.oac.uci.edu/indiv/ehood/man2html.html">man2html</a>
+</ADDRESS>
+</BODY>
+</HTML>
