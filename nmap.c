@@ -1031,7 +1031,7 @@ int nmap_main(int argc, char *argv[]) {
 		  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"Aggressive OS guesses: %s (%d%%)", currenths->FPR.prints[0]->OS_name, (int) (currenths->FPR.accuracy[0] * 100));
 		  for(i=1; i < 10 && currenths->FPR.num_matches > i &&
 			currenths->FPR.accuracy[i] > 
-			currenths->FPR.accuracy[0] - 0.15; i++) {
+			currenths->FPR.accuracy[0] - 0.10; i++) {
 		    log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,", %s (%d%%)", currenths->FPR.prints[i]->OS_name, (int) (currenths->FPR.accuracy[i] * 100));
 		  }
 		  log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT, "\n");
@@ -1404,7 +1404,7 @@ unsigned short *getpts(char *origexpr) {
 
 void printusage(char *name, int rc) {
   printf(
-	 "nmap V. %s Usage: nmap [Scan Type(s)] [Options] <host or net list>\n"
+	 "Nmap V. %s Usage: nmap [Scan Type(s)] [Options] <host or net list>\n"
 	 "Some Common Scan Types ('*' options require root privileges)\n"
 	 "  -sT TCP connect() port scan (default)\n"
 	 "* -sS TCP SYN stealth port scan (best all-around TCP scan)\n"
@@ -3356,23 +3356,37 @@ void get_syn_results(struct hoststruct *target, struct portinfo *scan,
   struct ip *ip2;
   unsigned short *data;
   struct timeval tv;
+  struct timeval start;
+  int quit = 0;
 
-  while (ss->numqueries_outstanding > 0 && 
+  gettimeofday(&start, NULL);
+
+  while (!quit && ss->numqueries_outstanding > 0 && 
 	 ( ip = (struct ip*) readip_pcap(pd, &bytes, target->to.timeout))) {
     if (bytes < (4 * ip->ip_hl) + 4)
       continue;
     current = NULL;
     trynum = newport = -1;
     newstate = PORT_UNKNOWN;
+
+    gettimeofday(&tv, NULL);
     
     /* Insure there is no timeout ... */
     if (o.host_timeout) {	
-      gettimeofday(&tv, NULL);
       if (TIMEVAL_MSEC_SUBTRACT(tv, target->host_timeout) >= 0) {
 	target->timedout = 1;
 	return;
       }
     }
+
+    /* If this takes at least 1.5 secs and is more than the targets
+       timeout, lets get out of here.  Otherwise stray network packets
+       could cause us trouble. */
+    if ( TIMEVAL_SUBTRACT(tv, start) > MAX(target->to.timeout, 1500)) {
+      /* Lets quit after we process this packet */
+      quit = 1;
+    }
+
     if (ip->ip_src.s_addr == target->host.s_addr && ip->ip_p == IPPROTO_TCP) {
       tcp = (struct tcphdr *) (((char *) ip) + 4 * ip->ip_hl);
       i = ntohs(tcp->th_dport);
