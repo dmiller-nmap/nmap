@@ -50,6 +50,8 @@
 #include "timing.h"
 #include "osscan.h"
 #include "NmapOps.h"
+#include "TargetGroup.h"
+#include "Target.h"
 
 extern NmapOps o;
 enum pingstyle { pingstyle_unknown, pingstyle_rawtcp, pingstyle_connecttcp, 
@@ -161,29 +163,6 @@ static int hostupdate(Target *hostbatch[], Target *target,
     pt->num_responses++;
   }
   return 0;
-}
-
-/* Lookahead is the number of hosts that can be
-   checked (such as ping scanned) in advance.  Randomize causes each
-   group of up to lookahead hosts to be internally shuffled around.
-   The target_expressions array MUST REMAIN VALID IN MEMMORY as long as
-   this class instance is used -- the array is NOT copied.
- */
-HostGroupState::HostGroupState(int lookahead, int rnd, 
-			       char *expr[], int numexpr) {
-  assert(lookahead > 0);
-  hostbatch = (Target **) safe_zalloc(sizeof(Target *) * lookahead);
-  max_batch_sz = lookahead;
-  current_batch_sz = 0;
-  next_batch_no = 0;
-  randomize = rnd;
-  target_expressions = expr;
-  num_expressions = numexpr;
-  next_expression = 0;
-}
-
-HostGroupState::~HostGroupState() {
-  free(hostbatch);
 }
 
 void hoststructfry(Target *hostbatch[], int nelem) {

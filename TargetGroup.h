@@ -2,6 +2,8 @@
 /***********************************************************************
  * TargetGroup.h -- The "TargetGroup" class holds a group of IP        *
  * addresses, such as those from a '/16' or '10.*.*.*' specification.  *
+ * It also has a trivial HostGroupState class which handles a bunch    *
+ * of expressions that go into TargetGroup classes.                    *
  *                                                                     *
  ***********************************************************************
  *  The Nmap Security Scanner is (C) 1995-2002 Insecure.Com LLC. This  *
@@ -89,6 +91,30 @@ class TargetGroup {
 
   int ipsleft; /* Number of IPs left in this structure -- set to 0 if 
 		  the fields are not valid */
+};
+
+class HostGroupState {
+ public:
+  HostGroupState(int lookahead, int randomize, char *target_expressions[],
+		 int num_expressions);
+  ~HostGroupState();
+  Target **hostbatch;
+  int max_batch_sz; /* The size of the hostbatch[] array */
+  int current_batch_sz; /* The number of VALID members of hostbatch[] */
+  int next_batch_no; /* The index of the next hostbatch[] member to be given 
+			back to the user */
+  int randomize; /* Whether each bach should be "shuffled" prior to the ping 
+		    scan (they will also be out of order when given back one
+		    at a time to the client program */
+  char **target_expressions; /* An array of target expression strings, passed
+				to us by the client (client is also in charge
+				of deleting it AFTER it is done with the 
+				hostgroup_state */
+  int num_expressions;       /* The number of valid expressions in 
+				target_expressions member above */
+  int next_expression;   /* The index of the next expression we have
+			    to handle */
+  TargetGroup current_expression; /* For batch chunking -- targets in queue */
 };
 
 #endif /* TARGETGROUP_H */

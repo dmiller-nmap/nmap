@@ -46,6 +46,7 @@
 /* $Id$ */
 
 #include "Target.h"
+#include "osscan.h"
 
 Target::Target() {
   Initialize();

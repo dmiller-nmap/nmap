@@ -409,6 +409,14 @@ only reported in normal output with -v.
 .Sp
 When verbose mode (\-v) is on with \-O, IPID Sequence Generation is also reported.  Most machines are in the "incremental" class, which means that they increment the "ID" field in the IP header for each packet they send.  This makes them vulnerable to several advanced information gathering and spoofing attacks.
 .TP
+.B \-6
+This options enables IPv6 support.  All targets must be IPv6 if this
+option is used, and they can be specified via normal DNS name (AAAA
+record) or as a literal IP address such as
+3ffe:501:4819:2000:210:f3ff:fe03:4d0 .  Currently, connect() TCP scan
+and TCP connect() Ping scan are supported.  If you need UDP or other
+scan types, have a look at http://nmap6.sourceforge.net/ .
+.TP
 .B \-I
 This turns on TCP reverse ident scanning. As noted by Dave
 Goldsmith in a 1996 Bugtraq post, the ident protocol (rfc

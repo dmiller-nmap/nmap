@@ -1196,6 +1196,7 @@ void printusage(char *name, int rc) {
 	 "  -v Verbose. Its use is recommended.  Use twice for greater effect.\n"
 	 "  -P0 Don't ping hosts (needed to scan www.microsoft.com and others)\n"
 	 "* -Ddecoy_host1,decoy2[,...] Hide scan using many decoys\n"
+         "  -6 scans via IPv6 rather than IPv4\n"
 	 "  -T <Paranoid|Sneaky|Polite|Normal|Aggressive|Insane> General timing policy\n"
 	 "  -n/-R Never do DNS resolution/Always resolve [default: sometimes resolve]\n"
 	 "  -oN/-oX/-oG <logfile> Output normal/XML/grepable scan logs to <logfile>\n"

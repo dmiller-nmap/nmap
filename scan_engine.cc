@@ -48,6 +48,7 @@
 
 #include "scan_engine.h"
 #include "timing.h"
+#include "NmapOps.h"
 
 extern NmapOps o;
 

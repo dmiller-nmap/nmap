@@ -72,6 +72,8 @@
 #include "nmap.h"
 #include "global_structures.h"
 
+class HostGroupState;
+
 /**************************STRUCTURES******************************/
 struct pingtune {
   int up_this_block;
