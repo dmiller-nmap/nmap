@@ -162,6 +162,13 @@ unsigned int gcd_n_uint(int nvals, unsigned int *val);
 int arg_parse(const char *command, char ***argv);
 void arg_parse_free(char **argv);
 
+/* Convert a string in the format of a roughly C-style string literal
+   (e.g. can have \r, \n, \xHH escapes, etc.) into a binary string.
+   This is done in-place, and the new (shorter or the same) length is
+   stored in newlen.  If parsing fails, NULL is returned, otherwise
+   str is returned. */
+char *cstring_unescape(char *str, unsigned int *len);
+
 #ifndef HAVE_USLEEP
 #ifdef HAVE_NANOSLEEP
 void usleep(unsigned long usec);

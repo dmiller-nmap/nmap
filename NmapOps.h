@@ -137,6 +137,7 @@ class NmapOps {
   int decoyturn;
   int identscan;
   int osscan;
+  int servicescan;
   int pingtype;
   int listscan;
   int pingscan;

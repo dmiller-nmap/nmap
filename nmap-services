@@ -1025,6 +1025,7 @@ elcsd             704/udp    # errlog copy/server daemon
 silc              706/tcp    # Secure Internet Live Conferencing -- http://silcnet.org
 entrustmanager    709/tcp    # EntrustManager - NorTel DES auth network see 389/tcp
 entrustmanager    709/udp    # EntrustManager - NorTel DES auth network see 389/tcp
+omfs              723/tcp    # OpenMosix File System
 netviewdm1        729/tcp    # IBM NetView DM/6000 Server/Client
 netviewdm1        729/udp    # IBM NetView DM/6000 Server/Client
 netviewdm2        730/tcp    # IBM NetView DM/6000 send/tcp
@@ -1884,6 +1885,7 @@ sae-urn           4500/tcp   #
 sae-urn           4500/udp   # 
 fax               4557/tcp   # FlexFax FAX transmission service
 hylafax           4559/tcp   # HylaFAX client-server protocol
+mosmig            4660/tcp   # OpenMOSix MIGrates local processes
 rfa               4672/tcp   # remote file access server
 rfa               4672/udp   # remote file access server
 squid-htcp        4827/udp   # Squid proxy HTCP port
@@ -1936,6 +1938,7 @@ cfengine          5308/tcp   #
 cfengine          5308/udp   # 
 pcduo-old         5400/tcp   # RemCon PC-Duo - old port
 pcduo             5405/tcp   # RemCon PC-Duo - new port
+omid              5428/udp   # OpenMosix Info Dissemination
 connect-proxy     5490/tcp   # Many HTTP CONNECT proxies 
 postgres          5432/tcp   # postgres database server
 securid           5500/udp   # SecurID
@@ -2161,6 +2164,7 @@ heretic2          28910/udp  # Heretic 2 game server
 Trinoo_Register   31335/udp  # Trinoo distributed attack tool Bcast Daemon registration port
 BackOrifice       31337/udp  # cDc Back Orifice remote admin tool
 Elite             31337/tcp  # Sometimes interesting stuff can be found here
+omad              32768/udp  # OpenMosix Autodiscovery Daemon
 sometimes-rpc3    32770/tcp  # Sometimes an RPC port on my Solaris box
 sometimes-rpc4    32770/udp  # Sometimes an RPC port on my Solaris box
 sometimes-rpc5    32771/tcp  # Sometimes an RPC port on my Solaris box (rusersd)

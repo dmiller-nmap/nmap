@@ -1,5 +1,19 @@
 # Nmap Changelog ($Id$)
 
+o Nmap now uses the excellent libpcre (Perl Compatible Regular
+  Expressions) library from http://www.pcre.org/ .  Many systems
+  already have this, otherwise Nmap will use the copy it now includes.
+  If your libpcre is hidden away in some nonstandard place, give
+  ./configure the new --with-libpcre=DIR directive.
+
+o Nmap now uses the C++ Standard Template Library (STL).  This makes
+  programming easier, but if it causes major portability or bloat
+  problems, I'll reluctantly remove it.
+
+o Applied a patch from Javier Kohen (jkohen(a)coresecurity.com) which
+  normalizes the names of many Microsoft entries in the
+  nmap-os-fingerprints file.
+
 o Applied a patch by Florin Andrei (florin(a)sgi.com) to the Nmap RPM
   spec file.  This uses the 'Epoch' flag to prevent the Redhat Network
   tool from marking my RPMs as "obsolete" and "upgrading" to earlier

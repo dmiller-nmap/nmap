@@ -309,7 +309,7 @@ ac_includes_default="\
 #endif"
 
 ac_subdirs_all="$ac_subdirs_all $subdirs"
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS libpcapdir CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT CXX CXXFLAGS ac_ct_CXX COMPAT_OBJS COMPAT_SRCS build build_cpu build_vendor build_os host host_cpu host_vendor host_os TARGETNMAPFE INSTALLNMAPFE CPP EGREP PCAP_DEPENDS PCAP_CLEAN PCAP_DIST_CLEAN NBASEDIR GTK_CONFIG subdirs LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS libpcapdir pcredir CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT CXX CXXFLAGS ac_ct_CXX COMPAT_OBJS COMPAT_SRCS build build_cpu build_vendor build_os host host_cpu host_vendor host_os TARGETNMAPFE INSTALLNMAPFE CPP EGREP PCAP_DEPENDS PCAP_CLEAN PCAP_DIST_CLEAN NBASEDIR NSOCKDIR GTK_CONFIG subdirs LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -854,8 +854,10 @@ Optional Packages:
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
   --with-localdirs        Explicitly ask compiler to use /usr/local/{include,libs} if they exist
   --without-nmapfe    skip nmapfe X-window GUI
-  --with-libpcap=DIR    Look for pcap include/libs in DIR
+  --with-libpcap=DIR    Look for pcap in DIR/include and DIR/libs
+  --with-libpcre=DIR    Use an existing (compiled) pcre lib from DIR/include and DIR/lib)
   --with-libnbase=DIR     Look for nbase include/libs in DIR
+  --with-libnsock=DIR     Compile and link to libnsock in DIR
 
 Some influential environment variables:
   CC          C compiler command
@@ -1303,6 +1305,9 @@ if test "$user_localdirs" = 1; then
 fi
 
 libpcapdir=libpcap-possiblymodified
+
+
+pcredir=pcre
 
 
           ac_config_headers="$ac_config_headers config.h"
@@ -3915,7 +3920,7 @@ fi
 echo "$as_me:$LINENO: result: $ac_cv_lib_pcap_pcap_datalink" >&5
 echo "${ECHO_T}$ac_cv_lib_pcap_pcap_datalink" >&6
 if test $ac_cv_lib_pcap_pcap_datalink = yes; then
-  have_libpcap=yes LIBS="-lpcap $LIBS"
+  have_libpcap=yes
 fi
 
 fi
@@ -4115,7 +4120,7 @@ fi
 echo "$as_me:$LINENO: result: $ac_cv_lib_pcap_pcap_datalink" >&5
 echo "${ECHO_T}$ac_cv_lib_pcap_pcap_datalink" >&6
 if test $ac_cv_lib_pcap_pcap_datalink = yes; then
-  have_libpcap=yes LIBS="-lpcap $LIBS"
+  have_libpcap=yes
 	LIBPCAP_INC=$with_libpcap/include
 	LIBPCAP_LIB=$with_libpcap/lib
 fi
@@ -4130,6 +4135,7 @@ fi
   esac
 
 fi;
+
 if test $linux = yes; then
   have_libpcap=no
 fi
@@ -4233,6 +4239,233 @@ fi
 
 
 
+
+LIBS="$LIBS -lpcap"
+have_pcre=no
+LIBPCREDIR=libpcre
+
+# test "${with_libpcre+set}" != "set" && with_libpcre=yes
+
+# First we test whether they specified libpcre explicitly
+
+# Check whether --with-libpcre or --without-libpcre was given.
+if test "${with_libpcre+set}" = set; then
+  withval="$with_libpcre"
+    case "$with_libpcre" in
+  yes)
+    ;;
+  *)
+    CPPFLAGS="-I$with_libpcre/include $CPPFLAGS"
+    LDFLAGS="-L$with_libpcre/lib $LDFLAGS"
+    have_pcre=yes
+    ;;
+  esac
+
+fi;
+
+# If they didn't specify it, we try to find it
+if test $have_pcre != yes ; then
+  if test "${ac_cv_header_pcre_h+set}" = set; then
+  echo "$as_me:$LINENO: checking for pcre.h" >&5
+echo $ECHO_N "checking for pcre.h... $ECHO_C" >&6
+if test "${ac_cv_header_pcre_h+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+fi
+echo "$as_me:$LINENO: result: $ac_cv_header_pcre_h" >&5
+echo "${ECHO_T}$ac_cv_header_pcre_h" >&6
+else
+  # Is the header compilable?
+echo "$as_me:$LINENO: checking pcre.h usability" >&5
+echo $ECHO_N "checking pcre.h usability... $ECHO_C" >&6
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+$ac_includes_default
+#include <pcre.h>
+_ACEOF
+rm -f conftest.$ac_objext
+if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
+  (eval $ac_compile) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+         { ac_try='test -s conftest.$ac_objext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_header_compiler=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+ac_header_compiler=no
+fi
+rm -f conftest.$ac_objext conftest.$ac_ext
+echo "$as_me:$LINENO: result: $ac_header_compiler" >&5
+echo "${ECHO_T}$ac_header_compiler" >&6
+
+# Is the header present?
+echo "$as_me:$LINENO: checking pcre.h presence" >&5
+echo $ECHO_N "checking pcre.h presence... $ECHO_C" >&6
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+#include <pcre.h>
+_ACEOF
+if { (eval echo "$as_me:$LINENO: \"$ac_cpp conftest.$ac_ext\"") >&5
+  (eval $ac_cpp conftest.$ac_ext) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } >/dev/null; then
+  if test -s conftest.err; then
+    ac_cpp_err=$ac_c_preproc_warn_flag
+  else
+    ac_cpp_err=
+  fi
+else
+  ac_cpp_err=yes
+fi
+if test -z "$ac_cpp_err"; then
+  ac_header_preproc=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+  ac_header_preproc=no
+fi
+rm -f conftest.err conftest.$ac_ext
+echo "$as_me:$LINENO: result: $ac_header_preproc" >&5
+echo "${ECHO_T}$ac_header_preproc" >&6
+
+# So?  What about this header?
+case $ac_header_compiler:$ac_header_preproc in
+  yes:no )
+    { echo "$as_me:$LINENO: WARNING: pcre.h: accepted by the compiler, rejected by the preprocessor!" >&5
+echo "$as_me: WARNING: pcre.h: accepted by the compiler, rejected by the preprocessor!" >&2;}
+    { echo "$as_me:$LINENO: WARNING: pcre.h: proceeding with the preprocessor's result" >&5
+echo "$as_me: WARNING: pcre.h: proceeding with the preprocessor's result" >&2;}
+    (
+      cat <<\_ASBOX
+## ------------------------------------ ##
+## Report this to bug-autoconf@gnu.org. ##
+## ------------------------------------ ##
+_ASBOX
+    ) |
+      sed "s/^/$as_me: WARNING:     /" >&2
+    ;;
+  no:yes )
+    { echo "$as_me:$LINENO: WARNING: pcre.h: present but cannot be compiled" >&5
+echo "$as_me: WARNING: pcre.h: present but cannot be compiled" >&2;}
+    { echo "$as_me:$LINENO: WARNING: pcre.h: check for missing prerequisite headers?" >&5
+echo "$as_me: WARNING: pcre.h: check for missing prerequisite headers?" >&2;}
+    { echo "$as_me:$LINENO: WARNING: pcre.h: proceeding with the preprocessor's result" >&5
+echo "$as_me: WARNING: pcre.h: proceeding with the preprocessor's result" >&2;}
+    (
+      cat <<\_ASBOX
+## ------------------------------------ ##
+## Report this to bug-autoconf@gnu.org. ##
+## ------------------------------------ ##
+_ASBOX
+    ) |
+      sed "s/^/$as_me: WARNING:     /" >&2
+    ;;
+esac
+echo "$as_me:$LINENO: checking for pcre.h" >&5
+echo $ECHO_N "checking for pcre.h... $ECHO_C" >&6
+if test "${ac_cv_header_pcre_h+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  ac_cv_header_pcre_h=$ac_header_preproc
+fi
+echo "$as_me:$LINENO: result: $ac_cv_header_pcre_h" >&5
+echo "${ECHO_T}$ac_cv_header_pcre_h" >&6
+
+fi
+if test $ac_cv_header_pcre_h = yes; then
+  echo "$as_me:$LINENO: checking for pcre_version in -lpcre" >&5
+echo $ECHO_N "checking for pcre_version in -lpcre... $ECHO_C" >&6
+if test "${ac_cv_lib_pcre_pcre_version+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lpcre  $LIBS"
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+/* Override any gcc2 internal prototype to avoid an error.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+/* We use char because int might match the return type of a gcc2
+   builtin and then its argument prototype would still apply.  */
+char pcre_version ();
+int
+main ()
+{
+pcre_version ();
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+         { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_lib_pcre_pcre_version=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+ac_cv_lib_pcre_pcre_version=no
+fi
+rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+echo "$as_me:$LINENO: result: $ac_cv_lib_pcre_pcre_version" >&5
+echo "${ECHO_T}$ac_cv_lib_pcre_pcre_version" >&6
+if test $ac_cv_lib_pcre_pcre_version = yes; then
+  have_pcre=yes
+fi
+
+fi
+
+
+fi
+
+# If we still don't have it, we use our own
+if test $have_pcre != yes ; then
+  subdirs="$LIBPCREDIR $subdirs"
+  LIBPCRE_INC=$LIBPCREDIR/include
+  LIBPCRE_LIB=$LIBPCREDIR/lib
+fi
+
+LIBS="-lpcre $LIBS"
 
 
 echo "$as_me:$LINENO: checking for ANSI C header files" >&5
@@ -5473,11 +5706,34 @@ LIBS="$LIBS -lnbase"
 
 
 
+NSOCKDIR="nsock"
+
+# Check whether --with-libnsock or --without-libnsock was given.
+if test "${with_libnsock+set}" = set; then
+  withval="$with_libnsock"
+    case "$with_nsock" in
+  yes)
+    ;;
+  *)
+    NSOCKDIR="$with_nsock"
+    ;;
+  esac
+
+fi;
+
+LDFLAGS="$LDFLAGS -L$NSOCKDIR/src/"
+CXXFLAGS="$CXXFLAGS -I$NSOCKDIR/include"
+LIBS="$LIBS -lnsock"
+
+
+
+subdirs="$subdirs $NSOCKDIR/src"
+
 
 if test $have_libpcap = yes ; then
-        subdirs="$NBASEDIR"
+        subdirs="$NBASEDIR $subdirs"
 else
-        subdirs="$NBASEDIR $libpcapdir"
+        subdirs="$NBASEDIR $libpcapdir $subdirs"
 fi
 
 if test "${with_nmapfe}" = "yes"; then
@@ -6171,6 +6427,7 @@ s,@ECHO_N@,$ECHO_N,;t t
 s,@ECHO_T@,$ECHO_T,;t t
 s,@LIBS@,$LIBS,;t t
 s,@libpcapdir@,$libpcapdir,;t t
+s,@pcredir@,$pcredir,;t t
 s,@CC@,$CC,;t t
 s,@CFLAGS@,$CFLAGS,;t t
 s,@LDFLAGS@,$LDFLAGS,;t t
@@ -6199,6 +6456,7 @@ s,@PCAP_DEPENDS@,$PCAP_DEPENDS,;t t
 s,@PCAP_CLEAN@,$PCAP_CLEAN,;t t
 s,@PCAP_DIST_CLEAN@,$PCAP_DIST_CLEAN,;t t
 s,@NBASEDIR@,$NBASEDIR,;t t
+s,@NSOCKDIR@,$NSOCKDIR,;t t
 s,@GTK_CONFIG@,$GTK_CONFIG,;t t
 s,@subdirs@,$subdirs,;t t
 s,@LIBOBJS@,$LIBOBJS,;t t

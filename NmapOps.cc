@@ -155,6 +155,7 @@ void NmapOps::Initialize() {
   decoyturn = -1;
   identscan = 0;
   osscan = 0;
+  servicescan = 1;
   pingtype = PINGTYPE_UNKNOWN;
   listscan = pingscan = allowall = ackscan = bouncescan = connectscan = 0;
   rpcscan = nullscan = xmasscan = fragscan = synscan = windowscan = 0;
@@ -338,7 +339,7 @@ void NmapOps::ValidateOptions() {
   }
   
   if (af() == AF_INET6 && (numdecoys|osscan|bouncescan|fragscan|ackscan|finscan|idlescan|ipprotscan|maimonscan|nullscan|rpcscan|synscan|udpscan|windowscan|xmasscan)) {
-    fatal("Sorry -- IPv6 support is currently only available for connect() scan (-sT), ping scan (-sP), and list scan (-sL).  If you want better IPv6 support, send your request to fyodor@insecure.org so he can guage demand.");
+    fatal("Sorry -- IPv6 support is currently only available for connect() scan (-sT), ping scan (-sP), and list scan (-sL).  Further support is under consideration.");
   }
 }
   

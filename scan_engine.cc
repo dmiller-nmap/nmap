@@ -1239,7 +1239,7 @@ void bounce_scan(Target *target, u16 *portarray, int numports,
 	    exit(1);
 	  }
 	  else {
-	    fprintf(stderr, "Your ftp bounce server doesn't allow priviliged ports, skipping them.\n");
+	    fprintf(stderr, "Your ftp bounce server doesn't allow privileged ports, skipping them.\n");
 	    while(i < numports && portarray[i] < 1024) i++;
 	    if (!portarray[i]) {
 	      fprintf(stderr, "And you didn't want to scan any unpriviliged ports.  Giving up.\n");

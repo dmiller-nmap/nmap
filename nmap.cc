@@ -934,7 +934,13 @@ int nmap_main(int argc, char *argv[]) {
 	 * host rather than port list the user specified.
 	 */
 	if (o.rpcscan)  pos_scan(currenths, NULL, 0, RPC_SCAN);
-	
+
+	if (o.servicescan) {
+	  // Application fingerprinting is desired.
+	  // service_scan takes an "array" of Targets.  Someday I'll actually pass more than
+	  // one.
+	  service_scan(&currenths, 1); 
+	}
 	
 	if (o.osscan) {
 	  os_scan(currenths);

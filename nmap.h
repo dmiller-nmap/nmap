@@ -375,7 +375,6 @@ void *realloc();
 
 /********************** LOCAL INCLUDES *****************************/
 
-
 #include "output.h"
 #include "portlist.h"
 #include "tcpip.h"
@@ -388,6 +387,7 @@ void *realloc();
 #include "targets.h"
 #include "Target.h"
 #include "TargetGroup.h"
+#include "service_scan.h"
 
 /***********************STRUCTURES**********************************/
 

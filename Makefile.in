@@ -1,4 +1,4 @@
-NMAP_VERSION = 3.30
+NMAP_VERSION = 3.40BETA1
 NMAP_NAME= nmap
 NMAP_URL= http://www.insecure.org/nmap/
 NMAP_PLATFORM=@host@
@@ -12,6 +12,7 @@ nmapdatadir = @datadir@/nmap
 deskdir = $(prefix)/share/gnome/apps/Utilities
 
 NBASEDIR=@NBASEDIR@
+NSOCKDIR=@NSOCKDIR@
 CC = @CC@
 CXX = @CXX@
 CCOPT = 
@@ -26,9 +27,9 @@ CXXFLAGS = @CXXFLAGS@ $(CCOPT) $(DEFS) $(INCLS)
 # CFLAGS = $(DEFS) $(INCLS)
 STATIC = 
 LDFLAGS = @LDFLAGS@ $(STATIC)
-LIBS =  @LIBS@ -lpcap
-# LIBS =  -lefence @LIBS@ -lpcap
-# LIBS =  -lrmalloc @LIBS@ -lpcap
+LIBS =  @LIBS@
+# LIBS =  -lefence @LIBS@
+# LIBS =  -lrmalloc @LIBS@
 SHTOOL = ./shtool
 INSTALL = $(SHTOOL) install 
 MAKEDEPEND = @MAKEDEPEND@
@@ -38,11 +39,11 @@ TARGET = nmap
 TARGETNMAPFE=@TARGETNMAPFE@
 INSTALLNMAPFE=@INSTALLNMAPFE@
 
-SRCS = main.cc nmap.cc targets.cc tcpip.cc nmap_error.cc utils.cc idle_scan.cc osscan.cc output.cc scan_engine.cc timing.cc charpool.cc services.cc protocols.cc nmap_rpc.cc portlist.cc NmapOps.cc TargetGroup.cc Target.cc FingerPrintResults.cc @COMPAT_SRCS@
+SRCS = main.cc nmap.cc targets.cc tcpip.cc nmap_error.cc utils.cc idle_scan.cc osscan.cc output.cc scan_engine.cc timing.cc charpool.cc services.cc protocols.cc nmap_rpc.cc portlist.cc NmapOps.cc TargetGroup.cc Target.cc FingerPrintResults.cc service_scan.cc @COMPAT_SRCS@
 
-OBJS = main.o nmap.o targets.o tcpip.o nmap_error.o utils.o idle_scan.o osscan.o output.o scan_engine.o timing.o charpool.o services.o protocols.o nmap_rpc.o portlist.o NmapOps.o TargetGroup.o Target.o FingerPrintResults.o @COMPAT_OBJS@
+OBJS = main.o nmap.o targets.o tcpip.o nmap_error.o utils.o idle_scan.o osscan.o output.o scan_engine.o timing.o charpool.o services.o protocols.o nmap_rpc.o portlist.o NmapOps.o TargetGroup.o Target.o FingerPrintResults.o service_scan.o @COMPAT_OBJS@
 
-DEPS = nmap.h nmap_amigaos.h nmap_error.h targets.h idle_scan.h osscan.h output.h scan_engine.h timing.h tcpip.h utils.h global_structures.h charpool.h services.h protocols.h nmap_rpc.h portlist.h NmapOps.h TargetGroup.h Target.h FingerPrintResults.h
+DEPS = nmap.h nmap_amigaos.h nmap_error.h targets.h idle_scan.h osscan.h output.h scan_engine.h timing.h tcpip.h utils.h global_structures.h charpool.h services.h protocols.h nmap_rpc.h portlist.h NmapOps.h TargetGroup.h Target.h FingerPrintResults.h service_scan.h
 
 # %.o : %.cc -- nope this is a GNU extension
 .cc.o:
@@ -50,17 +51,21 @@ DEPS = nmap.h nmap_amigaos.h nmap_error.h targets.h idle_scan.h osscan.h output.
 
 all: $(TARGET) $(TARGETNMAPFE)
 
-$(TARGET): $(DEPS) @PCAP_DEPENDS@ $(NBASEDIR)/libnbase.a $(OBJS)
+$(TARGET): $(DEPS) @PCAP_DEPENDS@ $(NBASEDIR)/libnbase.a $(NSOCKDIR)/src/libnsock.a $(OBJS)
 	@echo Compiling nmap
 	rm -f $@
 	$(CXX) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
 
 $(LIBPCAPDIR)/libpcap.a: $(LIBPCAPDIR)/Makefile
-	@echo Compiling libpcap; cd $(LIBPCAPDIR); $(MAKE)
+	@echo Compiling libpcap; cd $(LIBPCAPDIR) && $(MAKE)
 
 $(NBASEDIR)/libnbase.a: $(NBASEDIR)/Makefile
 	@echo Compiling libnbase;
-	cd $(NBASEDIR); $(MAKE)
+	cd $(NBASEDIR) && $(MAKE)
+
+$(NSOCKDIR)/src/libnsock.a: $(NSOCKDIR)/src/Makefile
+	@echo Compiling libnsock;
+	cd $(NSOCKDIR)/src && $(MAKE)
 
 #$(LIBPCAPDIR)/Makefile:
 #	@echo Configuring libpcap; cd $(LIBPCAPDIR); ./configure
@@ -182,18 +187,20 @@ static:
 	$(CC) $(CXXFLAGS) -static $(LDFLAGS) -o nmap.linux.bin  $(SRCS) $(LIBS)
 	strip nmap.linux.bin
 
-clean: @PCAP_CLEAN@ nmapfe_clean nbase_clean my_clean
+clean: @PCAP_CLEAN@ nmapfe_clean nsock_clean nbase_clean my_clean
 
 my_clean:
 	rm -f $(OBJS) $(TARGET) config.cache
 pcap_clean:
-	-cd $(LIBPCAPDIR); $(MAKE) clean
+	-cd $(LIBPCAPDIR) && $(MAKE) clean
 nmapfe_clean:
-	-cd nmapfe; $(MAKE) clean
+	-cd nmapfe && $(MAKE) clean
 nbase_clean:
-	-cd $(NBASEDIR); $(MAKE) clean
+	-cd $(NBASEDIR) && $(MAKE) clean
+nsock_clean:
+	-cd $(NSOCKDIR)/src && $(MAKE) clean
 pcap_dist_clean:
-	-cd $(LIBPCAPDIR); $(MAKE) distclean
+	-cd $(LIBPCAPDIR) && $(MAKE) distclean
 
 distclean: my_clean my_distclean @PCAP_DIST_CLEAN@
 my_distclean:

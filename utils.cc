@@ -563,6 +563,78 @@ void arg_parse_free(char **argv) {
   free(argv);
 }
 
+// A simple function to form a character from 2 hex digits in ASCII form
+static char hex2char(char a, char b)
+{
+  int val;
+  if (!isxdigit(a) || !isxdigit(b)) return 0;
+  a = tolower(a);
+  b = tolower(b);
+  if (isdigit(a))
+    val = (a - '0') << 4;
+  else val = (a - 'a') << 4;
+
+  if (isdigit(b))
+    val += (b - '0');
+  else val += (b - 'a');
+
+  return (char) b;
+}
+
+/* Convert a string in the format of a roughly C-style string literal
+   (e.g. can have \r, \n, \xHH escapes, etc.) into a binary string.
+   This is done in-place, and the new (shorter or the same) length is
+   stored in newlen.  If parsing fails, NULL is returned, otherwise
+   str is returned. */
+char *cstring_unescape(char *str, unsigned int *newlen) {
+  char *dst = str, *src = str;
+  char newchar;
+
+  while(*src) {
+    if (*src == '\\' ) {
+      src++;
+      switch(*src) {
+      case 'a': // Bell (BEL)
+	newchar = '\a'; src++; break;	
+      case 'b': // Backspace (BS)
+	newchar = '\b'; src++; break;	
+      case 'f': // Formfeed (FF)
+	newchar = '\f'; src++; break;	
+      case 'n': // Linefeed/Newline (LF)
+	newchar = '\n'; src++; break;	
+      case 'r': // Carriage Return (CR)
+	newchar = '\r'; src++; break;	
+      case 't': // Horizontal Tab (TAB)
+	newchar = '\t'; src++; break;	
+      case 'v': // Vertical Tab (VT)
+	newchar = '\v'; src++; break;	
+      case 'x':
+	src++;
+	if (!*src || !*(src + 1)) return NULL;
+	if (!isxdigit(*src) || !isxdigit(*src + 1)) return NULL;
+	newchar = hex2char(*src, *(src + 1));
+	src += 2;
+	break;
+      default:
+	if (isalnum(*src))
+	  return NULL; // I don't really feel like supporting octals such as \015
+	// Other characters I'll just copy as is
+	newchar = *src;
+	src++;
+      }
+      *dst = newchar;
+      dst++;
+    } else {
+      if (dst != src)
+	*dst = *src;
+      dst++; src++;
+    }
+  }
+
+  *dst = '\0'; // terminated, but this string can include other \0, so use newlen
+  if (newlen) *newlen = dst - str;
+  return str;
+}
 
 /* mmap() an entire file into the address space.  Returns a pointer
    to the beginning of the file.  The mmap'ed length is returned

@@ -31,6 +31,9 @@ fi
 libpcapdir=libpcap-possiblymodified
 AC_SUBST(libpcapdir)
 
+pcredir=pcre
+AC_SUBST(pcredir)
+
 dnl use config.h instad of -D macros
 AC_CONFIG_HEADER(config.h)
 
@@ -164,12 +167,12 @@ have_libpcap=no
 test "${with_libpcap+set}" != "set" && with_libpcap=yes
 
 AC_ARG_WITH(libpcap,
-[  --with-libpcap[=DIR]    Look for pcap include/libs in DIR],
+[  --with-libpcap[=DIR]    Look for pcap in DIR/include and DIR/libs],
 [  case "$with_libpcap" in
   yes)
     AC_CHECK_HEADER(pcap.h,
       AC_CHECK_LIB(pcap, pcap_datalink,
-      [have_libpcap=yes LIBS="-lpcap $LIBS"]))
+      [have_libpcap=yes ]))
     ;;
   *)
     _cppflags=$CPPFLAGS
@@ -180,7 +183,7 @@ AC_ARG_WITH(libpcap,
 
     AC_CHECK_HEADER(pcap.h,[
       AC_CHECK_LIB(pcap, pcap_datalink,
-	[have_libpcap=yes LIBS="-lpcap $LIBS"
+	[have_libpcap=yes
 	LIBPCAP_INC=$with_libpcap/include
 	LIBPCAP_LIB=$with_libpcap/lib])])
 
@@ -189,6 +192,7 @@ AC_ARG_WITH(libpcap,
     ;;
   esac]
 )
+
 if test $linux = yes; then
   have_libpcap=no
 fi
@@ -256,6 +260,42 @@ fi
 AC_SUBST(PCAP_DEPENDS)
 AC_SUBST(PCAP_CLEAN)
 AC_SUBST(PCAP_DIST_CLEAN)
+LIBS="$LIBS -lpcap"
+have_pcre=no
+LIBPCREDIR=libpcre
+
+# test "${with_libpcre+set}" != "set" && with_libpcre=yes
+
+# First we test whether they specified libpcre explicitly
+AC_ARG_WITH(libpcre,
+[  --with-libpcre=DIR    Use an existing (compiled) pcre lib from DIR/include and DIR/lib)],
+[  case "$with_libpcre" in
+  yes)
+    ;;
+  *)
+    CPPFLAGS="-I$with_libpcre/include $CPPFLAGS"
+    LDFLAGS="-L$with_libpcre/lib $LDFLAGS"
+    have_pcre=yes
+    ;;
+  esac]
+)
+
+# If they didn't specify it, we try to find it
+if test $have_pcre != yes ; then
+  AC_CHECK_HEADER(pcre.h,
+  AC_CHECK_LIB(pcre, pcre_version,
+  [have_pcre=yes ]))
+fi
+
+# If we still don't have it, we use our own
+if test $have_pcre != yes ; then
+  subdirs="$LIBPCREDIR $subdirs"
+  LIBPCRE_INC=$LIBPCREDIR/include
+  LIBPCRE_LIB=$LIBPCREDIR/lib
+fi
+
+LIBS="-lpcre $LIBS"
+
 
 dnl Checks for header files.
 AC_HEADER_STDC
@@ -435,15 +475,35 @@ LIBS="$LIBS -lnbase"
 
 AC_SUBST(NBASEDIR)
 
+NSOCKDIR="nsock"
+AC_ARG_WITH(libnsock,
+[  --with-libnsock=DIR     Compile and link to libnsock in DIR],
+[  case "$with_nsock" in
+  yes)
+    ;;
+  *)
+    NSOCKDIR="$with_nsock"
+    ;;
+  esac]
+)
+
+LDFLAGS="$LDFLAGS -L$NSOCKDIR/src/"
+CXXFLAGS="$CXXFLAGS -I$NSOCKDIR/include"
+LIBS="$LIBS -lnsock"
+
+AC_SUBST(NSOCKDIR)
+
+subdirs="$subdirs $NSOCKDIR/src"
+
 dnl I need to configure nmapfe and libpcap here since the user might
 dnl have specified special options (such as --prefix )
 dnl
 dnl But I only have to configure libpcap if I am going to use it
 
 if test $have_libpcap = yes ; then
-        subdirs="$NBASEDIR"
+        subdirs="$NBASEDIR $subdirs"
 else
-        subdirs="$NBASEDIR $libpcapdir"
+        subdirs="$NBASEDIR $libpcapdir $subdirs"
 fi
 
 if test "${with_nmapfe}" = "yes"; then
