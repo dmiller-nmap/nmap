@@ -1750,10 +1750,34 @@ static UltraProbe *sendIPScanProbe(UltraScanInfo *USI, HostScanStats *hss,
     }
   } else if (USI->prot_scan) {
     for(decoy = 0; decoy < o.numdecoys; decoy++) {
-      packet = build_ip_raw(&o.decoys[decoy], hss->target->v4hostip(), o.ttl, 
-			     destport, ipid, 
-			     o.extra_payload, o.extra_payload_length, 
-			     &packetlen);
+      switch(destport) {
+
+      case IPPROTO_TCP:
+	packet = build_tcp_raw(&o.decoys[decoy], hss->target->v4hostip(), o.ttl, 
+			       ipid, sport, o.magic_port, get_random_u32(), 
+			       get_random_u32(), TH_ACK, 0, NULL,
+			       0, o.extra_payload, o.extra_payload_length, 
+			       &packetlen);
+	break;
+      case IPPROTO_ICMP:
+	packet = build_icmp_raw(&o.decoys[decoy], hss->target->v4hostip(), o.ttl,
+				ipid, 0, 0, 8, 0, o.extra_payload,
+				o.extra_payload_length, &packetlen);
+	break;
+      case IPPROTO_UDP:
+	packet = build_udp_raw(&o.decoys[decoy], hss->target->v4hostip(), o.ttl, 
+			       sport, o.magic_port, ipid, 
+			       o.extra_payload, o.extra_payload_length, 
+			       &packetlen);
+
+	break;
+      default:
+	packet = build_ip_raw(&o.decoys[decoy], hss->target->v4hostip(), o.ttl, 
+			      destport, ipid, 
+			      o.extra_payload, o.extra_payload_length, 
+			      &packetlen);
+	break;
+      }
       if (decoy == o.decoyturn) {
 	probe->setIP(packet, packetlen);
 	hss->lastprobe_sent = probe->sent = USI->now;
@@ -2127,7 +2151,9 @@ static bool do_one_select_round(UltraScanInfo *USI, struct timeval *stime) {
 	case ECONNREFUSED:
 	  newstate = PORT_CLOSED;
 	  break;
+#ifdef ENOPROTOOPT
 	case ENOPROTOOPT:
+#endif
 	case EHOSTUNREACH:
 	case ETIMEDOUT:
 	case EHOSTDOWN:
@@ -2223,9 +2249,13 @@ static bool get_pcap_result(UltraScanInfo *USI, struct timeval *stime) {
   unsigned int probenum;
   unsigned int listsz;
   unsigned int requiredbytes;
-
+  /* Static so that we can detect an ICMP response now, then add it later when
+     the icmp probe is made */
+  static bool protoscanicmphack = false;
+  static struct sockaddr_in protoscanicmphackaddy;
   gettimeofday(&USI->now, NULL);
-  
+
+
   do {
     to_usec = TIMEVAL_SUBTRACT(*stime, USI->now);
     if (to_usec < 2000) to_usec = 2000;
@@ -2247,9 +2277,40 @@ static bool get_pcap_result(UltraScanInfo *USI, struct timeval *stime) {
       continue;
     if (ip->ip_v != 4)
       continue;
-      if (ip->ip_hl < 5)
-	continue;
-    if (ip->ip_p == IPPROTO_TCP) {
+    if (ip->ip_hl < 5)
+      continue;
+
+    if (USI->prot_scan) {
+      memset(&sin, 0, sizeof(sin));
+      sin.sin_addr.s_addr = ip->ip_src.s_addr;
+      sin.sin_family = AF_INET;
+      hss = USI->findIncompleteHost((struct sockaddr_storage *) &sin);
+      if (hss) {
+	setTargetMACIfAvailable(hss->target, &linkhdr, ip, 0);
+	if (ip->ip_p == IPPROTO_ICMP) {
+	  protoscanicmphack = true;
+	  protoscanicmphackaddy = sin;
+	} else {
+	  probeI = hss->probes_outstanding.end();
+	  listsz = hss->num_probes_outstanding();
+	  goodone = false;
+	  for(probenum = 0; probenum < listsz && !goodone; probenum++) {
+	    probeI--;
+	    probe = *probeI;
+	    ipp = probe->IP;
+	    
+	    if (ipp->ipv4->ip_p == ip->ip_p) {
+	      /* We got a packet from the dst host in the protocol we looked for, so it
+		 must be open */
+	      newstate = PORT_OPEN;
+	      goodone = true;
+	    }
+	  }
+	}
+      }
+    }
+
+    if (ip->ip_p == IPPROTO_TCP && !USI->prot_scan) {
       if ((unsigned) ip->ip_hl * 4 + 20 > bytes)
 	continue;
       tcp = (struct tcphdr *) ((u8 *) ip + ip->ip_hl * 4);
@@ -2403,12 +2464,10 @@ static bool get_pcap_result(UltraScanInfo *USI, struct timeval *stime) {
 	  if (udp->uh_sport != ipp->udp->uh_sport || 
 	      udp->uh_dport != ipp->udp->uh_dport)
 	    continue;
-	} else if (USI->prot_scan) {
-	  /* Nothing to do ... */
-	} else {
-	  assert(0); /* TODO: other scan type */
-	}
-	
+	} else if (!USI->prot_scan) {
+	  assert(0);
+	} 
+
 	if (icmp->icmp_type == 3) {
 	  if (icmp->icmp_code != 0 && icmp->icmp_code != 1 && 
 	      icmp->icmp_code != 2 && 
@@ -2422,13 +2481,14 @@ static bool get_pcap_result(UltraScanInfo *USI, struct timeval *stime) {
 	  }
 	  switch(icmp->icmp_code) {
 	  case 1: /* Host Unreachable */
+	    newstate = PORT_FILTERED;
+	    break;
 	  case 2: /* protocol unreachable */
 	    if (USI->scantype == IPPROT_SCAN) {
 	      newstate = PORT_CLOSED;
 	    } else
 	      newstate = PORT_FILTERED;
 	    break;
-
 	  case 3: /* Port unreach */
 	    if (USI->scantype == UDP_SCAN && 
 		ipp->ipv4->ip_dst.s_addr == ip->ip_src.s_addr)
@@ -2452,7 +2512,7 @@ static bool get_pcap_result(UltraScanInfo *USI, struct timeval *stime) {
 	  goodone = true;
 	}
       }
-    } else if (ip->ip_p == IPPROTO_UDP) {
+    } else if (ip->ip_p == IPPROTO_UDP && !USI->prot_scan) {
       if ((unsigned) ip->ip_hl * 4 + 8 > bytes)
 	continue;
       udp = (udphdr_bsd *) ((u8 *) ip + ip->ip_hl * 4);
@@ -2494,6 +2554,35 @@ static bool get_pcap_result(UltraScanInfo *USI, struct timeval *stime) {
       ultrascan_ping_update(USI, hss, probeI, &rcvdtime);
     else
       ultrascan_port_update(USI, hss, probeI, newstate, &rcvdtime);
+  }
+
+  /* If prooicmphack is true, we are doing an IP proto scan and
+     discovered that ICMP is open.  This has to be done separately
+     because an ICMP response ALSO frequently shows that some other
+     protocol is closed/filtered.  So we let that other protocol stuff
+     go first, then handle it here */
+  if (protoscanicmphack) {
+    hss = USI->findIncompleteHost((struct sockaddr_storage *) &protoscanicmphackaddy);
+    if (hss) {
+	  probeI = hss->probes_outstanding.end();
+	  listsz = hss->num_probes_outstanding();
+
+	  for(probenum = 0; probenum < listsz; probenum++) {
+	    probeI--;
+	    probe = *probeI;
+	    ipp = probe->IP;
+
+	    if (ipp->ipv4->ip_p == IPPROTO_ICMP) {
+	      if (probe->isPing())
+		ultrascan_ping_update(USI, hss, probeI, NULL);
+	      else
+		ultrascan_port_update(USI, hss, probeI, PORT_OPEN, NULL);
+	      if (!goodone) goodone = true;
+	      break;
+	    }
+	  }
+	  protoscanicmphack = false;
+    }
   }
 
   return goodone;
@@ -2564,8 +2653,25 @@ static void begin_sniffer(UltraScanInfo *USI, vector<Target *> &Targets) {
 	fatal("ran out of space in pcap_filter");
     }
   } else if (USI->prot_scan) {
-    snprintf(pcap_filter, sizeof(pcap_filter), "dst host %s and icmp", 
-	     inet_ntoa(Targets[0]->v4source())); 
+    len = snprintf(pcap_filter, sizeof(pcap_filter), "dst host %s%s", 
+		   inet_ntoa(Targets[0]->v4source()), (doIndividual)? " and (icmp or (" : "");
+    if (len < 0 || len >= (int) sizeof(pcap_filter))
+      fatal("ran out of space in pcap filter");
+    filterlen += len;
+    if (doIndividual) {
+      for(targetno = 0; targetno < Targets.size(); targetno++) {
+	len = snprintf(pcap_filter + filterlen, sizeof(pcap_filter) - filterlen,
+		       "%ssrc host %s", (targetno == 0)? "" : " or ",
+		       Targets[targetno]->targetipstr());
+	if (len < 0 || len + filterlen >= (int) sizeof(pcap_filter))
+	  fatal("ran out of space in pcap_filter");
+	filterlen += len;
+      }
+      len = snprintf(pcap_filter + filterlen, sizeof(pcap_filter) - filterlen, 
+		     "))");
+      if (len < 0 || len + filterlen >= (int) sizeof(pcap_filter))
+	fatal("ran out of space in pcap_filter");
+    }
  } else assert(0); /* Other scan types? */
   if (o.debugging > 2) printf("Pcap filter: %s\n", pcap_filter);
   set_pcap_filter(Targets[0], USI->pd, flt_all, pcap_filter);
@@ -2638,15 +2744,23 @@ void processData(UltraScanInfo *USI) {
       if (!probe->isPing() && probe->timedout && !probe->retransmitted) {
 	if (!tryno_mayincrease && probe->tryno >= maxtries) {
 	  /* No response received and no further tries allowed */
-	  if (USI->scantype == SYN_SCAN || USI->scantype == ACK_SCAN || 
-	      USI->scantype == WINDOW_SCAN || USI->scantype == CONNECT_SCAN)
-	    newstate = PORT_FILTERED;
-	  else if (USI->scantype == FIN_SCAN || USI->scantype == XMAS_SCAN || 
-		   USI->scantype == MAIMON_SCAN || USI->scantype == NULL_SCAN)
-	    newstate = PORT_OPEN;	  
-	  else if (USI->scantype == UDP_SCAN || USI->scantype == IPPROT_SCAN) {
-	    newstate = PORT_OPENFILTERED;
-	  } else assert(0); /* TODO: May differ for RPC scan and such */
+	  switch(USI->scantype) {
+	  case SYN_SCAN:
+	  case ACK_SCAN:
+	  case WINDOW_SCAN:
+	  case CONNECT_SCAN:
+	    newstate = PORT_FILTERED; break;
+	  case UDP_SCAN:
+	  case IPPROT_SCAN:
+	  case NULL_SCAN:
+	  case FIN_SCAN:
+	  case MAIMON_SCAN:
+	  case XMAS_SCAN:
+	    newstate = PORT_OPENFILTERED; break;
+	  default:
+	    fatal("Unexpected scan type found in processData()");
+	    break;
+	  }
 	  ultrascan_port_update(USI, host, probeI, newstate, NULL);
 	  if (tryno_capped && lastRetryCappedWarning != USI) {
 	    /* Perhaps I should give this on a per-host basis.  Oh

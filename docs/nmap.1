@@ -105,25 +105,26 @@ ports, and programs like Synlogger and Courtney are
 available to detect these scans. These advanced scans, on
 the other hand, may be able to pass through unmolested.
 .Sp
-The idea is that closed ports are required to reply to your
-probe packet with an RST, while open ports must ignore the
-packets in question (see RFC 793 pp 64).  The FIN scan uses
-a bare (surprise) FIN packet as the probe, while the Xmas
-tree scan turns on the FIN, URG, and PUSH flags.  The Null
-scan turns off all flags.  Unfortunately Microsoft (like
-usual) decided to completely ignore the standard and do
-things their own way.  Thus this scan type will not work
-against systems running Windows95/NT.  On the positive side,
-this is a good way to distinguish between the two platforms.
-If the scan finds open ports, you know the machine is not a
-Windows box.  If a -sF,-sX,or -sN scan shows all ports
-closed, yet a SYN (-sS) scan shows ports being opened, you
-are probably looking at a Windows box.  This is less useful
-now that nmap has proper OS detection built in.  There are
-also a few other systems that are broken in the same way
-Windows is.  They include Cisco, BSDI, HP/UX, MVS, and IRIX.
-All of the above send resets from the open ports when they
-should just drop the packet.
+The idea is that closed ports are required to reply to your probe
+packet with an RST, while open ports must ignore the packets in
+question (see RFC 793 pp 64).  Filered ports also tend to drop probes
+without a response, so Nmap considers ports "open|filtered" when it
+fails to elicit any response.  If you add version detection (-sV), it
+will try to verify whether the ports are actually open and change the
+state as appropriate.  The FIN scan uses a bare (surprise) FIN packet
+as the probe, while the Xmas tree scan turns on the FIN, URG, and PUSH
+flags.  The Null scan turns off all flags.  Unfortunately Microsoft
+(like usual) decided to completely ignore the standard and do things
+their own way.  Thus this scan type will not work against systems
+running Windows95/NT.  On the positive side, this is a good way to
+distinguish between the two platforms.  If the scan finds open ports,
+you know the machine is not a Windows box.  If a -sF,-sX,or -sN scan
+shows all ports closed, yet a SYN (-sS) scan shows ports being opened,
+you are probably looking at a Windows box.  This is less useful now
+that nmap has proper OS detection built in.  There are also a few
+other systems that are broken in the same way Windows is.  They
+include Cisco, BSDI, HP/UX, MVS, and IRIX.  All of the above send
+resets from the open ports when they should just drop the packet.
 .TP
 .B \-sP
 Ping scanning: Sometimes you only want to know which hosts
@@ -356,7 +357,7 @@ should always use
 .B \-P0
 or
 .B \-PS80
-when portscanning microsoft.com.  Note tht "ping" in this context may
+when portscanning microsoft.com.  Note that "ping" in this context may
 involve more than the traditional ICMP echo request packet.  Nmap
 supports many such probes, including arbitrary combinations of TCP,
 UDP, and ICMP probes.  By default, Nmap sends an ICMP echo request and

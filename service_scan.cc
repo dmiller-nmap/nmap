@@ -1475,6 +1475,18 @@ ServiceGroup::~ServiceGroup() {
   delete SPM;
 }
 
+/* Called if data is read for a service or a TCP connection made.  If
+   the port state is currently PORT_UNFILTERED, changes to
+   PORT_OPEN. */
+static void adjustPortStateIfNeccessary(ServiceNFO *svc) {
+
+  if (svc->port->state == PORT_OPENFILTERED) {
+    svc->target->ports.addPort(svc->portno, svc->proto, NULL, PORT_OPEN);
+  }
+
+  return;
+}
+
   // Sends probe text to an open connection.  In the case of a NULL probe, there
   // may be no probe text
   static int send_probe_text(nsock_pool nsp, nsock_iod nsi, ServiceNFO *svc,
@@ -1705,6 +1717,10 @@ void servicescan_connect_handler(nsock_pool nsp, nsock_event nse, void *mydata) 
     }
 #endif
 
+    /* If the port is TCP, it is now known to be open rather than openfiltered */
+    if (svc->proto == IPPROTO_TCP)
+      adjustPortStateIfNeccessary(svc);
+
     // Yeah!  Connection made to the port.  Send the appropriate probe
     // text (if any is needed -- might be NULL probe)
     svc->currentprobe_exec_time = *nsock_gettimeofday();
@@ -1773,20 +1789,6 @@ void servicescan_write_handler(nsock_pool nsp, nsock_event nse, void *mydata) {
   return;
 }
 
-/* Called if data is read for a service.  Checks if the service is UDP and
-   the port is in state PORT_OPENFILTERED.  If that is the case, the state
-   is changed to PORT_OPEN, as only an open port would return a response */
-static void adjustPortStateIfNeccessary(ServiceNFO *svc) {
-  if (svc->proto != IPPROTO_UDP)
-    return;
-
-  if (svc->port->state == PORT_OPENFILTERED) {
-    svc->target->ports.addPort(svc->portno, IPPROTO_UDP, NULL, PORT_OPEN);
-  }
-
-  return;
-}
-
 void servicescan_read_handler(nsock_pool nsp, nsock_event nse, void *mydata) {
   nsock_iod nsi = nse_iod(nse);
   enum nse_status status = nse_status(nse);
@@ -1806,7 +1808,7 @@ void servicescan_read_handler(nsock_pool nsp, nsock_event nse, void *mydata) {
   } else if (status == NSE_STATUS_SUCCESS) {
     // w00p, w00p, we read something back from the port.
     readstr = (u8 *) nse_readbuf(nse, &readstrlen);
-    adjustPortStateIfNeccessary(svc); /* A UDP response means PORT_OPENFILTERED is really PORT_OPEN */
+    adjustPortStateIfNeccessary(svc); /* A response means PORT_OPENFILTERED is really PORT_OPEN */
     svc->appendtocurrentproberesponse(readstr, readstrlen);
     // now get the full version
     readstr = svc->getcurrentproberesponse(&readstrlen);

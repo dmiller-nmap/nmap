@@ -1,4 +1,4 @@
-NMAP_VERSION = 3.71-PRE1
+NMAP_VERSION = 3.76
 NMAP_NAME= nmap
 NMAP_URL= http://www.insecure.org/nmap/
 NMAP_PLATFORM=@host@
@@ -94,7 +94,6 @@ nmapfe/nmapfe:
 #	-cd nmapfe; test -f Makefile && $(MAKE) VERSION=$(NMAP_VERSION) STATIC=$(STATIC);
 #	@echo "END OF SECTION WHERE FAILURES ARE OK"
 
-# This target is just for me ... don't you get any ideas --Fyodor
 # This is unsafe on shared systems, should use mktemp
 distro: 
 	autoconf
@@ -125,7 +124,7 @@ distro:
 # Make the RPM .spec file
 	sed -e s/\@VERSION\@/$(NMAP_VERSION)/g nmap.spec.in > nmap-$(NMAP_VERSION)-1.spec
 # Canonicalize and sort Nmap OS fingerprint DB
-	scripts/sort-prints nmap-os-fingerprints > nos && mv nos nmap-os-fingerprints
+	scripts/sort-prints.pl nmap-os-fingerprints > nos && mv nos nmap-os-fingerprints
 	$(MAKE) clean
 	rm -f $(LIBPCAPDIR)/config.cache $(LIBPCAPDIR)/Makefile
 	unix2dos README-WIN32
@@ -237,12 +236,7 @@ distro:
 
 # Update the web site
 web:
-	test x$(wroot) != x
-	cp -a CHANGELOG HACKING COPYING COPYING.OpenSSL INSTALL $(DATAFILES) README-WIN32 mswin32/nmap_performance.reg $(wroot)/nmap/data
-	cd docs && cp -a nmap_manpage*.html nmap*.1 xnmap.1 nmap.usage.txt nmap.dtd $(wroot)/nmap/data/
-	scripts/sort-prints.pl nmap-os-fingerprints > nos && mv nos nmap-os-fingerprints
-	scripts/produceosclasschoosebox.pl nmap-os-fingerprints > $(wroot)/nmap/data/os-classes.txt
-	find $(wroot)/nmap/data/ -type f -exec chmod 644 '{}' \;
+	cd scripts && $(MAKE) web
 
 clean: @PCAP_CLEAN@ @PCRE_CLEAN@ nmapfe_clean nsock_clean nbase_clean my_clean
 

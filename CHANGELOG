@@ -1,17 +1,40 @@
 # Nmap Changelog ($Id$)
 
+o Change IP protocol scan (-sO) so that a response from the target
+  host in any protocol at all will prove that protocol is open.  As
+  before, no response means "open|filtered", an ICMP protocol
+  unreachable means "closed", and most other ICMP error messages mean
+  "filered".
+
+o Changed IP protocol scan (-sO) so that it sends valid ICMP, TCP, and
+  UDP headers when scanning protocols 1, 6, and 17, respectively.  An
+  emtpy IP header is still sent for all other protocols.  This should
+  prevent the error messages such as "sendto in send_ip_packet:
+  sendto(3, packet, 20, 0, 192.31.33.7, 16) => Operation not
+  permitted" that Linux (and perhaps other systems) would give when
+  they try to interpret the raw packet.  This also makes it more
+  likely that these protocols will elicit a response, proving that the
+  protocol is "open".
+
+o Null, FIN, Maimon, and Xmas scans now mark ports as "open|filtered"
+  instead of "open" when they fail to receive any response from the
+  target port.  After all, it could just as easily be filtered as open.
+  This is the same change that was made to UDP scan in 3.70.  Also as
+  with UDP scan, adding version detection (-sV) will change the state
+  from open|filtered to open if it confirms that they really are open.
+
 Nmap 3.75
 
 o Implemented a huge OS fingerprint database update.  The number of
-  signatures have increased more than 20% to 1,353 and many of the
+  fingerprints increased more than 20% to 1,353 and many of the
   existing ones are much improved.  Notable updates include the fourth
   edition of Bell Lab's Plan9, Grandstream's BugeTone 101 IP Phone,
   and Bart's Network Boot Disk 2.7 (which runs MS-DOS).  Oh, and Linux
   kernels up to 2.6.8, dozens of new Windows fingerprints including XP
   SP2, the latest Longhorn warez, and many modified Xboxes, OpenBSD
-  3.6, NetBSD up to 2.0RC4, Apple's AirPort Express WAP and OS X 10.3.3
-  (Panther) release, Novell Netware 6.5, FreeBSD 5.3-BETA, a bunch of
-  Linksys and D-Link consumer junk, the latest Cisco IOS 12.2
+  3.6, NetBSD up to 2.0RC4, Apple's AirPort Express WAP and OS X
+  10.3.3 (Panther) release, Novell Netware 6.5, FreeBSD 5.3-BETA, a
+  bunch of Linksys and D-Link consumer junk, the latest Cisco IOS 12.2
   releases, a ton of miscellaneous broadband routers and printers, and
   much more.
 

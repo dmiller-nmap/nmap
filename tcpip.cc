@@ -479,7 +479,8 @@ const char *ippackethdrinfo(const u8 *packet, u32 len) {
     snprintf(protoinfo, sizeof(protoinfo), "ICMP %s > %s %s (type=%d/code=%d) %s",
 	     srchost, dsthost, icmptype, ping->type, ping->code, ipinfo);
   } else {
-    snprintf(protoinfo, sizeof(protoinfo), "Unknown protocol: %s", ipinfo);
+    snprintf(protoinfo, sizeof(protoinfo), "Unknown protocol (%d): %s", 
+	     ip->ip_p, ipinfo);
   }    
 
   return protoinfo;
@@ -800,6 +801,62 @@ int send_ip_packet(int sd, u8 *packet, unsigned int packetlen) {
   res = Sendto("send_ip_packet", sd, packet, BSDUFIX(ip->ip_len), 0,
 	       (struct sockaddr *)&sock,  (int)sizeof(struct sockaddr_in));
   return res;
+}
+
+/* Builds an ICMP packet (including an IP header) by packing the fields
+   with the given information.  It allocates a new buffer to store the
+   packet contents, and then returns that buffer.  The packet is not
+   actually sent by this function.  Caller must delete the buffer when
+   finished with the packet.  The packet length is returned in
+   packetlen, which must be a valid int pointer. */
+u8 *build_icmp_raw(const struct in_addr *source, const struct in_addr *victim, 
+		   int ttl, u16 ipid, u16 seq, unsigned short id, u8 ptype, 
+		   u8 pcode, char *data, u16 datalen, u32 *packetlen) {
+
+struct ppkt {
+  u8 type;
+  u8 code;
+  u16 checksum;
+  u16 id;
+  u16 seq;
+  u8 data[1500]; /* Note -- first 4-12 bytes can be used for ICMP header */
+} pingpkt;
+u32 *datastart = (u32 *) pingpkt.data;
+int dlen = sizeof(pingpkt.data); 
+int icmplen=0;
+char *ping = (char *) &pingpkt;
+
+ pingpkt.type = ptype;
+ pingpkt.code = pcode;
+
+ if (ptype == 8 && pcode == 0) /* echo request */ {
+   icmplen = 8;
+ } else if (ptype == 13 && pcode == 0) /* ICMP timestamp req */ {
+   icmplen = 20;
+   memset(datastart, 0, 12);
+   datastart += 12;
+   datalen -= 12;
+ } else if (ptype == 17 && pcode == 0) /* icmp netmask req */ {
+   icmplen = 12;
+   *datastart++ = 0;
+   datalen -= 4;
+ } else 
+   fatal("Unknown icmp type/code (%d/%d) in build_icmp_raw", ptype, pcode);
+
+ if (datalen > 0) {
+   icmplen += MIN(dlen, datalen);
+   memset(datastart, 0, MIN(dlen, datalen));
+ }
+/* Fill out the ping packet */
+
+pingpkt.code = 0;
+pingpkt.id = id;
+pingpkt.seq = seq;
+pingpkt.checksum = 0;
+pingpkt.checksum = in_cksum((unsigned short *)ping, icmplen);
+
+return build_ip_raw(source, victim, o.ttl, IPPROTO_ICMP, get_random_u16(),
+		    ping, icmplen, packetlen);
 }
 
 void readippacket(const u8 *packet, int readdata) {
@@ -1218,7 +1275,7 @@ int send_ip_raw_decoys( int sd, const struct in_addr *victim, int ttl,
    actually sent by this function.  Caller must delete the buffer when
    finished with the packet.  The packet length is returned in
    packetlen, which must be a valid int pointer. */
-u8 *build_ip_raw(struct in_addr *source, const struct in_addr *victim, 
+u8 *build_ip_raw(const struct in_addr *source, const struct in_addr *victim, 
 		 int ttl, u8 proto, u16 ipid, char *data, u16 datalen, 
 		 u32 *packetlen) 
 {
