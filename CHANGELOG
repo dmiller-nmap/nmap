@@ -1,5 +1,8 @@
 # Nmap Changelog
 
+-- Changed permutation algorithm to make port order and host order
+   shuffling more random.
+
 ** Version 2.3BETA13
 -- I made Nmap smarter about detecting filtering during UDP, Xmas,
    NULL, and FIN scans.

@@ -300,7 +300,6 @@ inline void adjust_timeouts(struct timeval sent, struct timeout_info *to);
 /* port manipulators */
 unsigned short *getpts(char *expr); /* someone stole the name getports()! */
 
-int shortfry(unsigned short *ports);
 int addport(portlist *plist, unsigned short portno, unsigned short protocol,
 	    char *owner, int state);
 int deleteport(portlist *plist, unsigned short portno,

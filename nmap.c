@@ -843,7 +843,7 @@ if (o.max_parallelism && (i = max_sd()) && i < o.max_parallelism) {
 if (o.debugging > 1) fprintf(o.nmap_stdout, "The max # of sockets we are using is: %d\n", o.max_parallelism);
 
 if (randomize)
-  shortfry(ports); 
+  shortfry(ports, o.numports); 
 
 starttime = time(NULL);
 
@@ -1865,22 +1865,6 @@ else {
 }
 return 1;
 }
-
-/* We don't exactly need real crypto here (thank god!)\n"*/
-int shortfry(unsigned short *ports) {
-int num;
-unsigned short tmp;
-int i;
-
-for(i=0; i < o.numports; i++) {
-  num = get_random_ushort() % (o.numports);
-  tmp = ports[i];
-  ports[i] = ports[num];
-  ports[num] = tmp;
-}
-return 1;
-}
-
 
 /* Much of this is swiped from my send_tcp_raw function above, which 
    doesn't support fragmentation */

@@ -71,6 +71,7 @@ unsigned short get_random_ushort();
 unsigned int get_random_uint();
 /* Scramble the contents of an array*/
 void genfry(unsigned char *arr, int elem_sz, int num_elem);
+void shortfry(unsigned short *arr, int num_elem);
 /* Like the perl equivialent -- It removes the terminating newline from string
    IF one exists.  It then returns the POSSIBLY MODIFIED string */
 char *chomp(char *string);

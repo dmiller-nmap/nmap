@@ -260,6 +260,11 @@ if (sizeof(unsigned char) != 1)
 if (num_elem < 2)
   return;
 
+ if (elem_sz == sizeof(unsigned short)) {
+   shortfry((unsigned short *)arr, num_elem);
+   return;
+ }
+
 /* OK, so I am stingy with the random bytes! */
 if (num_elem < 256) 
   bpe = sizeof(unsigned char);
@@ -275,7 +280,7 @@ cptr = bytes;
 sptr = (unsigned short *)bytes;
 iptr = (unsigned int *) bytes;
 
- for(i=0; i < num_elem; i++) {
+ for(i=num_elem - 1; i > 0; i--) {
    if (num_elem < 256) {
      pos = *cptr; cptr++;
    }
@@ -284,13 +289,31 @@ iptr = (unsigned int *) bytes;
    } else {
      pos = *iptr; iptr++;
    }
-   pos %= num_elem;
+   pos %= i+1;
    memcpy(tmp, arr + elem_sz * i, elem_sz);
    memcpy(arr + elem_sz * i, arr + elem_sz * pos, elem_sz);
    memcpy(arr + elem_sz * pos, tmp, elem_sz);
  }
  free(bytes);
  free(tmp);
+}
+
+void shortfry(unsigned short *arr, int num_elem) {
+int num;
+unsigned short tmp;
+int i;
+
+if (num_elem < 2)
+  return;
+ 
+ for(i= num_elem - 1; i > 0 ; i--) {
+   num = get_random_ushort() % (i + 1);
+   tmp = arr[i];
+   arr[i] = arr[num];
+   arr[num] = tmp;
+ } 
+
+ return;
 }
 
 ssize_t Write(int fd, const void *buf, size_t count) {
