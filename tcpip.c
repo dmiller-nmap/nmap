@@ -53,7 +53,7 @@ pcap_t *my_pcap_open_live(char *device, int snaplen, int promisc, int to_ms)
     fatal("pcap_open_live: %s\nThere are several possible reasons for this, depending on your operating system:\n"
           "LINUX: If you are getting Socket type not supported, try modprobe af_packet or recompile your kernel with SOCK_PACKET enabled.\n"
           "*BSD:  If you are getting device not configured, you need to recompile your kernel with Berkeley Packet Filter support.  If you are getting No such file or directory, try creating the device (eg cd /dev; MAKEDEV <device>; or use mknod).\n"
-          "SOLARIS:  If you are trying to scan localhost and getting '/dev/lo0: No such file or directory', complain to Sun.  I don't think Solaris can support localhost scans.  Try nmap -P0 -sT localhost\n\n", err0r);
+          "SOLARIS:  If you are trying to scan localhost and getting '/dev/lo0: No such file or directory', complain to Sun.  I don't think Solaris can support advanced localhost scans.  You can probably use \"-P0 -sT localhost\" though.\n\n", err0r);
   }
   return pt;
 }

@@ -2409,6 +2409,7 @@ void pos_scan(struct hoststruct *target, unsigned short *portarray, stype scanty
   char err0r[PCAP_ERRBUF_SIZE];
   char filter[512];
   char *p;
+  unsigned int ack_number = 0;
   int tries = 0;
   int  res;
   int connecterror = 0;
@@ -2573,10 +2574,16 @@ void pos_scan(struct hoststruct *target, unsigned short *portarray, stype scanty
       log_write(LOG_STDOUT, "Initiating SYN half-open stealth scan against %s (%s)\n", target->name, inet_ntoa(target->host));
     else if (scantype == CONNECT_SCAN)
       log_write(LOG_STDOUT, "Initiating TCP connect() scan against %s (%s)\n",target->name, inet_ntoa(target->host)); 
-    else if (scantype == WINDOW_SCAN)
+    else if (scantype == WINDOW_SCAN) {    
       log_write(LOG_STDOUT, "Initiating Window scan against %s (%s)\n",target->name, inet_ntoa(target->host));
-    else if (scantype == ACK_SCAN)
+      ack_number = get_random_uint();
+    }
+    else if (scantype == ACK_SCAN) {    
       log_write(LOG_STDOUT, "Initiating ACK scan against %s (%s)\n",target->name, inet_ntoa(target->host));
+      /* WE WANT TO ACK SCAN ACKNOWLEDGEMENT NUMBER TO LOOK AT LEAST A LITTLE
+	 BIT RANDOM (even though it will be constant throughout a session) */
+      ack_number = get_random_uint();
+    }
     else {
       log_write(LOG_STDOUT, "Initiating RPC scan against %s (%s)\n",target->name, inet_ntoa(target->host)); 
     }
@@ -2692,8 +2699,12 @@ void pos_scan(struct hoststruct *target, unsigned short *portarray, stype scanty
 		  if (o.fragscan)
 		    send_small_fragz_decoys(rawsd, &target->host, sequences[current->trynum], o.magic_port + tries * 3 + current->trynum, current->portno, scanflags);
 		  else 
-		    send_tcp_raw_decoys(rawsd, &target->host, o.magic_port + tries * 3 + current->trynum, 
-					current->portno, sequences[current->trynum], 0, scanflags, 0, NULL, 0,0, 0);
+		    send_tcp_raw_decoys(rawsd, &target->host, o.magic_port + 
+					tries * 3 + current->trynum, 
+					current->portno, 
+					sequences[current->trynum], 
+					ack_number, scanflags, 0, NULL, 0, 0, 
+					0);
 
 		} else if (scantype == RPC_SCAN) {
 		  if (send_rpc_query(&target->host, rsi.rpc_current_port->portno,
@@ -2783,7 +2794,10 @@ void pos_scan(struct hoststruct *target, unsigned short *portarray, stype scanty
 	      if (o.fragscan)
 		send_small_fragz_decoys(rawsd, &target->host, sequences[current->trynum], o.magic_port + tries * 3, current->portno, scanflags);
 	      else
-		send_tcp_raw_decoys(rawsd, &target->host, o.magic_port + tries * 3, current->portno, sequences[current->trynum], 0, scanflags, 0, NULL, 0, 0, 0);
+		send_tcp_raw_decoys(rawsd, &target->host, 
+				    o.magic_port + tries * 3, current->portno,
+				    sequences[current->trynum], ack_number, 
+				    scanflags, 0, NULL, 0, 0, 0);
 	    } else if (scantype == RPC_SCAN) {
 	      if (send_rpc_query(&target->host, rsi.rpc_current_port->portno,
 				 rsi.rpc_current_port->proto, current->portno, 
