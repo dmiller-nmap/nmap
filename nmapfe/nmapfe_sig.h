@@ -156,7 +156,6 @@ on_cancel_button1_clicked              (GtkButton       *button,
 
 /* A few functions that should be in a util file (in fact, they should
    share the same util file Nmap uses IMHO */
-int Strncpy(char *dest, const char *src, size_t n);
 int arg_parse(const char *command, char ***argv);
 void arg_parse_free(char **argv);
 
