@@ -48,6 +48,7 @@
 #include "nmap.h"
 #include "osscan.h"
 #include "scan_engine.h"
+#include "idle_scan.h"
 #include "timing.h"
 
 /* global options */
@@ -350,6 +351,7 @@ int nmap_main(int argc, char *argv[]) {
   short quashargv = 0;
   int numhosts_scanned = 0;
   char **host_exp_group;
+  char *idleProxy = NULL; /* The idle host used to "Proxy" an Idlescan */
   int num_host_exp_groups = 0;
   char *machinefilename = NULL, *kiddiefilename = NULL, 
        *normalfilename = NULL, *xmlfilename = NULL;
@@ -394,7 +396,8 @@ int nmap_main(int argc, char *argv[]) {
     {"oH", required_argument, 0, 0},  
     {"oX", required_argument, 0, 0},  
     {"iL", required_argument, 0, 0},  
-    {"iR", no_argument, 0, 0},  
+    {"iR", no_argument, 0, 0},
+    {"sI", required_argument, 0, 0},  
     {"initial_rtt_timeout", required_argument, 0, 0},
     {"randomize_hosts", no_argument, 0, 0},
     {"osscan_limit", no_argument, 0, 0}, /* skip OSScan if no open ports */
@@ -550,6 +553,9 @@ int nmap_main(int argc, char *argv[]) {
 	}
       } else if (strcmp(long_options[option_index].name, "iR") == 0) {
 	o.generate_random_ips = 1;
+      } else if (strcmp(long_options[option_index].name, "sI") == 0) {
+	o.idlescan = 1;
+	idleProxy = optarg;
       } else if (strcmp(long_options[option_index].name, "vv") == 0) {
 	/* Compatability hack ... ugly */
 	o.verbose += 2;
@@ -783,13 +789,18 @@ int nmap_main(int argc, char *argv[]) {
 
   /* Now we check the option sanity */
   /* Insure that at least one scantype is selected */
-  if (!o.connectscan && !o.udpscan && !o.synscan && !o.windowscan && !o.finscan && !o.maimonscan &&  !o.nullscan && !o.xmasscan && !o.ackscan && !o.bouncescan && !o.pingscan && !o.ipprotscan && !o.listscan) {
+  if (!o.connectscan && !o.udpscan && !o.synscan && !o.windowscan && !o.idlescan && !o.finscan && !o.maimonscan &&  !o.nullscan && !o.xmasscan && !o.ackscan && !o.bouncescan && !o.pingscan && !o.ipprotscan && !o.listscan) {
     o.connectscan++;
     if (o.verbose) error("No tcp,udp, or ICMP scantype specified, assuming vanilla tcp connect() scan. Use -sP if you really don't want to portscan (and just want to see what hosts are up).");
   }
 
   if (o.pingtype != PINGTYPE_NONE && o.spoofsource) {
     error("WARNING:  If -S is being used to fake your source address, you may also have to use -e <iface> and -P0 .  If you are using it to specify your real source address, you can ignore this warning.");
+  }
+
+  if (o.pingtype != PINGTYPE_NONE && o.idlescan) {
+    error("WARNING: Many people use -P0 w/Idlescan to prevent pings from your true IP");
+    sleep(1); /* Give ppl a chance for ^C :) */
   }
 
   if (o.connectscan && o.spoofsource) {
@@ -801,7 +812,7 @@ int nmap_main(int argc, char *argv[]) {
   } else if (fastscan && o.ipprotscan) {
     ports = getfastprots();
   } else if (fastscan) {
-    ports = getfastports(o.windowscan|o.synscan|o.connectscan|o.fragscan|o.finscan|o.maimonscan|o.bouncescan|o.nullscan|o.xmasscan|o.ackscan,o.udpscan);
+    ports = getfastports(o.windowscan|o.synscan|o.connectscan|o.fragscan|o.idlescan|o.finscan|o.maimonscan|o.bouncescan|o.nullscan|o.xmasscan|o.ackscan,o.udpscan);
   }
 
   if ((o.pingscan || o.listscan) && ports) {
@@ -820,7 +831,7 @@ int nmap_main(int argc, char *argv[]) {
     if (o.ipprotscan) {
       ports = getdefaultprots();
     } else {
-      ports = getdefaultports(o.windowscan|o.synscan|o.connectscan|o.fragscan|o.finscan|
+      ports = getdefaultports(o.windowscan|o.synscan|o.connectscan|o.fragscan|o.idlescan|o.finscan|
 			      o.maimonscan|o.bouncescan|o.nullscan|o.xmasscan|o.ackscan,
 			      o.udpscan);
     }
@@ -830,11 +841,11 @@ int nmap_main(int argc, char *argv[]) {
   if (!o.tcp_probe_port) o.tcp_probe_port = DEFAULT_TCP_PROBE_PORT;
 
 
-  if (o.pingscan && (o.connectscan || o.udpscan || o.windowscan || o.synscan || o.finscan || o.maimonscan ||  o.nullscan || o.xmasscan || o.ackscan || o.bouncescan || o.ipprotscan || o.listscan)) {
+  if (o.pingscan && (o.connectscan || o.udpscan || o.windowscan || o.synscan || o.idlescan || o.finscan || o.maimonscan ||  o.nullscan || o.xmasscan || o.ackscan || o.bouncescan || o.ipprotscan || o.listscan)) {
     fatal("Ping scan is not valid with any other scan types (the other ones all include a ping scan");
   }
 
-  if (o.listscan && (o.connectscan || o.udpscan || o.windowscan || o.synscan || o.finscan || o.maimonscan ||  o.nullscan || o.xmasscan || o.ackscan || o.bouncescan || o.pingscan)) {
+  if (o.listscan && (o.connectscan || o.udpscan || o.windowscan || o.synscan || o.idlescan || o.finscan || o.maimonscan ||  o.nullscan || o.xmasscan || o.ackscan || o.bouncescan || o.pingscan)) {
     fatal("List scan is not valid with any other scan types (it just lists the hosts that WOULD be scanned)");
   }
 
@@ -849,7 +860,7 @@ int nmap_main(int argc, char *argv[]) {
     }
 #endif
 
-    if (o.finscan || o.windowscan || o.synscan || o.maimonscan || o.nullscan || o.xmasscan || o.ackscan
+    if (o.idlescan || o.finscan || o.windowscan || o.synscan || o.maimonscan || o.nullscan || o.xmasscan || o.ackscan
 	|| o.udpscan || o.ipprotscan) {
 #ifndef WIN32
       fatal("You requested a scan type which requires r00t privileges, and you do not have them.\n");
@@ -890,11 +901,11 @@ int nmap_main(int argc, char *argv[]) {
   if (o.bouncescan && o.pingtype != PINGTYPE_NONE) 
     log_write(LOG_STDOUT, "Hint: if your bounce scan target hosts aren't reachable from here, remember to use -P0 so we don't try and ping them prior to the scan\n");
 
-  if (o.connectscan + o.windowscan + o.synscan + o.finscan + o.maimonscan + o.xmasscan + o.nullscan + o.ackscan  > 1) {
+  if (o.connectscan + o.windowscan + o.synscan + o.finscan + o.idlescan + o.maimonscan + o.xmasscan + o.nullscan + o.ackscan  > 1) {
     fatal("You specified more than one type of TCP scan.  Please choose only one of -sT, -sS, -sF, -sM, -sX, -sA, -sW, and -sN");
   }
 
-  if (o.ipprotscan && (o.connectscan | o.windowscan | o.synscan | o.finscan | o.maimonscan | o.xmasscan | o.nullscan | o.ackscan | o.udpscan))
+  if (o.ipprotscan && (o.connectscan | o.windowscan | o.synscan | o.idlescan | o.finscan | o.maimonscan | o.xmasscan | o.nullscan | o.ackscan | o.udpscan))
     fatal("Sorry, IP protocol scan cannot be combined with any other scans\n");
   /* this is due to use of the port spec infrastructure for protocols */
 
@@ -1005,7 +1016,7 @@ int nmap_main(int argc, char *argv[]) {
   /* Before we randomize the ports scanned, lets output them to machine 
      parseable output */
   if (o.verbose)
-    output_ports_to_machine_parseable_output(ports, o.numports, o.windowscan|o.synscan|o.connectscan|o.fragscan|o.finscan|o.maimonscan|o.bouncescan|o.nullscan|o.xmasscan|o.ackscan,o.udpscan);
+    output_ports_to_machine_parseable_output(ports, o.numports, o.windowscan|o.synscan|o.connectscan|o.fragscan|o.idlescan|o.finscan|o.maimonscan|o.bouncescan|o.nullscan|o.xmasscan|o.ackscan,o.udpscan);
 
   /* more fakeargv junk, BTW malloc'ing extra space in argv[0] doesn't work */
   if (quashargv) {
@@ -1095,7 +1106,7 @@ int nmap_main(int argc, char *argv[]) {
       if (currenths->flags & HOST_UP /*&& !currenths->wierd_responses*/ &&
 	  !o.pingscan && !o.listscan) {
 	
-	if (currenths->flags & HOST_UP && !currenths->source_ip.s_addr && ( o.windowscan || o.synscan || o.finscan || o.maimonscan || o.udpscan || o.nullscan || o.xmasscan || o.ackscan || o.ipprotscan )) {
+	if (currenths->flags & HOST_UP && !currenths->source_ip.s_addr && ( o.windowscan || o.synscan || o.idlescan || o.finscan || o.maimonscan || o.udpscan || o.nullscan || o.xmasscan || o.ackscan || o.ipprotscan )) {
 	  if (gethostname(myname, MAXHOSTNAMELEN) || 
 	      !(target = gethostbyname(myname)))
 	    fatal("Cannot get hostname!  Try using -S <my_IP_address> or -e <interface to scan through>\n"); 
@@ -1107,7 +1118,7 @@ int nmap_main(int argc, char *argv[]) {
 	}
 	
 	/* Figure out what link-layer device (interface) to use (ie eth0, ppp0, etc) */
-	if (!*currenths->device && currenths->flags & HOST_UP && (o.nullscan || o.xmasscan || o.ackscan || o.udpscan || o.finscan || o.maimonscan ||  o.synscan || o.osscan || o.windowscan || o.ipprotscan) && (ipaddr2devname( currenths->device, &currenths->source_ip) != 0))
+	if (!*currenths->device && currenths->flags & HOST_UP && (o.nullscan || o.xmasscan || o.ackscan || o.udpscan || o.idlescan || o.finscan || o.maimonscan ||  o.synscan || o.osscan || o.windowscan || o.ipprotscan) && (ipaddr2devname( currenths->device, &currenths->source_ip) != 0))
 	  fatal("Could not figure out what device to send the packet out on!  You might possibly want to try -S (but this is probably a bigger problem).  If you are trying to sp00f the source of a SYN/FIN scan with -S <fakeip>, then you must use -e eth0 (or other devicename) to tell us what interface to use.\n");
 	/* Set up the decoy */
 	o.decoys[o.decoyturn] = currenths->source_ip;
@@ -1125,6 +1136,8 @@ int nmap_main(int argc, char *argv[]) {
 	if (o.udpscan) super_scan(currenths, ports, UDP_SCAN);
 	if (o.ipprotscan) super_scan(currenths, ports, IPPROT_SCAN);
 	
+	if (o.idlescan) idle_scan(currenths, ports, idleProxy);
+
 	if (o.bouncescan) {
 	  if (ftp.sd <= 0) ftp_anon_connect(&ftp);
 	  if (ftp.sd > 0) bounce_scan(currenths, ports, &ftp);

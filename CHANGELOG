@@ -14,6 +14,9 @@
 -- Fixed command-line option parsing bug found 
    by "m r rao" (mrrao@del3.vsnl.net.in )
 
+-- Fixed an OS fingerprinting bug that caused many extra packets to be
+   sent if you request a lot of decoys.
+
 ** 2.54BETA25
 
 -- Added a whole bunch of new OS fingerprints (and adjustments)

@@ -78,7 +78,7 @@ struct ip *ip;
 struct tcphdr *tcp;
 struct icmp *icmp;
 struct timeval t1,t2;
-int i, j, k;
+int i;
 struct hostent *myhostent = NULL;
 pcap_t *pd;
 char myname[513];
@@ -96,16 +96,12 @@ unsigned int bytes;
 unsigned int closedport = 31337;
 struct port *tport = NULL;
 char *p;
-int decoy;
 char filter[512];
 double seq_inc_sum = 0;
 unsigned int  seq_avg_inc = 0;
 struct udpprobeinfo *upi = NULL;
 u32 seq_gcd = 1;
-int allipideqz = 1; /* Flag that means "All IP.IDs returned during sequencing
-		       are zero.  This is unset if we find a nonzero */
 u32 seq_diffs[NUM_SEQ_SAMPLES];
-u16 ipid_diffs[NUM_SEQ_SAMPLES];
 u32 ts_diffs[NUM_SEQ_SAMPLES];
 unsigned long time_usec_diffs[NUM_SEQ_SAMPLES];
 struct timeval seq_send_times[NUM_SEQ_SAMPLES];
@@ -332,26 +328,25 @@ if (o.verbose && openport != (unsigned long) -1)
    seq_packets_sent = 0;
    while (seq_packets_sent < NUM_SEQ_SAMPLES) {
      if (o.scan_delay) enforce_scan_delay(NULL);
-     for(decoy=0; decoy < o.numdecoys; decoy++) {
-       send_tcp_raw_decoys(rawsd, &target->host, 
-			   o.magic_port + seq_packets_sent + 1, 
-			   openport, 
-			   sequence_base + seq_packets_sent + 1, 0, 
-			   TH_SYN, 0 ,"\003\003\012\001\002\004\001\011\010\012\077\077\077\077\000\000\000\000\000\000" , 20, NULL, 0);
-       if (!o.scan_delay)
-	 usleep( MAX(110000, target->to.srtt)); /* Main reason we wait so long is that we need to spend more than .5 seconds to detect 2HZ timestamp sequencing -- this also should make ISN sequencing more regular */
-     }
+     send_tcp_raw_decoys(rawsd, &target->host, 
+			 o.magic_port + seq_packets_sent + 1, 
+			 openport, 
+			 sequence_base + seq_packets_sent + 1, 0, 
+			 TH_SYN, 0 ,"\003\003\012\001\002\004\001\011\010\012\077\077\077\077\000\000\000\000\000\000" , 20, NULL, 0);
+     if (!o.scan_delay)
+       usleep( MAX(110000, target->to.srtt)); /* Main reason we wait so long is that we need to spend more than .5 seconds to detect 2HZ timestamp sequencing -- this also should make ISN sequencing more regular */
+   
      gettimeofday(&seq_send_times[seq_packets_sent], NULL);
      seq_packets_sent++;
      
      /* Now we collect  the replies */
-
+     
      while(si->responses < seq_packets_sent && !timeout) {
        
        if (seq_packets_sent == NUM_SEQ_SAMPLES)
 	 ip = (struct ip*) readip_pcap(pd, &bytes, oshardtimeout);
        else ip = (struct ip*) readip_pcap(pd, &bytes, 10);
-
+       
        gettimeofday(&t2, NULL);
        /*     error("DEBUG: got a response (len=%d):\n", bytes);  */
        /*     lamont_hdump((unsigned char *) ip, bytes); */
@@ -387,7 +382,7 @@ if (o.verbose && openport != (unsigned long) -1)
 	 if ((tcp->th_flags & TH_RST)) {
 	   /*	 readtcppacket((char *) ip, ntohs(ip->ip_len));*/	 
 	   if (si->responses == 0) {	 
-	     fprintf(stderr, "WARNING:  RST from port %li -- is this port really open?\n", openport);
+	     fprintf(stderr, "WARNING:  RST from port %hi -- is this port really open?\n", openport);
 	     /* We used to quit in this case, but left-overs from a SYN
 		scan or lame-ass TCP wrappers can cause this! */
 	   } 
@@ -409,8 +404,6 @@ if (o.verbose && openport != (unsigned long) -1)
 	   si->responses++;
 	   si->seqs[seq_response_num] = ntohl(tcp->th_seq); /* TCP ISN */
 	   si->ipids[seq_response_num] = ntohs(ip->ip_id);
-	   if (si->ipids[seq_response_num])
-	     allipideqz = 0; /* All IP.ID values do *NOT* equal zero */
 	   if ((gettcpopt_ts(tcp, &timestamp, NULL) == 0))
 	     si->ts_seqclass = TS_SEQ_UNSUPPORTED;
 	   else {
@@ -439,88 +432,19 @@ if (o.verbose && openport != (unsigned long) -1)
        }
        if (si->responses > 0) {
 	 seq_diffs[si->responses - 1] = MOD_DIFF(si->seqs[si->responses], si->seqs[si->responses - 1]);
-	 ipid_diffs[si->responses - 1] = MOD_DIFF_USHORT(si->ipids[si->responses], si->ipids[si->responses - 1]);
 	 ts_diffs[si->responses - 1] = MOD_DIFF(si->timestamps[si->responses], si->timestamps[si->responses - 1]);
 	 time_usec_diffs[si->responses - 1] = TIMEVAL_SUBTRACT(seq_send_times[si->responses], seq_send_times[si->responses - 1]);
 	 if (!time_usec_diffs[si->responses - 1]) time_usec_diffs[si->responses - 1]++; /* We divide by this later */
 	 /*	 printf("MOD_DIFF_USHORT(%hi, %hi) == %hi\n", si->ipids[si->responses], si->ipids[si->responses - 1], MOD_DIFF_USHORT(si->ipids[si->responses], si->ipids[si->responses - 1])); */
-	 if (si->ipids[si->responses]  < si->ipids[si->responses - 1] &&
-	     (si->ipids[si->responses] > 500 || si->ipids[si->responses] < 65000)) {
-	   /* It has DECREASED and apparently NOT because of a rollover */
-	   si->ipid_seqclass = IPID_SEQ_RD;
-	 }
        }
 
        si->responses++;
      } /* Otherwise nothing good in this slot to copy */
    }
      
-   /* Battle plan for IPID sequencing:
-      1. If it is already set -- leave it that way
-      2. ipid_diffs-- if scanning localhost and safe
-      3. If any diff is > 1000, set to random, if 0, set to constant
-      4. If any of the diffs are 1, or all are less than 9 set it to 
-         incremental
-   */
-   if (allipideqz && si->responses >= 3) {
-     si->ipid_seqclass = IPID_SEQ_ZERO;
-   }
 
-   if (si->ipid_seqclass == IPID_SEQ_UNKNOWN && si->responses >= 3) {
-
-     /* Localhost problem */
-     if (islocalhost(&(target->host))) {
-       int allgto = 1; /* ALL Greater Than One flag */
-       for(i=0; i < si->responses - 1; i++)
-	 if (ipid_diffs[i] < 2) {
-	   allgto = 0; break;
-	 }
-       if (allgto) {
-	 for(i=0; i < si->responses - 1; i++) {
-	   if (ipid_diffs[i] % 256 == 0) /* Stupid MS */
-	     ipid_diffs[i] -= 256;
-	   else
-	     ipid_diffs[i]--; /* Because on localhost the RST sent back ues an IPID */
-	 }
-       }
-     }
-     
-     for(i=0; i < si->responses - 1; i++) {
-       if (ipid_diffs[i] > 1000) {
-	 si->ipid_seqclass = IPID_SEQ_RPI;
-	 break;
-       }
-       if (ipid_diffs[i] == 0) {
-	 si->ipid_seqclass = IPID_SEQ_CONSTANT;
-	 break;
-       }
-     }
-
-     j = 1; /* j is a flag meaning "all differences seen are < 9" */
-     k = 1; /* k is a flag meaning "all difference seen are multiples of 256 */
-     for(i=0; i < si->responses - 1; i++) {
-       if (ipid_diffs[i] == 1) {
-	 si->ipid_seqclass = IPID_SEQ_INCR;
-	 break;
-       }
-
-       if (k && ipid_diffs[i] < 2560 && ipid_diffs[i] % 256 != 0) {
-	 k = 0;
-       }
-
-       if (ipid_diffs[i] > 9)
-	 j = 0;
-     }
-
-     if (si->ipid_seqclass == IPID_SEQ_UNKNOWN && k == 1) {
-       /* Stupid Microsoft! */
-       si->ipid_seqclass = IPID_SEQ_BROKEN_INCR;
-     }
-
-     if (si->ipid_seqclass == IPID_SEQ_UNKNOWN && j == 1)
-       si->ipid_seqclass = IPID_SEQ_INCR;
-
-   }
+   si->ipid_seqclass = ipid_sequence(si->responses, si->ipids, 
+				     islocalhost(&(target->host)));
 
    /* Now we look at TCP Timestamp sequence prediction */
    /* Battle plan:
@@ -1744,3 +1668,94 @@ AVs[current_testno].next = NULL;
 return AVs;
 }
 
+/* This function takes an array of "numSamples" IP IDs and analyzes
+ them to determine their sequenceability classification.  It returns
+ one of the IPID_SEQ_* classifications defined in nmap.h .  If the
+ function cannot determine the sequence, IPID_SEQ_UNKNOWN is returned.
+ This islocalhost argument is a boolean specifying whether these
+ numbers were generated by scanning localhost.  NOTE: the "ipids" argument
+ may be modified if localhost is set to true. */
+
+int ipid_sequence(int numSamples, u16 *ipids, int islocalhost) {
+  u16 ipid_diffs[32];
+  int i;
+  int allipideqz = 1; /* Flag that means "All IP.IDs returned during
+		         sequencing are zero.  This is unset if we
+		         find a nonzero */
+  int j,k;
+
+  assert(numSamples < (sizeof(ipid_diffs) / 2));
+  if (numSamples < 2) return IPID_SEQ_UNKNOWN;
+
+  for(i = 1; i < numSamples; i++) {
+
+    if (ipids[i-1] != 0 || ipids[i] != 0) 
+      allipideqz = 0; /* All IP.ID values do *NOT* equal zero */
+
+    ipid_diffs[i-1] = MOD_DIFF_USHORT(ipids[i], ipids[i-1]);
+    if ((ipids[i] < ipids[i-1]) && (ipids[i] > 500 || ipids[i-1] < 65000))
+      return IPID_SEQ_RD;
+  }
+
+  if (allipideqz) return IPID_SEQ_ZERO;
+
+  /* Battle plan ... 
+     ipid_diffs-- if scanning localhost and safe
+     If any diff is > 1000, set to random, if 0, set to constant
+     If any of the diffs are 1, or all are less than 9, set to incremental 
+  */
+  
+  if (islocalhost) {
+    int allgto = 1; /* ALL diffs greater than one */
+    
+    for(i=0; i < numSamples - 1; i++)
+      if (ipid_diffs[i] < 2) {
+	allgto = 0; break;
+      }
+    if (allgto) {
+      for(i=0; i < numSamples - 1; i++) {
+	if (ipid_diffs[i] % 256 == 0) /* Stupid MS */
+	  ipid_diffs[i] -= 256;
+	else
+	  ipid_diffs[i]--; /* Because on localhost the RST sent back ues an IPID */
+      }
+    }
+  }
+
+  for(i=0; i < numSamples - 1; i++) {
+    if (ipid_diffs[i] > 1000) {
+      return IPID_SEQ_RPI;
+      break;
+    }
+    if (ipid_diffs[i] == 0) {
+      return IPID_SEQ_CONSTANT;
+      break;
+    }
+  }
+
+  j = 1; /* j is a flag meaning "all differences seen are < 9" */
+  k = 1; /* k is a flag meaning "all difference seen are multiples of 256 */
+  for(i=0; i < numSamples - 1; i++) {
+    if (ipid_diffs[i] == 1) {
+      return IPID_SEQ_INCR;
+    }
+
+    if (k && ipid_diffs[i] < 2560 && ipid_diffs[i] % 256 != 0) {
+      k = 0;
+    }
+
+    if (ipid_diffs[i] > 9)
+      j = 0;
+  }
+
+     if (k == 1) {
+       /* Stupid Microsoft! */
+       return IPID_SEQ_BROKEN_INCR;
+     }
+
+     if (j == 1)
+       return IPID_SEQ_INCR;
+
+     return IPID_SEQ_UNKNOWN;
+
+}

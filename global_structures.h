@@ -277,6 +277,7 @@ struct ops /* someone took struct options, <grrr> */ {
   int synscan;
   int windowscan;
   int maimonscan;
+  int idlescan;
   int finscan;
   int udpscan;
   int ipprotscan;

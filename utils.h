@@ -131,6 +131,7 @@ int get_random_bytes(void *buf, int numbytes);
 int get_random_int();
 unsigned short get_random_ushort();
 unsigned int get_random_uint();
+u32 get_random_u32();
 /* Scramble the contents of an array*/
 void genfry(unsigned char *arr, int elem_sz, int num_elem);
 void shortfry(unsigned short *arr, int num_elem);
