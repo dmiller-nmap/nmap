@@ -364,7 +364,7 @@ bzero((char *) packet, sizeof(struct ip) + sizeof(udphdr_bsd));
 
 udp->uh_sport = htons(sport);
 udp->uh_dport = htons(dport);
-udp->uh_ulen = 8 + datalen;
+udp->uh_ulen = htons(8 + datalen);
 /*udp->uh_sum = 0;*/
 
 /* Now for the ip header */
