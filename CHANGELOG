@@ -1,5 +1,16 @@
 # Nmap Changelog
 
+-- Applied patch from LaMont Jones (lamont@hp.com) which makes Nmap
+   compatable with gcc 3.0 (apparently printf() is a macro in that
+   version)
+
+-- Applied patch from Colin Phipps (cph@netcraft.com) which fixes a
+   problem that kept UDP RPC scanning from working unless you were
+   also doing a TCP scan.
+
+-- Applied a patch from Chris Eagle (cseagle@redshift.com) which fixes
+   Windows compilation (I broke it with a recent change).
+
 -- Updated Lithuanian translation of man page based on a newer version sent 
    by Aurimas Mikalauskas (inner@crazy.lt)
 

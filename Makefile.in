@@ -96,7 +96,7 @@ distro:
             config.sub INSTALL README-WIN32 COPYING CHANGELOG HACKING \
             /usr/tmp/nmap-$(NMAP_VERSION)
 	$(SHTOOL) mkdir /usr/tmp/nmap-$(NMAP_VERSION)/mswin32
-	cd mswin32; cp -ra *.h *.H ARPA NET NETINET RPC icon1.ico \
+	cd mswin32; cp -ra *.[hHcC] ARPA NET NETINET RPC icon1.ico \
                     ifaddrlist.h lib libpcap-note.txt nmap.dsp \
                     nmap.dsw nmap.rc winip \
                     /usr/tmp/nmap-$(NMAP_VERSION)/mswin32

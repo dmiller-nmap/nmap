@@ -1151,6 +1151,7 @@ nfsd-status       1110/tcp   # Cluster status info
 nfsd-keepalive    1110/udp   # Client status info
 msql              1112/tcp   # mini-sql server
 supfiledbg        1127/tcp   # SUP debugging
+cce3x             1139/tcp   # ClearCommerce Engine 3.x ( www.clearcommerce.com)
 nfa               1155/tcp   # Network File Access
 nfa               1155/udp   # Network File Access
 phone             1167/udp   # conference calling
@@ -2013,6 +2014,7 @@ amanda            10080/udp  # Amanda Backup Util
 amandaidx         10082/tcp  # Amanda indexing
 amidxtape         10083/tcp  # Amanda tape indexing
 pksd              11371/tcp  # PGP Public Key Server
+cce4x             12000/tcp  # ClearCommerce Engine 4.x (www.clearcommerce.com)
 NetBus            12345/tcp  # NetBus backdoor trojan
 NetBus            12346/tcp  # NetBus backdoor trojan
 isode-dua         17007/tcp  # 

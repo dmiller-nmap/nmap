@@ -797,7 +797,9 @@ T6(Resp=Y%DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=15C%RID=E%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
-Fingerprint MacOS 9 on a Power Macintosh 7200/75
+#  MacOS 9 on a Power Macintosh 7200/75
+# iMac running Mac OS 9.1
+Fingerprint Mac OS 9 - 9.1
 TSeq(Class=RI%gcd=<6%SI=<9CE0&>17D)
 T1(DF=Y%W=8000%ACK=S++%Flags=AS%Ops=MEWNNNT)
 T2(Resp=Y%DF=Y%W=0%ACK=S%Flags=AR%Ops=)
@@ -3319,7 +3321,8 @@ PU(DF=N%TOS=D%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=0%ULEN=134%DAT=E)
 # Trancell Webramp router or Xylan Omni Switch 3.2.X.X - 3.4.X.X
 # Epson Stylus Color 1520C with 100BTX-NIC from Epson
 # CISCO 6509 WS-C6509 Software, Version NmpSW: 5.3(3)CSX
-Fingerprint Router/Switch/Printer (LanPlex 2500/Cisco Catalyst 5505/CISCO 6509/Trancell Webramp/Xylan Omni Switch)/Epson Stylus (100BTX-NIC HP Secure Web Console) 
+# Sonicwall firewall appliance 10meg firmware 3.3.1
+Fingerprint Router/Switch/Printer (LanPlex 2500/Cisco Catalyst 5505/CISCO 6509/Trancell Webramp/Xylan Omni Switch)/Epson Stylus (100BTX-NIC HP Secure Web Console, Sonicwall firewall appliance 3.3.1) 
 TSeq(Class=64K)
 T1(DF=N%W=1000%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)
@@ -5542,7 +5545,8 @@ PU(Resp=Y%DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=F%RIPCK=0%UCK=0%ULEN=134%DAT=E)
 
 #  HPJ2600A Ethernet hub or HP ProCurve Switch 4000M
 # Thanks to Solar Designer (ROM A.01.00, HW A.01.00) & Jan Koum
-Fingerprint VxWorks 5.3.x bases system (usually an ethernet hub or switch)
+# Bay Networks MicroAnnex XL running firmware 10.0B
+Fingerprint VxWorks 5.3.x bases system (usually an ethernet hub or switch) or BayNetworks MicroAnnex XL term server
 TSeq(Class=64K)
 T1(DF=N%W=1000%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=N)

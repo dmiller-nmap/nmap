@@ -811,6 +811,10 @@ int nmap_main(int argc, char *argv[]) {
     fatal("The fast scan (-F) is incompatible with ping scan");
   }
 
+  if ((o.pingscan && o.pingtype == PINGTYPE_NONE)) {
+    fatal("-P0 (skip ping) is incompatable with -sP (ping scan).  If you only want to enumerate hosts, try list scan (-sL)");
+  }
+
   if (!ports) {
     if (o.ipprotscan) {
       ports = getdefaultprots();
@@ -1421,6 +1425,11 @@ unsigned short *getpts(char *origexpr) {
 }
 
 void printusage(char *name, int rc) {
+#ifdef WIN32
+#define WIN32_PRINTF "  --win_help Windows-specific features\n"
+#else
+#define WIN32_PRINTF
+#endif
   printf(
 	 "Nmap V. %s Usage: nmap [Scan Type(s)] [Options] <host or net list>\n"
 	 "Some Common Scan Types ('*' options require root privileges)\n"
@@ -1443,9 +1452,7 @@ void printusage(char *name, int rc) {
 	 "  -iL <inputfile> Get targets from file; Use '-' for stdin\n"
 	 "* -S <your_IP>/-e <devicename> Specify source address or network interface\n"
 	 "  --interactive Go into interactive mode (then press h for help)\n"
-#ifdef WIN32
-	 "  --win_help Windows-specific features\n"
-#endif
+         WIN32_PRINTF
 	 "Example: nmap -v -sS -O www.my.com 192.168.0.0/16 '192.88-90.*.*'\n"
 	 "SEE THE MAN PAGE FOR MANY MORE OPTIONS, DESCRIPTIONS, AND EXAMPLES \n", NMAP_VERSION);
   exit(rc);

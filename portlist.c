@@ -274,13 +274,15 @@ if (afterthisport) {
  current_portno++; /* Start on the port after the one we were given */
 
 /* First we look for TCP ports ... */
-if ((allowed_protocol == 0 || allowed_protocol == IPPROTO_TCP) && 
-    current_proto == IPPROTO_TCP && plist->tcp_ports) {
+if (current_proto == IPPROTO_TCP) {
+ if ((allowed_protocol == 0 || allowed_protocol == IPPROTO_TCP) && 
+    current_proto == IPPROTO_TCP && plist->tcp_ports)
   for(; current_portno < 65536; current_portno++) {
     if (plist->tcp_ports[current_portno] &&
 	(!allowed_state || plist->tcp_ports[current_portno]->state == allowed_state))
       return plist->tcp_ports[current_portno];
   }
+
   /*  Uh-oh.  We have tried all tcp ports, lets move to udp */
   current_portno = 0;
   current_proto = IPPROTO_UDP;
