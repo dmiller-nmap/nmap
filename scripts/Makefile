@@ -18,3 +18,12 @@ fingerdiff: dummy
 
 servicematch: dummy
 	$(CPP) -g -Wall $(INCLUDE_FLAGS) $(LINK_FLAGS) $(DEFINES) -o $@ $@.cc $(NMAP_OBJS) -lm -lnbase -lpcap -lpcre -lssl -lcrypt
+
+web:
+	test x$(wroot) != x
+	cd .. && cp -a CHANGELOG HACKING COPYING COPYING.OpenSSL INSTALL $(DATAFILES) README-WIN32 mswin32/nmap_performance.reg $(wroot)/nmap/data
+	cd ../docs && cp -a nmap_manpage*.html nmap*.1 xnmap.1 nmap.usage.txt nmap.dtd $(wroot)/nmap/data/
+	./sort-prints.pl ../nmap-os-fingerprints > nos && mv nos ../nmap-os-fingerprints
+	./produceosclasschoosebox.pl ../nmap-os-fingerprints > $(wroot)/nmap/data/os-classes.txt
+	./sign_release.pl $(wroot)/nmap/dist
+	find $(wroot)/nmap/data/ -type f -exec chmod 644 '{}' \;
