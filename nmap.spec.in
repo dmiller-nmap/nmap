@@ -44,15 +44,12 @@ Vendor: Fyodor <fyodor@dhp.com>
 
 %description
 
-nmap is a utility for exploration or security auditing of large
-networks, although it works fine for single hosts.  It supports ping
-scanning (to determine what hosts are up), many port scanning
-techniques (to determine what services the hosts are offering), and
-TCP/IP fingerprinting (to determine what OS is running on the
-host(s)).  Nmap also offers Nmap also offers flexible target and port
-specification, decoy scanning, determination of TCP sequence
-predictability characteristics, reverse-identd scanning, and output to
-machine parseable or human readable log files.
+Nmap is a utility for network exploration or security auditing.  It supports
+ping scanning (determine which hosts are up), many port scanning techniques
+(determine what services the hosts are offering), and TCP/IP fingerprinting
+(remote host operating system identification). Nmap also offers flexible target
+and port specification, decoy scanning, determination of TCP sequence
+predictability characteristics, reverse-identd scanning, and more.
 
 %prep
 %setup
@@ -66,9 +63,9 @@ strip nmap
 %install
 install -d -m 755 $RPM_BUILD_ROOT/usr/local/bin
 install -d -m 755 $RPM_BUILD_ROOT/usr/local/man/man1
-install -d -m 755 $RPM_BUILD_ROOT/usr/local/lib
+install -d -m 755 $RPM_BUILD_ROOT/usr/local/lib/nmap
 #install -m 755 $RPM_BUILD_ROOT/
-make install bindir=$RPM_BUILD_ROOT/usr/local/bin mandir=$RPM_BUILD_ROOT/usr/local/man libdir=$RPM_BUILD_ROOT/usr/local/lib
+make install bindir=$RPM_BUILD_ROOT/usr/local/bin mandir=$RPM_BUILD_ROOT/usr/local/man libdir=$RPM_BUILD_ROOT/usr/local/lib/nmap
 
 # build directory and file lists
 find $RPM_BUILD_ROOT -type d |
