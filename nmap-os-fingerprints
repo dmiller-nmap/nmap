@@ -9338,8 +9338,8 @@ T6(DF=N%W=0%ACK=O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=15C%RID=E%RIPCK=F%UCK=E%ULEN=134%DAT=E)
 
-Fingerprint Siemens 300E business phone system Release 6.5
-Class Siemens | embedded || telecom-misc
+Fingerprint Siemens HiCom 300E business phone system Release 6.5
+Class Siemens | embedded || VoIP phone
 TSeq(Class=RI%gcd=<6%SI=<5D131C&>4A3C%IPID=I%TS=U)
 T1(DF=N%W=1000%ACK=S++%Flags=AS%Ops=ME)
 T2(Resp=N)
@@ -11097,7 +11097,7 @@ T6(DF=N%W=0%ACK=S++|O%Flags=R%Ops=)
 T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
-Fingerprint Microsoft Microsoft NT 4.0 SP5-SP6
+Fingerprint Microsoft Windows NT 4.0 SP5-SP6
 Class Microsoft | Windows | NT/2K/XP | general purpose
 TSeq(Class=RI%gcd=<6%SI=<DA16&>21A)
 T1(DF=Y%W=2017%ACK=S++%Flags=AS%Ops=M)

@@ -1,8 +1,13 @@
 # Nmap Changelog ($Id$)
 
+o Applied a patch by Florin Andrei (florin(a)sgi.com) to the Nmap RPM
+  spec file.  This uses the 'Epoch' flag to prevent the Redhat Network
+  tool from marking my RPMs as "obsolete" and "upgrading" to earlier
+  Redhat-built versions.  A compilation flag problem is also fixed.
+
 Nmap 3.30
 
-o Implemented the largest-ever OS fingerprint update!  Roughtly 300
+o Implemented the largest-ever OS fingerprint update!  Roughly 300
   fingerprints were added/modified.  These massive changes span the
   gamut from AIX 5.1 to the ZyXEL Prestige broadband router line.
   Notable updates include OpenBSD 3.3, FreeBSD 5.1, Mac OS X 10.2.6,

@@ -15,6 +15,7 @@ Summary: Network exploration tool and security scanner
 Name: %{name}
 Version: %{version}
 Release: %{release}
+Epoch: 2
 Copyright: GPL
 Group: Applications/System
 Source0: http://www.insecure.org/nmap/dist/%{name}-%{version}.tgz
@@ -49,7 +50,9 @@ be installed before installing nmap-frontend.
 %setup -q
 
 %build
-CFLAGS="$RPM_OPT_FLAGS" ./configure --prefix=%{prefix} --mandir=%{prefix}/share/man
+export CFLAGS="$RPM_OPT_FLAGS"
+export CXXFLAGS="$RPM_OPT_FLAGS"
+./configure --prefix=%{prefix} --mandir=%{prefix}/share/man 
 make 
 
 %install
