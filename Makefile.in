@@ -1,4 +1,4 @@
-NMAP_VERSION = 2.54BETA35
+NMAP_VERSION = 2.54BETA36
 NMAP_NAME= nmap
 NMAP_URL= www.insecure.org/nmap/
 NMAP_PLATFORM=@host@
@@ -58,7 +58,7 @@ nmapfe/nmapfe:
 	@echo "FAILURES HERE ARE OK -- THEY JUST MEAN YOU CANNOT USE nmapfe"
 #	-rm -f nmapfe/Makefile
 #	-cd nmapfe; ./configure;
-	-cd nmapfe; test -f Makefile && $(MAKE) VERSION=0.$(NMAP_VERSION) STATIC=$(STATIC);
+	-cd nmapfe; test -f Makefile && $(MAKE) VERSION=$(NMAP_VERSION) STATIC=$(STATIC);
 	@echo "END OF SECTION WHERE FAILURES ARE OK"
 
 # This target is just for me ... don't you get any ideas --Fyodor
@@ -142,7 +142,7 @@ distro:
 # Make the actual RPM
 	rpm -ta /usr/tmp/nmap-$(NMAP_VERSION).tgz
 	cp -f $(RPMTDIR)/RPMS/i386/nmap-$(NMAP_VERSION)-1.i386.rpm /usr/tmp
-	cp -f $(RPMTDIR)/RPMS/i386/nmap-frontend-0.$(NMAP_VERSION)-1.i386.rpm /usr/tmp
+	cp -f $(RPMTDIR)/RPMS/i386/nmap-frontend-$(NMAP_VERSION)-1.i386.rpm /usr/tmp
 	cp -f $(RPMTDIR)/SRPMS/nmap-$(NMAP_VERSION)-1.src.rpm /usr/tmp
 	rm -rf /usr/tmp/nmap-$(NMAP_VERSION)
 

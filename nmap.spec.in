@@ -38,7 +38,7 @@ scanning, and more.
 Summary: Gtk+ frontend for nmap
 Group: Applications/System
 Requires: nmap, gtk+
-Version: 0.%{version}
+Version: %{version}
 %description frontend
 This package includes nmapfe, a Gtk+ frontend for nmap. The nmap package must
 be installed before installing nmap-frontend.

@@ -2,7 +2,13 @@
 
 Nmap 2.54BETA36
 
-o Fixed connect scan problem introduced in BETA35
+o Fixed major connect scan problem introduced in BETA35
+
+o Changed NmapFE to use the version number 2.54BETA36 rather than
+  0.2.54BETA36.  I had to do this because RedHat took the liberty of
+  releasing a so-called "2.54BETA31" version of nmap-frontend in their
+  7.3 distribution.  Thus my upgrades were failing to install on such
+  systems because a "later" version is already installed.
 
 Nmap 2.54BETA35
 
