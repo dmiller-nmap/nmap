@@ -307,7 +307,7 @@ void *realloc();
                           increment */
 #define IPID_SEQ_RD 4 /* Appears to select IPID using a "random" distributions (meaning it can go up or down) */
 #define IPID_SEQ_CONSTANT 5 /* Contains 1 or more sequential duplicates */
-
+#define IPID_SEQ_ZERO 6 /* Every packet that comes back has an IP.ID of 0 (eg Linux 2.4 does this) */
 #ifndef MAXHOSTNAMELEN
 #define MAXHOSTNAMELEN 64
 #endif

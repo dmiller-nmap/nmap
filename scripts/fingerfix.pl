@@ -31,10 +31,12 @@ while(<>) {
 	$fp{os} = $1;
     }
 
-    elsif ($line =~ /TSeq\(Class=([^%\)]+)(%gcd=([^%]+)%SI=([0-9A-F]+))?\)/) {
+    elsif ($line =~ /TSeq\(Class=([^%\)]+)(%gcd=([^%]+)%SI=([^%\)]+))?(%IPID=([^%\)]+))?(%TS=([^%\)]+))?\)/) {
         $cls = $1;
 	$gcd = hex($3);
 	$si = $4;
+        $ipid = $6;
+        $ts = $8;
 	if (index($fp{tseq}{cls}, $cls) == -1) {
 	    if ($fp{tseq}{cls}) {
 		$fp{tseq}{cls} = $fp{tseq}{cls} . qq^|$cls^;
@@ -51,31 +53,55 @@ while(<>) {
 	
 	$fp{tseq}{gcd} = sprintf ("<%X", $newgcd);
 
-	$si = hex($si);
+        $newhighlim = $newlowlim = -1;
+        if ($si =~ /<([0-9A-Fa-f]+)/) { $newhighlim = hex($1); }
+        if ($si =~ />([0-9A-Fa-f]+)/) { $newlowlim = hex($1); }
 
 	if ($fp{tseq}{si} =~ /<([0-9A-F]+)/) {
-	    $oldlowlim = hex($1);
-	} else { $oldlowlim = 0; }
-
-	if ($fp{tseq}{si} =~ />([0-9A-F]+)/) {
 	    $oldhighlim = hex($1);
 	} else { $oldhighlim = 0; }
+
+	if ($fp{tseq}{si} =~ />([0-9A-F]+)/) {
+	    $oldlowlim = hex($1);
+	} else { $oldlowlim = 0; }
 
 	if ($fp{tseq}{si} =~ /^([0-9A-F]+)/) {
 	    $oldhighlim = $oldlowlim = hex($1);
 	}
 
 	if ($oldlowlim) {
-	    $newlowlim = max(0, min($oldlowlim, $si / 10 - 20));
-	} else { $newlowlim = max(0, $si / 10 - 20); }
+      
+            if ($newlowlim != -1) { $newlowlim = max(0, min($oldlowlim, $newlowlim)); } 
+	    else { $newlowlim = max(0, min($oldlowlim, hex($si) / 10 - 20)); }
+	} else { if ($newlowlim == -1) { $newlowlim = max(0, hex($si) / 10 - 20); } }
 
-	$newhighlim = max($oldhighlim, $si * 10 + 20);
+        if ($newhighlim == -1) { 
+          $newhighlim = max($oldhighlim, hex($si) * 10 + 20);
+        } else { $newhighlim = max($oldhighlim, $newhighlim); }
 	
+#        print "oldhighlim: $oldhighlim oldlowlim: $oldlowlim newhighlim: $newhighlim newlowlim: $newlowlim oldsi: $fp{tseq}{si}";
 	if ($newlowlim > 0) {
 	    $fp{tseq}{si} = sprintf("<%X&>%X", $newhighlim, $newlowlim);
 	} else {
 	    $fp{tseq}{si} = sprintf("<%X", $newhighlim);
 	}
+
+#        print " newsi: $fp{tseq}{si}\n";
+        if (index($fp{tseq}{ipid}, $ipid) == -1) {
+            if ($fp{tseq}{ipid}) {
+                $fp{tseq}{ipid} = $fp{tseq}{ipid} . qq^|$ipid^;
+            } else {
+                $fp{tseq}{ipid} = $ipid;
+            }
+        }
+
+        if (index($fp{tseq}{ts}, $ts) == -1) {
+            if ($fp{tseq}{ts}) {
+                $fp{tseq}{ts} = $fp{tseq}{ts} . qq^|$ts^;
+            } else {
+                $fp{tseq}{ts} = $ts;
+            }
+        }
 
     } elsif ($line =~ /^T([1-7])/) {
 	$num = $1;
@@ -287,6 +313,8 @@ if ($fp{tseq}{cls}) {
 	    }
 	}
     }
+    if ($fp{tseq}{ipid}) { print "%IPID=$fp{tseq}{ipid}"; }
+    if ($fp{tseq}{ts}) { print "%TS=$fp{tseq}{ts}"; }
     print ")\n";
 }
 

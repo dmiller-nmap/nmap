@@ -643,7 +643,11 @@ void printosscanoutput(struct hoststruct *currenths) {
 	 while(*p) p++;
        }
        
-       log_write(LOG_XML, "<tcptssequence class=\"%s\" values=\"%s\"/>\n", tsseqclass2ascii(currenths->seq.ts_seqclass), numlst);
+       log_write(LOG_XML, "<tcptssequence class=\"%s\"", tsseqclass2ascii(currenths->seq.ts_seqclass));
+       if (currenths->seq.ts_seqclass != TS_SEQ_UNSUPPORTED) {
+	 log_write(LOG_XML, " values=\"%s\"", numlst);
+       }
+       log_write(LOG_XML, "/>\n");
      }
   }
 }

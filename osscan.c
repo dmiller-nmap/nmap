@@ -78,7 +78,7 @@ struct ip *ip;
 struct tcphdr *tcp;
 struct icmp *icmp;
 struct timeval t1,t2;
-int i, j;
+int i, j, k;
 struct hostent *myhostent = NULL;
 pcap_t *pd;
 char myname[513];
@@ -102,6 +102,8 @@ double seq_inc_sum = 0;
 unsigned int  seq_avg_inc = 0;
 struct udpprobeinfo *upi = NULL;
 u32 seq_gcd = 1;
+int allipideqz = 1; /* Flag that means "All IP.IDs returned during sequencing
+		       are zero.  This is unset if we find a nonzero */
 u32 seq_diffs[NUM_SEQ_SAMPLES];
 u16 ipid_diffs[NUM_SEQ_SAMPLES];
 u32 ts_diffs[NUM_SEQ_SAMPLES];
@@ -337,7 +339,7 @@ if (o.verbose && openport != (unsigned long) -1)
 			   sequence_base + seq_packets_sent + 1, 0, 
 			   TH_SYN, 0 ,"\003\003\012\001\002\004\001\011\010\012\077\077\077\077\000\000\000\000\000\000" , 20, NULL, 0);
        if (!o.scan_delay)
-	 usleep( 5000 + target->to.srtt);
+	 usleep( MAX(110000, target->to.srtt)); /* Main reason we wait so long is that we need to spend more than .5 seconds to detect 2HZ timestamp sequencing -- this also should make ISN sequencing more regular */
      }
      gettimeofday(&seq_send_times[seq_packets_sent], NULL);
      seq_packets_sent++;
@@ -407,6 +409,8 @@ if (o.verbose && openport != (unsigned long) -1)
 	   si->responses++;
 	   si->seqs[seq_response_num] = ntohl(tcp->th_seq); /* TCP ISN */
 	   si->ipids[seq_response_num] = ntohs(ip->ip_id);
+	   if (si->ipids[seq_response_num])
+	     allipideqz = 0; /* All IP.ID values do *NOT* equal zero */
 	   if ((gettcpopt_ts(tcp, &timestamp, NULL) == 0))
 	     si->ts_seqclass = TS_SEQ_UNSUPPORTED;
 	   else {
@@ -438,6 +442,7 @@ if (o.verbose && openport != (unsigned long) -1)
 	 ipid_diffs[si->responses - 1] = MOD_DIFF_USHORT(si->ipids[si->responses], si->ipids[si->responses - 1]);
 	 ts_diffs[si->responses - 1] = MOD_DIFF(si->timestamps[si->responses], si->timestamps[si->responses - 1]);
 	 time_usec_diffs[si->responses - 1] = TIMEVAL_SUBTRACT(seq_send_times[si->responses], seq_send_times[si->responses - 1]);
+	 if (!time_usec_diffs[si->responses - 1]) time_usec_diffs[si->responses - 1]++; /* We divide by this later */
 	 /*	 printf("MOD_DIFF_USHORT(%hi, %hi) == %hi\n", si->ipids[si->responses], si->ipids[si->responses - 1], MOD_DIFF_USHORT(si->ipids[si->responses], si->ipids[si->responses - 1])); */
 	 if (si->ipids[si->responses]  < si->ipids[si->responses - 1] &&
 	     (si->ipids[si->responses] > 500 || si->ipids[si->responses] < 65000)) {
@@ -454,9 +459,13 @@ if (o.verbose && openport != (unsigned long) -1)
       1. If it is already set -- leave it that way
       2. ipid_diffs-- if scanning localhost and safe
       3. If any diff is > 1000, set to random, if 0, set to constant
-      4. If any of the diffs are 1, or all are less than 5 set it to 
+      4. If any of the diffs are 1, or all are less than 9 set it to 
          incremental
    */
+   if (allipideqz && si->responses >= 3) {
+     si->ipid_seqclass = IPID_SEQ_ZERO;
+   }
+
    if (si->ipid_seqclass == IPID_SEQ_UNKNOWN && si->responses >= 3) {
 
      /* Localhost problem */
@@ -487,20 +496,25 @@ if (o.verbose && openport != (unsigned long) -1)
        }
      }
 
-     j = 1; /* j is a flag meaning "all differences seen are < 5" */
+     j = 1; /* j is a flag meaning "all differences seen are < 9" */
+     k = 1; /* k is a flag meaning "all difference seen are multiples of 256 */
      for(i=0; i < si->responses - 1; i++) {
        if (ipid_diffs[i] == 1) {
 	 si->ipid_seqclass = IPID_SEQ_INCR;
 	 break;
        }
 
-       if (ipid_diffs[i] == 256) { /* Argh.  Stupid Microsoft ... */
-	 si->ipid_seqclass = IPID_SEQ_BROKEN_INCR;
-	 break;
+       if (k && ipid_diffs[i] < 2560 && ipid_diffs[i] % 256 != 0) {
+	 k = 0;
        }
 
-       if (ipid_diffs[i] > 5)
+       if (ipid_diffs[i] > 9)
 	 j = 0;
+     }
+
+     if (si->ipid_seqclass == IPID_SEQ_UNKNOWN && k == 1) {
+       /* Stupid Microsoft! */
+       si->ipid_seqclass = IPID_SEQ_BROKEN_INCR;
      }
 
      if (si->ipid_seqclass == IPID_SEQ_UNKNOWN && j == 1)
@@ -529,7 +543,7 @@ if (o.verbose && openport != (unsigned long) -1)
      if (o.debugging)
        printf("The avg TCP TS HZ is: %f\n", avg_ts_hz);
      
-     if (avg_ts_hz > 1.5 && avg_ts_hz < 2.5) {
+     if (avg_ts_hz > 0 && avg_ts_hz < 3.9) { /* relatively wide range because sampling time so short and frequency so slow */
        si->ts_seqclass = TS_SEQ_2HZ;
        si->lastboot = seq_send_times[0].tv_sec - (si->timestamps[0] / 2); 
      }
@@ -678,6 +692,11 @@ if (o.verbose && openport != (unsigned long) -1)
        seq_AVs[avnum].next = &seq_AVs[avnum+1]; avnum++;
        seq_AVs[avnum].attribute = "IPID";
        strcpy(seq_AVs[avnum].value, "RD");
+       break;
+     case IPID_SEQ_ZERO:
+       seq_AVs[avnum].next = &seq_AVs[avnum+1]; avnum++;
+       seq_AVs[avnum].attribute = "IPID";
+       strcpy(seq_AVs[avnum].value, "Z");
        break;
      }
 

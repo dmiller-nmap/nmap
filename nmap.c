@@ -1541,8 +1541,10 @@ char *ipidclass2ascii(int seqclass) {
     return "Randomized";
   case IPID_SEQ_RPI:
     return "Random positive increments";
+  case IPID_SEQ_ZERO:
+    return "All zeros";
   case IPID_SEQ_UNKNOWN:
-    return "Busy server or unknown class)";
+    return "Busy server or unknown class";
   default:
     return "ERROR, WTF?";
   }
