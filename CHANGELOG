@@ -23,6 +23,20 @@ o Null, FIN, Maimon, and Xmas scans now mark ports as "open|filtered"
   with UDP scan, adding version detection (-sV) will change the state
   from open|filtered to open if it confirms that they really are open.
 
+o Fixed a crash on Windows systems that don't include the iphlpapi
+  DLL.  This affects Win95 and perhaps other variants.  Thanks to Ganga
+  Bhavani (GBhavani(a)everdreamcorp.com) for reporting the problem and
+  sending the patch.
+
+o Ensured that the device type, os vendor, and os family OS
+  fingerprinting classification values are scrubbed for XML compliance
+  in the XML output.  Thanks to Matthieu Verbert
+  (mve(a)zurich.ibm.com) for reporting the problem and sending a patch.
+
+o Changed to Nmap XML DTD to use the same xmloutputversion (1.01) as
+  newer versions of Nmap.  Thanks to Laurent Estieux
+  (laurent.estieux(a)free.fr) for reporting the problem.
+
 Nmap 3.75
 
 o Implemented a huge OS fingerprint database update.  The number of

@@ -2471,8 +2471,8 @@ static bool get_pcap_result(UltraScanInfo *USI, struct timeval *stime) {
 	if (icmp->icmp_type == 3) {
 	  if (icmp->icmp_code != 0 && icmp->icmp_code != 1 && 
 	      icmp->icmp_code != 2 && 
-	      icmp->icmp_code != 3 && icmp->icmp_code != 13 &&
-	      icmp->icmp_code != 9 && icmp->icmp_code != 10) {
+	      icmp->icmp_code != 3 && icmp->icmp_code != 9 &&
+	      icmp->icmp_code != 10 && icmp->icmp_code != 13) {
 	    error("Unexpected ICMP type/code 3/%d unreachable packet:", 
 		  icmp->icmp_code);
 	    hdump((unsigned char *)icmp, ntohs(ip->ip_len) - 

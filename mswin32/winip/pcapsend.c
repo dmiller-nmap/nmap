@@ -99,6 +99,7 @@ static int ip2route(const struct in_addr *dest, DWORD *nexthop, DWORD *ifi);
 static void releaseadapter();
 
 static void send_arp(DWORD ifi, DWORD ip);
+static void send_raw_arp(DWORD ifi, DWORD ip);
 static int lookupip(DWORD ip, DWORD ifi);
 
 //	ARP cache
@@ -113,6 +114,7 @@ static int killthread = 0;
 //	For rawsock fallback
 extern SOCKET global_raw_socket;
 extern int rawsock_avail;
+extern int iphlp_avail;
 
 extern NmapOps o;
 
@@ -537,6 +539,14 @@ static void send_arp(DWORD ifi, DWORD ip)
   PBYTE pBuffer;
   struct in_addr myip;
 
+  /* For windows95 machines that does not load iphlpapi.dll, send raw
+     ARP packet */ 
+  if( !iphlp_avail )
+    {
+      send_raw_arp(ifi,ip);
+      return;
+    } 
+
   ret = SendARP( ip, 0, uMACAddr, &uSize );
 
   if( NO_ERROR == ret )
@@ -545,6 +555,48 @@ static void send_arp(DWORD ifi, DWORD ip)
       AddToARPCache( ip, ifi, pBuffer, (int)uSize );
     } 
 } 
+
+//      this to send raw arp packet 
+static void send_raw_arp(DWORD ifi, DWORD ip)
+{
+        struct arp_hdr  arp_h;
+        LPADAPTER pAdap;
+        BYTE mymac[6];
+        int len;
+        unsigned long mytype;
+        struct in_addr myip;
+        BYTE bcastmac[6];       //      more Ethernet code !
+        memset(bcastmac, 0xFF, 6);
+
+        if(0 != ifi2ipaddr(ifi, &myip))
+                fatal("sendarp: failed to find my ip ?!?\n");
+
+        //      get the MAC et al
+        len = 6;
+        pAdap = if2adapter(ifi, mymac, &len, &mytype);
+        if(!pAdap)
+        {
+                //      do nothing for localhost scan
+                if(myip.s_addr == 0x0100007f) return;
+                else fatal("send_arp: can't send on this interface\n");
+        }
+
+        arp_h.ar_hrd=0x0100;
+
+        arp_h.ar_pro=0x0008;                    /* format of protocol address */
+        arp_h.ar_hln=6;                         /* length of hardware address */
+    arp_h.ar_pln=4;                         /* length of protocol addres */
+    arp_h.ar_op=0x0100 ;
+        memcpy(arp_h.ar_sha,mymac,6);
+        memcpy(arp_h.ar_spa,&myip.s_addr,4);
+        memset(arp_h.ar_tha,0,6);
+        memcpy(arp_h.ar_tpa,&ip,4);
+
+        realsend(pAdap, (char*)&arp_h, sizeof(arp_h),
+                bcastmac, mymac, len, mytype, ETH_ARP);
+
+        releaseadapter();
+}
 
 //	resolves an ip addr into a nexthop and index
 static int ip2route(const struct in_addr *dest, DWORD *nexthop, DWORD *ifi)

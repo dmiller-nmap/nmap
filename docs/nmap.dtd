@@ -84,7 +84,7 @@
 			args		CDATA		#IMPLIED
 			start		%attr_numeric;	#IMPLIED
 			version		CDATA		#REQUIRED
-			xmloutputversion (1.0)		#REQUIRED
+			xmloutputversion (1.01)		#REQUIRED
 >
 
 <!-- this element is written in output.c:doscaninfo() -->

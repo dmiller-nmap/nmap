@@ -870,7 +870,16 @@ static void printosclassificationoutput(const struct OS_Classification_Results *
       if (OSR->OSC[classno]->OS_Generation) {
 	snprintf(tmpbuf, sizeof(tmpbuf), " osgen=\"%s\"", OSR->OSC[classno]->OS_Generation);
       } else tmpbuf[0] = '\0';
-      log_write(LOG_XML, "<osclass type=\"%s\" vendor=\"%s\" osfamily=\"%s\"%s accuracy=\"%d\" />\n", OSR->OSC[classno]->Device_Type, OSR->OSC[classno]->OS_Vendor, OSR->OSC[classno]->OS_Family, tmpbuf, (int) (OSR->OSC_Accuracy[classno] * 100));
+      {
+	char *xml_type, *xml_vendor, *xml_class;
+	xml_type = xml_convert(OSR->OSC[classno]->Device_Type);
+	xml_vendor = xml_convert(OSR->OSC[classno]->OS_Vendor);
+	xml_class = xml_convert(OSR->OSC[classno]->OS_Family);
+	log_write(LOG_XML, "<osclass type=\"%s\" vendor=\"%s\" osfamily=\"%s\"%s accuracy=\"%d\" />\n", xml_type, xml_vendor, xml_class, tmpbuf, (int) (OSR->OSC_Accuracy[classno] * 100));
+	free(xml_type);
+	free(xml_vendor);
+	free(xml_class);
+      }
     }
 
     // Now to create the fodder for normal output

@@ -1337,7 +1337,7 @@ bool dropdown = false;
  if (probe_state == PROBESTATE_NONMATCHINGPROBES) {
    if (!dropdown && current_probe != AP->probes.end()) current_probe++;
    while (current_probe != AP->probes.end()) {
-     // The protocol must be right, it must be a nonmatching port ('cause we did thos),
+     // The protocol must be right, it must be a nonmatching port ('cause we did those),
      // and we better either have no soft match yet, or the soft service match must
      // be available via this probe.
      if ((proto == (*current_probe)->getProbeProtocol()) && 
@@ -1673,8 +1673,19 @@ void end_svcprobe(nsock_pool nsp, enum serviceprobestate probe_state, ServiceGro
   svc->probe_state = probe_state;
   member = find(SG->services_in_progress.begin(), SG->services_in_progress.end(),
 		  svc);
-  assert(*member);
-  SG->services_in_progress.erase(member);
+  if (member != SG->services_in_progress.end()) {
+    assert(*member == svc);
+    SG->services_in_progress.erase(member);
+  } else {
+    /* A probe can finish from services_remaining if the host times out before the
+       probe has even started */
+    member = find(SG->services_remaining.begin(), SG->services_remaining.end(),
+		  svc);
+    assert(member != SG->services_remaining.end());
+    assert(*member == svc);
+    SG->services_remaining.erase(member);
+  }
+
   SG->services_finished.push_back(svc);
 
   considerPrintingStats(SG);
@@ -1948,7 +1959,7 @@ void servicescan_read_handler(nsock_pool nsp, nsock_event nse, void *mydata) {
   } else {
     fatal("Unexpected status (%d) in NSE_TYPE_READ callback.", (int) status);
   }
-
+  
   // We may have room for more pr0bes!
   launchSomeServiceProbes(nsp, SG);
   return;
