@@ -3392,7 +3392,7 @@ T7(DF=Y%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=Y%TOS=C0%IPLEN=164%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 # Contributed by Michel Alexandre Salim <mas69@cam.ac.uk>
-Fingerprint Linux 2.3.99-pre2 x86
+Fingerprint Linux 2.3.47 - 2.3.99-pre2 x86
 TSeq(Class=RI%gcd=<10%SI=<1335F26&>312CA)
 T1(DF=Y%W=7900|7C70%ACK=S++%Flags=AS%Ops=MNNTNW)
 T2(Resp=N)
@@ -4217,7 +4217,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=134|3401%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 # Contributed by Grant Bayley gbayley@ausmac.net
-Fingerprint OpenBSD 2.6
+Fingerprint OpenBSD 2.6-2.7
 TSeq(Class=RI%gcd=<6%SI=<AD084&>1B9B)
 T1(DF=N%W=807A%ACK=S++%Flags=AS%Ops=MNWNNT)
 T2(Resp=N)
