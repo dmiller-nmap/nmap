@@ -348,7 +348,7 @@ for(i=2; i < 8; i++)
  last = 0;
  FPtmp = NULL;
  for(i=2; i < 8 ; i++) {
-   if (!FPtests[i]) continue; 
+   /*   if (!FPtests[i]) continue; */
    if (!FPtmp) FPtmp = FPtests[i];
    if (last) {
      FPtests[last]->next = FPtests[i];    
