@@ -595,9 +595,9 @@ int idlescan_countopen2(struct idle_proxy_info *proxy,
   tries = 0;
   TIMEVAL_MSEC_ADD(probe_times[0], start, MAX(50, (target->to.srtt * 3/4) / 1000));
   TIMEVAL_MSEC_ADD(probe_times[1], start, target->to.srtt / 1000 );
-  TIMEVAL_MSEC_ADD(probe_times[2], end, MAX(75, (target->to.srtt + 
+  TIMEVAL_MSEC_ADD(probe_times[2], end, MAX(75, (2 * target->to.srtt + 
 						   target->to.rttvar) / 1000));
-  TIMEVAL_MSEC_ADD(probe_times[3], end, MIN(4000, (target->to.srtt + 
+  TIMEVAL_MSEC_ADD(probe_times[3], end, MIN(4000, (2 * target->to.srtt + 
 						     (target->to.rttvar << 2 )) / 1000));
 
   do {
@@ -898,7 +898,6 @@ void idle_scan(Target *target, u16 *portarray, int numports,
     target->to.srtt = MAX(target->to.srtt, proxy.host.to.srtt);
     target->to.rttvar = MAX(target->to.rttvar, proxy.host.to.rttvar);
     target->to.timeout = target->to.srtt + (target->to.rttvar << 2);
-
   }
 
   /* Now I guess it is time to let the scanning begin!  Since Idle
