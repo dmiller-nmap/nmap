@@ -75,9 +75,11 @@ struct MatchDetails {
   // The service that was matched (Or NULL) zero-terminated.
   const char *serviceName;
 
-  // The verson info for the service that was matched (Or NULL)
+  // The product/verson/info for the service that was matched (Or NULL)
   // zero-terminated.
+  const char *product;
   const char *version;
+  const char *info;
 };
 
 /**********************  CLASSES     ***********************************/
@@ -117,19 +119,27 @@ class ServiceProbeMatch {
   bool matchops_ignorecase;
   bool matchops_dotall;
   bool isSoft; // is this a soft match? ("softmatch" keyword in nmap-service-probes)
-  // If this is non-NULL, a version template string was given to
-  // deduce the application/version info via substring matches.
-  char *version_template; 
+  // If any of these 3 are non-NULL, a product, version, or template
+  // string was given to deduce the application/version info via
+  // substring matches.
+  char *product_template;
+  char *version_template;
+  char *info_template;
   // The anchor is for SERVICESCAN_STATIC matches.  If the anchor is not -1, the match must
   // start at that zero-indexed position in the response str.
   int matchops_anchor;
 // Details to fill out and return for testMatch() calls
   struct MatchDetails MD_return;
-  // Use version_template, and the match data included here to put the
-  // version info into 'version' (as long as versionlen is
-  // sufficient).  Returns zero for success.
+
+  // Use the three version templates, and the match data included here
+  // to put the version info into 'product', 'version', and 'info',
+  // (as long as the given string sizes are sufficient).  Returns zero
+  // for success.  If no template is available for product, version,
+  // and/or info, that string will have zero length after the function
+  // call (assuming the corresponding length passed in is at least 1)
   int getVersionStr(const u8 *subject, int subjectlen, int *ovector, 
-		    int nummatches, char *version, int versionlen);
+		  int nummatches, char *product, int productlen,
+		  char *version, int versionlen, char *info, int infolen);
 };
 
 

@@ -84,7 +84,13 @@ struct serviceDeductions {
   // confident) expressing how accurate the service detection is
   // likely to be.
   int name_confidence;
-  const char *version; // will be NULL if can't determine
+  // Any of these three will be NULL if undetermined.
+  const char *product;
+  const char *version;
+  const char *extrainfo;
+  // This is the combined version of the three fields above.  It will be 
+  // zero length if unavailable.
+  char fullversion[128];
   // if we should give the user a service fingerprint to submit, here it is.  Otherwise NULL.
   const char *service_fp; 
   enum service_detection_type dtype; // definition above
@@ -106,22 +112,23 @@ class Port {
   Port();
   ~Port();
 
-  // pass in an allocated struct serviceDetection (don't wory about initializing, and
+  // pass in an allocated struct serviceDeductions (don't wory about initializing, and
   // you don't have to free any inernal ptrs.  See the serviceDeductions definition for
   // the fields that are populated.  Returns 0 if at least a name is available.
   int getServiceDeductions(struct serviceDeductions *sd);
 
   // sname should be NULL if sres is not
-  // PROBESTATE_FINISHED_MATCHED. version will be NULL unless it is
-  // available.  Sometimes only the service name, but not version are
-  // found.  Note that this function makes its own copy of sname and
-  // version.  This function also takes care of truncating version to
-  // a 'reasonable' length if neccessary, and cleaning up any
-  // unprinable chars. (these tests are to avoid annoying DOS (or
-  // other) attacks by malicious services).  The fingerprint should be
-  // NULL unless one is available and the user should submit it.
+  // PROBESTATE_FINISHED_MATCHED. product,version, and/or extrainfo
+  // will be NULL if unavailable. Note that this function makes its
+  // own copy of sname and product/version/extrainfo.  This function
+  // also takes care of truncating the version strings to a
+  // 'reasonable' length if neccessary, and cleaning up any unprinable
+  // chars. (these tests are to avoid annoying DOS (or other) attacks
+  // by malicious services).  The fingerprint should be NULL unless
+  // one is available and the user should submit it.
   void setServiceProbeResults(enum serviceprobestate sres, const char *sname,
-			      const char *version, const char *fingerprint);
+			      const char *product, const char *version, 
+			      const char *extrainfo, const char *fingerprint);
 
   /* Sets the results of an RPC scan.  if rpc_status is not
    RPC_STATUS_GOOD_PROGRAM, pass 0 for the other args. This function
@@ -151,7 +158,10 @@ class Port {
 			together */
   enum serviceprobestate serviceprobe_results; // overall results of service scan
   char *serviceprobe_service; // If a service was discovered, points to the name
-  char *serviceprobe_version; // If a version was discovered, points to the name
+  // Any of these next three can be NULL if the details are not available
+  char *serviceprobe_product; 
+  char *serviceprobe_version; 
+  char *serviceprobe_extrainfo; 
   // A fingerprint that the user can submit if the service wasn't recognized
   char *serviceprobe_fp; 
 

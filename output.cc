@@ -53,8 +53,63 @@
 #include "NmapOps.h"
 #include "NmapOutputTable.h"
 
+#include <string>
+
 extern NmapOps o;
 static char *logtypes[LOG_TYPES]=LOG_NAMES;
+
+
+// Creates an XML <service> element for the information given in
+// serviceDeduction.  It will be 0-length if none is neccessary.
+// returns 0 for success.
+static int getServiceXMLBuf(struct serviceDeductions *sd, char *xmlbuf, 
+		     unsigned int xmlbuflen) {
+  std::string versionxmlstring;
+  char rpcbuf[128];
+  char *xml_product = NULL, *xml_version = NULL, *xml_extrainfo = NULL;
+
+  if (xmlbuflen < 1) return -1;
+  xmlbuf[0] = '\0';
+  if (!sd->name) return 0;
+
+  if (sd->product) {
+    xml_product = xml_convert(sd->product);
+    versionxmlstring += " product=\"";
+    versionxmlstring += xml_product;
+    free(xml_product); xml_product = NULL;
+    versionxmlstring += '\"';
+  }
+
+  if (sd->version) {
+    xml_version = xml_convert(sd->version);
+    versionxmlstring += " version=\"";
+    versionxmlstring += xml_version;
+    free(xml_version); xml_version = NULL;
+    versionxmlstring += '\"';
+  }
+
+  if (sd->extrainfo) {
+    xml_extrainfo = xml_convert(sd->extrainfo);
+    versionxmlstring += " extrainfo=\"";
+    versionxmlstring += xml_extrainfo;
+    free(xml_extrainfo); xml_extrainfo = NULL;
+    versionxmlstring += '\"';
+  }
+
+  if (o.rpcscan && sd->rpc_status == RPC_STATUS_GOOD_PROG) {
+    snprintf(rpcbuf, sizeof(rpcbuf), 
+	     " rpcnum=\"%li\" lowver=\"%i\" highver=\"%i\" proto=\"rpc\"", 
+	     sd->rpc_program, sd->rpc_lowver, sd->rpc_highver);
+  } else rpcbuf[0] = '\0';
+
+  snprintf(xmlbuf, xmlbuflen, 
+	   "<service name=\"%s\"%s method=\"%s\" conf=\"%d\"%s />", sd->name, 
+	   versionxmlstring.c_str(), 
+	   (sd->dtype == SERVICE_DETECTION_TABLE)? "table" : "probed", 
+	   sd->name_confidence, rpcbuf);
+
+  return 0;
+}
 
 /* Prints the familiar Nmap tabular output showing the "interesting"
    ports found on the machine.  It also handles the Machine/Greppable
@@ -65,7 +120,7 @@ void printportoutput(Target *currenths, PortList *plist) {
   char rpcinfo[64];
   char rpcmachineinfo[64];
   char portinfo[64];
-  char tmpbuf[64];
+  char xmlbuf[512];
   char *state;
   char serviceinfo[64];
   char *name=NULL;
@@ -197,7 +252,6 @@ void printportoutput(Target *currenths, PortList *plist) {
 	snprintf(portinfo, sizeof(portinfo), "%d/%s", current->portno, protocol);
 	state = statenum2str(current->state);
 	current->getServiceDeductions(&sd);
-
 	if (sd.service_fp && saved_servicefps.size() <= 8)
 	  saved_servicefps.push_back(sd.service_fp);
 
@@ -237,17 +291,13 @@ void printportoutput(Target *currenths, PortList *plist) {
 		   (o.servicescan && sd.name && current->state == PORT_OPEN && sd.name_confidence <= 5)? "?" : "");
 	  strcpy(rpcmachineinfo, "");
 	}
-	// HACK: I hate the trailing whitespace so I'll just skip it unless
-	// an owner is available.  Eventually I need to work in/write a simple
-        // table-creating library which can deal with the spacing of the 
-	// columns and so forth.
 	Tbl->addItem(rowno, portcol, true, portinfo);
 	Tbl->addItem(rowno, statecol, false, state);
 	Tbl->addItem(rowno, servicecol, true, serviceinfo);
 	if (current->owner)
 	  Tbl->addItem(rowno, ownercol, true, current->owner);
-	if (sd.version)
-	  Tbl->addItem(rowno, versioncol, false, (char *) sd.version);
+	if (sd.fullversion)
+	  Tbl->addItem(rowno, versioncol, true, sd.fullversion);
 
 	log_write(LOG_MACHINE,"%d/%s/%s/%s/%s/%s//", current->portno, state, 
 		  protocol, (current->owner)? current->owner : "",
@@ -258,15 +308,9 @@ void printportoutput(Target *currenths, PortList *plist) {
 	if (current->owner && *current->owner) {
 	  log_write(LOG_XML, "<owner name=\"%s\" />", current->owner);
 	}
-	if (o.rpcscan && sd.rpc_status == RPC_STATUS_GOOD_PROG) {
-	  if (name) Strncpy(tmpbuf, name, sizeof(tmpbuf));
-	  else snprintf(tmpbuf, sizeof(tmpbuf), "#%li", sd.rpc_program);
-	  log_write(LOG_XML, "<service name=\"%s\" proto=\"rpc\" rpcnum=\"%li\" lowver=\"%i\" highver=\"%i\" method=\"probed\" conf=\"%d\" />\n", tmpbuf, sd.rpc_program, sd.rpc_lowver, sd.rpc_highver, sd.name_confidence);
-	} else if (sd.name) {
-	  if (sd.version) snprintf(tmpbuf, sizeof(tmpbuf), " version=\"%s\"", sd.version);
-	  else tmpbuf[0] = '\0';
-	  log_write(LOG_XML, "<service name=\"%s\"%s method=\"%s\" conf=\"%d\" %s />\n", sd.name, tmpbuf, (sd.dtype == SERVICE_DETECTION_TABLE)? "table" : "probed", sd.name_confidence, (o.rpcscan && sd.rpc_status == RPC_STATUS_UNKNOWN)? "proto=\"rpc\"" : ""); 
-	}
+	if (getServiceXMLBuf(&sd, xmlbuf, sizeof(xmlbuf)) == 0)
+	  if (*xmlbuf)
+	    log_write(LOG_XML, "%s", xmlbuf);
 	log_write(LOG_XML, "</port>\n");
 	rowno++;
       }

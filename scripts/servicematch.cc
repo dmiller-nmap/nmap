@@ -135,8 +135,8 @@ int doMatch(AllProbes *AP, char *fprint, int fplen, char *ipaddystr) {
 	  } else Strncpy(softmatch, MD->serviceName, sizeof(softmatch));
 	} else {
 	  // YEAH!  Found a hard match!
-	  if (MD->version)
-	    printf("MATCHED svc %s (%s)%s: %s\n", MD->serviceName, MD->version, ipaddystr, fprint);
+	  if (MD->product || MD->version || MD->info)
+	    printf("MATCHED svc %s |%s|%s|%s|%s: %s\n", MD->serviceName, MD->product? MD->product : "", MD->version? MD->version : "", MD->info? MD->info : "", ipaddystr, fprint);
 	  else
 	    printf("MATCHED svc %s (NO VERSION)%s: %s\n", MD->serviceName, ipaddystr, fprint);
 	  return 0;

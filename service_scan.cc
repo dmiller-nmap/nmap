@@ -94,8 +94,11 @@ public:
   Port *port; // The Port that this service represents (this copy is taken from inside Target)
   // if a match is found, it is placed here.  Otherwise NULL
   const char *probe_matched;
-  // If a match is found, it is placed here.  Otherwise 0 length.
-  char version_matched[128];
+  // If a match is found, any product/version/info is placed in these
+  // 3 strings.  Otherwise the string will be 0 length.
+  char product_matched[80];
+  char version_matched[80];
+  char extrainfo_matched[80];
   // if a match was found (see above), this tells whether it was a "soft"
   // or hard match.  It is always false if no match has been found.
   bool softMatchFound;
@@ -162,7 +165,7 @@ int launchSomeServiceProbes(nsock_pool nsp, ServiceGroup *SG);
 ServiceProbeMatch::ServiceProbeMatch() {
   servicename = NULL;
   matchstr = NULL;
-  version_template = NULL;
+  product_template = version_template = info_template = NULL;
   regex_compiled = NULL;
   regex_extra = NULL;
   isInitialized = false;
@@ -175,7 +178,9 @@ ServiceProbeMatch::~ServiceProbeMatch() {
   if (!isInitialized) return;
   if (servicename) free(servicename);
   if (matchstr) free(matchstr);
+  if (product_template) free(product_template);
   if (version_template) free(version_template);
+  if (info_template) free(info_template);
   matchstrlen = 0;
   if (regex_compiled) pcre_free(regex_compiled);
   if (regex_extra) pcre_free(regex_extra);
@@ -195,7 +200,6 @@ void ServiceProbeMatch::InitMatch(const char *matchtext, int lineno) {
   int pcre_compile_ops = 0;
   const char *pcre_errptr = NULL;
   int pcre_erroffset = 0;
-  char tmpbuf[256];
   unsigned int tmpbuflen = 0;
 
   if (isInitialized) fatal("Sorry ... ServiceProbeMatch::InitMatch does not yet support reinitializion");
@@ -280,7 +284,9 @@ void ServiceProbeMatch::InitMatch(const char *matchtext, int lineno) {
     fatal("ServiceProbeMatch::InitMatch: parse error on line %d of nmap-service-probes", lineno);
   }
 
-  /* OK!  Now we look for the optional version-detection regexp */
+  /* OK!  Now we look for the optional version-detection
+     product/version info in the form v/productname/version/info/
+     (where '/' delimiter can be anything) */
 
   while(isspace(*matchtext)) matchtext++;
   if (isalnum(*matchtext)) {
@@ -290,21 +296,42 @@ void ServiceProbeMatch::InitMatch(const char *matchtext, int lineno) {
       fatal("ServiceProbeMatch::InitMatch: illegal trailing garbage (should be a version pattern match?) on line %d of nmap-service-probes", lineno);
     delimchar = *(++matchtext);
     ++matchtext;
-    // find the end of the regex
+    // find the end of the productname
     p = strchr(matchtext, delimchar);
-    if (!p) fatal("ServiceProbeMatch::InitMatch: parse error on line %d of nmap-service-probes (in the version pattern section)", lineno);
+    if (!p) fatal("ServiceProbeMatch::InitMatch: parse error on line %d of nmap-service-probes (in the version pattern - productname section)", lineno);
     tmpbuflen = p - matchtext;
-    version_template = (char *) safe_malloc(tmpbuflen + 1);
-    memcpy(version_template, matchtext, tmpbuflen);
-    version_template[tmpbuflen] = '\0';
-    assert(tmpbuflen < sizeof(tmpbuf) - 1);
-    memcpy(tmpbuf, matchtext, tmpbuflen);
-    tmpbuf[tmpbuflen] = '\0';
-    // Insure there is no trailing junk after the version string (usually cased be delimchar
-    // accidently being in the version string).
+    if (tmpbuflen > 0) {
+      product_template = (char *) safe_malloc(tmpbuflen + 1);
+      memcpy(product_template, matchtext, tmpbuflen);
+      product_template[tmpbuflen] = '\0';
+    }
+    // Now lets go after the version info
+    matchtext = p+1;
+    p = strchr(matchtext, delimchar);
+    if (!p) fatal("ServiceProbeMatch::InitMatch: parse error on line %d of nmap-service-probes (in the version pattern - version section)", lineno);
+    tmpbuflen = p - matchtext;
+    if (tmpbuflen > 0) {
+      version_template = (char *) safe_malloc(tmpbuflen + 1);
+      memcpy(version_template, matchtext, tmpbuflen);
+      version_template[tmpbuflen] = '\0';
+    }
+    // And finally for the "info"
+    matchtext = p+1;
+    p = strchr(matchtext, delimchar);
+    if (!p) fatal("ServiceProbeMatch::InitMatch: parse error on line %d of nmap-service-probes (in the version pattern - info section)", lineno);
+    tmpbuflen = p - matchtext;
+    if (tmpbuflen > 0) {
+      info_template = (char *) safe_malloc(tmpbuflen + 1);
+      memcpy(info_template, matchtext, tmpbuflen);
+      info_template[tmpbuflen] = '\0';
+    }
+
+    // Insure there is no trailing junk after the version string
+    // (usually cased by delimchar accidently being in the
+    // product/version/info string).
     p++;
     while(*p && *p != '\r' && *p != '\n') {
-      if (!isspace((int) *(unsigned char *)p))  fatal("ServiceProbeMatch::InitMatch: illegal trailing garbage (accidental version delimeter in your v// string?) on line %d of nmap-service-probes", lineno);
+      if (!isspace((int) *(unsigned char *)p))  fatal("ServiceProbeMatch::InitMatch: illegal trailing garbage (accidental version delimeter in your v//// string?) on line %d of nmap-service-probes", lineno);
       p++;
     }
   }
@@ -324,7 +351,9 @@ void ServiceProbeMatch::InitMatch(const char *matchtext, int lineno) {
 const struct MatchDetails *ServiceProbeMatch::testMatch(const u8 *buf, int buflen) {
   int rc;
   int i;
-  static char version[120];
+  static char product[80];
+  static char version[80];
+  static char info[80];
   char *bufc = (char *) buf;
   int ovector[150]; // allows 50 substring matches (including the overall match)
   assert(isInitialized);
@@ -349,31 +378,36 @@ const struct MatchDetails *ServiceProbeMatch::testMatch(const u8 *buf, int bufle
   } else {
     // Yeah!  Match apparently succeeded.
     // Now lets get the version number if available
-    if (version_template) {
-      i = getVersionStr(buf, buflen, ovector, rc, version, sizeof(version));
-      assert (i == 0);
-      MD_return.version = version;
-    }
+    i = getVersionStr(buf, buflen, ovector, rc, product, sizeof(product), version, sizeof(version), info, sizeof(info));
+    assert (i == 0);
+    if (*product) MD_return.product = product;
+    if (*version) MD_return.version = version;
+    if (*info) MD_return.info = info;
+  
     MD_return.serviceName = servicename;
   }
 
   return &MD_return;
 }
 
-// Use version_template, and the match data included here to put the version info
-// into 'version' (as long as versionlen is sufficient).  Returns zero for success.
-int ServiceProbeMatch::getVersionStr(const u8 *subject, int subjectlen, 
-				     int *ovector, int nummatches,
-				     char *version, int versionlen) {
+// This function takes a template string (tmpl) which can have
+// placeholders in it such as $1 for substring matches in a regexp
+// that was run against subject, and subjectlen, with the 'nummatches'
+// matches in ovector.  The NUL-terminated newly composted string is
+// placed into 'newstr', as long as it doesn't exceed 'newstrlen'
+// bytes.  Returns zero for success
+static int dotmplsubst(const u8 *subject, int subjectlen, 
+		       int *ovector, int nummatches, char *tmpl, char *newstr,
+		       int newstrlen) {
   int newlen;
-  char *srcstart=version_template, *srcend;
-  char *dst = version;
-  char *versionend = version + versionlen; // Right after the final char
+  char *srcstart=tmpl, *srcend;
+  char *dst = newstr;
+  char *newstrend = newstr + newstrlen; // Right after the final char
   int subnum = 0;
   int offstart, offend;
 
-  if (!version || !version_template) return -1;
-  if (versionlen < 3) return -1; // fuck this!
+  if (!newstr || !tmpl) return -1;
+  if (newstrlen < 3) return -1; // fuck this!
   
   while(*srcstart) {
     // First do any literal text before '$'
@@ -381,7 +415,7 @@ int ServiceProbeMatch::getVersionStr(const u8 *subject, int subjectlen,
     if (!srcend) {
       // Only literal text remain!
       while(*srcstart) {
-	if (dst >= versionend - 1)
+	if (dst >= newstrend - 1)
 	  return -1;
 	*dst++ = *srcstart++;
       }
@@ -391,7 +425,7 @@ int ServiceProbeMatch::getVersionStr(const u8 *subject, int subjectlen,
       // Copy the literal text up to the '$', then do the substitution
       newlen = srcend - srcstart;
       if (newlen > 0) {
-	if (versionend - dst <= newlen - 1)
+	if (newstrend - dst <= newlen - 1)
 	  return -1;
 	memcpy(dst, srcstart, newlen);
 	dst += newlen;
@@ -408,16 +442,54 @@ int ServiceProbeMatch::getVersionStr(const u8 *subject, int subjectlen,
       assert(offstart >= 0 && offstart < subjectlen);
       assert(offend >= 0 && offend <= subjectlen);
       newlen = offend - offstart;
-      if (versionend - dst <= newlen - 1)
+      if (newstrend - dst <= newlen - 1)
 	return -1;
       memcpy(dst, subject + offstart, newlen);
       dst += newlen;
     }
   }
 
-  if (dst >= versionend - 1)
+  if (dst >= newstrend - 1)
     return -1;
   *dst = '\0';
+  return 0;
+
+}
+
+
+// Use the three version templates, and the match data included here
+// to put the version info into 'product', 'version', and 'info',
+// (as long as the given string sizes are sufficient).  Returns zero
+// for success.  If no template is available for product, version,
+// and/or info, that string will have zero length after the function
+// call (assuming the corresponding length passed in is at least 1)
+int ServiceProbeMatch::getVersionStr(const u8 *subject, int subjectlen, 
+	    int *ovector, int nummatches, char *product, int productlen,
+	    char *version, int versionlen, char *info, int infolen) {
+
+  int rc;
+  assert(productlen >= 0 && versionlen >= 0 && infolen >= 0);
+  
+  if (productlen > 0) *product = '\0';
+  if (versionlen > 0) *version = '\0';
+  if (infolen > 0) *info = '\0';
+
+  // Now lets get this started!  We begin with the product name
+  if (product_template) {
+    rc = dotmplsubst(subject, subjectlen, ovector, nummatches, product_template, product, productlen);
+    if (rc != 0) return rc; // Prob. bogus nmap-service-probes line
+  }
+
+  if (version_template) {
+    rc = dotmplsubst(subject, subjectlen, ovector, nummatches, version_template, version, versionlen);
+    if (rc != 0) return rc; // Prob. bogus nmap-service-probes line
+  }
+
+  if (info_template) {
+    rc = dotmplsubst(subject, subjectlen, ovector, nummatches, info_template, info, infolen);
+    if (rc != 0) return rc; // Prob. bogus nmap-service-probes line
+  }
+  
   return 0;
 }
 
@@ -733,7 +805,7 @@ ServiceNFO::ServiceNFO(AllProbes *newAP) {
   currentresp = NULL; 
   currentresplen = 0;
   port = NULL;
-  version_matched[0] = '\0';
+  product_matched[0] = version_matched[0] = extrainfo_matched[0] = '\0';
   softMatchFound = false;
   servicefplen = servicefpalloc = 0;
   servicefp = NULL;
@@ -1228,14 +1300,17 @@ void servicescan_read_handler(nsock_pool nsp, nsock_event nse, void *mydata) {
 	// more data for the same probe response it will probably still match.
       } else {
 	if (o.debugging > 1)
-	  if (MD->version)
-	    printf("Service scan match: %s:%hi is %s.  Version: %s\n", svc->target->NameIP(), svc->portno, MD->serviceName, MD->version);
+	  if (MD->product || MD->version || MD->info)
+	    printf("Service scan match: %s:%hi is %s.  Version: |%s|%s|%s|\n", svc->target->NameIP(), svc->portno, MD->serviceName, (MD->product)? MD->product : "", (MD->version)? MD->version : "", (MD->info)? MD->info : "");
 	  else
 	    printf("Service scan %s match: %s:%hi is %s\n", (MD->isSoft)? "soft" : "hard", svc->target->NameIP(), svc->portno, MD->serviceName);
 	svc->probe_matched = MD->serviceName;
-	if (MD->version) {
+	if (MD->product)
+	  Strncpy(svc->product_matched, MD->product, sizeof(svc->product_matched));
+	if (MD->version) 
 	  Strncpy(svc->version_matched, MD->version, sizeof(svc->version_matched));
-	}
+	if (MD->info) 
+	  Strncpy(svc->extrainfo_matched, MD->info, sizeof(svc->extrainfo_matched));
 	svc->softMatchFound = MD->isSoft;
 	if (!svc->softMatchFound)
 	  end_svcprobe(nsp, PROBESTATE_FINISHED_HARDMATCHED, SG, svc, nsi);
@@ -1336,18 +1411,22 @@ list<ServiceNFO *>::iterator svc;
    if ((*svc)->probe_state == PROBESTATE_FINISHED_HARDMATCHED) {
      (*svc)->port->setServiceProbeResults((*svc)->probe_state, 
 					  (*svc)->probe_matched, 
+					  *(*svc)->product_matched? (*svc)->product_matched : NULL, 
 					  *(*svc)->version_matched? (*svc)->version_matched : NULL, 
+					  *(*svc)->extrainfo_matched? (*svc)->extrainfo_matched : NULL, 
 					  NULL);
 
    } else if ((*svc)->probe_state == PROBESTATE_FINISHED_SOFTMATCHED) {
     (*svc)->port->setServiceProbeResults((*svc)->probe_state, 
 					  (*svc)->probe_matched, 
-					  NULL, (*svc)->getServiceFingerprint(NULL));
+					  NULL, NULL, NULL, 
+					 (*svc)->getServiceFingerprint(NULL));
 
    }  else if ((*svc)->probe_state == PROBESTATE_FINISHED_NOMATCH) {
      if ((*svc)->getServiceFingerprint(NULL))
        (*svc)->port->setServiceProbeResults((*svc)->probe_state, NULL,
-					    NULL, (*svc)->getServiceFingerprint(NULL));
+					    NULL, NULL, NULL, 
+					    (*svc)->getServiceFingerprint(NULL));
    }
  }
 }

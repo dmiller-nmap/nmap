@@ -1820,6 +1820,7 @@ sybase            2638/tcp   # Sybase database
 listen            2766/tcp   # System V listener port
 www-dev           2784/tcp   # world wide web - development
 www-dev           2784/udp   # world wide web - development
+corbaloc          2809/tcp   # Corba
 extensisportfolio 2903/tcp   # Portfolio Server by Extensis Product Group
 iss-realsec       2998/tcp   # ISS RealSecure IDS Remote Console Admin port
 ppp               3000/tcp   # User-level ppp daemon, or chili!soft asp

@@ -65,22 +65,65 @@ Port::Port() {
   next = NULL;
   serviceprobe_results = PROBESTATE_INITIAL;
   serviceprobe_service = NULL;
-  serviceprobe_version = NULL;
+  serviceprobe_product = serviceprobe_version = serviceprobe_extrainfo = NULL;
   serviceprobe_fp = NULL;
 }
 
 Port::~Port() {
  if (owner)
    free(owner);
+ if (serviceprobe_product)
+   free(serviceprobe_product);
  if (serviceprobe_version)
    free(serviceprobe_version);
+ if (serviceprobe_extrainfo)
+   free(serviceprobe_extrainfo);
  if (serviceprobe_service)
    free(serviceprobe_service);
  if (serviceprobe_fp)
    free(serviceprobe_fp);
 }
 
-// pass in an allocated struct serviceDetection (don't wory about
+// Uses the sd->{product,version,extrainfo} if available to fill
+// out sd->fullversion.  If unavailable, it will be set to zero length.
+static void populateFullVersionString(struct serviceDeductions *sd) {
+  char *dst = sd->fullversion;
+  char *end = sd->fullversion + sizeof(sd->fullversion);
+  int len;
+
+  if (sd->product) {
+    len = strlen(sd->product);
+    len = MIN((int) sizeof(sd->fullversion) - 1, len);
+    memcpy(dst, sd->product, len);
+    dst += len;
+  }
+
+  if (sd->version && dst < end - 1) {
+    if (dst != sd->fullversion)
+      *(dst++) = ' ';
+    len = strlen(sd->version);
+    len = MIN(len, end - dst - 1);
+    memcpy(dst, sd->version, len);
+    dst += len;
+  }
+
+  if (sd->extrainfo && dst < end) {
+    len = strlen(sd->extrainfo);
+    if (len < end - dst - 4) { // 4 == " ()\0"
+      if (dst != sd->fullversion)
+	*(dst++) = ' ';
+      *(dst++) = '(';
+      memcpy(dst, sd->extrainfo, len);
+      dst += len;
+      *(dst++) = ')';
+    }
+  }
+
+  *(dst++) = '\0'; // Will always have space
+}
+
+
+// pass in an allocated struct serviceDeductions (don't wory about
 // initializing, and you don't have to free any inernal ptrs.  See the
 // serviceDeductions definition for the fields that are populated.
 // Returns 0 if at least a name is available.
@@ -103,6 +146,8 @@ int Port::getServiceDeductions(struct serviceDeductions *sd) {
     sd->name_confidence = (rpc_status == RPC_STATUS_UNKNOWN)? 8 : 10;
     sd->dtype = SERVICE_DETECTION_PROBED; // RPC counts as probed
     sd->version = serviceprobe_version;
+    sd->extrainfo = serviceprobe_extrainfo;
+    populateFullVersionString(sd);
     return 0;
   } else if (serviceprobe_results == PROBESTATE_FINISHED_HARDMATCHED
 	     || serviceprobe_results == PROBESTATE_FINISHED_SOFTMATCHED) {
@@ -110,7 +155,10 @@ int Port::getServiceDeductions(struct serviceDeductions *sd) {
     sd->dtype = SERVICE_DETECTION_PROBED;
     sd->name = serviceprobe_service;
     sd->name_confidence = 10;
+    sd->product = serviceprobe_product;
     sd->version = serviceprobe_version;
+    sd->extrainfo = serviceprobe_extrainfo;
+    populateFullVersionString(sd);
     return 0;
   } else if (serviceprobe_results == PROBESTATE_FINISHED_TCPWRAPPED) {
     sd->dtype = SERVICE_DETECTION_PROBED;
@@ -134,33 +182,65 @@ int Port::getServiceDeductions(struct serviceDeductions *sd) {
 }
 
 
-// sname should be NULL if sres is not
-// PROBESTATE_FINISHED_MATCHED. version will be NULL unless it is
-// available.  Sometimes only the service name, but not version are
-// found.  Note that this function makes its own copy of sname and
-// version.  This function also takes care of truncating version to a
-// 'reasonable' length if neccessary, and cleaning up any unprinable
-// chars. (these tests are to avoid annoying DOS (or other) attacks by
-// malicious services).
-void Port::setServiceProbeResults(enum serviceprobestate sres, const char *sname, const char *version, const char *fingerprint) {
-  int vlen;
+  // sname should be NULL if sres is not
+  // PROBESTATE_FINISHED_MATCHED. product,version, and/or extrainfo
+  // will be NULL if unavailable. Note that this function makes its
+  // own copy of sname and product/version/extrainfo.  This function
+  // also takes care of truncating the version strings to a
+  // 'reasonable' length if neccessary, and cleaning up any unprinable
+  // chars. (these tests are to avoid annoying DOS (or other) attacks
+  // by malicious services).  The fingerprint should be NULL unless
+  // one is available and the user should submit it.
+  void Port::setServiceProbeResults(enum serviceprobestate sres, 
+				    const char *sname,
+				    const char *product, const char *version, 
+				    const char *extrainfo, 
+				    const char *fingerprint) {
+  int slen;
   serviceprobe_results = sres;
   unsigned char *p;
   if (sname) serviceprobe_service = strdup(sname);
   if (fingerprint) serviceprobe_fp = strdup(fingerprint);
+
+  if (product) {
+    slen = strlen(product);
+    if (slen > 64) slen = 64;
+    serviceprobe_product = (char *) safe_malloc(slen + 1);
+    memcpy(serviceprobe_product, product, slen);
+    serviceprobe_product[slen] = '\0';
+    p = (unsigned char *) serviceprobe_product;
+    while(*p) {
+      if (!isprint((int)*p)) *p = '.';
+      p++;
+    }
+  }
+
   if (version) {
-    vlen = strlen(version);
-    if (vlen > 128) vlen = 128;
-    serviceprobe_version = (char *) safe_malloc(vlen + 1);
-    memcpy(serviceprobe_version, version, vlen);
-    serviceprobe_version[vlen] = '\0';
-    serviceprobe_version = strdup(version);
+    slen = strlen(version);
+    if (slen > 64) slen = 64;
+    serviceprobe_version = (char *) safe_malloc(slen + 1);
+    memcpy(serviceprobe_version, version, slen);
+    serviceprobe_version[slen] = '\0';
     p = (unsigned char *) serviceprobe_version;
     while(*p) {
       if (!isprint((int)*p)) *p = '.';
       p++;
     }
   }
+
+  if (extrainfo) {
+    slen = strlen(extrainfo);
+    if (slen > 80) slen = 80;
+    serviceprobe_extrainfo = (char *) safe_malloc(slen + 1);
+    memcpy(serviceprobe_extrainfo, extrainfo, slen);
+    serviceprobe_extrainfo[slen] = '\0';
+    p = (unsigned char *) serviceprobe_extrainfo;
+    while(*p) {
+      if (!isprint((int)*p)) *p = '.';
+      p++;
+    }
+  }
+
 }
 
 /* Sets the results of an RPC scan.  if rpc_status is not
@@ -184,12 +264,14 @@ void Port::setRPCProbeResults(int rpcs, unsigned long rpcp,
     if (serviceprobe_service)
       free(serviceprobe_service);
     serviceprobe_service = strdup(newsvc);
+    serviceprobe_product = strdup(newsvc);
     if (rpc_lowver == rpc_highver)
-      snprintf(verbuf, sizeof(verbuf), "%i (rpc #%li)", rpc_lowver, rpc_program);
+      snprintf(verbuf, sizeof(verbuf), "%i", rpc_lowver);
     else
-      snprintf(verbuf, sizeof(verbuf), "%i-%i (rpc #%li)", rpc_lowver, rpc_highver,
-	       rpc_program);
+      snprintf(verbuf, sizeof(verbuf), "%i-%i", rpc_lowver, rpc_highver);
     serviceprobe_version = strdup(verbuf);
+    snprintf(verbuf, sizeof(verbuf), "rpc #%li", rpc_program);
+    serviceprobe_extrainfo = strdup(verbuf);
   } else if (rpc_status == RPC_STATUS_UNKNOWN) {
     if (serviceprobe_service)
       free(serviceprobe_service);
