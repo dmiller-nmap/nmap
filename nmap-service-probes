@@ -202,6 +202,10 @@ match telnet m|^\xff\xfd\$$| v/HP-UX telnetd///
 match telnet m|^\xff\xfd\x18$| v/Cisco microswitch telnetd///
 # Cayman-DSL Model 3220-H, DMT-ADSL (Alcatel) OS version 6.3.0
 match telnet m|^\xff\xfb\x01\xff\xfb\x03\xff\xfe\x01\n\rlogin: $| v/Cayman-DSL router telnetd///
+# Blue Coat Port 80 Security Appliance  Model: Blue Coat SG400  Software Version: SGOS 2.1.6044 Software Release id: 19480 Service Pack 4
+# Maybe I should call this SGOS telnetd instead
+match telnetd m|^\xff\xfb\x03\xff\xfb\x01\xff\xfd\x1f\r\n\r\nUsername: $| v/Blue Coat telnetd///
+
 match smtp m/^220 [-.+\w]+ \(IMail ([^)]+)\) NT-ESMTP Server/ v/IMail NT-ESMTP/$1//
 match smtp m/^220 X1 NT-ESMTP Server [-.+\w]+ \(IMail ([^)]+)\)\r\n/ v/IMail NT-ESMTP/$1//
 match smtp m/^220-[-.+\w]+ Microsoft SMTP MAIL ready at.*Version: ([-\w.]+)\r\n/ v/Microsoft SMTP/$1//
@@ -236,6 +240,7 @@ match smtp m|^220 [-.\w]+ ESMTP Service. Welcome.\r\n$| v/CommuniGate Pro smtpd/
 match smtp m|^220 [-.\w]+ Process Software ESMTP service V([-.\w]+) ready| v/Process Software smtpd/$1/on OpenVMS/
 match smtp m|^220 [-.\w]+ Mercury (\d[-.\w]+) ESMTP server ready\.\r\n$| v/Mercury Mail smtpd/$1//
 match smtp m|^220 [-.\w]+ ESMTP Service \(Lotus Domino Release (\d[-.\w]+)\) ready at | v/Lotus Domino smtpd/$1//
+match smtp m|^relaylock: Error: PRODUCT_ROOT_D not defined\nrelaylock: Error: PRODUCT_ROOT_D not defined\n1\n$| v/Plesk relaylock smtp wrapper//broken/
 softmatch smtp m|^220 [-.\w ]+SMTP.*\r\n|
 
 match pop3 m/^\+OK X1 NT-POP3 Server [-\w.]+ \(IMail ([^)]+)\)\r\n/ v/IMail pop3d/$1//
@@ -319,7 +324,7 @@ match pcanywheredata m/^\0X\x08\0}\x08\x0d\x0a\0\x2e\x08Please press<Enter>...\x
 match meetingmaker m/^\xc1,$/ v/Meeting Maker calendaring///
 match finger m|^\r\n    Line      User       Host\(s\)              Idle Location\r\n| v/Cisco fingerd//IOS 12.X/
 Probe TCP GenericLines q|\r\n\r\n|
-ports 21,43,110,113,505,540,1248,5432,30444
+ports 21,43,110,113,199,505,540,1248,5432,30444
 # iopd 2003debian0.0304182231-1
 match pop3 m|^\+OK POP3 \[[-.\w]+\] v(200[-.\w]+) server ready\r\n-ERR Null command\r\n-ERR Null command\r\n| v/ipopd/$1//
 # Solid POP3d 0.15
@@ -347,6 +352,8 @@ match redcarpet m|^Status: 400 Bad Request\r\nContent-Length: 0\r\n\r\n| v/Ximia
 match nsclient m|^ERROR:Wrong password$| v/Netsaint Windows Client///
 # Diverse IRC bot
 match ircbot m|^ \r\nSorry, that nickname format is invalid\.\r\r\n$| v/Diverse IRC bot///
+# Part of Linux net-snmp-5.0.6-17
+match smux m|^A\x01\x02$| v/Linux SNMP multiplexer///
 
 Probe TCP GetRequest q|GET / HTTP/1.0\r\n\r\n|
 ports 79,80-85,113,139,143,280,515,554,631,783,993,995,1220,5000,5432,5900,8000-8010,8080-8085,40193
@@ -382,6 +389,8 @@ match http m|^HTTP/1\.0 \d{3}.*\r\nServer: CompaqHTTPServer/([\.\w]+)\r\n|s v/Co
 match http m|^HTTP/1.1 401 Authorization Required\r\nWWW-Authenticate: Basic realm="Linksys ([-A-Z\d/]+)"\r\n| v/Linksys router web admin server//device model $1/
 match http m|^HTTP/1\.1 \d\d\d .*\r\nServer: Insight Manager (\d)\r\n\r\n|s v/Compaq Insite Manager/$1//
 match http m|^HTTP/1\.1 200 OK\r\nContent-Length: \d+\r\nConnection: close\r\nPragma: no-cache\r\nCache-Control: no-cache, no-store, must-revalidate\r\nExpires: 0\r\nContent-Type: text/html\r\n\r\n| v/GNU Httptunnel///
+# Blue Coat Port 80 Security Appliance Model: Blue Coat SG400 Software Version: SGOS 2.1.6044 Software Release id: 19480 Service Pack 4
+match http m|^HTTP/1\.0 301 Moved Permanently\r\nLocation: /Secure/Local/console/index\.htm\r\n\r\n$| v/Blue Coat Security Appliance HTTP admin interface///
 # No more HTTP softmatch because many services that I don't think are
 # best classified 'http' use http-like semantics (for example UPnP,
 # some https servers, etc).  Maybe I should make softmatch allow
@@ -390,6 +399,8 @@ match http m|^HTTP/1\.1 200 OK\r\nContent-Length: \d+\r\nConnection: close\r\nPr
 # softmatch http m|^HTTP/1.[01] \d\d\d|
 
 match http-proxy m|^HTTP/1\.0 400 Bad Request\r\nServer: [sS]quid/([-.\w]+)\r\n| v/Squid webproxy/$1//
+# Blue Coat Port 80 Security Appliance  Model: Blue Coat SG400 Software Version: SGOS 2.1.6044 Software Release id: 19480 Service Pack 4
+match http-proxy m|^HTTP/1\.1 504 Gateway Time-out\r\nConnection: close\r\nCache-Control: no-cache\r\nPragma: no-cache\r\nContent-Length: 2976\r\nContent-Type: text/html\r\n\r\n<DIV class=Section1> \n\t\t<P class=MsoNormal| v/Blue Coat Security Appliance http proxy///
 # TightVNC 1.2.6
 match vnc-http m|^HTTP/1.0 200 OK\n\n<HTML>\n  <HEAD><TITLE>TightVNC desktop \[[-.\w]+\]| v/TightVNC///
 match rtsp m|^RTSP/1.0 400 Bad Request\r\nServer: DSS/([-.\w]+) \[(v\d+)]-(\w+)\r\n| v/DarwinStreamingServer/$1/$2 on $3/
@@ -450,7 +461,8 @@ match domain m|\x07version\x04bind.*[\x03-\x10]([-\w._]{3,16})$|s v/ISC Bind/$1/
 # Windows 2000 SP4
 match domain m|^\0\x1e\0\x06\x81\x04\0\x01\0\0\0\0\0\0\x07version\x04bind\0\0\x10\0\x03$| v/Microsoft DNS///
 # OpenBSD 2.3
-match rlogind m|^\x01rlogind: Permission denied\.\r\n$| v/OpenBSD rlogind///
+# Solaris 9
+match rlogind m|^\x01rlogind: Permission denied\.\r\n$|
 match exec m|^\x01Login incorrect\.\n$| v/Solaris rexecd///
 # HP-UX B.11.00 A
 match exec m|^\x01rexecd: Login incorrect.\n$| v/HP-UX rexecd///
@@ -529,7 +541,8 @@ match ssl m|^\x16\x03\0..\x02\0\0F\x03\0\?|s v/Microsoft IIS SSL///
 # Novell Netware 6 Enterprise Web server 5.1 https
 # Novell Netware Ldap over SSL or enterprise web server 5.1 over SSL
 match ssl m|^\x16\x03\0\0:\x02\0\x006\x03\0| v/Novell Netware SSL///
-
+# Cisco IDS 4.1 Appliance
+match ssl m|^\x16\x03\0\0\*\x02\0\0&\x03\0\xd10:\xbd\\\x8e\xe3\x15\x1c\x0fZ\xe4\x04\x87\x07\xc0\x82\xa9\xd4\x0e\x9c1LXk\xd1\xd2\x0b\x1a\xc6/p\0\0\n\0\x16\x03\0\x026\x0b\0\x022\0| v/Cisco IDS SSL///
 #Probe TCP SSLSessionReq q|\x80\x67\x01\x03\x01\0\x4e\0\0\0\x10\x01\0\x80\x03\0\x80\x07\0\xc0\x06\0\x40\x02\0\x80\x04\0\x80\0\0\x39\0\0\x38\0\0\x35\0\0\x33\0\0\x32\0\0\x04\0\0\x05\0\0\x2f\0\0\x16\0\0\x13\0\xfe\xff\0\0\x0a\0\0\x15\0\0\x12\0\xfe\xfe\0\0\x09\0\0\x64\0\0\x62\0\0\x03\0\0\x06\xc8\xd5\x5a\x76\x5c\x0a\x7d\x9e\x9d\x47\xcd\x7d\xce\x4a\x06\x9a|
 #ports 443
 
@@ -605,3 +618,5 @@ ports 524
 match ncp m|^\x74\x4e\x63\x50\0\0\0\x10\x33\x33| v/Novell Netware NCP///
 
 Probe TCP NotesRPC q|\x3A\x00\x00\x00\x2F\x00\x00\x00\x02\x00\x00\x40\x02\x0F\x00\x01\x00\x3D\x05\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x2F\x00\x00\x00\x00\x00\x00\x00\x00\x00\x40\x1F\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00|
+ports 1352
+match lotusnotes m|^`\0\0\0U\0\0\0\x03\0\0@\x02\x0f\0\x05\x009\x05.....\x03\0\0\0\0\x02\0/\0\x12|s

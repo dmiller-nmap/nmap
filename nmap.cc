@@ -1150,7 +1150,7 @@ void init_socket(int sd) {
    of port numbers. Note that one trailing comma is OK -- this is actually
    useful for machine generated lists */
 struct scan_lists *getpts(char *origexpr) {
-  u8 porttbl[65536];
+  u8 *porttbl;
   int portwarning = 0; /* have we warned idiot about dup ports yet? */
   long rangestart = -2343242, rangeend = -9324423;
   char *current_range;
@@ -1160,7 +1160,7 @@ struct scan_lists *getpts(char *origexpr) {
   struct scan_lists *ports;
   int range_type = SCAN_TCP_PORT|SCAN_UDP_PORT|SCAN_PROTOCOLS;
 
-  memset(porttbl, 0, sizeof(porttbl));
+  porttbl = (u8 *) safe_zalloc(65535);
 
   current_range = origexpr;
   do {
@@ -1277,6 +1277,7 @@ struct scan_lists *getpts(char *origexpr) {
       ports->prots[protcount++] = i;
   }
 
+  free(porttbl);
   return ports;
 }
 

@@ -1,5 +1,33 @@
 # Nmap Changelog ($Id$)
 
+Nmap 3.40PVT15
+
+o Fixed a major bug in the Nsock time caching system.  This could
+  cause service detection to inexplicably fail against certain ports in
+  the second or later machines scanned.  Thanks to Solar Designer and HD
+  Moore for helping me track this down.
+
+o Fixed some *BSD compilation bugs found by 
+  Zillion (zillion(a)safemode.org).
+
+o Integrated more services thanks to submissiosn from Fyodor Yarochkin
+  (fygrave(a)tigerteam.net), and Niels Heinen
+  (zillion(a)safemode.org), and some of my own exploring.  There are
+  now 295 signatures.
+
+o Fixed a compilation bug found by Solar Designer on machines that
+  don't have struct sockaddr_storage.  Nsock now just uses "struct
+  sockaddr *" like connect() does.
+
+o Fixed a bug found by Solar Designer which would cause the Nmap
+  portscan table to be truncated in -oN output files if the results are
+  very long.
+
+o Changed a bunch of large stack arrays (e.g. int portlookup[65536])
+  into dynamically allocated heap pointers.  The large stack variables
+  apparently caused problems on some architectures.  This issue was
+  reported by osamah abuoun (osamah_abuoun(a)hotmail.com).
+
 Nmap 3.40PVT14
 
 o Added IPv6 support for service scan.

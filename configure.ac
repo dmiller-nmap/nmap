@@ -254,7 +254,7 @@ fi
 
 if test "$use_openssl" = "yes"; then
   AC_DEFINE(HAVE_OPENSSL)
-  LIBS="$LIBS -lssl -lcrypt"
+  LIBS="$LIBS -lssl -lcrypto"
 fi
 
 dnl Check whether libpcap is already available

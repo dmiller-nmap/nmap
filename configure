@@ -4778,7 +4778,7 @@ if test "$use_openssl" = "yes"; then
 #define HAVE_OPENSSL 1
 _ACEOF
 
-  LIBS="$LIBS -lssl -lcrypt"
+  LIBS="$LIBS -lssl -lcrypto"
 fi
 
 have_libpcap=no

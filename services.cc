@@ -183,7 +183,7 @@ struct scan_lists *getdefaultports(int tcpscan, int udpscan) {
   int tcpportindex = 0;
   int udpportindex = 0;
   struct scan_lists *ports;
-  char usedports[65536];
+  u8 *usedports;
   struct service_list *current;
   int bucket;
   int tcpportsneeded = 0;
@@ -193,7 +193,8 @@ struct scan_lists *getdefaultports(int tcpscan, int udpscan) {
     if (nmap_services_init() == -1)
       fatal("Getfastports: Couldn't get port numbers");
   
-  memset(usedports, 0, sizeof(usedports));
+  usedports = (u8 *) safe_zalloc(sizeof(*usedports) * 65536);
+
   for(bucket = 1; bucket < 1025; bucket++) {  
     if (tcpscan) {
       usedports[bucket] |= SCAN_TCP_PORT;
@@ -238,14 +239,15 @@ struct scan_lists *getdefaultports(int tcpscan, int udpscan) {
       ports->udp_ports[udpportindex++] = bucket;
   }
 
-return ports;
+  free(usedports);
+  return ports;
 }
 
 struct scan_lists *getfastports(int tcpscan, int udpscan) {
   int tcpportindex = 0;
   int udpportindex = 0;
   struct scan_lists *ports;
-  char usedports[65536];
+  u8 *usedports;
   struct service_list *current;
   int bucket;
   int tcpportsneeded = 0;
@@ -255,7 +257,7 @@ struct scan_lists *getfastports(int tcpscan, int udpscan) {
     if (nmap_services_init() == -1)
       fatal("Getfastports: Coudn't get port numbers");
   
-  memset(usedports, 0, sizeof(usedports));
+  usedports = (u8 *) safe_zalloc(sizeof(*usedports) * 65536);
 
   for(bucket = 0; bucket < SERVICE_TABLE_SIZE; bucket++) {  
     for(current = service_table[bucket % SERVICE_TABLE_SIZE];
@@ -289,6 +291,8 @@ struct scan_lists *getfastports(int tcpscan, int udpscan) {
     if (usedports[bucket] & SCAN_UDP_PORT) 
       ports->udp_ports[udpportindex++] = bucket;
   }
-return ports;
+
+  free(usedports);
+  return ports;
 }
 

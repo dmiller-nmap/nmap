@@ -418,12 +418,17 @@ char* xml_convert (const char* str) {
   return temp;
 }
 
-/* Write some information (printf style args) to the given log stream(s) */
+/* Write some information (printf style args) to the given log stream(s).
+ Remember to watch out for format string bugs.  */
 void log_write(int logt, const char *fmt, ...)
 {
   va_list  ap;
   int i,l=logt,skid=1;
-  char buffer[8192];
+  char b[4096];
+  char *buf = b;
+  int bufsz = sizeof(b);
+  bool buf_alloced = false;
+  int rc = 0;
 
   va_start(ap, fmt);
   if (l & LOG_STDOUT) {
@@ -435,11 +440,22 @@ void log_write(int logt, const char *fmt, ...)
   for (i=0;l;l>>=1,i++)
     {
       if (!o.logfd[i] || !(l&1)) continue;
-      vsnprintf(buffer,sizeof(buffer)-1,fmt,ap);
-      if (skid && ((1<<i)&LOG_SKID)) skid_output(buffer);
-      fwrite(buffer,1,strlen(buffer),o.logfd[i]);
+      while(1) {
+	rc = vsnprintf(buf,bufsz, fmt, ap);
+	if (rc >= 0 && rc < bufsz)
+	  break; // Successful
+	// D'oh!  Apparently not enough space - lets try a bigger buffer
+	bufsz = (rc > bufsz)? rc + 1 : bufsz * 2;
+	buf = (char *) safe_realloc(buf_alloced? buf : NULL, bufsz);
+	buf_alloced = true;
+      } 
+      if (skid && ((1<<i)&LOG_SKID)) skid_output(buf);
+      fwrite(buf,1,strlen(buf),o.logfd[i]);
     }
   va_end(ap);
+
+  if (buf_alloced)
+    free(buf);
 }
 
 /* Close the given log stream(s) */

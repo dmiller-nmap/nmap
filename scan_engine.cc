@@ -619,7 +619,7 @@ void pos_scan(Target *target, u16 *portarray, int numports, stype scantype) {
   size_t socklen;
   struct portinfo *scan = NULL,  *current, *next;
   struct portinfolist pil;
-  int portlookup[65536]; /* Indexes port number -> scan[] index */
+  int *portlookup = NULL; /* Indexes port number -> scan[] index */
   struct timeval now;
   struct connectsockinfo csi;
   struct rpcscaninfo rsi;
@@ -650,7 +650,6 @@ void pos_scan(Target *target, u16 *portarray, int numports, stype scantype) {
 
   if (o.debugging)
     log_write(LOG_STDOUT, "Starting pos_scan (%s)\n", scantype2str(scantype));
-
 
   ss.packet_incr = 4;
   ss.initial_packet_width = (scantype == RPC_SCAN)? 2 : 30;
@@ -688,7 +687,8 @@ void pos_scan(Target *target, u16 *portarray, int numports, stype scantype) {
   ss.initial_packet_width = box(ss.min_width, ss.max_width, ss.initial_packet_width);
   ss.numqueries_ideal = ss.initial_packet_width;
 
-  memset(portlookup, 255, sizeof(portlookup)); /* 0xffffffff better always be (int) -1 */
+  portlookup = (int *) safe_malloc(sizeof(int) * 65536);
+  memset(portlookup, 255, sizeof(int) * 65536); /* 0xffffffff better always be (int) -1 */
   memset(csi.socklookup, 0, sizeof(csi.socklookup));
 
   if (scantype != RPC_SCAN) {
@@ -1182,6 +1182,7 @@ void pos_scan(Target *target, u16 *portarray, int numports, stype scantype) {
     pcap_close(pd);
   if (scantype == RPC_SCAN)
     close_rpc_query_sockets();
+  free(portlookup);
   return;
 }
 
@@ -1348,7 +1349,7 @@ void super_scan(Target *target, u16 *portarray, int numports,
   u16 newport;
   int newstate = 999; /* This ought to break something if used illegally */
   struct portinfo *scan, *openlist, *current, *testinglist, *next;
-  int portlookup[65536]; /* Indexes port number -> scan[] index */
+  int *portlookup; /* Indexes port number -> scan[] index */
   struct timeval now, end;
   int packcount, timedout;
   int UDPPacketWarning = 0;
@@ -1376,6 +1377,7 @@ void super_scan(Target *target, u16 *portarray, int numports,
     (o.timing_level == 5)? 20 : 1;
   numqueries_ideal = initial_packet_width = MAX(min_width, MIN(max_width, 10));
 
+  portlookup = (int *) safe_malloc(sizeof(int) * 65536);
   memset(portlookup, 255, 65536 * sizeof(int)); /* 0xffffffff better always be (int) -1 */
   scan = (struct portinfo *) safe_malloc(numports * sizeof(struct portinfo));
 
@@ -1828,5 +1830,6 @@ void super_scan(Target *target, u16 *portarray, int numports,
       }
     }
   }
+  free(portlookup);
   return;
 }

@@ -1230,12 +1230,14 @@ static void startNextProbe(nsock_pool nsp, nsock_iod nsi, ServiceGroup *SG,
 	svc->target->TargetSockAddr(&ss, &ss_len);
 	if (svc->tunnel == SERVICE_TUNNEL_NONE) {
 	  nsock_connect_tcp(nsp, svc->niod, servicescan_connect_handler, 
-			    DEFAULT_CONNECT_TIMEOUT, svc, &ss, ss_len,
+			    DEFAULT_CONNECT_TIMEOUT, svc, 
+			    (struct sockaddr *) &ss, ss_len,
 			    svc->portno);
 	} else {
 	  assert(svc->tunnel == SERVICE_TUNNEL_SSL);
 	  nsock_connect_ssl(nsp, svc->niod, servicescan_connect_handler, 
-			    DEFAULT_CONNECT_SSL_TIMEOUT, svc, &ss,
+			    DEFAULT_CONNECT_SSL_TIMEOUT, svc, 
+			    (struct sockaddr *) &ss,
 			    ss_len, svc->portno);
 	}
       } else {
@@ -1586,12 +1588,13 @@ int launchSomeServiceProbes(nsock_pool nsp, ServiceGroup *SG) {
     svc->target->TargetSockAddr(&ss, &ss_len);
     if (svc->proto == IPPROTO_TCP)
       nsock_connect_tcp(nsp, svc->niod, servicescan_connect_handler, 
-			DEFAULT_CONNECT_TIMEOUT, svc, &ss, ss_len,
+			DEFAULT_CONNECT_TIMEOUT, svc, 
+			(struct sockaddr *)&ss, ss_len,
 			svc->portno);
     else {
       assert(svc->proto == IPPROTO_UDP);
       nsock_connect_udp(nsp, svc->niod, servicescan_connect_handler, 
-			svc, &ss, ss_len,
+			svc, (struct sockaddr *) &ss, ss_len,
 			svc->portno);
     }
     // Now remove it from the remaining service list
