@@ -52,10 +52,11 @@ nmap-VERSION-win32.zip .  The .zip version is usually much more
 up-to-date.  Here are the instructions for installing the zip
 archive:
 
-1) Make sure you have installed Winpcap Version 2.1-beta or later.  This
-   is available at http://netgroup-serv.polito.it/winpcap/ .  It is
-   very important that you use version 2.1-beta or later.  This is
-   optional, but recommended, under Windows 2000.
+1) Make sure you have installed Winpcap Version 3.1-beta4 or later.
+   That version is critical as Nmap will crash if you have anything
+   older.  This is available at
+   http://netgroup-serv.polito.it/winpcap/ .  Winpcap is optional, but
+   recommended, under Windows 2000.
 
 2) Unzip the archive using Winzip or your favorite decompression
    utility -- a directory call nmap-VERSION will be extracted .

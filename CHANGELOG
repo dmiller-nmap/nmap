@@ -4,6 +4,12 @@ o Fixed the way tcp connect scan (-sT) respons to ICMP network
   unreachable responses (patch by Richard Moore
   (rich(a)westpoint.ltd.uk).
 
+o Update random host scan (-iR) to support the latest IANA-allocated
+  ranges, thanks to patch by Chad Loder (cloder(a)loder.us).
+
+o Added some new RPC services to nmap-rpc thanks to a patch from
+  vlad902 (vlad902(a)gmail.com).
+
 Nmap 3.81
 
 o Nmap now ships with and installs (in the same directory as other

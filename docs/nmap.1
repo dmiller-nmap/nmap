@@ -35,19 +35,23 @@ interfaces (such as raw sockets) require root privileges.
 nmap should be run as root whenever possible (not setuid root,
 of course).
 .PP
-The result of running nmap is usually a list of interesting
-ports on the machine(s) being scanned (if any).  Nmap always
-gives the port's "well known" service name (if any), number,
-state, and protocol.  The state is either "open",
-"filtered", or "unfiltered".  Open means that the target
-machine will accept() connections on that port.  Filtered
-means that a firewall, filter, or other network obstacle is
-covering the port and preventing nmap from determining
-whether the port is open.  Unfiltered means that the port is
-known by nmap to be closed and no firewall/filter seems to
-be interfering with nmap's attempts to determine this.
-Unfiltered ports are the common case and are only shown when
-most of the scanned ports are in the filtered state.
+The result of running nmap is usually a list of interesting ports on
+the machine(s) being scanned (if any).  Nmap always gives the port's
+"well known" service name (if any), number, state, and protocol.  The
+state is either "open", "closed" "filtered", or "unfiltered".  Open
+means that the target machine will accept() connections on that port.
+Closed ports are not listening for connections (they have no
+application associated with them).  Filtered means that a firewall,
+filter, or other network obstacle is covering the port and preventing
+nmap from determining whether the port is open.  Unfiltered means that
+the port is known by nmap to be closed and no firewall/filter seems to
+be interfering with nmap's attempts to determine this.  Unfiltered
+ports are the common case and are only shown when most of the scanned
+ports are in the filtered state.  In some cases, Nmap cannot
+distinguish between filtered ports and those that are either open or
+closed.  For example, a port that does not respond to a FIN Scan could
+be either open or filtered.  In these cases, Nmap lists ports as
+"open|filtered" or "closed|filtered".
 .PP
 Depending on options used, nmap may also report the
 following characteristics of the remote host: OS in use, TCP

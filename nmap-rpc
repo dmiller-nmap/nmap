@@ -4,12 +4,11 @@
 # from various members of the nmap-hackers list.  
 # To join nmap-hackers send mail to nmap-hackers-subscribe@insecure.org
 # Nmap is available from http://www.insecure.org/nmap/
-# All the rpc services we could find as of Feb22, 1999
+# All the rpc services we could find as of Feb26, 2005
 # Tweaked a bit by Fyodor <fyodor@insecure.org>
 #
 # NOTE:  Eilon Gishri <eilon@aristo.tau.ac.il> has merged the nmap-rpc
-# with his massive rpc file (see comments below).  So as of 6/30/02,
-# this is an exact copy (except for these comments) of 
+# with his massive rpc file (see comments below).
 # ftp://ftp.tau.ac.il/pub/users/eilon/rpc/rpc
 #
 # Someday I would like to reorder this with the most popular services
@@ -73,7 +72,7 @@ llockmgr        100020
 nlockmgr        100021
 x25.inr         100022
 statmon         100023
-status          100024		# Status monitor
+status          100024	statd rpc.statd		# Status monitor
 select_lib      100025
 bootparam       100026
 mazewars        100027		# Mazewars game
@@ -138,6 +137,8 @@ sender		100139	cc_sender	# Cooperative Consoles
 amiserv		100146			# AMI Daemon
 amiaux		100147			# AMI Daemon
 ocfserv		100150			# OCF (Smart card) Daemon
+sunvts		100153
+smserverd	100155	rpc.smserverd
 kcms_server	100221			# SunKCMS Profile Server
 nfs_acl		100227
 #
@@ -161,11 +162,13 @@ nis_cache	100301
 nis_callback	100302
 nispasswd	100303	rpc.nispasswdd
 fnsypd          100304			# Federated Naming Service (FNS)
+stfsloader	100424			# Standard Type Services Framework (STSF) Font Server
 rpc.pts         105004  Protoserver	# Advanced Printing Software
 swu_svr		120100			# Software Usage Monitoring daemon 
 nf_snmd		120126			# SunNet Manager
 nf_snmd		120127
 pcnfsd		150001	pcnfs
+mapsvc		351455
 #
 # Pyramid
 #
@@ -255,6 +258,17 @@ dmispd		300598		# Sun Solstice Enterprise DMI Service Provider
 prpasswd	300632
 sfs		344444		# SFS - Self-Certifying File System
 prestoctl_svc	390100	presto	# Prestoserve control daemon
+#
+# Computer Associates
+#
+caasalert	351473
+caservd		395644	as6_arcserve
+calqserver	395645	as6_queue LQServer
+camediadsvr	395646	as6_tapesvr MediaSvr
+caldbserver	395647	as6_dbserver LDbserver
+caauthd		395648	as6_auth
+cadiscovd	395649	as6_discovery
+caloggerd	395650	as6_logger
 #
 # Legato NetWorker
 #
@@ -569,6 +583,7 @@ inetray         555555558
 inetray         555555559
 inetray         555555560
 #
+drac		900101		# Dynamic Relay Authorization Control
 des_crypt	600100029	freebsd-crypt	# FreeBSD
 fypxfrd		600100069	freebsd-ypxfrd	# FreeBSD
 rdbx		611319808

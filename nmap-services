@@ -1887,6 +1887,7 @@ netcheque         4008/tcp   # NetCheque accounting
 netcheque         4008/udp   # NetCheque accounting
 lockd             4045/tcp   # 
 lockd             4045/udp   # NFS lock daemon/manager
+rww               4125/tcp   # Microsoft Remote Web Workplace on Small Business Server
 nuts_dem          4132/tcp   # NUTS Daemon
 nuts_dem          4132/udp   # NUTS Daemon
 nuts_bootp        4133/tcp   # NUTS Bootp Server
@@ -1931,6 +1932,8 @@ admdog            5101/tcp   # (chili!soft asp)
 admeng            5102/tcp   # (chili!soft asp)
 rmonitor_secure   5145/tcp   # 
 rmonitor_secure   5145/udp   # 
+sip               5060/tcp   # Session Initiation Protocol (SIP)
+sip               5060/udp   # Session Initiation Protocol (SIP)
 aol               5190/tcp   # America-Online.  Also can be used by ICQ
 aol               5190/udp   # America-Online.
 aol-1             5191/tcp   # AmericaOnline1
