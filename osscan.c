@@ -194,7 +194,7 @@ if (o.verbose && openport != (unsigned long) -1)
  current_port = o.magic_port + NUM_SEQ_SAMPLES +1;
  
  /* Now lets do the NULL packet technique */
- testsleft = (openport == (unsigned long) -1)? 4 : 7;
+ testsleft = (openport == (unsigned long) -1)? 4 : 8;
  FPtmp = NULL;
  /* bzero(FPtests, sizeof(FPtests));*/
  tries = 0;
@@ -251,6 +251,7 @@ if (o.verbose && openport != (unsigned long) -1)
 			 closedport, sequence_base, 0,TH_FIN|TH_PUSH|TH_URG, 0,"\003\003\012\001\002\004\001\011\010\012\077\077\077\077\000\000\000\000\000\000" , 20, NULL, 0);
    }
 
+   /* Test 8 */
    if (!FPtests[8]) {
      if (o.scan_delay) enforce_scan_delay(NULL);
      upi = send_closedudp_probe(rawsd, &target->host, o.magic_port, closedport);
@@ -479,6 +480,15 @@ if (o.verbose && openport != (unsigned long) -1)
        si->ts_seqclass = TS_SEQ_1000HZ;
        si->lastboot = seq_send_times[0].tv_sec - (si->timestamps[0] / 1000); 
      }
+     if (si->lastboot && (seq_send_times[0].tv_sec - si->lastboot > 63072000))
+       {
+	 /* Up 2 years?  Perhaps, but they're probably lying. */
+	 if (o.debugging) {
+	   error("Ignoring claimed uptime of %d days", 
+		 (seq_send_times[0].tv_sec - si->lastboot) / 86400);
+	 }
+	 si->lastboot = 0;
+       }
    }
    
    /* Time to look at the TCP ISN predictability */
