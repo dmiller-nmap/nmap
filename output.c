@@ -635,7 +635,16 @@ void printosscanoutput(struct hoststruct *currenths) {
 	 log_write(LOG_NORMAL|LOG_SKID|LOG_STDOUT,"IPID Sequence Generation: %s\n", ipidclass2ascii(currenths->seq.ipid_seqclass));
        log_write(LOG_MACHINE,"\tSeq Index: %d", currenths->seq.index);
 
-       log_write(LOG_XML, "<tcptssequence class=\"%s\" />\n", tsseqclass2ascii(currenths->seq.ts_seqclass));
+       p=numlst;
+       for(i=0; i < currenths->seq.responses; i++) {
+	 if (p - numlst > (sizeof(numlst) - 15)) 
+	   fatal("STRANGE ERROR #3877 -- please report to fyodor@insecure.org\n");
+	 if (p != numlst) *p++=',';
+	 sprintf(p, "%X", currenths->seq.timestamps[i]);
+	 while(*p) p++;
+       }
+       
+       log_write(LOG_XML, "<tcptssequence class=\"%s\" values=\"%s\"/>\n", tsseqclass2ascii(currenths->seq.ts_seqclass), numlst);
      }
   }
 }

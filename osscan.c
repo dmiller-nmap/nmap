@@ -323,7 +323,8 @@ if (o.verbose && openport != (unsigned long) -1)
      for(decoy=0; decoy < o.numdecoys; decoy++) {
        send_tcp_raw_decoys(rawsd, &target->host, 
 			   o.magic_port + seq_packets_sent + 1, 
-			   openport, sequence_base + seq_packets_sent + 1, 0, 
+			   openport, 
+			   sequence_base + seq_packets_sent + 1, 0, 
 			   TH_SYN, 0 ,"\003\003\012\001\002\004\001\011\010\012\077\077\077\077\000\000\000\000\000\000" , 20, NULL, 0);
        if (!o.scan_delay)
 	 usleep( 5000 + target->to.srtt);
@@ -383,21 +384,27 @@ if (o.verbose && openport != (unsigned long) -1)
 	   /*	error("DEBUG: response is SYN|ACK to port %hi\n", ntohs(tcp->th_dport)); */
 	   /*readtcppacket((char *)ip, ntohs(ip->ip_len));*/
 	   /* We use the ACK value to match up our sent with rcv'd packets */
-	   seq_response_num = (tcp->th_ack /* NOT ntohl! */ - 2 - 
+	   seq_response_num = (ntohl(tcp->th_ack) - 2 - 
 			       sequence_base); 
 	   if (seq_response_num < 0 || seq_response_num >= seq_packets_sent) {
 	     /* BzzT! Value out of range */
-	     if (o.debugging) error("Unable to associate os scan response with ssent packet (received ack: %li; sequence base: %li", tcp->th_ack, sequence_base);
+	     if (o.debugging) {
+	       error("Unable to associate os scan response with sent packet (received ack: %lX; sequence base: %lX. Packet:", ntohl(tcp->th_ack), sequence_base);
+	       readtcppacket((char *)ip,BSDUFIX(ip->ip_len));
+	     }
 	     seq_response_num = si->responses;
 	   }
 	   si->responses++;
 	   si->seqs[seq_response_num] = ntohl(tcp->th_seq); /* TCP ISN */
 	   si->ipids[seq_response_num] = ntohs(ip->ip_id);
-	   gettcpopt_ts(tcp, &timestamp, NULL);
-	   si->timestamps[seq_response_num] = timestamp;
-	   if (timestamp == 0) {
-	     si->ts_seqclass = TS_SEQ_ZERO;
+	   if ((gettcpopt_ts(tcp, &timestamp, NULL) == 0))
+	     si->ts_seqclass = TS_SEQ_UNSUPPORTED;
+	   else {
+	     if (timestamp == 0) {
+	       si->ts_seqclass = TS_SEQ_ZERO;
+	     }
 	   }
+	   si->timestamps[seq_response_num] = timestamp;
 	   /*           printf("Response #%d -- ipid=%hi ts=%i\n", seq_response_num, ntohs(ip->ip_id), timestamp); */
 	   if (si->responses > 1) {
 	     seq_diffs[si->responses-2] = MOD_DIFF(ntohl(tcp->th_seq), si->seqs[si->responses-2]);
@@ -451,7 +458,10 @@ if (o.verbose && openport != (unsigned long) -1)
 	 }
        if (allgto) {
 	 for(i=0; i < si->responses - 1; i++) {
-	   ipid_diffs[i]--; /* Because on localhost the RST sent back ues an IPID */
+	   if (ipid_diffs[i] % 256 == 0) /* Stupid MS */
+	     ipid_diffs[i] -= 256;
+	   else
+	     ipid_diffs[i]--; /* Because on localhost the RST sent back ues an IPID */
 	 }
        }
      }
@@ -473,6 +483,12 @@ if (o.verbose && openport != (unsigned long) -1)
 	 si->ipid_seqclass = IPID_SEQ_INCR;
 	 break;
        }
+
+       if (ipid_diffs[i] == 256) { /* Argh.  Stupid Microsoft ... */
+	 si->ipid_seqclass = IPID_SEQ_BROKEN_INCR;
+	 break;
+       }
+
        if (ipid_diffs[i] > 5)
 	 j = 0;
      }
@@ -501,9 +517,13 @@ if (o.verbose && openport != (unsigned long) -1)
      }
 
      if (o.debugging)
-       printf("The avg IPID HZ is: %f\n", avg_ts_hz);
-
-     if (avg_ts_hz > 85 && avg_ts_hz < 115) {
+       printf("The avg TCP TS HZ is: %f\n", avg_ts_hz);
+     
+     if (avg_ts_hz > 1.5 && avg_ts_hz < 2.5) {
+       si->ts_seqclass = TS_SEQ_2HZ;
+       si->lastboot = seq_send_times[0].tv_sec - (si->timestamps[0] / 2); 
+     }
+     else if (avg_ts_hz > 85 && avg_ts_hz < 115) {
        si->ts_seqclass = TS_SEQ_100HZ;
        si->lastboot = seq_send_times[0].tv_sec - (si->timestamps[0] / 100); 
      }
@@ -634,6 +654,11 @@ if (o.verbose && openport != (unsigned long) -1)
        seq_AVs[avnum].attribute = "IPID";
        strcpy(seq_AVs[avnum].value, "I");
        break;
+     case IPID_SEQ_BROKEN_INCR:
+       seq_AVs[avnum].next = &seq_AVs[avnum+1]; avnum++;
+       seq_AVs[avnum].attribute = "IPID";
+       strcpy(seq_AVs[avnum].value, "BI");
+       break;
      case IPID_SEQ_RPI:
        seq_AVs[avnum].next = &seq_AVs[avnum+1]; avnum++;
        seq_AVs[avnum].attribute = "IPID";
@@ -653,6 +678,11 @@ if (o.verbose && openport != (unsigned long) -1)
        seq_AVs[avnum].attribute = "TS";
        strcpy(seq_AVs[avnum].value, "0");
        break;
+     case TS_SEQ_2HZ:
+       seq_AVs[avnum].next = &seq_AVs[avnum+1]; avnum++;
+       seq_AVs[avnum].attribute = "TS";
+       strcpy(seq_AVs[avnum].value, "2HZ");
+       break;
      case TS_SEQ_100HZ:
        seq_AVs[avnum].next = &seq_AVs[avnum+1]; avnum++;
        seq_AVs[avnum].attribute = "TS";
@@ -662,6 +692,11 @@ if (o.verbose && openport != (unsigned long) -1)
        seq_AVs[avnum].next = &seq_AVs[avnum+1]; avnum++;
        seq_AVs[avnum].attribute = "TS";
        strcpy(seq_AVs[avnum].value, "1000HZ");
+       break;
+     case TS_SEQ_UNSUPPORTED:
+       seq_AVs[avnum].next = &seq_AVs[avnum+1]; avnum++;
+       seq_AVs[avnum].attribute = "TS";
+       strcpy(seq_AVs[avnum].value, "U");
        break;
      }
    }
@@ -1235,15 +1270,18 @@ if(*(FP->OS_name)) {
 }
 
 for(current = FP; current ; current = current->next) {
-  strcpy(p, current->name);
-  p += strlen(current->name);
+  Strncpy(p, current->name, sizeof(str) - (p-str));
+  p += strlen(p);
+  assert(p-str < sizeof(str) - 30);
   *p++='(';
   for(AV = current->results; AV; AV = AV->next) {
-    strcpy(p, AV->attribute);
-    p += strlen(AV->attribute);
+    Strncpy(p, AV->attribute, sizeof(str) - (p-str));
+    p += strlen(p);
+    assert(p-str < sizeof(str) - 30);
     *p++='=';
-    strcpy(p, AV->value);
-    p += strlen(AV->value);
+    Strncpy(p, AV->value, sizeof(str) - (p-str));
+    p += strlen(p);
+    assert(p-str < sizeof(str) - 30);
     *p++ = '%';
   }
   if(*(p-1) != '(')
@@ -1260,7 +1298,7 @@ FingerPrint **FPs;
 FingerPrint *current;
 FILE *fp;
 char filename[256];
-char line[1024];
+char line[512];
 int numrecords = 0;
 int lineno = 0;
 char *p, *q; /* OH YEAH!!!! */
@@ -1298,6 +1336,8 @@ while(fgets(line, sizeof(line), fp)) {
   bzero(FPs[numrecords], sizeof(FingerPrint));
   q = FPs[numrecords]->OS_name;
   while(*p && *p != '\n' && *p != '#') {
+    if (q - FPs[numrecords]->OS_name >= (sizeof(FPs[numrecords]->OS_name) -2))
+      fatal("Ack!  0v3rf0w r3ad|ng fIng3rpRint FiLE!");
     *q++ = *p++;
   }
 
@@ -1384,7 +1424,7 @@ for(i=0; i < count; i++) {
     *q = '\0';
     AVs[i].next = &AVs[i+1];
   }
-  strcpy(AVs[i].value, p); 
+  Strncpy(AVs[i].value, p, sizeof(AVs[i].value)); 
   p = q + 1;
 }
 return AVs;

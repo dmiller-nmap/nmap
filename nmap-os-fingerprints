@@ -1438,7 +1438,7 @@ T7(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 PU(DF=N%TOS=C0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Cisco Catalyst 1900 switch or Netopia DSL/ISDN router or Bay 350-450
-TSeq(Class=TD%gcd=<138C%SI=<1E)
+TSeq(Class=TD%gcd=<FFFF%SI=<1E)
 T1(DF=N%W=400%ACK=S++%Flags=AS%Ops=M)
 T2(Resp=Y%DF=N%W=0%ACK=S%Flags=AR%Ops=)
 T3(Resp=Y%DF=N%W=400%ACK=S++%Flags=AS%Ops=M)
@@ -5590,7 +5590,7 @@ T7(DF=N%W=0%ACK=S++%Flags=AR%Ops=)
 PU(DF=N%TOS=0%IPLEN=38%RIPTL=148%RID=E%RIPCK=E%UCK=E%ULEN=134%DAT=E)
 
 Fingerprint Windows NT4 / Win95 / Win98
-TSeq(Class=TD|RI%gcd=1|2|3|4|5|A|14|1E|28|5A%SI=<1F4)
+TSeq(Class=TD|RI%gcd=1|2|3|4|5|A|14|1E|28|5A%SI=<1F4%IPID=BI%TS=U)
 T1(DF=Y%W=2017|16D0|860|4470|8000|869F%ACK=S++%Flags=A|AS%Ops=|M|MNWNNT)
 T2(DF=N%W=0%ACK=S%Flags=AR%Ops=)
 T3(Resp=Y%DF=Y%W=2017|16D0|860|4470|8000|869F%ACK=S++%Flags=AS%Ops=M|MNWNNT)

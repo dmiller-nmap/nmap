@@ -1526,12 +1526,14 @@ char *ipidclass2ascii(int seqclass) {
     return "Duplicated ipid (!)";
   case IPID_SEQ_INCR:
     return "Incremental";
+  case IPID_SEQ_BROKEN_INCR:
+    return "Broken little-endian incremental";
   case IPID_SEQ_RD:
     return "Randomized";
   case IPID_SEQ_RPI:
     return "Random positive increments";
   case IPID_SEQ_UNKNOWN:
-    return "Unknown class";
+    return "Busy server or unknown class)";
   default:
     return "ERROR, WTF?";
   }
@@ -1541,10 +1543,14 @@ char *tsseqclass2ascii(int seqclass) {
   switch(seqclass) {
   case TS_SEQ_ZERO:
     return "zero timestamp";
+  case TS_SEQ_2HZ:
+    return "2HZ";
   case TS_SEQ_100HZ:
     return "100HZ";
   case TS_SEQ_1000HZ:
     return "1000HZ";
+  case TS_SEQ_UNSUPPORTED:
+    return "none returned (unsupported)";
   case TS_SEQ_UNKNOWN:
     return "unknown class";
   default:

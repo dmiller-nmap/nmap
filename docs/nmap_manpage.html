@@ -430,19 +430,33 @@
               fingerprint  if  you know (for sure) the OS running
               on the machine.  By doing this  you  contribute  to
               the  pool  of  operating  systems known to nmap and
-              thus it will be more accurate for everyone.
+              thus it will be more accurate for  everyone.   Note
+              that  if  you  leave an IP address on the form, the
+              machine may be scanned when we add the  fingerprint
+              (to validate that it works).
 
-              The  -O  option  also  enables  TCP  Sequence  Pre-
+              The  -O  option  also  enables several other tests.
+              One is the "Uptime" measurement, which uses the TCP
+              timestamp option (RFC 1323) to guess when a machine
+              was last  rebooted.   This  is  only  reported  for
+              machines which provide this information.
+
+              Another  test  enabled  by  -O is TCP Sequence Pre-
               dictability Classification.  This is a measure that
               describes approximately how hard it is to establish
-              a  forged  TCP  connection against the remote host.
+              a forged TCP connection against  the  remote  host.
               This is useful for exploiting source-IP based trust
-              relationships  (rlogin,  firewall  filters, etc) or
-              for hiding the source of  an  attack.   The  actual
-              difficulty  number is based on statistical sampling
-              and may fluctuate.  It is generally better  to  use
-              the  English  classification  such as "worthy chal-
-              lenge" or "trivial joke".
+              relationships (rlogin, firewall  filters,  etc)  or
+              for  hiding  the  source  of an attack.  The actual
+              difficulty number is based on statistical  sampling
+              and  may  fluctuate.  It is generally better to use
+              the English classification such  as  "worthy  chal-
+              lenge" or "trivial joke".  This is only reported in
+              normal output with -v.
+
+              When verbose mode (-v) is on with -O, IPID Sequence
+              Generation  is also reported.  Most machines are in
+              the
 
        <B>-I</B>     This turns on TCP reverse ident scanning. As  noted
               by Dave Goldsmith in a 1996 Bugtraq post, the ident
@@ -458,6 +472,17 @@
               port  found.  Obviously this won't work if the host
               is not running identd.
 
+
+
+                                                                7
+
+
+
+
+
+<B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
+
+
        <B>-f</B>     This option causes the requested SYN, FIN, XMAS, or
               NULL  scan  to use tiny fragmented IP packets.  The
               idea is to split up the  TCP  header  over  several
@@ -471,18 +496,6 @@
               method won't get by packet  filters  and  firewalls
               that   queue   all  IP  fragments  (like  the  CON-
               FIG_IP_ALWAYS_DEFRAG option in the  Linux  kernel),
-
-
-
-                                                                7
-
-
-
-
-
-<B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
-
-
               some networks can't afford the performance hit this
               causes and thus leave it disabled.
 
@@ -524,6 +537,18 @@
               This  simple format provides all the information on
               one line (so you can easily grep  for  port  or  OS
               information  and  see all the IPs.  This used to be
+
+
+
+                                                                8
+
+
+
+
+
+<B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
+
+
               the preferred mechanism for  programs  to  interact
               with  Nmap,  but  now  we recommend XML output (-oX
               instead).  This simple format may  not  contain  as
@@ -537,18 +562,6 @@
 
        <B>-oS</B> <B>&lt;logfilename&gt;</B>
               thIs  l0gz  th3  r3suLtS  of YouR ScanZ iN a <B>s|&lt;ipT</B>
-
-
-
-                                                                8
-
-
-
-
-
-<B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
-
-
               <B>kiDd|3</B> f0rM iNto THe fiL3 U sPecfy 4s an  arGuMEnT!
               U  kAn  gIv3  the  4rgument '-' (wItHOUt qUOteZ) to
               sh00t output iNT0 stDouT!@!!
@@ -590,6 +603,18 @@
               ports  between  1  and  1024  as  well as any ports
               listed in the services file which comes with  nmap.
               For  IP protocol scanning (-sO), this specifies the
+
+
+
+                                                                9
+
+
+
+
+
+<B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
+
+
               protocol number you wish to scan for (0-255).
 
        <B>-F</B> <B>Fast</B> <B>scan</B> <B>mode.</B>
@@ -603,18 +628,6 @@
               Causes a decoy scan to be performed which makes  it
               appear  to  the  remote  host  that the host(s) you
               specify as decoys are scanning the  target  network
-
-
-
-                                                                9
-
-
-
-
-
-<B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
-
-
               too.   Thus  their IDS might report 5-10 port scans
               from unique IP addresses, but they won't know which
               IP  was  scanning  them  and  which  were  innocent
@@ -656,6 +669,18 @@
               Decoys  are  used  both  in  the  initial ping scan
               (using ICMP, SYN, ACK, or whatever) and during  the
               actual  port  scanning phase.  Decoys are also used
+
+
+
+                                                               10
+
+
+
+
+
+<B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
+
+
               during remote OS detection ( <B>-O</B> ).
 
               It is worth noting that using too many  decoys  may
@@ -669,18 +694,6 @@
               determine  your source address ( <I>nmap</I> will tell you
               if this is the case).  In this  situation,  use  -S
               with  your IP address (of the interface you wish to
-
-
-
-                                                               10
-
-
-
-
-
-<B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
-
-
               send packets through).
 
               Another possible use of this flag is to  spoof  the
@@ -719,6 +732,25 @@
               sometimes  store  useful  information in the source
               port number.
 
+       <B>-n</B>     Tells Nmap to <B>NEVER</B> do reverse  DNS  resolution  on
+              the  active  IP  addresses  it finds.  Since DNS is
+              often slow, this can help speed things up.
+
+
+
+                                                               11
+
+
+
+
+
+<B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
+
+
+       <B>-R</B>     Tells Nmap to <B>ALWAYS</B> do reverse DNS  resolution  on
+              the  target  IP  addresses.   Normally this is only
+              done when a machine is found to be alive.
+
        <B>-r</B>     Tells Nmap <B>NOT</B> to  randomize  the  order  in  which
               ports are scanned.
 
@@ -735,18 +767,6 @@
               default).   This  is useful to slow down the scan a
               little bit  and  avoid  crashing  remote  machines.
               Another  approach is to use -sS, which is generally
-
-
-
-                                                               11
-
-
-
-
-
-<B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
-
-
               easier for machines to handle.
 
        <B>TIMING</B> <B>OPTIONS</B>
@@ -781,6 +801,18 @@
               hosts  in 75 seconds and only waits 0.3 seconds for
               individual probes.  It does allow  for  very  quick
               network  sweeps  though :).  You can also reference
+
+
+
+                                                               12
+
+
+
+
+
+<B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
+
+
               these by number (0-5).  For example, '-T  0'  gives
               you Paranoid mode and '-T 5' is Insane mode.
 
@@ -799,19 +831,6 @@
               allowed   to  wait  for  a  probe  response  before
               retransmitting or timing out that particular probe.
               The default mode sets this to about 9000.
-
-
-
-
-
-                                                               12
-
-
-
-
-
-<B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
-
 
        <B>--min_rtt_timeout</B> <B>&lt;milliseconds&gt;</B>
               When  the target hosts start to establish a pattern
@@ -850,6 +869,18 @@
        Everything  that  isn't  an option (or option argument) in
        nmap is treated as a target host specification.  The  sim-
        plest  case is listing single hostnames or IP addresses on
+
+
+
+                                                               13
+
+
+
+
+
+<B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
+
+
        the command line.  If you want to  scan  a  subnet  of  IP
        addresses,  you  can  append <B>'/mask'</B> to the hostname or IP
        address.  <B>mask</B> must be between 0 (scan the whole internet)
@@ -869,17 +900,6 @@
        Another interesting thing to do is slice the Internet  the
        other  way.   Instead of scanning all the hosts in a class
        specifying hosts to scan, see the <I>examples</I> section.
-
-
-
-                                                               13
-
-
-
-
-
-<B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
-
 
 
 </PRE>
@@ -916,9 +936,21 @@
        255  possible  8  bit  subnets  in  the  198.116 class 'B'
        address space.  We are testing  whether  the  systems  run
        sshd,  DNS,  pop3d,  imapd,  or port 4564.  Note that Xmas
-       scan doesn't work on Microsoft boxes due  to  their  defi-
-       cient  TCP  stack.  Same goes with CISCO, IRIX, HP/UX, and
-       BSDI boxes.
+       scan  doesn't  work  on  Microsoft  boxes  due  to   their
+
+
+
+                                                               14
+
+
+
+
+
+<B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
+
+
+       deficient  TCP  stack.  Same goes with CISCO, IRIX, HP/UX,
+       and BSDI boxes.
 
        <B>nmap</B> <B>-v</B> <B>--randomize_hosts</B> <B>-p</B> <B>80</B> <B>'*.*.2.3-5'</B>
 
@@ -937,17 +969,6 @@
        and then feed the IP addresses to <I>nmap.</I>   The  above  com-
        mands  are  for  my GNU/Linux box.  You may need different
        commands/options on other operating systems.
-
-
-
-                                                               14
-
-
-
-
-
-<B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
-
 
 
 </PRE>
@@ -988,6 +1009,18 @@
 
        Source  is  provided  to  this software because we believe
        users have a right to know exactly what a program is going
+
+
+
+                                                               15
+
+
+
+
+
+<B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
+
+
        to  do  before they run it.  This also allows you to audit
        the software for security holes (none have been  found  so
        far).
@@ -1009,18 +1042,6 @@
        This  program  is  distributed in the hope that it will be
        useful, but <B>WITHOUT</B> <B>ANY</B> <B>WARRANTY;</B> without even the implied
        warranty  of  <B>MERCHANTABILITY</B>  or <B>FITNESS</B> <B>FOR</B> <B>A</B> <B>PARTICULAR</B>
-
-
-
-                                                               15
-
-
-
-
-
-<B>NMAP(1)</B>                                                   <B>NMAP(1)</B>
-
-
        <B>PURPOSE.</B>  See the GNU  General  Public  License  for  more
        details  (it  is in the COPYING file of the <I>nmap</I> distribu-
        tion).
@@ -1047,27 +1068,6 @@
        believed  to be Year 2000 (Y2K) compliant in all respects.
        There is no reason to believe versions  earlier  than  2.0
        are  susceptible to problems, but we have not tested them.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

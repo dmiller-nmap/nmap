@@ -1,15 +1,8 @@
 # Nmap Changelog
 
--- Show actual IPID and TCP ISN values in XML format output rather than just
-   the cooked results.
-
--- Suppress IPID and TCP ISN predictability report unless you use -v
-   (you need -O as well).
-
--- Added TCP Timestamp sequence checking for OS detection and uptime tests.
-
--- Added IPID sequence number predictability report (also now used in
-   OS detection).
+** 2.54BETA20 
+-- Added TCP Timestamp sequence checking for OS detection and
+   Netcraft-style uptime tests.
 
 -- Found and fixed (I hope) byte alignment problem which was causing
    bus errors on SPARC64 ( reported by H D Moore (hdm@secureaustin.com)
@@ -17,6 +10,15 @@
 
 -- Applied Darwin (Mac OS X) 1.2 portability patch from 
    Rob Braun <bbraun@synack.net>
+
+-- Added IPID sequence number predictability report (also now used in
+   OS detection).
+
+-- Show actual IPID, TCP ISN, and TCP timestamp values in XML format
+   output rather than just the cooked results.
+
+-- Suppress IPID and TCP ISN predictability report unless you use -v
+   (you need -O as well).
 
 -- Applied Solaris 8 compilation fixes from Germano Caronni 
    ( caronni@batfax.olymp.org )

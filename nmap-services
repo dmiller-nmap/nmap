@@ -1096,6 +1096,7 @@ mdbs_daemon       800/udp    #
 device            801/tcp    # 
 device            801/udp    # 
 supfilesrv        871/tcp    # SUP server
+rsync             873/tcp    # Rsync server ( http://rsync.samba.org )
 accessbuilder     888/tcp    # or Audio CD Database
 accessbuilder     888/udp    # 
 ftps-data         989/tcp    # ftp protocol, data, over TLS/SSL

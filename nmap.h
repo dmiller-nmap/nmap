@@ -295,15 +295,19 @@ void *realloc();
 /* TCP Timestamp Sequence */
 #define TS_SEQ_UNKNOWN 0
 #define TS_SEQ_ZERO 1 /* At least one of the timestamps we received back was 0 */
-#define TS_SEQ_100HZ 2
-#define TS_SEQ_1000HZ 3
+#define TS_SEQ_2HZ 2
+#define TS_SEQ_100HZ 3
+#define TS_SEQ_1000HZ 4
+#define TS_SEQ_UNSUPPORTED 5 /* System didn't send back a timestamp */
 
 #define IPID_SEQ_UNKNOWN 0
 #define IPID_SEQ_INCR 1  /* simple increment by one each time */
-#define IPID_SEQ_RPI 2 /* Goes up each time but by a "random" positive 
+#define IPID_SEQ_BROKEN_INCR 2 /* Stupid MS -- forgot htons() so it 
+                                  counts by 256 on little-endian platforms */
+#define IPID_SEQ_RPI 3 /* Goes up each time but by a "random" positive 
                           increment */
-#define IPID_SEQ_RD 3 /* Appears to select IPID using a "random" distributions (meaning it can go up or down) */
-#define IPID_SEQ_CONSTANT 4 /* Contains 1 or more sequential duplicates */
+#define IPID_SEQ_RD 4 /* Appears to select IPID using a "random" distributions (meaning it can go up or down) */
+#define IPID_SEQ_CONSTANT 5 /* Contains 1 or more sequential duplicates */
 
 #ifndef MAXHOSTNAMELEN
 #define MAXHOSTNAMELEN 64
