@@ -560,7 +560,7 @@ match smtp m/^220 [-.+\w]+ ESMTP Server \(Microsoft Exchange Internet Mail Servi
 match smtp m/^220 [-.+\w]+ ESMTP Sendmail (\d[^;]+);/ v/Sendmail/$1//
 match smtp m|^220 [-.+\w]+ SMTP Sendmail ([-/.+\w]+)\r\n| v/Sendmail/$1//
 match smtp m|^220 [-.+\w]+ Sendmail (SMI-\S+) ready at .*\r\n$| v/Sendmail/$1//
-match smtp m/^220[- ][-.+\w]+ ESMTP Exim (\d\S+)/ v/Exim smtpd/$1//
+match smtp m/^220[- ][^\r\n]+ ESMTP Exim (\d\S+)/ v/Exim smtpd/$1//
 match smtp m/Failed to open configuration file.*exim/ v/Exim smtpd///
 match smtp m/^220 CheckPoint FireWall-1 secure ESMTP server\r\n$/ v/Checkpoint FireWall-1 smtpd///
 match smtp m/^220 CheckPoint FireWall-1 secure SMTP server\r\n$/ v/Checkpoint FireWall-1 smtpd///
@@ -595,6 +595,11 @@ match smtp m|^220 [-.\w]+ WebSTAR Mail Simple Mail Transfer Service Ready\r\n| v
 match smtp m|^220 [-.\w]+ Lotus SMTP MTA Service Ready\r\n$| v/Lotus Notes SMTP///
 match smtp m|^220 [-.\w]+ SMTP NAVGW (\d[-.\w]+);| v/Norton Antivirus Gateway NAVGW/$1//
 match smtp m|^220 ([-.\w]+) Kerio MailServer (\d[-.\w]+) ESMTP ready\r\n$| v/Kerio MailServer/$1/$2/
+match smtp m|^220 YSmtp \S+ ESMTP service ready| v/Yahoo! MTA///
+match smtp m|^220 \S+ GMX Mailservices ESMTP| v/GMX MTA///
+match smtp m|214 2\.0\.0 http://www\.google\.com/search.*RFC\+2821\s*\r?\n| v/Google SMTP///
+match smtp m|^220 \S+ ESMTP MailMax (\d[-.\w\d]+)| v/MailMax/$1// 
+match smtp m|^220 Welcome to the INDY SMTP Server\r\n$| v/INDY smtpd/// 
 softmatch smtp m|^220 [-.\w ]+SMTP.*\r\n|
 
 match snpp m|^220 [-.\w]+ SNPP server \(HylaFAX \(tm\) Version ([-.\w]+)\) ready.\r\n| v/HylaFAX SNPP/$1//
@@ -1074,7 +1079,7 @@ match http m|^HTTP/1\.0 \d\d\d .*\nMime-Version: .*\nServer: LispWeb (\d[-.\w]+)
 match http m|^HTTP/1\.0 \d\d\d .*\r\nServer: WDaemon/(\d[-.\w]+)\r\n| v/Alt-N MDaemon World Client webmail/$1//
 # pop3proxy web interface from spambayes 1.0a5 on Linux
 match http m|^HTTP/1\.1 \d\d\d .*\r\nConnection: close\r\nContent-Type: text/html\r\nDate: .*\r\n\r\n<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4\.01 Transitional//EN\">\r\n<html>\r\n<head>\r\n<title id=\"title\">Home</title>\r\n<meta content=\"no-cache\" http-equiv=\"Pragma\"/>\r\n<meta content=\"no-cache\" http-equiv=\"Cache\"/>\r\n| v/Spambayes pop3proxy web interface///
-match http m|^HTTP/1\.[01] \d\d\d .*\r\nServer: Zope/\(Zope (\d[-.\w]+) \(([^\)]+)\), ([^\r]+)\r\n|s v/Zope application server/$1/$2; $3/
+match http m|^HTTP/1\.[01] \d\d\d .*\r\nServer: Zope/\((?:Zope )?([\d\w][^\,\)]+),?\s*([^\)]+)\)\S*\s+([^\r]+)\r\n|s v/Zope/$1/$2; $3/
 # Oracle XML Database - SuSe Linux 8.1 Personal, Linux 2.4.19, Oracle9i Database
 match http m|^HTTP/1\.1 \d\d\d .*\r\nServer: Oracle XML DB/(Oracle[\w]+ Enterprise Edition Release) (\d[-.\w]+) |s v/Oracle XML DB webserver/$2/$1/
 match http m|^HTTP/1\.1 \d\d\d .*\r\nDate: .*\r\nServer: Oracle9iAS \((\d[-.\w]+)\) Containers for J2EE\r\n| v/Oracle 9iAS J2EE webserver/$1//
@@ -1646,6 +1651,7 @@ match smtp m|^220 .*\r\n502 Error: command not implemented\r\n$| v/Postfix smtpd
 # Courier ESMTP courier-0.42.0-1.7.3
 match smtp m|^220 [-.\w]+ ESMTP\r\n502 ESMTP command error\r\n$| v/Courier smtpd///
 match smtp m|^220 [-.\w]+ ESMTP Sendmail ([^;]{3,50})| v/Sendmail smtpd/$1//
+match smtp m|^220 [-.\w]+ ESMTP Sendmail;| v/Sendmail smtpd///
 match smtp m|220.*214-2\.0\.0 This is sendmail version ([-+.\w]+)\r\n214-2\.0\.0 Topics:\r\n214-2\.0\.0|s v/Sendmail smtpd/$1//
 match smtp m|^220.* Sendmail (\d[-.\w]+) -- HELP not implemented\r\n|s v/Sendmail/$1//
 match tcpmux m|^(sgi_[-.\w]+\r\n([-.\w]+\r\n)*)$| v/SGI IRIX tcpmux//Available services: $SUBST(1, "\r\n", ",")/

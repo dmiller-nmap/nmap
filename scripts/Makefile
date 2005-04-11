@@ -27,3 +27,4 @@ web:
 	./produceosclasschoosebox.pl ../nmap-os-fingerprints > $(wroot)/nmap/data/os-classes.txt
 	./sign_release.pl $(wroot)/nmap/dist
 	find $(wroot)/nmap/data/ -type f -exec chmod 644 '{}' \;
+	find $(wroot)/nmap/dist/sigs -type f -exec chmod 644 '{}' \;
