@@ -5,7 +5,7 @@
  *                                                                         *
  ***********************IMPORTANT NMAP LICENSE TERMS************************
  *                                                                         *
- * The Nmap Security Scanner is (C) 1996-2008 Insecure.Com LLC. Nmap is    *
+ * The Nmap Security Scanner is (C) 1996-2011 Insecure.Com LLC. Nmap is    *
  * also a registered trademark of Insecure.Com LLC.  This program is free  *
  * software; you may redistribute and/or modify it under the terms of the  *
  * GNU General Public License as published by the Free Software            *
@@ -27,25 +27,16 @@
  *   nmap-os-db or nmap-service-probes.                                    *
  * o Executes Nmap and parses the results (as opposed to typical shell or  *
  *   execution-menu apps, which simply display raw Nmap output and so are  *
- *   not derivative works.)                                                * 
+ *   not derivative works.)                                                *
  * o Integrates/includes/aggregates Nmap into a proprietary executable     *
  *   installer, such as those produced by InstallShield.                   *
  * o Links to a library or executes a program that does any of the above   *
  *                                                                         *
  * The term "Nmap" should be taken to also include any portions or derived *
- * works of Nmap.  This list is not exclusive, but is just meant to        *
- * clarify our interpretation of derived works with some common examples.  *
- * These restrictions only apply when you actually redistribute Nmap.  For *
- * example, nothing stops you from writing and selling a proprietary       *
- * front-end to Nmap.  Just distribute it by itself, and point people to   *
- * http://nmap.org to download Nmap.                                       *
- *                                                                         *
- * We don't consider these to be added restrictions on top of the GPL, but *
- * just a clarification of how we interpret "derived works" as it applies  *
- * to our GPL-licensed Nmap product.  This is similar to the way Linus     *
- * Torvalds has announced his interpretation of how "derived works"        *
- * applies to Linux kernel modules.  Our interpretation refers only to     *
- * Nmap - we don't speak for any other GPL products.                       *
+ * works of Nmap.  This list is not exclusive, but is meant to clarify our *
+ * interpretation of derived works with some common examples.  Our         *
+ * interpretation applies only to Nmap--we don't speak for other people's  *
+ * GPL works.                                                              *
  *                                                                         *
  * If you have any questions about the GPL licensing restrictions on using *
  * Nmap in non-GPL works, we would be happy to help.  As mentioned above,  *
@@ -59,8 +50,8 @@
  * As a special exception to the GPL terms, Insecure.Com LLC grants        *
  * permission to link the code of this program with any version of the     *
  * OpenSSL library which is distributed under a license identical to that  *
- * listed in the included COPYING.OpenSSL file, and distribute linked      *
- * combinations including the two. You must obey the GNU GPL in all        *
+ * listed in the included docs/licenses/OpenSSL.txt file, and distribute   *
+ * linked combinations including the two. You must obey the GNU GPL in all *
  * respects for all of the code used other than OpenSSL.  If you modify    *
  * this file, you may extend this exception to your version of the file,   *
  * but you are not obligated to do so.                                     *
@@ -76,17 +67,17 @@
  *                                                                         *
  * Source code also allows you to port Nmap to new platforms, fix bugs,    *
  * and add new features.  You are highly encouraged to send your changes   *
- * to fyodor@insecure.org for possible incorporation into the main         *
+ * to nmap-dev@insecure.org for possible incorporation into the main       *
  * distribution.  By sending these changes to Fyodor or one of the         *
  * Insecure.Org development mailing lists, it is assumed that you are      *
- * offering Fyodor and Insecure.Com LLC the unlimited, non-exclusive right *
- * to reuse, modify, and relicense the code.  Nmap will always be          *
- * available Open Source, but this is important because the inability to   *
- * relicense code has caused devastating problems for other Free Software  *
- * projects (such as KDE and NASM).  We also occasionally relicense the    *
- * code to third parties as discussed above.  If you wish to specify       *
- * special license conditions of your contributions, just say so when you  *
- * send them.                                                              *
+ * offering the Nmap Project (Insecure.Com LLC) the unlimited,             *
+ * non-exclusive right to reuse, modify, and relicense the code.  Nmap     *
+ * will always be available Open Source, but this is important because the *
+ * inability to relicense code has caused devastating problems for other   *
+ * Free Software projects (such as KDE and NASM).  We also occasionally    *
+ * relicense the code to third parties as discussed above.  If you wish to *
+ * specify special license conditions of your contributions, just say so   *
+ * when you send them.                                                     *
  *                                                                         *
  * This program is distributed in the hope that it will be useful, but     *
  * WITHOUT ANY WARRANTY; without even the implied warranty of              *
@@ -105,6 +96,7 @@
 #include "nmap.h"
 #include "global_structures.h"
 #include "FingerPrintResults.h"
+#include "Target.h"
 
 #define OSSCAN_SUCCESS 0
 #define OSSCAN_NOMATCHES -1
@@ -118,6 +110,13 @@
 /* moved to global_structures.h */
 
 /**********************  PROTOTYPES  ***********************************/
+
+/* The OS database consists of many small strings, many of which appear
+   thousands of times. It pays to allocate memory only once for each unique
+   string, and have all references point at the one allocated value. */
+const char *string_pool_insert(const char *s);
+const char *string_pool_sprintf(const char *fmt, ...);
+
 const char *fp2ascii(FingerPrint *FP);
 
 /* Parses a single fingerprint from the memory region given.  If a
@@ -140,22 +139,32 @@ void free_fingerprint_file(FingerPrintDB *DB);
    verbose is nonzero, differences will be printed.  The comparison
    accuracy (between 0 and 1) is returned).  If MatchPoints is not NULL, it is 
    a special "fingerprints" which tells how many points each test is worth. */
-double compare_fingerprints(FingerPrint *referenceFP, FingerPrint *observedFP,
-			    FingerPrint *MatchPoints, int verbose);
+double compare_fingerprints(const FingerPrint *referenceFP, const FingerPrint *observedFP,
+			    const FingerPrint *MatchPoints, int verbose);
 
 /* Takes a fingerprint and looks for matches inside the passed in
    reference fingerprint DB.  The results are stored in in FPR (which
-   must point to an instantiated FingerPrintResults class) -- results
+   must point to an instantiated FingerPrintResultsIPv4 class) -- results
    will be reverse-sorted by accuracy.  No results below
    accuracy_threshhold will be included.  The max matches returned is
-   the maximum that fits in a FingerPrintResults class.  */
-void match_fingerprint(FingerPrint *FP, FingerPrintResults *FPR, 
-		       FingerPrintDB *DB, double accuracy_threshold);
+   the maximum that fits in a FingerPrintResultsIPv4 class.  */
+void match_fingerprint(const FingerPrint *FP, FingerPrintResultsIPv4 *FPR,
+		       const FingerPrintDB *DB, double accuracy_threshold);
 
 /* Returns true if perfect match -- if num_subtests & num_subtests_succeeded are non_null it updates them.  if shortcircuit is zero, it does all the tests, otherwise it returns when the first one fails */
 
 void freeFingerPrint(FingerPrint *FP);
-const char *mergeFPs(FingerPrint *FPs[], int numFPs, bool isGoodFP, const struct in_addr * const addr, int distance, const u8 *mac, int openTcpPort, int closedTcpPort, int closedUdpPort, bool wrapit);
+void WriteSInfo(char *ostr, int ostrlen, bool isGoodFP,
+                                const char *engine_id,
+                                const struct sockaddr_storage *addr, int distance,
+                                enum dist_calc_method distance_calculation_method,
+                                const u8 *mac, int openTcpPort,
+                                int closedTcpPort, int closedUdpPort);
+const char *mergeFPs(FingerPrint *FPs[], int numFPs, bool isGoodFP,
+                           const struct sockaddr_storage *addr, int distance,
+                           enum dist_calc_method distance_calculation_method,
+                           const u8 *mac, int openTcpPort, int closedTcpPort,
+                           int closedUdpPort, bool wrapit);
 
 #endif /*OSSCAN_H*/
 

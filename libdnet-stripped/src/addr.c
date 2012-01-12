@@ -5,10 +5,10 @@
  *
  * Copyright (c) 2000 Dug Song <dugsong@monkey.org>
  *
- * $Id: addr.c,v 1.33 2005/01/23 07:36:54 dugsong Exp $
+ * $Id: addr.c 610 2005-06-26 18:23:26Z dugsong $
  */
 
-#ifdef _WIN32
+#ifdef WIN32
 #include "dnet_winconfig.h"
 #else
 #include "config.h"
@@ -250,15 +250,23 @@ addr_ntos(const struct addr *a, struct sockaddr *sa)
 	case ADDR_TYPE_ETH:
 #ifdef HAVE_NET_IF_DL_H
 		memset(&so->sdl, 0, sizeof(so->sdl));
-#ifdef HAVE_SOCKADDR_SA_LEN
+# ifdef HAVE_SOCKADDR_SA_LEN
 		so->sdl.sdl_len = sizeof(so->sdl);
-#endif
+# endif
+# ifdef AF_LINK
 		so->sdl.sdl_family = AF_LINK;
+# else
+		so->sdl.sdl_family = AF_UNSPEC;
+# endif
 		so->sdl.sdl_alen = ETH_ADDR_LEN;
 		memcpy(LLADDR(&so->sdl), &a->addr_eth, ETH_ADDR_LEN);
 #else
 		memset(sa, 0, sizeof(*sa));
+# ifdef AF_LINK
+		sa->sa_family = AF_LINK;
+# else
 		sa->sa_family = AF_UNSPEC;
+# endif
 		memcpy(sa->sa_data, &a->addr_eth, ETH_ADDR_LEN);
 #endif
 		break;
@@ -296,6 +304,7 @@ addr_ston(const struct sockaddr *sa, struct addr *a)
 	
 	switch (sa->sa_family) {
 #ifdef HAVE_NET_IF_DL_H
+# ifdef AF_LINK
 	case AF_LINK:
 		if (so->sdl.sdl_alen != ETH_ADDR_LEN) {
 			errno = EINVAL;
@@ -305,6 +314,7 @@ addr_ston(const struct sockaddr *sa, struct addr *a)
 		a->addr_bits = ETH_ADDR_BITS;
 		memcpy(&a->addr_eth, LLADDR(&so->sdl), ETH_ADDR_LEN);
 		break;
+# endif
 #endif
 	case AF_UNSPEC:
 	case ARP_HRD_ETH:	/* XXX- Linux arp(7) */
@@ -381,11 +391,17 @@ addr_stob(const struct sockaddr *sa, uint16_t *bits)
 	} else
 #endif
 	{
-#ifdef HAVE_SOCKADDR_SA_LEN
-		if ((len = sa->sa_len - IP_ADDR_LEN) > IP_ADDR_LEN)
-#endif
-		len = IP_ADDR_LEN;
 		p = (u_char *)&so->sin.sin_addr.s_addr;
+#ifdef HAVE_SOCKADDR_SA_LEN
+		len = sa->sa_len - ((void *) p - (void *) sa);
+		/* Handles the special case of sa->sa_len == 0. */
+		if (len < 0)
+			len = 0;
+		else if (len > IP_ADDR_LEN)
+			len = IP_ADDR_LEN;
+#else
+		len = IP_ADDR_LEN;
+#endif
 	}
 	for (n = i = 0; i < len; i++, n += 8) {
 		if (p[i] != 0xff)

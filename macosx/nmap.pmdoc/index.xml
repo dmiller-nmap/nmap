@@ -14,12 +14,32 @@
     <choice title="Nmap" id="choice92" starts_selected="true"
     description="Nmap executables, scripts, and support files."
     starts_enabled="true" starts_hidden="false">
-      <pkgref id="org.insecure.nmap.nmap.pkg" />
+      <pkgref id="org.insecure.nmap.Nmap.pkg" />
     </choice>
     <choice title="Zenmap" id="choice93" starts_selected="true"
     description="Zenmap graphical frontend."
     starts_enabled="true" starts_hidden="false">
-      <pkgref id="org.insecure.nmap.zenmap.pkg" />
+      <pkgref id="org.insecure.nmap.Zenmap.pkg" />
+    </choice>
+    <choice title="Ncat" id="choice94" starts_selected="true"
+    description="Ncat general-purpose network sender and receiver (reimplementation of Netcat)."
+    starts_enabled="true" starts_hidden="false">
+      <pkgref id="org.insecure.nmap.Ncat.pkg" />
+    </choice>
+    <choice title="Ndiff" id="choice95" starts_selected="true"
+    description="Ndiff scan comparison utility."
+    starts_enabled="true" starts_hidden="false">
+      <pkgref id="org.insecure.nmap.Ndiff.pkg" />
+    </choice>
+    <choice title="Nping" id="choice96" starts_selected="true"
+    description="Nping packet generator."
+    starts_enabled="true" starts_hidden="false">
+      <pkgref id="org.insecure.nmap.Nping.pkg" />
+    </choice>
+    <choice title="nmap-update" id="choice97" starts_selected="true"
+    description="nmap-update updater for architecture-independent files."
+    starts_enabled="true" starts_hidden="false">
+      <pkgref id="org.insecure.nmap.nmap-update.pkg" />
     </choice>
   </contents>
   <resources bg-scale="none" bg-align="topleft">
@@ -31,6 +51,10 @@
   <flags />
   <item type="file">01nmap.xml</item>
   <item type="file">02zenmap.xml</item>
+  <item type="file">03ncat.xml</item>
+  <item type="file">04ndiff.xml</item>
+  <item type="file">05nping.xml</item>
+  <item type="file">06nmap-update.xml</item>
   <mod>properties.customizeOption</mod>
   <mod>properties.title</mod>
   <mod>properties.anywhereDomain</mod>

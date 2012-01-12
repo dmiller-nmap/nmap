@@ -1,103 +1,124 @@
--- See nmaps COPYING for license
-module("tab" ,package.seeall)
+---
+-- Arrange output into tables.
+--
+-- This module provides NSE scripts with a way to output structured tables
+-- similar to what <code>NmapOutputTable.cc</code> provides.
+--
+-- Example usage:
+-- <code>
+-- local t = tab.new()
+-- tab.add(t, 1, 'A1')
+-- tab.add(t, 2, 'A2')
+-- tab.nextrow(t)
+-- tab.add(t, 1, 'BBBBBBBBB1')
+-- tab.add(t, 2, 'BBB2')
+-- tab.nextrow(t)
+-- tab.addrow(t, 'C1', 'C2')
+-- tab.dump(t)
+-- </code>
+--
+-- <code>tab.add</code> works on the bottom-most row until
+-- <code>tab.nextrow</code> is called. Think of <code>tab.nextrow</code> as
+-- typing Enter at the end of a line. <code>tab.addrow</code> adds a whole row
+-- at a time and calls <code>tab.nextrow</code> automatically.
+--
+-- @copyright Same as Nmap--See http://nmap.org/book/man-legal.html
 
---[[ Provide NSE scripts with a way to output structured tables similar to
-     NmapOutputTable.cc. See end for an example on how to use it. --]]
+module(... or "tab", package.seeall)
 
 require('strbuf')
 
---[[ Create and return a new table with a number of columns equal to col and
-     the row counter set to 1 --]]
-function new(cols)
-	assert(cols > 0)
-	local table ={}
+--- Create and return a new table.
+-- @return A new table.
+function new()
+	local t = {}
 
-	table['cols'] = cols
-	table['rows'] = 1
-	setmetatable(table, {__tostring=dump})
-	return table
+	t.current_row = 1
+	setmetatable(t, {__tostring=dump})
+	return t
 end
 
---[[ Add a new string item (v) in a previously initialised table (t)
-     at column position 'c'. The data will be added to the current 
-     row, if nextrow() hasn't been called yet that will be row 1 --]]
+--- Add a new string item to a table at a given column position.
+--
+-- The item will be added to the current row. If <code>nextrow</code> hasn't
+-- been called yet that will be row 1.
+-- @param t The table.
+-- @param v The string to add.
+-- @param c The column position at which to add the item.
 function add(t, c, v)
 	assert(t)
-	assert(v)
-	assert(t['rows'])
-	assert(t['cols'])
 	assert(type(v) == "string")
 
-	if c < 1 or c > t['cols'] then
-		return false
-	end
-
 	-- add a new row if one doesn't exist
-	if t[t['rows']] == nil then
-		t[t['rows']] = {}
-	end
+	t[t.current_row] = t[t.current_row] or {}
 
-	t[t['rows']][c] = v
+	t[t.current_row][c] = v
 	return true
 end
 
---[[ Move on to the next row in the table. If this is not called
-     then previous column values will be over-written by subsequent
-     values. --]]
+--- Add a complete row to the table and move on to the next row.
+--
+-- Calls <code>add</code> for each argument starting with the second argument
+-- and after that calls <code>nextrow</code>.
+-- @param t The table.
+-- @param ... The elements to add to the row.
+function addrow(t, ...)
+	for i = 1, select("#", ...) do
+		add(t, i, tostring((select(i, ...))))
+	end
+	nextrow(t)
+end
+
+--- Move on to the next row in the table. If this is not called
+-- then previous column values will be over-written by subsequent
+-- values.
+-- @param t The table.
 function nextrow(t)
 	assert(t)
-	assert(t['rows'])
-	t['rows'] = t['rows'] + 1
+	assert(t.current_row)
+	t[t.current_row] = t[t.current_row] or {}
+	t.current_row = t.current_row + 1
 end
 
---[[ Once items have been added to a table, call this to return a
-     string which contains an equally spaced table. Number of spaces 
-     is based on the largest element of a column with an additional
-     two spaces for padding --]]
+--- Return a formatted string representation of the table.
+--
+-- The number of spaces in a column is based on the largest element in the
+-- column with an additional two spaces for padding.
+-- @param t The table.
 function dump(t)
 	assert(t)
-	assert(t['rows'])
-	assert(t['cols'])
 
-	local col_len = {}	
-	local table = strbuf.new()
-	local len
+	local column_width = {}	
+	local num_columns = {}
+	local buf = strbuf.new()
 
-	-- find largest string in column
-	for i=1, t['cols'] do
-		local max = 0
-		for x=1, t['rows'] do
-			if t[x] == nil then t[x] = {} end
-			if t[x][i] ~= nil and string.len(t[x][i]) > max then
-				max = string.len(t[x][i])
+	-- find widest element in each column
+	for i, row in ipairs(t) do
+		num_columns[i] = 0
+		for x, elem in pairs(row) do
+			local elem_width = #elem
+			if not column_width[x] or elem_width > column_width[x] then
+				column_width[x] = elem_width
+			end
+			if x > num_columns[i] then
+				num_columns[i] = x
 			end
 		end
-		col_len[i] = max+2
 	end
 
-	-- build table with padding so all column elements line up
-	for i=1,t['rows'] do
-		for x=1, t['cols'] do
-			if t[i][x] ~= nil then
-				length = string.len(t[i][x])
-				table = table .. t[i][x]
-				table = table .. string.rep(' ', col_len[x]-length)
+	-- build buf with padding so all column elements line up
+	for i, row in ipairs(t) do
+		local text_row = {}
+		for x = 1, num_columns[i] do
+			local elem = row[x] or ""
+			if x < num_columns[i] then
+				text_row[#text_row + 1] = elem .. string.rep(" ", column_width[x] - #elem)
+			else
+				text_row[#text_row + 1] = elem
 			end
 		end
-		table = table .. "\n"
+		buf = buf .. table.concat(text_row, "  ") .. "\n"
 	end
 
-	return strbuf.dump(table)
+	return strbuf.dump(buf)
 end
-
---[[ Example Usage
-
-local t = tab.new(2)
-tab.add(t, 1, 'A1')
-tab.add(t, 2, 'A2')
-tab.nextrow(t)
-tab.add(t, 1, 'BBBBBBBBB1')
-tab.add(t, 2, 'BBB2')
-tab.dump(t)
-
---]]

@@ -7,7 +7,7 @@
  *                                                                         *
  ***********************IMPORTANT NMAP LICENSE TERMS************************
  *                                                                         *
- * The Nmap Security Scanner is (C) 1996-2008 Insecure.Com LLC. Nmap is    *
+ * The Nmap Security Scanner is (C) 1996-2011 Insecure.Com LLC. Nmap is    *
  * also a registered trademark of Insecure.Com LLC.  This program is free  *
  * software; you may redistribute and/or modify it under the terms of the  *
  * GNU General Public License as published by the Free Software            *
@@ -29,25 +29,16 @@
  *   nmap-os-db or nmap-service-probes.                                    *
  * o Executes Nmap and parses the results (as opposed to typical shell or  *
  *   execution-menu apps, which simply display raw Nmap output and so are  *
- *   not derivative works.)                                                * 
+ *   not derivative works.)                                                *
  * o Integrates/includes/aggregates Nmap into a proprietary executable     *
  *   installer, such as those produced by InstallShield.                   *
  * o Links to a library or executes a program that does any of the above   *
  *                                                                         *
  * The term "Nmap" should be taken to also include any portions or derived *
- * works of Nmap.  This list is not exclusive, but is just meant to        *
- * clarify our interpretation of derived works with some common examples.  *
- * These restrictions only apply when you actually redistribute Nmap.  For *
- * example, nothing stops you from writing and selling a proprietary       *
- * front-end to Nmap.  Just distribute it by itself, and point people to   *
- * http://nmap.org to download Nmap.                                       *
- *                                                                         *
- * We don't consider these to be added restrictions on top of the GPL, but *
- * just a clarification of how we interpret "derived works" as it applies  *
- * to our GPL-licensed Nmap product.  This is similar to the way Linus     *
- * Torvalds has announced his interpretation of how "derived works"        *
- * applies to Linux kernel modules.  Our interpretation refers only to     *
- * Nmap - we don't speak for any other GPL products.                       *
+ * works of Nmap.  This list is not exclusive, but is meant to clarify our *
+ * interpretation of derived works with some common examples.  Our         *
+ * interpretation applies only to Nmap--we don't speak for other people's  *
+ * GPL works.                                                              *
  *                                                                         *
  * If you have any questions about the GPL licensing restrictions on using *
  * Nmap in non-GPL works, we would be happy to help.  As mentioned above,  *
@@ -61,8 +52,8 @@
  * As a special exception to the GPL terms, Insecure.Com LLC grants        *
  * permission to link the code of this program with any version of the     *
  * OpenSSL library which is distributed under a license identical to that  *
- * listed in the included COPYING.OpenSSL file, and distribute linked      *
- * combinations including the two. You must obey the GNU GPL in all        *
+ * listed in the included docs/licenses/OpenSSL.txt file, and distribute   *
+ * linked combinations including the two. You must obey the GNU GPL in all *
  * respects for all of the code used other than OpenSSL.  If you modify    *
  * this file, you may extend this exception to your version of the file,   *
  * but you are not obligated to do so.                                     *
@@ -78,17 +69,17 @@
  *                                                                         *
  * Source code also allows you to port Nmap to new platforms, fix bugs,    *
  * and add new features.  You are highly encouraged to send your changes   *
- * to fyodor@insecure.org for possible incorporation into the main         *
+ * to nmap-dev@insecure.org for possible incorporation into the main       *
  * distribution.  By sending these changes to Fyodor or one of the         *
  * Insecure.Org development mailing lists, it is assumed that you are      *
- * offering Fyodor and Insecure.Com LLC the unlimited, non-exclusive right *
- * to reuse, modify, and relicense the code.  Nmap will always be          *
- * available Open Source, but this is important because the inability to   *
- * relicense code has caused devastating problems for other Free Software  *
- * projects (such as KDE and NASM).  We also occasionally relicense the    *
- * code to third parties as discussed above.  If you wish to specify       *
- * special license conditions of your contributions, just say so when you  *
- * send them.                                                              *
+ * offering the Nmap Project (Insecure.Com LLC) the unlimited,             *
+ * non-exclusive right to reuse, modify, and relicense the code.  Nmap     *
+ * will always be available Open Source, but this is important because the *
+ * inability to relicense code has caused devastating problems for other   *
+ * Free Software projects (such as KDE and NASM).  We also occasionally    *
+ * relicense the code to third parties as discussed above.  If you wish to *
+ * specify special license conditions of your contributions, just say so   *
+ * when you send them.                                                     *
  *                                                                         *
  * This program is distributed in the hope that it will be useful, but     *
  * WITHOUT ANY WARRANTY; without even the implied warranty of              *
@@ -104,6 +95,11 @@
 #ifndef TARGETGROUP_H
 #define TARGETGROUP_H
 
+#include <list>
+#include <queue>
+#include <set>
+#include <string>
+
 #include "nmap.h"
 
 class TargetGroup {
@@ -118,9 +114,7 @@ class TargetGroup {
     such as 192.168.0.0/16 , 10.1.0-5.1-254 , or
     fe80::202:e3ff:fe14:1102 .  The af parameter is AF_INET or
     AF_INET6 Returns 0 for success */
-  int parse_expr(const char * const target_expr, int af);
-  /* Reset the object without reinitializing it */
-  int rewind();
+  int parse_expr(const char *target_expr, int af);
   /* Grab the next host from this expression (if any).  Returns 0 and
      fills in ss if successful.  ss must point to a pre-allocated
      sockaddr_storage structure */
@@ -130,6 +124,15 @@ class TargetGroup {
      this if you have fetched at least 1 host since parse_expr() was
      called */
   int return_last_host();
+  /* Returns true iff the given address is the one that was resolved to create
+     this target group; i.e., not one of the addresses derived from it with a
+     netmask. */
+  bool is_resolved_address(const struct sockaddr_storage *ss);
+  /* Return a string of the name or address that was resolved for this group. */
+  const char *get_resolved_name(void);
+  /* Return the list of addresses that the name for this group resolved to, if
+     it came from a name resolution. */
+  const std::list<struct sockaddr_storage> &get_resolved_addrs(void);
   /* return the target type */
   char get_targets_type() {return targets_type;};
   /* get the netmask */
@@ -146,14 +149,17 @@ class TargetGroup {
   struct sockaddr_in6 ip6;
 #endif
 
-  /* These 4 are used for the '/mask' style of specifying target 
+  std::list<struct sockaddr_storage> resolvedaddrs;
+
+  /* These are used for the '/mask' style of specifying target 
      net (IPV4_NETMASK) */
   u32 netmask;
+  std::string resolvedname;
   struct in_addr startaddr;
   struct in_addr currentaddr;
   struct in_addr endaddr;
 
-  // These three are for the '138.[1-7,16,91-95,200-].12.1' style (IPV4_RANGES)
+  // These three are for the '138.1-7,16,91-95,200-.12.1' style (IPV4_RANGES)
   u8 addresses[4][256];
   unsigned int current[4];
   u8 last[4];  
@@ -164,6 +170,50 @@ class TargetGroup {
 
   // is the current target expression a named host
   int namedhost;
+};
+
+/* Adding new targets is for NSE scripts */
+class NewTargets {
+ public:
+  NewTargets();
+
+  /* return a previous inserted target */
+  static std::string read (void);
+
+  /* clear the scanned_targets_cache */
+  static void clear (void);
+
+  /* get the number of all new added targets */
+  static unsigned long get_number (void);
+
+  /* get the number that have been scanned */
+  static unsigned long get_scanned (void);
+
+  /* get the number of queued targets left to scan */
+  static unsigned long get_queued (void);
+
+  /* get the new_targets object */
+  static NewTargets *get (void);
+
+  /* insert targets to the new_targets_queue */
+  static unsigned long insert (const char *target);
+ private:
+  /* unsigned long mex_new_targets; */
+
+  /* A queue to push new targets that were discovered by NSE scripts.
+   * Nmap will pop future targets from this queue. */
+  std::queue<std::string> queue;
+
+  /* A cache to save scanned targets specifiactions.
+   * (These are targets that were pushed to Nmap scan queue) */
+  std::set<std::string> history;
+
+  void Initialize();
+
+  /* Save new targets onto the queue */
+  unsigned long push (const char *target);
+ protected:
+  static NewTargets *new_targets;
 };
 
 class HostGroupState {

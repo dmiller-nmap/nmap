@@ -5,7 +5,7 @@
  *
  * Copyright (c) 2002 Dug Song <dugsong@monkey.org>
  *
- * $Id: ip6.h,v 1.6 2004/02/23 10:01:15 dugsong Exp $
+ * $Id: ip6.h 486 2004-02-23 10:01:15Z dugsong $
  */
 
 #ifndef DNET_IP6_H
@@ -164,8 +164,8 @@ struct ip6_ext_hdr {
 
 #define ip6_pack_hdr(hdr, fc, fl, plen, nxt, hlim, src, dst) do {	\
 	struct ip6_hdr *ip6 = (struct ip6_hdr *)(hdr);			\
-	ip6->ip6_flow = htonl(((uint32_t)(fc) << 28) &			\
-	    (IP6_FLOWLABEL_MASK | (fl)));				\
+	ip6->ip6_flow = htonl(((uint32_t)(fc) << 20) |			\
+	    (0x000fffff & (fl)));					\
 	ip6->ip6_vfc = (IP6_VERSION | ((fc) >> 4));			\
 	ip6->ip6_plen = htons((plen));					\
 	ip6->ip6_nxt = (nxt); ip6->ip6_hlim = (hlim);			\

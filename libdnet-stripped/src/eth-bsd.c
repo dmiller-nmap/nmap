@@ -3,7 +3,7 @@
  *
  * Copyright (c) 2001 Dug Song <dugsong@monkey.org>
  *
- * $Id: eth-bsd.c,v 1.10 2005/01/25 21:30:39 dugsong Exp $
+ * $Id: eth-bsd.c 630 2006-02-02 04:17:39Z dugsong $
  */
 
 #include "config.h"
@@ -47,7 +47,11 @@ eth_open(const char *device)
 	if ((e = calloc(1, sizeof(*e))) != NULL) {
 		for (i = 0; i < 128; i++) {
 			snprintf(file, sizeof(file), "/dev/bpf%d", i);
-			e->fd = open(file, O_WRONLY);
+			/* This would be O_WRONLY, but Mac OS X 10.6 has a bug
+			   where that prevents other users of the interface
+			   from seeing incoming traffic, even in other
+			   processes. */
+			e->fd = open(file, O_RDWR);
 			if (e->fd != -1 || errno != EBUSY)
 				break;
 		}

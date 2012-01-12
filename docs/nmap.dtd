@@ -55,40 +55,44 @@
 <!-- don't know how to escape states like open|filtered -->
 <!ENTITY % port_states "CDATA" >
 
-<!ENTITY % hostname_types "(PTR)" >
+<!ENTITY % hostname_types "(user|PTR)" >
 
 <!-- see output.c:output_xml_scaninfo_records for scan types -->
-<!ENTITY % scan_types "(syn|ack|bounce|connect|null|xmas|window|maimon|fin|udp|ipproto)" >
+<!ENTITY % scan_types "(syn|ack|bounce|connect|null|xmas|window|maimon|fin|udp|sctpinit|sctpcookieecho|ipproto)" >
 
 <!-- <!ENTITY % ip_versions "(ipv4)" > -->
 
-<!ENTITY % port_protocols "(ip|tcp|udp)" >
+<!ENTITY % port_protocols "(ip|tcp|udp|sctp)" >
 
-<!-- I don't know exactly what these are, but the values were enumerated via:
-     grep "conf=" *
+<!-- Service detection confidence level (portlist.h:struct serviceDeductions)
 --> 
-<!ENTITY % service_confs  "( 0 | 3 | 5 | 10)" >
+<!ENTITY % service_confs  "( 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10)" >
 
 <!-- This element was started in nmap.c:nmap_main().
      It represents to the topmost element of the output document.
 -->
-<!ELEMENT nmaprun      (scaninfo*, verbose, debugging, ((taskbegin, taskprogress*, taskend) | host)*, runstats) >
+<!ELEMENT nmaprun      (scaninfo*, verbose, debugging,
+                        ( taskbegin | taskprogress | taskend |
+                            prescript | postscript | host | output)*,
+                            runstats) >
 <!ATTLIST nmaprun
 			scanner		(nmap)		#REQUIRED
 			args		CDATA		#IMPLIED
 			start		%attr_numeric;	#IMPLIED
 			startstr	CDATA	        #IMPLIED
 			version		CDATA		#REQUIRED
-			xmloutputversion (1.02)		#REQUIRED
+			profile_name	CDATA		#IMPLIED
+			xmloutputversion CDATA		#REQUIRED
 >
 
 <!-- this element is written in output.c:doscaninfo() -->
 <!ELEMENT scaninfo	EMPTY >
 <!ATTLIST scaninfo
-			type		%scan_types;	#REQUIRED
+			type		%scan_types;	 #REQUIRED
+			scanflags	CDATA		 #IMPLIED
 			protocol	%port_protocols; #REQUIRED
-			numservices	%attr_numeric;	#REQUIRED
-			services	CDATA		#REQUIRED
+			numservices	%attr_numeric;	 #REQUIRED
+			services	CDATA		 #REQUIRED
 >
 
 <!-- these elements are written in nmap.c:nmap_main() -->
@@ -133,10 +137,11 @@
 <!ELEMENT host		( status, address , (address | hostnames |
                           smurf | ports | os | distance | uptime | 
                           tcpsequence | ipidsequence | tcptssequence |
-                          hostscript | trace)*, times ) >
+                          hostscript | trace)*, times? ) >
 <!ATTLIST host
 			starttime	%attr_numeric;	#IMPLIED
 			endtime		%attr_numeric;	#IMPLIED
+			comment		CDATA		#IMPLIED
 >
 
 <!-- these elements are written by output.c:write_xml_initial_hostinfo() -->
@@ -197,11 +202,11 @@
 <!ELEMENT owner		EMPTY >
 <!ATTLIST owner		name		CDATA		#REQUIRED >
 
-<!ELEMENT service	EMPTY >
+<!ELEMENT service	(cpe*) >
 <!ATTLIST service
 			name		CDATA		#REQUIRED
 			conf		%service_confs;	#REQUIRED
-                        method          (table|detection|probed) #REQUIRED
+                        method          (table|probed)  #REQUIRED
                         version         CDATA           #IMPLIED
                         product         CDATA           #IMPLIED
                         extrainfo       CDATA           #IMPLIED
@@ -215,6 +220,8 @@
                         devicetype      CDATA           #IMPLIED
                         servicefp       CDATA           #IMPLIED
 >
+
+<!ELEMENT cpe (#PCDATA)>
 
 <!ELEMENT script	EMPTY >
 <!ATTLIST script	
@@ -230,7 +237,7 @@
 			proto 		%port_protocols; #REQUIRED
 			portid 		%attr_numeric;	#REQUIRED
 >
-<!ELEMENT osclass      EMPTY >
+<!ELEMENT osclass      (cpe*) >
 <!ATTLIST osclass
                        vendor          CDATA           #REQUIRED
                        osgen           CDATA           #IMPLIED
@@ -282,10 +289,10 @@
 			values		CDATA		#IMPLIED
 >
 
-<!ELEMENT trace (hop*, error?) >
+<!ELEMENT trace (hop*) >
 <!ATTLIST trace
-      proto   CDATA   #REQUIRED
-      port    CDATA   #REQUIRED
+      proto   CDATA   #IMPLIED
+      port    CDATA   #IMPLIED
 >
 
 <!ELEMENT hop EMPTY>
@@ -296,11 +303,6 @@
       host    CDATA   #IMPLIED
 >
 
-<!ELEMENT error EMPTY>
-<!ATTLIST error
-     errorstr   CDATA #IMPLIED
->
-
 <!ELEMENT times EMPTY>
 <!ATTLIST times
 	srtt	CDATA	#REQUIRED
@@ -308,12 +310,20 @@
 	to	CDATA	#REQUIRED
 >
 
+<!-- For embedding another type of output (screen output) like Zenmap does. -->
+<!ELEMENT output (#PCDATA)>
+<!ATTLIST output type  (interactive)  #IMPLIED>
+
 <!-- these elements are generated in output.c:printfinaloutput() -->
-<!ELEMENT runstats	(finished, hosts) >
+<!ELEMENT runstats	(finished, hosts)>
 
 <!ELEMENT finished	EMPTY >
 <!ATTLIST finished	time		%attr_numeric;	#REQUIRED 
                         timestr		CDATA	        #IMPLIED
+			elapsed		%attr_numeric;	#REQUIRED
+                        summary		CDATA	        #IMPLIED
+                        exit		(error|success) #IMPLIED
+                        errormsg	CDATA	        #IMPLIED
 >
 
 <!ELEMENT hosts		EMPTY >
@@ -324,3 +334,5 @@
 >
 
 <!ELEMENT hostscript ( script+ )>
+<!ELEMENT prescript ( script+ )>
+<!ELEMENT postscript ( script+ )>

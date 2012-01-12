@@ -1,24 +1,23 @@
-/* A Bison parser, made by GNU Bison 2.3.  */
+
+/* A Bison parser, made by GNU Bison 2.4.1.  */
 
 /* Skeleton interface for Bison's Yacc-like parsers in C
-
-   Copyright (C) 1984, 1989, 1990, 2000, 2001, 2002, 2003, 2004, 2005, 2006
+   
+      Copyright (C) 1984, 1989, 1990, 2000, 2001, 2002, 2003, 2004, 2005, 2006
    Free Software Foundation, Inc.
-
-   This program is free software; you can redistribute it and/or modify
+   
+   This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 2, or (at your option)
-   any later version.
-
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+   
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
-
+   
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 51 Franklin Street, Fifth Floor,
-   Boston, MA 02110-1301, USA.  */
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
 /* As a special exception, you may create a larger work that contains
    part or all of the Bison parser skeleton and distribute that work
@@ -29,9 +28,10 @@
    special exception, which will cause the skeleton and the resulting
    Bison output files to be licensed under the GNU General Public
    License without this special exception.
-
+   
    This special exception was added by the Free Software Foundation in
    version 2.2 of Bison.  */
+
 
 /* Tokens.  */
 #ifndef YYTOKENTYPE
@@ -81,65 +81,72 @@
      PF_SRNR = 297,
      PF_REASON = 298,
      PF_ACTION = 299,
-     LINK = 300,
-     GEQ = 301,
-     LEQ = 302,
-     NEQ = 303,
-     ID = 304,
-     EID = 305,
-     HID = 306,
-     HID6 = 307,
-     AID = 308,
-     LSH = 309,
-     RSH = 310,
-     LEN = 311,
-     IPV6 = 312,
-     ICMPV6 = 313,
-     AH = 314,
-     ESP = 315,
-     VLAN = 316,
-     MPLS = 317,
-     PPPOED = 318,
-     PPPOES = 319,
-     ISO = 320,
-     ESIS = 321,
-     CLNP = 322,
-     ISIS = 323,
-     L1 = 324,
-     L2 = 325,
-     IIH = 326,
-     LSP = 327,
-     SNP = 328,
-     CSNP = 329,
-     PSNP = 330,
-     STP = 331,
-     IPX = 332,
-     NETBEUI = 333,
-     LANE = 334,
-     LLC = 335,
-     METAC = 336,
-     BCC = 337,
-     SC = 338,
-     ILMIC = 339,
-     OAMF4EC = 340,
-     OAMF4SC = 341,
-     OAM = 342,
-     OAMF4 = 343,
-     CONNECTMSG = 344,
-     METACONNECT = 345,
-     VPI = 346,
-     VCI = 347,
-     RADIO = 348,
-     FISU = 349,
-     LSSU = 350,
-     MSU = 351,
-     SIO = 352,
-     OPC = 353,
-     DPC = 354,
-     SLS = 355,
-     AND = 356,
-     OR = 357,
-     UMINUS = 358
+     TYPE = 300,
+     SUBTYPE = 301,
+     DIR = 302,
+     ADDR1 = 303,
+     ADDR2 = 304,
+     ADDR3 = 305,
+     ADDR4 = 306,
+     LINK = 307,
+     GEQ = 308,
+     LEQ = 309,
+     NEQ = 310,
+     ID = 311,
+     EID = 312,
+     HID = 313,
+     HID6 = 314,
+     AID = 315,
+     LSH = 316,
+     RSH = 317,
+     LEN = 318,
+     IPV6 = 319,
+     ICMPV6 = 320,
+     AH = 321,
+     ESP = 322,
+     VLAN = 323,
+     MPLS = 324,
+     PPPOED = 325,
+     PPPOES = 326,
+     ISO = 327,
+     ESIS = 328,
+     CLNP = 329,
+     ISIS = 330,
+     L1 = 331,
+     L2 = 332,
+     IIH = 333,
+     LSP = 334,
+     SNP = 335,
+     CSNP = 336,
+     PSNP = 337,
+     STP = 338,
+     IPX = 339,
+     NETBEUI = 340,
+     LANE = 341,
+     LLC = 342,
+     METAC = 343,
+     BCC = 344,
+     SC = 345,
+     ILMIC = 346,
+     OAMF4EC = 347,
+     OAMF4SC = 348,
+     OAM = 349,
+     OAMF4 = 350,
+     CONNECTMSG = 351,
+     METACONNECT = 352,
+     VPI = 353,
+     VCI = 354,
+     RADIO = 355,
+     FISU = 356,
+     LSSU = 357,
+     MSU = 358,
+     SIO = 359,
+     OPC = 360,
+     DPC = 361,
+     SLS = 362,
+     AND = 363,
+     OR = 364,
+     UMINUS = 365
    };
 #endif
 /* Tokens.  */
@@ -185,73 +192,83 @@
 #define PF_SRNR 297
 #define PF_REASON 298
 #define PF_ACTION 299
-#define LINK 300
-#define GEQ 301
-#define LEQ 302
-#define NEQ 303
-#define ID 304
-#define EID 305
-#define HID 306
-#define HID6 307
-#define AID 308
-#define LSH 309
-#define RSH 310
-#define LEN 311
-#define IPV6 312
-#define ICMPV6 313
-#define AH 314
-#define ESP 315
-#define VLAN 316
-#define MPLS 317
-#define PPPOED 318
-#define PPPOES 319
-#define ISO 320
-#define ESIS 321
-#define CLNP 322
-#define ISIS 323
-#define L1 324
-#define L2 325
-#define IIH 326
-#define LSP 327
-#define SNP 328
-#define CSNP 329
-#define PSNP 330
-#define STP 331
-#define IPX 332
-#define NETBEUI 333
-#define LANE 334
-#define LLC 335
-#define METAC 336
-#define BCC 337
-#define SC 338
-#define ILMIC 339
-#define OAMF4EC 340
-#define OAMF4SC 341
-#define OAM 342
-#define OAMF4 343
-#define CONNECTMSG 344
-#define METACONNECT 345
-#define VPI 346
-#define VCI 347
-#define RADIO 348
-#define FISU 349
-#define LSSU 350
-#define MSU 351
-#define SIO 352
-#define OPC 353
-#define DPC 354
-#define SLS 355
-#define AND 356
-#define OR 357
-#define UMINUS 358
+#define TYPE 300
+#define SUBTYPE 301
+#define DIR 302
+#define ADDR1 303
+#define ADDR2 304
+#define ADDR3 305
+#define ADDR4 306
+#define LINK 307
+#define GEQ 308
+#define LEQ 309
+#define NEQ 310
+#define ID 311
+#define EID 312
+#define HID 313
+#define HID6 314
+#define AID 315
+#define LSH 316
+#define RSH 317
+#define LEN 318
+#define IPV6 319
+#define ICMPV6 320
+#define AH 321
+#define ESP 322
+#define VLAN 323
+#define MPLS 324
+#define PPPOED 325
+#define PPPOES 326
+#define ISO 327
+#define ESIS 328
+#define CLNP 329
+#define ISIS 330
+#define L1 331
+#define L2 332
+#define IIH 333
+#define LSP 334
+#define SNP 335
+#define CSNP 336
+#define PSNP 337
+#define STP 338
+#define IPX 339
+#define NETBEUI 340
+#define LANE 341
+#define LLC 342
+#define METAC 343
+#define BCC 344
+#define SC 345
+#define ILMIC 346
+#define OAMF4EC 347
+#define OAMF4SC 348
+#define OAM 349
+#define OAMF4 350
+#define CONNECTMSG 351
+#define METACONNECT 352
+#define VPI 353
+#define VCI 354
+#define RADIO 355
+#define FISU 356
+#define LSSU 357
+#define MSU 358
+#define SIO 359
+#define OPC 360
+#define DPC 361
+#define SLS 362
+#define AND 363
+#define OR 364
+#define UMINUS 365
 
 
 
 
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 typedef union YYSTYPE
-#line 90 "grammar.y"
 {
+
+/* Line 1676 of yacc.c  */
+#line 242 "grammar.y"
+
 	int i;
 	bpf_u_int32 h;
 	u_char *e;
@@ -265,14 +282,17 @@ typedef union YYSTYPE
 		struct block *b;
 	} blk;
 	struct block *rblk;
-}
-/* Line 1489 of yacc.c.  */
-#line 271 "y.tab.h"
-	YYSTYPE;
+
+
+
+/* Line 1676 of yacc.c  */
+#line 290 "y.tab.h"
+} YYSTYPE;
+# define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1
-# define YYSTYPE_IS_TRIVIAL 1
 #endif
 
 extern YYSTYPE pcap_lval;
+
 

@@ -5,7 +5,7 @@
  *                                                                         *
  ***********************IMPORTANT NMAP LICENSE TERMS************************
  *                                                                         *
- * The Nmap Security Scanner is (C) 1996-2008 Insecure.Com LLC. Nmap is    *
+ * The Nmap Security Scanner is (C) 1996-2011 Insecure.Com LLC. Nmap is    *
  * also a registered trademark of Insecure.Com LLC.  This program is free  *
  * software; you may redistribute and/or modify it under the terms of the  *
  * GNU General Public License as published by the Free Software            *
@@ -27,25 +27,16 @@
  *   nmap-os-db or nmap-service-probes.                                    *
  * o Executes Nmap and parses the results (as opposed to typical shell or  *
  *   execution-menu apps, which simply display raw Nmap output and so are  *
- *   not derivative works.)                                                * 
+ *   not derivative works.)                                                *
  * o Integrates/includes/aggregates Nmap into a proprietary executable     *
  *   installer, such as those produced by InstallShield.                   *
  * o Links to a library or executes a program that does any of the above   *
  *                                                                         *
  * The term "Nmap" should be taken to also include any portions or derived *
- * works of Nmap.  This list is not exclusive, but is just meant to        *
- * clarify our interpretation of derived works with some common examples.  *
- * These restrictions only apply when you actually redistribute Nmap.  For *
- * example, nothing stops you from writing and selling a proprietary       *
- * front-end to Nmap.  Just distribute it by itself, and point people to   *
- * http://nmap.org to download Nmap.                                       *
- *                                                                         *
- * We don't consider these to be added restrictions on top of the GPL, but *
- * just a clarification of how we interpret "derived works" as it applies  *
- * to our GPL-licensed Nmap product.  This is similar to the way Linus     *
- * Torvalds has announced his interpretation of how "derived works"        *
- * applies to Linux kernel modules.  Our interpretation refers only to     *
- * Nmap - we don't speak for any other GPL products.                       *
+ * works of Nmap.  This list is not exclusive, but is meant to clarify our *
+ * interpretation of derived works with some common examples.  Our         *
+ * interpretation applies only to Nmap--we don't speak for other people's  *
+ * GPL works.                                                              *
  *                                                                         *
  * If you have any questions about the GPL licensing restrictions on using *
  * Nmap in non-GPL works, we would be happy to help.  As mentioned above,  *
@@ -59,8 +50,8 @@
  * As a special exception to the GPL terms, Insecure.Com LLC grants        *
  * permission to link the code of this program with any version of the     *
  * OpenSSL library which is distributed under a license identical to that  *
- * listed in the included COPYING.OpenSSL file, and distribute linked      *
- * combinations including the two. You must obey the GNU GPL in all        *
+ * listed in the included docs/licenses/OpenSSL.txt file, and distribute   *
+ * linked combinations including the two. You must obey the GNU GPL in all *
  * respects for all of the code used other than OpenSSL.  If you modify    *
  * this file, you may extend this exception to your version of the file,   *
  * but you are not obligated to do so.                                     *
@@ -76,17 +67,17 @@
  *                                                                         *
  * Source code also allows you to port Nmap to new platforms, fix bugs,    *
  * and add new features.  You are highly encouraged to send your changes   *
- * to fyodor@insecure.org for possible incorporation into the main         *
+ * to nmap-dev@insecure.org for possible incorporation into the main       *
  * distribution.  By sending these changes to Fyodor or one of the         *
  * Insecure.Org development mailing lists, it is assumed that you are      *
- * offering Fyodor and Insecure.Com LLC the unlimited, non-exclusive right *
- * to reuse, modify, and relicense the code.  Nmap will always be          *
- * available Open Source, but this is important because the inability to   *
- * relicense code has caused devastating problems for other Free Software  *
- * projects (such as KDE and NASM).  We also occasionally relicense the    *
- * code to third parties as discussed above.  If you wish to specify       *
- * special license conditions of your contributions, just say so when you  *
- * send them.                                                              *
+ * offering the Nmap Project (Insecure.Com LLC) the unlimited,             *
+ * non-exclusive right to reuse, modify, and relicense the code.  Nmap     *
+ * will always be available Open Source, but this is important because the *
+ * inability to relicense code has caused devastating problems for other   *
+ * Free Software projects (such as KDE and NASM).  We also occasionally    *
+ * relicense the code to third parties as discussed above.  If you wish to *
+ * specify special license conditions of your contributions, just say so   *
+ * when you send them.                                                     *
  *                                                                         *
  * This program is distributed in the hope that it will be useful, but     *
  * WITHOUT ANY WARRANTY; without even the implied warranty of              *
@@ -214,33 +205,6 @@ void NmapOutputTable::addItemFormatted(unsigned int row,
   }
 }
 
-// Returns the maximum size neccessary to create a printableTable() (the 
-// actual size could be less);
-int NmapOutputTable::printableSize() {
-
-  struct NmapOutputTableCell *cell;
-  int rowlen = 0;
-  unsigned int i;
-
-  for(i = 0; i < numColumns; i++) {
-    rowlen += maxColLen[i]; 
-  }
-
-  /* Add the delimeter between each column, and the final newline */
-  rowlen += numColumns;
-
-  // if one of the fullrow tables is larger than the single column
-  // roles then the maximal rowlen needs to be adjusted.
-  for(i = 0; i < numRows; i++) {
-    cell = getCellAddy(i, 0);
-    if(cell->fullrow && cell->strlength > rowlen)
-      rowlen = cell->strlength;
-  }
-  
-  return rowlen * numRows;
-
-}
-
 /* True if every column in nrow is empty */
 bool NmapOutputTable::emptyRow(unsigned int nrow) {
 	NmapOutputTableCell *cell;
@@ -267,18 +231,16 @@ bool NmapOutputTable::emptyRow(unsigned int nrow) {
  // All blank rows are removed from the returned string
 char *NmapOutputTable::printableTable(int *size) {
   unsigned int col, row;
-  int maxsz = printableSize();
-  char *p;
+  int p = 0; /* The offset into tableout */
   int clen = 0;
   int i;
   struct NmapOutputTableCell *cell;
   int validthisrow;
 
-  if (maxsz >= tableoutsz) {
-    tableoutsz = maxsz + 1;
-    tableout = (char *) safe_realloc(tableout, tableoutsz);
+  if (tableoutsz == 0) {
+    tableoutsz = 512; /* Start us off with half a k */
+    tableout = (char *) safe_malloc(tableoutsz);
   }
-  p = tableout;
 
   for(row = 0; row < numRows; row++) {
     validthisrow = 0;
@@ -288,27 +250,38 @@ char *NmapOutputTable::printableTable(int *size) {
 
     cell = getCellAddy(row, 0);
     if(cell->fullrow && cell->strlength > 0) {
-      memcpy(p, cell->str,  cell->strlength);
+      /* Full rows are easy, just make sure we have the space + \n\0 */
+      if (cell->strlength + p + 2 > tableoutsz) {
+	tableoutsz = (cell->strlength + p + 2) * 2;
+	tableout = (char *) safe_realloc(tableout, tableoutsz);
+      }
+      memcpy(tableout + p, cell->str,  cell->strlength);
       p += cell->strlength;
     } else {
       for(col = 0; col < numColumns; col++) {
         cell = getCellAddy(row, col);
         clen = maxColLen[col];
+	/* Cells get padded with an extra space + \n\0 */
+	if (clen + p + 3 > tableoutsz) {
+	  tableoutsz = (cell->strlength + p + 2) * 2;
+	  tableout = (char *) safe_realloc(tableout, tableoutsz);
+	}
         if (cell->strlength > 0) {
-          memcpy(p, cell->str,  cell->strlength);
+          memcpy(tableout + p, cell->str,  cell->strlength);
           p += cell->strlength;
           validthisrow++;
         }
         // No point leaving trailing spaces ...
         if (validthisrow < itemsInRow[row]) {
           for(i=cell->strlength; i <= clen; i++) // one extra because of space between columns
-            *(p++) = ' ';
+            *(tableout + p++) = ' ';
         }
       }
     }
-    *(p++) = '\n';
+    *(tableout + p++) = '\n';
   }
-  *p = '\0';
-  if (size) *size = p - tableout;
+  *(tableout + p) = '\0';
+
+  if (size) *size = p;
   return tableout;
 }

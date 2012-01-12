@@ -7,7 +7,7 @@
  *                                                                         *
  ***********************IMPORTANT NMAP LICENSE TERMS************************
  *                                                                         *
- * The Nmap Security Scanner is (C) 1996-2008 Insecure.Com LLC. Nmap is    *
+ * The Nmap Security Scanner is (C) 1996-2011 Insecure.Com LLC. Nmap is    *
  * also a registered trademark of Insecure.Com LLC.  This program is free  *
  * software; you may redistribute and/or modify it under the terms of the  *
  * GNU General Public License as published by the Free Software            *
@@ -29,25 +29,16 @@
  *   nmap-os-db or nmap-service-probes.                                    *
  * o Executes Nmap and parses the results (as opposed to typical shell or  *
  *   execution-menu apps, which simply display raw Nmap output and so are  *
- *   not derivative works.)                                                * 
+ *   not derivative works.)                                                *
  * o Integrates/includes/aggregates Nmap into a proprietary executable     *
  *   installer, such as those produced by InstallShield.                   *
  * o Links to a library or executes a program that does any of the above   *
  *                                                                         *
  * The term "Nmap" should be taken to also include any portions or derived *
- * works of Nmap.  This list is not exclusive, but is just meant to        *
- * clarify our interpretation of derived works with some common examples.  *
- * These restrictions only apply when you actually redistribute Nmap.  For *
- * example, nothing stops you from writing and selling a proprietary       *
- * front-end to Nmap.  Just distribute it by itself, and point people to   *
- * http://nmap.org to download Nmap.                                       *
- *                                                                         *
- * We don't consider these to be added restrictions on top of the GPL, but *
- * just a clarification of how we interpret "derived works" as it applies  *
- * to our GPL-licensed Nmap product.  This is similar to the way Linus     *
- * Torvalds has announced his interpretation of how "derived works"        *
- * applies to Linux kernel modules.  Our interpretation refers only to     *
- * Nmap - we don't speak for any other GPL products.                       *
+ * works of Nmap.  This list is not exclusive, but is meant to clarify our *
+ * interpretation of derived works with some common examples.  Our         *
+ * interpretation applies only to Nmap--we don't speak for other people's  *
+ * GPL works.                                                              *
  *                                                                         *
  * If you have any questions about the GPL licensing restrictions on using *
  * Nmap in non-GPL works, we would be happy to help.  As mentioned above,  *
@@ -61,8 +52,8 @@
  * As a special exception to the GPL terms, Insecure.Com LLC grants        *
  * permission to link the code of this program with any version of the     *
  * OpenSSL library which is distributed under a license identical to that  *
- * listed in the included COPYING.OpenSSL file, and distribute linked      *
- * combinations including the two. You must obey the GNU GPL in all        *
+ * listed in the included docs/licenses/OpenSSL.txt file, and distribute   *
+ * linked combinations including the two. You must obey the GNU GPL in all *
  * respects for all of the code used other than OpenSSL.  If you modify    *
  * this file, you may extend this exception to your version of the file,   *
  * but you are not obligated to do so.                                     *
@@ -78,17 +69,17 @@
  *                                                                         *
  * Source code also allows you to port Nmap to new platforms, fix bugs,    *
  * and add new features.  You are highly encouraged to send your changes   *
- * to fyodor@insecure.org for possible incorporation into the main         *
+ * to nmap-dev@insecure.org for possible incorporation into the main       *
  * distribution.  By sending these changes to Fyodor or one of the         *
  * Insecure.Org development mailing lists, it is assumed that you are      *
- * offering Fyodor and Insecure.Com LLC the unlimited, non-exclusive right *
- * to reuse, modify, and relicense the code.  Nmap will always be          *
- * available Open Source, but this is important because the inability to   *
- * relicense code has caused devastating problems for other Free Software  *
- * projects (such as KDE and NASM).  We also occasionally relicense the    *
- * code to third parties as discussed above.  If you wish to specify       *
- * special license conditions of your contributions, just say so when you  *
- * send them.                                                              *
+ * offering the Nmap Project (Insecure.Com LLC) the unlimited,             *
+ * non-exclusive right to reuse, modify, and relicense the code.  Nmap     *
+ * will always be available Open Source, but this is important because the *
+ * inability to relicense code has caused devastating problems for other   *
+ * Free Software projects (such as KDE and NASM).  We also occasionally    *
+ * relicense the code to third parties as discussed above.  If you wish to *
+ * specify special license conditions of your contributions, just say so   *
+ * when you send them.                                                     *
  *                                                                         *
  * This program is distributed in the hope that it will be useful, but     *
  * WITHOUT ANY WARRANTY; without even the implied warranty of              *
@@ -123,31 +114,29 @@ void adjust_timeouts2(const struct timeval *sent,
    response.  We update our RTT averages, etc. */
 void adjust_timeouts(struct timeval sent, struct timeout_info *to);
 
+#define DEFAULT_CURRENT_RATE_HISTORY 5.0
 
 /* Sleeps if necessary to ensure that it isn't called twice within less
    time than o.send_delay.  If it is passed a non-null tv, the POST-SLEEP
    time is recorded in it */
 void enforce_scan_delay(struct timeval *tv);
 
-/* This class implements current and lifetime average data rates for packets and
-   bytes. */
+/* This class measures current and lifetime average rates for some quantity. */
 class RateMeter {
   public:
-    RateMeter();
+    RateMeter(double current_rate_history = DEFAULT_CURRENT_RATE_HISTORY);
 
     void start(const struct timeval *now = NULL);
     void stop(const struct timeval *now = NULL);
-    void record(u32 len, const struct timeval *now = NULL);
-    double getOverallPacketRate(const struct timeval *now = NULL) const;
-    double getCurrentPacketRate(const struct timeval *now = NULL, bool update =true);
-    double getOverallByteRate(const struct timeval *now = NULL) const;
-    double getCurrentByteRate(const struct timeval *now = NULL, bool update =true);
-    unsigned long long getNumPackets(void) const;
-    unsigned long long getNumBytes(void) const;
+    void update(double amount, const struct timeval *now = NULL);
+    double getOverallRate(const struct timeval *now = NULL) const;
+    double getCurrentRate(const struct timeval *now = NULL, bool update = true);
+    double getTotal(void) const;
+    double elapsedTime(const struct timeval *now = NULL) const;
 
   private:
     /* How many seconds to look back when calculating the "current" rates. */
-    const double CURRENT_RATE_HISTORY;
+    double current_rate_history;
 
     /* When this meter started recording. */
     struct timeval start_tv;
@@ -156,15 +145,30 @@ class RateMeter {
     /* The last time the current sample rates were updated. */
     struct timeval last_update_tv;
 
-    unsigned long long num_packets;
-    unsigned long long num_bytes;
+    double total;
+    double current_rate;
 
-    double current_packet_rate;
-    double current_byte_rate;
-
-    void update(u32 packets, u32 bytes, const struct timeval *now);
-    double elapsedTime(const struct timeval *now = NULL) const;
     static bool isSet(const struct timeval *tv);
+};
+
+/* A specialization of RateMeter that measures packet and byte rates. */
+class PacketRateMeter {
+  public:
+    PacketRateMeter(double current_rate_history = DEFAULT_CURRENT_RATE_HISTORY);
+
+    void start(const struct timeval *now = NULL);
+    void stop(const struct timeval *now = NULL);
+    void update(u32 len, const struct timeval *now = NULL);
+    double getOverallPacketRate(const struct timeval *now = NULL) const;
+    double getCurrentPacketRate(const struct timeval *now = NULL, bool update = true);
+    double getOverallByteRate(const struct timeval *now = NULL) const;
+    double getCurrentByteRate(const struct timeval *now = NULL, bool update =true);
+    unsigned long long getNumPackets(void) const;
+    unsigned long long getNumBytes(void) const;
+
+  private:
+    RateMeter packet_rate_meter;
+    RateMeter byte_rate_meter;
 };
 
 class ScanProgressMeter {
@@ -178,7 +182,7 @@ class ScanProgressMeter {
    might as well check this before spending much time computing
    progress info.  now can be NULL if caller doesn't have the current
    time handy.  Just because this function returns true does not mean
-   that the next printStatsIfNeccessary will always print something.
+   that the next printStatsIfNecessary will always print something.
    It depends on whether time estimates have changed, which this func
    doesn't even know about. */
   bool mayBePrinted(const struct timeval *now);
@@ -187,7 +191,7 @@ class ScanProgressMeter {
    so if mayBePrinted() is true, and it seems reasonable to do so
    because the estimate has changed significantly.  Returns whether
    or not a line was printed.*/
-  bool printStatsIfNeccessary(double perc_done, const struct timeval *now);
+  bool printStatsIfNecessary(double perc_done, const struct timeval *now);
 
   /* Prints an estimate of when this scan will complete. */
   bool printStats(double perc_done, const struct timeval *now);
@@ -197,7 +201,7 @@ class ScanProgressMeter {
 
   struct timeval begin; /* When this ScanProgressMeter was instantiated */
  private:
-  struct timeval last_print_test; /* Last time printStatsIfNeccessary was called */
+  struct timeval last_print_test; /* Last time printStatsIfNecessary was called */
   struct timeval last_print; /* The most recent time the ETC was printed */
   char *scantypestr;
   struct timeval last_est; /* The latest PRINTED estimate */

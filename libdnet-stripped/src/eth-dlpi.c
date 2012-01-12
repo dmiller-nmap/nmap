@@ -5,7 +5,7 @@
  *
  * Copyright (c) 2001 Dug Song <dugsong@monkey.org>
  *
- * $Id: eth-dlpi.c,v 1.19 2005/02/10 16:48:36 dugsong Exp $
+ * $Id: eth-dlpi.c 560 2005-02-10 16:48:36Z dugsong $
  */
 
 #include "config.h"
@@ -113,6 +113,20 @@ eth_match_ppa(eth_t *e, const char *device)
 	}
 	return (ppa);
 }
+#else
+static int
+dev_find_ppa(const char *dev)
+{
+	const char *p;
+
+	p = dev + strlen(dev);
+	while (p > dev && strchr("0123456789", *(p - 1)) != NULL)
+		p--;
+	if (*p == '\0')
+		return NULL;
+
+	return p;
+}
 #endif
 
 eth_t *
@@ -138,7 +152,7 @@ eth_open(const char *device)
 #else
 	e->fd = -1;
 	snprintf(dev, sizeof(dev), "/dev/%s", device);
-	if ((p = strpbrk(dev, "0123456789")) == NULL) {
+	if ((p = dev_find_ppa(dev)) == NULL) {
 		errno = EINVAL;
 		return (eth_close(e));
 	}

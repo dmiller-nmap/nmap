@@ -8,8 +8,8 @@
 #include <string.h>
 
 extern "C" {
-#include "lua.h"
-#include "lauxlib.h"
+  #include "lua.h"
+  #include "lauxlib.h"
 }
 
 #include <locale.h>
@@ -69,14 +69,6 @@ static int get_flags (lua_State *L, const flags_pair *arr)
 		lua_rawset(L, -3);
 	}
 	return 1;
-}
-
-static void createmeta(lua_State *L, const char *name)
-{
-	(void)luaL_newmetatable(L, name);   /* create new metatable */
-	lua_pushliteral(L, "__index");
-	lua_pushvalue(L, -2);         /* push metatable */
-	lua_rawset(L, -3);            /* metatable.__index = metatable */
 }
 
 const char pcre_handle[] = "pcre_regex_handle";
@@ -191,7 +183,7 @@ static void Lpcre_push_substrings (lua_State *L, const char *text, pcre2 *ud)
 		unsigned int n = (tabptr[0] << 8) | tabptr[1]; /* number of the capturing parenthesis */
 		if (n > 0 && n <= (unsigned) ud->ncapt) {   /* check range */
 			unsigned int j = n * 2;
-			lua_pushstring(L, strdup((char*)tabptr + 2)); /* name of the capture, zero terminated */
+			lua_pushstring(L, (char*)tabptr + 2); /* name of the capture, zero terminated */
 			if (match[j] >= 0)
 				lua_pushlstring(L, text + match[j], match[j + 1] - match[j]);
 			else

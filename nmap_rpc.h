@@ -1,13 +1,13 @@
 
 /***************************************************************************
- * nmap_rpc.h -- Functions related to the RPCGrind (-sR) facility of Nmap. *
+ * nmap_rpc.h -- Functions related to the RPCGrind facility of Nmap.       *
  * This includes reading the nmap-rpc services file and sending rpc        *
  * queries and interpreting responses.  The actual scan engine used for    *
  * rpc grinding is pos_scan (which is not in this file)                    *
  *                                                                         *
  ***********************IMPORTANT NMAP LICENSE TERMS************************
  *                                                                         *
- * The Nmap Security Scanner is (C) 1996-2008 Insecure.Com LLC. Nmap is    *
+ * The Nmap Security Scanner is (C) 1996-2011 Insecure.Com LLC. Nmap is    *
  * also a registered trademark of Insecure.Com LLC.  This program is free  *
  * software; you may redistribute and/or modify it under the terms of the  *
  * GNU General Public License as published by the Free Software            *
@@ -29,25 +29,16 @@
  *   nmap-os-db or nmap-service-probes.                                    *
  * o Executes Nmap and parses the results (as opposed to typical shell or  *
  *   execution-menu apps, which simply display raw Nmap output and so are  *
- *   not derivative works.)                                                * 
+ *   not derivative works.)                                                *
  * o Integrates/includes/aggregates Nmap into a proprietary executable     *
  *   installer, such as those produced by InstallShield.                   *
  * o Links to a library or executes a program that does any of the above   *
  *                                                                         *
  * The term "Nmap" should be taken to also include any portions or derived *
- * works of Nmap.  This list is not exclusive, but is just meant to        *
- * clarify our interpretation of derived works with some common examples.  *
- * These restrictions only apply when you actually redistribute Nmap.  For *
- * example, nothing stops you from writing and selling a proprietary       *
- * front-end to Nmap.  Just distribute it by itself, and point people to   *
- * http://nmap.org to download Nmap.                                       *
- *                                                                         *
- * We don't consider these to be added restrictions on top of the GPL, but *
- * just a clarification of how we interpret "derived works" as it applies  *
- * to our GPL-licensed Nmap product.  This is similar to the way Linus     *
- * Torvalds has announced his interpretation of how "derived works"        *
- * applies to Linux kernel modules.  Our interpretation refers only to     *
- * Nmap - we don't speak for any other GPL products.                       *
+ * works of Nmap.  This list is not exclusive, but is meant to clarify our *
+ * interpretation of derived works with some common examples.  Our         *
+ * interpretation applies only to Nmap--we don't speak for other people's  *
+ * GPL works.                                                              *
  *                                                                         *
  * If you have any questions about the GPL licensing restrictions on using *
  * Nmap in non-GPL works, we would be happy to help.  As mentioned above,  *
@@ -61,8 +52,8 @@
  * As a special exception to the GPL terms, Insecure.Com LLC grants        *
  * permission to link the code of this program with any version of the     *
  * OpenSSL library which is distributed under a license identical to that  *
- * listed in the included COPYING.OpenSSL file, and distribute linked      *
- * combinations including the two. You must obey the GNU GPL in all        *
+ * listed in the included docs/licenses/OpenSSL.txt file, and distribute   *
+ * linked combinations including the two. You must obey the GNU GPL in all *
  * respects for all of the code used other than OpenSSL.  If you modify    *
  * this file, you may extend this exception to your version of the file,   *
  * but you are not obligated to do so.                                     *
@@ -78,17 +69,17 @@
  *                                                                         *
  * Source code also allows you to port Nmap to new platforms, fix bugs,    *
  * and add new features.  You are highly encouraged to send your changes   *
- * to fyodor@insecure.org for possible incorporation into the main         *
+ * to nmap-dev@insecure.org for possible incorporation into the main       *
  * distribution.  By sending these changes to Fyodor or one of the         *
  * Insecure.Org development mailing lists, it is assumed that you are      *
- * offering Fyodor and Insecure.Com LLC the unlimited, non-exclusive right *
- * to reuse, modify, and relicense the code.  Nmap will always be          *
- * available Open Source, but this is important because the inability to   *
- * relicense code has caused devastating problems for other Free Software  *
- * projects (such as KDE and NASM).  We also occasionally relicense the    *
- * code to third parties as discussed above.  If you wish to specify       *
- * special license conditions of your contributions, just say so when you  *
- * send them.                                                              *
+ * offering the Nmap Project (Insecure.Com LLC) the unlimited,             *
+ * non-exclusive right to reuse, modify, and relicense the code.  Nmap     *
+ * will always be available Open Source, but this is important because the *
+ * inability to relicense code has caused devastating problems for other   *
+ * Free Software projects (such as KDE and NASM).  We also occasionally    *
+ * relicense the code to third parties as discussed above.  If you wish to *
+ * specify special license conditions of your contributions, just say so   *
+ * when you send them.                                                     *
  *                                                                         *
  * This program is distributed in the hope that it will be useful, but     *
  * WITHOUT ANY WARRANTY; without even the implied warranty of              *
@@ -125,27 +116,27 @@
 
 /* structure used for RPC calls */
 struct rpc_hdr                          
-{       u_long  xid;                    /* xid number                    */
-        u_long  type_msg;               /* request or answer             */
-        u_long  version_rpc;            /* portmapper/rpcbind version    */
-        u_long  prog_id;                /* rpc program id                */
-        u_long  prog_ver;               /* rpc program version           */
-        u_long  prog_proc;              /* remote procedure call number  */
-        u_long  authcred_flavor;        /* credentials field             */
-        u_long  authcred_length;
-        u_long  authveri_flavor;        /* verification field            */
-        u_long  authveri_length;
+{       u32  xid;                    /* xid number                    */
+        u32  type_msg;               /* request or answer             */
+        u32  version_rpc;            /* portmapper/rpcbind version    */
+        u32  prog_id;                /* rpc program id                */
+        u32  prog_ver;               /* rpc program version           */
+        u32  prog_proc;              /* remote procedure call number  */
+        u32  authcred_flavor;        /* credentials field             */
+        u32  authcred_length;
+        u32  authveri_flavor;        /* verification field            */
+        u32  authveri_length;
 };
 
 struct rpc_hdr_rcv {
-  unsigned long xid;
-  unsigned long type_msg;
-  unsigned long rp_stat;
-  unsigned long auth_flavor;
-  unsigned long opaque_length;
-  unsigned long accept_stat;
-  unsigned long low_version;
-  unsigned long high_version;
+  u32 xid;
+  u32 type_msg;
+  u32 rp_stat;
+  u32 auth_flavor;
+  u32 opaque_length;
+  u32 accept_stat;
+  u32 low_version;
+  u32 high_version;
 };
 
 struct rpc_info {
@@ -156,7 +147,7 @@ struct rpc_info {
 };
 
 struct rpcscaninfo {
-  Port *rpc_current_port;
+  const Port *rpc_current_port;
   unsigned long *rpc_progs;
   unsigned long rpc_number;
   int valid_responses_this_port; /* Number of valid (RPC wise) responses we

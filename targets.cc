@@ -6,7 +6,7 @@
  *                                                                         *
  ***********************IMPORTANT NMAP LICENSE TERMS************************
  *                                                                         *
- * The Nmap Security Scanner is (C) 1996-2008 Insecure.Com LLC. Nmap is    *
+ * The Nmap Security Scanner is (C) 1996-2011 Insecure.Com LLC. Nmap is    *
  * also a registered trademark of Insecure.Com LLC.  This program is free  *
  * software; you may redistribute and/or modify it under the terms of the  *
  * GNU General Public License as published by the Free Software            *
@@ -28,25 +28,16 @@
  *   nmap-os-db or nmap-service-probes.                                    *
  * o Executes Nmap and parses the results (as opposed to typical shell or  *
  *   execution-menu apps, which simply display raw Nmap output and so are  *
- *   not derivative works.)                                                * 
+ *   not derivative works.)                                                *
  * o Integrates/includes/aggregates Nmap into a proprietary executable     *
  *   installer, such as those produced by InstallShield.                   *
  * o Links to a library or executes a program that does any of the above   *
  *                                                                         *
  * The term "Nmap" should be taken to also include any portions or derived *
- * works of Nmap.  This list is not exclusive, but is just meant to        *
- * clarify our interpretation of derived works with some common examples.  *
- * These restrictions only apply when you actually redistribute Nmap.  For *
- * example, nothing stops you from writing and selling a proprietary       *
- * front-end to Nmap.  Just distribute it by itself, and point people to   *
- * http://nmap.org to download Nmap.                                       *
- *                                                                         *
- * We don't consider these to be added restrictions on top of the GPL, but *
- * just a clarification of how we interpret "derived works" as it applies  *
- * to our GPL-licensed Nmap product.  This is similar to the way Linus     *
- * Torvalds has announced his interpretation of how "derived works"        *
- * applies to Linux kernel modules.  Our interpretation refers only to     *
- * Nmap - we don't speak for any other GPL products.                       *
+ * works of Nmap.  This list is not exclusive, but is meant to clarify our *
+ * interpretation of derived works with some common examples.  Our         *
+ * interpretation applies only to Nmap--we don't speak for other people's  *
+ * GPL works.                                                              *
  *                                                                         *
  * If you have any questions about the GPL licensing restrictions on using *
  * Nmap in non-GPL works, we would be happy to help.  As mentioned above,  *
@@ -60,8 +51,8 @@
  * As a special exception to the GPL terms, Insecure.Com LLC grants        *
  * permission to link the code of this program with any version of the     *
  * OpenSSL library which is distributed under a license identical to that  *
- * listed in the included COPYING.OpenSSL file, and distribute linked      *
- * combinations including the two. You must obey the GNU GPL in all        *
+ * listed in the included docs/licenses/OpenSSL.txt file, and distribute   *
+ * linked combinations including the two. You must obey the GNU GPL in all *
  * respects for all of the code used other than OpenSSL.  If you modify    *
  * this file, you may extend this exception to your version of the file,   *
  * but you are not obligated to do so.                                     *
@@ -77,17 +68,17 @@
  *                                                                         *
  * Source code also allows you to port Nmap to new platforms, fix bugs,    *
  * and add new features.  You are highly encouraged to send your changes   *
- * to fyodor@insecure.org for possible incorporation into the main         *
+ * to nmap-dev@insecure.org for possible incorporation into the main       *
  * distribution.  By sending these changes to Fyodor or one of the         *
  * Insecure.Org development mailing lists, it is assumed that you are      *
- * offering Fyodor and Insecure.Com LLC the unlimited, non-exclusive right *
- * to reuse, modify, and relicense the code.  Nmap will always be          *
- * available Open Source, but this is important because the inability to   *
- * relicense code has caused devastating problems for other Free Software  *
- * projects (such as KDE and NASM).  We also occasionally relicense the    *
- * code to third parties as discussed above.  If you wish to specify       *
- * special license conditions of your contributions, just say so when you  *
- * send them.                                                              *
+ * offering the Nmap Project (Insecure.Com LLC) the unlimited,             *
+ * non-exclusive right to reuse, modify, and relicense the code.  Nmap     *
+ * will always be available Open Source, but this is important because the *
+ * inability to relicense code has caused devastating problems for other   *
+ * Free Software projects (such as KDE and NASM).  We also occasionally    *
+ * relicense the code to third parties as discussed above.  If you wish to *
+ * specify special license conditions of your contributions, just say so   *
+ * when you send them.                                                     *
  *                                                                         *
  * This program is distributed in the hope that it will be useful, but     *
  * WITHOUT ANY WARRANTY; without even the implied warranty of              *
@@ -101,6 +92,7 @@
 /* $Id$ */
 
 
+#include "nbase/nbase_addrset.h"
 #include "targets.h"
 #include "timing.h"
 #include "NmapOps.h"
@@ -110,39 +102,8 @@
 #include "nmap_dns.h"
 #include "nmap_tty.h"
 #include "utils.h"
-
 using namespace std;
 extern NmapOps o;
-enum pingstyle { pingstyle_unknown, pingstyle_rawtcp, pingstyle_rawudp, pingstyle_connecttcp, 
-		 pingstyle_icmp };
-
-/* Gets the host number (index) of target in the hostbatch array of
- pointers.  Note that the target MUST EXIST in the array or all
- heck will break loose. */
-static inline int gethostnum(Target *hostbatch[], Target *target) {
-  int i = 0;
-  do {
-    if (hostbatch[i] == target)
-      return i;
-  } while(++i);
-
-  fatal("fluxx0red");
-  return 0; // Unreached
-}
-
-const char *readhoststate(int state) {
-  switch(state) {
-  case HOST_UP:
-    return "HOST_UP";
-  case HOST_DOWN:
-    return "HOST_DOWN";
-  case HOST_FIREWALLED:
-    return "HOST_FIREWALLED";
-  default:
-    return "UNKNOWN/COMBO";
-  }
-  return NULL;
-}
 
 /* Conducts an ARP ping sweep of the given hosts to determine which ones
    are up on a local ethernet network */
@@ -153,32 +114,34 @@ static void arpping(Target *hostbatch[], int num_hosts) {
   int targetno;
   targets.reserve(num_hosts);
 
-  for(targetno = 0; targetno < num_hosts; targetno++) {
+  for (targetno = 0; targetno < num_hosts; targetno++) {
     initialize_timeout_info(&hostbatch[targetno]->to);
     /* Default timout should be much lower for arp */
-    hostbatch[targetno]->to.timeout = MIN(o.initialRttTimeout(), 100) * 1000;
+    hostbatch[targetno]->to.timeout = MAX(o.minRttTimeout(), MIN(o.initialRttTimeout(), INITIAL_ARP_RTT_TIMEOUT)) * 1000;
     if (!hostbatch[targetno]->SrcMACAddress()) {
-      bool islocal = islocalhost(hostbatch[targetno]->v4hostip());
+      bool islocal = islocalhost(hostbatch[targetno]->TargetSockAddr());
       if (islocal) {
-	log_write(LOG_STDOUT|LOG_NORMAL, 
-		  "ARP ping: Considering %s UP because it is a local IP, despite no MAC address for device %s\n",
-		  hostbatch[targetno]->NameIP(), hostbatch[targetno]->deviceName());
-	hostbatch[targetno]->flags &= ~(HOST_DOWN|HOST_FIREWALLED);
-	hostbatch[targetno]->flags |= HOST_UP;
+        log_write(LOG_STDOUT|LOG_NORMAL, 
+                  "ARP ping: Considering %s UP because it is a local IP, despite no MAC address for device %s\n",
+                  hostbatch[targetno]->NameIP(), hostbatch[targetno]->deviceName());
+        hostbatch[targetno]->flags = HOST_UP;
       } else {
-	log_write(LOG_STDOUT|LOG_NORMAL, 
-		  "ARP ping: Considering %s DOWN because no MAC address found for device %s.\n",
-		  hostbatch[targetno]->NameIP(), 
-		  hostbatch[targetno]->deviceName());
-	hostbatch[targetno]->flags &= ~HOST_FIREWALLED;
-	hostbatch[targetno]->flags |= HOST_DOWN;
+        log_write(LOG_STDOUT|LOG_NORMAL, 
+                  "ARP ping: Considering %s DOWN because no MAC address found for device %s.\n",
+                  hostbatch[targetno]->NameIP(), 
+                  hostbatch[targetno]->deviceName());
+        hostbatch[targetno]->flags = HOST_DOWN;
       }
       continue;
     }
     targets.push_back(hostbatch[targetno]);
   }
-  if (!targets.empty())
-    ultra_scan(targets, NULL, PING_SCAN_ARP);
+  if (!targets.empty()) {
+    if (targets[0]->af() == AF_INET)
+      ultra_scan(targets, NULL, PING_SCAN_ARP);
+    else
+      ultra_scan(targets, NULL, PING_SCAN_ND);
+  }
   return;
 }
 
@@ -194,238 +157,68 @@ void returnhost(HostGroupState *hs) {
   hs->next_batch_no--;
 }
 
-/* Is the host passed as Target to be excluded, much of this logic had  (mdmcl)
- * to be rewritten from wam's original code to allow for the objects */
+/* Is the host passed as Target to be excluded? Much of this logic had
+   to be rewritten from wam's original code to allow for the objects */
 static int hostInExclude(struct sockaddr *checksock, size_t checksocklen, 
-		  TargetGroup *exclude_group) {
-  unsigned long tmpTarget; /* ip we examine */
-  int i=0;                 /* a simple index */
-  char targets_type;       /* what is the address type of the Target Group */
-  struct sockaddr_storage ss; 
-  struct sockaddr_in *sin = (struct sockaddr_in *) &ss;
-  size_t slen;             /* needed for funct but not used */
-  unsigned long mask = 0;  /* our trusty netmask, which we convert to nbo */
-  struct sockaddr_in *checkhost;
-
-  if ((TargetGroup *)0 == exclude_group)
+                  const addrset *exclude_group) {
+  if (exclude_group == NULL)
     return 0;
 
-  assert(checksocklen >= sizeof(struct sockaddr_in));
-  checkhost = (struct sockaddr_in *) checksock;
-  if (checkhost->sin_family != AF_INET)
-    checkhost = NULL;
+  if (checksock == NULL)
+    return 0;
 
-  /* First find out what type of addresses are in the target group */
-  targets_type = exclude_group[i].get_targets_type();
-
-  /* Lets go through the targets until we reach our uninitialized placeholder */
-  while (exclude_group[i].get_targets_type() != TargetGroup::TYPE_NONE)
-  { 
-    /* while there are still hosts in the target group */
-    while (exclude_group[i].get_next_host(&ss, &slen) == 0) {
-      tmpTarget = sin->sin_addr.s_addr; 
-
-      /* For Netmasks simply compare the network bits and move to the next
-       * group if it does not compare, we don't care about the individual addrs */
-      if (targets_type == TargetGroup::IPV4_NETMASK) {
-        mask = htonl((unsigned long) (0-1) << (32-exclude_group[i].get_mask()));
-        if ((tmpTarget & mask) == (checkhost->sin_addr.s_addr & mask)) {
-	  exclude_group[i].rewind();
-	  return 1;
-        }
-	else {
-	  break;
-	}
-      } 
-      /* For ranges we need to be a little more slick, if we don't find a match
-       * we should skip the rest of the addrs in the octet, thank wam for this
-       * optimization */
-      else if (targets_type == TargetGroup::IPV4_RANGES) {
-        if (tmpTarget == checkhost->sin_addr.s_addr) {
-          exclude_group[i].rewind();
-          return 1;
-        }
-        else { /* note these are in network byte order */
-	  if ((tmpTarget & 0x000000ff) != (checkhost->sin_addr.s_addr & 0x000000ff))
-            exclude_group[i].skip_range(TargetGroup::FIRST_OCTET); 
-	  else if ((tmpTarget & 0x0000ff00) != (checkhost->sin_addr.s_addr & 0x0000ff00))
-            exclude_group[i].skip_range(TargetGroup::SECOND_OCTET); 
-	  else if ((tmpTarget & 0x00ff0000) != (checkhost->sin_addr.s_addr & 0x00ff0000))
-            exclude_group[i].skip_range(TargetGroup::THIRD_OCTET); 
-
-          continue;
-        }
-      }
-#if HAVE_IPV6
-      else if (targets_type == TargetGroup::IPV6_ADDRESS) {
-        fatal("exclude file not supported for IPV6 -- If it is important to you, send a mail to fyodor@insecure.org so I can guage support\n");
-      }
-#endif
-    }
-    exclude_group[i++].rewind();
-  }
-
-  /* we did not find the host */
+  if (addrset_contains(exclude_group,checksock))
+    return 1;
   return 0;
 }
 
-/* loads an exclude file into an exclude target list  (mdmcl) */
-TargetGroup* load_exclude(FILE *fExclude, char *szExclude) {
-  int i=0;			/* loop counter */
-  int iLine=0;			/* line count */
-  int iListSz=0;		/* size of our exclude target list. 
-				 * It doubles in size as it gets
-				 *  close to filling up
-				 */
-  char acBuf[512];
-  char *p_acBuf;
-  TargetGroup *excludelist;	/* list of ptrs to excluded targets */
-  char *pc;			/* the split out exclude expressions */
-  char b_file = (char)0;        /* flag to indicate if we are using a file */
+/* Load an exclude list from a file for --excludefile. */
+int load_exclude_file(addrset *excludelist, FILE *fp) {
+  char host_spec[1024];
+  size_t n;
 
-  /* If there are no params return now with a NULL list */
-  if (((FILE *)0 == fExclude) && ((char *)0 == szExclude)) {
-    excludelist=NULL;
-    return excludelist;
-  }
-
-  if ((FILE *)0 != fExclude)
-    b_file = (char)1;
-
-  /* Since I don't know of a realloc equiv in C++, we will just count
-   * the number of elements here. */
-
-  /* If the input was given to us in a file, count the number of elements
-   * in the file, and reset the file */
-  if (1 == b_file) {
-    while ((char *)0 != fgets(acBuf,sizeof(acBuf), fExclude)) {
-      if ((char *)0 == strchr(acBuf, '\n')) {
-        fatal("Exclude file line %d was too long to read.  Exiting.", iLine);
-      }
-      pc=strtok(acBuf, "\t\n ");	
-      while (NULL != pc) {
-        iListSz++;
-        pc=strtok(NULL, "\t\n ");
-      }
-    }
-    rewind(fExclude);
-  } /* If the exclude file was provided via command line, count the elements here */
-  else {
-    p_acBuf=strdup(szExclude);
-    pc=strtok(p_acBuf, ",");
-    while (NULL != pc) {
-      iListSz++;
-      pc=strtok(NULL, ",");
-    }
-    free(p_acBuf);
-    p_acBuf = NULL;
-  }
-
-  /* allocate enough TargetGroups to cover our entries, plus one that
-   * remains uninitialized so we know we reached the end */
-  excludelist = new TargetGroup[iListSz + 1];
-
-  /* don't use a for loop since the counter isn't incremented if the 
-   * exclude entry isn't parsed
-   */
-  i=0;
-  if (1 == b_file) {
-    /* If we are parsing a file load the exclude list from that */
-    while ((char *)0 != fgets(acBuf, sizeof(acBuf), fExclude)) {
-      ++iLine;
-      if ((char *)0 == strchr(acBuf, '\n')) {
-        fatal("Exclude file line %d was too long to read.  Exiting.", iLine);
-      }
-  
-      pc=strtok(acBuf, "\t\n ");	
-  
-      while ((char *)0 != pc) {
-         if(excludelist[i].parse_expr(pc,o.af()) == 0) {
-           if (o.debugging > 1)
-             error("Loaded exclude target of: %s", pc);
-           ++i;
-         } 
-         pc=strtok(NULL, "\t\n ");
-      }
+  while ((n = read_host_from_file(fp, host_spec, sizeof(host_spec))) > 0) {
+    if (n >= sizeof(host_spec))
+      fatal("One of your exclude file specifications was too long to read (>= %u chars)", (unsigned int) sizeof(host_spec));
+    if(!addrset_add_spec(excludelist, host_spec, o.af(), 1)){
+      fatal("Invalid address specification:");
     }
   }
-  else {
-    /* If we are parsing command line, load the exclude file from the string */
-    p_acBuf=strdup(szExclude);
-    pc=strtok(p_acBuf, ",");
 
-    while (NULL != pc) {
-      if(excludelist[i].parse_expr(pc,o.af()) == 0) {
-        if (o.debugging >1)
-          error("Loaded exclude target of: %s", pc);
-        ++i;
-      } 
-
-      /* This is a totally cheezy hack, but since I can't use strtok_r...
-       * If you can think of a better way to do this, feel free to change.
-       * As for now, we will reset strtok each time we leave parse_expr */
-      {
-	int hack_i;
-	char *hack_c = strdup(szExclude);
-
-	pc=strtok(hack_c, ",");
-
-        for (hack_i = 0; hack_i < i; hack_i++) 
-          pc=strtok(NULL, ",");
-
-	free(hack_c);
-      }
-    } 
-  }
-  return excludelist;
+  return 1;
 }
 
-/* A debug routine to dump some information to stdout.                  (mdmcl)
- * Invoked if debugging is set to 3 or higher
- * I had to make signigicant changes from wam's code. Although wam
- * displayed much more detail, alot of this is now hidden inside
- * of the Target Group Object. Rather than writing a bunch of methods
- * to return private attributes, which would only be used for 
- * debugging, I went for the method below.
- */
-int dumpExclude(TargetGroup *exclude_group) {
-  int i=0, debug_save=0, type=TargetGroup::TYPE_NONE;
-  unsigned int mask = 0;
-  struct sockaddr_storage ss;
-  struct sockaddr_in *sin = (struct sockaddr_in *) &ss;
-  size_t slen;
+/* Load a comma-separated exclude list from a string, the argument to
+   --exclude. */
+int load_exclude_string(addrset *excludelist, const char *s) {
+  const char *begin, *p;
 
-  /* shut off debugging for now, this is a debug routine in itself,
-   * we don't want to see all the debug messages inside of the object */
-  debug_save = o.debugging;
-  o.debugging = 0;
-
-  while ((type = exclude_group[i].get_targets_type()) != TargetGroup::TYPE_NONE)
-  {
-    switch (type) {
-       case TargetGroup::IPV4_NETMASK:
-         exclude_group[i].get_next_host(&ss, &slen);
-         mask = exclude_group[i].get_mask();
-         error("exclude host group %d is %s/%d", i, inet_ntoa(sin->sin_addr), mask);
-         break;
-
-       case TargetGroup::IPV4_RANGES:
-         while (exclude_group[i].get_next_host(&ss, &slen) == 0) 
-           error("exclude host group %d is %s", i, inet_ntoa(sin->sin_addr));
-         break;
-
-       case TargetGroup::IPV6_ADDRESS:
-	 fatal("IPV6 addresses are not supported in the exclude file\n");
-         break;
-
-       default:
-	 fatal("Unknown target type in exclude file.\n");
+  p = s;
+  while (*p != '\0') {
+    begin = p;
+    while (*p != '\0' && *p != ',')
+      p++;
+    std::string addr_str = std::string(begin, p - begin);
+    if (!addrset_add_spec(excludelist, addr_str.c_str(), o.af(), 1)) {
+        fatal("Invalid address specification: %s", addr_str.c_str());
     }
-    exclude_group[i++].rewind();
-  }
+    if (*p == '\0')
+      break;
+    p++;
+  };
 
-  /* return debugging to what it was */
-  o.debugging = debug_save; 
+  return 1;
+}
+
+
+/* A debug routine to dump some information to stdout. Invoked if debugging is
+   set to 3 or higher. */
+int dumpExclude(addrset *exclude_group) {
+  const struct addrset_elem *elem;
+
+  for (elem = exclude_group->head; elem != NULL; elem = elem->next)
+    addrset_elem_print(stdout, elem);
+
   return 1;
 }
  
@@ -462,158 +255,216 @@ static void massping(Target *hostbatch[], int num_hosts, struct scan_lists *port
   ultra_scan(targets, ports, PING_SCAN, &group_to);
 }
 
-Target *nexthost(HostGroupState *hs, TargetGroup *exclude_group,
-			    struct scan_lists *ports, int pingtype) {
-int hidx = 0;
-int i;
-struct sockaddr_storage ss;
-size_t sslen;
-struct intf_entry *ifentry;
- u32 ifbuf[200] ;
- struct route_nfo rnfo;
- bool arpping_done = false;
- struct timeval now;
+/* Returns true iff this target is incompatible with the other hosts in the host
+   group. This happens when:
+     1. it uses a different interface, or
+     2. it uses a different source address, or
+     3. it is directly connected when the other hosts are not, or vice versa, or
+     4. it has the same IP address as another target already in the group.
+   These restrictions only apply for raw scans. This function is similar to one
+   of the same name in nmap.cc. That one is for port scanning, this one is for
+   ping scanning. */
+static bool target_needs_new_hostgroup(const HostGroupState *hs, const Target *target) {
+  int i;
 
- ifentry = (struct intf_entry *) ifbuf; 
- ifentry->intf_len = sizeof(ifbuf); // TODO: May want to use a larger buffer if interface aliases prove important.
-if (hs->next_batch_no < hs->current_batch_sz) {
-  /* Woop!  This is easy -- we just pass back the next host struct */
-  return hs->hostbatch[hs->next_batch_no++];
+  /* We've just started a new hostgroup, so any target is acceptable. */
+  if (hs->current_batch_sz == 0)
+    return false;
+
+  /* There are no restrictions on non-root scans. */
+  if (!(o.isr00t && target->deviceName() != NULL))
+    return false;
+
+  /* Different address family? */
+  if (hs->hostbatch[0]->af() != target->af())
+    return true;
+
+  /* Different interface name? */
+  if (hs->hostbatch[0]->deviceName() != NULL &&
+      strcmp(hs->hostbatch[0]->deviceName(), target->deviceName()) != 0) {
+    return true;
+  }
+
+  /* Different source address? */
+  if (sockaddr_storage_cmp(hs->hostbatch[0]->SourceSockAddr(), target->SourceSockAddr()) != 0)
+    return true;
+
+  /* Different direct connectedness? */
+  if (hs->hostbatch[0]->directlyConnected() != target->directlyConnected())
+    return true;
+
+  /* Is there already a target with this same IP address? ultra_scan doesn't
+     cope with that, because it uses IP addresses to look up targets from
+     replies. What happens is one target gets the replies for all probes
+     referring to the same IP address. */
+  for (i = 0; i < hs->current_batch_sz; i++) {
+    if (sockaddr_storage_cmp(hs->hostbatch[0]->TargetSockAddr(), target->TargetSockAddr()) == 0)
+      return true;
+  }
+
+  return false;
 }
-/* Doh, we need to refresh our array */
-/* for(i=0; i < hs->max_batch_sz; i++) hs->hostbatch[i] = new Target(); */
 
-hs->current_batch_sz = hs->next_batch_no = 0;
-do {
-  /* Grab anything we have in our current_expression */
-  while (hs->current_batch_sz < hs->max_batch_sz && 
-	 hs->current_expression.get_next_host(&ss, &sslen) == 0)
-    {
+Target *nexthost(HostGroupState *hs, const addrset *exclude_group,
+                 struct scan_lists *ports, int pingtype) {
+  int i;
+  struct sockaddr_storage ss;
+  size_t sslen;
+  struct route_nfo rnfo;
+  bool arpping_done = false;
+  struct timeval now;
+
+  if (hs->next_batch_no < hs->current_batch_sz) {
+    /* Woop!  This is easy -- we just pass back the next host struct */
+    return hs->hostbatch[hs->next_batch_no++];
+  }
+  /* Doh, we need to refresh our array */
+  /* for (i=0; i < hs->max_batch_sz; i++) hs->hostbatch[i] = new Target(); */
+
+  hs->current_batch_sz = hs->next_batch_no = 0;
+  do {
+    /* Grab anything we have in our current_expression */
+    while (hs->current_batch_sz < hs->max_batch_sz && 
+        hs->current_expression.get_next_host(&ss, &sslen) == 0) {
+      Target *t;
+
       if (hostInExclude((struct sockaddr *)&ss, sslen, exclude_group)) {
-	continue; /* Skip any hosts the user asked to exclude */
+        continue; /* Skip any hosts the user asked to exclude */
       }
-      hidx = hs->current_batch_sz;
-      hs->hostbatch[hidx] = new Target();
-      hs->hostbatch[hidx]->setTargetSockAddr(&ss, sslen);
+      t = new Target();
+      t->setTargetSockAddr(&ss, sslen);
 
-      /* put target expression in target if we have a named host without netmask */
-      if ( hs->current_expression.get_targets_type() == TargetGroup::IPV4_NETMASK  &&
-	  hs->current_expression.get_namedhost() &&
-	  !strchr( hs->target_expressions[hs->next_expression-1], '/' ) ) {
-	hs->hostbatch[hidx]->setTargetName(hs->target_expressions[hs->next_expression-1]);
+      /* Special handling for the resolved address (for example whatever
+         scanme.nmap.org resolves to in scanme.nmap.org/24). */
+      if (hs->current_expression.is_resolved_address(&ss)) {
+        if (hs->current_expression.get_namedhost())
+          t->setTargetName(hs->current_expression.get_resolved_name());
+        t->resolved_addrs = hs->current_expression.get_resolved_addrs();
       }
 
       /* We figure out the source IP/device IFF
-	 1) We are r00t AND
-	 2) We are doing tcp or udp pingscan OR
-	 3) We are doing a raw-mode portscan or osscan OR
-	 4) We are on windows and doing ICMP ping */
-      if (o.isr00t && o.af() == AF_INET && 
-	  ((pingtype & (PINGTYPE_TCP|PINGTYPE_UDP|PINGTYPE_PROTO|PINGTYPE_ARP)) || o.RawScan()
+         1) We are r00t AND
+         2) We are doing tcp or udp pingscan OR
+         3) We are doing a raw-mode portscan or osscan or traceroute OR
+         4) We are on windows and doing ICMP ping */
+      if (o.isr00t && 
+          ((pingtype & (PINGTYPE_TCP|PINGTYPE_UDP|PINGTYPE_SCTP_INIT|PINGTYPE_PROTO|PINGTYPE_ARP)) || o.RawScan()
 #ifdef WIN32
-	   || (pingtype & (PINGTYPE_ICMP_PING|PINGTYPE_ICMP_MASK|PINGTYPE_ICMP_TS))
+           || (pingtype & (PINGTYPE_ICMP_PING|PINGTYPE_ICMP_MASK|PINGTYPE_ICMP_TS))
 #endif // WIN32
-	   )) {
-	hs->hostbatch[hidx]->TargetSockAddr(&ss, &sslen);
-	if (!route_dst(&ss, &rnfo)) {
-	  fatal("%s: failed to determine route to %s", __func__, hs->hostbatch[hidx]->NameIP());
-	}
-	if (rnfo.direct_connect) {
-	  hs->hostbatch[hidx]->setDirectlyConnected(true);
-	} else {
-	  hs->hostbatch[hidx]->setDirectlyConnected(false);
-	  hs->hostbatch[hidx]->setNextHop(&rnfo.nexthop, 
-					  sizeof(rnfo.nexthop));
-	}
-	hs->hostbatch[hidx]->setIfType(rnfo.ii.device_type);
-	if (rnfo.ii.device_type == devt_ethernet) {
-	  if (o.spoofMACAddress())
-	    hs->hostbatch[hidx]->setSrcMACAddress(o.spoofMACAddress());
-	  else hs->hostbatch[hidx]->setSrcMACAddress(rnfo.ii.mac);
-	}
-	hs->hostbatch[hidx]->setSourceSockAddr(&rnfo.srcaddr, sizeof(rnfo.srcaddr));
-	if (hidx == 0) /* Because later ones can have different src addy and be cut off group */
-	  o.decoys[o.decoyturn] = hs->hostbatch[hidx]->v4source();
-	hs->hostbatch[hidx]->setDeviceNames(rnfo.ii.devname, rnfo.ii.devfullname);
-	//	  printf("Target %s %s directly connected, goes through local iface %s, which %s ethernet\n", hs->hostbatch[hidx]->NameIP(), hs->hostbatch[hidx]->directlyConnected()? "IS" : "IS NOT", hs->hostbatch[hidx]->deviceName(), (hs->hostbatch[hidx]->ifType() == devt_ethernet)? "IS" : "IS NOT");
+          )) {
+        t->TargetSockAddr(&ss, &sslen);
+        if (!nmap_route_dst(&ss, &rnfo)) {
+          fatal("%s: failed to determine route to %s", __func__, t->NameIP());
+        }
+        if (rnfo.direct_connect) {
+          t->setDirectlyConnected(true);
+        } else {
+          t->setDirectlyConnected(false);
+          t->setNextHop(&rnfo.nexthop, sizeof(rnfo.nexthop));
+        }
+        t->setIfType(rnfo.ii.device_type);
+        if (rnfo.ii.device_type == devt_ethernet) {
+          if (o.spoofMACAddress())
+            t->setSrcMACAddress(o.spoofMACAddress());
+          else
+            t->setSrcMACAddress(rnfo.ii.mac);
+        }
+        t->setSourceSockAddr(&rnfo.srcaddr, sizeof(rnfo.srcaddr));
+        if (hs->current_batch_sz == 0) /* Because later ones can have different src addy and be cut off group */
+          o.decoys[o.decoyturn] = t->v4source();
+        t->setDeviceNames(rnfo.ii.devname, rnfo.ii.devfullname);
+        t->setMTU(rnfo.ii.mtu);
+        // printf("Target %s %s directly connected, goes through local iface %s, which %s ethernet\n", t->NameIP(), t->directlyConnected()? "IS" : "IS NOT", t->deviceName(), (t->ifType() == devt_ethernet)? "IS" : "IS NOT");
       }
-      
 
-      /* In some cases, we can only allow hosts that use the same
-	 device in a group.  Similarly, we don't mix
-	 directly-connected boxes with those that aren't */
-      if (o.af() == AF_INET && o.isr00t && hidx > 0 && 
-	  hs->hostbatch[hidx]->deviceName() && 
-	  (hs->hostbatch[hidx]->v4source().s_addr != hs->hostbatch[0]->v4source().s_addr || 
-	   strcmp(hs->hostbatch[0]->deviceName(), 
-		  hs->hostbatch[hidx]->deviceName()) != 0 
-	  || hs->hostbatch[hidx]->directlyConnected() != hs->hostbatch[0]->directlyConnected())) {
-	/* Cancel everything!  This guy must go in the next group and we are
-	   out of here */
-	hs->current_expression.return_last_host();
-	delete hs->hostbatch[hidx];
-	goto batchfull;
+      /* Does this target need to go in a separate host group? */
+      if (target_needs_new_hostgroup(hs, t)) {
+        /* Cancel everything!  This guy must go in the next group and we are
+           out of here */
+        hs->current_expression.return_last_host();
+        delete t;
+        goto batchfull;
       }
-      hs->current_batch_sz++;
-}
 
-  if (hs->current_batch_sz < hs->max_batch_sz &&
-      hs->next_expression < hs->num_expressions) {
-    /* We are going to have to pop in another expression. */
-    while(hs->current_expression.parse_expr(hs->target_expressions[hs->next_expression++], o.af()) != 0) 
-      if (hs->next_expression >= hs->num_expressions)
-	break;
-  } else break;
-} while(1);
+      hs->hostbatch[hs->current_batch_sz++] = t;
+    }
 
- batchfull:
- 
-if (hs->current_batch_sz == 0)
-  return NULL;
+    if (hs->current_batch_sz < hs->max_batch_sz &&
+        hs->next_expression < hs->num_expressions) {
+      /* We are going to have to pop in another expression. */
+      while(hs->current_expression.parse_expr(hs->target_expressions[hs->next_expression++], o.af()) != 0) 
+        if (hs->next_expression >= hs->num_expressions)
+          break;
+    } else break;
+  } while(1);
 
-/* OK, now we have our complete batch of entries.  The next step is to
-   randomize them (if requested) */
-if (hs->randomize) {
-  hoststructfry(hs->hostbatch, hs->current_batch_sz);
-}
+batchfull:
 
-/* First I'll do the ARP ping if all of the machines in the group are
-   directly connected over ethernet.  I may need the MAC addresses
-   later anyway. */
- if (hs->hostbatch[0]->ifType() == devt_ethernet && 
-     hs->hostbatch[0]->directlyConnected() && 
-     o.sendpref != PACKET_SEND_IP_STRONG) {
-   arpping(hs->hostbatch, hs->current_batch_sz);
-   arpping_done = true;
- }
- 
- gettimeofday(&now, NULL);
- if ((o.sendpref & PACKET_SEND_ETH) && 
-     hs->hostbatch[0]->ifType() == devt_ethernet) {
-   for(i=0; i < hs->current_batch_sz; i++)
-     if (!(hs->hostbatch[i]->flags & HOST_DOWN) && 
-	 !hs->hostbatch[i]->timedOut(&now))
-       if (!setTargetNextHopMAC(hs->hostbatch[i]))
-	 fatal("%s: Failed to determine dst MAC address for target %s", 
-	       __func__, hs->hostbatch[i]->NameIP());
- }
+  if (hs->current_batch_sz == 0)
+    return NULL;
 
- /* TODO: Maybe I should allow real ping scan of directly connected
-    ethernet hosts? */
- /* Then we do the mass ping (if required - IP-level pings) */
- if ((pingtype == PINGTYPE_NONE && !arpping_done) || hs->hostbatch[0]->ifType() == devt_loopback) {
-   for(i=0; i < hs->current_batch_sz; i++)  {
-     if (!hs->hostbatch[i]->timedOut(&now)) {
-       initialize_timeout_info(&hs->hostbatch[i]->to);
-       hs->hostbatch[i]->flags |= HOST_UP; /*hostbatch[i].up = 1;*/
-	   hs->hostbatch[i]->reason.reason_id = ER_LOCALHOST;
-     }
-   }
- } else if (!arpping_done) {
-   massping(hs->hostbatch, hs->current_batch_sz, ports);
- }
- 
- if (!o.noresolve) nmap_mass_rdns(hs->hostbatch, hs->current_batch_sz);
- 
- return hs->hostbatch[hs->next_batch_no++];
+  /* OK, now we have our complete batch of entries.  The next step is to
+     randomize them (if requested) */
+  if (hs->randomize) {
+    hoststructfry(hs->hostbatch, hs->current_batch_sz);
+  }
+
+  /* First I'll do the ARP ping if all of the machines in the group are
+     directly connected over ethernet.  I may need the MAC addresses
+     later anyway. */
+  if (hs->hostbatch[0]->ifType() == devt_ethernet && 
+      hs->hostbatch[0]->af() == AF_INET &&
+      hs->hostbatch[0]->directlyConnected() && 
+      o.sendpref != PACKET_SEND_IP_STRONG) {
+    arpping(hs->hostbatch, hs->current_batch_sz);
+    arpping_done = true;
+  }
+
+  /* No other interface types are supported by ND ping except devt_ethernet
+     at the moment. */
+  if (hs->hostbatch[0]->ifType() == devt_ethernet &&
+      hs->hostbatch[0]->af() == AF_INET6 &&
+      hs->hostbatch[0]->directlyConnected() &&
+      o.sendpref != PACKET_SEND_IP_STRONG) {
+    arpping(hs->hostbatch, hs->current_batch_sz);
+    arpping_done = true;
+  }
+
+  gettimeofday(&now, NULL);
+  if ((o.sendpref & PACKET_SEND_ETH) && 
+      hs->hostbatch[0]->ifType() == devt_ethernet) {
+    for (i=0; i < hs->current_batch_sz; i++) {
+      if (!(hs->hostbatch[i]->flags & HOST_DOWN) && 
+          !hs->hostbatch[i]->timedOut(&now)) {
+        if (!setTargetNextHopMAC(hs->hostbatch[i])) {
+          fatal("%s: Failed to determine dst MAC address for target %s", 
+              __func__, hs->hostbatch[i]->NameIP());
+        }
+      }
+    }
+  }
+
+  /* TODO: Maybe I should allow real ping scan of directly connected
+     ethernet hosts? */
+  /* Then we do the mass ping (if required - IP-level pings) */
+  if ((pingtype == PINGTYPE_NONE && !arpping_done) || hs->hostbatch[0]->ifType() == devt_loopback) {
+    for (i=0; i < hs->current_batch_sz; i++) {
+      if (!hs->hostbatch[i]->timedOut(&now)) {
+        initialize_timeout_info(&hs->hostbatch[i]->to);
+        hs->hostbatch[i]->flags |= HOST_UP; /*hostbatch[i].up = 1;*/
+        if (pingtype == PINGTYPE_NONE && !arpping_done)
+          hs->hostbatch[i]->reason.reason_id = ER_USER;
+        else
+          hs->hostbatch[i]->reason.reason_id = ER_LOCALHOST;
+      }
+    }
+  } else if (!arpping_done) {
+    massping(hs->hostbatch, hs->current_batch_sz, ports);
+  }
+
+  if (!o.noresolve)
+    nmap_mass_rdns(hs->hostbatch, hs->current_batch_sz);
+
+  return hs->hostbatch[hs->next_batch_no++];
 }

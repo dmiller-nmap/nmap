@@ -1,64 +1,101 @@
+
+extern "C" {
+  #include "lua.h"
+  #include "lauxlib.h"
+}
+
+#include "nmap.h"
 #include "nse_debug.h"
 #include "output.h"
 
-void l_dumpStack(lua_State *L) {
-	int stack_height = lua_gettop(L);
-	int i;
-	
-	log_write(LOG_PLAIN, "-== Stack Dump Begin ==-\n");
-	for(i = -1; i >= 0 - stack_height; i--) {
-		log_write(LOG_PLAIN, "%d: ", i);
-		l_dumpValue(L, i);
-	}
-
-	log_write(LOG_PLAIN, "-== Stack Dump End ==-\n");
+/* Print a Lua table. depth_limit is the limit on recursive printing of
+   subtables. */
+static void table_dump (lua_State *L, int i, int depth_limit)
+{
+  assert(lua_type(L, i) == LUA_TTABLE);
+  printf("{ ");
+  lua_pushvalue(L, i);
+  lua_pushnil(L);
+  while (lua_next(L, -2) != 0) {
+    value_dump(L, -2, depth_limit - 1);
+    printf(" = ");
+    value_dump(L, -1, depth_limit - 1);
+    printf(", ");
+    lua_pop(L, 1);
+  }
+  lua_pop(L, 1);
+  printf("}");
 }
 
-void l_dumpValue(lua_State *L, int i) {
-    switch (lua_type(L, i))
-    {
-      case LUA_TTABLE:
-		l_dumpTable(L, i);
-        break;
-      case LUA_TFUNCTION:
-		l_dumpFunction(L, i);
-        break;
-      case LUA_TSTRING:
-		log_write(LOG_PLAIN, "string '%s'\n", lua_tostring(L, i));
-        break;
-      case LUA_TBOOLEAN:
-		log_write(LOG_PLAIN, "boolean: %s\n",
-            lua_toboolean(L, i) ? "true" : "false"); 
-        break;
-      case LUA_TNUMBER:
-		log_write(LOG_PLAIN, "number: %g\n", lua_tonumber(L, i));
-        break;
-      default:
-		log_write(LOG_PLAIN, "%s\n", lua_typename(L, lua_type(L, i)));
-    }
+/* Print a Lua value. depth_limit controls the depth to which tables will be
+   printed recursively (0 for no recursion). */
+void value_dump (lua_State *L, int i, int depth_limit)
+{
+  int t = lua_type(L, i);
+  switch (t)
+  {
+    case LUA_TSTRING:  /* strings */
+      printf("'%s'", lua_tostring(L, i));
+      break;
+    case LUA_TBOOLEAN:  /* booleans */
+      printf(lua_toboolean(L, i) ? "true" : "false");
+      break;
+    case LUA_TNUMBER:  /* numbers */
+      printf("%g", lua_tonumber(L, i));
+      break;
+    case LUA_TTABLE:
+      if (depth_limit > 0)
+        table_dump(L, i, depth_limit);
+      else
+        printf("table: %p", lua_topointer(L, i));
+      break;
+    case LUA_TTHREAD:
+    case LUA_TFUNCTION:
+    case LUA_TUSERDATA:
+    case LUA_TLIGHTUSERDATA:
+      printf("%s: %p", lua_typename(L, t), lua_topointer(L, i));
+      break;
+    default:  /* other values */
+      printf("%s", lua_typename(L, t));
+      break;
+  }
 }
 
-void l_dumpTable(lua_State *L, int index) {
-	log_write(LOG_PLAIN, "table\n");
-	lua_pushnil(L);
-
-	if (index<0) --index;
-	while(lua_next(L, index) != 0)
-	{
-		l_dumpValue(L, -2);
-		l_dumpValue(L, -1);
-		lua_pop(L, 1); 
-	}
+void stack_dump (lua_State *L)
+{
+  int i, top = lua_gettop(L);
+  for (i = 1; i <= top; i++)
+  {
+    printf("[%d, %d] = ", i, (-top + i - 1));
+    value_dump(L, i, 0);
+    printf("\n");
+  }
 }
 
-void l_dumpFunction(lua_State *L, int index) {
-//	lua_Debug ar;
+void lua_state_dump (lua_State *L)
+{
+  int top;
 
-	log_write(LOG_PLAIN, "function\n");	
+  printf("=== LUA STATE ===\n");
 
-//	lua_pushvalue(L, index);
-//	lua_getinfo(L, ">n", &ar);
-//	
-//	log_write(LOG_PLAIN, "\tname: %s %s\n", ar.namewhat, ar.name);
-	fflush(stdout);
+  top = lua_gettop(L);
+  printf("=== STACK (height %d)\n", top);
+  stack_dump(L);
+
+  printf("=== GLOBALS\n");
+  table_dump(L, LUA_GLOBALSINDEX, 0);
+  printf("\n");
+
+  printf("=== REGISTRY\n");
+  table_dump(L, LUA_REGISTRYINDEX, 0);
+  printf("\n");
+
+  printf("=== nmap.registry\n");
+  lua_getglobal(L, "nmap");
+  lua_getfield(L, -1, "registry");
+  table_dump(L, -1, 1);
+  printf("\n");
+  lua_pop(L, 2);
+
+  assert(lua_gettop(L) == top);
 }

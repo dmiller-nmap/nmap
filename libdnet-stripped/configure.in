@@ -3,11 +3,11 @@ dnl configure.in
 dnl
 dnl Copyright (c) 2000 Dug Song <dugsong@monkey.org>
 dnl
-dnl $Id: configure.in,v 1.64 2005/02/25 23:05:09 dugsong Exp $
+dnl $Id: configure.in 638 2007-01-20 11:39:21Z dugsong $
 
 AC_INIT(include/dnet.h)
 
-AM_INIT_AUTOMAKE(libdnet, 1.10)
+AM_INIT_AUTOMAKE(libdnet, 1.12)
 AM_CONFIG_HEADER(include/config.h)
 
 dnl XXX - stop the insanity!@#$
@@ -17,6 +17,11 @@ dnl Check for system type.
 dnl XXX - we do this to qualify our later feature checks, since some
 dnl systems claim to support multiple features, but are quite b0rked.
 AC_CANONICAL_HOST
+dnl XXX - spoof AC_CYGWIN
+case "$host_os" in
+  *cygwin*) CYGWIN=yes;;
+         *) CYGWIN=no;;
+esac
 
 dnl Initialize prefix.
 if test "$prefix" = "NONE"; then
@@ -27,6 +32,7 @@ dnl Checks for programs.
 AC_PROG_CC
 AC_PROG_INSTALL
 AC_LIBTOOL_DLOPEN
+AC_DISABLE_SHARED
 AM_PROG_LIBTOOL
 
 dnl Checks for Python.
@@ -69,7 +75,6 @@ if test -r /usr/include/sgidefs.h ; then
 	CPPFLAGS="$CPPFLAGS -D__sgi"
 fi
 dnl XXX - we need MingW32 under Cygwin for win32
-AC_CYGWIN
 if test "$CYGWIN" = yes ; then
 	if test -d /usr/include/mingw ; then
 		CPPFLAGS="$CPPFLAGS -mno-cygwin"
@@ -164,6 +169,7 @@ else
 	AC_CHECK_HEADERS(net/bpf.h net/if.h net/if_var.h \
 	    net/if_arp.h net/if_dl.h net/pfilt.h \
 	    net/pfvar.h net/radix.h net/raw.h net/route.h netinet/in_var.h \
+	    netinet/in6_var.h \
 	    net/if_tun.h linux/if_tun.h netinet/ip_fw.h linux/ip_fw.h \
 	    linux/ip_fwchains.h linux/netfilter_ipv4/ipchains_core.h)
 	AC_CHECK_HEADERS(ip_fil_compat.h netinet/ip_fil_compat.h ip_compat.h \
@@ -190,6 +196,8 @@ AC_PROG_GCC_TRADITIONAL
 if test "$GCC" = yes ; then
    	CFLAGS="$CFLAGS -Wall"
 fi
+AC_CHECK_TYPES([socklen_t], [], [], [AC_INCLUDES_DEFAULT
+#include <sys/socket.h>])
 
 dnl Checks for library functions.
 AC_FUNC_MEMCMP
@@ -205,6 +213,7 @@ if test "$CYGWIN" != yes ; then
 	AC_DNET_IOCTL_ARP
 	AC_DNET_RAWIP_HOST_OFFLEN
 	AC_DNET_RAWIP_COOKED
+	AC_DNET_GETKERNINFO
 fi
 
 dnl Check for arp interface.
@@ -238,8 +247,6 @@ else
 	AC_LIBOBJ([eth-none])
 fi
 
-dnl Using fw-none since Nmap doesn't need any of the firewall-related rules
-dnl --Fyodor
 AC_LIBOBJ([fw-none])
 
 dnl Check for network interface interface.
@@ -276,26 +283,20 @@ if test "$ac_cv_header_linux_if_tun_h" = yes ; then
 	AC_LIBOBJ([tun-linux])
 elif test "$ac_cv_header_net_if_tun_h" = yes ; then
 	if test "$ac_cv_header_stropts_h" = yes ; then
-           case "$host_os" in
-           *kfreebsd* | *dragonfly*)
-               AC_LIBOBJ([tun-bsd]);;
-           *)
-               AC_LIBOBJ([tun-solaris]);;
-           esac
+               case "$host_os" in
+               *kfreebsd*)
+                       AC_LIBOBJ([tun-bsd]);;
+               *)
+                       AC_LIBOBJ([tun-solaris]);;
+               esac
 	else
 		AC_LIBOBJ([tun-bsd])
 	fi
-elif test -f "/dev/tun0" ; then
+elif test -c "/dev/tun0" ; then
 	AC_LIBOBJ([tun-bsd])
 else
 	AC_LIBOBJ([tun-none])
 fi
-
-dnl Generate LTLIBOBJS for libtool.
-Xsed="sed -e s/^X//"
-LTLIBOBJS=`echo X"$LIBOBJS"|\
-	[$Xsed -e "s,\.[^.]* ,.lo ,g;s,\.[^.]*$,.lo,"]`
-AC_SUBST(LTLIBOBJS)
 
 AC_OUTPUT([Makefile dnet-config include/Makefile include/dnet/Makefile
 	src/Makefile],

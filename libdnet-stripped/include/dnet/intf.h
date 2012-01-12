@@ -5,7 +5,7 @@
  *
  * Copyright (c) 2000 Dug Song <dugsong@monkey.org>
  *
- * $Id: intf.h,v 1.16 2004/01/13 07:41:09 dugsong Exp $
+ * $Id: intf.h 478 2004-01-13 07:41:09Z dugsong $
  */
 
 #ifndef DNET_INTF_H
@@ -19,6 +19,7 @@
 struct intf_entry {
 	u_int		intf_len;		    /* length of entry */
 	char		intf_name[INTF_NAME_LEN];   /* interface name */
+	u_int		intf_index;		    /* interface index (r/o) */
 	u_short		intf_type;		    /* interface type (r/o) */
 	u_short		intf_flags;		    /* interface flags */
 	u_int		intf_mtu;		    /* interface MTU */
@@ -58,12 +59,13 @@ typedef int (*intf_handler)(const struct intf_entry *entry, void *arg);
 __BEGIN_DECLS
 intf_t	*intf_open(void);
 int	 intf_get(intf_t *i, struct intf_entry *entry);
+int	 intf_get_index(intf_t *intf, struct intf_entry *entry, int af, unsigned int index);
 int	 intf_get_src(intf_t *i, struct intf_entry *entry, struct addr *src);
 int	 intf_get_dst(intf_t *i, struct intf_entry *entry, struct addr *dst);
+int	 intf_get_pcap_devname(const char *intf_name, char *pcapdev, int pcapdevlen);
 int	 intf_set(intf_t *i, const struct intf_entry *entry);
 int	 intf_loop(intf_t *i, intf_handler callback, void *arg);
 intf_t	*intf_close(intf_t *i);
-
 __END_DECLS
 
 #endif /* DNET_INTF_H */

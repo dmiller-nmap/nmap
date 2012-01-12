@@ -5,7 +5,7 @@
  *                                                                         *
  ***********************IMPORTANT NMAP LICENSE TERMS************************
  *                                                                         *
- * The Nmap Security Scanner is (C) 1996-2008 Insecure.Com LLC. Nmap is    *
+ * The Nmap Security Scanner is (C) 1996-2011 Insecure.Com LLC. Nmap is    *
  * also a registered trademark of Insecure.Com LLC.  This program is free  *
  * software; you may redistribute and/or modify it under the terms of the  *
  * GNU General Public License as published by the Free Software            *
@@ -27,25 +27,16 @@
  *   nmap-os-db or nmap-service-probes.                                    *
  * o Executes Nmap and parses the results (as opposed to typical shell or  *
  *   execution-menu apps, which simply display raw Nmap output and so are  *
- *   not derivative works.)                                                * 
+ *   not derivative works.)                                                *
  * o Integrates/includes/aggregates Nmap into a proprietary executable     *
  *   installer, such as those produced by InstallShield.                   *
  * o Links to a library or executes a program that does any of the above   *
  *                                                                         *
  * The term "Nmap" should be taken to also include any portions or derived *
- * works of Nmap.  This list is not exclusive, but is just meant to        *
- * clarify our interpretation of derived works with some common examples.  *
- * These restrictions only apply when you actually redistribute Nmap.  For *
- * example, nothing stops you from writing and selling a proprietary       *
- * front-end to Nmap.  Just distribute it by itself, and point people to   *
- * http://nmap.org to download Nmap.                                       *
- *                                                                         *
- * We don't consider these to be added restrictions on top of the GPL, but *
- * just a clarification of how we interpret "derived works" as it applies  *
- * to our GPL-licensed Nmap product.  This is similar to the way Linus     *
- * Torvalds has announced his interpretation of how "derived works"        *
- * applies to Linux kernel modules.  Our interpretation refers only to     *
- * Nmap - we don't speak for any other GPL products.                       *
+ * works of Nmap.  This list is not exclusive, but is meant to clarify our *
+ * interpretation of derived works with some common examples.  Our         *
+ * interpretation applies only to Nmap--we don't speak for other people's  *
+ * GPL works.                                                              *
  *                                                                         *
  * If you have any questions about the GPL licensing restrictions on using *
  * Nmap in non-GPL works, we would be happy to help.  As mentioned above,  *
@@ -59,8 +50,8 @@
  * As a special exception to the GPL terms, Insecure.Com LLC grants        *
  * permission to link the code of this program with any version of the     *
  * OpenSSL library which is distributed under a license identical to that  *
- * listed in the included COPYING.OpenSSL file, and distribute linked      *
- * combinations including the two. You must obey the GNU GPL in all        *
+ * listed in the included docs/licenses/OpenSSL.txt file, and distribute   *
+ * linked combinations including the two. You must obey the GNU GPL in all *
  * respects for all of the code used other than OpenSSL.  If you modify    *
  * this file, you may extend this exception to your version of the file,   *
  * but you are not obligated to do so.                                     *
@@ -76,17 +67,17 @@
  *                                                                         *
  * Source code also allows you to port Nmap to new platforms, fix bugs,    *
  * and add new features.  You are highly encouraged to send your changes   *
- * to fyodor@insecure.org for possible incorporation into the main         *
+ * to nmap-dev@insecure.org for possible incorporation into the main       *
  * distribution.  By sending these changes to Fyodor or one of the         *
  * Insecure.Org development mailing lists, it is assumed that you are      *
- * offering Fyodor and Insecure.Com LLC the unlimited, non-exclusive right *
- * to reuse, modify, and relicense the code.  Nmap will always be          *
- * available Open Source, but this is important because the inability to   *
- * relicense code has caused devastating problems for other Free Software  *
- * projects (such as KDE and NASM).  We also occasionally relicense the    *
- * code to third parties as discussed above.  If you wish to specify       *
- * special license conditions of your contributions, just say so when you  *
- * send them.                                                              *
+ * offering the Nmap Project (Insecure.Com LLC) the unlimited,             *
+ * non-exclusive right to reuse, modify, and relicense the code.  Nmap     *
+ * will always be available Open Source, but this is important because the *
+ * inability to relicense code has caused devastating problems for other   *
+ * Free Software projects (such as KDE and NASM).  We also occasionally    *
+ * relicense the code to third parties as discussed above.  If you wish to *
+ * specify special license conditions of your contributions, just say so   *
+ * when you send them.                                                     *
  *                                                                         *
  * This program is distributed in the hope that it will be useful, but     *
  * WITHOUT ANY WARRANTY; without even the implied warranty of              *
@@ -128,7 +119,7 @@ int wildtest(char *wild, char *test) {
       if (wild[1] == '\0') return 1;
 
       for(i=0; test[i]!='\0'; i++)
-        if ((tolower((int)wild[1]) == tolower((int)test[i]) || wild[1] == '?')
+        if ((tolower((int) (unsigned char) wild[1]) == tolower((int) (unsigned char) test[i]) || wild[1] == '?')
             &&  wildtest(wild+1, test+i) == 1) return 1;
 
       return 0;
@@ -137,98 +128,27 @@ int wildtest(char *wild, char *test) {
     /* --- '?' can't match '\0'. --- */
     if (*wild == '?' && *test == '\0') return 0;
 
-    if (*wild != '?' && tolower((int)*wild) != tolower((int)*test)) return 0;
+    if (*wild != '?' && tolower((int) (unsigned char) *wild) != tolower((int) (unsigned char) *test)) return 0;
     wild++; test++;
   }
 
-  if (tolower((int)*wild) == tolower((int)*test)) return 1;
+  if (tolower((int) (unsigned char) *wild) == tolower((int) (unsigned char) *test)) return 1;
   return 0;
 
 }
 
+/* Wrapper for nbase function hexdump() */
+void nmap_hexdump(unsigned char *cp, unsigned int length){
 
-
-/* Hex dump */
-void hdump(unsigned char *packet, unsigned int len) {
-unsigned int i=0, j=0;
-
-log_write(LOG_PLAIN, "Here it is:\n");
-
-for(i=0; i < len; i++){
-  j = (unsigned) (packet[i]);
-  log_write(LOG_PLAIN, "%-2X ", j);
-  if (!((i+1)%16))
-    log_write(LOG_PLAIN, "\n");
-  else if (!((i+1)%4))
-    log_write(LOG_PLAIN, "  ");
-}
-log_write(LOG_PLAIN, "\n");
+ char *string=NULL;
+ string = hexdump((u8*)cp, length);
+ if(string){
+    log_write(LOG_PLAIN, "%s", string);
+    free(string);
+ }
+ return;
 }
 
-/* A better version of hdump, from Lamont Granquist.  Modified slightly
-   by Fyodor (fyodor@insecure.org) */
-void lamont_hdump(char *cp, unsigned int length) {
-
-  /* stolen from tcpdump, then kludged extensively */
-
-  static const char asciify[] = "................................ !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~.................................................................................................................................";
-
-  const u_short *sp;
-  const u_char *ap;
-  unsigned char *bp = (unsigned char *) cp;
-  u_int i, j;
-  int nshorts, nshorts2;
-  int padding;
-  
-  log_write(LOG_PLAIN, "\n\t");
-  padding = 0;
-  sp = (u_short *)bp;
-  ap = (u_char *)bp;
-  nshorts = (u_int) length / sizeof(u_short);
-  nshorts2 = (u_int) length / sizeof(u_short);
-  i = 0;
-  j = 0;
-  while(1) {
-    while (--nshorts >= 0) {
-      log_write(LOG_PLAIN, " %04x", ntohs(*sp));
-      sp++;
-      if ((++i % 8) == 0)
-        break;
-    }
-    if (nshorts < 0) {
-      if ((length & 1) && (((i-1) % 8) != 0)) {
-        log_write(LOG_PLAIN, " %02x  ", *(u_char *)sp);
-        padding++;
-      }
-      nshorts = (8 - (nshorts2 - nshorts));
-      while(--nshorts >= 0) {
-        log_write(LOG_PLAIN, "     ");
-      }
-      if (!padding) log_write(LOG_PLAIN, "     ");
-    }
-    log_write(LOG_PLAIN, "  ");
-
-    while (--nshorts2 >= 0) {
-      log_write(LOG_PLAIN, "%c%c", asciify[*ap], asciify[*(ap+1)]);
-      ap += 2;
-      if ((++j % 8) == 0) {
-        log_write(LOG_PLAIN, "\n\t");
-        break;
-      }
-    }
-    if (nshorts2 < 0) {
-      if ((length & 1) && (((j-1) % 8) != 0)) {
-        log_write(LOG_PLAIN, "%c", asciify[*ap]);
-      }
-      break;
-    }
-  }
-  if ((length & 1) && (((i-1) % 8) == 0)) {
-    log_write(LOG_PLAIN, " %02x", *(u_char *)sp);
-    log_write(LOG_PLAIN, "                                       %c", asciify[*ap]);
-  }
-  log_write(LOG_PLAIN, "\n");
-}
 
 #ifndef HAVE_STRERROR
 char *strerror(int errnum) {
@@ -251,24 +171,6 @@ char *chomp(char *string) {
   return string;
 }
 
-/* Compare a canonical option name (e.g. "max-scan-delay") with a
-   user-generated option such as "max_scan_delay" and returns 0 if the
-   two values are considered equivalant (for example, - and _ are
-   considered to be the same), nonzero otherwise. */
-int optcmp(const char *a, const char *b) {
-  while(*a && *b) {
-    if (*a == '_' || *a == '-') {
-      if (*b != '_' && *b != '-')
-	return 1;
-    }
-    else if (*a != *b)
-      return 1;
-    a++; b++;
-  }
-  if (*a || *b)
-    return 1;
-  return 0;
-}
 
 /* Scramble the contents of an array*/
 void genfry(unsigned char *arr, int elem_sz, int num_elem) {
@@ -317,9 +219,11 @@ iptr = (unsigned int *) bytes;
      pos = *iptr; iptr++;
    }
    pos %= i+1;
-   memcpy(tmp, arr + elem_sz * i, elem_sz);
-   memcpy(arr + elem_sz * i, arr + elem_sz * pos, elem_sz);
-   memcpy(arr + elem_sz * pos, tmp, elem_sz);
+   if ((unsigned) i != pos) { /* memcpy is undefined when source and dest overlap. */
+     memcpy(tmp, arr + elem_sz * i, elem_sz);
+     memcpy(arr + elem_sz * i, arr + elem_sz * pos, elem_sz);
+     memcpy(arr + elem_sz * pos, tmp, elem_sz);
+   }
  }
  free(bytes);
  free(tmp);
@@ -351,7 +255,7 @@ int Send(int sd, const void *msg, size_t len, int flags) {
   unsigned int sentlen = 0;
 
   do {
-    res = send(sd,(char *) msg + sentlen, len - sentlen, 0);
+    res = send(sd,(char *) msg + sentlen, len - sentlen, flags);
     if (res > 0)
       sentlen += res;
   } while(sentlen < len && (res != -1 || socket_errno() == EINTR));
@@ -399,7 +303,7 @@ int arg_parse(const char *command, char ***argv) {
   myargv++;
   start = mycommand;
   while(start && *start) {
-    while(*start && isspace((int) *start))
+    while(*start && isspace((int) (unsigned char) *start))
       start++;
     if (*start == '"') {
       start++;
@@ -411,7 +315,7 @@ int arg_parse(const char *command, char ***argv) {
       continue;
     } else {
       end = start+1;
-      while(*end && !isspace((int) *end)) {      
+      while(*end && !isspace((int) (unsigned char) *end)) {      
 	end++;
       }
     }
@@ -453,14 +357,14 @@ void arg_parse_free(char **argv) {
 static unsigned char hex2char(unsigned char a, unsigned char b)
 {
   int val;
-  if (!isxdigit(a) || !isxdigit(b)) return 0;
-  a = tolower(a);
-  b = tolower(b);
-  if (isdigit(a))
+  if (!isxdigit((int) a) || !isxdigit((int) b)) return 0;
+  a = tolower((int) a);
+  b = tolower((int) b);
+  if (isdigit((int) a))
     val = (a - '0') << 4;
   else val = (10 + (a - 'a')) << 4;
 
-  if (isdigit(b))
+  if (isdigit((int) b))
     val += (b - '0');
   else val += 10 + (b - 'a');
 
@@ -499,12 +403,12 @@ char *cstring_unescape(char *str, unsigned int *newlen) {
       case 'x':
 	src++;
 	if (!*src || !*(src + 1)) return NULL;
-	if (!isxdigit(*src) || !isxdigit(*(src + 1))) return NULL;
+	if (!isxdigit((int) (unsigned char) *src) || !isxdigit((int) (unsigned char) *(src + 1))) return NULL;
 	newchar = hex2char(*src, *(src + 1));
 	src += 2;
 	break;
       default:
-	if (isalnum(*src))
+	if (isalnum((int) (unsigned char) *src))
 	  return NULL; // I don't really feel like supporting octals such as \015
 	// Other characters I'll just copy as is
 	newchar = *src;
@@ -525,143 +429,6 @@ char *cstring_unescape(char *str, unsigned int *newlen) {
   return str;
 }
 
-/* This function converts zero-terminated 'txt' string to binary 'data'.
-   It is used to parse user input for ip options. Some examples of possible input
-   strings and results:
-   	'\x01*2\xA2'	-> [0x01,0x01,0xA2]	// with 'x' number is parsed in hex
-   	'\01\01\255'	-> [0x01,0x01,0xFF]	// without 'x' its in decimal
-   	'\x01\x00*2'	-> [0x01,0x00,0x00]	// '*' is copying char
-   	'R'		-> Record Route with 9 slots
-   	'S 192.168.0.1 172.16.0.1' -> Strict Route with 2 slots
-   	'L 192.168.0.1 172.16.0.1' -> Loose Route with 2 slots
-   	'T'		-> Record Timestamp with 9 slots
-   	'U'		-> Record Timestamp and Ip Address with 4 slots
-*/
-int parse_ip_options(char *txt, u8 *data, int datalen, int* firsthopoff, int* lasthopoff){
-  enum{
-    NONE  = 0,
-    SLASH = 1,
-    MUL   = 2,
-    RR	  = 3,
-    TIME  = 4,
-  } s = NONE;
-  char *n, lc;
-  char *c = txt;
-  u8 *d = data;
-  int i,j;
-  int base = 10;
-  u8 *dataend = &data[datalen];
-  u8 *len = NULL;
-  char buf[32];
-  memset(data, 0, datalen);
-  bool sourcerouting = false;
-  
-
-  for(;*c;c++){
-    switch(s){
-    case SLASH:
-      // parse \x00 string
-      if(*c == 'x'){// just ignore this char
-      	base = 16;
-        break;
-      }
-      if(isxdigit(*c)){
-        *d++ = strtol(c, &n, base);
-        c=n-1;
-      }else
-        fatal("not a digit after '\\'");
-      s = NONE;
-      break;
-    case MUL:
-      if(d==data)
-        fatal("nothing before '*' char");
-      i = strtol(c, &n, 10);
-      if(i<2)
-        fatal("bad number after '*'");
-      c = n-1;		// move current txt pointer
-      lc = *(d-1);	// last char, we'll copy this
-      for(j=1; j<i; j++){
-        *d++ = lc;
-        if(d == dataend) // check for overflow
-          goto after;
-      }
-      s = NONE;
-      break;
-    case RR:
-      if(*c==' ' || *c==',')
-        break;
-      n = buf;
-      while((*c=='.' || (*c>='0' && *c<='9')) && n-buf <= ((int)sizeof(buf)-1))
-      	 *n++ = *c++;
-      *n = '\0'; c--;
-      if(d+4>=dataend)
-        fatal("Buffer too small. Or input data too big :)");
-      i = inet_pton(AF_INET, buf, d);
-      if(i<1)
-        fatal("Not a valid ipv4 address '%s'",buf);
-      // remember offset of first hop
-      if(sourcerouting && !*firsthopoff)
-        *firsthopoff = d - data;
-      d+=4;
-      if(*len<37)
-        *len += 4;
-      break;
-    case TIME:
-      fatal("No more arguments allowed!");
-    default:
-      switch(*c){
-      case '\\':s = SLASH;base=10;break;
-      case '*':s = MUL;break;
-      case 'R':
-      case 'S':
-      case 'L':
-        if(d != data)
-          fatal("This option can't be used in that way");
-        *d++ = '\x01';//NOP
-        switch(*c){
-        case 'R':*d++ = 7;break;
-        case 'S':*d++ = 137; sourcerouting=true; break;
-        case 'L':*d++ = 131; sourcerouting=true; break;
-        }
-	len = d;
-        *d++ = (*c=='R')? 39 : 3; // length: 3+4*9 bytes
-        *d++ = 4; //pointer          
-        s = RR;
-        break;
-      case 'T':
-      case 'U':
-        if(d != data)
-          fatal("This option can't be used in that way");
-	*d++ = 68;	// option type
-	len = d;
-        *d++ = (*c=='U') ? 36 : 40;   // length: 3+4*9 bytes or 4+4*9 bytes
-        *d++ = 5; // pointer
-        *d++ = (*c=='U') ? 1 : 0; // flag: address and Time fields
-        s = TIME;
-        break;
-      default://*d++ = *c;
-      	fatal("Bad character in ip option '%c'",*c);
-      }
-    }
-    if(d == dataend)
-      break;
-    assert(d<dataend);
-  }
-  if(sourcerouting){
-    if(*len<37){
-      *len+=4;
-      *lasthopoff = d - data;
-      *d++ = 0;*d++ = 0;*d++ = 0;*d++ = 0;
-    }else
-      fatal("When using source routing you must leave at least one slot for target's ip.");
-  }
-  if(s == RR)
-    return(*len+1); // because we inject NOP before
-  if(s == TIME)
-    return(*len);
-after:
-  return(d - data);
-}
 
 void bintohexstr(char *buf, int buflen, char *src, int srclen){
     int bp=0;
@@ -682,203 +449,23 @@ void bintohexstr(char *buf, int buflen, char *src, int srclen){
       bp += Snprintf(buf+bp, buflen-bp,"\n");
 }
 
-static inline char* STRAPP(const char *fmt, ...) {
-  static char buf[256];
-  static int bp;
-  int left = (int)sizeof(buf)-bp;
-  if(!fmt){
-    bp = 0;
-    return(buf);
-  }
-  if (left <= 0)
-    return buf;
-  va_list ap;
-  va_start(ap, fmt);
-  bp += Vsnprintf (buf+bp, left, fmt, ap);
-  va_end(ap);
+/* Get the CPE part (first component of the URL, should be "a", "h", or "o") as
+   a character: 'a', 'h', or 'o'. Returns -1 on error. */
+int cpe_get_part(const char *cpe) {
+  const char *PREFIX = "cpe:/";
+  char part;
 
-  return(buf);
+  if (strncmp(cpe, PREFIX, strlen(PREFIX) != 0))
+    return -1;
+  /* This could be more robust, by decoding character escapes and checking ':'
+     boundaries. */
+  part = cpe[strlen(PREFIX)];
+
+  if (part == 'a' || part == 'h' || part == 'o')
+    return part;
+  else
+    return -1;
 }
-
-#define HEXDUMP -2
-#define UNKNOWN -1
-
-#define BREAK()		\
-	{option_type = HEXDUMP; break;}
-#define CHECK(tt)	\
-  if(tt >= option_end)	\
-  	{option_type = HEXDUMP; break;}
-/* It tries to decode ip options.
-   Returns static buffer. watch out. */
-char* print_ip_options(u8* ipopt, int ipoptlen) {
-  char ipstring[32];
-  int option_type = UNKNOWN;// option type
-  int option_len  = 0; // option length
-  int option_pt   = 0; // option pointer
-  int option_fl   = 0;  // option flag
-  u8 *tptr;		// temp pointer
-  u32 *tint;		// temp int
-
-  int option_sta = 0;	// option start offset
-  int option_end = 0;	// option end offset
-  int pt = 0;		// current offset
-
-  // clear buffer
-  STRAPP(NULL,NULL);
-
-  if(!ipoptlen)
-    return(NULL);
-
-  while(pt<ipoptlen){	// for every char in ipopt
-    // read ip option header
-    if(option_type == UNKNOWN) {
-      option_sta  = pt;
-      option_type = ipopt[pt++];
-      if(option_type != 0 && option_type != 1) { // should we be interested in length field?
-        if(pt >= ipoptlen)	// no more chars
-          {option_type = HEXDUMP;pt--; option_end = 255; continue;} // no length field, hex dump to the end
-        option_len  = ipopt[pt++];
-        // end must not be greater than length
-        option_end  = MIN(option_sta + option_len, ipoptlen);
-        // end must not be smaller than current position
-        option_end  = MAX(option_end, option_sta+2);
-      }
-    }
-    switch(option_type) {
-    case 0:	// IPOPT_END
-    	STRAPP(" EOL", NULL);
-    	option_type = UNKNOWN;
-  	break;
-    case 1:	// IPOPT_NOP
-    	STRAPP(" NOP", NULL);
-    	option_type = UNKNOWN;
-  	break;
-/*    case 130:	// IPOPT_SECURITY
-    	option_type=-1;
-  	break;*/
-    case 131:	// IPOPT_LSRR	-> Loose Source and Record Route
-    case 137:	// IPOPT_SSRR	-> Strict Source and Record Route
-    case 7:	// IPOPT_RR	-> Record Route
-	if(pt - option_sta == 2) {
-    	  STRAPP(" %s%s{", (option_type==131)?"LS":(option_type==137)?"SS":"", "RR");
-    	  // option pointer
-    	  CHECK(pt);
-    	  option_pt = ipopt[pt++];
-    	  if(option_pt%4 != 0 || (option_sta + option_pt-1)>option_end || option_pt<4)	//bad or too big pointer
-    	    STRAPP(" [bad ptr=%02i]", option_pt);
-    	}
-    	if(pt - option_sta > 2) { // ip's
-    	  int i, s = (option_pt)%4;
-    	  // if pointer is mangled, fix it. it's max 3 bytes wrong
-    	  CHECK(pt+3);
-    	  for(i=0; i<s; i++)
-    	    STRAPP("\\x%02x", ipopt[pt++]);
-    	  option_pt -= i;
-    	  // okay, now we can start printing ip's
-    	  CHECK(pt+3);
-	  tptr = &ipopt[pt]; pt+=4;
-	  if(inet_ntop(AF_INET, (char *) tptr, ipstring, sizeof(ipstring)) == NULL)
-	    fatal("Failed to convert target address to presentation format!?!  Error: %s", strerror(socket_errno()));
-    	  STRAPP("%c%s",(pt-3-option_sta)==option_pt?'#':' ', ipstring);
-    	  if(pt == option_end)
-    	    STRAPP("%s",(pt-option_sta)==(option_pt-1)?"#":""); // pointer in the end?
-    	}else BREAK();
-  	break;
-    case 68:	// IPOPT_TS	-> Internet Timestamp
-	if(pt - option_sta == 2){
-	  STRAPP(" TM{");
-    	  // pointer
-    	  CHECK(pt);
-    	  option_pt  = ipopt[pt++];
-	  // bad or too big pointer
-    	  if(option_pt%4 != 1 || (option_sta + option_pt-1)>option_end || option_pt<5)
-    	    STRAPP(" [bad ptr=%02i]", option_pt);
-    	  // flags + overflow
-    	  CHECK(pt);
-    	  option_fl  = ipopt[pt++];
-    	  if((option_fl&0x0C) || (option_fl&0x03)==2)
-    	    STRAPP(" [bad flags=\\x%01hhx]", option_fl&0x0F);
-  	  STRAPP("[%i hosts not recorded]", option_fl>>4);
-  	  option_fl &= 0x03;
-	}
-    	if(pt - option_sta > 2) {// ip's
-    	  int i, s = (option_pt+3)%(option_fl==0?4:8);
-    	  // if pointer is mangled, fix it. it's max 3 bytes wrong
-    	  CHECK(pt+(option_fl==0?3:7));
-    	  for(i=0; i<s; i++)
-    	    STRAPP("\\x%02x", ipopt[pt++]);
-    	  option_pt-=i;
-
-	  // print pt
-  	  STRAPP("%c",(pt+1-option_sta)==option_pt?'#':' ');
-    	  // okay, first grab ip.
-    	  if(option_fl!=0){
-    	    CHECK(pt+3);
-	    tptr = &ipopt[pt]; pt+=4;
-	    if(inet_ntop(AF_INET, (char *) tptr, ipstring, sizeof(ipstring)) == NULL)
-	      fatal("Failed to convert target address to presentation format!?!  Error: %s", strerror(socket_errno()));
-	    STRAPP("%s@", ipstring);
-    	  }
-    	  CHECK(pt+3);
-	  tint = (u32*)&ipopt[pt]; pt+=4;
-	  STRAPP("%u", ntohl(*tint));
-
-    	  if(pt == option_end)
-  	    STRAPP("%s",(pt-option_sta)==(option_pt-1)?"#":" ");
-    	}else BREAK();
-  	break;
-    case 136:	// IPOPT_SATID	-> (SANET) Stream Identifier
-	if(pt - option_sta == 2){
-	  u16 *sh;
-    	  STRAPP(" SI{",NULL);
-    	  // length
-    	  if(option_sta+option_len > ipoptlen || option_len!=4)
-    	    STRAPP("[bad len %02i]", option_len);
-
-    	  // stream id
-    	  CHECK(pt+1);
-    	  sh = (u16*) &ipopt[pt]; pt+=2;
-    	  option_pt  = ntohs(*sh);
-    	  STRAPP("id=%i", option_pt);
-    	  if(pt != option_end)
-    	    BREAK();
-	}else BREAK();
-  	break;
-    case UNKNOWN:
-    default:
-    	// we read option_type and option_len, print them.
-    	STRAPP(" ??{\\x%02hhx\\x%02hhx", option_type, option_len);
-    	// check option_end once more:
-    	if(option_len < ipoptlen)
-    	  option_end = MIN(MAX(option_sta+option_len, option_sta+2),ipoptlen);
-    	else
-    	  option_end = 255;
-    	option_type = HEXDUMP;
-    	break;
-    case HEXDUMP:
-    	assert(pt<=option_end);
-    	if(pt == option_end){
-	  STRAPP("}",NULL);
-    	  option_type=-1;
-    	  break;
-    	}
-	STRAPP("\\x%02hhx", ipopt[pt++]);
-    	break;
-    }
-    if(pt == option_end && option_type != UNKNOWN) {
-      STRAPP("}",NULL);
-      option_type = UNKNOWN;
-    }
-  } // while 
-  if(option_type != UNKNOWN)
-    STRAPP("}");
-
-  return(STRAPP("",NULL));
-}
-#undef CHECK
-#undef BREAK
-#undef UNKNOWN
-#undef HEXDUMP
 
 
 /* mmap() an entire file into the address space.  Returns a pointer
@@ -978,11 +565,11 @@ char *mmapfile(char *fname, int *length, int openflags)
  if (!fileptr)
   pfatal ("%s(%u): MapViewOfFile()", __FILE__, __LINE__);
 
- CloseHandle (fd);
-
  if (o.debugging > 2)
   log_write(LOG_PLAIN, "%s(): fd %08lX, gmap %08lX, fileptr %08lX, length %d\n",
     __func__, (DWORD)fd, (DWORD)gmap, (DWORD)fileptr, *length);
+
+ CloseHandle (fd);
 
 	return fileptr;
 }

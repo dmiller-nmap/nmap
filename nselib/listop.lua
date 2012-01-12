@@ -1,5 +1,15 @@
--- See nmaps COPYING for licence
-module(..., package.seeall)
+---
+-- Functional-style list operations.
+--
+-- People used to programming in functional languages, such as Lisp
+-- or Haskell, appreciate their handling of lists very much. The
+-- <code>listop</code> module tries to bring much of the functionality from
+-- functional languages to Lua using Lua's central data structure, the table, as
+-- a base for its list operations. Highlights include a <code>map</code>
+-- function applying a given function to each element of a list. 
+-- @copyright Same as Nmap--See http://nmap.org/book/man-legal.html
+
+module(... or "listop", package.seeall)
 
 --[[
 --
@@ -25,18 +35,27 @@ Functional programming style 'list' operations
     where 'value' is an lua datatype
 --]]
 
--- true if l is empty
+--- Returns true if the given list is empty.
+-- @param l A list.
+-- @return True or false.
 function is_empty(l)
   return #l == 0 and true or false;
 end
 
--- true if l is a list
+--- Returns true if the given value is a list (or rather a table).
+-- @param l Any value.
+-- @return True or false.
 function is_list(l)
   return type(l) == 'table' and true or false;
 end
 
--- Pass each elements of l to a function f which takes a single
--- argument. All the results are returned in an list
+--- Calls <code>f</code> for each element in the list. The returned list
+--contains the results of each function call.
+-- @usage
+-- listop.map(tostring,{1,2,true}) --> {"1","2","true"}
+-- @param f The function to call.
+-- @param l A list.
+-- @return List of function results.
 function map(f, l) 
     local results = {}
     for _, v in ipairs(l) do
@@ -45,16 +64,27 @@ function map(f, l)
     return results;
 end
 
--- Pass all elements of l to function f which takes a variable 
--- number of arguments or a number of arguments equal to the
--- size of l. The result of f is returned
+--- Calls the function with all the elements in the list as the parameters.
+-- @usage
+-- listop.apply(math.max,{1,5,6,7,50000}) --> 50000
+-- @param f The function to call.
+-- @param l A list.
+-- @return Results from <code>f</code>.
 function apply(f, l)
   return f(unpack(l))
 end
 
--- Pass all elements of l to a predicate function f which takes a single
--- argument. All elements where f(l[x]) is true are returned in an 
--- indexed list
+--- Returns a list containing only those elements for which a predicate
+-- function returns true.
+--
+-- The predicate has to be a function taking one argument and returning
+-- a Boolean. If it returns true, the argument is appended to the return value
+-- of filter.
+-- @usage
+-- listop.filter(isnumber,{1,2,3,"foo",4,"bar"}) --> {1,2,3,4}
+-- @param f The function.
+-- @param l The list.
+-- @return Filtered list.
 function filter(f, l) 
   local results = {}
   for i, v in ipairs(l) do
@@ -65,32 +95,50 @@ function filter(f, l)
   return results
 end
 
--- return first element of a list
+--- Fetch the first element of a list.
+-- @param l The list.
+-- @return The first element.
 function car(l)
   return l[1]
 end
 
--- return everything but the first element of a list
+--- Fetch all elements following the first in a new list.
+-- @param l The list.
+-- @return Elements after the first.
 function cdr(l)
   return {unpack(l, 2)}
 end
 
--- same as car but start at element x
+--- Fetch element at index <code>x</code> from <code>l</code>.
+-- @param l The list.
+-- @param x Element index.
+-- @return Element at index <code>x</code> or at index <code>1</code> if
+-- <code>x</code> is not given.
 function ncar(l, x)
   return l[x or 1];
 end
 
--- same as cdr but start at element x
+--- Fetch all elements following the element at index <code>x</code>.
+-- @param l The list.
+-- @param x Element index.
+-- @return Elements after index <code>x</code> or after index <code>1</code> if
+-- <code>x</code> is not given.
 function ncdr(l, x) 
   return {unpack(l, x or 2)};
 end
 
--- prepend a value or list to another value or list
+--- Prepend a value or list to another value or list.
+-- @param v1 value or list.
+-- @param v2 value or list.
+-- @return New list.
 function cons(v1, v2)
     return{ is_list(v1) and {unpack(v1)} or v1, is_list(v2) and {unpack(v2)} or v2}
 end
 
--- concatenate two lists and return the result
+--- Concatenate two lists and return the result.
+-- @param l1 List.
+-- @param l2 List.
+-- @return List.
 function append(l1, l2)
     local results = {unpack(l1)}
 
@@ -100,7 +148,9 @@ function append(l1, l2)
     return results
 end
 
--- returned l in reverse order
+--- Return a list in reverse order.
+-- @param l List.
+-- @return Reversed list.
 function reverse(l)
     local results = {}
     for i=#l, 1, -1 do
@@ -109,7 +159,12 @@ function reverse(l)
     return results
 end
 
--- return a flat version of nested list l
+--- Return a flattened version of a list. The flattened list contains
+-- only non-list values.
+-- @usage
+-- listop.flatten({1,2,3,"foo",{4,5,{"bar"}}}) --> {1,2,3,"foo",4,5,"bar"}
+-- @param l The list to flatten.
+-- @return Flattened list.
 function flatten(l)
     local function flat(r, t)
     	for i, v in ipairs(t) do

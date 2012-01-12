@@ -5,7 +5,7 @@
  *                                                                         *
  ***********************IMPORTANT NMAP LICENSE TERMS************************
  *                                                                         *
- * The Nmap Security Scanner is (C) 1996-2008 Insecure.Com LLC. Nmap is    *
+ * The Nmap Security Scanner is (C) 1996-2011 Insecure.Com LLC. Nmap is    *
  * also a registered trademark of Insecure.Com LLC.  This program is free  *
  * software; you may redistribute and/or modify it under the terms of the  *
  * GNU General Public License as published by the Free Software            *
@@ -27,25 +27,16 @@
  *   nmap-os-db or nmap-service-probes.                                    *
  * o Executes Nmap and parses the results (as opposed to typical shell or  *
  *   execution-menu apps, which simply display raw Nmap output and so are  *
- *   not derivative works.)                                                * 
+ *   not derivative works.)                                                *
  * o Integrates/includes/aggregates Nmap into a proprietary executable     *
  *   installer, such as those produced by InstallShield.                   *
  * o Links to a library or executes a program that does any of the above   *
  *                                                                         *
  * The term "Nmap" should be taken to also include any portions or derived *
- * works of Nmap.  This list is not exclusive, but is just meant to        *
- * clarify our interpretation of derived works with some common examples.  *
- * These restrictions only apply when you actually redistribute Nmap.  For *
- * example, nothing stops you from writing and selling a proprietary       *
- * front-end to Nmap.  Just distribute it by itself, and point people to   *
- * http://nmap.org to download Nmap.                                       *
- *                                                                         *
- * We don't consider these to be added restrictions on top of the GPL, but *
- * just a clarification of how we interpret "derived works" as it applies  *
- * to our GPL-licensed Nmap product.  This is similar to the way Linus     *
- * Torvalds has announced his interpretation of how "derived works"        *
- * applies to Linux kernel modules.  Our interpretation refers only to     *
- * Nmap - we don't speak for any other GPL products.                       *
+ * works of Nmap.  This list is not exclusive, but is meant to clarify our *
+ * interpretation of derived works with some common examples.  Our         *
+ * interpretation applies only to Nmap--we don't speak for other people's  *
+ * GPL works.                                                              *
  *                                                                         *
  * If you have any questions about the GPL licensing restrictions on using *
  * Nmap in non-GPL works, we would be happy to help.  As mentioned above,  *
@@ -59,8 +50,8 @@
  * As a special exception to the GPL terms, Insecure.Com LLC grants        *
  * permission to link the code of this program with any version of the     *
  * OpenSSL library which is distributed under a license identical to that  *
- * listed in the included COPYING.OpenSSL file, and distribute linked      *
- * combinations including the two. You must obey the GNU GPL in all        *
+ * listed in the included docs/licenses/OpenSSL.txt file, and distribute   *
+ * linked combinations including the two. You must obey the GNU GPL in all *
  * respects for all of the code used other than OpenSSL.  If you modify    *
  * this file, you may extend this exception to your version of the file,   *
  * but you are not obligated to do so.                                     *
@@ -76,17 +67,17 @@
  *                                                                         *
  * Source code also allows you to port Nmap to new platforms, fix bugs,    *
  * and add new features.  You are highly encouraged to send your changes   *
- * to fyodor@insecure.org for possible incorporation into the main         *
+ * to nmap-dev@insecure.org for possible incorporation into the main       *
  * distribution.  By sending these changes to Fyodor or one of the         *
  * Insecure.Org development mailing lists, it is assumed that you are      *
- * offering Fyodor and Insecure.Com LLC the unlimited, non-exclusive right *
- * to reuse, modify, and relicense the code.  Nmap will always be          *
- * available Open Source, but this is important because the inability to   *
- * relicense code has caused devastating problems for other Free Software  *
- * projects (such as KDE and NASM).  We also occasionally relicense the    *
- * code to third parties as discussed above.  If you wish to specify       *
- * special license conditions of your contributions, just say so when you  *
- * send them.                                                              *
+ * offering the Nmap Project (Insecure.Com LLC) the unlimited,             *
+ * non-exclusive right to reuse, modify, and relicense the code.  Nmap     *
+ * will always be available Open Source, but this is important because the *
+ * inability to relicense code has caused devastating problems for other   *
+ * Free Software projects (such as KDE and NASM).  We also occasionally    *
+ * relicense the code to third parties as discussed above.  If you wish to *
+ * specify special license conditions of your contributions, just say so   *
+ * when you send them.                                                     *
  *                                                                         *
  * This program is distributed in the hope that it will be useful, but     *
  * WITHOUT ANY WARRANTY; without even the implied warranty of              *
@@ -158,30 +149,8 @@
 #define TRUE 1
 #endif
 
-#define NIPQUAD(addr) \
-        (((addr) >> 0)  & 0xff), \
-        (((addr) >> 8)  & 0xff), \
-        (((addr) >> 16) & 0xff), \
-        (((addr) >> 24) & 0xff)
-
 #define MAX_PARSE_ARGS 254 /* +1 for integrity checking + 1 for null term */
 
-/* Timeval subtraction in microseconds */
-#define TIMEVAL_SUBTRACT(a,b) (((a).tv_sec - (b).tv_sec) * 1000000 + (a).tv_usec - (b).tv_usec)
-/* Timeval subtract in milliseconds */
-#define TIMEVAL_MSEC_SUBTRACT(a,b) ((((a).tv_sec - (b).tv_sec) * 1000) + ((a).tv_usec - (b).tv_usec) / 1000)
-/* Timeval subtract in seconds; truncate towards zero */
-#define TIMEVAL_SEC_SUBTRACT(a,b) ((a).tv_sec - (b).tv_sec + (((a).tv_usec < (b).tv_usec) ? - 1 : 0))
-
-/* assign one timeval to another timeval plus some msecs: a = b + msecs */
-#define TIMEVAL_MSEC_ADD(a, b, msecs) { (a).tv_sec = (b).tv_sec + ((msecs) / 1000); (a).tv_usec = (b).tv_usec + ((msecs) % 1000) * 1000; (a).tv_sec += (a).tv_usec / 1000000; (a).tv_usec %= 1000000; }
-#define TIMEVAL_ADD(a, b, usecs) { (a).tv_sec = (b).tv_sec + ((usecs) / 1000000); (a).tv_usec = (b).tv_usec + ((usecs) % 1000000); (a).tv_sec += (a).tv_usec / 1000000; (a).tv_usec %= 1000000; }
-
-/* Find our if one timeval is before or after another, avoiding the integer
-   overflow that can result when doing a TIMEVAL_SUBTRACT on two widely spaced
-   timevals. */
-#define TIMEVAL_BEFORE(a, b) (((a).tv_sec < (b).tv_sec) || ((a).tv_sec == (b).tv_sec && (a).tv_usec < (b).tv_usec))
-#define TIMEVAL_AFTER(a, b) (((a).tv_sec > (b).tv_sec) || ((a).tv_sec == (b).tv_sec && (a).tv_usec > (b).tv_usec))
 
 /* Return num if it is between min and max.  Otherwise return min or
    max (whichever is closest to num), */
@@ -198,14 +167,7 @@ template<class T> T box(T bmin, T bmax, T bnum) {
 
 int wildtest(char *wild, char *test);
 
-void hdump(unsigned char *packet, unsigned int len);
-void lamont_hdump(char *cp, unsigned int length);
-
-/* Compare a canonical option name (e.g. "max-scan-delay") with a
-   user-generated option such as "max_scan_delay" and returns 0 if the
-   two values are considered equivalant (for example, - and _ are
-   considered to be the same), nonzero otherwise. */
-int optcmp(const char *canonical, const char *instance);
+void nmap_hexdump(unsigned char *cp, unsigned int length);
 
 /* Scramble the contents of an array*/
 void genfry(unsigned char *arr, int elem_sz, int num_elem);
@@ -230,27 +192,16 @@ void arg_parse_free(char **argv);
    str is returned. */
 char *cstring_unescape(char *str, unsigned int *len);
 
-/* This function converts zero-terminated 'txt' string to binary 'data'.
-   It is used to parse user input for ip options. Some examples of possible input
-   strings and results:
-   	'\x01*2\xA2'	-> [0x01,0x01,0xA2]	// with 'x' number is parsed in hex
-   	'\01\01\255'	-> [0x01,0x01,0xFF]	// without 'x' its in decimal
-   	'\x01\x00*2'	-> [0x01,0x00,0x00]	// '*' is copying char
-   	'R'		-> Record Route with 9 slots
-   	'S 192.168.0.1 172.16.0.1' -> Strict Route with 2 slots
-   	'L 192.168.0.1 172.16.0.1' -> Loose Route with 2 slots
-   	'T'		-> Record Timestamp with 9 slots
-   	'U'		-> Record Timestamp and Ip Address with 4 slots
-*/
-int parse_ip_options(char *txt, u8 *data, int datalen, int* firsthopoff, int* lasthopoff);
-
 void bintohexstr(char *buf, int buflen, char *src, int srclen);
 
-char* print_ip_options(u8* ipopt, int ipoptlen);
 
 #ifndef HAVE_STRERROR
 char *strerror(int errnum);
 #endif
+
+/* Get the CPE part (first component of the URL, should be "a", "h", or "o") as
+   a character: 'a', 'h', or 'o'. Returns -1 on error. */
+int cpe_get_part(const char *cpe);
 
 /* mmap() an entire file into the address space.  Returns a pointer
    to the beginning of the file.  The mmap'ed length is returned

@@ -6,7 +6,7 @@
  *                                                                         *
  ***********************IMPORTANT NMAP LICENSE TERMS************************
  *                                                                         *
- * The Nmap Security Scanner is (C) 1996-2008 Insecure.Com LLC. Nmap is    *
+ * The Nmap Security Scanner is (C) 1996-2011 Insecure.Com LLC. Nmap is    *
  * also a registered trademark of Insecure.Com LLC.  This program is free  *
  * software; you may redistribute and/or modify it under the terms of the  *
  * GNU General Public License as published by the Free Software            *
@@ -28,25 +28,16 @@
  *   nmap-os-db or nmap-service-probes.                                    *
  * o Executes Nmap and parses the results (as opposed to typical shell or  *
  *   execution-menu apps, which simply display raw Nmap output and so are  *
- *   not derivative works.)                                                * 
+ *   not derivative works.)                                                *
  * o Integrates/includes/aggregates Nmap into a proprietary executable     *
  *   installer, such as those produced by InstallShield.                   *
  * o Links to a library or executes a program that does any of the above   *
  *                                                                         *
  * The term "Nmap" should be taken to also include any portions or derived *
- * works of Nmap.  This list is not exclusive, but is just meant to        *
- * clarify our interpretation of derived works with some common examples.  *
- * These restrictions only apply when you actually redistribute Nmap.  For *
- * example, nothing stops you from writing and selling a proprietary       *
- * front-end to Nmap.  Just distribute it by itself, and point people to   *
- * http://nmap.org to download Nmap.                                       *
- *                                                                         *
- * We don't consider these to be added restrictions on top of the GPL, but *
- * just a clarification of how we interpret "derived works" as it applies  *
- * to our GPL-licensed Nmap product.  This is similar to the way Linus     *
- * Torvalds has announced his interpretation of how "derived works"        *
- * applies to Linux kernel modules.  Our interpretation refers only to     *
- * Nmap - we don't speak for any other GPL products.                       *
+ * works of Nmap.  This list is not exclusive, but is meant to clarify our *
+ * interpretation of derived works with some common examples.  Our         *
+ * interpretation applies only to Nmap--we don't speak for other people's  *
+ * GPL works.                                                              *
  *                                                                         *
  * If you have any questions about the GPL licensing restrictions on using *
  * Nmap in non-GPL works, we would be happy to help.  As mentioned above,  *
@@ -60,8 +51,8 @@
  * As a special exception to the GPL terms, Insecure.Com LLC grants        *
  * permission to link the code of this program with any version of the     *
  * OpenSSL library which is distributed under a license identical to that  *
- * listed in the included COPYING.OpenSSL file, and distribute linked      *
- * combinations including the two. You must obey the GNU GPL in all        *
+ * listed in the included docs/licenses/OpenSSL.txt file, and distribute   *
+ * linked combinations including the two. You must obey the GNU GPL in all *
  * respects for all of the code used other than OpenSSL.  If you modify    *
  * this file, you may extend this exception to your version of the file,   *
  * but you are not obligated to do so.                                     *
@@ -77,17 +68,17 @@
  *                                                                         *
  * Source code also allows you to port Nmap to new platforms, fix bugs,    *
  * and add new features.  You are highly encouraged to send your changes   *
- * to fyodor@insecure.org for possible incorporation into the main         *
+ * to nmap-dev@insecure.org for possible incorporation into the main       *
  * distribution.  By sending these changes to Fyodor or one of the         *
  * Insecure.Org development mailing lists, it is assumed that you are      *
- * offering Fyodor and Insecure.Com LLC the unlimited, non-exclusive right *
- * to reuse, modify, and relicense the code.  Nmap will always be          *
- * available Open Source, but this is important because the inability to   *
- * relicense code has caused devastating problems for other Free Software  *
- * projects (such as KDE and NASM).  We also occasionally relicense the    *
- * code to third parties as discussed above.  If you wish to specify       *
- * special license conditions of your contributions, just say so when you  *
- * send them.                                                              *
+ * offering the Nmap Project (Insecure.Com LLC) the unlimited,             *
+ * non-exclusive right to reuse, modify, and relicense the code.  Nmap     *
+ * will always be available Open Source, but this is important because the *
+ * inability to relicense code has caused devastating problems for other   *
+ * Free Software projects (such as KDE and NASM).  We also occasionally    *
+ * relicense the code to third parties as discussed above.  If you wish to *
+ * specify special license conditions of your contributions, just say so   *
+ * when you send them.                                                     *
  *                                                                         *
  * This program is distributed in the hope that it will be useful, but     *
  * WITHOUT ANY WARRANTY; without even the implied warranty of              *
@@ -122,9 +113,11 @@ void Target::Initialize() {
   targetname = NULL;
   memset(&seq, 0, sizeof(seq));
   distance = -1;
+  distance_calculation_method = DIST_METHOD_NONE;
   FPR = NULL;
   osscan_flag = OS_NOTPERF;
-  wierd_responses = flags = 0;
+  weird_responses = flags = 0;
+  traceroute_probespec.type = PS_NONE;
   memset(&to, 0, sizeof(to));
   memset(&targetsock, 0, sizeof(targetsock));
   memset(&sourcesock, 0, sizeof(sourcesock));
@@ -132,6 +125,7 @@ void Target::Initialize() {
   targetsocklen = sourcesocklen = nexthopsocklen = 0;
   directly_connected = -1;
   targetipstring[0] = '\0';
+  sourceipstring[0] = '\0';
   nameIPBuf = NULL;
   memset(&MACaddress, 0, sizeof(MACaddress));
   memset(&SrcMACaddress, 0, sizeof(SrcMACaddress));
@@ -141,19 +135,20 @@ void Target::Initialize() {
   htn.toclock_running = false;
   htn.host_start = htn.host_end = 0;
   interface_type = devt_other;
-	devname[0] = '\0';
-	devfullname[0] = '\0';
+  devname[0] = '\0';
+  devfullname[0] = '\0';
+  mtu = 0;
   state_reason_init(&reason);
   memset(&pingprobe, 0, sizeof(pingprobe));
   pingprobe_state = PORT_UNKNOWN;
 }
 
 
-const char * Target::deviceName() { 
+const char * Target::deviceName() const {
 	return (devname[0] != '\0')? devname : NULL;
 }
 
-const char * Target::deviceFullName() { 
+const char * Target::deviceFullName() const {
 	return (devfullname[0] != '\0')? devfullname : NULL; 
 }
 
@@ -184,9 +179,11 @@ void Target::FreeInternal() {
 
 /*  Creates a "presentation" formatted string out of the IPv4/IPv6 address.
     Called when the IP changes */
-void Target::GenerateIPString() {
+void Target::GenerateTargetIPString() {
   struct sockaddr_in *sin = (struct sockaddr_in *) &targetsock;
+#if HAVE_IPV6
   struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *) &targetsock;
+#endif
 
   if (inet_ntop(sin->sin_family, (sin->sin_family == AF_INET)? 
                 (char *) &sin->sin_addr : 
@@ -200,12 +197,37 @@ void Target::GenerateIPString() {
   }
 }
 
+/*  Creates a "presentation" formatted string out of the IPv4/IPv6 address.
+    Called when the IP changes */
+void Target::GenerateSourceIPString() {
+  struct sockaddr_in *sin = (struct sockaddr_in *) &sourcesock;
+#if HAVE_IPV6
+  struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *) &sourcesock;
+#endif
+
+  if (inet_ntop(sin->sin_family, (sin->sin_family == AF_INET)?
+                (char *) &sin->sin_addr :
+#if HAVE_IPV6
+                (char *) &sin6->sin6_addr,
+#else
+                (char *) NULL,
+#endif
+		sourceipstring, sizeof(sourceipstring)) == NULL) {
+    fatal("Failed to convert source address to presentation format!?!  Error: %s", strerror(socket_errno()));
+  }
+}
+
+/* Returns the address family of the destination address. */
+int Target::af() const {
+  return targetsock.ss_family;
+}
+
 /* Fills a sockaddr_storage with the AF_INET or AF_INET6 address
      information of the target.  This is a preferred way to get the
      address since it is portable for IPv6 hosts.  Returns 0 for
      success. ss_len must be provided.  It is not examined, but is set
      to the size of the sockaddr copied in. */
-int Target::TargetSockAddr(struct sockaddr_storage *ss, size_t *ss_len) {
+int Target::TargetSockAddr(struct sockaddr_storage *ss, size_t *ss_len) const {
   assert(ss);
   assert(ss_len);  
   if (targetsocklen <= 0)
@@ -216,9 +238,13 @@ int Target::TargetSockAddr(struct sockaddr_storage *ss, size_t *ss_len) {
   return 0;
 }
 
+const struct sockaddr_storage *Target::TargetSockAddr() const {
+  return &targetsock;
+}
+
 /* Note that it is OK to pass in a sockaddr_in or sockaddr_in6 casted
      to sockaddr_storage */
-void Target::setTargetSockAddr(struct sockaddr_storage *ss, size_t ss_len) {
+void Target::setTargetSockAddr(const struct sockaddr_storage *ss, size_t ss_len) {
 
   assert(ss_len > 0 && ss_len <= sizeof(*ss));
   if (targetsocklen > 0) {
@@ -229,13 +255,13 @@ void Target::setTargetSockAddr(struct sockaddr_storage *ss, size_t ss_len) {
   }
   memcpy(&targetsock, ss, ss_len);
   targetsocklen = ss_len;
-  GenerateIPString();
+  GenerateTargetIPString();
   /* The ports array needs to know a name too */
   ports.setIdStr(targetipstr());
 }
 
 // Returns IPv4 host address or {0} if unavailable.
-struct in_addr Target::v4host() {
+struct in_addr Target::v4host() const {
   const struct in_addr *addy = v4hostip();
   struct in_addr in;
   if (addy) return *addy;
@@ -244,7 +270,7 @@ struct in_addr Target::v4host() {
 }
 
 // Returns IPv4 host address or NULL if unavailable.
-const struct in_addr *Target::v4hostip() {
+const struct in_addr *Target::v4hostip() const {
   struct sockaddr_in *sin = (struct sockaddr_in *) &targetsock;
   if (sin->sin_family == AF_INET) {
     return &(sin->sin_addr);
@@ -252,8 +278,16 @@ const struct in_addr *Target::v4hostip() {
   return NULL;
 }
 
+const struct in6_addr *Target::v6hostip() const {
+  struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *) &targetsock;
+  if (sin6->sin6_family == AF_INET6) {
+    return &(sin6->sin6_addr);
+  }
+  return NULL;
+}
+
  /* The source address used to reach the target */
-int Target::SourceSockAddr(struct sockaddr_storage *ss, size_t *ss_len) {
+int Target::SourceSockAddr(struct sockaddr_storage *ss, size_t *ss_len) const {
   if (sourcesocklen <= 0)
     return 1;
   assert(sourcesocklen <= sizeof(*ss));
@@ -264,16 +298,21 @@ int Target::SourceSockAddr(struct sockaddr_storage *ss, size_t *ss_len) {
   return 0;
 }
 
+const struct sockaddr_storage *Target::SourceSockAddr() const {
+  return &sourcesock;
+}
+
 /* Note that it is OK to pass in a sockaddr_in or sockaddr_in6 casted
      to sockaddr_storage */
-void Target::setSourceSockAddr(struct sockaddr_storage *ss, size_t ss_len) {
+void Target::setSourceSockAddr(const struct sockaddr_storage *ss, size_t ss_len) {
   assert(ss_len > 0 && ss_len <= sizeof(*ss));
   memcpy(&sourcesock, ss, ss_len);
   sourcesocklen = ss_len;
+  GenerateSourceIPString();
 }
 
 // Returns IPv4 host address or {0} if unavailable.
-struct in_addr Target::v4source() {
+struct in_addr Target::v4source() const {
   const struct in_addr *addy = v4sourceip();
   struct in_addr in;
   if (addy) return *addy;
@@ -282,7 +321,7 @@ struct in_addr Target::v4source() {
 }
 
 // Returns IPv4 host address or NULL if unavailable.
-const struct in_addr *Target::v4sourceip() {
+const struct in_addr *Target::v4sourceip() const {
   struct sockaddr_in *sin = (struct sockaddr_in *) &sourcesock;
   if (sin->sin_family == AF_INET) {
     return &(sin->sin_addr);
@@ -290,6 +329,14 @@ const struct in_addr *Target::v4sourceip() {
   return NULL;
 }
 
+// Returns IPv6 host address or NULL if unavailable.
+const struct in6_addr *Target::v6sourceip() const {
+  struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *) &sourcesock;
+  if (sin6->sin6_family == AF_INET6) {
+    return &(sin6->sin6_addr);
+  }
+  return NULL;
+}
 
   /* You can set to NULL to erase a name or if it failed to resolve -- or 
      just don't call this if it fails to resolve */
@@ -304,7 +351,7 @@ void Target::setHostName(char *name) {
     while (*p) {
       // I think only a-z A-Z 0-9 . and - are allowed, but I'll be a little more
       // generous.
-      if (!isalnum(*p) && !strchr(".-+=:_~*", *p)) {
+      if (!isalnum((int) (unsigned char) *p) && !strchr(".-+=:_~*", *p)) {
 	log_write(LOG_STDOUT, "Illegal character(s) in hostname -- replacing with '*'\n");
 	*p = '*';
       }
@@ -313,7 +360,7 @@ void Target::setHostName(char *name) {
   }
 }
 
-void Target::setTargetName(char *name) {
+void Target::setTargetName(const char *name) {
   if (targetname) {
     free(targetname);
     targetname = NULL;
@@ -331,9 +378,12 @@ void Target::setTargetName(char *name) {
 const char *Target::NameIP(char *buf, size_t buflen) {
   assert(buf);
   assert(buflen > 8);
-  if (hostname) {
+  if (targetname)
+    Snprintf(buf, buflen, "%s (%s)", targetname, targetipstring);
+  else if (hostname)
     Snprintf(buf, buflen, "%s (%s)", hostname, targetipstring);
-  } else Strncpy(buf, targetipstring, buflen);
+  else
+    Strncpy(buf, targetipstring, buflen);
   return buf;
 }
 
@@ -364,11 +414,11 @@ void Target::setDirectlyConnected(bool connected) {
   directly_connected = connected? 1 : 0;
 }
 
-int Target::directlyConnectedOrUnset(){
+int Target::directlyConnectedOrUnset() const {
     return directly_connected;
 }
 
-bool Target::directlyConnected() {
+bool Target::directlyConnected() const {
   assert(directly_connected == 0 || directly_connected == 1);
   return directly_connected;
 }
@@ -381,6 +431,15 @@ void Target::setNextHop(struct sockaddr_storage *next_hop, size_t next_hop_len) 
   nexthopsocklen = next_hop_len;
 }
 
+/* Set MTU (to correspond with devname) */
+void Target::setMTU(int devmtu) {
+  mtu = devmtu;
+}
+
+/* Get MTU (to correspond with devname) */
+int Target::MTU(void) {
+  return mtu;
+}
 
   /* Starts the timeout clock for the host running (e.g. you are
      beginning a scan).  If you do not have the current time handy,
@@ -454,15 +513,15 @@ void Target::setDeviceNames(const char *name, const char *fullname) {
 }
 
 /* Returns the 6-byte long MAC address, or NULL if none has been set */
-const u8 *Target::MACAddress() {
+const u8 *Target::MACAddress() const {
   return (MACaddress_set)? MACaddress : NULL;
 }
 
-const u8 *Target::SrcMACAddress() {
+const u8 *Target::SrcMACAddress() const {
   return (SrcMACaddress_set)? SrcMACaddress : NULL;
 }
 
-const u8 *Target::NextHopMACAddress() {
+const u8 *Target::NextHopMACAddress() const {
   return (NextHopMACaddress_set)? NextHopMACaddress : NULL;
 }
 

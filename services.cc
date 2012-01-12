@@ -5,7 +5,7 @@
  *                                                                         *
  ***********************IMPORTANT NMAP LICENSE TERMS************************
  *                                                                         *
- * The Nmap Security Scanner is (C) 1996-2008 Insecure.Com LLC. Nmap is    *
+ * The Nmap Security Scanner is (C) 1996-2011 Insecure.Com LLC. Nmap is    *
  * also a registered trademark of Insecure.Com LLC.  This program is free  *
  * software; you may redistribute and/or modify it under the terms of the  *
  * GNU General Public License as published by the Free Software            *
@@ -27,25 +27,16 @@
  *   nmap-os-db or nmap-service-probes.                                    *
  * o Executes Nmap and parses the results (as opposed to typical shell or  *
  *   execution-menu apps, which simply display raw Nmap output and so are  *
- *   not derivative works.)                                                * 
+ *   not derivative works.)                                                *
  * o Integrates/includes/aggregates Nmap into a proprietary executable     *
  *   installer, such as those produced by InstallShield.                   *
  * o Links to a library or executes a program that does any of the above   *
  *                                                                         *
  * The term "Nmap" should be taken to also include any portions or derived *
- * works of Nmap.  This list is not exclusive, but is just meant to        *
- * clarify our interpretation of derived works with some common examples.  *
- * These restrictions only apply when you actually redistribute Nmap.  For *
- * example, nothing stops you from writing and selling a proprietary       *
- * front-end to Nmap.  Just distribute it by itself, and point people to   *
- * http://nmap.org to download Nmap.                                       *
- *                                                                         *
- * We don't consider these to be added restrictions on top of the GPL, but *
- * just a clarification of how we interpret "derived works" as it applies  *
- * to our GPL-licensed Nmap product.  This is similar to the way Linus     *
- * Torvalds has announced his interpretation of how "derived works"        *
- * applies to Linux kernel modules.  Our interpretation refers only to     *
- * Nmap - we don't speak for any other GPL products.                       *
+ * works of Nmap.  This list is not exclusive, but is meant to clarify our *
+ * interpretation of derived works with some common examples.  Our         *
+ * interpretation applies only to Nmap--we don't speak for other people's  *
+ * GPL works.                                                              *
  *                                                                         *
  * If you have any questions about the GPL licensing restrictions on using *
  * Nmap in non-GPL works, we would be happy to help.  As mentioned above,  *
@@ -59,8 +50,8 @@
  * As a special exception to the GPL terms, Insecure.Com LLC grants        *
  * permission to link the code of this program with any version of the     *
  * OpenSSL library which is distributed under a license identical to that  *
- * listed in the included COPYING.OpenSSL file, and distribute linked      *
- * combinations including the two. You must obey the GNU GPL in all        *
+ * listed in the included docs/licenses/OpenSSL.txt file, and distribute   *
+ * linked combinations including the two. You must obey the GNU GPL in all *
  * respects for all of the code used other than OpenSSL.  If you modify    *
  * this file, you may extend this exception to your version of the file,   *
  * but you are not obligated to do so.                                     *
@@ -76,17 +67,17 @@
  *                                                                         *
  * Source code also allows you to port Nmap to new platforms, fix bugs,    *
  * and add new features.  You are highly encouraged to send your changes   *
- * to fyodor@insecure.org for possible incorporation into the main         *
+ * to nmap-dev@insecure.org for possible incorporation into the main       *
  * distribution.  By sending these changes to Fyodor or one of the         *
  * Insecure.Org development mailing lists, it is assumed that you are      *
- * offering Fyodor and Insecure.Com LLC the unlimited, non-exclusive right *
- * to reuse, modify, and relicense the code.  Nmap will always be          *
- * available Open Source, but this is important because the inability to   *
- * relicense code has caused devastating problems for other Free Software  *
- * projects (such as KDE and NASM).  We also occasionally relicense the    *
- * code to third parties as discussed above.  If you wish to specify       *
- * special license conditions of your contributions, just say so when you  *
- * send them.                                                              *
+ * offering the Nmap Project (Insecure.Com LLC) the unlimited,             *
+ * non-exclusive right to reuse, modify, and relicense the code.  Nmap     *
+ * will always be available Open Source, but this is important because the *
+ * inability to relicense code has caused devastating problems for other   *
+ * Free Software projects (such as KDE and NASM).  We also occasionally    *
+ * relicense the code to third parties as discussed above.  If you wish to *
+ * specify special license conditions of your contributions, just say so   *
+ * when you send them.                                                     *
  *                                                                         *
  * This program is distributed in the hope that it will be useful, but     *
  * WITHOUT ANY WARRANTY; without even the implied warranty of              *
@@ -99,19 +90,53 @@
 
 /* $Id$ */
 
+#include "nmap.h"
 #include "services.h"
 #include "NmapOps.h"
 #include "charpool.h"
 #include "nmap_error.h"
 #include "utils.h"
 
+#include <list>
+#include <map>
+
+/* This structure is the key for looking up services in the
+   port/proto -> service map. */
+struct port_spec {
+  int portno; /* Network byte order */
+  std::string proto;
+
+  /* Sort in the usual nmap-services order. */
+  bool operator<(const port_spec& other) const {
+    if (this->portno < other.portno)
+      return true;
+    else if (this->portno > other.portno)
+      return false;
+    else
+      return this->proto < other.proto;
+  }
+};
+
+/* This is a servent augmented by a frequency ratio. */
+struct service_node : public servent {
+public:
+  double ratio;
+};
+
+/* Compare the ratios of two service nodes for top-ports purposes. Larger ratios
+   come before smaller. */
+bool service_node_ratio_compare(const service_node& a, const service_node& b) {
+  return a.ratio > b.ratio;
+}
+
 extern NmapOps o;
-static int numtcpports = 0;
-static int numudpports = 0;
-static struct service_list *service_table[SERVICE_TABLE_SIZE];
-static struct service_list *sorted_services = NULL;
-static int services_initialized = 0;
-static int ratio_format = 0; // 0 = /etc/services no-ratio format. 1 = new nmap format
+static int numtcpports;
+static int numudpports;
+static int numsctpports;
+static std::map<port_spec, service_node> service_table;
+static std::list<service_node> services_by_ratio;
+static int services_initialized;
+static int ratio_format; // 0 = /etc/services no-ratio format. 1 = new nmap format
 
 static int nmap_services_init() {
   if (services_initialized) return 0;
@@ -123,10 +148,17 @@ static int nmap_services_init() {
   char *p;
   char line[1024];
   int lineno = 0;
-  struct service_list *current, *previous, *sp;
   int res;
   double ratio;
   int ratio_n, ratio_d;
+  char ratio_str[32];
+
+  numtcpports = 0;
+  numudpports = 0;
+  numsctpports = 0;
+  service_table.clear();
+  services_by_ratio.clear();
+  ratio_format = 0;
 
   if (nmap_fetchfile(filename, sizeof(filename), "nmap-services") != 1) {
 #ifndef WIN32
@@ -159,58 +191,67 @@ static int nmap_services_init() {
   /* Record where this data file was found. */
   o.loaded_data_files["nmap-services"] = filename;
 
-  memset(service_table, 0, sizeof(service_table));
-  
   while(fgets(line, sizeof(line), fp)) {
     lineno++;
     p = line;
-    while(*p && isspace((int) *p))
+    while(*p && isspace((int) (unsigned char) *p))
       p++;
     if (*p == '#')
       continue;
 
-    res = sscanf(line, "%127s %hu/%15s %d/%d", servicename, &portno, proto, &ratio_n, &ratio_d);
-
+    res = sscanf(line, "%127s %hu/%15s %31s", servicename, &portno, proto, ratio_str);
+    
     if (res == 3) {
       ratio = 0;
-    } else if (res == 5) {
-      if (ratio_n < 0 || ratio_d < 0)
-        fatal("%s:%d contains an invalid negative value", filename, lineno);
+    } else if (res == 4) {
+      if (strchr(ratio_str, '/')) {
+	res = sscanf(ratio_str, "%d/%d", &ratio_n, &ratio_d);
+	if (res != 2)
+	  fatal("%s:%d contains invalid port ratio string: %s", filename, lineno, ratio_str);
 
-      if (ratio_n > ratio_d)
-        fatal("%s:%d has a ratio %g. All ratios must be < 1", filename, lineno, (double)ratio_n/ratio_d);
-
-      if (ratio_d == 0)
-        fatal("%s:%d has a ratio denominator of 0 causing a division by 0 error", filename, lineno);
-
-      ratio = (double)ratio_n / ratio_d;
-      ratio_format = 1;
+	if (ratio_n < 0 || ratio_d < 0)
+	  fatal("%s:%d contains an invalid negative value", filename, lineno);
+	
+	if (ratio_n > ratio_d)
+	  fatal("%s:%d has a ratio %g. All ratios must be < 1", filename, lineno, (double)ratio_n/ratio_d);
+	
+	if (ratio_d == 0)
+	  fatal("%s:%d has a ratio denominator of 0 causing a division by 0 error", filename, lineno);
+	
+	ratio = (double)ratio_n / ratio_d;
+	ratio_format = 1;
+      } else if (strncmp(ratio_str, "0.", 2) == 0) {
+	/* We assume the ratio is in floating point notation already */
+	ratio = strtod(ratio_str, NULL);
+	ratio_format = 1;
+      } else {
+	ratio = 0;
+      }
     } else {
       continue;
     }
 
     portno = htons(portno);
 
+    port_spec ps;
+    ps.portno = portno;
+    ps.proto = proto;
+
     /* Now we make sure our service table doesn't have duplicates */
-    for(current = service_table[portno % SERVICE_TABLE_SIZE], previous = NULL;
-	current; current = current->next) {
-      if (portno == (u16) current->servent->s_port &&
-	  strcasecmp(proto, current->servent->s_proto) == 0) {
-	if (o.debugging) {
-	  error("Port %d proto %s is duplicated in services file %s", ntohs(portno), proto, filename);
-	}
-	break;
-      }
-      previous = current;
-    }
-    /* Current service in the file was a duplicate, get another one */
-    if (current)
+    std::map<port_spec, service_node>::iterator i;
+    i = service_table.find(ps);
+    if (i != service_table.end()) {
+      if (o.debugging)
+        error("Port %d proto %s is duplicated in services file %s", ntohs(portno), proto, filename);
       continue;
+    }
 
     if (strncasecmp(proto, "tcp", 3) == 0) {
       numtcpports++;
     } else if (strncasecmp(proto, "udp", 3) == 0) {
       numudpports++;
+    } else if (strncasecmp(proto, "sctp", 4) == 0) {
+      numsctpports++;
     } else if (strncasecmp(proto, "ddp", 3) == 0) {
       /* ddp is some apple thing...we don't "do" that */
     } else if (strncasecmp(proto, "divert", 6) == 0) {
@@ -223,47 +264,34 @@ static int nmap_services_init() {
       continue;
     }
 
-    current = (struct service_list *) cp_alloc(sizeof(struct service_list));
-    current->servent = (struct servent *) cp_alloc(sizeof(struct servent));
-    current->ratio = ratio;
-    current->next = NULL;
-    if (previous == NULL) {
-      service_table[portno % SERVICE_TABLE_SIZE] = current;
-    } else {
-      previous->next = current;
-    }
-    current->servent->s_name = cp_strdup(servicename);
-    current->servent->s_port = portno;
-    current->servent->s_proto = cp_strdup(proto);
-    current->servent->s_aliases = NULL;
+    struct service_node sn;
 
-    sp = (struct service_list *) cp_alloc(sizeof(struct service_list));
-    sp->servent = current->servent;
-    sp->ratio = current->ratio;
-    sp->next = NULL;
+    sn.s_name = cp_strdup(servicename);
+    sn.s_port = portno;
+    sn.s_proto = cp_strdup(proto);
+    sn.s_aliases = NULL;
+    sn.ratio = ratio;
 
-    if (sorted_services == NULL || sorted_services->ratio < sp->ratio) {
-      sp->next = sorted_services;
-      sorted_services = sp;
-    } else
-      for (current=sorted_services;;current=current->next) {
-        if (current->next == NULL) {
-          current->next = sp;
-          break;
-        } else if (current->next->ratio < sp->ratio) {
-          sp->next = current->next;
-          current->next = sp;
-          break;
-        }
-      }
+    service_table[ps] = sn;
 
+    services_by_ratio.push_back(sn);
   }
+
+  /* Sort the list of ports sorted by frequency for top-ports purposes. */
+  services_by_ratio.sort(service_node_ratio_compare);
 
   fclose(fp);
   services_initialized = 1;
   return 0;
 }
 
+void free_services() {
+  /* This doesn't free anything, because the service_table is allocated
+     statically. It just marks the table as needing to be reinitialized because
+     other things have been freed, for example the cp_strdup-allocated members
+     of service_node. */
+  services_initialized = 0;
+}
 
   
 /* Adds ports whose names match mask and one or more protocols
@@ -273,52 +301,51 @@ static int nmap_services_init() {
  */
 
 int addportsfromservmask(char *mask, u8 *porttbl, int range_type) {
-  struct service_list *current;
-  int bucket,t=0;
+  std::map<port_spec, service_node>::iterator i;
+  int t = 0;
 
   if (!services_initialized && nmap_services_init() == -1)
     fatal("%s: Couldn't get port numbers", __func__);
   
-  for(bucket = 0; bucket < SERVICE_TABLE_SIZE; bucket++) {
-    for(current = service_table[bucket % SERVICE_TABLE_SIZE]; current; current = current->next) {
-      if (wildtest(mask, current->servent->s_name)) {
-
-        if ((range_type & SCAN_TCP_PORT) && strcmp(current->servent->s_proto, "tcp") == 0) {
-          porttbl[ntohs(current->servent->s_port)] |= SCAN_TCP_PORT;
-          t++;
-        }
-
-        if ((range_type & SCAN_UDP_PORT) && strcmp(current->servent->s_proto, "udp") == 0) {
-          porttbl[ntohs(current->servent->s_port)] |= SCAN_UDP_PORT;
-          t++;
-        }
-
+  for (i = service_table.begin(); i != service_table.end(); i++) {
+    service_node& current = i->second;
+    if (wildtest(mask, current.s_name)) {
+      if ((range_type & SCAN_TCP_PORT) && strcmp(current.s_proto, "tcp") == 0) {
+        porttbl[ntohs(current.s_port)] |= SCAN_TCP_PORT;
+        t++;
+      }
+      if ((range_type & SCAN_UDP_PORT) && strcmp(current.s_proto, "udp") == 0) {
+        porttbl[ntohs(current.s_port)] |= SCAN_UDP_PORT;
+        t++;
+      }
+      if ((range_type & SCAN_SCTP_PORT) && strcmp(current.s_proto, "sctp") == 0) {
+        porttbl[ntohs(current.s_port)] |= SCAN_SCTP_PORT;
+        t++;
       }
     }
   }
 
   return t;
-
 }
 
 
 
+/* Port must be in network byte order. */
 struct servent *nmap_getservbyport(int port, const char *proto) {
-  struct service_list *current;
+  std::map<port_spec, service_node>::iterator i;
+  port_spec ps;
 
   if (nmap_services_init() == -1)
     return NULL;
 
-  for(current = service_table[port % SERVICE_TABLE_SIZE];
-	current; current = current->next) {
-    if (((u16) port == (u16) current->servent->s_port) &&
-	strcmp(proto, current->servent->s_proto) == 0)
-      return current->servent;
-  }
+  ps.portno = port;
+  ps.proto = proto;
+  i = service_table.find(ps);
+  if (i != service_table.end())
+    return &i->second;
 
   /* Couldn't find it ... oh well. */
   return NULL;
-
 }
 
 
@@ -336,18 +363,24 @@ static int port_compare(const void *a, const void *b) {
 // called when you use a non-default top-ports or port-ratio value TOGETHER WITH
 // a -p portlist.
 
-static int is_port_member(struct scan_lists *ptsdata, struct service_list *serv) {
+static bool is_port_member(const struct scan_lists *ptsdata, const struct service_node *serv) {
   int i;
 
-  if (serv->servent->s_proto[0] == 't') {
+  if (strcmp(serv->s_proto, "tcp") == 0) {
     for (i=0; i<ptsdata->tcp_count; i++)
-      if (ntohs(serv->servent->s_port) == ptsdata->tcp_ports[i]) return 1;
-  } else {
+      if (ntohs(serv->s_port) == ptsdata->tcp_ports[i])
+        return true;
+  } else if (strcmp(serv->s_proto, "udp") == 0) {
     for (i=0; i<ptsdata->udp_count; i++)
-      if (ntohs(serv->servent->s_port) == ptsdata->udp_ports[i]) return 1;
+      if (ntohs(serv->s_port) == ptsdata->udp_ports[i])
+        return true;
+  } else if (strcmp(serv->s_proto, "sctp") == 0) {
+    for (i=0; i<ptsdata->sctp_count; i++)
+      if (ntohs(serv->s_port) == ptsdata->sctp_ports[i])
+        return true;
   }
 
-  return 0;
+  return false;
 }
 
 // gettoppts() sets its third parameter, a scan_list, with the most
@@ -361,13 +394,14 @@ static int is_port_member(struct scan_lists *ptsdata, struct service_list *serv)
 // and return the N highest ratio ports (where N==level).
 //
 // This function doesn't support IP protocol scan so only call this
-// function if o.TCPScan() || o.UDPScan()
+// function if o.TCPScan() || o.UDPScan() || o.SCTPScan()
 
 void gettoppts(double level, char *portlist, struct scan_lists * ports) {
-  int ti=0, ui=0;
+  int ti=0, ui=0, si=0;
   struct scan_lists ptsdata = { 0 };
   bool ptsdata_initialized = false;
-  struct service_list *current;
+  const struct service_node *current;
+  std::list<service_node>::iterator i;
 
   if (!services_initialized && nmap_services_init() == -1)
     fatal("%s: Couldn't get port numbers", __func__);
@@ -395,68 +429,90 @@ void gettoppts(double level, char *portlist, struct scan_lists * ports) {
       return;
     }
     if (o.fastscan) level = 100;
-    else level = 0.01;
+    else level = 1000;
   }
 
   if (portlist){
-	getpts(portlist, &ptsdata);
-        ptsdata_initialized = true;
+    getpts(portlist, &ptsdata);
+    ptsdata_initialized = true;
   }
   if (level < 1) {
-    for (current=sorted_services; current; current=current->next) {
-      if (ptsdata_initialized && !is_port_member(&ptsdata, current)) continue;
-
+    for (i = services_by_ratio.begin(); i != services_by_ratio.end(); i++) {
+      current = &(*i);
+      if (ptsdata_initialized && !is_port_member(&ptsdata, current))
+        continue;
       if (current->ratio >= level) {
-        if (o.TCPScan() && current->servent->s_proto[0] == 't') ports->tcp_count++;
-        else if (o.UDPScan() && current->servent->s_proto[0] == 'u') ports->udp_count++;
-      } else break;
+        if (o.TCPScan() && strcmp(current->s_proto, "tcp") == 0)
+          ports->tcp_count++;
+        else if (o.UDPScan() && strcmp(current->s_proto, "udp") == 0)
+          ports->udp_count++;
+        else if (o.SCTPScan() && strcmp(current->s_proto, "sctp") == 0)
+          ports->sctp_count++;
+      } else {
+        break;
+      }
     }
 
     if (ports->tcp_count)
-	    ports->tcp_ports = (unsigned short *)safe_zalloc(ports->tcp_count * sizeof(unsigned short));
+      ports->tcp_ports = (unsigned short *)safe_zalloc(ports->tcp_count * sizeof(unsigned short));
 
     if (ports->udp_count)
-	    ports->udp_ports = (unsigned short *)safe_zalloc(ports->udp_count * sizeof(unsigned short));
+      ports->udp_ports = (unsigned short *)safe_zalloc(ports->udp_count * sizeof(unsigned short));
+
+    if (ports->sctp_count)
+      ports->sctp_ports = (unsigned short *)safe_zalloc(ports->sctp_count * sizeof(unsigned short));
 
     ports->prots = NULL;
 
-    for (current=sorted_services;current;current=current->next) {
-      if (ptsdata_initialized && !is_port_member(&ptsdata, current)) continue;
-
+    for (i = services_by_ratio.begin(); i != services_by_ratio.end(); i++) {
+      current = &(*i);
+      if (ptsdata_initialized && !is_port_member(&ptsdata, current))
+        continue;
       if (current->ratio >= level) {
-        if (o.TCPScan() && current->servent->s_proto[0] == 't')
-		ports->tcp_ports[ti++] = ntohs(current->servent->s_port);
-        else if (o.UDPScan() && current->servent->s_proto[0] == 'u')
-		ports->udp_ports[ui++] = ntohs(current->servent->s_port);
-      } else break;
+        if (o.TCPScan() && strcmp(current->s_proto, "tcp") == 0)
+          ports->tcp_ports[ti++] = ntohs(current->s_port);
+        else if (o.UDPScan() && strcmp(current->s_proto, "udp") == 0)
+          ports->udp_ports[ui++] = ntohs(current->s_port);
+        else if (o.SCTPScan() && strcmp(current->s_proto, "sctp") == 0)
+          ports->sctp_ports[si++] = ntohs(current->s_port);
+      } else {
+        break;
+      }
     }
   } else if (level >= 1) {
     if (level > 65536)
       fatal("Level argument to gettoppts (%g) is too large", level);
 
     if (o.TCPScan()) {
-	    ports->tcp_count = MIN((int) level, numtcpports);
-	    ports->tcp_ports = (unsigned short *)safe_zalloc(ports->tcp_count * sizeof(unsigned short));
+      ports->tcp_count = MIN((int) level, numtcpports);
+      ports->tcp_ports = (unsigned short *)safe_zalloc(ports->tcp_count * sizeof(unsigned short));
     }
-
     if (o.UDPScan()) {
-	    ports->udp_count = MIN((int) level, numudpports);
-	    ports->udp_ports = (unsigned short *)safe_zalloc(ports->udp_count * sizeof(unsigned short));
+      ports->udp_count = MIN((int) level, numudpports);
+      ports->udp_ports = (unsigned short *)safe_zalloc(ports->udp_count * sizeof(unsigned short));
+    }
+    if (o.SCTPScan()) {
+      ports->sctp_count = MIN((int) level, numsctpports);
+      ports->sctp_ports = (unsigned short *)safe_zalloc(ports->sctp_count * sizeof(unsigned short));
     }
 
     ports->prots = NULL;
 
-    for (current=sorted_services;current && (ti < ports->tcp_count || ui < ports->udp_count);current=current->next) {
-      if (ptsdata_initialized && !is_port_member(&ptsdata, current)) continue;
-
-      if (o.TCPScan() && current->servent->s_proto[0] == 't' && ti < ports->tcp_count)
-	      ports->tcp_ports[ti++] = ntohs(current->servent->s_port);
-      else if (o.UDPScan() && current->servent->s_proto[0] == 'u' && ui < ports->udp_count)
-	      ports->udp_ports[ui++] = ntohs(current->servent->s_port);
+    for (i = services_by_ratio.begin(); i != services_by_ratio.end(); i++) {
+      current = &(*i);
+      if (ptsdata_initialized && !is_port_member(&ptsdata, current))
+        continue;
+      if (o.TCPScan() && strcmp(current->s_proto, "tcp") == 0 && ti < ports->tcp_count)
+        ports->tcp_ports[ti++] = ntohs(current->s_port);
+      else if (o.UDPScan() && strcmp(current->s_proto, "udp") == 0 && ui < ports->udp_count)
+        ports->udp_ports[ui++] = ntohs(current->s_port);
+      else if (o.SCTPScan() && strcmp(current->s_proto, "sctp") == 0 && si < ports->sctp_count)
+        ports->sctp_ports[si++] = ntohs(current->s_port);
     }
 
     if (ti < ports->tcp_count) ports->tcp_count = ti;
     if (ui < ports->udp_count) ports->udp_count = ui;
+    if (si < ports->sctp_count) ports->sctp_count = si;
   } else
     fatal("Argument to gettoppts (%g) should be a positive ratio below 1 or an integer of 1 or higher", level);
 
@@ -466,14 +522,17 @@ void gettoppts(double level, char *portlist, struct scan_lists * ports) {
   }
 
   if (ports->tcp_count > 1)
-	  qsort(ports->tcp_ports, ports->tcp_count, sizeof(unsigned short), &port_compare);
+    qsort(ports->tcp_ports, ports->tcp_count, sizeof(unsigned short), &port_compare);
 
   if (ports->udp_count > 1)
-	  qsort(ports->udp_ports, ports->udp_count, sizeof(unsigned short), &port_compare);
+    qsort(ports->udp_ports, ports->udp_count, sizeof(unsigned short), &port_compare);
+
+  if (ports->sctp_count > 1)
+    qsort(ports->sctp_ports, ports->sctp_count, sizeof(unsigned short), &port_compare);
 
   if (o.debugging && level < 1)
-	  log_write(LOG_STDOUT, "PORTS: Using ports open on %g%% or more average hosts (TCP:%d, UDP:%d)\n", level*100, ports->tcp_count, ports->udp_count);
+    log_write(LOG_STDOUT, "PORTS: Using ports open on %g%% or more average hosts (TCP:%d, UDP:%d, SCTP:%d)\n", level*100, ports->tcp_count, ports->udp_count, ports->sctp_count);
   else if (o.debugging && level >= 1)
-	  log_write(LOG_STDOUT, "PORTS: Using top %d ports found open (TCP:%d, UDP:%d)\n", (int) level, ports->tcp_count, ports->udp_count);
+    log_write(LOG_STDOUT, "PORTS: Using top %d ports found open (TCP:%d, UDP:%d, SCTP:%d)\n", (int) level, ports->tcp_count, ports->udp_count, ports->sctp_count);
 }
 

@@ -3,7 +3,7 @@
  *                                                                         *
  ***********************IMPORTANT NMAP LICENSE TERMS************************
  *                                                                         *
- * The Nmap Security Scanner is (C) 1996-2008 Insecure.Com LLC. Nmap is    *
+ * The Nmap Security Scanner is (C) 1996-2011 Insecure.Com LLC. Nmap is    *
  * also a registered trademark of Insecure.Com LLC.  This program is free  *
  * software; you may redistribute and/or modify it under the terms of the  *
  * GNU General Public License as published by the Free Software            *
@@ -25,25 +25,16 @@
  *   nmap-os-db or nmap-service-probes.                                    *
  * o Executes Nmap and parses the results (as opposed to typical shell or  *
  *   execution-menu apps, which simply display raw Nmap output and so are  *
- *   not derivative works.)                                                * 
+ *   not derivative works.)                                                *
  * o Integrates/includes/aggregates Nmap into a proprietary executable     *
  *   installer, such as those produced by InstallShield.                   *
  * o Links to a library or executes a program that does any of the above   *
  *                                                                         *
  * The term "Nmap" should be taken to also include any portions or derived *
- * works of Nmap.  This list is not exclusive, but is just meant to        *
- * clarify our interpretation of derived works with some common examples.  *
- * These restrictions only apply when you actually redistribute Nmap.  For *
- * example, nothing stops you from writing and selling a proprietary       *
- * front-end to Nmap.  Just distribute it by itself, and point people to   *
- * http://nmap.org to download Nmap.                                       *
- *                                                                         *
- * We don't consider these to be added restrictions on top of the GPL, but *
- * just a clarification of how we interpret "derived works" as it applies  *
- * to our GPL-licensed Nmap product.  This is similar to the way Linus     *
- * Torvalds has announced his interpretation of how "derived works"        *
- * applies to Linux kernel modules.  Our interpretation refers only to     *
- * Nmap - we don't speak for any other GPL products.                       *
+ * works of Nmap.  This list is not exclusive, but is meant to clarify our *
+ * interpretation of derived works with some common examples.  Our         *
+ * interpretation applies only to Nmap--we don't speak for other people's  *
+ * GPL works.                                                              *
  *                                                                         *
  * If you have any questions about the GPL licensing restrictions on using *
  * Nmap in non-GPL works, we would be happy to help.  As mentioned above,  *
@@ -57,8 +48,8 @@
  * As a special exception to the GPL terms, Insecure.Com LLC grants        *
  * permission to link the code of this program with any version of the     *
  * OpenSSL library which is distributed under a license identical to that  *
- * listed in the included COPYING.OpenSSL file, and distribute linked      *
- * combinations including the two. You must obey the GNU GPL in all        *
+ * listed in the included docs/licenses/OpenSSL.txt file, and distribute   *
+ * linked combinations including the two. You must obey the GNU GPL in all *
  * respects for all of the code used other than OpenSSL.  If you modify    *
  * this file, you may extend this exception to your version of the file,   *
  * but you are not obligated to do so.                                     *
@@ -74,17 +65,17 @@
  *                                                                         *
  * Source code also allows you to port Nmap to new platforms, fix bugs,    *
  * and add new features.  You are highly encouraged to send your changes   *
- * to fyodor@insecure.org for possible incorporation into the main         *
+ * to nmap-dev@insecure.org for possible incorporation into the main       *
  * distribution.  By sending these changes to Fyodor or one of the         *
  * Insecure.Org development mailing lists, it is assumed that you are      *
- * offering Fyodor and Insecure.Com LLC the unlimited, non-exclusive right *
- * to reuse, modify, and relicense the code.  Nmap will always be          *
- * available Open Source, but this is important because the inability to   *
- * relicense code has caused devastating problems for other Free Software  *
- * projects (such as KDE and NASM).  We also occasionally relicense the    *
- * code to third parties as discussed above.  If you wish to specify       *
- * special license conditions of your contributions, just say so when you  *
- * send them.                                                              *
+ * offering the Nmap Project (Insecure.Com LLC) the unlimited,             *
+ * non-exclusive right to reuse, modify, and relicense the code.  Nmap     *
+ * will always be available Open Source, but this is important because the *
+ * inability to relicense code has caused devastating problems for other   *
+ * Free Software projects (such as KDE and NASM).  We also occasionally    *
+ * relicense the code to third parties as discussed above.  If you wish to *
+ * specify special license conditions of your contributions, just say so   *
+ * when you send them.                                                     *
  *                                                                         *
  * This program is distributed in the hope that it will be useful, but     *
  * WITHOUT ANY WARRANTY; without even the implied warranty of              *
@@ -95,1418 +86,1509 @@
  *                                                                         *
  ***************************************************************************/
 
-
 /*
- * Written by Eddie Bell <ejlbell@gmail.com> as part of SoC2006
- * A multi-protocol parallel traceroute implementation for nmap.
- *
- * For more information on how traceroutes work:
- * http://en.wikipedia.org/wiki/Traceroute
- *
- * Traceroute takes in a list of scanned targets and determines a valid
- * responsive port to trace to based on the scan results, scan protocol and 
- * various pieces of protocol data.
- *
- * Nmap first sends a probe to the target port, from the reply traceroute is able
- * to infer how many hops away the target is. Nmap starts the trace by sending 
- * a packet with a TTL equal to that of the hop distance guess. If it gets an 
- * ICMP_TTL_EXCEEDED message back it know the hop distance guess was under so
- * nmap will continue sending probes with incremental TTLs until it receives a
- * reply from the target host.
- *
- * Once a reply from the host is received nmap sets the TTL to one below the 
- * hop guess and continues to send probes with decremental TTLs until it reaches
- * TTL 0. Then we have a complete trace to the target. If nmap does not get a 
- * hop distance probe reply, the trace TTL starts at one and is incremented 
- * until it hits the target host.
- *
- * Forwards/Backwards tracing example
- *  hop guess:20
- *  send:20  --> ICMP_TTL_EXCEEDED
- *  send:21  --> ICMP_TTL_EXCEEDED
- *  send:22  --> Reply from host
- *  send:19  --> ICMP_TTL_EXCEEDED
- *  ....
- *  send:1   --> ICMP_TTL_EXCEEDED
- *
- * The forward/backwards tracing method seems a little convoluted at first but 
- * there is a reason for it. The first host traced in a Target group is
- * designated as the reference trace. All other traces 
- * (once they have reached their destination host)  are compared against the
- * reference trace. If a match is found the trace is ended prematurely and the 
- * remaining hops are assumed to be the same as the reference trace. This 
- * normally only happens in the lower TTls, which rarely change. On average nmap
- * sends 5 less packets per host. If nmap is tracing related hosts 
- * (EG. 1.2.3.0/24) it will send a lot less packets. Depending on the network 
- * topology it may only have to send a single packet to each host.
- *   
- * Nmap's traceroute employs a dynamic timing model similar to nmap's scanning engine
- * but a little more light weight. It keeps track of sent, received and dropped
- * packet, then adjusts timing parameters accordingly. The parameters are; number of
- * retransmissions, delay between each sent packet and the amount of time to wait 
- * for a reply. They are initially based on the timing level (-T0 to -T5). 
- * Traceroute also has to watch out for rate-limiting of ICMP TTL EXCEEDED
- * messages, sometimes there is nothing we can do and just have to settle with a
- * timedout hop.
- *
- * The output from each trace is consolidated to save space, XML logging and debug
- * mode ignore consolidation. There are two type of consolidation time-out and 
- * reference trace.
- *
- * Timed out
- *  23  ... 24 no response
- *
- * Reference trace
- *   Hops 1-10 are the same as for X.X.X.X
- *
- * Traceroute does not work with connect scans or idle scans and has trouble
- * with ICMP_TIMESTAMP and ICMP_ADDRESSMASK scans because so many host filter 
- * them out. The quickest seems to be SYN scan.
- *
- * Bugs
- * ----
- *  o The code, currently, only works with ipv4.
- *  o Should send both UDP and TCP hop distance probes no matter what the
- *    scan protocol
- */
+Traceroute for Nmap. This traceroute is faster than a traditional traceroute
+because it sends several probes in parallel and detects shared traces.
 
-#include "traceroute.h"
-#include "NmapOps.h"
-#include "NmapOutputTable.h"
-#include "nmap_tty.h"
+The algorithm works by sending probes with varying TTL values and waiting for
+TTL_EXCEEDED messages. As intermediate hops are discovered, they are entered
+into a global hop cache that is shared between targets and across host groups.
+When a hop is discovered and is found to be already in the cache, the trace for
+that target is linked into the cached trace and there is no need to try lower
+TTLs. The process results in the building of a tree of Hop structures.
+
+The order in which probes are sent does not matter to the accuracy of the
+algorithm but it does matter to the speed. The sooner a shared trace can be
+detected, and the higher the TTL at which it is detected, the fewer probes need
+to be sent. The ideal situation is to start sending probes with a TTL equal to
+the true distance and count downward from there. In that case it may only be
+necessary to send two probes per target: one at the distance of the target to
+get a response, and one at distance - 1 to get a cache hit. When the distance
+isn't known in advance, the algorithm arbitrarily starts at a TTL of 10 and
+counts downward, then counts upward from 11 until it reaches the target. So a
+typical trace may look like
+
+TTL 10 -> TTL_EXCEEDED
+TTL  9 -> TTL_EXCEEDED
+TTL  8 -> TTL_EXCEEDED
+TTL  7 -> cache hit
+TTL 11 -> TTL_EXCEEDED
+TTL 12 -> TTL_EXCEEDED
+TTL 13 -> SYN/ACK, or whatever is the target's response to the probe
+
+The output for this host would then say "Hops 1-7 are the same as for ...".
+
+The detection of shared traces rests on the assumption that all paths going
+through a router at a certain TTL will be identical up to and including the
+router. This assumption is not always true. Even if two targets are each one hop
+past router X at TTL 10, packets may follow different paths to each host (and
+those paths may even change over time). This traceroute algorithm will be fooled
+by such a situation, and will report that the paths are identical up to
+router X. The only way to be sure is to do a complete trace for each target
+individually.
+*/
+
 #include "nmap_dns.h"
+#include "nmap_error.h"
+#include "nmap_tty.h"
 #include "osscan2.h"
-#include "protocols.h"
+#include "payload.h"
 #include "timing.h"
-#include "utils.h"
-#include <algorithm>
-#include <stdlib.h>
+#include "NmapOps.h"
+#include "Target.h"
 
-using namespace std;
+#include "struct_ip.h"
+
+#include <dnet.h>
+
+#include <algorithm>
+#include <list>
+#include <map>
+#include <set>
+#include <vector>
+
 extern NmapOps o;
 
-static void enforce_scan_delay (struct timeval *, int);
-static char *hostStr (u32 ip);
-
-/* Each target group has a single reference trace. All
- * other traces are compared to it and if a match is
- * found the trace is ended prematurely and the 
- * remaining hops are assumed to match the reference
- * trace */
-unsigned long commonPath[MAX_TTL + 1];
-
-Traceroute::Traceroute (const char *device_name, devtype type, const scan_lists * ports) {
-    fd = -1;
-    scanlists = ports;
-    ethsd = NULL;
-    hops = NULL;
-    pd = NULL;
-    total_size = 0;
-    memset(&ref_ipaddr, '\0', sizeof(struct in_addr));
-    cp_flag = 0;
-
-    if(type == devt_loopback) 
-        return;
-
-    /* open various socks to send and read from on windows and 
-     * unix */
-    if ((o.sendpref & PACKET_SEND_ETH) && type == devt_ethernet) {
-        /* We'll send ethernet packets with dnet */
-        ethsd = eth_open_cached (device_name);
-        if (ethsd == NULL)
-            fatal ("dnet: Failed to open device %s", device_name);
-    } else {
-        if ((fd = socket (AF_INET, SOCK_RAW, IPPROTO_RAW)) < 0)
-            pfatal ("Traceroute: socket troubles");
-        broadcast_socket (fd);
-#ifndef WIN32
-        sethdrinclude (fd);
-#endif
-    }
-
-    /* rely on each group using the same device */
-    pd = my_pcap_open_live (device_name, 100, o.spoofsource ? 1 : 0, 2);
-
-    scaninfo.initial_proto = IPPROTO_IP;
-    scaninfo.open_response = 0;
-    scaninfo.open_state = PORT_OPEN;
-    scaninfo.closed_state = PORT_CLOSED;
-
-    /* Set up which protocols, tcp flags and responsive
-     * states to use with the current scan type.
-     *
-     * Horribly messy but it is better then peppering
-     * the nmap source code with references to traceroute */
-    if (o.synscan) {
-        scaninfo.scan_flags = TH_SYN;
-        scaninfo.open_response = TH_SYN | TH_ACK;
-        scaninfo.closed_response = TH_RST;
-    } else if (o.ackscan) {
-        scaninfo.scan_flags = TH_ACK;
-        scaninfo.open_response = TH_RST;
-        scaninfo.closed_response = TH_RST;
-        scaninfo.open_state = PORT_UNFILTERED;
-        scaninfo.closed_state = PORT_UNFILTERED;
-    } else if (o.finscan) {
-        scaninfo.scan_flags = TH_FIN;
-        scaninfo.closed_response = TH_RST;
-    } else if (o.xmasscan) {
-        scaninfo.scan_flags = TH_FIN | TH_URG | TH_PUSH;
-        scaninfo.closed_response = TH_RST;
-    } else if (o.nullscan) {
-        scaninfo.scan_flags = 0;
-        scaninfo.closed_response = TH_RST;
-    } else if (o.windowscan) {
-        scaninfo.scan_flags = TH_ACK;
-        scaninfo.open_response = TH_RST;
-        scaninfo.closed_response = TH_RST;
-    } else if (o.maimonscan) {
-        scaninfo.scan_flags = TH_FIN | TH_ACK;
-        scaninfo.open_response = TH_RST;
-        scaninfo.closed_response = TH_RST;
-    }
-
-    if (o.udpscan)
-        scaninfo.initial_proto = IPPROTO_UDP;
-    if (o.synscan || o.finscan || o.xmasscan || o.nullscan ||
-        o.ackscan || o.windowscan || o.maimonscan)
-        scaninfo.initial_proto = IPPROTO_TCP;
-
-    if(o.pingscan) {
-        scaninfo.open_state = HOST_UP;
-        if (o.pingtype & PINGTYPE_TCP_USE_SYN) {
-            scaninfo.scan_flags = TH_SYN;
-            scaninfo.open_response = TH_SYN | TH_ACK;
-            scaninfo.closed_response = TH_RST;
-            scaninfo.initial_proto = IPPROTO_TCP;
-        } else if (o.pingtype & PINGTYPE_TCP_USE_ACK) {
-            scaninfo.scan_flags = TH_ACK;
-            scaninfo.open_response = TH_RST;
-            scaninfo.closed_response = TH_RST;
-            scaninfo.initial_proto = IPPROTO_TCP;
-        } else if (o.pingtype & PINGTYPE_UDP) {
-            scaninfo.initial_proto = IPPROTO_UDP;
-        } else if (o.pingtype & PINGTYPE_ICMP_PING) {
-            scaninfo.initial_proto = IPPROTO_ICMP;
-            scaninfo.icmp_type = ICMP_ECHO;
-        } else if (o.pingtype & PINGTYPE_ICMP_TS) {
-            scaninfo.initial_proto = IPPROTO_ICMP;
-            scaninfo.icmp_type = ICMP_TIMESTAMP;
-        } else if(o.pingtype & PINGTYPE_ICMP_MASK) {
-            scaninfo.initial_proto = IPPROTO_ICMP;
-            scaninfo.icmp_type = ICMP_ADDRESS;
-        }
-    }
-
-    if (o.scanflags != -1)
-        scaninfo.scan_flags = o.scanflags;
-    memset (commonPath, 0, sizeof (commonPath));
-}
-
-Traceroute::~Traceroute () {
-    map < u32, TraceGroup * >::iterator it = TraceGroups.begin ();
-    while ((--total_size) >= 0) 
-        delete(hops[total_size]);
-    if(hops)
-        free(hops);
-    for (; it != TraceGroups.end (); ++it)
-        delete (it->second);
-    if (ethsd)
-        ethsd = NULL;
-    if (fd != -1)
-        close (fd);
-    if(pd)
-        pcap_close (pd);
-}
-
-/* get an open or closed port from the portlist. Traceroute requires a positive response, 
- * positive responses are generated by different port states depending on the type of scan */
-inline int
-Traceroute::getTracePort (u8 proto, Target * t) {
-    u16 open_port = 1;
-    u16 closed_port = 1;
-    u16 filtered_port = 1;
-    u16 port = 0;
-    int state = -1;
-    Port *np;
-
-    /* Use the first specified port for ping traceroutes */
-    if (o.pingscan) {
-        if (o.pingtype & PINGTYPE_TCP_USE_SYN)
-            return scanlists->syn_ping_ports[0];
-        else if (o.pingtype & PINGTYPE_TCP_USE_ACK)
-            return scanlists->ack_ping_ports[0];
-        else if (o.pingtype & PINGTYPE_UDP)
-            return scanlists->udp_ping_ports[0];
-        else
-            return 0;
-    }
-
-    if (proto == IPPROTO_TCP) {
-        /* can't use filtered ports for tcp */
-        filtered_port = 0;
-        open_port = (!scaninfo.open_response) ? 0 : 1;
-    }
-
-    /* For UDP we try for a closed port, then an open one.  For everything else
-     * we try the opposite.  When all else fails, we try for filtered */
-    if (proto == IPPROTO_UDP) {
-        if (closed_port && t->ports.getStateCounts (proto, scaninfo.closed_state))
-            state = scaninfo.closed_state;
-        else if (open_port && t->ports.getStateCounts (proto, scaninfo.open_state))
-            state = scaninfo.open_state;
-    } else {
-        if (open_port && t->ports.getStateCounts (proto, scaninfo.open_state))
-            state = scaninfo.open_state;
-        else if (closed_port && t->ports.getStateCounts (proto, scaninfo.closed_state))
-            state = scaninfo.closed_state;
-    }
-
-    if (state == -1 && filtered_port &&
-        t->ports.getStateCounts (proto, PORT_FILTERED)) {
-        state = PORT_FILTERED;
-        if (o.verbose)
-            log_write (LOG_PLAIN, "%s: only filtered %s available, results may be incorrect\n",
-                       t->targetipstr (), o.ipprotscan ? "protocols" : "ports");
-    }
-
-    if (state == -1)
-        return -1;
-
-    np = t->ports.nextPort (NULL, proto, state);
-    if (!np)
-      return -1;
-
-    port = np->portno;
-
-    /* If this is a protocol scan traceroute and we are using
-     * one of the major protocols, set up the required information
-     * so we include the correct protocol headers */
-    if (proto == IPPROTO_IP) {
-        if (port == IPPROTO_TCP) {
-            scaninfo.initial_proto = IPPROTO_TCP;
-            scaninfo.scan_flags = TH_ACK;
-            scaninfo.open_response = TH_RST;
-            scaninfo.closed_response = TH_RST;
-        } else if (port == IPPROTO_UDP) {
-            scaninfo.initial_proto = IPPROTO_UDP;
-        } else if (port == IPPROTO_ICMP) {
-            scaninfo.initial_proto = IPPROTO_ICMP;
-            scaninfo.icmp_type = ICMP_ECHO;
-        }
-    }
-    return port;
-}
-
-/* finite state machine that reads all incoming packets
- * and attempts to match them with sent probes */
-inline bool
-Traceroute::readTraceResponses () {
-    struct ip *ip = NULL;
-    struct ip *ip2 = NULL;
-    struct icmp *icmp = NULL;
-    struct icmp *icmp2 = NULL;
-    struct tcp_hdr *tcp = NULL;
-    struct udp_hdr *udp = NULL;
-    struct link_header linkhdr;
-    unsigned int bytes;
-    struct timeval rcvdtime;
-    TraceProbe *tp = NULL;
-    TraceGroup *tg = NULL;
-    u16 sport;
-    u32 ipaddr;
-
-    /* Got to look into readip_pcap's timeout value, perhaps make it dynamic */
-    ip = (struct ip *) readip_pcap (pd, &bytes, 10000, &rcvdtime, &linkhdr, true);
-
-    if (ip == NULL)
-        return finished ();
-    if ((unsigned) ip->ip_hl * 4 + 20 > bytes)
-        return finished ();
-
-    switch (ip->ip_p) {
-    case IPPROTO_ICMP:
-        icmp = (struct icmp *) ((char *) ip + 4 * ip->ip_hl);
-        ipaddr = ip->ip_src.s_addr;
-        sport = ntohs(icmp->icmp_id);
-
-        /* Process ICMP replies that encapsulate our original probe */
-        if (icmp->icmp_type == ICMP_DEST_UNREACH || icmp->icmp_type == ICMP_TIME_EXCEEDED) {
-            ip2 = (struct ip *) (((char *) ip) + 4 * ip->ip_hl + 8);
-            if (ip2->ip_p == IPPROTO_TCP) {
-                tcp = (struct tcp_hdr *) ((u8 *) ip2 + ip2->ip_hl * 4);
-                if (ntohs(ip2->ip_len) - (ip2->ip_hl * 4) < 2)
-                    break;
-                sport = ntohs (tcp->th_sport);
-            } else if (ip2->ip_p == IPPROTO_UDP) {
-                udp = (struct udp_hdr *) ((u8 *) ip2 + ip2->ip_hl * 4);
-                if (ntohs(ip2->ip_len) - (ip2->ip_hl * 4) < 2)
-                    break;
-                sport = ntohs (udp->uh_sport);
-            } else if (ip2->ip_p == IPPROTO_ICMP) {
-                icmp2 = (struct icmp *) ((char *) ip2 + 4 * ip2->ip_hl);
-                if (ntohs(ip2->ip_len) - (ip2->ip_hl * 4) < 8)
-                    break;
-                sport = ntohs(icmp2->icmp_id);
-            } else {
-                sport = ntohs(ip2->ip_id);
-            }
-            ipaddr = ip2->ip_dst.s_addr;
-        }
-
-        if (TraceGroups.find (ipaddr) != TraceGroups.end ())
-            tg = TraceGroups[ipaddr];
-        else
-            break;
-
-        if (tg->TraceProbes.find (sport) != tg->TraceProbes.end ())
-            tp = tg->TraceProbes[sport];
-        else
-            break;
-
-        if (tp->ipreplysrc.s_addr)
-            break;
-
-        if ((tg->proto == IPPROTO_UDP && (ip2 && ip2->ip_p == IPPROTO_UDP)) ||
-            (icmp->icmp_type == ICMP_DEST_UNREACH)) {
-            switch (icmp->icmp_code) {
-                /* reply from a closed port */
-            case ICMP_PORT_UNREACH:
-                /* replies from a filtered port */
-            case ICMP_HOST_UNREACH:
-            case ICMP_PROT_UNREACH:
-            case ICMP_NET_ANO:
-            case ICMP_HOST_ANO:
-            case ICMP_PKT_FILTERED:
-                if (tp->probeType () == PROBE_TTL) {
-                   tg->setHopDistance (o.ttl - ip2->ip_ttl, 0);
-                   tg->start_ttl = tg->ttl = tg->hopDistance;
-                } else {
-                    tg->gotReply = true;
-                    if (tg->start_ttl < tg->ttl)
-                        tg->ttl = tg->start_ttl + 1;
-                }
-            }
-        }
-        /* icmp ping scan replies */
-        else if (tg->proto == IPPROTO_ICMP && (icmp->icmp_type == ICMP_ECHOREPLY ||
-                icmp->icmp_type == ICMP_ADDRESSREPLY || icmp->icmp_type == ICMP_TIMESTAMPREPLY)) {
-            if (tp->probeType () == PROBE_TTL) {
-                tg->setHopDistance (get_initial_ttl_guess (ip->ip_ttl), ip->ip_ttl);
-                tg->start_ttl = tg->ttl = tg->hopDistance;
-            } else {
-                tg->gotReply = true;
-                if (tg->start_ttl < tg->ttl)
-                    tg->ttl = tg->start_ttl + 1;
-            }
-        }
-
-        if (tp->timing.getState () == P_TIMEDOUT)
-            tp->timing.setState (P_OK);
-        else
-            tg->decRemaining ();
-
-        tg->repliedPackets++;
-        tg->consecTimeouts = 0;
-        tp->timing.adjustTimeouts (&rcvdtime, tg->scanDelay);
-        tp->ipreplysrc.s_addr = ip->ip_src.s_addr;
-
-        /* check to see if this hop is in the referece trace. If 
-         * it is then we stop tracing this target and assume
-         * all subsequent hops match the common path */
-        if (commonPath[tp->ttl] == tp->ipreplysrc.s_addr &&
-            tp->ttl > 1 && tg->gotReply && tg->getState () != G_FINISH) {
-            tg->setState (G_FINISH);
-            tg->consolidation_start = tp->ttl+1;
-	    cp_flag = 1;
-            break;
-        } else if (commonPath[tp->ttl] == 0) {
-            commonPath[tp->ttl] = tp->ipreplysrc.s_addr;
-	    /* remember which host is the reference trace */
-            if(!cp_flag) {
-               ref_ipaddr.s_addr = tg->ipdst;
-               cp_flag = 1;
-	    }
-	}
-        break;
-    case IPPROTO_TCP:
-        tcp = (struct tcp_hdr *) ((char *) ip + 4 * ip->ip_hl);
-
-        if (TraceGroups.find (ip->ip_src.s_addr) != TraceGroups.end ())
-            tg = TraceGroups[ip->ip_src.s_addr];
-        else
-            break;
-
-        if (tg->TraceProbes.find (ntohs (tcp->th_dport)) != tg->TraceProbes.end ())
-            tp = tg->TraceProbes[ntohs (tcp->th_dport)];
-        else
-            break;
-
-        /* already got the tcp packet for this group,
-         * could be a left over rst or syn-ack */
-        if (tp->ipreplysrc.s_addr)
-            break;
-
-        /* We have reached the destination host and the 
-         * trace can stop for this target */
-        if (tcp->th_flags & scaninfo.open_response || tcp->th_flags & scaninfo.closed_response) {
-
-            /* We might have got a late reply */
-            if (tp->timing.getState () == P_TIMEDOUT)
-                tp->timing.setState (P_OK);
-            else
-                tg->decRemaining ();
-
-            tp->timing.recvTime = rcvdtime;
-            tp->ipreplysrc = ip->ip_src;
-            tg->repliedPackets++;
-            /* The probe was the reply from a ttl guess */
-            if (tp->probeType () == PROBE_TTL) {
-                tg->setHopDistance (get_initial_ttl_guess (ip->ip_ttl), ip->ip_ttl);
-                tg->start_ttl = tg->ttl = tg->hopDistance;
-            } else {
-                tg->gotReply = true;
-                if (tg->start_ttl < tg->ttl)
-                    tg->ttl = tg->start_ttl + 1;
-            }
-        }
-        break;
-    case IPPROTO_UDP:
-        udp = (udp_hdr *) ((u8 *) ip + ip->ip_hl * 4);
-
-        if (TraceGroups.find (ip->ip_src.s_addr) != TraceGroups.end ())
-            tg = TraceGroups[ip->ip_src.s_addr];
-        else
-            break;
-
-        if (tg->TraceProbes.find (ntohs (udp->uh_dport)) != tg->TraceProbes.end ())
-            tp = tg->TraceProbes[ntohs (udp->uh_dport)];
-        else
-            break;
-
-        if (tp->ipreplysrc.s_addr)
-            break;
-
-        /* We might have got a late reply */
-        if (tp->timing.getState () == P_TIMEDOUT)
-            tp->timing.setState (P_OK);
-        else
-            tg->decRemaining ();
-
-        tp->timing.recvTime = rcvdtime;
-        tp->ipreplysrc.s_addr = ip->ip_src.s_addr;
-        tg->repliedPackets++;
-
-        if (tp->probeType () == PROBE_TTL) {
-            tg->setHopDistance (get_initial_ttl_guess (ip->ip_ttl), ip->ip_ttl);
-            tg->setState (G_OK);
-            tg->start_ttl = tg->ttl = tg->hopDistance;
-        } else {
-            tg->gotReply = true;
-            if (tg->start_ttl < tg->ttl)
-                tg->ttl = tg->start_ttl + 1;
-        }
-        break;
-    default:
-        ;
-    }
-    return finished ();
-}
-
-/* Estimate how many hops away a host is by actively probing it.
- *
- * If the scan protocol isn't udp we guesstimate how many hops away
- * the target is by sending a probe to an open or closed port and
- * calculating a possible hop distance based on the returned ttl
- *
- * If the scan protocol is udp then we send a probe to a closed,
- * filtered or open port. Closed ports are more accurate because
- * we can exactly determine the hop distance based on the packet
- * return in the icmp port unreachable's payload. Open ports use
- * the same estimation method as tcp probes. Filtered ports are
- * only used as a last resort, although the hop distance guess is
- * accurate, the filtered response may not be from the destination
- * target, it may be from a node filtering the target */
-inline void
-Traceroute::sendTTLProbes (vector < Target * >&Targets, vector < Target * >&valid_targets) {
-    Target *t = NULL;
-    long dport = 0;
-    u16 sport = 0;
-    u8 proto;
-    TraceProbe *tp;
-    TraceGroup *tg = NULL;
-    vector < Target * >::iterator it = Targets.begin ();
-
-    for (; it != Targets.end (); ++it) {
-        t = *it;
-        proto = scaninfo.initial_proto;
-
-        /* No point in tracing directly connected nodes */
-        if (t->directlyConnected ())
-            continue;
-
-        /* This node has already been sent a hop distance probe */
-        if (TraceGroups.find (t->v4hostip ()->s_addr) != TraceGroups.end ()) {
-            valid_targets.push_back (t);
-            continue;
-        }
-
-        /* Determine active port to probe */
-        if ((dport = getTracePort (proto, t)) == -1) {
-            /* If we could not find a responsive tcp port then try
-             * to find a responsive udp port */
-            if (o.udpscan && proto != IPPROTO_UDP) {
-                proto = IPPROTO_UDP;
-                dport = getTracePort (proto, t);
-            }
-        }
-
-        if (dport == -1) {
-            if (o.verbose > 1)
-                log_write (LOG_STDOUT, "%s: no responsive %s\n",
-                           t->targetipstr (), o.ipprotscan ? "protocols" : "ports");
-            continue;
-        }
-
-        /* If this is a protocol scan getTracePort() returns 
-         * a protocol number for so we need a random destination 
-         * port */
-        if (o.ipprotscan) {
-            proto = dport;
-            dport = get_random_u16 ();
-            scaninfo.initial_proto = IPPROTO_IP;
-        }
-
-        /* start off with a random source port and increment 
-         * it for each probes sent. The source port is the
-         * distinguishing value used to identify each probe */
-        sport = get_random_u16 ();
-        tg = new TraceGroup (t->v4hostip ()->s_addr, sport, dport, proto);
-        tg->src_mac_addr = t->SrcMACAddress ();
-        tg->nxt_mac_addr = t->NextHopMACAddress ();
-        tg->sport++;
-        TraceGroups[tg->ipdst] = tg;
-
-        /* OS fingerprint engine may already have the distance so
-         * we don't need to calculate it */
-        if (t->distance != -1) {
-            tg->setHopDistance (0, t->distance);
-	    } else {
-            tp = new TraceProbe (proto, t->v4hostip ()->s_addr,
-                                 t->v4sourceip ()->s_addr, sport, dport);
-            tp->setProbeType (PROBE_TTL);
-            tp->ttl = o.ttl;
-            tg->TraceProbes[sport] = tp;
-            tg->incRemaining ();
-            sendProbe (tp);
-        }
-        valid_targets.push_back (t);
-    }
-}
-
-/* Send a single traceprobe object */
-int
-Traceroute::sendProbe (TraceProbe * tp) {
-    u8 *tcpopts = NULL;
-    int tcpoptslen = 0;
-    u32 ack = 0;
-    u8 *packet = NULL;
-    u32 packetlen = 0;
-    TraceGroup *tg = NULL;
-    int decoy = 0;
-    struct in_addr source;
-    struct eth_nfo eth;
-    struct eth_nfo *ethptr = NULL;
-
-    if (scaninfo.scan_flags & TH_ACK)
-        ack = rand ();
-    if (scaninfo.scan_flags & TH_SYN) {
-        tcpopts = (u8 *) "\x02\x04\x05\xb4";
-        tcpoptslen = 4;
-    }
-
-    if (TraceGroups.find (tp->ipdst.s_addr) == TraceGroups.end ())
-        return -1;
-    tg = TraceGroups[tp->ipdst.s_addr];
-
-    /* required to send raw packets in windows */
-    if (ethsd) {
-        memcpy (eth.srcmac, tg->src_mac_addr, 6);
-        memcpy (eth.dstmac, tg->nxt_mac_addr, 6);
-        eth.ethsd = ethsd;
-        eth.devname[0] = '\0';
-        ethptr = &eth;
-    }
-
-    if (tg->TraceProbes.find (tp->sport) == tg->TraceProbes.end ()) {
-        tg->nextTTL ();
-
-        if (tg->ttl > MAX_TTL) {
-            tg->setState (G_ALIVE_TTL);
-            return -1;
-        }
-        if (!tg->ttl || (tg->gotReply && tg->noDistProbe) ) {
-            tg->setState (G_FINISH);
-            return 0;
-        }
-        tg->sport++;
-        tp->ttl = tg->ttl;
-        tp->dport = tg->dport;
-        tg->incRemaining ();
-    } else {
-        /* this probe is a retransmission */
-        tp->timing.setState (P_OK);
-    }
-
-    tg->TraceProbes[tp->sport] = tp;
-
-    for (decoy = 0; decoy < o.numdecoys; decoy++) {
-        enforce_scan_delay (&tp->timing.sendTime, tg->scanDelay);
-
-        if (decoy == o.decoyturn)
-            source = tp->ipsrc;
-        else
-            source = o.decoys[decoy];
-
-        switch (tp->proto) {
-        case IPPROTO_TCP:
-            packet = build_tcp_raw (&source, &tp->ipdst, tp->ttl, get_random_u16 (),
-                                    get_random_u8 (), 0, NULL, 0, tp->sport, tp->dport,
-                                    get_random_u32 (), ack, 0, scaninfo.scan_flags,
-                                    get_random_u16 (), 0, tcpopts, tcpoptslen,
-                                    o.extra_payload, o.extra_payload_length, &packetlen);
-            break;
-        case IPPROTO_UDP:
-            packet = build_udp_raw (&source, &tp->ipdst, tp->ttl, get_random_u16 (),
-                                    get_random_u8 (), false,
-                                    NULL, 0, tp->sport,
-                                    tp->dport, o.extra_payload, o.extra_payload_length, &packetlen);
-            break;
-        case IPPROTO_ICMP:
-            packet = build_icmp_raw (&source, &tp->ipdst, tp->ttl, 0, 0, false,
-                                     NULL, 0, get_random_u16 (), tp->sport, scaninfo.icmp_type, 0,
-                                     o.extra_payload, o.extra_payload_length, &packetlen);
-            break;
-        default:
-            packet = build_ip_raw (&source, &tp->ipdst, tp->proto, tp->ttl, tp->sport,
-                                   get_random_u8 (), false, NULL, 0, o.extra_payload,
-                                   o.extra_payload_length, &packetlen);
-        }
-        send_ip_packet (fd, ethptr, packet, packetlen);
-        free (packet);
-    }
-    return 0;
-}
-
-/* true if all groups have finished or failed */
-bool
-Traceroute::finished () {
-    map < u32, TraceGroup * >::iterator it = TraceGroups.begin ();
-    for (; it != TraceGroups.end (); ++it) {
-        if (it->second->getState () == G_OK || it->second->getRemaining ())
-            return false;
-    }
-    return true;
-}
-
-/* Main parallel send and recv loop */
-void
-Traceroute::trace (vector < Target * >&Targets) {
-    map < u32, TraceGroup * >::iterator it;
-    vector < Target * >::iterator targ;
-    vector < Target * >valid_targets;
-    vector < Target * >reference;
-    vector < TraceProbe * >retrans_probes;
-    vector < TraceGroup * >::size_type pcount;
-    TraceProbe *tp = NULL;
-    TraceGroup *tg = NULL;
-    Target *t = NULL;
-    ScanProgressMeter *SPM;
-    u16 total_size, total_complete;
-
-    if (o.af () == AF_INET6) {
-        error ("Traceroute does not support ipv6\n");
-        return;
-    }
-
-    /* perform the reference trace first */
-    if (Targets.size () > 1) {
-        o.current_scantype = TRACEROUTE;
-        for (targ = Targets.begin (); targ != Targets.end (); ++targ) {
-            reference.push_back (*targ);
-            sendTTLProbes (reference, valid_targets);
-            if (valid_targets.size ()) {
-                o.current_scantype = REF_TRACEROUTE;
-                this->trace (valid_targets);
-                o.current_scantype = TRACEROUTE;
-                break;
-            }
-        }
-    }
-
-    /* guess hop distance to targets. valid_targets
-     * is populated with all Target object that are
-     * legitimate to trace to */
-    sendTTLProbes (Targets, valid_targets);
-
-    if (!valid_targets.size())
-        return;
-
-    SPM = new ScanProgressMeter ("Traceroute");
-
-    while (!readTraceResponses ()) {
-        for (targ = valid_targets.begin (); targ != valid_targets.end (); ++targ) {
-            t = *targ;
-            tg = TraceGroups[t->v4host ().s_addr];
-
-            /* Check for any timedout probes and 
-             * retransmit them. If too many probes
-             * are outstanding we wait for replies or
-             * timeouts before sending any more */
-            if (tg->getRemaining ()) {
-                tg->retransmissions (retrans_probes);
-                for (pcount = 0; pcount < retrans_probes.size (); pcount++)
-                    sendProbe (retrans_probes[pcount]);
-                retrans_probes.clear ();
-                /* Max number of packets outstanding is 2 if we don't have a reply yet
-                 * otherwise it is equal to o.timing_level. If the timing level it 0 
-                 * it is equal to 1 */
-                if (tg->getRemaining () >=
-                    (tg->gotReply ? (!o.timing_level ? 1 : o.timing_level) : 2))
-                    continue;
-            }
-            if (tg->getState () != G_OK || !tg->hopDistance)
-                continue;
-
-            tp = new TraceProbe (tg->proto, t->v4hostip ()->s_addr,
-                                 t->v4sourceip ()->s_addr, tg->sport, 0);
-            sendProbe (tp);
-        }
-
-        if (!keyWasPressed ())
-            continue;
-
-        total_size = total_complete = 0;
-        for (it = TraceGroups.begin (); it != TraceGroups.end (); ++it) {
-            total_complete += it->second->size ();
-            total_size += it->second->hopDistance;
-        }
-
-        if (!total_size)
-            continue;
-
-        if (total_size < total_complete)
-            swap (total_complete, total_size);
-        SPM->printStats (MIN ((double) total_complete / total_size, 0.99), NULL);
-    }
-    SPM->endTask(NULL, NULL);
-    delete (SPM);
+/* The highest TTL we go up to if the target itself doesn't respond. */
+#define MAX_TTL 30
+#define MAX_OUTSTANDING_PROBES 10
+#define MAX_RESENDS 2
+/* In milliseconds. */
+#define PROBE_TIMEOUT 1000
+/* If the hop cache (including timed-out hops) is bigger than this after a
+   round, the hop is cleared and rebuilt from scratch. */
+#define MAX_HOP_CACHE_SIZE 1000
+
+struct Hop;
+class HostState;
+class Probe;
+
+/* A global random token used to distinguish this traceroute's probes from
+   those of other traceroutes possibly running on the same machine. */
+static u16 global_id;
+/* A global cache of known hops, indexed by TTL and address. */
+static std::map<struct HopIdent, Hop *> hop_cache;
+/* A list of timedout hops, which are not kept in hop_cache, so we can delete
+   all hops on occasion. */
+static std::list<Hop *> timedout_hops;
+/* The TTL at which we start sending probes if we don't have a distance
+   estimate. This is updated after each host group on the assumption that hosts
+   across groups will not differ much in distance. Having this closer to the
+   true distance makes the trace faster but is not needed for accuracy. */
+static u8 initial_ttl = 10;
+
+static struct timeval get_now(struct timeval *now = NULL);
+static const char *ss_to_string(const struct sockaddr_storage *ss);
+
+/* An object of this class is a (TTL, address) pair that uniquely identifies a
+   hop. Hops in the hop_cache are indexed by this type. */
+struct HopIdent {
+  u8 ttl;
+  struct sockaddr_storage addr;
+
+  HopIdent(u8 ttl, const struct sockaddr_storage &addr) {
+    this->addr = addr;
+    this->ttl = ttl;
   }
 
-/* Resolves traceroute hops through nmaps
- * parallel caching rdns infrastructure.
- * The <hops> class variable should be NULL and needs
- * freeing after the hostnames are finished 
- * with 
- *
- * N.B TraceProbes contain pointers into the Target
- * structure, if it is free'ed prematurely something
- * nasty will happen */
-void Traceroute::resolveHops () {
-    map<u32, TraceGroup *>::iterator tg_iter;
-    map<u16, TraceProbe *>::iterator tp_iter;
-    int count = 0;
-    struct sockaddr_storage ss;
-    struct sockaddr_in *sin = (struct sockaddr_in *) &ss;
-  
-    if(o.noresolve)
-        return;
-
-    assert(hops == NULL);
-
-    memset(&ss, '\0', sizeof(ss));
-    sin->sin_family = o.af();
-
-    for(tg_iter = TraceGroups.begin(); tg_iter != TraceGroups.end(); ++tg_iter) 
-        total_size += tg_iter->second->size();
-    if(!total_size)
-        return;
-    hops = (Target **) safe_zalloc(sizeof(Target *) * total_size);
-
-    /* Move hop IP address to Target structures and point TraceProbes to
-     * Targets hostname */
-    for(tg_iter = TraceGroups.begin(); tg_iter != TraceGroups.end(); ++tg_iter) {
-        tp_iter = tg_iter->second->TraceProbes.begin();
-        for(; tp_iter != tg_iter->second->TraceProbes.end(); ++tp_iter) {
-            if(tp_iter->second->ipreplysrc.s_addr && tp_iter->second->probeType() != PROBE_TTL) {
-                sin->sin_addr = tp_iter->second->ipreplysrc;
-                hops[count] = new Target();
-                hops[count]->setTargetSockAddr(&ss, sizeof(ss));
-                hops[count]->flags = HOST_UP;
-                tp_iter->second->hostname = &hops[count]->hostname; 
-                count++;
-            }
-        }
-    }
-    /* resolve all hops in this group at onces */
-    nmap_mass_rdns(hops, count);
-}
-
-void
-Traceroute::addConsolidationMessage(NmapOutputTable *Tbl, unsigned short row_count, unsigned short ttl) {
-	char mbuf[64];
-	int len;
-
-	assert(ref_ipaddr.s_addr);
-	char *ip = inet_ntoa(ref_ipaddr);
-
-	if(ttl == 1)
-		len = Snprintf(mbuf, 64, "Hop 1 is the same as for %s", ip);
-	else
-		len = Snprintf(mbuf, 64, "Hops 1-%d are the same as for %s", ttl, ip);
-
-	assert(len);
-	Tbl->addItem(row_count, HOP_COL, true, "-", 1);
-	Tbl->addItem(row_count, RTT_COL, true, true, mbuf, len);
-}
-
-/* print a trace in plain text format */
-void
-Traceroute::outputTarget (Target * t) {
-    map < u16, TraceProbe * >::const_iterator it;
-    map < u16, TraceProbe * >::size_type ttl_count;
-    map < u16, TraceProbe * >sortedProbes;
-    TraceProbe *tp = NULL;
-    TraceGroup *tg = NULL;
-    NmapOutputTable *Tbl = NULL;
-
-    struct protoent *proto;
-    bool last_consolidation = false;
-    bool common_consolidation = false;
-    char row_count = 0;
-    char timebuf[16];
-    u8 consol_count = 0;
-
-    if ((TraceGroups.find (t->v4host ().s_addr)) == TraceGroups.end ())
-        return;
-    tg = TraceGroups[t->v4host ().s_addr];
-
-    /* sort into ttl order */
-    for (it = tg->TraceProbes.begin (); it != tg->TraceProbes.end (); ++it)
-        sortedProbes[it->second->ttl] = it->second;
-    sortedProbes.swap (tg->TraceProbes);
-
-    /* clean up and consolidate traces */
-    tg->consolidateHops ();
-
-    this->outputXMLTrace(tg);
-
-    /* table headers */
-    Tbl = new NmapOutputTable (tg->hopDistance+1, 3);
-    Tbl->addItem (row_count, HOP_COL, false, "HOP", 3);
-    Tbl->addItem (row_count, RTT_COL, false, "RTT", 3);
-    Tbl->addItem (row_count, HOST_COL, false, "ADDRESS", 7);
-
-    for (ttl_count = 1; ttl_count <= tg->hopDistance; ttl_count++) {
-	
-	assert(row_count <= tg->hopDistance);
-
-        /* consolidate hops based on the reference trace (commonPath)  */
-        if(commonPath[ttl_count] && ttl_count <= tg->consolidation_start) { 
-            /* do not consolidate in debug mode */
-            if(o.debugging) {
-                row_count++;
-                Tbl->addItemFormatted(row_count, HOP_COL, false, "%d", ttl_count);
-                Tbl->addItemFormatted(row_count, RTT_COL, false, "--");
-                Tbl->addItemFormatted(row_count, HOST_COL, false, "%s", hostStr(commonPath[ttl_count]));
-            } else if(!common_consolidation) {
-                row_count++;
-                common_consolidation = true;
-            }
-        }
-
- 	/* here we print the final hop for a trace that is fully consolidated */
-        if ((it = tg->TraceProbes.find (ttl_count)) == tg->TraceProbes.end ()) {
-		if (common_consolidation && ttl_count == tg->hopDistance) {
-			if(ttl_count-2 == 1) {
-				Tbl->addItemFormatted(row_count, RTT_COL, false, "--");
-				Tbl->addItemFormatted(row_count, HOST_COL,false,  "%s", hostStr(commonPath[ttl_count-2]));
-			} else {
-				addConsolidationMessage(Tbl, row_count, ttl_count-2);
-			}
-			common_consolidation = false;
-			break;
-		}
-		continue;
-	}
-        /* Here we consolidate the probe that first matched the common path */
-        if (ttl_count < tg->consolidation_start) 
-              continue;
-
-        tp = tg->TraceProbes[ttl_count];
-
-        /* end of reference trace consolidation */
-        if(common_consolidation) {
-            if(ttl_count-1 == 1) {
-                Tbl->addItemFormatted(row_count, RTT_COL, false, "--", ttl_count-1);
-                Tbl->addItemFormatted(row_count, HOST_COL,false,  "%s", hostStr(commonPath[ttl_count-1]));
-            } else {
-		addConsolidationMessage(Tbl, row_count, ttl_count-1);
-	    }
-            common_consolidation = false;
-        }
-
-        row_count++;
-
-        /* timeout consolidation */
-        if(tp->timing.consolidated) {
-            consol_count++;
-            if(!last_consolidation) {
-                last_consolidation = true;
-                Tbl->addItemFormatted(row_count, HOP_COL, false, "%d", tp->ttl);
-            }
-            else if(tg->getState() == G_DEAD_TTL && ttl_count == tg->hopDistance) 
-               Tbl->addItem (row_count, RTT_COL, false, "... 50");
-            row_count--;
-        } else if(!tp->timing.consolidated && last_consolidation) { 
-	    Tbl->addItem(row_count, HOST_COL, false, "no response", 11);
-            if(consol_count>1) 
-                Tbl->addItemFormatted(row_count, RTT_COL, false, "... %d", tp->ttl-1);
-            else
-                Tbl->addItemFormatted(row_count, RTT_COL, false, "...");
-
-            row_count++;
-            last_consolidation = false;
-            consol_count = 0;
-        }
-
-        /* normal hop output (rtt, ip and hostname) */
-        if (!tp->timing.consolidated && !last_consolidation) {
-            Snprintf(timebuf, 16, "%.2f", (float) 
-            TIMEVAL_SUBTRACT (tp->timing.recvTime, tp->timing.sendTime) / 1000);
-            Tbl->addItemFormatted (row_count, HOP_COL, false, "%d", tp->ttl);
-        if (tp->timing.getState () != P_TIMEDOUT) {
-            Tbl->addItem (row_count, RTT_COL, true, timebuf);
-            Tbl->addItem (row_count, HOST_COL, true, tp->nameIP ());
-        } else 
-           Tbl->addItemFormatted (row_count, RTT_COL, false, "...");
-    }
-
-    }
-
-    /* Traceroute header and footer */
-    proto = nmap_getprotbynum(htons(tg->proto));
-    if(o.ipprotscan || (o.pingscan && !(o.pingtype & PINGTYPE_TCP || o.pingtype & PINGTYPE_UDP))) 
-        log_write(LOG_PLAIN, "\nTRACEROUTE (using proto %d/%s)\n", tg->proto, proto?proto->p_name:"unknown");
-    else 
-        log_write(LOG_PLAIN, "\nTRACEROUTE (using port %d/%s)\n", tg->dport, proto2ascii(tg->proto));
-    log_write (LOG_PLAIN, "%s", Tbl->printableTable(NULL));
-
-    if(G_TTL(tg->getState()))
-        log_write(LOG_PLAIN, "! maximum TTL reached (50)\n");
-    else if(!tg->gotReply || (tp && (tp->ipreplysrc.s_addr != tg->ipdst)))
-        log_write(LOG_PLAIN, "! destination not reached (%s)\n", inet_ntoa(tp->ipdst));
-
-    log_flush (LOG_PLAIN);
-    delete Tbl;
-}
-
-/* print a trace in xml */
-void
-Traceroute::outputXMLTrace(TraceGroup * tg) {
-    map < u16, TraceProbe * >::const_iterator it;
-    TraceProbe *tp = NULL;
-    const char *hostname_tmp = NULL;
-    struct protoent *proto;
-    struct in_addr addr;
-    long timediff;
-    short ttl_count;
-
-    /* XML traceroute header */
-    log_write(LOG_XML, "<trace ");
-    if ((o.pingscan && (o.pingtype & PINGTYPE_TCP || o.pingtype & PINGTYPE_UDP)) || (!o.ipprotscan && !o.pingscan))
-	log_write(LOG_XML, "port=\"%d\" ", tg->dport);
-    if((proto = nmap_getprotbynum(htons(tg->proto))))
-        log_write(LOG_XML, "proto=\"%s\"", proto->p_name);
+  bool operator<(const struct HopIdent &other) const {
+    if (ttl < other.ttl)
+      return true;
+    else if (ttl > other.ttl)
+      return false;
     else
-        log_write(LOG_XML, "proto=\"%d\"", tg->proto);
-    log_write(LOG_XML, ">\n");
+      return sockaddr_storage_cmp(&addr, &other.addr) < 0;
+  }
+};
 
-    /* add missing hosts host from the common path */
-    for(ttl_count = 1 ; ttl_count < tg->TraceProbes.begin()->second->ttl; ttl_count++) {
-        addr.s_addr = commonPath[ttl_count];
-        log_write(LOG_XML, "<hop ttl=\"%d\" rtt=\"--\" ", ttl_count);
-        log_write(LOG_XML, "ipaddr=\"%s\"", inet_ntoa(addr));
-        if((hostname_tmp = lookup_cached_host(commonPath[ttl_count])) != NULL)
-            log_write(LOG_XML, " host=\"%s\"", hostname_tmp);
-        log_write(LOG_XML, "/>\n");
-    }
+struct Hop {
+  Hop *parent;
+  struct sockaddr_storage tag;
+  /* When addr.ss_family == 0, this hop represents a timeout. */
+  struct sockaddr_storage addr;
+  u8 ttl;
+  float rtt; /* In milliseconds. */
+  std::string hostname;
 
-    /* display normal traceroute nodes.  Consolidation based on the
-     * common path is not performed */
-    for(it = tg->TraceProbes.begin() ;it != tg->TraceProbes.end(); it++) {
-        tp = it->second;
+  Hop() {
+    this->parent = NULL;
+    this->addr.ss_family = 0;
+    this->ttl = 0;
+    this->rtt = -1.0;
+    this->tag.ss_family = 0;
+  }
 
-        if(tp->probeType() == PROBE_TTL)
-            break;
+  Hop(u8 ttl, const struct sockaddr_storage &addr, float rtt) {
+    this->parent = NULL;
+    this->addr = addr;
+    this->ttl = ttl;
+    this->rtt = rtt;
+    this->tag.ss_family = 0;
+  }
+};
 
-        if(tp->timing.getState() == P_TIMEDOUT) {
-            continue;
-	}
+class HostState {
+public:
+  enum counting_state { COUNTING_DOWN, COUNTING_UP };
 
-        timediff = TIMEVAL_SUBTRACT (tp->timing.recvTime, tp->timing.sendTime);
+  Target *target;
+  /* A bitmap of TTLs that have been sent, to avoid duplicates when we switch
+     around the order counting up or down. */
+  std::vector<bool> sent_ttls;
+  u8 current_ttl;
+  enum counting_state state;
+  /* If nonzero, the known hop distance to the target. */
+  int reached_target;
+  struct probespec pspec;
+  std::list<Probe *> unanswered_probes;
+  std::list<Probe *> active_probes;
+  std::list<Probe *> pending_resends;
+  Hop *hops;
 
-        log_write(LOG_XML, "<hop ttl=\"%d\" rtt=\"%.2f\" ipaddr=\"%s\"", tp->ttl, (float)timediff/1000, tp->ipReplyStr());
-        if(tp->HostName() != NULL)
-            log_write(LOG_XML, " host=\"%s\"", tp->HostName());
-        log_write(LOG_XML, "/>\n");
-    }
+  HostState(Target *target);
+  ~HostState();
+  bool has_more_probes() const;
+  bool is_finished() const;
+  bool send_next_probe(int rawsd, eth_t *ethsd);
+  void next_ttl();
+  void count_up();
+  int cancel_probe(std::list<Probe *>::iterator it);
+  int cancel_probes_below(u8 ttl);
+  int cancel_probes_above(u8 ttl);
+  Hop *insert_hop(u8 ttl, const struct sockaddr_storage *addr, float rtt);
+  void link_to(Hop *hop);
+  double completion_fraction() const;
 
-    if(G_TTL(tg->getState()))
-        log_write(LOG_XML, "<error errorstr=\"maximum TTL reached\"/>\n");
-    else if(!tg->gotReply || (tp && (tp->ipreplysrc.s_addr != tg->ipdst)))
-        log_write(LOG_XML, "<error errorstr=\"destination not reached (%s)\"/>\n", inet_ntoa(tp->ipdst));
+private:
+  void child_parent_ttl(u8 ttl, Hop **child, Hop **parent);
+  static u8 distance_guess(const Target *target);
+  static struct probespec get_probe(const Target *target);
+};
 
-    /* traceroute XML footer */
-    log_write(LOG_XML, "</trace>\n");
-    log_flush(LOG_XML);
-} 
+class Probe {
+private:
+  /* This is incremented with each instantiated probe. */
+  static u16 token_counter;
 
-TraceGroup::TraceGroup (u32 dip, u16 sport, u16 dport, u8 proto) {
-    this->ipdst = dip;
-    this->dport = dport;
-    this->sport = sport;
-    this->proto = proto;
-    ttl = 0;
-    state = G_OK;
-    remaining = 0;
-    hopDistance = 0;
-    start_ttl = 0;
-    TraceProbes.clear ();
-    gotReply = false;
-    noDistProbe = false;
-    scanDelay = o.scan_delay ? o.scan_delay : 0;
-    maxRetransmissions = (o.getMaxRetransmissions () < 2) ? 2 : o.getMaxRetransmissions () / 2;
-    droppedPackets = 0;
-    repliedPackets = 0;
-    consecTimeouts = 0;
-    consolidation_start = 0;
+  int num_resends;
+
+public:
+  HostState *host;
+  struct probespec pspec;
+  u8 ttl;
+  /* The token is used to match up probe replies. */
+  u16 token;
+  struct timeval sent_time;
+
+  Probe(HostState *host, struct probespec pspec, u8 ttl);
+  virtual ~Probe();
+  void send(int rawsd, eth_t *ethsd, struct timeval *now = NULL);
+  void resend(int rawsd, eth_t *ethsd, struct timeval *now = NULL);
+  bool is_timedout(struct timeval *now = NULL) const;
+  bool may_resend() const;
+  virtual unsigned char *build_packet(const struct sockaddr_storage *source,
+    u32 *len) const = 0;
+
+  static Probe *make(HostState *host, struct probespec pspec, u8 ttl);
+};
+u16 Probe::token_counter = 0x0000;
+
+class TracerouteState {
+public:
+  std::list<HostState *> active_hosts;
+  /* The next send time for enforcing scan delay. */
+  struct timeval next_send_time;
+
+  TracerouteState(std::vector<Target *> &targets);
+  ~TracerouteState();
+
+  void send_new_probes();
+  void read_replies(long timeout);
+  void cull_timeouts();
+  void remove_finished_hosts();
+  void resolve_hops();
+  void transfer_hops();
+
+  double completion_fraction() const;
+
+private:
+  eth_t *ethsd;
+  int rawsd;
+  pcap_t *pd;
+  int num_active_probes;
+
+  std::vector<HostState *> hosts;
+  std::list<HostState *>::iterator next_sending_host;
+
+  void next_active_host();
+  Probe *lookup_probe(const struct sockaddr_storage *target_addr, u16 token);
+  void set_host_hop(HostState *host, u8 ttl,
+    const struct sockaddr_storage *from_addr, float rtt);
+  void set_host_hop_timedout(HostState *host, u8 ttl);
+};
+
+static Hop *merge_hops(const struct sockaddr_storage *tag, Hop *a, Hop *b);
+static Hop *hop_cache_lookup(u8 ttl, const struct sockaddr_storage *addr);
+static void hop_cache_insert(Hop *hop);
+static unsigned int hop_cache_size();
+
+HostState::HostState(Target *target) : sent_ttls(MAX_TTL + 1, false) {
+  this->target = target;
+  current_ttl = MIN(MAX(1, HostState::distance_guess(target)), MAX_TTL);
+  state = HostState::COUNTING_DOWN;
+  reached_target = 0;
+  pspec = HostState::get_probe(target);
+  hops = NULL;
 }
 
-TraceGroup::~TraceGroup () {
-    map < u16, TraceProbe * >::const_iterator it = TraceProbes.begin ();
-    for (; it != TraceProbes.end (); ++it)
-        delete (it->second);
+HostState::~HostState() {
+  /* active_probes and pending_resends are subsets of unanswered_probes, so we
+     delete the allocated probes in unanswered_probes only. */
+  while (!unanswered_probes.empty()) {
+    delete *unanswered_probes.begin();
+    unanswered_probes.pop_front();
+  }
+  while (!active_probes.empty())
+    active_probes.pop_front();
+  while (!pending_resends.empty())
+    pending_resends.pop_front();
 }
 
-/* go through all probes in a group and check if any have timedout. 
- * If too many packets have been dropped then the groups scan delay
- * is increased */
-void
-TraceGroup::retransmissions (vector < TraceProbe * >&retrans) {
-    map < u16, TraceProbe * >::iterator it;
-    u32 timediff;
-    struct timeval now;
-    double threshold = (o.timing_level >= 4) ? 0.40 : 0.30;
-
-    for (it = TraceProbes.begin (); it != TraceProbes.end (); ++it) {
-        if (it->second->timing.gotReply () || it->second->timing.getState () == P_TIMEDOUT)
-            continue;
-
-        gettimeofday (&now, NULL);
-        timediff = TIMEVAL_SUBTRACT (now, it->second->timing.sendTime);
-
-        if (timediff < it->second->timing.probeTimeout ())
-            continue;
-
-        if (it->second->timing.retranLimit () >= maxRetransmissions) {
-            /* this probe has timedout */
-            it->second->timing.setState (P_TIMEDOUT);
-            decRemaining ();
-
-            if(it->second->ttl > MAX_TTL)
-                setState(G_DEAD_TTL);
-
-            if ((++consecTimeouts) > 5 && maxRetransmissions > 2)
-                maxRetransmissions = 2;
-            if (it->second->probeType () == PROBE_TTL) {
-                hopDistance = 1;
-                noDistProbe = true;
-                if (o.verbose)
-                    log_write (LOG_STDOUT, "%s: no reply to our hop distance probe!\n", IPStr ());
-            }
-        } else {
-            droppedPackets++;
-            it->second->timing.setState (P_RETRANS);
-            retrans.push_back (it->second);
-        }
-
-        /* Calculate dynamic timing adjustments */
-        if (repliedPackets > droppedPackets / 5)
-            maxRetransmissions = (maxRetransmissions == 2) ? 2 : maxRetransmissions - 1;
-        else
-            maxRetransmissions = MIN (o.getMaxRetransmissions (), maxRetransmissions + 1);
-
-        if (droppedPackets > 10 && (droppedPackets /
-                                    ((double) droppedPackets + repliedPackets) > threshold)) {
-            if (!scanDelay)
-                scanDelay = (proto == IPPROTO_TCP) ? 5 : 50;
-            else
-                scanDelay = MIN (scanDelay * 2, MAX (scanDelay, 800));
-            droppedPackets = 0;
-            repliedPackets = 0;
-        } else {
-            scanDelay = MAX (scanDelay - (scanDelay / 5), 5);
-        }
-    }
+bool HostState::has_more_probes() const {
+  /* We are done if we are counting up and
+     1. we've reached and exceeded the target, or
+     2. we've exceeded MAX_TTL. */
+  return !(state == HostState::COUNTING_UP
+           && ((reached_target > 0 && current_ttl >= reached_target)
+               || current_ttl > MAX_TTL));
 }
 
-/* Remove uneeded probes and mark timed out probes for consolidation */
-void TraceGroup::consolidateHops () {
-    map < u16, TraceProbe * >::size_type ttl_count;
-    map < u16, u32 >::iterator com_iter;
-    TraceProbe *tp;
-    int timeout_count = 0;
-
-    /* remove any superfluous probes */
-    for (ttl_count = hopDistance + 1; ttl_count <= TraceProbes.size () + 1; ttl_count++)
-        TraceProbes.erase (ttl_count);
-
-    for (ttl_count = 1; ttl_count <= hopDistance; ttl_count++) {
-        tp = TraceProbes[ttl_count];
-        if(!tp) {
-            TraceProbes.erase (ttl_count);
-            continue;
-        }
-
-        /* timeout consolidation flags, ignore if in debugging more */
-        if (tp->timing.getState () != P_TIMEDOUT) {
-            timeout_count = 0;
-        } else {
-            if (++timeout_count > 1 && !o.debugging) {
-                TraceProbes[(ttl_count == 1) ? 1 : ttl_count - 1]->timing.consolidated = true;
-                TraceProbes[(ttl_count == 1) ? 1 : ttl_count]->timing.consolidated = true;
-            }
-        } 
-
-        if (tp->ipreplysrc.s_addr == ipdst)
-            break;
-    }
-
-    /* we may have accidently shot past the intended destination */
-    while (ttl_count <= hopDistance)
-        TraceProbes.erase (++ttl_count);
+bool HostState::is_finished() const {
+  return !this->has_more_probes()
+    && active_probes.empty() && pending_resends.empty();
 }
 
-u8
-TraceGroup::setState (u8 state) {
-    if (state <= G_FINISH && state >= G_OK)
-        this->state = state;
-    else if (o.debugging)
-        log_write (LOG_STDOUT, "%s: invalid tracegroup state %d\n", IPStr (), state);
-    return this->state;
+bool HostState::send_next_probe(int rawsd, eth_t *ethsd) {
+  Probe *probe;
+
+  /* Do a resend if possible. */
+  if (!pending_resends.empty()) {
+    probe = pending_resends.front();
+    pending_resends.pop_front();
+    active_probes.push_back(probe);
+    probe->resend(rawsd, ethsd);
+    return true;
+  }
+
+  this->next_ttl();
+
+  if (!this->has_more_probes())
+    return false;
+
+  probe = Probe::make(this, pspec, current_ttl);
+  unanswered_probes.push_back(probe);
+  active_probes.push_back(probe);
+  probe->send(rawsd, ethsd);
+  sent_ttls[current_ttl] = true;
+
+  return true;
 }
 
-u8
-TraceGroup::setHopDistance (u8 hop_distance, u8 ttl) {
-    if (this->hopDistance)
-        return 0;
-
-    this->hopDistance = hop_distance;
-
-    if(o.debugging)
-        log_write(LOG_STDOUT, "%s: hop distance parameters -> hg:%d ttl:%d\n", IPStr(), hop_distance, ttl);
-
-    if (this->hopDistance && ttl) 
-        this->hopDistance -= ttl;
-    else if(!this->hopDistance && ttl)
-        this->hopDistance = ttl;
-    else
-        this->hopDistance = hop_distance;
-
-    /* guess is too big */
-    if (this->hopDistance >= MAX_TTL)
-        this->hopDistance = MAX_TTL- 2;
-    /* guess is too small */
-    else if(this->hopDistance == 0)
-        this->hopDistance = 1;
-
-    if (o.verbose)
-        log_write (LOG_STDOUT, "%s: guessing hop distance at %d\n", IPStr (), this->hopDistance);
-    return this->hopDistance;
+/* Find the next TTL we should send to. */
+void HostState::next_ttl() {
+  assert(current_ttl > 0);
+  if (state == HostState::COUNTING_DOWN) {
+    while (current_ttl > 1 && sent_ttls[current_ttl])
+      current_ttl--;
+    if (current_ttl == 1)
+      state = HostState::COUNTING_UP;
+  }
+  /* Note no "else". */
+  if (state == HostState::COUNTING_UP) {
+    while (current_ttl <= MAX_TTL && sent_ttls[current_ttl])
+      current_ttl++;
+  }
 }
 
-TraceProbe::TraceProbe (u8 proto, u32 dip, u32 sip, u16 sport, u16 dport) {
-    this->proto = proto;
-    this->sport = sport;
-    this->dport = dport;
-    ipdst.s_addr = dip;
-    ipsrc.s_addr = sip;
-    ipreplysrc.s_addr = 0;
-    hostnameip = NULL;
-    hostname = NULL;
-    probetype = PROBE_TRACE;
+int HostState::cancel_probe(std::list<Probe *>::iterator it) {
+  int count;
+
+  count = active_probes.size();
+  active_probes.remove(*it);
+  count -= active_probes.size();
+  pending_resends.remove(*it);
+  delete *it;
+  unanswered_probes.erase(it);
+
+  return count;
 }
 
-TraceProbe::~TraceProbe () {
-    if (hostnameip)
-        free (hostnameip);
+int HostState::cancel_probes_below(u8 ttl) {
+  std::list<Probe *>::iterator it, next;
+  int count;
+
+  count = 0;
+  for (it = unanswered_probes.begin(); it != unanswered_probes.end(); it = next) {
+    next = it;
+    next++;
+    if ((*it)->ttl < ttl)
+      count += this->cancel_probe(it);
+  }
+
+  return count;
 }
 
-const char *TraceProbe::nameIP(void) {
-	hostnameip = (char *) safe_zalloc(NAMEIPLEN);
+int HostState::cancel_probes_above(u8 ttl) {
+  std::list<Probe *>::iterator it, next;
+  int count;
 
-	if(hostname == NULL || *hostname == NULL)
-		Snprintf(hostnameip, NAMEIPLEN, "%s", inet_ntoa(ipreplysrc));
-	else
-		Snprintf(hostnameip, NAMEIPLEN, "%s (%s)",*hostname, inet_ntoa(ipreplysrc));
-		
-	return hostnameip;
+  count = 0;
+  for (it = unanswered_probes.begin(); it != unanswered_probes.end(); it = next) {
+    next = it;
+    next++;
+    if ((*it)->ttl > ttl)
+      count += this->cancel_probe(it);
+  }
+
+  return count;
 }
 
-TimeInfo::TimeInfo () {
-    memset (&sendTime, 0, sizeof (struct timeval));
-    memset (&recvTime, 0, sizeof (struct timeval));
-    retransmissions = 0;
-    state = P_OK;
-    consolidated = false;
-    initialize_timeout_info (&to);
-}
+Hop *HostState::insert_hop(u8 ttl, const struct sockaddr_storage *addr,
+  float rtt) {
+  Hop *hop, *prev, *p;
 
-u8
-TimeInfo::setState (u8 state) {
-    if (state <= P_OK)
-        this->state = state;
-    else if (o.debugging)
-        log_write (LOG_STDOUT, ": invalid traceprobe state %d\n", state);
-    return state;
-}
-
-int
-TimeInfo::retranLimit () {
-    return ++this->retransmissions;
-}
-
-void
-TimeInfo::adjustTimeouts (struct timeval *received, u16 scan_delay) {
-    long delta = 0;
-
-    recvTime = *received;
-
-    if (o.debugging > 3) {
-        log_write (LOG_STDOUT, "Timeout vals: srtt: %d rttvar: %d to: %d ", to.srtt, to.rttvar,
-                   to.timeout);
-    }
-
-    delta = TIMEVAL_SUBTRACT (*received, sendTime);
-
-    /* Argh ... pcap receive time is sometimes a little off my
-       getimeofday() results on various platforms :(.  So a packet may
-       appear to be received as much as a hundredth of a second before
-       it was sent.  So I will allow small negative RTT numbers */
-    if (delta < 0 && delta > -50000) {
-        if (o.debugging > 2)
-            log_write (LOG_STDOUT, "Small negative delta - adjusting from %lius to %dus\n", delta,
-                       10000);
-        delta = 10000;
-    }
-
-
-    if (to.srtt == -1 && to.rttvar == -1) {
-        /* We need to initialize the sucker ... */
-        to.srtt = delta;
-        to.rttvar = MAX (5000, MIN (to.srtt, 2000000));
-        to.timeout = to.srtt + (to.rttvar << 2);
+  this->child_parent_ttl(ttl, &prev, &p);
+  if (p != NULL && p->ttl == ttl) {
+    hop = p;
+    /* Collision with the same TTL and a different address. */
+    if (hop->addr.ss_family == 0) {
+      /* Hit a timed-out hop. Fill in the missing address and RTT. */
+      hop->addr = *addr;
+      hop->rtt = rtt;
     } else {
-        if (delta >= 8000000 || delta < 0) {
-            if (o.verbose)
-                error
-                    ("adjust_timeout: packet supposedly had rtt of %lu microseconds.  Ignoring time.",
-                     delta);
-            return;
-        }
-        delta -= to.srtt;
-        /* sanity check 2 */
-        if (delta > 1500000 && delta > 3 * to.srtt + 2 * to.rttvar) {
-            if (o.debugging)
-                log_write (LOG_STDOUT, "Bogus delta: %ld (srtt %d) ... ignoring\n", delta, to.srtt);
-            return;
-        }
-
-        to.srtt += delta >> 3;
-        to.rttvar += (ABS (delta) - to.rttvar) >> 2;
-        to.timeout = to.srtt + (to.rttvar << 2);
+      if (o.debugging) {
+        log_write(LOG_STDOUT, "Found existing %s", ss_to_string(&hop->addr));
+        log_write(LOG_STDOUT, " while inserting %s at TTL %d for %s\n", 
+          ss_to_string(addr), ttl, target->targetipstr());
+      }
     }
-
-    if (to.rttvar > 2300000) {
-        log_write (LOG_STDOUT, "RTTVAR has grown to over 2.3 seconds, decreasing to 2.0\n");
-        to.rttvar = 2000000;
+  } else {
+    hop = new Hop(ttl, *addr, rtt);
+    hop->parent = p;
+    if (prev == NULL) {
+      size_t sslen;
+      this->hops = hop;
+      sslen = sizeof(hop->tag);
+      target->TargetSockAddr(&hop->tag, &sslen);
+    } else {
+      prev->parent = hop;
+      hop->tag = prev->tag;
     }
+    hop_cache_insert(hop);
+  }
 
-    /* It hurts to do this ... it really does ... but otherwise we are being
-       too risky */
-    to.timeout = box (o.minRttTimeout () * 1000, o.maxRttTimeout () * 1000, to.timeout);
-
-    if (scan_delay)
-        to.timeout = MAX (to.timeout, scan_delay * 1000);
-
-    if (o.debugging > 3) {
-        log_write (LOG_STDOUT, "delta %ld ==> srtt: %d rttvar: %d to: %d\n",
-                   delta, to.srtt, to.rttvar, to.timeout);
-    }
+  return hop;
 }
 
-/* Sleeps if necessary to ensure that it isn't called twice within less
- * time than send_delay.  If it is passed a non-null tv, the POST-SLEEP
- * time is recorded in it */
-static void
-enforce_scan_delay (struct timeval *tv, int scan_delay) {
-    static int init = -1;
-    static struct timeval lastcall;
-    struct timeval now;
-    int time_diff;
+void HostState::link_to(Hop *hop) {
+  Hop *prev, *p;
 
-    if (!scan_delay) {
-        if (tv)
-            gettimeofday (tv, NULL);
-        return;
-    }
-
-    if (init == -1) {
-        gettimeofday (&lastcall, NULL);
-        init = 0;
-        if (tv)
-            memcpy (tv, &lastcall, sizeof (struct timeval));
-        return;
-    }
-
-    gettimeofday (&now, NULL);
-    time_diff = TIMEVAL_MSEC_SUBTRACT (now, lastcall);
-    if (time_diff < (int) scan_delay) {
-        if (o.debugging > 2)
-            log_write (LOG_STDOUT, "Sleeping for %d milliseconds in %s()\n",
-                       scan_delay - time_diff, __func__);
-        usleep ((scan_delay - time_diff) * 1000);
-        gettimeofday (&lastcall, NULL);
-    } else
-        memcpy (&lastcall, &now, sizeof (struct timeval));
-    if (tv) {
-        memcpy (tv, &lastcall, sizeof (struct timeval));
-    }
+  this->child_parent_ttl(hop->ttl, &prev, &p);
+  if (hop == p) {
+    /* Already linked for this host. This can happen a reply for a higher TTL
+       results in a merge, and later a reply for a lower TTL comes back. */
     return;
+  }
+  if (o.debugging > 1) {
+    log_write(LOG_STDOUT, "Merging traces below TTL %d for %s",
+      hop->ttl, ss_to_string(&hop->tag));
+    log_write(LOG_STDOUT, " and %s\n", target->targetipstr());
+  }
+  hop = merge_hops(&hop->tag, hop, p);
+  if (prev == NULL)
+    this->hops = hop;
+  else
+    prev->parent = hop;
 }
 
-static char *
-hostStr (u32 ip) {
-    static char nameipbuf[MAXHOSTNAMELEN + INET6_ADDRSTRLEN] = { '0' };
-    const char *hname;
-    struct in_addr addr;
+double HostState::completion_fraction() const {
+  std::vector<bool>::iterator it;
+  unsigned int i, n;
 
-    memset (nameipbuf, '\0', MAXHOSTNAMELEN + INET6_ADDRSTRLEN);
-    addr.s_addr = ip;
-    if((hname = lookup_cached_host(ip)) == NULL)
-        Snprintf(nameipbuf, MAXHOSTNAMELEN+INET6_ADDRSTRLEN, "%s", inet_ntoa(addr));
+  if (this->is_finished())
+    return 1.0;
+
+  n = 0;
+  for (i = 0; i < sent_ttls.size(); i++) {
+    if (sent_ttls[i])
+      n++;
+  }
+
+  return (double) n / sent_ttls.size();
+}
+
+void HostState::child_parent_ttl(u8 ttl, Hop **child, Hop **parent) {
+  *child = NULL;
+  *parent = this->hops;
+  while (*parent != NULL && (*parent)->ttl > ttl) {
+    *child = *parent;
+    *parent = (*parent)->parent;
+  }
+}
+
+u8 HostState::distance_guess(const Target *target) {
+  /* Use the distance from OS detection if we have it. */
+  if (target->distance != -1)
+    return target->distance;
+  else
+    /* initial_ttl is a variable with file-level scope. */
+    return initial_ttl;
+}
+
+/* Get the probe that will be used for the traceroute. This is the
+   highest-quality probe found in ping or port scanning, or ICMP echo if no
+   responsive probe is known. */
+struct probespec HostState::get_probe(const Target *target) {
+  struct probespec probe;
+
+  probe = target->pingprobe;
+  if (probe.type == PS_TCP || probe.type == PS_UDP || probe.type == PS_ICMP ||
+      probe.type == PS_SCTP || probe.type == PS_ICMPV6) {
+    /* Nothing needed. */
+  } else if (probe.type == PS_PROTO) {
+    /* If this is an IP protocol probe, fill in some fields for some common
+       protocols. We cheat and store them in the TCP-, UDP-, SCTP- and
+       ICMP-specific fields. */
+    if (probe.proto == IPPROTO_TCP) {
+      probe.pd.tcp.flags = TH_ACK;
+      probe.pd.tcp.dport = get_random_u16();
+    } else if (probe.proto == IPPROTO_UDP) {
+      probe.pd.udp.dport = get_random_u16();
+    } else if (probe.proto == IPPROTO_SCTP) {
+      probe.pd.sctp.dport = get_random_u16();
+    } else if (probe.proto == IPPROTO_ICMP) {
+      probe.pd.icmp.type = ICMP_ECHO;
+    }
+  } else {
+    /* No responsive probe known? The user probably skipped both ping and
+       port scan. Guess ICMP echo as the most likely to get a response. */
+    if (target->af() == AF_INET) {
+      probe.type = PS_ICMP;
+      probe.proto = IPPROTO_ICMP;
+      probe.pd.icmp.type = ICMP_ECHO;
+      probe.pd.icmp.code = 0;
+    } else if (target->af() == AF_INET6) {
+      probe.type = PS_ICMPV6;
+      probe.proto = IPPROTO_ICMPV6;
+      probe.pd.icmp.type = ICMPV6_ECHO;
+      probe.pd.icmp.code = 0;
+    } else {
+      fatal("Unknown address family %d", target->af());
+    }
+  }
+
+  return probe;
+}
+
+Probe::Probe(HostState *host, struct probespec pspec, u8 ttl) {
+  this->host = host;
+  this->pspec = pspec;
+  this->ttl = ttl;
+  token = Probe::token_counter++;
+  sent_time.tv_sec = 0;
+  sent_time.tv_usec = 0;
+  num_resends = 0;
+}
+
+Probe::~Probe() {
+}
+
+void Probe::send(int rawsd, eth_t *ethsd, struct timeval *now) {
+  struct eth_nfo eth;
+  struct eth_nfo *ethp;
+  int decoy;
+
+  /* Set up the Ethernet handle if we're using that. */
+  if (ethsd != NULL) {
+    memcpy(eth.srcmac, host->target->SrcMACAddress(), 6);
+    memcpy(eth.dstmac, host->target->NextHopMACAddress(), 6);
+    eth.ethsd = ethsd;
+    eth.devname[0] = '\0';
+    ethp = &eth;
+  } else {
+    ethp = NULL;
+  }
+
+  for (decoy = 0; decoy < o.numdecoys; decoy++) {
+    struct sockaddr_storage source;
+    size_t source_len;
+    unsigned char *packet;
+    u32 packetlen;
+
+    if (decoy == o.decoyturn) {
+      source_len = sizeof(source);
+      host->target->SourceSockAddr(&source, &source_len);
+      sent_time = get_now(now);
+    } else {
+      if (o.af() == AF_INET) {
+        struct sockaddr_in *sin;
+
+        sin = (struct sockaddr_in *) &source;
+        sin->sin_family = AF_INET;
+        sin->sin_addr = o.decoys[decoy];
+      } else {
+        /* Decoys are IPv4-only. */
+        continue;
+      }
+    }
+
+    packet = this->build_packet(&source, &packetlen);
+    send_ip_packet(rawsd, ethp, host->target->TargetSockAddr(), packet, packetlen);
+    free(packet);
+  }
+}
+
+void Probe::resend(int rawsd, eth_t *ethsd, struct timeval *now) {
+  num_resends++;
+  this->send(rawsd, ethsd, now);
+}
+
+bool Probe::is_timedout(struct timeval *now) const {
+  struct timeval tv;
+
+  tv = get_now(now);
+
+  return TIMEVAL_MSEC_SUBTRACT(tv, sent_time) > PROBE_TIMEOUT;
+}
+
+bool Probe::may_resend() const {
+  return num_resends < MIN(o.getMaxRetransmissions(), MAX_RESENDS);
+}
+
+/* Probe is an abstract class with a missing build_packet method. These concrete
+   subclasses implement the method for different probe types. */
+
+class ICMPProbe : public Probe
+{
+public:
+  ICMPProbe(HostState *host, struct probespec pspec, u8 ttl)
+  : Probe(host, pspec, ttl) {
+  }
+
+  unsigned char *build_packet(const struct sockaddr_storage *source, u32 *len) const {
+    const struct sockaddr_in *sin;
+    assert(source->ss_family == AF_INET);
+    sin = (struct sockaddr_in *) source;
+    return build_icmp_raw(&sin->sin_addr, host->target->v4hostip(), ttl,
+      0x0000, 0x00, false, NULL, 0, token, global_id,
+      pspec.pd.icmp.type, pspec.pd.icmp.code,
+      o.extra_payload, o.extra_payload_length, len);
+  }
+};
+
+class TCPProbe : public Probe
+{
+public:
+  TCPProbe(HostState *host, struct probespec pspec, u8 ttl)
+  : Probe(host, pspec, ttl) {
+  }
+  unsigned char *build_packet(const struct sockaddr_storage *source, u32 *len) const {
+    const char *tcpopts;
+    int tcpoptslen;
+    u32 ack;
+
+    tcpopts = NULL;
+    tcpoptslen = 0;
+    ack = 0;
+    if ((pspec.pd.tcp.flags & TH_SYN) == TH_SYN) {
+      /* MSS 1460 bytes. */
+      tcpopts = "\x02\x04\x05\xb4";
+      tcpoptslen = 4;
+    } else if ((pspec.pd.tcp.flags & TH_ACK) == TH_ACK) {
+      ack = get_random_u32();
+    }
+
+    /* For TCP we encode the token in the source port. */
+    if (source->ss_family == AF_INET) {
+      const struct sockaddr_in *sin = (struct sockaddr_in *) source;
+      return build_tcp_raw(&sin->sin_addr, host->target->v4hostip(), ttl,
+        get_random_u16(), get_random_u8(), false, NULL, 0,
+        token ^ global_id, pspec.pd.tcp.dport, get_random_u32(), ack, 0x00,
+        pspec.pd.tcp.flags, get_random_u16(), 0, (const u8 *) tcpopts, tcpoptslen,
+        o.extra_payload, o.extra_payload_length, len);
+    } else if (source->ss_family == AF_INET6) {
+      const struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *) source;
+      return build_tcp_raw_ipv6(&sin6->sin6_addr, host->target->v6hostip(),
+        0, 0, ttl,
+        token ^ global_id, pspec.pd.tcp.dport, get_random_u32(), ack, 0x00,
+        pspec.pd.tcp.flags, get_random_u16(), 0, (const u8 *) tcpopts, tcpoptslen,
+        o.extra_payload, o.extra_payload_length, len);
+    } else {
+      fatal("Unknown address family %u in %s.", source->ss_family, __func__);
+    }
+
+    /* This should not be reached. Just in case. */
+    assert(0);
+  }
+};
+
+class UDPProbe : public Probe
+{
+public:
+  UDPProbe(HostState *host, struct probespec pspec, u8 ttl)
+  : Probe(host, pspec, ttl) {
+  }
+  unsigned char *build_packet(const struct sockaddr_storage *source, u32 *len) const {
+    const char *payload;
+    size_t payload_length;
+    const struct sockaddr_in *sin;
+
+    assert(source->ss_family == AF_INET);
+    sin = (struct sockaddr_in *) source;
+
+    payload = get_udp_payload(pspec.pd.udp.dport, &payload_length);
+
+    /* For UDP we encode the token in the source port. */
+    return build_udp_raw(&sin->sin_addr, host->target->v4hostip(), ttl,
+      get_random_u16(), get_random_u8(), false, NULL, 0,
+      token ^ global_id, pspec.pd.udp.dport,
+      payload, payload_length, len);
+  }
+};
+
+class SCTPProbe : public Probe
+{
+public:
+  SCTPProbe(HostState *host, struct probespec pspec, u8 ttl)
+  : Probe(host, pspec, ttl) {
+  }
+  unsigned char *build_packet(const struct sockaddr_storage *source, u32 *len) const {
+    struct sctp_chunkhdr_init chunk;
+    const struct sockaddr_in *sin;
+
+    assert(source->ss_family == AF_INET);
+    sin = (struct sockaddr_in *) source;
+
+    sctp_pack_chunkhdr_init(&chunk, SCTP_INIT, 0, sizeof(chunk),
+      get_random_u32() /*itag*/, 32768, 10, 2048, get_random_u32() /*itsn*/);
+    return build_sctp_raw(&sin->sin_addr, host->target->v4hostip(), ttl,
+      get_random_u16(), get_random_u8(), false, NULL, 0,
+      token ^ global_id, pspec.pd.sctp.dport, 0UL,
+      (char *) &chunk, sizeof(chunk),
+      o.extra_payload, o.extra_payload_length, len);
+  }
+};
+
+class IPProtoProbe : public Probe
+{
+public:
+  IPProtoProbe(HostState *host, struct probespec pspec, u8 ttl)
+  : Probe(host, pspec, ttl) {
+  }
+  unsigned char *build_packet(const struct sockaddr_storage *source, u32 *len) const {
+    const struct sockaddr_in *sin;
+    assert(source->ss_family == AF_INET);
+    sin = (struct sockaddr_in *) source;
+    /* For IP proto scan the token is put in the IP ID. */
+    return build_ip_raw(&sin->sin_addr, host->target->v4hostip(), pspec.proto, ttl,
+      token ^ global_id, get_random_u8(), false, NULL, 0,
+      o.extra_payload, o.extra_payload_length, len);
+  }
+};
+
+class ICMPv6Probe : public Probe
+{
+public:
+  ICMPv6Probe(HostState *host, struct probespec pspec, u8 ttl)
+  : Probe(host, pspec, ttl) {
+  }
+
+  unsigned char *build_packet(const struct sockaddr_storage *source, u32 *len) const {
+    const struct sockaddr_in6 *sin6;
+    assert(source->ss_family == AF_INET6);
+    sin6 = (struct sockaddr_in6 *) source;
+    return build_icmpv6_raw(&sin6->sin6_addr, host->target->v6hostip(), 0x00, 0x0000,
+      ttl, token, global_id, pspec.pd.icmp.type, pspec.pd.icmp.code,
+      o.extra_payload, o.extra_payload_length, len);
+  }
+};
+
+Probe *Probe::make(HostState *host, struct probespec pspec, u8 ttl)
+{
+  if (pspec.type == PS_ICMP || (pspec.type == PS_PROTO && pspec.proto == IPPROTO_ICMP))
+    return new ICMPProbe(host, pspec, ttl);
+  else if (pspec.type == PS_TCP || (pspec.type == PS_PROTO && pspec.proto == IPPROTO_TCP))
+    return new TCPProbe(host, pspec, ttl);
+  else if (pspec.type == PS_UDP || (pspec.type == PS_PROTO && pspec.proto == IPPROTO_UDP))
+    return new UDPProbe(host, pspec, ttl);
+  else if (pspec.type == PS_SCTP || (pspec.type == PS_PROTO && pspec.proto == IPPROTO_SCTP))
+    return new SCTPProbe(host, pspec, ttl);
+  else if (pspec.type == PS_PROTO)
+    return new IPProtoProbe(host, pspec, ttl);
+  else if (pspec.type == PS_ICMPV6)
+    return new ICMPv6Probe(host, pspec, ttl);
+  else
+    fatal("Unknown probespec type in traceroute");
+
+  return NULL;
+}
+
+TracerouteState::TracerouteState(std::vector<Target *> &targets) {
+  std::vector<Target *>::iterator it;
+  struct sockaddr_storage srcaddr;
+  size_t sslen;
+  char pcap_filter[128];
+  int n;
+
+  assert(targets.size() > 0);
+
+  if ((o.sendpref & PACKET_SEND_ETH) && targets[0]->ifType() == devt_ethernet) {
+    ethsd = eth_open_cached(targets[0]->deviceName());
+    if (ethsd == NULL)
+      fatal("dnet: failed to open device %s", targets[0]->deviceName());
+    rawsd = -1;
+  } else {
+#ifdef WIN32
+    win32_fatal_raw_sockets(targets[0]->deviceName());
+#endif
+    rawsd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW);
+    if (rawsd == -1)
+      pfatal("traceroute: socket troubles");
+    broadcast_socket(rawsd);
+#ifndef WIN32
+    sethdrinclude(rawsd);
+#endif
+    ethsd = NULL;
+  }
+
+  /* Assume that all the targets share the same device. */
+  if((pd=my_pcap_open_live(targets[0]->deviceName(), 128, o.spoofsource, 2))==NULL)
+    fatal("%s", PCAP_OPEN_ERRMSG);
+  sslen = sizeof(srcaddr);
+  targets[0]->SourceSockAddr(&srcaddr, &sslen);
+  n = Snprintf(pcap_filter, sizeof(pcap_filter), "(ip or ip6) and dst host %s",
+    ss_to_string(&srcaddr));
+  assert(n < (int) sizeof(pcap_filter));
+  set_pcap_filter(targets[0]->deviceFullName(), pd, pcap_filter);
+ if (o.debugging)
+   log_write(LOG_STDOUT, "Packet capture filter (device %s): %s\n", targets[0]->deviceFullName(), pcap_filter);
+  for (it = targets.begin(); it != targets.end(); it++) {
+    HostState *state = new HostState(*it);
+    hosts.push_back(state);
+    active_hosts.push_back(state);
+  }
+
+  num_active_probes = 0;
+  next_sending_host = active_hosts.begin();
+  next_send_time = get_now();
+}
+
+TracerouteState::~TracerouteState() {
+  std::vector<HostState *>::iterator it;
+
+  if (rawsd != -1)
+    close(rawsd);
+  pcap_close(pd);
+
+  for (it = hosts.begin(); it != hosts.end(); it++)
+    delete *it;
+}
+
+void TracerouteState::next_active_host() {
+  assert(next_sending_host != active_hosts.end());
+  next_sending_host++;
+  if (next_sending_host == active_hosts.end())
+    next_sending_host = active_hosts.begin();
+}
+
+void TracerouteState::send_new_probes() {
+  std::list<HostState *>::iterator failed_host;
+  struct timeval now;
+
+  now = get_now();
+
+  assert(!active_hosts.empty());
+  failed_host = active_hosts.end();
+  while (next_sending_host != failed_host
+    && num_active_probes < MAX_OUTSTANDING_PROBES
+    && !TIMEVAL_BEFORE(now, next_send_time)) {
+    if ((*next_sending_host)->send_next_probe(rawsd, ethsd)) {
+      num_active_probes++;
+      TIMEVAL_MSEC_ADD(next_send_time, next_send_time, o.scan_delay);
+      if (TIMEVAL_BEFORE(next_send_time, now))
+        next_send_time = now;
+      failed_host = active_hosts.end();
+    } else if (failed_host == active_hosts.end()) {
+      failed_host = next_sending_host;
+    }
+    next_active_host();
+  }
+}
+
+static Hop *hop_cache_lookup(u8 ttl, const struct sockaddr_storage *addr) {
+  std::map<struct HopIdent, Hop *>::iterator it;
+  HopIdent ident(ttl, *addr);
+
+  it = hop_cache.find(ident);
+  if (it == hop_cache.end())
+    return NULL;
+  else
+    return it->second;
+}
+
+static void hop_cache_insert(Hop *hop) {
+  if (hop->addr.ss_family == 0) {
+    timedout_hops.push_back(hop);
+  } else {
+    hop_cache[HopIdent(hop->ttl, hop->addr)] = hop;
+  }
+}
+
+static unsigned int hop_cache_size() {
+  return hop_cache.size() + timedout_hops.size();
+}
+
+void traceroute_hop_cache_clear() {
+  std::map<struct HopIdent, Hop *>::iterator map_iter;
+  std::list<Hop *>::iterator list_iter;
+
+  for (map_iter = hop_cache.begin(); map_iter != hop_cache.end(); map_iter++)
+    delete map_iter->second;
+  hop_cache.clear();
+  for (list_iter = timedout_hops.begin(); list_iter != timedout_hops.end(); list_iter++)
+    delete *list_iter;
+  timedout_hops.clear();
+}
+
+/* Merge two hop chains together and return the head of the merged chain. This
+   is done when a cache hit finds that two targets share the same intermediate
+   hop; rather than doing a full trace for each target, one is linked to the
+   other. "Merged" means that, for example, if chain a has an hop at TTL 3 and
+   chain b has one for TTL 2, the merged chain will include both. Usually, the
+   chains will not have hops at the same TTL (that implies different routes to
+   the same host), but see the next paragraph for what we do when that happens.
+   Each hop in the merged chain will be tagged with the given tag.
+
+   There are many cases that must be handled correctly by this function: a and b
+   may be equal; either may be NULL; a and b may be disjoint chains or may be
+   joined somewhere. The biggest difficulty is when both of the chains have a
+   hop with the same TTL but a different address. When this happens we
+   arbitrarily choose one of the hops to unlink, on the presumption that any
+   route through the same intermediate host at a given TTL should be the same
+   and that differences aren't meaningful. (This has the same effect as if we
+   were to send probes strictly serially, because then there would be no parent
+   hops to potentially conflict, even if in fact they would if traced to
+   completion. */
+static Hop *merge_hops(const struct sockaddr_storage *tag, Hop *a, Hop *b) {
+  Hop head, *p;
+
+  p = &head;
+
+  while (a != NULL && b != NULL && a != b) {
+    Hop **next;
+
+    if (a->ttl > b->ttl) {
+      next = &a;
+    } else if (b->ttl > a->ttl) {
+      next = &b;
+    } else {
+      Hop **discard, *parent;
+
+      if (b->addr.ss_family == 0) {
+        next = &a;
+        discard = &b;
+      } else if (a->addr.ss_family == 0) {
+        next = &b;
+        discard = &a;
+      } else {
+        next = &a;
+        discard = &b;
+        if (o.debugging) {
+          log_write(LOG_STDOUT, "Warning: %s", ss_to_string(&(*next)->addr));
+          log_write(LOG_STDOUT, " doesn't match %s at TTL %d;",
+            ss_to_string(&(*discard)->addr), a->ttl);
+          log_write(LOG_STDOUT, " arbitrarily discarding %s\n",
+            ss_to_string(&(*discard)->addr));
+        }
+      }
+      parent = (*discard)->parent;
+      *discard = parent;
+    }
+    p->parent = *next;
+    p->tag = *tag;
+    p = p->parent;
+    *next = (*next)->parent;
+  }
+  /* At most one branch of this is taken, even when a == b. */
+  if (a != NULL)
+    p->parent = a;
+  else if (b != NULL)
+    p->parent = b;
+  for ( ; p != NULL; p = p->parent)
+    p->tag = *tag;
+
+  return head.parent;
+}
+
+/* Record a hop at the given TTL for the given host. This takes care of linking
+   the hop into the host's chain as well as into the global hop tree. */
+void TracerouteState::set_host_hop(HostState *host, u8 ttl,
+  const struct sockaddr_storage *from_addr, float rtt) {
+  Hop *hop;
+
+  if (o.debugging > 1) {
+    log_write(LOG_STDOUT, "Set hop %s TTL %d to %s RTT %.2f ms\n",
+      host->target->targetipstr(), ttl, ss_to_string(from_addr), rtt);
+  }
+
+  hop = hop_cache_lookup(ttl, from_addr);
+  if (hop == NULL) {
+    /* A new hop, never before seen with this address and TTL. Add it to the
+       host's chain and to the global cache. */
+    hop = host->insert_hop(ttl, from_addr, rtt);
+  } else {
+    /* An existing hop at this address and TTL. Link this host's chain to it. */
+    if (o.debugging > 1) {
+      log_write(LOG_STDOUT, "Traceroute cache hit %s TTL %d while tracing",
+        ss_to_string(&hop->addr), hop->ttl);
+      log_write(LOG_STDOUT, " %s TTL %d\n", host->target->targetipstr(), ttl);
+    }
+
+    host->link_to(hop);
+
+    if (host->state == HostState::COUNTING_DOWN) {
+      /* Hit the cache going down. Seek to the end of the chain. If we have the
+         tag for the last node, we take responsibility for finishing the trace.
+         Otherwise, start counting up. */
+      struct sockaddr_storage addr;
+      size_t sslen;
+
+      while (hop->parent != NULL) {
+        hop = hop->parent;
+        /* No need to re-probe any merged hops. */
+        host->sent_ttls[hop->ttl] = true;
+      }
+      sslen = sizeof(addr);
+      host->target->TargetSockAddr(&addr, &sslen);
+      if (sockaddr_storage_equal(&hop->tag, &addr)) {
+        if (o.debugging > 1) {
+          log_write(LOG_STDOUT, "%s continuing trace from TTL %d\n",
+            host->target->targetipstr(), host->current_ttl);
+        }
+      } else {
+        host->state = HostState::COUNTING_UP;
+        num_active_probes -= host->cancel_probes_below(ttl);
+      }
+    }
+  }
+}
+
+/* Record that a hop at the given TTL for the given host timed out. */
+void TracerouteState::set_host_hop_timedout(HostState *host, u8 ttl) {
+  static struct sockaddr_storage EMPTY_ADDR = { 0 };
+  host->insert_hop(ttl, &EMPTY_ADDR, -1.0);
+}
+
+struct Reply {
+  struct timeval rcvdtime;
+  struct sockaddr_storage from_addr;
+  struct sockaddr_storage target_addr;
+  u8 ttl;
+  u16 token;
+};
+
+static bool parse_encapsulated_reply(const void *ip, unsigned len, Reply *reply) {
+  struct abstract_ip_hdr hdr;
+  const void *data;
+
+  data = ip_get_data(ip, &len, &hdr);
+  if (data == NULL)
+    return false;
+
+  if (hdr.version == 4 && hdr.proto == IPPROTO_ICMP) {
+    const struct icmp *icmp = (const struct icmp *) data;
+    if (len < 8 || ntohs(icmp->icmp_id) != global_id)
+      return false;
+    reply->token = ntohs(icmp->icmp_seq);
+  } else if (hdr.version == 6 && hdr.proto == IPPROTO_ICMPV6) {
+    const struct icmpv6_msg_echo *echo = (struct icmpv6_msg_echo *) ((char *) data + sizeof(struct icmpv6_hdr));
+    if (len < 8 || ntohs(echo->icmpv6_id) != global_id)
+      return false;
+    reply->token = ntohs(echo->icmpv6_seq);
+  } else if (hdr.proto == IPPROTO_TCP) {
+    const struct tcp_hdr *tcp = (const struct tcp_hdr *) data;
+    if (len < 2)
+      return false;
+    reply->token = ntohs(tcp->th_sport) ^ global_id;
+  } else if (hdr.proto == IPPROTO_UDP) {
+    const struct udp_hdr *udp = (const struct udp_hdr *) data;
+    if (len < 2)
+      return false;
+    reply->token = ntohs(udp->uh_sport) ^ global_id;
+  } else if (hdr.proto == IPPROTO_SCTP) {
+    const struct sctp_hdr *sctp = (const struct sctp_hdr *) data;
+    if (len < 2)
+      return false;
+    reply->token = ntohs(sctp->sh_sport) ^ global_id;
+  } else {
+    if (len < 6)
+      return false;
+    /* Check IP ID for proto scan. */
+    reply->token = hdr.ipid ^ global_id;
+  }
+
+  reply->target_addr = hdr.dst;
+
+  return true;
+}
+
+static bool decode_reply(const void *ip, unsigned int len, Reply *reply) {
+  struct abstract_ip_hdr hdr;
+  const void *data;
+
+  data = ip_get_data(ip, &len, &hdr);
+  if (data == NULL)
+    return false;
+
+  reply->from_addr = hdr.src;
+
+  if (hdr.version == 4 && hdr.proto == IPPROTO_ICMP) {
+    /* ICMP responses comprise all the TTL exceeded messages we expect from all
+       probe types, as well as actual replies from ICMP probes. */
+    const struct icmp_hdr *icmp = (const struct icmp_hdr *) data;
+    if (len < 8)
+      return false;
+    if ((icmp->icmp_type == ICMP_TIMEXCEED
+         && icmp->icmp_code == ICMP_TIMEXCEED_INTRANS)
+        || icmp->icmp_type == ICMP_UNREACH) {
+      /* Get the encapsulated IP packet. */
+      const void *encaps = icmp_get_data(icmp, &len);
+      if (encaps == NULL)
+        return false;
+      return parse_encapsulated_reply(encaps, len, reply);
+    } else if (icmp->icmp_type == ICMP_ECHOREPLY
+               || icmp->icmp_type == ICMP_MASKREPLY
+               || icmp->icmp_type == ICMP_TSTAMPREPLY) {
+      /* Need this alternate form of header for icmp_id and icmp_seq. */
+      const struct icmp *icmp = (const struct icmp *) data;
+
+      if (ntohs(icmp->icmp_id) != global_id)
+        return false;
+      reply->token = ntohs(icmp->icmp_seq);
+      /* Reply came directly from the target. */
+      reply->target_addr = reply->from_addr;
+    } else {
+      return false;
+    }
+  } else if (hdr.version == 6 && hdr.proto == IP_PROTO_ICMPV6) {
+    /* ICMPv6 responses comprise all the TTL exceeded messages we expect from
+       all probe types, as well as actual replies from ICMP probes. */
+    const struct icmpv6_hdr *icmpv6 = (const struct icmpv6_hdr *) data;
+    if (len < 2)
+      return false;
+    /* TIMEXCEED, UNREACH */
+    if ((icmpv6->icmpv6_type == ICMPV6_TIMEXCEED
+         && icmpv6->icmpv6_code == ICMPV6_TIMEXCEED_INTRANS)
+        || icmpv6->icmpv6_type == ICMPV6_UNREACH) {
+      /* Get the encapsulated IP packet. */
+      const void *encaps = icmpv6_get_data(icmpv6, &len);
+      if (encaps == NULL)
+        return false;
+      return parse_encapsulated_reply(encaps, len, reply);
+    } else if (icmpv6->icmpv6_type == ICMPV6_ECHOREPLY) {
+      /* MASKREPLY, TSTAMPREPLY */
+      const struct icmpv6_msg_echo *echo;
+
+      if (len < sizeof(*icmpv6) + 4)
+	return false;
+      echo = (struct icmpv6_msg_echo *) ((char *) icmpv6 + sizeof(*icmpv6));
+      if (ntohs(echo->icmpv6_id) != global_id)
+        return false;
+      reply->token = ntohs(echo->icmpv6_seq);
+      /* Reply came directly from the target. */
+      reply->target_addr = reply->from_addr;
+    } else {
+      return false;
+    }
+  } else if (hdr.proto == IPPROTO_TCP) {
+    const struct tcp_hdr *tcp = (const struct tcp_hdr *) data;
+    if (len < 4)
+      return false;
+    reply->token = ntohs(tcp->th_dport) ^ global_id;
+    reply->target_addr = reply->from_addr;
+  } else if (hdr.proto == IPPROTO_UDP) {
+    const struct udp_hdr *udp = (const struct udp_hdr *) data;
+    if (len < 4)
+      return false;
+    reply->token = ntohs(udp->uh_dport) ^ global_id;
+    reply->target_addr = reply->from_addr;
+  } else if (hdr.proto == IPPROTO_SCTP) {
+    const struct sctp_hdr *sctp = (const struct sctp_hdr *) data;
+    if (len < 4)
+      return false;
+    reply->token = ntohs(sctp->sh_dport) ^ global_id;
+    reply->target_addr = reply->from_addr;
+  } else {
+    return false;
+  }
+
+  return true;
+}
+
+static bool read_reply(Reply *reply, pcap_t *pd, long timeout) {
+  const struct ip *ip;
+  unsigned int iplen;
+  struct link_header linkhdr;
+
+  ip = (struct ip *) readip_pcap(pd, &iplen, timeout, &reply->rcvdtime, &linkhdr, true);
+  if (ip == NULL)
+    return false;
+  if (ip->ip_v == 4 || ip->ip_v == 6)
+    return decode_reply(ip, iplen, reply);
+  else
+    return false;
+}
+
+void TracerouteState::read_replies(long timeout) {
+  struct sockaddr_storage ss;
+  struct timeval now;
+  size_t sslen;
+  Reply reply;
+
+  assert(timeout / 1000 <= (long) o.scan_delay);
+  timeout = MAX(timeout, 10000);
+  now = get_now();
+
+  while (timeout > 0 && read_reply(&reply, pd, timeout)) {
+    std::list<Probe *>::iterator it;
+    struct timeval oldnow;
+    HostState *host;
+    Probe *probe;
+    float rtt;
+
+    oldnow = now;
+    now = get_now();
+    timeout -= TIMEVAL_SUBTRACT(now, oldnow);
+
+    probe = this->lookup_probe(&reply.target_addr, reply.token);
+    if (probe == NULL)
+      continue;
+    host = probe->host;
+
+    sslen = sizeof(ss);
+    host->target->TargetSockAddr(&ss, &sslen);
+    if (sockaddr_storage_equal(&ss, &reply.from_addr)) {
+      adjust_timeouts2(&probe->sent_time, &reply.rcvdtime, &host->target->to);
+      if (host->reached_target == 0 || probe->ttl < host->reached_target)
+        host->reached_target = probe->ttl;
+      if (host->state == HostState::COUNTING_DOWN) {
+        /* If this probe was past the target, skip ahead to what we think the
+           actual distance is. */
+        int distance = get_initial_ttl_guess(reply.ttl) - reply.ttl + 1;
+        if (distance > 0 && distance < host->current_ttl)
+          host->current_ttl = MIN(distance, MAX_TTL);
+      }
+      num_active_probes -= host->cancel_probes_above(probe->ttl);
+    }
+
+    rtt = TIMEVAL_SUBTRACT(reply.rcvdtime, probe->sent_time) / 1000.0;
+    set_host_hop(host, probe->ttl, &reply.from_addr, rtt);
+
+    it = find(host->unanswered_probes.begin(), host->unanswered_probes.end(), probe);
+    num_active_probes -= host->cancel_probe(it);
+  }
+}
+
+void TracerouteState::cull_timeouts() {
+  std::list<HostState *>::iterator host_iter;
+  struct timeval now;
+
+  now = get_now();
+
+  for (host_iter = active_hosts.begin(); host_iter != active_hosts.end(); host_iter++) {
+    while (!(*host_iter)->active_probes.empty()
+           && (*host_iter)->active_probes.front()->is_timedout(&now)) {
+      Probe *probe;
+
+      probe = (*host_iter)->active_probes.front();
+      if (o.debugging > 1) {
+        log_write(LOG_STDOUT, "Traceroute probe to %s TTL %d timed out\n",
+          probe->host->target->targetipstr(), probe->ttl);
+      }
+      set_host_hop_timedout(*host_iter, probe->ttl);
+      (*host_iter)->active_probes.pop_front();
+      num_active_probes--;
+      if (probe->may_resend())
+        (*host_iter)->pending_resends.push_front(probe);
+    }
+  }
+}
+
+void TracerouteState::remove_finished_hosts() {
+  std::list<HostState *>::iterator it, next;
+
+  for (it = active_hosts.begin(); it != active_hosts.end(); it = next) {
+    next = it;
+    next++;
+    if ((*it)->is_finished()) {
+      if (next_sending_host == it)
+        next_active_host();
+      active_hosts.erase(it);
+    }
+  }
+}
+
+/* Dummy class to use sockaddr_storage as a map key. */
+struct lt_sockaddr_storage {
+  bool operator()(const struct sockaddr_storage& a, const struct sockaddr_storage& b) const {
+    return sockaddr_storage_cmp(&a, &b) < 0;
+  }
+};
+
+/* Find the reverse-DNS names of the hops. */
+void TracerouteState::resolve_hops() {
+  std::set<sockaddr_storage, lt_sockaddr_storage> addrs;
+  std::set<sockaddr_storage, lt_sockaddr_storage>::iterator addr_iter;
+  std::vector<HostState *>::iterator host_iter;
+  std::map<sockaddr_storage, const char *, lt_sockaddr_storage> name_map;
+  Target **targets;
+  Hop *hop;
+  int i, n;
+
+  /* First, put all the IPv4 addresses in a set to remove duplicates. This
+     re-resolves the addresses of the targets themselves, which is a little
+     inefficient. */
+  for (host_iter = hosts.begin(); host_iter != hosts.end(); host_iter++) {
+    for (hop = (*host_iter)->hops; hop != NULL; hop = hop->parent) {
+      if (hop->addr.ss_family != AF_UNSPEC)
+        addrs.insert(hop->addr);
+    }
+  }
+  n = addrs.size();
+  /* Second, make an array of pointer to Target to suit the interface of
+     nmap_mass_rdns. */
+  targets = (Target **) safe_malloc(sizeof(*targets) * n);
+  i = 0;
+  addr_iter = addrs.begin();
+  while (i < n) {
+    targets[i] = new Target();
+    targets[i]->setTargetSockAddr(&*addr_iter, sizeof(*addr_iter));
+    targets[i]->flags = HOST_UP;
+    i++;
+    addr_iter++;
+  }
+  nmap_mass_rdns(targets, n);
+  /* Third, make a map from addresses to names for easy lookup. */
+  for (i = 0; i < n; i++) {
+    struct sockaddr_storage ss;
+    size_t ss_len;
+    const char *hostname = targets[i]->HostName();
+    if (*hostname == '\0')
+      hostname = NULL;
+    ss_len = sizeof(ss);
+    targets[i]->TargetSockAddr(&ss, &ss_len);
+    name_map[ss] = hostname;
+  }
+  /* Finally, copy the names into the hops. */
+  for (host_iter = hosts.begin(); host_iter != hosts.end(); host_iter++) {
+    for (hop = (*host_iter)->hops; hop != NULL; hop = hop->parent) {
+      if (hop->addr.ss_family != AF_UNSPEC) {
+        const char *hostname = name_map[hop->addr];
+        if (hostname != NULL)
+          hop->hostname = hostname;
+      }
+    }
+  }
+  for (i = 0; i < n; i++)
+    delete targets[i];
+  free(targets);
+}
+
+void TracerouteState::transfer_hops() {
+  std::vector<HostState *>::iterator it;
+  Hop *p;
+
+  for (it = hosts.begin(); it != hosts.end(); it++) {
+    for (p = (*it)->hops; p != NULL; p = p->parent) {
+      TracerouteHop hop;
+
+      /* Trim excessive hops. */
+      if ((*it)->reached_target && p->ttl > (*it)->reached_target)
+        continue;
+
+      hop.tag = p->tag;
+      if (p->addr.ss_family == 0) {
+        hop.timedout = true;
+      } else {
+        hop.timedout = false;
+        hop.rtt = p->rtt;
+      }
+      hop.name = p->hostname;
+      hop.addr = p->addr;
+      hop.ttl = p->ttl;
+      (*it)->target->traceroute_hops.push_front(hop);
+    }
+
+    (*it)->target->traceroute_probespec = (*it)->pspec;
+
+    /* Set the hop distance for OS fingerprints. */
+    if ((*it)->reached_target) {
+      (*it)->target->distance = (*it)->reached_target;
+      (*it)->target->distance_calculation_method = DIST_METHOD_TRACEROUTE;
+    }
+  }
+}
+
+Probe *TracerouteState::lookup_probe(
+  const struct sockaddr_storage *target_addr, u16 token) {
+  std::list<HostState *>::iterator host_iter;
+  std::list<Probe *>::iterator probe_iter;
+
+  for (host_iter = active_hosts.begin(); host_iter != active_hosts.end(); host_iter++) {
+    struct sockaddr_storage ss;
+    size_t sslen;
+
+    sslen = sizeof(ss);
+    (*host_iter)->target->TargetSockAddr(&ss, &sslen);
+    if (!sockaddr_storage_equal(&ss, target_addr))
+      continue;
+    for (probe_iter = (*host_iter)->unanswered_probes.begin();
+         probe_iter != (*host_iter)->unanswered_probes.end();
+         probe_iter++) {
+      if ((*probe_iter)->token == token)
+        return *probe_iter;
+    }
+  }
+
+  return NULL;
+}
+
+double TracerouteState::completion_fraction() const {
+  std::vector<HostState *>::const_iterator it;
+  double sum;
+
+  sum = 0.0;
+  for (it = hosts.begin(); it != hosts.end(); it++)
+    sum += (*it)->completion_fraction();
+  return sum / hosts.size();
+}
+
+/* This is a special case of traceroute when all the targets are directly
+   connected. Because the distance to each target is known to be 1, we send no
+   probes at all, only fill in a TracerouteHop structure. */
+static int traceroute_direct(std::vector<Target *> targets) {
+  std::vector<Target *>::iterator it;
+
+  for (it = targets.begin(); it != targets.end(); it++) {
+    TracerouteHop hop;
+    const char *hostname;
+    size_t sslen;
+
+    sslen = sizeof(hop.tag);
+    (*it)->TargetSockAddr(&hop.tag, &sslen);
+    hop.timedout = false;
+    hop.rtt = (*it)->to.srtt / 1000.0;
+    hostname = (*it)->HostName();
+    if (hostname != NULL && hostname[0] != '\0')
+      hop.name = hostname;
+    hop.addr = hop.tag;
+    hop.ttl = 1;
+    (*it)->traceroute_hops.push_front(hop);
+  }
+
+  return 1;
+}
+
+static int traceroute_remote(std::vector<Target *> targets) {
+  std::vector<Target *>::iterator target_iter;
+
+  if (targets.empty())
+    return 1;
+
+  TracerouteState global_state(targets);
+
+  global_id = get_random_u16();
+
+  ScanProgressMeter SPM("Traceroute");
+
+  o.current_scantype = TRACEROUTE;
+
+  while (!global_state.active_hosts.empty()) {
+    struct timeval now;
+    long int timeout;
+
+    global_state.send_new_probes();
+    now = get_now();
+    timeout = TIMEVAL_SUBTRACT(global_state.next_send_time, now);
+    global_state.read_replies(timeout);
+    global_state.cull_timeouts();
+    global_state.remove_finished_hosts();
+
+    if (keyWasPressed())
+      SPM.printStats(global_state.completion_fraction(), NULL);
+  }
+
+  SPM.endTask(NULL, NULL);
+
+  if (!o.noresolve)
+    global_state.resolve_hops();
+  /* This puts the hops into the targets known by the global_state. */
+  global_state.transfer_hops();
+
+  /* Update initial_ttl to be the highest distance seen in this host group, as
+     an estimate for the next. */
+  initial_ttl = 0;
+  for (target_iter = targets.begin();
+       target_iter != targets.end();
+       target_iter++) {
+    initial_ttl = MAX(initial_ttl, (*target_iter)->traceroute_hops.size());
+  }
+
+  if (hop_cache_size() > MAX_HOP_CACHE_SIZE) {
+    if (o.debugging) {
+      log_write(LOG_STDOUT, "Clearing hop cache that has grown to %d\n",
+        hop_cache_size());
+    }
+    traceroute_hop_cache_clear();
+  }
+
+  return 1;
+}
+
+int traceroute(std::vector<Target *> &Targets) {
+  std::vector<Target *> direct, remote;
+  std::vector<Target *>::iterator target_iter;
+
+  /* Separate directly connected targets from remote targets. */
+  for (target_iter = Targets.begin();
+       target_iter != Targets.end();
+       target_iter++) {
+    if ((*target_iter)->ifType() == devt_loopback)
+      ; /* Ignore */
+    else if ((*target_iter)->directlyConnected())
+      direct.push_back(*target_iter);
     else
-        Snprintf (nameipbuf, MAXHOSTNAMELEN + INET6_ADDRSTRLEN, "%s (%s)", hname, inet_ntoa (addr));
-    return nameipbuf;
+      remote.push_back(*target_iter);
+  }
+
+  traceroute_direct(direct);
+  traceroute_remote(remote);
+
+  return 1;
+}
+
+static struct timeval get_now(struct timeval *now) {
+  struct timeval tv;
+
+  if (now != NULL)
+    return *now;
+  gettimeofday(&tv, NULL);
+
+  return tv;
+}
+
+/* Convert the address in ss to a string. The result is returned in a static
+   buffer so you can't call this twice in arguments to printf, for example. */
+static const char *ss_to_string(const struct sockaddr_storage *ss) {
+  return inet_ntop_ez(ss, sizeof(*ss));
 }

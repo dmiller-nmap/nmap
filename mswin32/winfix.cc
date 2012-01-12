@@ -6,7 +6,7 @@
  *                                                                         *
  ***********************IMPORTANT NMAP LICENSE TERMS************************
  *                                                                         *
- * The Nmap Security Scanner is (C) 1996-2008 Insecure.Com LLC. Nmap is    *
+ * The Nmap Security Scanner is (C) 1996-2011 Insecure.Com LLC. Nmap is    *
  * also a registered trademark of Insecure.Com LLC.  This program is free  *
  * software; you may redistribute and/or modify it under the terms of the  *
  * GNU General Public License as published by the Free Software            *
@@ -28,25 +28,16 @@
  *   nmap-os-db or nmap-service-probes.                                    *
  * o Executes Nmap and parses the results (as opposed to typical shell or  *
  *   execution-menu apps, which simply display raw Nmap output and so are  *
- *   not derivative works.)                                                * 
+ *   not derivative works.)                                                *
  * o Integrates/includes/aggregates Nmap into a proprietary executable     *
  *   installer, such as those produced by InstallShield.                   *
  * o Links to a library or executes a program that does any of the above   *
  *                                                                         *
  * The term "Nmap" should be taken to also include any portions or derived *
- * works of Nmap.  This list is not exclusive, but is just meant to        *
- * clarify our interpretation of derived works with some common examples.  *
- * These restrictions only apply when you actually redistribute Nmap.  For *
- * example, nothing stops you from writing and selling a proprietary       *
- * front-end to Nmap.  Just distribute it by itself, and point people to   *
- * http://nmap.org to download Nmap.                                       *
- *                                                                         *
- * We don't consider these to be added restrictions on top of the GPL, but *
- * just a clarification of how we interpret "derived works" as it applies  *
- * to our GPL-licensed Nmap product.  This is similar to the way Linus     *
- * Torvalds has announced his interpretation of how "derived works"        *
- * applies to Linux kernel modules.  Our interpretation refers only to     *
- * Nmap - we don't speak for any other GPL products.                       *
+ * works of Nmap.  This list is not exclusive, but is meant to clarify our *
+ * interpretation of derived works with some common examples.  Our         *
+ * interpretation applies only to Nmap--we don't speak for other people's  *
+ * GPL works.                                                              *
  *                                                                         *
  * If you have any questions about the GPL licensing restrictions on using *
  * Nmap in non-GPL works, we would be happy to help.  As mentioned above,  *
@@ -60,8 +51,8 @@
  * As a special exception to the GPL terms, Insecure.Com LLC grants        *
  * permission to link the code of this program with any version of the     *
  * OpenSSL library which is distributed under a license identical to that  *
- * listed in the included COPYING.OpenSSL file, and distribute linked      *
- * combinations including the two. You must obey the GNU GPL in all        *
+ * listed in the included docs/licenses/OpenSSL.txt file, and distribute   *
+ * linked combinations including the two. You must obey the GNU GPL in all *
  * respects for all of the code used other than OpenSSL.  If you modify    *
  * this file, you may extend this exception to your version of the file,   *
  * but you are not obligated to do so.                                     *
@@ -77,17 +68,17 @@
  *                                                                         *
  * Source code also allows you to port Nmap to new platforms, fix bugs,    *
  * and add new features.  You are highly encouraged to send your changes   *
- * to fyodor@insecure.org for possible incorporation into the main         *
+ * to nmap-dev@insecure.org for possible incorporation into the main       *
  * distribution.  By sending these changes to Fyodor or one of the         *
  * Insecure.Org development mailing lists, it is assumed that you are      *
- * offering Fyodor and Insecure.Com LLC the unlimited, non-exclusive right *
- * to reuse, modify, and relicense the code.  Nmap will always be          *
- * available Open Source, but this is important because the inability to   *
- * relicense code has caused devastating problems for other Free Software  *
- * projects (such as KDE and NASM).  We also occasionally relicense the    *
- * code to third parties as discussed above.  If you wish to specify       *
- * special license conditions of your contributions, just say so when you  *
- * send them.                                                              *
+ * offering the Nmap Project (Insecure.Com LLC) the unlimited,             *
+ * non-exclusive right to reuse, modify, and relicense the code.  Nmap     *
+ * will always be available Open Source, but this is important because the *
+ * inability to relicense code has caused devastating problems for other   *
+ * Free Software projects (such as KDE and NASM).  We also occasionally    *
+ * relicense the code to third parties as discussed above.  If you wish to *
+ * specify special license conditions of your contributions, just say so   *
+ * when you send them.                                                     *
  *                                                                         *
  * This program is distributed in the hope that it will be useful, but     *
  * WITHOUT ANY WARRANTY; without even the implied warranty of              *
@@ -102,6 +93,7 @@
 
 #include <winclude.h>
 #include <sys/timeb.h>
+#include <shellapi.h>
 
 
 #include "..\nmap.h"
@@ -119,8 +111,6 @@
 #endif
 
 extern NmapOps o;
-
-int pcap_avail = 0;
 
 /*   internal functions   */
 static void win_cleanup(void);
@@ -140,6 +130,89 @@ void win_pre_init() {
 		fatal("failed to start winsock.\n");
 }
 
+/* Check if the NPF service is running on Windows, and try to start it if it's
+   not. Return true if it was running or we were able to start it, false
+   otherwise. */
+static bool start_npf() {
+  SC_HANDLE scm, npf;
+  SERVICE_STATUS service;
+  bool npf_running;
+  int ret;
+
+  scm = NULL;
+  npf = NULL;
+
+  scm = OpenSCManager(NULL, NULL, 0);
+  if (scm == NULL) {
+    error("Error in OpenSCManager");
+    goto quit_error;
+  }
+  npf = OpenService(scm, "npf", SC_MANAGER_CONNECT | SERVICE_QUERY_STATUS);
+  if (npf == NULL) {
+    error("Error in OpenService");
+    goto quit_error;
+  }
+  if (!QueryServiceStatus(npf, &service)) {
+    error("Error in QueryServiceStatus");
+    goto quit_error;
+  }
+  npf_running = (service.dwCurrentState & SERVICE_RUNNING) != 0;
+  CloseServiceHandle(scm);
+  CloseServiceHandle(npf);
+
+  if (npf_running) {
+    if (o.debugging > 1)
+      log_write(LOG_PLAIN, "NPF service is already running.\n");
+    return true;
+  }
+
+  /* NPF is not running. Try to start it. */
+
+  if (o.debugging > 1)
+    log_write(LOG_PLAIN, "NPF service is not running.\n");
+
+  ret = (int) ShellExecute(0, "runas", "net.exe", "start npf", 0, SW_HIDE);
+  if (ret <= 32) {
+    error("Unable to start NPF service: ShellExecute returned %d.\n\
+Resorting to unprivileged (non-administrator) mode.", ret);
+    return false;
+  }
+
+  return true;
+
+quit_error:
+  if (scm != NULL)
+    CloseHandle(scm);
+  if (npf != NULL)
+    CloseHandle(npf);
+
+  return false;
+}
+
+/* Restrict where we're willing to load DLLs from to prevent DLL hijacking. */
+static void init_dll_path()
+{
+	BOOL (WINAPI *SetDllDirectory)(LPCTSTR);
+
+	SetDllDirectory = (BOOL (WINAPI *)(LPCTSTR)) GetProcAddress(GetModuleHandle("kernel32.dll"), "SetDllDirectoryA");
+	if (SetDllDirectory == NULL) {
+		char nmapdir[MAX_PATH];
+
+		/* SetDllDirectory is not available before XP SP1. Instead, set
+		   the current directory to the home of the executable (instead
+		   of where a malicious DLL may be). */
+		if (GetModuleFileName(NULL, nmapdir, sizeof(nmapdir)) == 0 ||
+		    GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
+			pfatal("Error in GetModuleFileName");
+		}
+		if (SetCurrentDirectory(nmapdir))
+			pfatal("Error in SetCurrentDirectory");
+	} else {
+		if (SetDllDirectory("") == 0)
+			pfatal("Error in SetDllDirectory(\"\")");
+	}
+}
+
 /* Requires that win_pre_init() has already been called, also that
    options processing has been done so that o.debugging is
    available */
@@ -153,6 +226,7 @@ void win_init()
 	int i;
 	int numipsleft;
 
+	init_dll_path();
 
 	ver.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
 	if(!GetVersionEx((LPOSVERSIONINFO)&ver))
@@ -173,7 +247,7 @@ void win_init()
 	{
 		ULONG len = sizeof(pcaplist);
 
-		pcap_avail = 1;
+		o.have_pcap = true;
 		if(o.debugging > 2) printf("***WinIP***  trying to initialize WinPcap\n");
 		PacketGetAdapterNames(pcaplist, &len);
 
@@ -181,20 +255,26 @@ void win_init()
 		if(FAILED(__HrLoadAllImportsForDll("wpcap.dll")))
 		{
 			error("WARNING: your winpcap is too old to use.  Nmap may not function.\n");
-			pcap_avail = 0;
+			o.have_pcap = false;
 		}
 #endif
 		if(o.debugging)
 			printf("Winpcap present, dynamic linked to: %s\n", pcap_lib_version());
+
+		/* o.isr00t will be false at this point if the user asked for
+		   --unprivileged. In that case don't bother them with a
+		   potential UAC dialog when starting NPF. */
+		if (o.isr00t)
+			o.have_pcap = o.have_pcap && start_npf();
 	}
 #ifdef _MSC_VER
 	__except (1) {
 			error("WARNING: Could not import all necessary WinPcap functions.  You may need to upgrade to version 3.1 or higher from http://www.winpcap.org.  Resorting to connect() mode -- Nmap may not function completely");
-		pcap_avail=0;
+		o.have_pcap=false;
 		}
 #endif
 
-	if (!pcap_avail)
+	if (!o.have_pcap)
 		o.isr00t = 0;
 	atexit(win_cleanup);
 }

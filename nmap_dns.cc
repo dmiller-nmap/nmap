@@ -4,7 +4,7 @@
  *                                                                         *
  ***********************IMPORTANT NMAP LICENSE TERMS************************
  *                                                                         *
- * The Nmap Security Scanner is (C) 1996-2008 Insecure.Com LLC. Nmap is    *
+ * The Nmap Security Scanner is (C) 1996-2011 Insecure.Com LLC. Nmap is    *
  * also a registered trademark of Insecure.Com LLC.  This program is free  *
  * software; you may redistribute and/or modify it under the terms of the  *
  * GNU General Public License as published by the Free Software            *
@@ -26,25 +26,16 @@
  *   nmap-os-db or nmap-service-probes.                                    *
  * o Executes Nmap and parses the results (as opposed to typical shell or  *
  *   execution-menu apps, which simply display raw Nmap output and so are  *
- *   not derivative works.)                                                * 
+ *   not derivative works.)                                                *
  * o Integrates/includes/aggregates Nmap into a proprietary executable     *
  *   installer, such as those produced by InstallShield.                   *
  * o Links to a library or executes a program that does any of the above   *
  *                                                                         *
  * The term "Nmap" should be taken to also include any portions or derived *
- * works of Nmap.  This list is not exclusive, but is just meant to        *
- * clarify our interpretation of derived works with some common examples.  *
- * These restrictions only apply when you actually redistribute Nmap.  For *
- * example, nothing stops you from writing and selling a proprietary       *
- * front-end to Nmap.  Just distribute it by itself, and point people to   *
- * http://nmap.org to download Nmap.                                       *
- *                                                                         *
- * We don't consider these to be added restrictions on top of the GPL, but *
- * just a clarification of how we interpret "derived works" as it applies  *
- * to our GPL-licensed Nmap product.  This is similar to the way Linus     *
- * Torvalds has announced his interpretation of how "derived works"        *
- * applies to Linux kernel modules.  Our interpretation refers only to     *
- * Nmap - we don't speak for any other GPL products.                       *
+ * works of Nmap.  This list is not exclusive, but is meant to clarify our *
+ * interpretation of derived works with some common examples.  Our         *
+ * interpretation applies only to Nmap--we don't speak for other people's  *
+ * GPL works.                                                              *
  *                                                                         *
  * If you have any questions about the GPL licensing restrictions on using *
  * Nmap in non-GPL works, we would be happy to help.  As mentioned above,  *
@@ -58,8 +49,8 @@
  * As a special exception to the GPL terms, Insecure.Com LLC grants        *
  * permission to link the code of this program with any version of the     *
  * OpenSSL library which is distributed under a license identical to that  *
- * listed in the included COPYING.OpenSSL file, and distribute linked      *
- * combinations including the two. You must obey the GNU GPL in all        *
+ * listed in the included docs/licenses/OpenSSL.txt file, and distribute   *
+ * linked combinations including the two. You must obey the GNU GPL in all *
  * respects for all of the code used other than OpenSSL.  If you modify    *
  * this file, you may extend this exception to your version of the file,   *
  * but you are not obligated to do so.                                     *
@@ -75,17 +66,17 @@
  *                                                                         *
  * Source code also allows you to port Nmap to new platforms, fix bugs,    *
  * and add new features.  You are highly encouraged to send your changes   *
- * to fyodor@insecure.org for possible incorporation into the main         *
+ * to nmap-dev@insecure.org for possible incorporation into the main       *
  * distribution.  By sending these changes to Fyodor or one of the         *
  * Insecure.Org development mailing lists, it is assumed that you are      *
- * offering Fyodor and Insecure.Com LLC the unlimited, non-exclusive right *
- * to reuse, modify, and relicense the code.  Nmap will always be          *
- * available Open Source, but this is important because the inability to   *
- * relicense code has caused devastating problems for other Free Software  *
- * projects (such as KDE and NASM).  We also occasionally relicense the    *
- * code to third parties as discussed above.  If you wish to specify       *
- * special license conditions of your contributions, just say so when you  *
- * send them.                                                              *
+ * offering the Nmap Project (Insecure.Com LLC) the unlimited,             *
+ * non-exclusive right to reuse, modify, and relicense the code.  Nmap     *
+ * will always be available Open Source, but this is important because the *
+ * inability to relicense code has caused devastating problems for other   *
+ * Free Software projects (such as KDE and NASM).  We also occasionally    *
+ * relicense the code to third parties as discussed above.  If you wish to *
+ * specify special license conditions of your contributions, just say so   *
+ * when you send them.                                                     *
  *                                                                         *
  * This program is distributed in the hope that it will be useful, but     *
  * WITHOUT ANY WARRANTY; without even the implied warranty of              *
@@ -151,17 +142,11 @@
 // * Tune performance parameters
 //
 // * Figure out best way to estimate completion time
-//   and display it in a ScanProgressMeter 
+//   and display it in a ScanProgressMeter
 
 #ifdef WIN32
 #include "nmap_winconfig.h"
 #endif
-
-#include <stdlib.h>
-#include <limits.h>
-#include <list>
-#include <vector>
-#include <algorithm>
 
 #include "nmap.h"
 #include "NmapOps.h"
@@ -171,6 +156,12 @@
 #include "nmap_tty.h"
 #include "timing.h"
 #include "Target.h"
+
+#include <stdlib.h>
+#include <limits.h>
+#include <list>
+#include <vector>
+#include <algorithm>
 
 extern NmapOps o;
 
@@ -252,7 +243,8 @@ typedef struct host_elem_s host_elem;
 
 struct dns_server_s {
   char *hostname;
-  sockaddr_in addr;
+  sockaddr_storage addr;
+  size_t addr_len;
   nsock_iod nsd;
   int connected;
   int reqs_on_wire;
@@ -309,7 +301,7 @@ static void addto_etchosts(u32 ip, const char *hname);
 #define ACTION_CNAME_LIST 1
 #define ACTION_TIMEOUT 2
 
-//------------------- Misc code --------------------- 
+//------------------- Misc code ---------------------
 
 static void output_summary() {
   int tp = stat_ok + stat_nx + stat_dropped;
@@ -592,7 +584,7 @@ static u32 parse_inaddr_arpa(unsigned char *buf, int maxlen) {
     maxlen -= buf[0] + 1;
     if (maxlen <= 0) return 0;
 
-    for (j=1; j<=buf[0]; j++) if (!isdigit(buf[j])) return 0;
+    for (j=1; j<=buf[0]; j++) if (!isdigit((int) buf[j])) return 0;
 
     ip |= atoi((char *) buf+1) << (8*i);
     buf += buf[0] + 1;
@@ -608,21 +600,39 @@ static u32 parse_inaddr_arpa(unsigned char *buf, int maxlen) {
 // Turns a DNS packet encoded name (see the RFC) and turns it into
 // a normal decimal separated hostname.
 // ASSUMES NAME LENGTH/VALIDITY HAS ALREADY BEEN VERIFIED
-static int encoded_name_to_normal(unsigned char *buf, char *output, int outputsize){
-  while (buf[0]) {
-    if (buf[0] >= outputsize-1) return -1;
-    memcpy(output, buf+1, buf[0]);
-    outputsize -= buf[0];
-    output += buf[0];
-    buf += buf[0]+1;
+static int encoded_name_to_normal(const unsigned char *buf, char *output, int outputsize) {
+  int len;
+  char *p;
 
-    if (buf[0]) {
-      *output++ = '.';
-      outputsize--;
-    } else {
-      *output = '\0';
-    }
+  p = output;
+
+  /* Special case: keep the trailing dot only for the name ".". */
+  if (buf[0] == 0) {
+    if (p + 2 > output + outputsize)
+      return -1;
+    *p++ = '.';
+    *p++ = '\0';
+    return 0;
   }
+
+  while ((len = buf[0]) != 0) {
+    /* Add a dot before every component but the first. */
+    if (p > output) {
+      if (p + 1 > output + outputsize)
+        return -1;
+      *p++ = '.';
+    }
+
+    if (p + len > output + outputsize)
+      return -1;
+    memcpy(p, buf + 1, len);
+    p += len;
+    buf += 1 + len;
+  }
+
+  if (p + 1 > output + outputsize)
+    return -1;
+  *p++ = '\0';
 
   return 0;
 }
@@ -630,7 +640,7 @@ static int encoded_name_to_normal(unsigned char *buf, char *output, int outputsi
 
 // Takes a pointer to the start of a DNS name inside a packet. It makes
 // sure that there is enough space in the name, deals with compression, etc.
-static int advance_past_dns_name(u8 *buf, int buflen, int curbuf, 
+static int advance_past_dns_name(u8 *buf, int buflen, int curbuf,
 			  int *nameloc) {
   int compression=0;
 
@@ -802,12 +812,12 @@ static void add_dns_server(char *ipaddrs) {
   std::list<dns_server *>::iterator servI;
   dns_server *tpserv;
   char *hostname;
-  struct sockaddr_in addr;
+  struct sockaddr_storage addr;
   size_t addr_len = sizeof(addr);
 
   for (hostname = strtok(ipaddrs, " ,"); hostname != NULL; hostname = strtok(NULL, " ,")) {
 
-    if (!resolve(hostname, (struct sockaddr_storage *) &addr, &addr_len, PF_INET)) continue;
+    if (!resolve(hostname, 0, 0, (struct sockaddr_storage *) &addr, &addr_len, PF_UNSPEC)) continue;
 
     for(servI = servs.begin(); servI != servs.end(); servI++) {
       tpserv = *servI;
@@ -822,6 +832,7 @@ static void add_dns_server(char *ipaddrs) {
 
       tpserv->hostname = strdup(hostname);
       memcpy(&tpserv->addr, &addr, sizeof(addr));
+      tpserv->addr_len = addr_len;
 
       servs.push_front(tpserv);
 
@@ -869,7 +880,7 @@ static void connect_dns_servers() {
     s->capacity = CAPACITY_MIN;
     s->write_busy = 0;
 
-    nsock_connect_udp(dnspool, s->nsd, connect_evt_handler, NULL, (struct sockaddr *) &s->addr, sizeof(struct sockaddr), 53);
+    nsock_connect_udp(dnspool, s->nsd, connect_evt_handler, NULL, (struct sockaddr *) &s->addr, s->addr_len, 53);
     nsock_read(dnspool, s->nsd, read_evt_handler, -1, NULL);
     s->connected = 1;
   }
@@ -878,6 +889,8 @@ static void connect_dns_servers() {
 
 
 #ifdef WIN32
+// Reads the Windows registry and adds all the nameservers found via the
+// add_dns_server() function.
 void win32_read_registry(char *controlset) {
   HKEY hKey;
   HKEY hKey2;
@@ -937,21 +950,22 @@ void win32_read_registry(char *controlset) {
 
 
 
-// Parses /etc/resolv.conf (unix) or the registry (win32) and adds
-// all the nameservers found via the add_dns_server() function.
+// Parses /etc/resolv.conf (unix) and adds all the nameservers found via the
+// add_dns_server() function.
 static void parse_resolvdotconf() {
-
-#ifndef WIN32
-
   FILE *fp;
   char buf[2048], *tp;
-  char ipaddr[16];
+  char fmt[32];
+  char ipaddr[INET6_ADDRSTRLEN];
 
   fp = fopen("/etc/resolv.conf", "r");
   if (fp == NULL) {
     if (firstrun) error("mass_dns: warning: Unable to open /etc/resolv.conf. Try using --system-dns or specify valid servers with --dns-servers");
     return;
   }
+
+  /* Customize a sscanf format to sizeof(ipaddr). */
+  Snprintf(fmt, sizeof(fmt), "nameserver %%%us", (unsigned int) sizeof(ipaddr));
 
   while (fgets(buf, sizeof(buf), fp)) {
     tp = buf;
@@ -964,14 +978,10 @@ static void parse_resolvdotconf() {
     // Skip any leading whitespace
     while (*tp == ' ' || *tp == '\t') tp++;
 
-    if (sscanf(tp, "nameserver %15s", ipaddr) == 1) add_dns_server(ipaddr);
+    if (sscanf(tp, fmt, ipaddr) == 1) add_dns_server(ipaddr);
   }
 
   fclose(fp);
-
-#else
-  win32_read_registry("CurrentControlSet");
-#endif
 }
 
 
@@ -1039,7 +1049,7 @@ static void addto_etchosts(u32 ip, const char *hname) {
   host_elem *he;
   int i;
 
-  if(lookup_etchosts(ip) != NULL) 
+  if(lookup_etchosts(ip) != NULL)
     return;
 
   while(total_size >= HASH_TABLE_SIZE) {
@@ -1113,6 +1123,31 @@ static void etchosts_init(void) {
 #endif
 }
 
+/* Initialize the global servs list of DNS servers. If the --dns-servers option
+ * was given, use the listed servers; otherwise get the list from resolv.conf or
+ * the Windows registry. If o.mass_dns is false, the list of servers is empty.
+ * This function caches the results from the first time it is run. */
+static void init_servs(void) {
+  static bool initialized = false;
+
+  if (initialized)
+    return;
+
+  initialized = true;
+
+  if (!o.mass_dns)
+    return;
+
+  if (o.dns_servers) {
+    add_dns_server(o.dns_servers);
+  } else {
+#ifndef WIN32
+    parse_resolvdotconf();
+#else
+    win32_read_registry("CurrentControlSet");
+#endif
+  }
+}
 
 //------------------- Main loops ---------------------
 
@@ -1129,51 +1164,10 @@ static void nmap_mass_rdns_core(Target **targets, int num_targets) {
   bool lasttrace = false;
   char spmobuf[1024];
 
-  if (o.mass_dns == false) {
-    Target *currenths;
-    struct sockaddr_storage ss;
-    size_t sslen;
-    char hostname[MAXHOSTNAMELEN + 1] = "";
+  // If necessary, set up the dns server list
+  init_servs();
 
-    for(hostI = targets; hostI < targets+num_targets; hostI++) {
-      currenths = *hostI;
-
-      if (((currenths->flags & HOST_UP) || o.resolve_all) && !o.noresolve) stat_actual++;
-    }
-
-    Snprintf(spmobuf, sizeof(spmobuf), "System DNS resolution of %d host%s.", num_targets, num_targets-1 ? "s" : "");
-    SPM = new ScanProgressMeter(spmobuf);
-
-    for(i=0, hostI = targets; hostI < targets+num_targets; hostI++, i++) {
-      currenths = *hostI;
-	
-      if (keyWasPressed())
-        SPM->printStats((double) i / stat_actual, NULL);
-
-      if (((currenths->flags & HOST_UP) || o.resolve_all) && !o.noresolve) {
-        if (currenths->TargetSockAddr(&ss, &sslen) != 0)
-          fatal("Failed to get target socket address.");
-        if (getnameinfo((struct sockaddr *)&ss, sslen, hostname,
-                        sizeof(hostname), NULL, 0, NI_NAMEREQD) == 0) {
-          stat_ok++;
-          currenths->setHostName(hostname);
-        }
-      }
-    }
-
-    SPM->endTask(NULL, NULL);
-    delete SPM;
-
-    return;
-  }
-
-  // If necessary, set up the dns server list from resolv.conf
-  if (servs.size() == 0) {
-    if (o.dns_servers) add_dns_server(o.dns_servers);
-    else parse_resolvdotconf();
-
-    if (servs.size() == 0 && firstrun) error("mass_dns: warning: Unable to determine any DNS servers. Reverse DNS is disabled. Try using --system-dns or specify valid servers with --dns-servers");
-  }
+  if (servs.size() == 0 && firstrun) error("mass_dns: warning: Unable to determine any DNS servers. Reverse DNS is disabled. Try using --system-dns or specify valid servers with --dns-servers");
 
 
   // If necessary, set up the /etc/hosts hashtable
@@ -1214,8 +1208,8 @@ static void nmap_mass_rdns_core(Target **targets, int num_targets) {
     fatal("Unable to create nsock pool in %s()", __func__);
 
   if ((lasttrace = o.packetTrace()))
-    nsp_settrace(dnspool, 5, o.getStartTime());
-  
+    nsp_settrace(dnspool, NULL, NSOCK_TRACE_LEVEL, o.getStartTime());
+
   connect_dns_servers();
 
   cname_reqs.clear();
@@ -1236,8 +1230,8 @@ static void nmap_mass_rdns_core(Target **targets, int num_targets) {
     if (o.packetTrace() != lasttrace) {
       lasttrace = !lasttrace;
       if (lasttrace)
-	nsp_settrace(dnspool, 5, o.getStartTime());
-      else nsp_settrace(dnspool, 0, o.getStartTime());
+	nsp_settrace(dnspool, NULL, NSOCK_TRACE_LEVEL, o.getStartTime());
+      else nsp_settrace(dnspool, NULL, 0, o.getStartTime());
     }
     nsock_loop(dnspool, timeout);
   }
@@ -1288,6 +1282,44 @@ static void nmap_mass_rdns_core(Target **targets, int num_targets) {
 
 }
 
+static void nmap_system_rdns_core(Target **targets, int num_targets) {
+  Target **hostI;
+  Target *currenths;
+  struct sockaddr_storage ss;
+  size_t sslen;
+  char hostname[MAXHOSTNAMELEN + 1] = "";
+  char spmobuf[1024];
+  int i;
+
+  for(hostI = targets; hostI < targets+num_targets; hostI++) {
+    currenths = *hostI;
+
+    if (((currenths->flags & HOST_UP) || o.resolve_all) && !o.noresolve) stat_actual++;
+  }
+
+  Snprintf(spmobuf, sizeof(spmobuf), "System DNS resolution of %d host%s.", num_targets, num_targets-1 ? "s" : "");
+  SPM = new ScanProgressMeter(spmobuf);
+
+  for(i=0, hostI = targets; hostI < targets+num_targets; hostI++, i++) {
+    currenths = *hostI;
+
+    if (keyWasPressed())
+      SPM->printStats((double) i / stat_actual, NULL);
+
+    if (((currenths->flags & HOST_UP) || o.resolve_all) && !o.noresolve) {
+      if (currenths->TargetSockAddr(&ss, &sslen) != 0)
+        fatal("Failed to get target socket address.");
+      if (getnameinfo((struct sockaddr *)&ss, sslen, hostname,
+                      sizeof(hostname), NULL, 0, NI_NAMEREQD) == 0) {
+        stat_ok++;
+        currenths->setHostName(hostname);
+      }
+    }
+  }
+
+  SPM->endTask(NULL, NULL);
+  delete SPM;
+}
 
 
 // Publicly available function. Basically just a wrapper so we
@@ -1300,13 +1332,17 @@ void nmap_mass_rdns(Target **targets, int num_targets) {
 
   stat_actual = stat_ok = stat_nx = stat_sf = stat_trans = stat_dropped = stat_cname = 0;
 
-  nmap_mass_rdns_core(targets, num_targets);
+  // mass_dns only supports IPv4.
+  if (o.mass_dns && o.af() == AF_INET)
+    nmap_mass_rdns_core(targets, num_targets);
+  else
+    nmap_system_rdns_core(targets, num_targets);
 
   gettimeofday(&now, NULL);
 
   if (stat_actual > 0) {
     if (o.debugging || o.verbose >= 3) {
-      if (o.mass_dns) {
+      if (o.mass_dns && o.af() == AF_INET) {
 	// #:  Number of DNS servers used
 	// OK: Number of fully reverse resolved queries
 	// NX: Number of confirmations of 'No such reverse domain eXists'
@@ -1325,4 +1361,21 @@ void nmap_mass_rdns(Target **targets, int num_targets) {
   }
 
   firstrun=0;
+}
+
+
+// Returns a list of known DNS servers
+std::list<std::string> get_dns_servers() {
+  init_servs();
+
+  // If the user said --system-dns (!o.mass_dns), we should never return a list
+  // of servers.
+  assert(o.mass_dns || servs.empty());
+
+  std::list<dns_server *>::iterator servI;
+  std::list<std::string> serverList;
+  for(servI = servs.begin(); servI != servs.end(); servI++) {
+    serverList.push_back(inet_socktop((struct sockaddr_storage *) &(*servI)->addr));
+  }
+  return serverList;
 }

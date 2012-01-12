@@ -4,7 +4,7 @@
  *                                                                         *
  ***********************IMPORTANT NMAP LICENSE TERMS************************
  *                                                                         *
- * The Nmap Security Scanner is (C) 1996-2008 Insecure.Com LLC. Nmap is    *
+ * The Nmap Security Scanner is (C) 1996-2011 Insecure.Com LLC. Nmap is    *
  * also a registered trademark of Insecure.Com LLC.  This program is free  *
  * software; you may redistribute and/or modify it under the terms of the  *
  * GNU General Public License as published by the Free Software            *
@@ -26,25 +26,16 @@
  *   nmap-os-db or nmap-service-probes.                                    *
  * o Executes Nmap and parses the results (as opposed to typical shell or  *
  *   execution-menu apps, which simply display raw Nmap output and so are  *
- *   not derivative works.)                                                * 
+ *   not derivative works.)                                                *
  * o Integrates/includes/aggregates Nmap into a proprietary executable     *
  *   installer, such as those produced by InstallShield.                   *
  * o Links to a library or executes a program that does any of the above   *
  *                                                                         *
  * The term "Nmap" should be taken to also include any portions or derived *
- * works of Nmap.  This list is not exclusive, but is just meant to        *
- * clarify our interpretation of derived works with some common examples.  *
- * These restrictions only apply when you actually redistribute Nmap.  For *
- * example, nothing stops you from writing and selling a proprietary       *
- * front-end to Nmap.  Just distribute it by itself, and point people to   *
- * http://nmap.org to download Nmap.                                       *
- *                                                                         *
- * We don't consider these to be added restrictions on top of the GPL, but *
- * just a clarification of how we interpret "derived works" as it applies  *
- * to our GPL-licensed Nmap product.  This is similar to the way Linus     *
- * Torvalds has announced his interpretation of how "derived works"        *
- * applies to Linux kernel modules.  Our interpretation refers only to     *
- * Nmap - we don't speak for any other GPL products.                       *
+ * works of Nmap.  This list is not exclusive, but is meant to clarify our *
+ * interpretation of derived works with some common examples.  Our         *
+ * interpretation applies only to Nmap--we don't speak for other people's  *
+ * GPL works.                                                              *
  *                                                                         *
  * If you have any questions about the GPL licensing restrictions on using *
  * Nmap in non-GPL works, we would be happy to help.  As mentioned above,  *
@@ -58,8 +49,8 @@
  * As a special exception to the GPL terms, Insecure.Com LLC grants        *
  * permission to link the code of this program with any version of the     *
  * OpenSSL library which is distributed under a license identical to that  *
- * listed in the included COPYING.OpenSSL file, and distribute linked      *
- * combinations including the two. You must obey the GNU GPL in all        *
+ * listed in the included docs/licenses/OpenSSL.txt file, and distribute   *
+ * linked combinations including the two. You must obey the GNU GPL in all *
  * respects for all of the code used other than OpenSSL.  If you modify    *
  * this file, you may extend this exception to your version of the file,   *
  * but you are not obligated to do so.                                     *
@@ -75,17 +66,17 @@
  *                                                                         *
  * Source code also allows you to port Nmap to new platforms, fix bugs,    *
  * and add new features.  You are highly encouraged to send your changes   *
- * to fyodor@insecure.org for possible incorporation into the main         *
+ * to nmap-dev@insecure.org for possible incorporation into the main       *
  * distribution.  By sending these changes to Fyodor or one of the         *
  * Insecure.Org development mailing lists, it is assumed that you are      *
- * offering Fyodor and Insecure.Com LLC the unlimited, non-exclusive right *
- * to reuse, modify, and relicense the code.  Nmap will always be          *
- * available Open Source, but this is important because the inability to   *
- * relicense code has caused devastating problems for other Free Software  *
- * projects (such as KDE and NASM).  We also occasionally relicense the    *
- * code to third parties as discussed above.  If you wish to specify       *
- * special license conditions of your contributions, just say so when you  *
- * send them.                                                              *
+ * offering the Nmap Project (Insecure.Com LLC) the unlimited,             *
+ * non-exclusive right to reuse, modify, and relicense the code.  Nmap     *
+ * will always be available Open Source, but this is important because the *
+ * inability to relicense code has caused devastating problems for other   *
+ * Free Software projects (such as KDE and NASM).  We also occasionally    *
+ * relicense the code to third parties as discussed above.  If you wish to *
+ * specify special license conditions of your contributions, just say so   *
+ * when you send them.                                                     *
  *                                                                         *
  * This program is distributed in the hope that it will be useful, but     *
  * WITHOUT ANY WARRANTY; without even the implied warranty of              *
@@ -122,11 +113,8 @@
 #define PORT_HIGHEST_STATE 9 /* ***IMPORTANT -- BUMP THIS UP WHEN STATES ARE 
 				ADDED *** */
  
-#define TCPANDUDP IPPROTO_MAX
-
-#define CONF_NONE 0
-#define CONF_LOW 1
-#define CONF_HIGH 2
+#define TCPANDUDPANDSCTP IPPROTO_MAX
+#define UDPANDSCTP (IPPROTO_MAX + 1)
 
 enum serviceprobestate {
   PROBESTATE_INITIAL=1, // No probes started yet
@@ -152,25 +140,26 @@ enum service_tunnel_type { SERVICE_TUNNEL_NONE, SERVICE_TUNNEL_SSL };
 void random_port_cheat(u16 *ports, int portcount);
 
 struct serviceDeductions {
-  const char *name; // will be NULL if can't determine
+  serviceDeductions();
+  void populateFullVersionString(char *buf, size_t n) const;
+
+  char *name; // will be NULL if can't determine
   // Confidence is a number from 0 (least confident) to 10 (most
   // confident) expressing how accurate the service detection is
   // likely to be.
   int name_confidence;
   // Any of these 6 can be NULL if we weren't able to determine it
-  const char *product;
-  const char *version;
-  const char *extrainfo;
-  const char *hostname;
-  const char *ostype;
-  const char *devicetype;
+  char *product;
+  char *version;
+  char *extrainfo;
+  char *hostname;
+  char *ostype;
+  char *devicetype;
+  std::vector<char *> cpe;
   // SERVICE_TUNNEL_NONE or SERVICE_TUNNEL_SSL
   enum service_tunnel_type service_tunnel; 
-  // This is the combined version of the three fields above.  It will be 
-  // zero length if unavailable.
-  char fullversion[128];
   // if we should give the user a service fingerprint to submit, here it is.  Otherwise NULL.
-  const char *service_fp; 
+  char *service_fp; 
   enum service_detection_type dtype; // definition above
   int rpc_status; /* RPC_STATUS_UNTESTED means we haven't checked
 		    RPC_STATUS_UNKNOWN means the port appears to be RPC
@@ -185,46 +174,16 @@ struct serviceDeductions {
 };
 
 class Port {
+ friend class PortList;
+
  public:
   Port();
-  ~Port();
-
-  // pass in an allocated struct serviceDeductions (don't worry about initializing, and
-  // you don't have to free any internal ptrs.  See the serviceDeductions definition for
-  // the fields that are populated.  Returns 0 if at least a name is available.
-  int getServiceDeductions(struct serviceDeductions *sd);
-
-  // sname should be NULL if sres is not
-  // PROBESTATE_FINISHED_MATCHED. product,version, and/or extrainfo
-  // will be NULL if unavailable. Note that this function makes its
-  // own copy of sname and product/version/extrainfo.  This function
-  // also takes care of truncating the version strings to a
-  // 'reasonable' length if neccessary, and cleaning up any unprinable
-  // chars. (these tests are to avoid annoying DOS (or other) attacks
-  // by malicious services).  The fingerprint should be NULL unless
-  // one is available and the user should submit it.  tunnel must be
-  // SERVICE_TUNNEL_NULL (normal) or SERVICE_TUNNEL_SSL (means ssl was
-  // detected and we tried to tunnel through it ).
-  void setServiceProbeResults(enum serviceprobestate sres, const char *sname,
-			      enum service_tunnel_type tunnel, const char *product, 
-			      const char *version, const char *hostname,
-			      const char *ostype, const char *devicetype,
-			      const char *extrainfo, const char *fingerprint);
-
-  char* cstringSanityCheck(const char* string, int len);
-
-  /* Sets the results of an RPC scan.  if rpc_status is not
-   RPC_STATUS_GOOD_PROGRAM, pass 0 for the other args. This function
-   takes care of setting the port's service and version
-   appropriately. */
-  void setRPCProbeResults(int rpc_status, unsigned long rpc_program, 
-			  unsigned int rpc_lowver, unsigned int rpc_highver);
+  void freeService();
+  void getNmapServiceName(char *namebuf, int buflen, const char *rpcinfo) const;
 
   u16 portno;
   u8 proto;
-  char *owner;
-  int state; 
-  int confidence; /* How sure are we about the state? */
+  u8 state; 
   state_reason_t reason;
 
 #ifndef NOLUA
@@ -232,30 +191,10 @@ class Port {
 #endif
 
  private:
-  int rpc_status; /* RPC_STATUS_UNTESTED means we haven't checked
-		    RPC_STATUS_UNKNOWN means the port appears to be RPC
-		    but we couldn't find a match
-		    RPC_STATUS_GOOD_PROG means rpc_program gives the prog #
-		    RPC_STATUS_NOT_RPC means the port doesn't appear to 
-		    be RPC */
-  unsigned long rpc_program; /* Only valid if rpc_state == RPC_STATUS_GOOD_PROG */
-  unsigned int rpc_lowver;
-  unsigned int rpc_highver;
-  Port *next; /* Internal use only -- we sometimes like to link them
-			together */
-  enum serviceprobestate serviceprobe_results; // overall results of service scan
-  char *serviceprobe_service; // If a service was discovered, points to the name
-  // Any of these next three can be NULL if the details are not available
-  char *serviceprobe_product; 
-  char *serviceprobe_version; 
-  char *serviceprobe_extrainfo; 
-  char *serviceprobe_hostname;
-  char *serviceprobe_ostype;
-  char *serviceprobe_devicetype;
-  enum service_tunnel_type serviceprobe_tunnel;
-  // A fingerprint that the user can submit if the service wasn't recognized
-  char *serviceprobe_fp;
-
+  /* This is allocated only on demand by PortList::setServiceProbeResults or
+     PortList::setRPCProbeResults, to save memory for the many closed or
+     filtered ports that don't need it. */
+  serviceDeductions *service;
 };
 
 
@@ -264,8 +203,9 @@ class Port {
 enum portlist_proto {	// PortList Protocols
   PORTLIST_PROTO_TCP	= 0,
   PORTLIST_PROTO_UDP	= 1,
-  PORTLIST_PROTO_IP	= 2,
-  PORTLIST_PROTO_MAX	= 3
+  PORTLIST_PROTO_SCTP	= 2,
+  PORTLIST_PROTO_IP	= 3,
+  PORTLIST_PROTO_MAX	= 4
 };
 
 class PortList {
@@ -278,10 +218,11 @@ class PortList {
   /* Free memory used by port_map. It should be done somewhere before quitting*/
   static void freePortMap();
   
-  /* Add a new port to this list.  If the state has changed, it is
-     OK to call this function to effect the change */
-  int addPort(u16 portno, u8 protocol, char *owner, int state);
-  int removePort(u16 portno, u8 protocol);
+  void setDefaultPortState(u8 protocol, int state);
+  void setPortState(u16 portno, u8 protocol, int state);
+  int getPortState(u16 portno, u8 protocol);
+  int forgetPort(u16 portno, u8 protocol);
+  bool portIsDefault(u16 portno, u8 protocol);
   /* Saves an identification string for the target containing these
      ports (an IP addrss might be a good example, but set what you
      want).  Only used when printing new port updates.  Optional.  A
@@ -291,29 +232,59 @@ class PortList {
    first "afterthisport".  Then supply the most recent returned port
    for each subsequent call.  When no more matching ports remain, NULL
    will be returned.  To restrict returned ports to just one protocol,
-   specify IPPROTO_TCP or IPPROTO_UDP for allowed_protocol. A TCPANDUDP
-   for allowed_protocol matches either. A 0 for allowed_state matches 
-   all possible states. This function returns ports in numeric
-   order from lowest to highest, except that if you ask for both TCP &
-   UDP, every TCP port will be returned before we start returning UDP
-   ports */
-   Port *nextPort(Port *afterthisport, 
-  	          int allowed_protocol, int allowed_state);
+   specify IPPROTO_TCP, IPPROTO_UDP or UPPROTO_SCTP for
+   allowed_protocol. A TCPANDUDPANDSCTP for allowed_protocol matches
+   either. A 0 for allowed_state matches all possible states. This
+   function returns ports in numeric order from lowest to highest,
+   except that if you ask for TCP, UDP & SCTP, all TCP ports will be
+   returned before we start returning UDP and finally SCTP ports */
+  Port *nextPort(const Port *cur, Port *next,
+                 int allowed_protocol, int allowed_state);
 
-  /* Get Port structure from PortList structure.*/
-  Port *getPortEntry(u16 portno, u8 protocol);
-  /* Set Port structure to PortList structure.*/
-  void  setPortEntry(u16 portno, u8 protocol, Port *port);
+  int setStateReason(u16 portno, u8 proto, reason_t reason, u8 ttl, const struct sockaddr_storage *ip_addr);
 
-  int setStateReason(u16 portno, u8 proto, reason_t reason, u8 ttl, u32 ip_addr);
-
-  int numports; /* Total number of ports in list in ANY state */
   int numscriptresults; /* Total number of scripts which produced output */
 
   /* Get number of ports in this state. This a sum for protocols. */
-  int getStateCounts(int state);
+  int getStateCounts(int state) const;
   /* Get number of ports in this state for requested protocol. */
-  int getStateCounts(int protocol, int state);
+  int getStateCounts(int protocol, int state) const;
+
+  // sname should be NULL if sres is not
+  // PROBESTATE_FINISHED_MATCHED. product,version, and/or extrainfo
+  // will be NULL if unavailable. Note that this function makes its
+  // own copy of sname and product/version/extrainfo.  This function
+  // also takes care of truncating the version strings to a
+  // 'reasonable' length if necessary, and cleaning up any unprinable
+  // chars. (these tests are to avoid annoying DOS (or other) attacks
+  // by malicious services).  The fingerprint should be NULL unless
+  // one is available and the user should submit it.  tunnel must be
+  // SERVICE_TUNNEL_NULL (normal) or SERVICE_TUNNEL_SSL (means ssl was
+  // detected and we tried to tunnel through it ).
+  void setServiceProbeResults(u16 portno, int protocol,
+			      enum serviceprobestate sres, const char *sname,
+			      enum service_tunnel_type tunnel, const char *product, 
+			      const char *version, const char *hostname,
+			      const char *ostype, const char *devicetype,
+			      const char *extrainfo,
+			      const char *cpe_a, const char *cpe_h, const char *cpe_o,
+			      const char *fingerprint);
+
+  // pass in an allocated struct serviceDeductions (don't worry about initializing, and
+  // you don't have to free any internal ptrs.  See the serviceDeductions definition for
+  // the fields that are populated.  Returns 0 if at least a name is available.
+  void getServiceDeductions(u16 portno, int protocol, struct serviceDeductions *sd) const;
+
+  /* Sets the results of an RPC scan.  if rpc_status is not
+   RPC_STATUS_GOOD_PROGRAM, pass 0 for the other args. This function
+   takes care of setting the port's service and version
+   appropriately. */
+  void setRPCProbeResults(u16 portno, int proto, int rpc_status, unsigned long rpc_program, 
+			  unsigned int rpc_lowver, unsigned int rpc_highver);
+
+#ifndef NOLUA
+  void addScriptResult(u16 portno, int protocol, ScriptResult& sr);
+#endif
 
   /* Cycles through the 0 or more "ignored" ports which should be
    consolidated for Nmap output.  They are returned sorted by the
@@ -330,12 +301,21 @@ class PortList {
 
   int numIgnoredStates();
   int numIgnoredPorts();
+  int numPorts() const;
+  bool hasOpenPorts() const;
 
  private:
+  bool mapPort(u16 *portno, u8 *protocol) const;
+  /* Get Port structure from PortList structure.*/
+  const Port *lookupPort(u16 portno, u8 protocol) const;
+  Port *createPort(u16 portno, u8 protocol);
+  /* Set Port structure to PortList structure.*/
+  void  setPortEntry(u16 portno, u8 protocol, Port *port);
+
   /* A string identifying the system these ports are on.  Just used for 
      printing open ports, if it is set with setIdStr() */
   char *idstr;
-  /* Number of ports in each state per each protocol */
+  /* Number of ports in each state per each protocol. */
   int state_counts_proto[PORTLIST_PROTO_MAX][PORT_HIGHEST_STATE];
   Port **port_list[PORTLIST_PROTO_MAX];
  protected:
@@ -343,8 +323,10 @@ class PortList {
    * Only functions: getPortEntry, setPortEntry, initializePortMap and 
    * nextPort should access this structure directly. */
   static u16 *port_map[PORTLIST_PROTO_MAX];
+  static u16 *port_map_rev[PORTLIST_PROTO_MAX];
   /* Number of allocated elements in port_list per each protocol. */
   static int port_list_count[PORTLIST_PROTO_MAX];
+  Port default_port_state[PORTLIST_PROTO_MAX];
 };
 
 #endif

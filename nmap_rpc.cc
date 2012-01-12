@@ -1,13 +1,13 @@
 
 /***************************************************************************
- * nmap_rpc.cc -- Functions related to the RPCGrind (-sR) facility of Nmap *
+ * nmap_rpc.cc -- Functions related to the RPCGrind facility of Nmap.      *
  * This includes reading the nmap-rpc services file and sending rpc        *
  * queries and interpreting responses.  The actual scan engine used for    *
  * rpc grinding is pos_scan (which is not in this file)                    *
  *                                                                         *
  ***********************IMPORTANT NMAP LICENSE TERMS************************
  *                                                                         *
- * The Nmap Security Scanner is (C) 1996-2008 Insecure.Com LLC. Nmap is    *
+ * The Nmap Security Scanner is (C) 1996-2011 Insecure.Com LLC. Nmap is    *
  * also a registered trademark of Insecure.Com LLC.  This program is free  *
  * software; you may redistribute and/or modify it under the terms of the  *
  * GNU General Public License as published by the Free Software            *
@@ -29,25 +29,16 @@
  *   nmap-os-db or nmap-service-probes.                                    *
  * o Executes Nmap and parses the results (as opposed to typical shell or  *
  *   execution-menu apps, which simply display raw Nmap output and so are  *
- *   not derivative works.)                                                * 
+ *   not derivative works.)                                                *
  * o Integrates/includes/aggregates Nmap into a proprietary executable     *
  *   installer, such as those produced by InstallShield.                   *
  * o Links to a library or executes a program that does any of the above   *
  *                                                                         *
  * The term "Nmap" should be taken to also include any portions or derived *
- * works of Nmap.  This list is not exclusive, but is just meant to        *
- * clarify our interpretation of derived works with some common examples.  *
- * These restrictions only apply when you actually redistribute Nmap.  For *
- * example, nothing stops you from writing and selling a proprietary       *
- * front-end to Nmap.  Just distribute it by itself, and point people to   *
- * http://nmap.org to download Nmap.                                       *
- *                                                                         *
- * We don't consider these to be added restrictions on top of the GPL, but *
- * just a clarification of how we interpret "derived works" as it applies  *
- * to our GPL-licensed Nmap product.  This is similar to the way Linus     *
- * Torvalds has announced his interpretation of how "derived works"        *
- * applies to Linux kernel modules.  Our interpretation refers only to     *
- * Nmap - we don't speak for any other GPL products.                       *
+ * works of Nmap.  This list is not exclusive, but is meant to clarify our *
+ * interpretation of derived works with some common examples.  Our         *
+ * interpretation applies only to Nmap--we don't speak for other people's  *
+ * GPL works.                                                              *
  *                                                                         *
  * If you have any questions about the GPL licensing restrictions on using *
  * Nmap in non-GPL works, we would be happy to help.  As mentioned above,  *
@@ -61,8 +52,8 @@
  * As a special exception to the GPL terms, Insecure.Com LLC grants        *
  * permission to link the code of this program with any version of the     *
  * OpenSSL library which is distributed under a license identical to that  *
- * listed in the included COPYING.OpenSSL file, and distribute linked      *
- * combinations including the two. You must obey the GNU GPL in all        *
+ * listed in the included docs/licenses/OpenSSL.txt file, and distribute   *
+ * linked combinations including the two. You must obey the GNU GPL in all *
  * respects for all of the code used other than OpenSSL.  If you modify    *
  * this file, you may extend this exception to your version of the file,   *
  * but you are not obligated to do so.                                     *
@@ -78,17 +69,17 @@
  *                                                                         *
  * Source code also allows you to port Nmap to new platforms, fix bugs,    *
  * and add new features.  You are highly encouraged to send your changes   *
- * to fyodor@insecure.org for possible incorporation into the main         *
+ * to nmap-dev@insecure.org for possible incorporation into the main       *
  * distribution.  By sending these changes to Fyodor or one of the         *
  * Insecure.Org development mailing lists, it is assumed that you are      *
- * offering Fyodor and Insecure.Com LLC the unlimited, non-exclusive right *
- * to reuse, modify, and relicense the code.  Nmap will always be          *
- * available Open Source, but this is important because the inability to   *
- * relicense code has caused devastating problems for other Free Software  *
- * projects (such as KDE and NASM).  We also occasionally relicense the    *
- * code to third parties as discussed above.  If you wish to specify       *
- * special license conditions of your contributions, just say so when you  *
- * send them.                                                              *
+ * offering the Nmap Project (Insecure.Com LLC) the unlimited,             *
+ * non-exclusive right to reuse, modify, and relicense the code.  Nmap     *
+ * will always be available Open Source, but this is important because the *
+ * inability to relicense code has caused devastating problems for other   *
+ * Free Software projects (such as KDE and NASM).  We also occasionally    *
+ * relicense the code to third parties as discussed above.  If you wish to *
+ * specify special license conditions of your contributions, just say so   *
+ * when you send them.                                                     *
  *                                                                         *
  * This program is distributed in the hope that it will be useful, but     *
  * WITHOUT ANY WARRANTY; without even the implied warranty of              *
@@ -109,6 +100,7 @@
 #include "timing.h"
 #include "nmap_error.h"
 #include "utils.h"
+#include "nbase.h"
 
 extern NmapOps o;
 static struct rpc_info ri;
@@ -164,7 +156,7 @@ static void rpc_services_init() {
       ri.num_alloc *= 3;
     }
 
-    while(*p && *p != '#' && !isalnum((int) *p)) p++;
+    while(*p && *p != '#' && !isalnum((int) (unsigned char) *p)) p++;
 
     if (!*p || *p == '#') continue;
 
@@ -176,7 +168,7 @@ static void rpc_services_init() {
     ri.names[ri.num_used] = cp_strdup(p);
     p = tmpptr + 1;
 
-    while(*p && !isdigit((int) *p)) p++;
+    while(*p && !isdigit((int) (unsigned char) *p)) p++;
 
     if (!*p)
       continue;
@@ -231,7 +223,7 @@ int send_rpc_query(Target *target_host, unsigned short portno,
      if (numruns++ > 2)
      fatal("Done");  */
 
-  rpch = (struct rpc_hdr *) ((char *)rpch_buf + sizeof(unsigned long));
+  rpch = (struct rpc_hdr *) ((char *)rpch_buf + sizeof(u32));
   memset(rpch, 0, sizeof(struct rpc_hdr));
 
 
@@ -239,7 +231,7 @@ int send_rpc_query(Target *target_host, unsigned short portno,
     rpc_xid_base = (unsigned long) get_random_uint();
   
   if (o.debugging > 1) {
-    log_write(LOG_PLAIN, "Sending RPC probe for program %li to %hu/%s -- scan_offset=%d trynum=%d xid=%lX\n", program, portno, proto2ascii(ipproto), scan_offset, trynum, rpc_xid_base + ((portno & 0x3FFF) << 16) + (trynum << 30) +  scan_offset);
+    log_write(LOG_PLAIN, "Sending RPC probe for program %li to %hu/%s -- scan_offset=%d trynum=%d xid=%lX\n", program, portno, proto2ascii_lowercase(ipproto), scan_offset, trynum, rpc_xid_base + ((portno & 0x3FFF) << 16) + (trynum << 30) +  scan_offset);
   }
 
   memset(&sock, 0, sizeof(sock));
@@ -287,8 +279,7 @@ int send_rpc_query(Target *target_host, unsigned short portno,
     if ((tcp_rpc_socket = socket(sock.ss_family, SOCK_STREAM, IPPROTO_TCP)) == -1)
       pfatal("Socket troubles in %s", __func__);
     /* I should unblock the socket here and timeout the connect() */
-    res = connect(tcp_rpc_socket, (struct sockaddr *) &sock, 
-		  sizeof(struct sockaddr_storage));
+    res = connect(tcp_rpc_socket, (struct sockaddr *) &sock, socklen);
     if (res == -1) {
       if (o.debugging) {
 	gh_perror("Failed to connect to port %d of %s in %s",
@@ -327,9 +318,9 @@ int send_rpc_query(Target *target_host, unsigned short portno,
     /* Simply send this sucker we have created ... */
     do {  
       if (o.debugging > 1)
-	hdump((unsigned char *) rpch, sizeof(struct rpc_hdr));
+	  nmap_hexdump((unsigned char *) rpch, sizeof(struct rpc_hdr));
       res = sendto(udp_rpc_socket, (char *)rpch, sizeof(struct rpc_hdr), 0,
-		   (struct sockaddr *) &sock, sizeof(struct sockaddr_storage));
+		   (struct sockaddr *) &sock, socklen);
       if (res == -1)
 	err = socket_errno();
      } while(res == -1 && (err == EINTR || err == ENOBUFS));
@@ -346,8 +337,8 @@ int send_rpc_query(Target *target_host, unsigned short portno,
   } else {
     /* TCP socket */
     /* 0x80000000 means only 1 record marking */
-    *(unsigned long *)rpch_buf = htonl(sizeof(struct rpc_hdr) | 0x80000000);
-    res = Send(tcp_rpc_socket, rpch_buf, sizeof(struct rpc_hdr) + sizeof(unsigned long), 0);
+    *(u32 *)rpch_buf = htonl(sizeof(struct rpc_hdr) | 0x80000000);
+    res = Send(tcp_rpc_socket, rpch_buf, sizeof(struct rpc_hdr) + sizeof(u32), 0);
     if (res == -1) {
       if (o.debugging) {
 	gh_perror("Write in %s", __func__);
@@ -371,8 +362,8 @@ static int rpc_are_we_done(char *msg, int msg_len, Target *target,
 
   if (rsi->rpc_current_port->state == PORT_OPENFILTERED) {
     /* Received a packet, so this port is actually open */
-     target->ports.addPort(rsi->rpc_current_port->portno, 
-			   rsi->rpc_current_port->proto, NULL, PORT_OPEN);
+     target->ports.setPortState(rsi->rpc_current_port->portno, 
+			   rsi->rpc_current_port->proto, PORT_OPEN);
   }
 
   rpc_pack = (struct rpc_hdr_rcv *) msg;     
@@ -382,7 +373,7 @@ static int rpc_are_we_done(char *msg, int msg_len, Target *target,
     if (o.debugging > 1) {
       log_write(LOG_PLAIN, "Port %hu/%s labelled NON_RPC because of invalid sized message (%d)\n", 
 		rsi->rpc_current_port->portno, 
-		proto2ascii(rsi->rpc_current_port->proto, true), msg_len);
+		proto2ascii_uppercase(rsi->rpc_current_port->proto), msg_len);
     }
     rsi->rpc_status = RPC_STATUS_NOT_RPC;
     ss->numqueries_outstanding = 0;
@@ -395,7 +386,7 @@ static int rpc_are_we_done(char *msg, int msg_len, Target *target,
   if (((scan_offset >> 16) & 0x3FFF) != (unsigned long) (rsi->rpc_current_port->portno & 0x3FFF)) {
     /* Doh -- this doesn't seem right */
     if (o.debugging > 1) {
-      log_write(LOG_PLAIN, "Port %hu/%s labelled NON_RPC because ((scan_offset >> 16) & 0x3FFF) is %li\n", rsi->rpc_current_port->portno, proto2ascii(rsi->rpc_current_port->proto, true), ((scan_offset >> 16) & 0x3FFF));
+      log_write(LOG_PLAIN, "Port %hu/%s labelled NON_RPC because ((scan_offset >> 16) & 0x3FFF) is %li\n", rsi->rpc_current_port->portno, proto2ascii_uppercase(rsi->rpc_current_port->proto), ((scan_offset >> 16) & 0x3FFF));
     }
     rsi->rpc_status = RPC_STATUS_NOT_RPC;
     ss->numqueries_outstanding = 0;
@@ -415,7 +406,8 @@ static int rpc_are_we_done(char *msg, int msg_len, Target *target,
   }
   if (ntohl(rpc_pack->auth_flavor) != 0 /* AUTH_NULL */ ||
       ntohl(rpc_pack->opaque_length != 0)) {
-    error("Strange -- auth flavor/opaque_length are %lu/%lu should generally be 0/0", rpc_pack->auth_flavor, rpc_pack->opaque_length);
+    error("Strange -- auth flavor/opaque_length are %lu/%lu should generally be 0/0",
+      (unsigned long) rpc_pack->auth_flavor, (unsigned long) rpc_pack->opaque_length);
     rsi->rpc_status = RPC_STATUS_NOT_RPC;
     ss->numqueries_outstanding = 0;
     return 1;
@@ -475,13 +467,13 @@ static int rpc_are_we_done(char *msg, int msg_len, Target *target,
     if (o.debugging > 1) {
       error("Port %hu/%s claims that it is not RPC service %li", 
 	    rsi->rpc_current_port->portno, 
-	    proto2ascii(rsi->rpc_current_port->proto, true),  current->portno);
+	    proto2ascii_uppercase(rsi->rpc_current_port->proto),  current->portno);
     }
     rsi->valid_responses_this_port++;
     return 0;
   } else if (ntohl(rpc_pack->accept_stat) == PROG_MISMATCH) {
     if (o.debugging > 1) {
-      error("Port %hu/%s claims IT IS RPC service %li", rsi->rpc_current_port->portno, proto2ascii(rsi->rpc_current_port->proto, true),  current->portno);
+      error("Port %hu/%s claims IT IS RPC service %li", rsi->rpc_current_port->portno, proto2ascii_uppercase(rsi->rpc_current_port->proto),  current->portno);
     }
     current->state = PORT_OPEN;
     rsi->rpc_status = RPC_STATUS_GOOD_PROG;
@@ -505,167 +497,180 @@ static int rpc_are_we_done(char *msg, int msg_len, Target *target,
   return 0;
 }
 
+static unsigned short sockaddr_port(const struct sockaddr_storage *ss) {
+  unsigned short port;
+
+  if (ss->ss_family == AF_INET)
+    port = ((struct sockaddr_in *) ss)->sin_port;
+  else if (ss->ss_family == AF_INET6)
+    port = ((struct sockaddr_in6 *) ss)->sin6_port;
+  else
+    port = 0;
+
+  return ntohs(port);
+}
+
 void get_rpc_results(Target *target, struct portinfo *scan,
 		     struct scanstats *ss, struct portinfolist *pil, 
-		     struct rpcscaninfo *rsi) {
+                     struct rpcscaninfo *rsi) {
+  int max_sd = -1;
+  fd_set fds_r; 
+  int sres;
+  struct timeval tv;
+  int res;
+  static char readbuf[512];
+  char *current_msg;
+  unsigned long current_msg_len;
 
-int max_sd = -1;
-fd_set fds_r; 
-int sres;
-struct timeval tv;
-int res;
-static char readbuf[512];
-struct sockaddr_in from;
-recvfrom6_t fromlen = sizeof(struct sockaddr_in);
-char *current_msg;
-unsigned long current_msg_len;
- 
- if ((udp_rpc_socket == -1 && tcp_rpc_socket == -1) || ss->numqueries_outstanding <= 0)
-   return;
+  if ((udp_rpc_socket == -1 && tcp_rpc_socket == -1) || ss->numqueries_outstanding <= 0)
+    return;
 
- FD_ZERO(&fds_r);
+  FD_ZERO(&fds_r);
 
- if (udp_rpc_socket >= 0 && rsi->rpc_current_port->proto == IPPROTO_UDP) {
-   FD_SET(udp_rpc_socket, &fds_r);
-   max_sd = udp_rpc_socket;
- }
- else if (tcp_rpc_socket >= 0 && rsi->rpc_current_port->proto == IPPROTO_TCP) {
-   FD_SET(tcp_rpc_socket, &fds_r);
-   if (tcp_rpc_socket > max_sd)
-     max_sd = tcp_rpc_socket;
- } else {
-   error("Unable to find listening socket in %s", __func__);
-   return;
- }
+  if (udp_rpc_socket >= 0 && rsi->rpc_current_port->proto == IPPROTO_UDP) {
+    FD_SET(udp_rpc_socket, &fds_r);
+    max_sd = udp_rpc_socket;
+  } else if (tcp_rpc_socket >= 0 && rsi->rpc_current_port->proto == IPPROTO_TCP) {
+    FD_SET(tcp_rpc_socket, &fds_r);
+    max_sd = tcp_rpc_socket;
+  } else {
+    error("Unable to find listening socket in %s", __func__);
+    return;
+  }
 
 
- while (ss->numqueries_outstanding > 0) {
+  while (ss->numqueries_outstanding > 0) {
+    /* Insure there is no timeout ... */
+    gettimeofday(&tv, NULL);
+    if (target->timedOut(&tv))
+      return;
 
-   /* Insure there is no timeout ... */
-   gettimeofday(&tv, NULL);
-   if (target->timedOut(&tv))
-       return;
+    tv.tv_sec = target->to.timeout / 1000000;
+    tv.tv_usec = target->to.timeout % 1000000;
+    sres = select(max_sd + 1, &fds_r, NULL, NULL, &tv);
+    if (!sres)
+      break;
+    if (sres == -1 && socket_errno() == EINTR)
+      continue;
+    if (udp_rpc_socket >= 0 && FD_ISSET(udp_rpc_socket, &fds_r)) {
+      struct sockaddr_storage from;
+      recvfrom6_t fromlen = sizeof(from);
+      unsigned short fromport;
 
-   tv.tv_sec = target->to.timeout / 1000000;
-   tv.tv_usec = target->to.timeout % 1000000;
-   sres = select(max_sd + 1, &fds_r, NULL, NULL, &tv);
-   if (!sres)
-     break;
-   if (sres == -1 && socket_errno() == EINTR)
-     continue;
-   if (udp_rpc_socket >= 0 && FD_ISSET(udp_rpc_socket, &fds_r)) {
-     res = recvfrom(udp_rpc_socket, readbuf, sizeof(readbuf), 0, (struct sockaddr *) &from, &fromlen);
-   
-     if (res < 0) {
-       /* Doh! */
-       if (o.debugging || o.verbose)
-	 gh_perror("recvfrom in %s", __func__);
-       ss->numqueries_outstanding = 0;
-       rsi->rpc_status = RPC_STATUS_NOT_RPC;
-       return;
-     }
-     if (o.debugging > 1)
-       log_write(LOG_PLAIN, "Received %d byte UDP packet\n", res);
-     /* Now we check that the response is from the expected host/port */
-     if (from.sin_addr.s_addr != target->v4host().s_addr ||
-	 from.sin_port != htons(rsi->rpc_current_port->portno)) {
-       if (o.debugging > 1) {
-	 log_write(LOG_PLAIN, "Received UDP packet from %d.%d.%d.%d/%hu when expecting packet from %d.%d.%d.%d/%hu\n", NIPQUAD(from.sin_addr.s_addr), ntohs(from.sin_port), NIPQUAD(target->v4host().s_addr), rsi->rpc_current_port->portno);
-       }
-       continue;
-     }
+      res = recvfrom(udp_rpc_socket, readbuf, sizeof(readbuf), 0, (struct sockaddr *) &from, &fromlen);
 
-     if (rpc_are_we_done(readbuf, res, target, scan, ss, pil, rsi) != 0) {
-       return;
-     }
-   } else if (tcp_rpc_socket >= 0 && FD_ISSET(tcp_rpc_socket, &fds_r)) {
-     do {     
-       res = recv(tcp_rpc_socket, readbuf + tcp_readlen, sizeof(readbuf) - tcp_readlen, 0);
-     } while(res == -1 && socket_errno() == EINTR);
-     if (res <= 0) {
-       if (o.debugging) {
-	 if (res == -1)
-	   gh_perror("Failed to read() from tcp rpc socket in %s", __func__);
-	 else {
-	   error("Lamer on port %u closed RPC socket on me in %s", rsi->rpc_current_port->portno, __func__);
-	 }
-       }
-       ss->numqueries_outstanding = 0;
-       rsi->rpc_status = RPC_STATUS_NOT_RPC;
-       return;
-     }
+      if (res < 0) {
+        /* Doh! */
+        if (o.debugging || o.verbose)
+          gh_perror("recvfrom in %s", __func__);
+        ss->numqueries_outstanding = 0;
+        rsi->rpc_status = RPC_STATUS_NOT_RPC;
+        return;
+      }
+      fromport = sockaddr_port(&from);
+      if (o.debugging > 1)
+        log_write(LOG_PLAIN, "Received %d byte UDP packet\n", res);
+      /* Now we check that the response is from the expected host/port */
+      if (!sockaddr_storage_equal(&from, target->TargetSockAddr()) ||
+          fromport != rsi->rpc_current_port->portno) {
+        if (o.debugging > 1) {
+          log_write(LOG_PLAIN, "Received UDP packet from %s/%hu", inet_ntop_ez(&from, fromlen), fromport);
+          log_write(LOG_PLAIN, " when expecting packet from %s/%hu\n", target->targetipstr(), rsi->rpc_current_port->portno);
+        }
+        continue;
+      }
 
-     tcp_readlen += res;
+      if (rpc_are_we_done(readbuf, res, target, scan, ss, pil, rsi) != 0) {
+        return;
+      }
+    } else if (tcp_rpc_socket >= 0 && FD_ISSET(tcp_rpc_socket, &fds_r)) {
+      do {     
+        res = recv(tcp_rpc_socket, readbuf + tcp_readlen, sizeof(readbuf) - tcp_readlen, 0);
+      } while(res == -1 && socket_errno() == EINTR);
+      if (res <= 0) {
+        if (o.debugging) {
+          if (res == -1)
+            gh_perror("Failed to read() from tcp rpc socket in %s", __func__);
+          else {
+            error("Lamer on port %u closed RPC socket on me in %s", rsi->rpc_current_port->portno, __func__);
+          }
+        }
+        ss->numqueries_outstanding = 0;
+        rsi->rpc_status = RPC_STATUS_NOT_RPC;
+        return;
+      }
 
-     if (tcp_readlen < 28) {
-       /* This is suspiciously small -- I'm assuming this is not the first
-	  part of a valid RPC packet */
-       if (o.debugging > 1) {
-	 log_write(LOG_PLAIN, "Port %hu/%s labelled NON_RPC because tcp_readlen is %d (should be at least 28)\n", 
-		   rsi->rpc_current_port->portno, 
-		   proto2ascii(rsi->rpc_current_port->proto, true), 
-		   (int) tcp_readlen);
-       }
-       ss->numqueries_outstanding = 0;
-       rsi->rpc_status = RPC_STATUS_NOT_RPC;
-       return;
-     }
-     /* I'm ignoring the multiple msg fragment possibility for now */
-     current_msg_len = ntohl((*(unsigned long *)readbuf)) & 0x7FFFFFFF;
-						     
-     if (current_msg_len > tcp_readlen - 4) {
-       if (o.debugging > 1) {
-	 log_write(LOG_PLAIN, "Port %hu/%s labelled NON_RPC because current_msg_len is %li while tcp_readlen is %d\n",
-		   rsi->rpc_current_port->portno, 
-		   proto2ascii(rsi->rpc_current_port->proto, true), 
-		   current_msg_len, (int) tcp_readlen);
-       }
-       ss->numqueries_outstanding = 0;
-       rsi->rpc_status = RPC_STATUS_NOT_RPC;
-       return;
-     }
-     current_msg = readbuf + 4;
+      tcp_readlen += res;
 
-     do {
-       if (rpc_are_we_done(current_msg, current_msg_len, target, scan, ss, 
-			   pil, rsi) != 0) 
-	 return;
+      if (tcp_readlen < 28) {
+        /* This is suspiciously small -- I'm assuming this is not the first
+           part of a valid RPC packet */
+        if (o.debugging > 1) {
+          log_write(LOG_PLAIN, "Port %hu/%s labelled NON_RPC because tcp_readlen is %d (should be at least 28)\n", 
+              rsi->rpc_current_port->portno, 
+              proto2ascii_uppercase(rsi->rpc_current_port->proto), 
+              (int) tcp_readlen);
+        }
+        ss->numqueries_outstanding = 0;
+        rsi->rpc_status = RPC_STATUS_NOT_RPC;
+        return;
+      }
+      /* I'm ignoring the multiple msg fragment possibility for now */
+      current_msg_len = ntohl((*(unsigned long *)readbuf)) & 0x7FFFFFFF;
 
-       current_msg += current_msg_len;
-       if ((current_msg - readbuf) + 4UL < tcp_readlen) {       
-	 current_msg_len = ntohl(*(unsigned long *) current_msg) & 0x7FFFFFFF;
-	 current_msg += 4;
-       } else {
-	 if ((unsigned long) (current_msg - readbuf) < tcp_readlen) {
-	   tcp_readlen -= current_msg - readbuf;
-	   memmove(readbuf, current_msg, tcp_readlen);
-	 } else tcp_readlen = 0;
-	 break;	   
-       }
+      if (current_msg_len > tcp_readlen - 4) {
+        if (o.debugging > 1) {
+          log_write(LOG_PLAIN, "Port %hu/%s labelled NON_RPC because current_msg_len is %li while tcp_readlen is %d\n",
+              rsi->rpc_current_port->portno, 
+              proto2ascii_uppercase(rsi->rpc_current_port->proto), 
+              current_msg_len, (int) tcp_readlen);
+        }
+        ss->numqueries_outstanding = 0;
+        rsi->rpc_status = RPC_STATUS_NOT_RPC;
+        return;
+      }
+      current_msg = readbuf + 4;
 
-       if (current_msg_len < 24 || current_msg_len > 32) {
-	 ss->numqueries_outstanding = 0;
-	 if (o.debugging > 1) {
-	   log_write(LOG_PLAIN, "Port %hu/%s labelled NON_RPC because current_msg_len is %li\n", 
-		     rsi->rpc_current_port->portno, 
-		     proto2ascii(rsi->rpc_current_port->proto, true), 
-		     current_msg_len);
-	 }
-	 rsi->rpc_status = RPC_STATUS_NOT_RPC;
-	 return;
-       }
+      do {
+        if (rpc_are_we_done(current_msg, current_msg_len, target, scan, ss, 
+              pil, rsi) != 0) 
+          return;
 
-       if ((current_msg - readbuf) + current_msg_len > tcp_readlen) {
-	 tcp_readlen -= current_msg - readbuf;
-	 memmove(readbuf +4 , current_msg, tcp_readlen);
-	 *(unsigned long *)&readbuf = htonl(current_msg_len);
-	 tcp_readlen += 4;
-	 break;
-       }
-     } while(1);
-   }
- }
- return;
+        current_msg += current_msg_len;
+        if ((current_msg - readbuf) + 4UL < tcp_readlen) {       
+          current_msg_len = ntohl(*(unsigned long *) current_msg) & 0x7FFFFFFF;
+          current_msg += 4;
+        } else {
+          if ((unsigned long) (current_msg - readbuf) < tcp_readlen) {
+            tcp_readlen -= current_msg - readbuf;
+            memmove(readbuf, current_msg, tcp_readlen);
+          } else tcp_readlen = 0;
+          break;	   
+        }
+
+        if (current_msg_len < 24 || current_msg_len > 32) {
+          ss->numqueries_outstanding = 0;
+          if (o.debugging > 1) {
+            log_write(LOG_PLAIN, "Port %hu/%s labelled NON_RPC because current_msg_len is %li\n", 
+                rsi->rpc_current_port->portno, 
+                proto2ascii_uppercase(rsi->rpc_current_port->proto), 
+                current_msg_len);
+          }
+          rsi->rpc_status = RPC_STATUS_NOT_RPC;
+          return;
+        }
+
+        if ((current_msg - readbuf) + current_msg_len > tcp_readlen) {
+          tcp_readlen -= current_msg - readbuf;
+          memmove(readbuf +4 , current_msg, tcp_readlen);
+          *(unsigned long *)&readbuf = htonl(current_msg_len);
+          tcp_readlen += 4;
+          break;
+        }
+      } while(1);
+    }
+  }
+  return;
 }
 
 

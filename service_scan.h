@@ -6,7 +6,7 @@
  *                                                                         *
  ***********************IMPORTANT NMAP LICENSE TERMS************************
  *                                                                         *
- * The Nmap Security Scanner is (C) 1996-2008 Insecure.Com LLC. Nmap is    *
+ * The Nmap Security Scanner is (C) 1996-2011 Insecure.Com LLC. Nmap is    *
  * also a registered trademark of Insecure.Com LLC.  This program is free  *
  * software; you may redistribute and/or modify it under the terms of the  *
  * GNU General Public License as published by the Free Software            *
@@ -28,25 +28,16 @@
  *   nmap-os-db or nmap-service-probes.                                    *
  * o Executes Nmap and parses the results (as opposed to typical shell or  *
  *   execution-menu apps, which simply display raw Nmap output and so are  *
- *   not derivative works.)                                                * 
+ *   not derivative works.)                                                *
  * o Integrates/includes/aggregates Nmap into a proprietary executable     *
  *   installer, such as those produced by InstallShield.                   *
  * o Links to a library or executes a program that does any of the above   *
  *                                                                         *
  * The term "Nmap" should be taken to also include any portions or derived *
- * works of Nmap.  This list is not exclusive, but is just meant to        *
- * clarify our interpretation of derived works with some common examples.  *
- * These restrictions only apply when you actually redistribute Nmap.  For *
- * example, nothing stops you from writing and selling a proprietary       *
- * front-end to Nmap.  Just distribute it by itself, and point people to   *
- * http://nmap.org to download Nmap.                                       *
- *                                                                         *
- * We don't consider these to be added restrictions on top of the GPL, but *
- * just a clarification of how we interpret "derived works" as it applies  *
- * to our GPL-licensed Nmap product.  This is similar to the way Linus     *
- * Torvalds has announced his interpretation of how "derived works"        *
- * applies to Linux kernel modules.  Our interpretation refers only to     *
- * Nmap - we don't speak for any other GPL products.                       *
+ * works of Nmap.  This list is not exclusive, but is meant to clarify our *
+ * interpretation of derived works with some common examples.  Our         *
+ * interpretation applies only to Nmap--we don't speak for other people's  *
+ * GPL works.                                                              *
  *                                                                         *
  * If you have any questions about the GPL licensing restrictions on using *
  * Nmap in non-GPL works, we would be happy to help.  As mentioned above,  *
@@ -60,8 +51,8 @@
  * As a special exception to the GPL terms, Insecure.Com LLC grants        *
  * permission to link the code of this program with any version of the     *
  * OpenSSL library which is distributed under a license identical to that  *
- * listed in the included COPYING.OpenSSL file, and distribute linked      *
- * combinations including the two. You must obey the GNU GPL in all        *
+ * listed in the included docs/licenses/OpenSSL.txt file, and distribute   *
+ * linked combinations including the two. You must obey the GNU GPL in all *
  * respects for all of the code used other than OpenSSL.  If you modify    *
  * this file, you may extend this exception to your version of the file,   *
  * but you are not obligated to do so.                                     *
@@ -77,17 +68,17 @@
  *                                                                         *
  * Source code also allows you to port Nmap to new platforms, fix bugs,    *
  * and add new features.  You are highly encouraged to send your changes   *
- * to fyodor@insecure.org for possible incorporation into the main         *
+ * to nmap-dev@insecure.org for possible incorporation into the main       *
  * distribution.  By sending these changes to Fyodor or one of the         *
  * Insecure.Org development mailing lists, it is assumed that you are      *
- * offering Fyodor and Insecure.Com LLC the unlimited, non-exclusive right *
- * to reuse, modify, and relicense the code.  Nmap will always be          *
- * available Open Source, but this is important because the inability to   *
- * relicense code has caused devastating problems for other Free Software  *
- * projects (such as KDE and NASM).  We also occasionally relicense the    *
- * code to third parties as discussed above.  If you wish to specify       *
- * special license conditions of your contributions, just say so when you  *
- * send them.                                                              *
+ * offering the Nmap Project (Insecure.Com LLC) the unlimited,             *
+ * non-exclusive right to reuse, modify, and relicense the code.  Nmap     *
+ * will always be available Open Source, but this is important because the *
+ * inability to relicense code has caused devastating problems for other   *
+ * Free Software projects (such as KDE and NASM).  We also occasionally    *
+ * relicense the code to third parties as discussed above.  If you wish to *
+ * specify special license conditions of your contributions, just say so   *
+ * when you send them.                                                     *
  *                                                                         *
  * This program is distributed in the hope that it will be useful, but     *
  * WITHOUT ANY WARRANTY; without even the implied warranty of              *
@@ -133,6 +124,9 @@ struct MatchDetails {
   // The service that was matched (Or NULL) zero-terminated.
   const char *serviceName;
 
+  // The line number of this match in nmap-service-probes.
+  int lineno;
+
   // The product/verson/info for the service that was matched (Or NULL)
   // zero-terminated.
   const char *product;
@@ -143,6 +137,11 @@ struct MatchDetails {
   const char *hostname;
   const char *ostype;
   const char *devicetype;
+
+  // CPE identifiers for application, OS, and hardware type.
+  const char *cpe_a;
+  const char *cpe_o;
+  const char *cpe_h;
 };
 
 /**********************  CLASSES     ***********************************/
@@ -196,6 +195,7 @@ class ServiceProbeMatch {
   char *hostname_template;
   char *ostype_template;
   char *devicetype_template;
+  std::vector<char *> cpe_templates;
   // The anchor is for SERVICESCAN_STATIC matches.  If the anchor is not -1, the match must
   // start at that zero-indexed position in the response str.
   int matchops_anchor;
@@ -211,7 +211,10 @@ class ServiceProbeMatch {
 		  int nummatches, char *product, int productlen,
 		  char *version, int versionlen, char *info, int infolen,
                   char *hostname, int hostnamelen, char *ostype, int ostypelen,
-                  char *devicetype, int devicetypelen);
+                  char *devicetype, int devicetypelen,
+                  char *cpe_a, int cpe_alen,
+                  char *cpe_h, int cpe_hlen,
+                  char *cpe_o, int cpe_olen);
 };
 
 
@@ -274,7 +277,7 @@ class ServiceProbe {
   void setRarity(const char *portstr, int lineno);
 
   // Simply returns the rarity of this probe
-  const int getRarity() { return rarity; }
+  int getRarity() const { return rarity; }
 
   // Takes a match line in a probe description and adds it to the
   // list of matches for this probe.  This function should be passed
@@ -285,7 +288,7 @@ class ServiceProbe {
   void addMatch(const char *match, int lineno);
 
   // If the buf (of length buflen) matches one of the regexes in this
-  // ServiceProbe, returns the details of the match (service name,
+  // ServiceProbe, returns the details of the nth match (service name,
   // version number if applicable, and whether this is a "soft" match.
   // If the buf doesn't match, the serviceName field in the structure
   // will be NULL.  The MatchDetails returned is only valid until the
@@ -293,7 +296,7 @@ class ServiceProbe {
   // serviceName field can be saved throughought program execution.  If
   // no version matched, that field will be NULL. This function may
   // return NULL if there are no match lines at all in this probe.
-  const struct MatchDetails *testMatch(const u8 *buf, int buflen);
+  const struct MatchDetails *testMatch(const u8 *buf, int buflen, int n);
 
   char *fallbackStr;
   ServiceProbe *fallbacks[MAXFALLBACKS+1];
@@ -338,6 +341,7 @@ public:
   
   static AllProbes *service_scan_init(void);
   static void service_scan_free(void);
+  static int check_excluded_port(unsigned short port, int proto);
 protected:
   static AllProbes *global_AP;
 };

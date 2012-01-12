@@ -131,6 +131,9 @@
 /* Define if you have cooked raw IP sockets. */
 /* #undef HAVE_RAWIP_COOKED */
 
+/* Define if <sys/kinfo.h> has getkerninfo. */
+/* #undef HAVE_GETKERNINFO */
+
 /* Define if raw IP sockets require host byte ordering for ip_off, ip_len. */
 /* #undef HAVE_RAWIP_HOST_OFFLEN */
 
@@ -138,7 +141,7 @@
 /* #undef HAVE_ROUTE_RT_MSGHDR */
 
 /* Define if <netinet/in.h> has sockaddr_in6 struct. */
-// #define HAVE_SOCKADDR_IN6 1
+#define HAVE_SOCKADDR_IN6 1
 
 /* Define if sockaddr struct has sa_len. */
 /* #undef HAVE_SOCKADDR_SA_LEN */
@@ -195,7 +198,7 @@
 /* #undef HAVE_SYS_NDD_VAR_H */
 
 /* Define if you have the <sys/socket.h> header file. */
-#define HAVE_SYS_SOCKET_H 1
+/* #undef HAVE_SYS_SOCKET_H */
 
 /* Define if you have the <sys/sockio.h> header file. */
 /* #undef HAVE_SYS_SOCKIO_H */
@@ -225,7 +228,7 @@
 #define STDC_HEADERS 1
 
 /* Version number of package */
-#define VERSION "1.10"
+#define VERSION "1.12"
 
 /* Define for faster code generation. */
 #define WIN32_LEAN_AND_MEAN
@@ -250,6 +253,7 @@
 
 #ifdef HAVE_WINSOCK2_H
 # include <winsock2.h>
+# include <ws2tcpip.h>
 # include <windows.h>
 #endif
 
@@ -272,6 +276,8 @@ int	strlcpy(char *, const char *, int);
 #ifndef HAVE_STRSEP
 char	*strsep(char **, const char *);
 #endif
+
+#define snprintf _snprintf
 
 /* Without this, Windows will give us all sorts of crap about using functions
    like strcpy() even if they are done safely */
