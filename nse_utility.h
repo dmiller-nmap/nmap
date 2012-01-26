@@ -34,6 +34,13 @@ void nseU_setnfield (lua_State *L, int idx, const char *field, lua_Number value)
  */
 void nseU_setbfield (lua_State *L, int idx, const char *field, int value);
 
+/* void nseU_appendfstr (lua_State *L, int idx,             [-0, +0, m]
+ *                      const char *fmt, ...)
+ *
+ * Appends the formatted string to the table at index idx.
+ */
+void nseU_appendfstr (lua_State *L, int idx, const char *fmt, ...);
+
 /* void nseU_weaktable (lua_State *L, int narr, int nrec,  [-0, +1, e]
  *                      const char *mode)
  *
