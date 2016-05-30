@@ -122,7 +122,7 @@ static int script_set_output (lua_State *L)
   sr.set_output_tab(L, 2);
   if (!lua_isnil(L, 3)) {
     lua_len(L, 3);
-    sr.set_output_str(luaL_checkstring(L, 3), luaL_checkint(L,-1));
+    sr.set_output_str(luaL_checkstring(L, 3), luaL_checkinteger(L,-1));
   }
   script_scan_results.push_back(sr);
   return 0;
@@ -136,7 +136,7 @@ static int host_set_output (lua_State *L)
   sr.set_output_tab(L, 3);
   if (!lua_isnil(L, 4)) {
     lua_len(L, 4);
-    sr.set_output_str(luaL_checkstring(L, 4), luaL_checkint(L,-1));
+    sr.set_output_str(luaL_checkstring(L, 4), luaL_checkinteger(L,-1));
   }
   target->scriptResults.push_back(sr);
   return 0;
@@ -153,7 +153,7 @@ static int port_set_output (lua_State *L)
   sr.set_output_tab(L, 4);
   if (!lua_isnil(L, 5)) {
     lua_len(L, 5);
-    sr.set_output_str(luaL_checkstring(L, 5), luaL_checkint(L,-1));
+    sr.set_output_str(luaL_checkstring(L, 5), luaL_checkinteger(L,-1));
   }
   target->ports.addScriptResult(p->portno, p->proto, sr);
   target->ports.numscriptresults++;
@@ -442,7 +442,7 @@ static std::string format_obj(lua_State *L, int pos)
   }
 
   lua_len(L, -1);
-  output = std::string(lua_tostring(L, -2), luaL_checkint(L, -1));
+  output = std::string(lua_tostring(L, -2), luaL_checkinteger(L, -1));
   lua_pop(L, 1);
 
   return output;
@@ -660,7 +660,7 @@ static int run_main (lua_State *L)
  * correct and only way to call is as a tail call:
  *   return nse_yield(L, 0, NULL);
  */
-int nse_yield (lua_State *L, int ctx, lua_CFunction k)
+int nse_yield (lua_State *L, lua_KContext ctx, lua_KFunction k)
 {
   lua_getfield(L, LUA_REGISTRYINDEX, NSE_YIELD);
   lua_pushthread(L);
@@ -780,8 +780,8 @@ void open_nse (void)
     double minor = fmod(*version, 10.0);
     if (o.debugging >= 1)
       log_write(LOG_STDOUT, "%s: Using Lua %.0f.%.0f.\n", SCRIPT_ENGINE, major, minor);
-    if (*version < 502)
-      fatal("%s: This version of NSE only works with Lua 5.2 or greater.", SCRIPT_ENGINE);
+    if (*version < 503)
+      fatal("%s: This version of NSE only works with Lua 5.3 or greater.", SCRIPT_ENGINE);
     if ((L_NSE = luaL_newstate()) == NULL)
       fatal("%s: failed to open a Lua state!", SCRIPT_ENGINE);
     lua_atpanic(L_NSE, panic);

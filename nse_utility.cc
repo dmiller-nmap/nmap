@@ -147,7 +147,7 @@ uint16_t nseU_checkport (lua_State *L, int idx, const char **protocol)
       *protocol = lua_tostring(L, -1);
     lua_pop(L, 2);
   } else {
-    port = (uint16_t) luaL_checkint(L, idx);
+    port = (uint16_t) luaL_checkinteger(L, idx);
   }
   return port;
 }

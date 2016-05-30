@@ -494,7 +494,7 @@ static int l_get_port_state (lua_State *L)
  * */
 static int l_port_is_excluded (lua_State *L)
 {
-  unsigned short portno = (unsigned short) luaL_checkint(L, 1);
+  unsigned short portno = (unsigned short) luaL_checkinteger(L, 1);
   int protocol = NSE_PROTOCOL[luaL_checkoption(L, 2, NULL, NSE_PROTOCOL_OP)];
 
   lua_pushboolean(L, AllProbes::check_excluded_port(portno, protocol));
@@ -611,7 +611,7 @@ static int l_log_write (lua_State *L)
   return 0;
 }
 
-static int finalize_cleanup (lua_State *L)
+static int finalize_cleanup (lua_State *L, int status, lua_KContext ctx)
 {
   lua_settop(L, 2);
   return lua_error(L);
@@ -629,7 +629,7 @@ static int new_try_finalize (lua_State *L)
       lua_pushvalue(L, lua_upvalueindex(1));
       lua_callk(L, 0, 0, 0, finalize_cleanup);
     }
-    return finalize_cleanup(L);
+    return finalize_cleanup(L, LUA_OK, 0);
   }
   return lua_gettop(L)-1; /* omit first boolean argument */
 }
