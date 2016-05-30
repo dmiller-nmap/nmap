@@ -14,7 +14,6 @@
 #include "nse_fs.h"
 #include "nse_nsock.h"
 #include "nse_nmaplib.h"
-#include "nse_binlib.h"
 #include "nse_pcrelib.h"
 #include "nse_openssl.h"
 #include "nse_debug.h"
@@ -542,7 +541,6 @@ static void set_nmap_libraries (lua_State *L)
   static const luaL_Reg libs[] = {
     {NSE_PCRELIBNAME, luaopen_pcrelib},
     {NSE_NMAPLIBNAME, luaopen_nmap},
-    {NSE_BINLIBNAME, luaopen_binlib},
     {LFSLIBNAME, luaopen_lfs},
     {LPEGLIBNAME, luaopen_lpeg},
 #ifdef HAVE_OPENSSL
